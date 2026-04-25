@@ -1,0 +1,28 @@
+using UnityEngine;
+
+namespace Hollow.Persistence
+{
+    [DefaultExecutionOrder(-900)]
+    public sealed class ProfileSessionHost : MonoBehaviour
+    {
+        public static ProfileSessionHost Instance { get; private set; }
+
+        public IProfileStore ProfileStore { get; private set; }
+
+        public SelectedProfileContext SelectedProfileContext { get; private set; }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            ProfileStore = new JsonProfileStore();
+            SelectedProfileContext = new SelectedProfileContext();
+        }
+    }
+}

@@ -6,7 +6,19 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/_Hollow/Scenes/Boot.unity
+    guid: 4c68800af12e14039bf82ec6a1e09a49
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/MainMenu.unity
+    guid: 09a162385ecfe478a810b05145d54878
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/Game_Windows.unity
+    guid: 9c58598e435e9477e9d35f678cc144f8
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity
+    guid: 76c664672a2d045208fbe1c3eeb81d6d
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity
+    guid: b50ffa173443b45c2855fe83e48bfdda
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

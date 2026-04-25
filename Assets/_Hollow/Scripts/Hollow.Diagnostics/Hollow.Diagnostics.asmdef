@@ -1,0 +1,19 @@
+{
+  "name": "Hollow.Diagnostics",
+  "rootNamespace": "Hollow.Diagnostics",
+  "references": [
+    "Hollow.Core",
+    "Hollow.Data",
+    "Hollow.Platform",
+    "Hollow.Input"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

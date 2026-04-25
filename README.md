@@ -2,6 +2,15 @@
 
 Unity project for Hollow Soul.
 
+## Current Foundation
+
+Milestone 0 has started under `Assets/_Hollow`.
+
+- `Assets/_Hollow/Scripts` contains the initial assembly split.
+- `Assets/_Hollow/Data`, `Art`, `Audio`, `Prefabs`, `Scenes`, `Settings`, `Shaders`, `Tools`, and `Tests` are the canonical Hollow-owned roots.
+- `Docs/Milestone0Foundation.md` describes the current foundation and validation command.
+- `Docs/Milestone1MenuProfilesAndRouting.md` describes the first menu/profile/platform routing layer.
+
 ## Required Setup
 
 - Unity Editor `6000.4.1f1`

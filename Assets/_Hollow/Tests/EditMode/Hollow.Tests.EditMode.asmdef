@@ -1,0 +1,27 @@
+{
+  "name": "Hollow.Tests.EditMode",
+  "rootNamespace": "Hollow.Tests.EditMode",
+  "references": [
+    "Hollow.Core",
+    "Hollow.Data",
+    "Hollow.Platform",
+    "Hollow.Input",
+    "Hollow.Diagnostics",
+    "Hollow.Persistence",
+    "Hollow.UI"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}

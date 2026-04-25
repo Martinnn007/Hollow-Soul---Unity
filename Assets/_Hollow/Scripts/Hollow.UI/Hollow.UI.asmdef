@@ -1,0 +1,19 @@
+{
+  "name": "Hollow.UI",
+  "rootNamespace": "Hollow.UI",
+  "references": [
+    "Hollow.Core",
+    "Hollow.Persistence",
+    "Hollow.Platform",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
