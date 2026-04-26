@@ -1,0 +1,27 @@
+{
+    "reportId": "platform-build-qa-bootstrap",
+    "generatedAtUtc": "2026-04-26T17:01:26.0254050Z",
+    "prototypeVersion": "Hollow Soul Unity M24 Platform Build QA",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "046fb78",
+    "result": "NotRun",
+    "reportRoot": "output/reports",
+    "buildRoot": "output/builds",
+    "targets": [
+        {
+            "id": "m24-full-gate",
+            "platform": "All Platforms",
+            "result": "NotRun",
+            "outputPath": "",
+            "durationMs": 0.0,
+            "messages": [
+                "Run Hollow/Platform QA/Run Full M24 QA Gate to produce the full platform QA report."
+            ],
+            "remediation": []
+        }
+    ],
+    "manualChecklist": [
+        "Run the full M24 QA gate before external handoff."
+    ]
+}

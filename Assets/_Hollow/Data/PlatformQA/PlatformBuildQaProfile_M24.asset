@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32aa2a7db284e4b2e93ee35d99ad1d0e, type: 3}
+  m_Name: PlatformBuildQaProfile_M24
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlatformBuildQaProfileDefinition
+  id: 
+  displayName: 
+  notes: 
+  prototypeVersion: Hollow Soul Unity M24 Platform Build QA
+  buildRoot: output/builds
+  reportRoot: output/reports
+  windowsBuildFolderName: HollowSoul_M24_Windows
+  windowsExecutableName: HollowSoul
+  latestQaJsonFileName: latest_platform_build_qa.json
+  latestQaMarkdownFileName: latest_platform_build_qa.md
+  requireAddressablesBuild: 1
+  allowEnvironmentBlocks: 1
+  requiredScenes:
+  - Assets/_Hollow/Scenes/Boot.unity
+  - Assets/_Hollow/Scenes/MainMenu.unity
+  - Assets/_Hollow/Scenes/Game_Windows.unity
+  - Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity
+  - Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity
+  - Assets/_Hollow/Scenes/RoomDesigner.unity
+  validationTypes:
+  - Hollow.Editor.Validation.Milestone0Validator
+  - Hollow.Editor.Validation.Milestone1Validator
+  - Hollow.Editor.Validation.Milestone2Validator
+  - Hollow.Editor.Validation.Milestone3Validator
+  - Hollow.Editor.Validation.Milestone4Validator
+  - Hollow.Editor.Validation.Milestone5Validator
+  - Hollow.Editor.Validation.Milestone6Validator
+  - Hollow.Editor.Validation.Milestone7Validator
+  - Hollow.Editor.Validation.Milestone8Validator
+  - Hollow.Editor.Validation.Milestone9Validator
+  - Hollow.Editor.Validation.Milestone10Validator
+  - Hollow.Editor.Validation.Milestone11Validator
+  - Hollow.Editor.Validation.Milestone12Validator
+  - Hollow.Editor.Validation.Milestone13Validator
+  - Hollow.Editor.Validation.Milestone14Validator
+  - Hollow.Editor.Validation.Milestone15Validator
+  - Hollow.Editor.Validation.Milestone16Validator
+  - Hollow.Editor.Validation.Milestone17Validator
+  - Hollow.Editor.Validation.Milestone18Validator
+  - Hollow.Editor.Validation.Milestone19Validator
+  - Hollow.Editor.Validation.Milestone20Validator
+  - Hollow.Editor.Validation.Milestone21Validator
+  - Hollow.Editor.Validation.Milestone22Validator
+  - Hollow.Editor.Validation.Milestone23Validator
+  performanceBudget: {fileID: 11400000, guid: c0102fe80b0b446719752b51221d64b8, type: 2}
+  buildAutomationProfile: {fileID: 11400000, guid: a7d8b2b2769264700a7fcaba2d8b0d51, type: 2}

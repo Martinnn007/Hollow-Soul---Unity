@@ -306,6 +306,13 @@ MonoBehaviour:
     - hollow.build-automation
     - hollow.data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: acc6557c88e434f79b998f6ceae33be0
+    m_Address: hollow.platform_qa.m24
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    - hollow.platform-qa
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: afbe4414f6d324727888a80276bf4122
     m_Address: hollow.material.RoomOriginMarker
     m_ReadOnly: 0

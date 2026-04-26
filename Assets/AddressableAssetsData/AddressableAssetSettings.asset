@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 6bb6ed976175f40b09a242d3039124e1
   m_currentHash:
     serializedVersion: 2
-    Hash: 66d8bc821456c1484e8ca602091814c5
+    Hash: 00000000000000000000000000000000
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -119,6 +119,7 @@ MonoBehaviour:
     - hollow.artpass.materials
     - hollow.artpass.vfx
     - hollow.artpass.audio
+    - hollow.platform-qa
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: b408fb567075246ccac49508ba370c67, type: 2}

@@ -5,7 +5,12 @@
     "Hollow.Core",
     "Hollow.Data",
     "Hollow.Platform",
-    "Hollow.Input"
+    "Hollow.Input",
+    "Hollow.Presentation",
+    "Hollow.Rooms",
+    "Hollow.World",
+    "Hollow.UI",
+    "Hollow.RoomDesigner"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
