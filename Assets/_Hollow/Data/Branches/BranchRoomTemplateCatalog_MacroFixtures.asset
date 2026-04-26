@@ -20,4 +20,5 @@ MonoBehaviour:
   tall1x2: {fileID: 4900000, guid: 531eb5c6fae914b0c9151034cd96828f, type: 3}
   block2x2: {fileID: 4900000, guid: 17abfebaa175c498bae028f31af8d92d, type: 3}
   l3Cell: {fileID: 4900000, guid: 4aaf4479fb1ad40f39a1af10e8544a93, type: 3}
+  additionalTemplates: []
   defaultSeed: 14001

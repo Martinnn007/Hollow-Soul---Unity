@@ -70,14 +70,16 @@ namespace Hollow.Branches
             var resolvedSeed = seed == 0 ? settings.DefaultSeed : seed;
             var random = new System.Random(resolvedSeed);
             var roomPool = content.MacroRoomPool;
+            var fixturePool = content.FixtureRoomPool;
+            var candidatesByShape = BuildCandidatesByShape(roomPool.Values);
             var fixtureIds = settings.AllowedFixtureIds
-                .Where(id => roomPool.ContainsKey(id))
+                .Where(id => fixturePool.ContainsKey(id))
                 .Distinct()
                 .OrderBy(id => id)
                 .ToList();
             if (fixtureIds.Count == 0)
             {
-                fixtureIds = roomPool.Keys.OrderBy(id => id).ToList();
+                fixtureIds = fixturePool.Keys.OrderBy(id => id).ToList();
             }
 
             var targetRoomCount = Mathf.Max(2, settings.TargetRoomCount);
@@ -85,7 +87,8 @@ namespace Hollow.Branches
             var usedPortsByTempIndex = new Dictionary<int, HashSet<string>>();
             var occupiedCells = new HashSet<Vector2Int>();
 
-            var originAsset = RequireRoom(roomPool, "combat_macro_single_1x1");
+            var originFallback = RequireRoom(fixturePool, "combat_macro_single_1x1");
+            var originAsset = ChooseCandidateForShape(candidatesByShape, originFallback, random);
             var origin = new PlacementRecord(0, originAsset, Vector2Int.zero, PlaceFootprint(originAsset.Footprint, Vector2Int.zero));
             records.Add(origin);
             usedPortsByTempIndex[0] = new HashSet<string>();
@@ -93,7 +96,7 @@ namespace Hollow.Branches
 
             for (var tempIndex = 1; tempIndex < targetRoomCount; tempIndex++)
             {
-                if (!TryPlaceNextRecord(records, usedPortsByTempIndex, occupiedCells, roomPool, fixtureIds, random, settings.MaxPlacementAttempts, tempIndex, out var record))
+                if (!TryPlaceNextRecord(records, usedPortsByTempIndex, occupiedCells, fixturePool, candidatesByShape, fixtureIds, random, settings.MaxPlacementAttempts, tempIndex, out var record))
                 {
                     throw new InvalidOperationException($"M15 seeded macro branch generation failed to place room {tempIndex} after {settings.MaxPlacementAttempts} attempts.");
                 }
@@ -145,7 +148,8 @@ namespace Hollow.Branches
             IReadOnlyList<PlacementRecord> records,
             IReadOnlyDictionary<int, HashSet<string>> usedPortsByTempIndex,
             HashSet<Vector2Int> occupiedCells,
-            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> roomPool,
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> fixturePool,
+            IReadOnlyDictionary<RoomFootprintShape, IReadOnlyList<ImportedRoomRuntimeAsset>> candidatesByShape,
             IReadOnlyList<string> fixtureIds,
             System.Random random,
             int maxAttempts,
@@ -165,7 +169,8 @@ namespace Hollow.Branches
                 }
 
                 var parentPort = parentPorts[random.Next(parentPorts.Count)];
-                var childAsset = roomPool[fixtureIds[random.Next(fixtureIds.Count)]];
+                var childFallback = fixturePool[fixtureIds[random.Next(fixtureIds.Count)]];
+                var childAsset = ChooseCandidateForShape(candidatesByShape, childFallback, random);
                 var childPorts = childAsset.DoorPorts
                     .Where(port => port.Direction == Opposite(parentPort.Direction))
                     .OrderBy(_ => random.Next())
@@ -199,6 +204,33 @@ namespace Hollow.Branches
 
             record = null;
             return false;
+        }
+
+        private static IReadOnlyDictionary<RoomFootprintShape, IReadOnlyList<ImportedRoomRuntimeAsset>> BuildCandidatesByShape(IEnumerable<ImportedRoomRuntimeAsset> assets)
+        {
+            return (assets ?? Enumerable.Empty<ImportedRoomRuntimeAsset>())
+                .Where(asset => asset != null && RoomFootprintShapeUtility.IsSupported(asset.Footprint))
+                .GroupBy(asset => RoomFootprintShapeUtility.Classify(asset.Footprint))
+                .ToDictionary(
+                    group => group.Key,
+                    group => (IReadOnlyList<ImportedRoomRuntimeAsset>)group.OrderBy(asset => asset.Id).ToArray());
+        }
+
+        private static ImportedRoomRuntimeAsset ChooseCandidateForShape(
+            IReadOnlyDictionary<RoomFootprintShape, IReadOnlyList<ImportedRoomRuntimeAsset>> candidatesByShape,
+            ImportedRoomRuntimeAsset fallback,
+            System.Random random)
+        {
+            var shape = RoomFootprintShapeUtility.Classify(fallback?.Footprint);
+            if (shape == RoomFootprintShape.Unsupported ||
+                candidatesByShape == null ||
+                !candidatesByShape.TryGetValue(shape, out var candidates) ||
+                candidates.Count == 0)
+            {
+                return fallback;
+            }
+
+            return candidates.Count == 1 ? candidates[0] : candidates[random.Next(candidates.Count)];
         }
 
         private static Dictionary<int, BranchRoomId> AssignRoomIds(IReadOnlyList<PlacementRecord> records, int bossTempIndex)
