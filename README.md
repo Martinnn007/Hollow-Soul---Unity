@@ -27,6 +27,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone16ApprovedDesignerRoomPool.md` describes the approved Room Designer JSON intake folder and additive branch room pool.
 - `Docs/Milestone17FeatureBranchTreasureRooms.md` describes the first special feature-room role, treasure-room auto-clear behavior, and M17 branch identity.
 - `Docs/Milestone18SeededRandomRewards.md` describes seeded automatic reward pools, role-specific reward rolls, and reward effect persistence.
+- `Docs/Milestone19EnemyEncounterContent.md` describes seeded encounter tables and the first distinct enemy behavior content pass.
 
 ## Required Setup
 

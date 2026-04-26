@@ -147,4 +147,5 @@ MonoBehaviour:
   contactCooldownSeconds: 1
   radiusMeters: 0.32
   archetypeId: 0
+  behaviorId: 0
   movementMode: 0

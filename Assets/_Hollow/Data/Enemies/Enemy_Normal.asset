@@ -15,10 +15,19 @@ MonoBehaviour:
   spawnKind: spawnEnemyNormal
   displayName: Normal Chaser
   archetypeId: 0
+  behaviorId: 0
   movementMode: 0
   maxHealth: 3
   speedMetersPerSecond: 1.5
   contactDamage: 1
   contactCooldownSeconds: 1
   radiusMeters: 0.32
+  attackRangeMeters: 4
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 4
+  chargeSpeedMetersPerSecond: 4
+  chargeCooldownSeconds: 2
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
   color: {r: 0.85, g: 0.16, b: 0.14, a: 1}

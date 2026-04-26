@@ -17,6 +17,6 @@ MonoBehaviour:
   notes: 
   cueId: 7
   prefab: {fileID: 0}
-  debugColor: {r: 0.25, g: 1, b: 0.92, a: 1}
+  debugColor: {r: 0.42, g: 0.39, b: 0.34, a: 1}
   debugScale: 0.16
   createDebugPrimitive: 1

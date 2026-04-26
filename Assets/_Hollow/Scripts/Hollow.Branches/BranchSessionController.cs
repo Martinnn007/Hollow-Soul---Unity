@@ -29,6 +29,7 @@ namespace Hollow.Branches
         [SerializeField] private RewardPoolDefinition standardRewardPool;
         [SerializeField] private RewardPoolDefinition treasureRewardPool;
         [SerializeField] private RewardPoolDefinition bossRewardPool;
+        [SerializeField] private EncounterCatalogDefinition encounterCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
         private ImportedRoomRuntimeAsset roomAsset;
@@ -41,6 +42,7 @@ namespace Hollow.Branches
         private RunEconomy runEconomy = new();
         private PlayerRunStats playerRunStats = new();
         private ProceduralRewardPlan proceduralRewardPlan = ProceduralRewardPlan.Empty;
+        private EncounterPlan encounterPlan = EncounterPlan.Empty;
         private IRunSaveStore runSaveStore;
         private ProfileSlotId activeProfileSlotId;
         private bool canPersist;
@@ -85,6 +87,8 @@ namespace Hollow.Branches
 
         public RewardPoolDefinition BossRewardPool => bossRewardPool;
 
+        public EncounterCatalogDefinition EncounterCatalog => encounterCatalog;
+
         public int MacroBranchSeed => macroBranchSeed;
 
         public void Configure(GameObject nextRewardPickupPrefab, GameObject nextHubReturnPortalPrefab)
@@ -113,6 +117,11 @@ namespace Hollow.Branches
             standardRewardPool = standardPool;
             treasureRewardPool = treasurePool;
             bossRewardPool = bossPool;
+        }
+
+        public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
+        {
+            encounterCatalog = nextEncounterCatalog;
         }
 
         public void Initialize(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState)
@@ -155,6 +164,7 @@ namespace Hollow.Branches
             activeRunCompletedOrFailed = false;
             State = BranchSessionState.Create(CreateFreshGraph());
             proceduralRewardPlan = CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
+            encounterPlan = CreateEncounterPlanForGraph(State.Graph);
             LoadCurrentRoom();
             CheckpointActiveRun();
         }
@@ -170,6 +180,7 @@ namespace Hollow.Branches
             runEconomy = RunEconomy.FromSaveState(snapshot?.economy);
             playerRunStats = PlayerRunStats.FromSaveState(snapshot?.playerStats);
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
+            encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
             activeRunCompletedOrFailed = false;
             State = BranchSessionState.Create(CreateGraphForSnapshot(snapshot));
@@ -178,6 +189,10 @@ namespace Hollow.Branches
                 proceduralRewardPlan = CreateRewardPlanForGraph(
                     State.Graph,
                     legacyFallback: snapshot?.branchId == BranchGenerator.SeededMacroBranchId);
+            }
+            if (State.Graph.BranchId == BranchGenerator.EnemyEncounterBranchId && !encounterPlan.Assignments.Any())
+            {
+                encounterPlan = CreateEncounterPlanForGraph(State.Graph);
             }
             RestoreBranchRooms(snapshot);
             State.RestoreCurrentRoom(new BranchRoomId(snapshot?.currentRoomId ?? BranchRoomId.Origin.Value));
@@ -297,7 +312,8 @@ namespace Hollow.Branches
                 roomRuntimeRoot,
                 playerController,
                 State.CurrentRoom.IsCleared,
-                State.CurrentRoom.Role == BranchRoomRole.Boss ? RoomCombatEncounterKind.Boss : RoomCombatEncounterKind.Standard);
+                State.CurrentRoom.Role == BranchRoomRole.Boss ? RoomCombatEncounterKind.Boss : RoomCombatEncounterKind.Standard,
+                CreateEncounterContextForCurrentRoom());
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
@@ -507,6 +523,11 @@ namespace Hollow.Branches
                 {
                     try
                     {
+                        if (encounterCatalog != null)
+                        {
+                            return BranchGenerator.CreateSeededEncounterBranch(branchContent, branchGenerationSettings, macroBranchSeed);
+                        }
+
                         return branchGenerationSettings.EnableTreasureLeaf
                             ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, macroBranchSeed)
                             : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, macroBranchSeed);
@@ -525,6 +546,17 @@ namespace Hollow.Branches
 
         private BranchFloorGraph CreateGraphForSnapshot(RunSaveSnapshot snapshot)
         {
+            if (snapshot != null &&
+                snapshot.branchId == BranchGenerator.EnemyEncounterBranchId &&
+                branchContent != null &&
+                branchContent.HasMacroFixturePool)
+            {
+                return BranchGenerator.CreateSeededEncounterBranch(
+                    branchContent,
+                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+            }
+
             if (snapshot != null &&
                 snapshot.branchId == BranchGenerator.FeatureBranchId &&
                 branchContent != null &&
@@ -562,7 +594,9 @@ namespace Hollow.Branches
 
         private static bool IsProceduralRewardBranch(string branchId)
         {
-            return branchId == BranchGenerator.SeededMacroBranchId || branchId == BranchGenerator.FeatureBranchId;
+            return branchId == BranchGenerator.SeededMacroBranchId ||
+                   branchId == BranchGenerator.FeatureBranchId ||
+                   branchId == BranchGenerator.EnemyEncounterBranchId;
         }
 
         private ProceduralRewardPlan CreateRewardPlanForGraph(BranchFloorGraph graph, bool legacyFallback)
@@ -587,6 +621,24 @@ namespace Hollow.Branches
             return grant.Souls > 0
                 ? $"Received: {grant.DisplayName} (+{grant.Souls} souls)"
                 : $"Received: {grant.DisplayName}";
+        }
+
+        private EncounterPlan CreateEncounterPlanForGraph(BranchFloorGraph graph)
+        {
+            return graph != null && graph.BranchId == BranchGenerator.EnemyEncounterBranchId
+                ? EncounterResolver.CreateSeededPlan(graph, encounterCatalog, graph.Seed)
+                : EncounterPlan.Empty;
+        }
+
+        private RoomCombatEncounterContext CreateEncounterContextForCurrentRoom()
+        {
+            if (State?.CurrentRoomId == null ||
+                !encounterPlan.TryResolve(State.CurrentRoomId.Value, out var assignment))
+            {
+                return RoomCombatEncounterContext.Empty;
+            }
+
+            return new RoomCombatEncounterContext(assignment.EncounterId, assignment.EnemySpawnKinds);
         }
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()
@@ -696,6 +748,7 @@ namespace Hollow.Branches
                 platformKind = gameSessionState?.PlatformKind.ToString() ?? string.Empty,
                 playerCurrentHealth = roomCombatController?.PlayerHealth != null ? roomCombatController.PlayerHealth.CurrentHealth : RoomCombatController.PlayerMaxHealth,
                 proceduralRewardPlan = proceduralRewardPlan.ToSaveState(),
+                encounterPlan = encounterPlan.ToSaveState(),
                 economy = runEconomy.ToSaveState(),
                 playerStats = playerRunStats.ToSaveState()
             };

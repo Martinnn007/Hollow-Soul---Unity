@@ -90,6 +90,16 @@ namespace Hollow.Combat
 
         public void BeginRoom(RoomRuntimeRoot room, PlaceholderPlayerController player, bool alreadyCleared, RoomCombatEncounterKind encounterKind)
         {
+            BeginRoom(room, player, alreadyCleared, encounterKind, RoomCombatEncounterContext.Empty);
+        }
+
+        public void BeginRoom(
+            RoomRuntimeRoot room,
+            PlaceholderPlayerController player,
+            bool alreadyCleared,
+            RoomCombatEncounterKind encounterKind,
+            RoomCombatEncounterContext encounterContext)
+        {
             roomRuntimeRoot = room;
             playerController = player;
             if (roomRuntimeRoot == null || playerController == null)
@@ -124,10 +134,10 @@ namespace Hollow.Combat
 
             if (encounterKind == RoomCombatEncounterKind.Boss)
             {
-                var boss = EnemySpawnService.SpawnBoss(roomRuntimeRoot, playerController.transform.parent, enemyPrefab, playerController, enemyCatalog, difficultyTier, diagnostics);
+                var boss = EnemySpawnService.SpawnBoss(roomRuntimeRoot, playerController.transform.parent, enemyPrefab, projectilePrefab, playerController, enemyCatalog, difficultyTier, diagnostics);
                 if (boss != null)
                 {
-                    enemies.Add(boss);
+                    RegisterEnemy(boss);
                 }
             }
             else
@@ -136,11 +146,16 @@ namespace Hollow.Combat
                     roomRuntimeRoot,
                     playerController.transform.parent,
                     enemyPrefab,
+                    projectilePrefab,
                     playerController,
                     enemyCatalog,
                     difficultyTier,
-                    diagnostics));
-                enemies.AddRange(spawnResult.Enemies);
+                    diagnostics,
+                    encounterContext));
+                foreach (var enemy in spawnResult.Enemies)
+                {
+                    RegisterEnemy(enemy);
+                }
             }
 
             ObjectiveState = RoomObjectiveState.InCombat;
@@ -203,6 +218,24 @@ namespace Hollow.Combat
             return enemies.Count(enemy => enemy != null && enemy.IsAlive);
         }
 
+        private void RegisterEnemy(EnemyRuntimeController enemy)
+        {
+            if (enemy == null || enemies.Contains(enemy))
+            {
+                return;
+            }
+
+            enemy.SpawnedChild -= OnEnemySpawnedChild;
+            enemy.SpawnedChild += OnEnemySpawnedChild;
+            enemies.Add(enemy);
+            diagnostics.SetEnemyCounts(enemies);
+        }
+
+        private void OnEnemySpawnedChild(EnemyRuntimeController child)
+        {
+            RegisterEnemy(child);
+        }
+
         private void ResolveReferences()
         {
             if (roomRuntimeRoot == null)
@@ -246,6 +279,14 @@ namespace Hollow.Combat
             }
 
             foreach (var projectile in parent.GetComponentsInChildren<ProjectileController>(includeInactive: true))
+            {
+                if (projectile != null && projectile.gameObject.activeInHierarchy)
+                {
+                    DestroyRuntimeObject(projectile.gameObject);
+                }
+            }
+
+            foreach (var projectile in parent.GetComponentsInChildren<EnemyProjectileController>(includeInactive: true))
             {
                 if (projectile != null && projectile.gameObject.activeInHierarchy)
                 {

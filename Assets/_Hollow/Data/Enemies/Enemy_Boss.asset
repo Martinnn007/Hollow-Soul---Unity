@@ -15,10 +15,19 @@ MonoBehaviour:
   spawnKind: spawnEnemyBoss
   displayName: Stone Warden
   archetypeId: 4
+  behaviorId: 5
   movementMode: 0
   maxHealth: 14
   speedMetersPerSecond: 0.75
   contactDamage: 2
   contactCooldownSeconds: 1
   radiusMeters: 0.55
+  attackRangeMeters: 6
+  attackCooldownSeconds: 1.35
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 4.5
+  chargeSpeedMetersPerSecond: 4.5
+  chargeCooldownSeconds: 2.4
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
   color: {r: 0.42, g: 0.34, b: 0.28, a: 1}

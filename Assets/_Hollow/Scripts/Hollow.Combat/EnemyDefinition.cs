@@ -7,12 +7,21 @@ namespace Hollow.Combat
         [SerializeField] private string spawnKind = "spawnEnemyNormal";
         [SerializeField] private string displayName = "Normal Chaser";
         [SerializeField] private EnemyArchetypeId archetypeId = EnemyArchetypeId.Normal;
+        [SerializeField] private EnemyBehaviorId behaviorId = EnemyBehaviorId.Chaser;
         [SerializeField] private EnemyMovementMode movementMode = EnemyMovementMode.Grounded;
         [SerializeField] private int maxHealth = 3;
         [SerializeField] private float speedMetersPerSecond = 1.5f;
         [SerializeField] private int contactDamage = 1;
         [SerializeField] private float contactCooldownSeconds = 1f;
         [SerializeField] private float radiusMeters = 0.32f;
+        [SerializeField] private float attackRangeMeters = 5f;
+        [SerializeField] private float attackCooldownSeconds = 1.4f;
+        [SerializeField] private int projectileDamage = 1;
+        [SerializeField] private float projectileSpeedMetersPerSecond = 5f;
+        [SerializeField] private float chargeSpeedMetersPerSecond = 5f;
+        [SerializeField] private float chargeCooldownSeconds = 2.25f;
+        [SerializeField] private string splitSpawnKind = "spawnEnemyNormal";
+        [SerializeField] private int splitCount;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -20,6 +29,8 @@ namespace Hollow.Combat
         public string DisplayName => displayName;
 
         public EnemyArchetypeId ArchetypeId => archetypeId;
+
+        public EnemyBehaviorId BehaviorId => behaviorId;
 
         public EnemyMovementMode MovementMode => movementMode;
 
@@ -32,6 +43,22 @@ namespace Hollow.Combat
         public float ContactCooldownSeconds => contactCooldownSeconds;
 
         public float RadiusMeters => radiusMeters;
+
+        public float AttackRangeMeters => attackRangeMeters;
+
+        public float AttackCooldownSeconds => attackCooldownSeconds;
+
+        public int ProjectileDamage => projectileDamage;
+
+        public float ProjectileSpeedMetersPerSecond => projectileSpeedMetersPerSecond;
+
+        public float ChargeSpeedMetersPerSecond => chargeSpeedMetersPerSecond;
+
+        public float ChargeCooldownSeconds => chargeCooldownSeconds;
+
+        public string SplitSpawnKind => splitSpawnKind;
+
+        public int SplitCount => splitCount;
 
         public Color Color => color;
 
@@ -47,15 +74,67 @@ namespace Hollow.Combat
             float nextRadiusMeters,
             Color nextColor)
         {
+            Configure(
+                nextSpawnKind,
+                nextDisplayName,
+                nextArchetypeId,
+                DefaultBehaviorFor(nextArchetypeId, nextMovementMode),
+                nextMovementMode,
+                nextMaxHealth,
+                nextSpeedMetersPerSecond,
+                nextContactDamage,
+                nextContactCooldownSeconds,
+                nextRadiusMeters,
+                nextAttackRangeMeters: 5f,
+                nextAttackCooldownSeconds: 1.4f,
+                nextProjectileDamage: 1,
+                nextProjectileSpeedMetersPerSecond: 5f,
+                nextChargeSpeedMetersPerSecond: 5f,
+                nextChargeCooldownSeconds: 2.25f,
+                nextSplitSpawnKind: "spawnEnemyNormal",
+                nextSplitCount: 0,
+                nextColor);
+        }
+
+        public void Configure(
+            string nextSpawnKind,
+            string nextDisplayName,
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode,
+            int nextMaxHealth,
+            float nextSpeedMetersPerSecond,
+            int nextContactDamage,
+            float nextContactCooldownSeconds,
+            float nextRadiusMeters,
+            float nextAttackRangeMeters,
+            float nextAttackCooldownSeconds,
+            int nextProjectileDamage,
+            float nextProjectileSpeedMetersPerSecond,
+            float nextChargeSpeedMetersPerSecond,
+            float nextChargeCooldownSeconds,
+            string nextSplitSpawnKind,
+            int nextSplitCount,
+            Color nextColor)
+        {
             spawnKind = nextSpawnKind;
             displayName = nextDisplayName;
             archetypeId = nextArchetypeId;
+            behaviorId = nextBehaviorId;
             movementMode = nextMovementMode;
             maxHealth = Mathf.Max(1, nextMaxHealth);
             speedMetersPerSecond = Mathf.Max(0f, nextSpeedMetersPerSecond);
             contactDamage = Mathf.Max(0, nextContactDamage);
             contactCooldownSeconds = Mathf.Max(0.01f, nextContactCooldownSeconds);
             radiusMeters = Mathf.Max(0.01f, nextRadiusMeters);
+            attackRangeMeters = Mathf.Max(0.1f, nextAttackRangeMeters);
+            attackCooldownSeconds = Mathf.Max(0.05f, nextAttackCooldownSeconds);
+            projectileDamage = Mathf.Max(0, nextProjectileDamage);
+            projectileSpeedMetersPerSecond = Mathf.Max(0.1f, nextProjectileSpeedMetersPerSecond);
+            chargeSpeedMetersPerSecond = Mathf.Max(0f, nextChargeSpeedMetersPerSecond);
+            chargeCooldownSeconds = Mathf.Max(0.05f, nextChargeCooldownSeconds);
+            splitSpawnKind = string.IsNullOrWhiteSpace(nextSplitSpawnKind) ? "spawnEnemyNormal" : nextSplitSpawnKind;
+            splitCount = Mathf.Max(0, nextSplitCount);
             color = nextColor;
         }
 
@@ -82,8 +161,37 @@ namespace Hollow.Combat
         public static EnemyDefinition CreateRuntimeBoss()
         {
             var definition = CreateRuntime("spawnEnemyBoss", "Stone Warden", EnemyArchetypeId.Boss, EnemyMovementMode.Grounded, 14, 0.75f, 2, new Color(0.42f, 0.34f, 0.28f, 1f));
-            definition.Configure("spawnEnemyBoss", "Stone Warden", EnemyArchetypeId.Boss, EnemyMovementMode.Grounded, 14, 0.75f, 2, 1f, 0.55f, new Color(0.42f, 0.34f, 0.28f, 1f));
+            definition.Configure(
+                "spawnEnemyBoss",
+                "Stone Warden",
+                EnemyArchetypeId.Boss,
+                EnemyBehaviorId.BossWarden,
+                EnemyMovementMode.Grounded,
+                14,
+                0.75f,
+                2,
+                1f,
+                0.55f,
+                6f,
+                1.35f,
+                1,
+                4.5f,
+                4.5f,
+                2.4f,
+                "spawnEnemyNormal",
+                0,
+                new Color(0.42f, 0.34f, 0.28f, 1f));
             return definition;
+        }
+
+        private static EnemyBehaviorId DefaultBehaviorFor(EnemyArchetypeId nextArchetypeId, EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return EnemyBehaviorId.BossWarden;
+            }
+
+            return nextMovementMode == EnemyMovementMode.Flying ? EnemyBehaviorId.FlyingChaser : EnemyBehaviorId.Chaser;
         }
     }
 }

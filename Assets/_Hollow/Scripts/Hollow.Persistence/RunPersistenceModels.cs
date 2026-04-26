@@ -15,6 +15,7 @@ namespace Hollow.Persistence
         public long savedAtUtcTicks;
         public List<BranchRoomSaveState> rooms = new();
         public List<RunRewardSaveState> proceduralRewardPlan = new();
+        public List<RoomEncounterSaveState> encounterPlan = new();
         public RunEconomySaveState economy = new();
         public PlayerRunStatsSaveState playerStats = new();
     }
@@ -47,6 +48,14 @@ namespace Hollow.Persistence
         public string kind = string.Empty;
         public int intValue;
         public float floatValue;
+    }
+
+    [Serializable]
+    public sealed class RoomEncounterSaveState
+    {
+        public string roomId = string.Empty;
+        public string encounterId = string.Empty;
+        public List<string> enemySpawnKinds = new();
     }
 
     [Serializable]

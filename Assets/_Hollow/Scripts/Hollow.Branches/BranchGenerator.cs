@@ -13,6 +13,7 @@ namespace Hollow.Branches
         public const string MacroFixtureBranchId = "m14_macro_fixture_branch_v1";
         public const string SeededMacroBranchId = "m15_seeded_macro_branch_v1";
         public const string FeatureBranchId = "m17_feature_branch_v1";
+        public const string EnemyEncounterBranchId = "m19_enemy_encounter_content_v1";
         public const int DefaultMacroFixtureSeed = 14001;
         public const int DefaultSeededMacroSeed = 15001;
 
@@ -85,6 +86,22 @@ namespace Hollow.Branches
             }
 
             return CreateSeededBranch(content, settings, seed, FeatureBranchId, enableTreasureLeaf: true, milestoneLabel: "M17");
+        }
+
+        public static BranchFloorGraph CreateSeededEncounterBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
+        {
+            if (content == null || !content.HasMacroFixturePool)
+            {
+                throw new InvalidOperationException("Seeded encounter branch generation requires a complete macro room pool.");
+            }
+
+            settings = settings != null ? settings : BranchGenerationSettingsDefinition.CreateRuntimeDefault();
+            if (settings.AllowLoops)
+            {
+                throw new InvalidOperationException("M19 seeded encounter branch generation does not support loops.");
+            }
+
+            return CreateSeededBranch(content, settings, seed, EnemyEncounterBranchId, enableTreasureLeaf: true, milestoneLabel: "M19");
         }
 
         private static BranchFloorGraph CreateSeededBranch(

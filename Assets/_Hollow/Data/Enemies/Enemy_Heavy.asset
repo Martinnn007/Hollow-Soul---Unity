@@ -15,10 +15,19 @@ MonoBehaviour:
   spawnKind: spawnEnemyHeavy
   displayName: Heavy Chaser
   archetypeId: 3
+  behaviorId: 0
   movementMode: 0
   maxHealth: 6
   speedMetersPerSecond: 0.9
   contactDamage: 2
-  contactCooldownSeconds: 1
-  radiusMeters: 0.32
+  contactCooldownSeconds: 1.1
+  radiusMeters: 0.42
+  attackRangeMeters: 4
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 4
+  chargeSpeedMetersPerSecond: 4
+  chargeCooldownSeconds: 2
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
   color: {r: 0.62, g: 0.22, b: 0.82, a: 1}
