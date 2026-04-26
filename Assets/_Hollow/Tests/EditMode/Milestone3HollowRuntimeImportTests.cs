@@ -83,6 +83,7 @@ namespace Hollow.Tests.EditMode
                     if (collider.name.StartsWith("rockTile.", StringComparison.Ordinal))
                     {
                         Assert.IsTrue(collider.enabled);
+                        Assert.AreEqual(0f, collider.transform.localPosition.y - collider.transform.localScale.y * 0.5f, 0.0001f);
                     }
                 }
             }

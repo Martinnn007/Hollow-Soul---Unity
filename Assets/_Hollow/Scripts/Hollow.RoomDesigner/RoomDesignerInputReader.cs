@@ -11,8 +11,8 @@ namespace Hollow.RoomDesigner
             var keyboard = Keyboard.current;
             var gamepad = Gamepad.current;
 
-            var moveX = Pressed(keyboard?.dKey, keyboard?.rightArrowKey) ? 1 : Pressed(keyboard?.aKey, keyboard?.leftArrowKey) ? -1 : 0;
-            var moveZ = Pressed(keyboard?.wKey, keyboard?.upArrowKey) ? -1 : Pressed(keyboard?.sKey, keyboard?.downArrowKey) ? 1 : 0;
+            var moveX = Held(keyboard?.dKey, keyboard?.rightArrowKey) ? 1 : Held(keyboard?.aKey, keyboard?.leftArrowKey) ? -1 : 0;
+            var moveZ = Held(keyboard?.wKey, keyboard?.upArrowKey) ? 1 : Held(keyboard?.sKey, keyboard?.downArrowKey) ? -1 : 0;
             var toolDelta = Pressed(keyboard?.eKey) ? 1 : Pressed(keyboard?.qKey) ? -1 : 0;
             var layerDelta = Pressed(keyboard?.xKey) ? 1 : Pressed(keyboard?.zKey) ? -1 : 0;
 
@@ -46,6 +46,19 @@ namespace Hollow.RoomDesigner
             foreach (var key in keys)
             {
                 if (key?.wasPressedThisFrame == true)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool Held(params KeyControl[] keys)
+        {
+            foreach (var key in keys)
+            {
+                if (key?.isPressed == true)
                 {
                     return true;
                 }

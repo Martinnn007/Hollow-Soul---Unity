@@ -26,14 +26,7 @@ namespace Hollow.RoomDesigner
 
         public IReadOnlyList<RoomDesignerProject> LoadDrafts(ProfileSlotId slotId)
         {
-            var slotDirectory = SlotDirectory(slotId);
-            Directory.CreateDirectory(slotDirectory);
-            var drafts = Directory.GetFiles(slotDirectory, "*.roomdesigner.json")
-                .Select(ReadProject)
-                .Where(project => project != null)
-                .OrderByDescending(project => project.updatedAtUtcTicks)
-                .ToList();
-
+            var drafts = LoadExistingDrafts(slotId);
             if (drafts.Count > 0)
             {
                 return drafts;
@@ -42,6 +35,17 @@ namespace Hollow.RoomDesigner
             var defaultDraft = RoomDesignerProject.CreateDefault();
             SaveDraft(slotId, defaultDraft);
             return new[] { defaultDraft };
+        }
+
+        public IReadOnlyList<RoomDesignerProject> LoadExistingDrafts(ProfileSlotId slotId)
+        {
+            var slotDirectory = SlotDirectory(slotId);
+            Directory.CreateDirectory(slotDirectory);
+            return Directory.GetFiles(slotDirectory, "*.roomdesigner.json")
+                .Select(ReadProject)
+                .Where(project => project != null)
+                .OrderByDescending(project => project.updatedAtUtcTicks)
+                .ToList();
         }
 
         public RoomDesignerProject SaveDraft(ProfileSlotId slotId, RoomDesignerProject project)

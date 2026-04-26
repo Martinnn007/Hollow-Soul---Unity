@@ -9,12 +9,19 @@ namespace Hollow.RoomDesigner
     {
         private readonly RoomDesignerStore store;
         private readonly ProfileSlotId slotId;
+        private readonly bool autoCreateDefaultDraft;
         private readonly List<RoomDesignerProject> drafts = new();
 
         public RoomDesignerDraftLibraryState(RoomDesignerStore store, ProfileSlotId slotId)
+            : this(store, slotId, autoCreateDefaultDraft: true)
+        {
+        }
+
+        public RoomDesignerDraftLibraryState(RoomDesignerStore store, ProfileSlotId slotId, bool autoCreateDefaultDraft)
         {
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             this.slotId = slotId;
+            this.autoCreateDefaultDraft = autoCreateDefaultDraft;
             Reload();
         }
 
@@ -59,7 +66,7 @@ namespace Hollow.RoomDesigner
         public void Reload(string preferredProjectId = null)
         {
             drafts.Clear();
-            drafts.AddRange(store.LoadDrafts(slotId));
+            drafts.AddRange(autoCreateDefaultDraft ? store.LoadDrafts(slotId) : store.LoadExistingDrafts(slotId));
             SelectedDraft = !string.IsNullOrWhiteSpace(preferredProjectId)
                 ? drafts.FirstOrDefault(draft => draft.projectId == preferredProjectId) ?? drafts.FirstOrDefault()
                 : drafts.FirstOrDefault();

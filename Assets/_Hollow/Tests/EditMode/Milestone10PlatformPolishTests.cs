@@ -102,6 +102,39 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void GameplayCameraFollowMovesRigOnTargetXZOnly()
+        {
+            var rigObject = new GameObject("GameplayCameraRig");
+            var cameraObject = new GameObject("Main Camera", typeof(Camera));
+            var playerObject = new GameObject("PlayerCharacter");
+            try
+            {
+                cameraObject.transform.SetParent(rigObject.transform, false);
+                cameraObject.transform.localPosition = new Vector3(0f, 7f, -10f);
+                cameraObject.transform.localRotation = Quaternion.Euler(35f, 0f, 0f);
+                rigObject.transform.position = new Vector3(0f, 1.25f, 0f);
+                playerObject.transform.position = new Vector3(4f, 0.4f, -3f);
+
+                var follow = rigObject.AddComponent<GameplayCameraFollowController>();
+                follow.Configure(playerObject.transform, Hollow.Platform.HollowPlatformKind.WindowsStandard3D);
+
+                Assert.AreEqual(new Vector3(4f, 1.25f, -3f), rigObject.transform.position);
+                Assert.AreEqual(new Vector3(0f, 7f, -10f), cameraObject.transform.localPosition);
+
+                playerObject.transform.position = new Vector3(-2f, 0.4f, 5f);
+                follow.ApplyImmediate();
+
+                Assert.AreEqual(new Vector3(-2f, 1.25f, 5f), rigObject.transform.position);
+                Assert.AreEqual(new Vector3(0f, 7f, -10f), cameraObject.transform.localPosition);
+            }
+            finally
+            {
+                Object.DestroyImmediate(rigObject);
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
         public void Milestone10ContentValidatorPassesGeneratedPipeline()
         {
             var report = ContentImportValidator.ValidateAll();

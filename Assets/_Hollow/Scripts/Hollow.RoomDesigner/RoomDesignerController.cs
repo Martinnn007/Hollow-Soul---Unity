@@ -7,6 +7,8 @@ using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace Hollow.RoomDesigner
@@ -19,22 +21,34 @@ namespace Hollow.RoomDesigner
         [SerializeField] private Canvas hudCanvas;
 
         private readonly RoomDesignerTool[] tools = Enum.GetValues(typeof(RoomDesignerTool)).Cast<RoomDesignerTool>().ToArray();
+        private readonly RoomDesignerFootprintPreset[] templatePresets = Enum.GetValues(typeof(RoomDesignerFootprintPreset)).Cast<RoomDesignerFootprintPreset>().ToArray();
+        private readonly RoomDesignerCameraController cameraController = new();
         private RoomDesignerStore store;
         private RoomDesignerDraftLibraryState libraryState;
         private ProfileSlotId slotId;
         private RoomDesignerProject currentProject;
         private Text hudText;
+        private RectTransform libraryPanel;
         private float nextMoveTime;
         private int toolIndex;
+        private int librarySelectedIndex;
+        private string pendingDeleteProjectId = string.Empty;
+        private string pendingDeleteDisplayName = string.Empty;
         private string status = "Ready";
+
+        public RoomDesignerMode Mode { get; private set; } = RoomDesignerMode.Loading;
 
         public RoomDesignerProject CurrentProject => currentProject;
 
         public RoomDesignerDraftLibraryState LibraryState => libraryState;
 
+        public RoomDesignerLibraryViewModel LibraryViewModel { get; private set; }
+
         public RoomDesignerValidationReport LastValidationReport { get; private set; }
 
         public RoomDesignerTool CurrentTool => tools[Mathf.Clamp(toolIndex, 0, tools.Length - 1)];
+
+        public Vector3 CameraTargetPosition => cameraController.TargetPosition;
 
         public int CursorX { get; private set; }
 
@@ -51,14 +65,13 @@ namespace Hollow.RoomDesigner
 
         public void Initialize()
         {
+            Mode = RoomDesignerMode.Loading;
             store = new RoomDesignerStore();
             slotId = ResolveSlotId();
-            libraryState = new RoomDesignerDraftLibraryState(store, slotId);
-            currentProject = libraryState.SelectedDraft;
-            SnapCursorToFootprint();
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false);
+            currentProject = null;
             EnsureRoots();
-            RebuildPreview();
-            RefreshHud();
+            ShowLibrary();
         }
 
         public void InitializeForTest(RoomDesignerStore nextStore, ProfileSlotId nextSlotId, RoomDesignerProject nextProject)
@@ -67,55 +80,185 @@ namespace Hollow.RoomDesigner
             slotId = nextSlotId;
             store.SaveDraft(slotId, nextProject);
             libraryState = new RoomDesignerDraftLibraryState(store, slotId);
-            currentProject = libraryState.OpenDraft(nextProject.projectId);
-            SnapCursorToFootprint();
             EnsureRoots();
-            RebuildPreview();
+            EnterEditing(libraryState.OpenDraft(nextProject.projectId));
+        }
+
+        public void InitializeLibraryForTest(RoomDesignerStore nextStore, ProfileSlotId nextSlotId)
+        {
+            store = nextStore;
+            slotId = nextSlotId;
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false);
+            currentProject = null;
+            EnsureRoots();
+            ShowLibrary();
+        }
+
+        public void ShowLibrary()
+        {
+            EnsureRoots();
+            Mode = RoomDesignerMode.Library;
+            pendingDeleteProjectId = string.Empty;
+            pendingDeleteDisplayName = string.Empty;
+            currentProject = null;
+            store ??= new RoomDesignerStore();
+            libraryState ??= new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false);
+            libraryState.Reload();
+            if (libraryState.Drafts.Count == 0)
+            {
+                ShowCreateTemplates();
+                return;
+            }
+
+            librarySelectedIndex = Mathf.Clamp(librarySelectedIndex, 0, Mathf.Max(0, libraryState.Drafts.Count - 1));
+            status = libraryState.LatestMessage;
+            ClearPreview();
             RefreshHud();
+            RefreshLibraryPanel();
+        }
+
+        public void ShowCreateTemplates()
+        {
+            EnsureRoots();
+            Mode = RoomDesignerMode.CreateTemplate;
+            currentProject = null;
+            librarySelectedIndex = Mathf.Clamp(librarySelectedIndex, 0, templatePresets.Length - 1);
+            pendingDeleteProjectId = string.Empty;
+            pendingDeleteDisplayName = string.Empty;
+            status = libraryState != null && libraryState.Drafts.Count == 0
+                ? "No drafts yet. Choose a template to create your first room."
+                : "Choose a room template.";
+            ClearPreview();
+            RefreshHud();
+            RefreshLibraryPanel();
         }
 
         public RoomDesignerProject CreateDraft(RoomDesignerFootprintPreset preset)
         {
-            libraryState ??= new RoomDesignerDraftLibraryState(store ?? new RoomDesignerStore(), slotId);
+            store ??= new RoomDesignerStore();
+            libraryState ??= new RoomDesignerDraftLibraryState(store, slotId);
             currentProject = libraryState.CreateDraft(preset);
-            CursorX = 0;
-            CursorZ = 0;
-            CursorLayer = 0;
-            SnapCursorToFootprint();
             status = libraryState.LatestMessage;
-            RebuildPreview();
-            RefreshHud();
+            EnterEditing(currentProject);
             return currentProject;
         }
 
         public RoomDesignerProject OpenDraft(string projectId)
         {
             currentProject = libraryState.OpenDraft(projectId);
-            SnapCursorToFootprint();
             status = libraryState.LatestMessage;
-            RebuildPreview();
-            RefreshHud();
+            EnterEditing(currentProject);
             return currentProject;
         }
 
         public RoomDesignerProject DuplicateDraft(string projectId)
         {
             currentProject = libraryState.DuplicateDraft(projectId);
-            SnapCursorToFootprint();
             status = libraryState.LatestMessage;
-            RebuildPreview();
-            RefreshHud();
+            EnterEditing(currentProject);
             return currentProject;
         }
 
         public RoomDesignerProject DeleteDraft(string projectId)
         {
             currentProject = libraryState.DeleteDraft(projectId);
-            SnapCursorToFootprint();
             status = libraryState.LatestMessage;
-            RebuildPreview();
-            RefreshHud();
+            if (currentProject != null)
+            {
+                EnterEditing(currentProject);
+            }
+            else
+            {
+                ShowCreateTemplates();
+            }
             return currentProject;
+        }
+
+        public void OpenSelectedDraft()
+        {
+            if (Mode != RoomDesignerMode.Library || libraryState == null || libraryState.Drafts.Count == 0)
+            {
+                return;
+            }
+
+            if (librarySelectedIndex == libraryState.Drafts.Count)
+            {
+                librarySelectedIndex = 0;
+                ShowCreateTemplates();
+                return;
+            }
+
+            if (librarySelectedIndex == libraryState.Drafts.Count + 1)
+            {
+                ReturnToMainMenu();
+                return;
+            }
+
+            var draftIndex = DraftIndexFromSelection();
+            if (draftIndex < 0)
+            {
+                ShowCreateTemplates();
+                return;
+            }
+
+            OpenDraft(libraryState.Drafts[draftIndex].projectId);
+        }
+
+        public void CreateDraftFromSelectedTemplate()
+        {
+            if (Mode == RoomDesignerMode.CreateTemplate && librarySelectedIndex >= templatePresets.Length)
+            {
+                if (libraryState != null && libraryState.Drafts.Count > 0)
+                {
+                    ShowLibrary();
+                }
+                else
+                {
+                    ReturnToMainMenu();
+                }
+
+                return;
+            }
+
+            var index = Mathf.Clamp(librarySelectedIndex, 0, templatePresets.Length - 1);
+            CreateDraft(templatePresets[index]);
+        }
+
+        public void RequestDeleteDraft()
+        {
+            if (Mode != RoomDesignerMode.Library || libraryState == null || libraryState.Drafts.Count == 0)
+            {
+                return;
+            }
+
+            var draftIndex = DraftIndexFromSelection();
+            if (draftIndex < 0)
+            {
+                return;
+            }
+
+            var draft = libraryState.Drafts[draftIndex];
+            pendingDeleteProjectId = draft.projectId;
+            pendingDeleteDisplayName = draft.displayName;
+            Mode = RoomDesignerMode.ConfirmDelete;
+            librarySelectedIndex = 0;
+            status = $"Delete {pendingDeleteDisplayName}?";
+            RefreshHud();
+            RefreshLibraryPanel();
+        }
+
+        public void ConfirmDeleteDraft()
+        {
+            if (Mode != RoomDesignerMode.ConfirmDelete || string.IsNullOrWhiteSpace(pendingDeleteProjectId))
+            {
+                return;
+            }
+
+            libraryState.DeleteDraft(pendingDeleteProjectId);
+            librarySelectedIndex = 0;
+            pendingDeleteProjectId = string.Empty;
+            pendingDeleteDisplayName = string.Empty;
+            ShowLibrary();
         }
 
         public void SelectTool(RoomDesignerTool tool)
@@ -131,10 +274,20 @@ namespace Hollow.RoomDesigner
         private void Update()
         {
             ApplyInput(RoomDesignerInputReader.ReadCurrent(), Time.time);
+            if (Mode == RoomDesignerMode.Editing)
+            {
+                cameraController.Tick(Camera.main, Time.deltaTime);
+            }
         }
 
         public void ApplyInput(RoomDesignerInputSnapshot input, float timeSeconds = 999f)
         {
+            if (Mode != RoomDesignerMode.Editing)
+            {
+                ApplyLibraryInput(input, timeSeconds);
+                return;
+            }
+
             SnapCursorToFootprint();
             var changed = false;
             if ((input.MoveX != 0 || input.MoveZ != 0) && timeSeconds >= nextMoveTime)
@@ -209,7 +362,7 @@ namespace Hollow.RoomDesigner
 
             if (input.BackPressed)
             {
-                ReturnToMainMenu();
+                ShowLibrary();
             }
 
             if (changed)
@@ -217,6 +370,98 @@ namespace Hollow.RoomDesigner
                 RebuildPreview();
                 RefreshHud();
             }
+        }
+
+        private void ApplyLibraryInput(RoomDesignerInputSnapshot input, float timeSeconds)
+        {
+            var optionCount = LibraryOptionCount();
+            if ((input.MoveX != 0 || input.MoveZ != 0) && optionCount > 0 && timeSeconds >= nextMoveTime)
+            {
+                var delta = input.MoveZ != 0 ? input.MoveZ : input.MoveX;
+                librarySelectedIndex = Mod(librarySelectedIndex + delta, optionCount);
+                nextMoveTime = timeSeconds + RepeatDelaySeconds;
+                RefreshHud();
+                RefreshLibraryPanel();
+            }
+
+            if (input.PlacePressed)
+            {
+                if (Mode == RoomDesignerMode.CreateTemplate)
+                {
+                    CreateDraftFromSelectedTemplate();
+                }
+                else if (Mode == RoomDesignerMode.Library)
+                {
+                    if (libraryState != null && librarySelectedIndex == libraryState.Drafts.Count)
+                    {
+                        librarySelectedIndex = 0;
+                        ShowCreateTemplates();
+                    }
+                    else if (libraryState != null && librarySelectedIndex == libraryState.Drafts.Count + 1)
+                    {
+                        ReturnToMainMenu();
+                    }
+                    else
+                    {
+                        OpenSelectedDraft();
+                    }
+                }
+                else if (Mode == RoomDesignerMode.ConfirmDelete)
+                {
+                    if (librarySelectedIndex == 0)
+                    {
+                        ConfirmDeleteDraft();
+                    }
+                    else
+                    {
+                        ShowLibrary();
+                    }
+                }
+            }
+
+            if (input.ErasePressed && Mode == RoomDesignerMode.Library)
+            {
+                RequestDeleteDraft();
+            }
+
+            if (input.BackPressed)
+            {
+                if (Mode == RoomDesignerMode.ConfirmDelete)
+                {
+                    ShowLibrary();
+                }
+                else if (Mode == RoomDesignerMode.CreateTemplate && libraryState != null && libraryState.Drafts.Count > 0)
+                {
+                    ShowLibrary();
+                }
+                else
+                {
+                    ReturnToMainMenu();
+                }
+            }
+        }
+
+        private void EnterEditing(RoomDesignerProject project)
+        {
+            if (project == null)
+            {
+                ShowCreateTemplates();
+                return;
+            }
+
+            Mode = RoomDesignerMode.Editing;
+            CursorX = 0;
+            CursorZ = 0;
+            CursorLayer = 0;
+            SnapCursorToFootprint();
+            if (libraryPanel != null)
+            {
+                libraryPanel.gameObject.SetActive(false);
+            }
+
+            RebuildPreview();
+            RefreshHud();
+            UpdateCameraTarget(immediate: true);
         }
 
         private void SnapCursorToFootprint()
@@ -441,6 +686,12 @@ namespace Hollow.RoomDesigner
         private void RebuildPreview()
         {
             EnsureRoots();
+            if (currentProject == null)
+            {
+                ClearPreview();
+                return;
+            }
+
             ClearChildren(previewRoot);
             BuildGrid();
             foreach (var cell in currentProject.cells)
@@ -464,28 +715,27 @@ namespace Hollow.RoomDesigner
             cursor.transform.localPosition = new Vector3(CursorX, CursorLayer + 0.55f, CursorZ);
             cursor.transform.localScale = new Vector3(1.08f, 0.08f, 1.08f);
             MaterialResolver.ApplyTo(cursor, MaterialRole.DesignerCursor);
-            AutoFitCamera();
+            UpdateCameraTarget(immediate: false);
         }
 
-        private void AutoFitCamera()
+        private void UpdateCameraTarget(bool immediate)
         {
+            if (currentProject == null)
+            {
+                return;
+            }
+
             var camera = Camera.main;
             if (camera == null)
             {
                 return;
             }
 
-            var dimensions = RoomDesignerFootprintUtility.Dimensions(currentProject.footprintPreset);
-            var longest = Mathf.Max(dimensions.x, dimensions.y);
-            camera.transform.position = new Vector3(0f, Mathf.Max(10f, longest * 0.55f), Mathf.Max(8f, longest * 0.45f));
-            camera.transform.rotation = Quaternion.Euler(58f, 0f, 0f);
-            if (camera.orthographic)
+            var target = new Vector3(CursorX, 0f, CursorZ);
+            cameraController.SetTarget(target, currentProject.footprintPreset);
+            if (immediate)
             {
-                camera.orthographicSize = Mathf.Max(dimensions.x * 0.42f, dimensions.y * 0.72f, 6f);
-            }
-            else
-            {
-                camera.fieldOfView = 54f;
+                cameraController.ApplyImmediate(camera);
             }
         }
 
@@ -634,6 +884,12 @@ namespace Hollow.RoomDesigner
 
         private void EnsureRoots()
         {
+            if (EventSystem.current == null)
+            {
+                var eventSystemObject = new GameObject("RoomDesignerEventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+                eventSystemObject.transform.SetParent(transform, false);
+            }
+
             if (previewRoot == null)
             {
                 previewRoot = transform.Find("RoomDesignerPreviewRoot");
@@ -656,6 +912,18 @@ namespace Hollow.RoomDesigner
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1920f, 1080f);
             }
+            else
+            {
+                hudCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                hudCanvas.sortingOrder = Mathf.Max(hudCanvas.sortingOrder, 20);
+                var scaler = hudCanvas.GetComponent<CanvasScaler>() ?? hudCanvas.gameObject.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                if (hudCanvas.GetComponent<GraphicRaycaster>() == null)
+                {
+                    hudCanvas.gameObject.AddComponent<GraphicRaycaster>();
+                }
+            }
 
             if (hudText == null)
             {
@@ -674,6 +942,267 @@ namespace Hollow.RoomDesigner
                 hudText.color = Color.white;
                 hudText.raycastTarget = false;
             }
+
+            if (libraryPanel == null)
+            {
+                var panelObject = new GameObject("RoomDesignerLibraryPanel", typeof(RectTransform), typeof(Image));
+                panelObject.transform.SetParent(hudCanvas.transform, false);
+                libraryPanel = (RectTransform)panelObject.transform;
+                libraryPanel.anchorMin = new Vector2(0.5f, 0.5f);
+                libraryPanel.anchorMax = new Vector2(0.5f, 0.5f);
+                libraryPanel.pivot = new Vector2(0.5f, 0.5f);
+                libraryPanel.anchoredPosition = Vector2.zero;
+                libraryPanel.sizeDelta = new Vector2(860f, 780f);
+                var image = panelObject.GetComponent<Image>();
+                image.color = new Color(0.05f, 0.055f, 0.06f, 0.92f);
+            }
+        }
+
+        private void RefreshLibraryPanel()
+        {
+            EnsureRoots();
+            if (libraryPanel == null)
+            {
+                return;
+            }
+
+            if (Mode == RoomDesignerMode.Editing)
+            {
+                libraryPanel.gameObject.SetActive(false);
+                return;
+            }
+
+            libraryPanel.gameObject.SetActive(true);
+            ClearChildren(libraryPanel);
+            LibraryViewModel = BuildLibraryViewModel();
+
+            AddPanelText("LibraryTitle", Mode switch
+            {
+                RoomDesignerMode.CreateTemplate => "Create Room From Template",
+                RoomDesignerMode.ConfirmDelete => "Delete Draft?",
+                _ => "Room Designer"
+            }, 32, FontStyle.Bold, new Vector2(36f, -34f), new Vector2(780f, 52f));
+
+            AddPanelText("LibrarySubtitle", Mode switch
+            {
+                RoomDesignerMode.CreateTemplate => "Choose a macro footprint. The footprint is locked when the draft is created.",
+                RoomDesignerMode.ConfirmDelete => $"Delete \"{pendingDeleteDisplayName}\"? This only removes the designer draft.",
+                _ => "Open a saved draft, create a new room, or delete the selected draft."
+            }, 20, FontStyle.Normal, new Vector2(36f, -88f), new Vector2(780f, 58f));
+
+            if (Mode == RoomDesignerMode.CreateTemplate)
+            {
+                RefreshCreateTemplatePanel();
+            }
+            else if (Mode == RoomDesignerMode.ConfirmDelete)
+            {
+                RefreshConfirmDeletePanel();
+            }
+            else
+            {
+                RefreshLibraryDraftPanel();
+            }
+
+            AddPanelText("LibraryStatus", status, 18, FontStyle.Italic, new Vector2(36f, -708f), new Vector2(780f, 42f));
+            AddPanelText(
+                "LibraryControls",
+                "Keyboard/controller: WASD/Arrows/D-pad select | Enter/A open/create | Delete/B delete | Esc/Menu back",
+                17,
+                FontStyle.Normal,
+                new Vector2(36f, -744f),
+                new Vector2(780f, 34f));
+        }
+
+        private void RefreshLibraryDraftPanel()
+        {
+            var y = -168f;
+            var draftCount = libraryState?.Drafts.Count ?? 0;
+            for (var index = 0; index < draftCount; index++)
+            {
+                var draft = libraryState.Drafts[index];
+                var selected = librarySelectedIndex == index;
+                var label = $"{(selected ? "> " : string.Empty)}{draft.displayName}  |  {draft.footprintPreset}  |  {draft.widthTiles}x{draft.heightTiles}m";
+                var capturedIndex = index;
+                AddPanelButton($"Draft_{index}", label, index, new Vector2(36f, y), new Vector2(640f, 48f), () =>
+                {
+                    librarySelectedIndex = capturedIndex;
+                    OpenDraft(draft.projectId);
+                });
+                AddPanelButton($"Delete_{index}", "Delete", index, new Vector2(690f, y), new Vector2(124f, 48f), () =>
+                {
+                    librarySelectedIndex = capturedIndex;
+                    RequestDeleteDraft();
+                });
+                y -= 58f;
+            }
+
+            AddPanelButton(
+                "CreateNewRoom",
+                $"{(librarySelectedIndex == draftCount ? "> " : string.Empty)}Create New Room",
+                draftCount,
+                new Vector2(36f, y - 16f),
+                new Vector2(778f, 54f),
+                () =>
+                {
+                    librarySelectedIndex = 0;
+                    ShowCreateTemplates();
+                });
+            AddPanelButton(
+                "BackToMenu",
+                $"{(librarySelectedIndex == draftCount + 1 ? "> " : string.Empty)}Back To Main Menu",
+                draftCount + 1,
+                new Vector2(36f, y - 82f),
+                new Vector2(778f, 54f),
+                ReturnToMainMenu);
+        }
+
+        private void RefreshCreateTemplatePanel()
+        {
+            var y = -166f;
+            for (var index = 0; index < templatePresets.Length; index++)
+            {
+                var row = new RoomDesignerTemplateRow(templatePresets[index]);
+                var selected = librarySelectedIndex == index;
+                var capturedIndex = index;
+                AddPanelButton(
+                    $"Template_{row.Preset}",
+                    $"{(selected ? "> " : string.Empty)}{row.DisplayName}  |  {row.WidthTiles}x{row.HeightTiles}m",
+                    index,
+                    new Vector2(36f, y),
+                    new Vector2(778f, 54f),
+                    () =>
+                    {
+                        librarySelectedIndex = capturedIndex;
+                        CreateDraftFromSelectedTemplate();
+                    });
+                y -= 62f;
+            }
+
+            AddPanelButton(
+                "TemplateBack",
+                $"{(librarySelectedIndex == templatePresets.Length ? "> " : string.Empty)}Back",
+                templatePresets.Length,
+                new Vector2(36f, y - 18f),
+                new Vector2(778f, 54f),
+                () =>
+                {
+                    if (libraryState != null && libraryState.Drafts.Count > 0)
+                    {
+                        ShowLibrary();
+                    }
+                    else
+                    {
+                        ReturnToMainMenu();
+                    }
+                });
+        }
+
+        private void RefreshConfirmDeletePanel()
+        {
+            AddPanelButton(
+                "ConfirmDelete",
+                $"{(librarySelectedIndex == 0 ? "> " : string.Empty)}Delete Draft",
+                0,
+                new Vector2(36f, -188f),
+                new Vector2(778f, 60f),
+                ConfirmDeleteDraft);
+            AddPanelButton(
+                "CancelDelete",
+                $"{(librarySelectedIndex == 1 ? "> " : string.Empty)}Cancel",
+                1,
+                new Vector2(36f, -260f),
+                new Vector2(778f, 60f),
+                ShowLibrary);
+        }
+
+        private RoomDesignerLibraryViewModel BuildLibraryViewModel()
+        {
+            var drafts = libraryState == null
+                ? Array.Empty<RoomDesignerLibraryRow>()
+                : libraryState.Drafts
+                    .Select(draft => new RoomDesignerLibraryRow(
+                        draft.projectId,
+                        draft.displayName,
+                        draft.footprintPreset,
+                        draft.widthTiles,
+                        draft.heightTiles))
+                    .ToArray();
+            var templates = templatePresets.Select(preset => new RoomDesignerTemplateRow(preset)).ToArray();
+            return new RoomDesignerLibraryViewModel(
+                Mode,
+                librarySelectedIndex,
+                drafts,
+                templates,
+                status,
+                pendingDeleteProjectId,
+                pendingDeleteDisplayName);
+        }
+
+        private Text AddPanelText(string name, string text, int fontSize, FontStyle style, Vector2 position, Vector2 size)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(libraryPanel, false);
+            var rect = (RectTransform)textObject.transform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            var textComponent = textObject.GetComponent<Text>();
+            textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            textComponent.fontSize = fontSize;
+            textComponent.fontStyle = style;
+            textComponent.alignment = TextAnchor.MiddleLeft;
+            textComponent.color = Color.white;
+            textComponent.text = text;
+            textComponent.raycastTarget = false;
+            return textComponent;
+        }
+
+        private Button AddPanelButton(string name, string label, int selectionIndex, Vector2 position, Vector2 size, Action onClick)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(libraryPanel, false);
+            var rect = (RectTransform)buttonObject.transform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+
+            var image = buttonObject.GetComponent<Image>();
+            image.color = librarySelectedIndex == selectionIndex
+                ? new Color(0.22f, 0.34f, 0.42f, 0.95f)
+                : new Color(0.13f, 0.14f, 0.16f, 0.92f);
+
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(() =>
+            {
+                librarySelectedIndex = selectionIndex;
+                onClick?.Invoke();
+            });
+
+            AddButtonLabel(buttonObject.transform, label);
+            return button;
+        }
+
+        private void AddButtonLabel(Transform parent, string label)
+        {
+            var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            var rect = (RectTransform)textObject.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(18f, 0f);
+            rect.offsetMax = new Vector2(-18f, 0f);
+            var text = textObject.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 20;
+            text.alignment = TextAnchor.MiddleLeft;
+            text.color = Color.white;
+            text.text = label;
+            text.raycastTarget = false;
         }
 
         private void RefreshHud()
@@ -683,6 +1212,13 @@ namespace Hollow.RoomDesigner
                 return;
             }
 
+            if (Mode != RoomDesignerMode.Editing || currentProject == null)
+            {
+                hudText.gameObject.SetActive(false);
+                return;
+            }
+
+            hudText.gameObject.SetActive(true);
             LastValidationReport = RoomDesignerDraftValidator.Validate(currentProject);
             var dimensions = RoomDesignerFootprintUtility.Dimensions(currentProject.footprintPreset);
             var selectedDoor = SelectedDoorSummary();
@@ -704,6 +1240,34 @@ namespace Hollow.RoomDesigner
             return nearest == null
                 ? "none"
                 : $"{nearest.id} {nearest.state} host({nearest.hostCellX},{nearest.hostCellZ})";
+        }
+
+        private int LibraryOptionCount()
+        {
+            return Mode switch
+            {
+                RoomDesignerMode.Library => (libraryState?.Drafts.Count ?? 0) + 2,
+                RoomDesignerMode.CreateTemplate => templatePresets.Length + 1,
+                RoomDesignerMode.ConfirmDelete => 2,
+                _ => 0
+            };
+        }
+
+        private int DraftIndexFromSelection()
+        {
+            var draftCount = libraryState?.Drafts.Count ?? 0;
+            return librarySelectedIndex >= 0 && librarySelectedIndex < draftCount
+                ? librarySelectedIndex
+                : -1;
+        }
+
+        private void ClearPreview()
+        {
+            EnsureRoots();
+            if (previewRoot != null)
+            {
+                ClearChildren(previewRoot);
+            }
         }
 
         private void ReturnToMainMenu()

@@ -132,5 +132,100 @@ namespace Hollow.Tests.EditMode
                 Object.DestroyImmediate(root);
             }
         }
+
+        [Test]
+        public void ControllerStartsOnTemplateScreenWithoutAutoCreatingHiddenDefaultDraft()
+        {
+            var root = new GameObject("RoomDesignerEntryController");
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                var store = new RoomDesignerStore(tempRoot);
+                var slotId = new ProfileSlotId(0);
+
+                controller.InitializeLibraryForTest(store, slotId);
+
+                Assert.AreEqual(RoomDesignerMode.CreateTemplate, controller.Mode);
+                Assert.IsNull(controller.CurrentProject);
+                Assert.AreEqual(0, store.LoadExistingDrafts(slotId).Count);
+                Assert.IsNotNull(controller.LibraryViewModel);
+                Assert.AreEqual(5, controller.LibraryViewModel.Templates.Count);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ControllerCreatesOpensAndDeletesDraftsThroughLibraryStates()
+        {
+            var root = new GameObject("RoomDesignerLibraryFlowController");
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                var store = new RoomDesignerStore(tempRoot);
+                var slotId = new ProfileSlotId(0);
+                controller.InitializeLibraryForTest(store, slotId);
+
+                controller.ApplyInput(Input(moveZ: 1), 1f);
+                controller.ApplyInput(Input(place: true), 2f);
+
+                Assert.AreEqual(RoomDesignerMode.Editing, controller.Mode);
+                Assert.AreEqual(RoomDesignerFootprintPreset.Wide2x1, controller.CurrentProject.footprintPreset);
+                var createdId = controller.CurrentProject.projectId;
+
+                controller.ShowLibrary();
+                Assert.AreEqual(RoomDesignerMode.Library, controller.Mode);
+                controller.OpenSelectedDraft();
+                Assert.AreEqual(createdId, controller.CurrentProject.projectId);
+
+                controller.ShowLibrary();
+                controller.RequestDeleteDraft();
+                Assert.AreEqual(RoomDesignerMode.ConfirmDelete, controller.Mode);
+                controller.ConfirmDeleteDraft();
+
+                Assert.AreEqual(RoomDesignerMode.CreateTemplate, controller.Mode);
+                Assert.AreEqual(0, store.LoadExistingDrafts(slotId).Count);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ControllerCameraTargetFollowsActiveCursorCell()
+        {
+            var root = new GameObject("RoomDesignerCameraController");
+            var cameraObject = new GameObject("MainCamera", typeof(Camera));
+            cameraObject.tag = "MainCamera";
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault(RoomDesignerFootprintPreset.Block2x2, "Camera Draft"));
+
+                controller.ApplyInput(Input(moveX: 1), 1f);
+                controller.ApplyInput(Input(moveZ: 1), 2f);
+
+                Assert.AreEqual(new Vector3(1f, 0f, 1f), controller.CameraTargetPosition);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(cameraObject);
+            }
+        }
+
+        private static RoomDesignerInputSnapshot Input(
+            int moveX = 0,
+            int moveZ = 0,
+            int toolDelta = 0,
+            int layerDelta = 0,
+            bool place = false,
+            bool erase = false)
+        {
+            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false);
+        }
     }
 }

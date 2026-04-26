@@ -30,6 +30,10 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(fixture.DoorPortCount, asset.DoorPorts.Count, fixture.RoomId);
                 Assert.AreEqual(fixture.OccupiedCellCount * 13 * 7, asset.Layout.WalkableTiles.Count, fixture.RoomId);
                 Assert.IsNotNull(asset.SafeStart);
+                foreach (var obstacle in asset.Layout.Obstacles.Where(obstacle => obstacle.Kind == RoomDesignerCellKinds.Rock && Mathf.Approximately(obstacle.Size.y, 1f)))
+                {
+                    Assert.AreEqual(0f, obstacle.Center.y - obstacle.Size.y * 0.5f, 0.0001f, $"{fixture.RoomId}:{obstacle.Id}");
+                }
             }
         }
 
@@ -83,6 +87,9 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(fixture.OccupiedCellCount, occupiedCells.Count, fixture.RoomId);
                 Assert.AreEqual(fixture.OccupiedCellCount * 13 * 7, groundCount, fixture.RoomId);
                 Assert.AreEqual(fixture.DoorPortCount, project.doorPorts.Count, fixture.RoomId);
+                Assert.IsTrue(project.cells
+                    .Where(cell => cell.kind == RoomDesignerCellKinds.Rock)
+                    .All(cell => cell.layer == 0), fixture.RoomId);
             }
         }
 

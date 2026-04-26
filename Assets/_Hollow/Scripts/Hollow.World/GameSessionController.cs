@@ -70,6 +70,7 @@ namespace Hollow.World
             {
                 branchSessionController.Initialize(importedAsset, SessionState);
                 ResolveReferences();
+                ConfigureGameplayCameraFollow();
                 return;
             }
 
@@ -84,6 +85,8 @@ namespace Hollow.World
                 playerController.transform.localPosition = spawnPosition;
                 playerController.ConfigureDefault();
             }
+
+            ConfigureGameplayCameraFollow();
         }
 
         private void Update()
@@ -155,6 +158,25 @@ namespace Hollow.World
 
             branchSessionController = null;
             return false;
+        }
+
+        private void ConfigureGameplayCameraFollow()
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var targetCamera = Camera.main != null ? Camera.main : FindAnyObjectByType<Camera>();
+            if (targetCamera == null)
+            {
+                return;
+            }
+
+            var rigMetadata = targetCamera.GetComponentInParent<CameraRigMetadata>();
+            var host = rigMetadata != null ? rigMetadata.gameObject : targetCamera.gameObject;
+            var follow = host.GetComponent<GameplayCameraFollowController>() ?? host.AddComponent<GameplayCameraFollowController>();
+            follow.Configure(playerController.transform, platformKind);
         }
     }
 }

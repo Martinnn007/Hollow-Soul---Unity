@@ -48,7 +48,7 @@ namespace Hollow.RoomDesigner
             {
                 if (RoomDesignerFootprintUtility.ContainsTile(preset, position.x, position.y))
                 {
-                    project.cells.Add(new RoomDesignerCell(position.x, position.y, 1, RoomDesignerCellKinds.Rock));
+                    project.cells.Add(new RoomDesignerCell(position.x, position.y, 0, RoomDesignerCellKinds.Rock));
                 }
             }
 

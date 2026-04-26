@@ -4,10 +4,14 @@ using Hollow.Data.Definitions;
 using Hollow.Editor.Build;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
+using Hollow.Platform;
+using Hollow.UI.Shell;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEngine;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
 {
@@ -88,6 +92,63 @@ namespace Hollow.Tests.EditMode
                 PlatformBuildQaResult.Failed
             });
             Assert.IsFalse(string.IsNullOrWhiteSpace(result.platform));
+        }
+
+        [Test]
+        public void PlatformShellCanvasNoLongerCreatesM1DebugOverlay()
+        {
+            var shellObject = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            try
+            {
+                var shell = shellObject.AddComponent<PlatformShellController>();
+                shell.Configure(HollowPlatformKind.WindowsStandard3D);
+                shell.SendMessage("Start");
+
+                Assert.AreEqual(0, shellObject.transform.childCount);
+                Assert.AreEqual(RenderMode.ScreenSpaceOverlay, shellObject.GetComponent<Canvas>().renderMode);
+            }
+            finally
+            {
+                Object.DestroyImmediate(shellObject);
+            }
+        }
+
+        [Test]
+        public void BranchMiniMapBuildsSeparatedReadableHudPanels()
+        {
+            var shellObject = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            try
+            {
+                var minimap = shellObject.AddComponent<BranchMiniMapController>();
+                minimap.SendMessage("Start");
+
+                var mapPanel = shellObject.transform.Find("BranchMiniMap.MapPanel");
+                var economyPanel = shellObject.transform.Find("BranchMiniMap.EconomyPanel");
+                var itemLogPanel = shellObject.transform.Find("BranchMiniMap.ItemLogPanel");
+                Assert.IsNotNull(mapPanel);
+                Assert.IsNotNull(economyPanel);
+                Assert.IsNotNull(itemLogPanel);
+
+                var mapRect = (RectTransform)mapPanel;
+                Assert.AreEqual(Vector2.one, mapRect.anchorMin);
+                Assert.AreEqual(Vector2.one, mapRect.anchorMax);
+                Assert.AreEqual(Vector2.one, mapRect.pivot);
+
+                var mapText = mapPanel.GetComponentInChildren<Text>();
+                Assert.IsNotNull(mapText);
+                StringAssert.Contains("Branch Map", mapText.text);
+                Assert.That(mapText.text, Does.Not.Contain("Run Souls"));
+                Assert.That(mapText.text, Does.Not.Contain("Items"));
+
+                var economyText = economyPanel.GetComponentInChildren<Text>();
+                var itemLogText = itemLogPanel.GetComponentInChildren<Text>();
+                StringAssert.Contains("Run Souls", economyText.text);
+                StringAssert.Contains("Items", itemLogText.text);
+            }
+            finally
+            {
+                Object.DestroyImmediate(shellObject);
+            }
         }
 
         [Test]

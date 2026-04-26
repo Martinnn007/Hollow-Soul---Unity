@@ -121,6 +121,27 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void ControllerTreatsPositiveZAsDesignerForwardInput()
+        {
+            var root = new GameObject("RoomDesignerForwardInputTest");
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault());
+
+                controller.ApplyInput(Input(moveZ: 1));
+                Assert.AreEqual(1, controller.CursorZ);
+
+                controller.ApplyInput(Input(moveZ: -1));
+                Assert.AreEqual(0, controller.CursorZ);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void ExportersWriteProjectRuntimeAndUsdaCompanion()
         {
             var project = RoomDesignerProject.CreateDefault();

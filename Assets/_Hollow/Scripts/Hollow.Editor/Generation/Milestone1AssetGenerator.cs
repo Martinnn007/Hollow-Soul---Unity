@@ -289,6 +289,7 @@ namespace Hollow.Editor.Generation
         {
             var root = new GameObject(name);
             root.AddComponent<CameraRigMetadata>().Configure(platformKind);
+            root.AddComponent<GameplayCameraFollowController>();
             var cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
             cameraObject.transform.SetParent(root.transform, false);
             cameraObject.transform.localPosition = cameraPosition;

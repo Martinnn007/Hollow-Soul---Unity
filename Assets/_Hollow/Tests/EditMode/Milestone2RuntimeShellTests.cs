@@ -59,8 +59,15 @@ namespace Hollow.Tests.EditMode
         public void GameSessionControllerInitializesBoundedSceneWithoutScalingHud()
         {
             var root = new GameObject("GameSessionRoot");
+            var cameraRig = new GameObject("CameraRig");
             try
             {
+                cameraRig.AddComponent<CameraRigMetadata>().Configure(HollowPlatformKind.VisionOSBoundedTabletop);
+                var cameraObject = new GameObject("Main Camera", typeof(Camera));
+                cameraObject.tag = "MainCamera";
+                cameraObject.transform.SetParent(cameraRig.transform, false);
+                cameraObject.transform.localPosition = new Vector3(0f, 1.35f, -2.4f);
+
                 var controller = root.AddComponent<GameSessionController>();
                 controller.Configure(HollowPlatformKind.VisionOSBoundedTabletop);
 
@@ -86,10 +93,14 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(0.1f, controller.PresentationRoot.WorldScale);
                 Assert.AreEqual(Vector3.zero, controller.PlayerController.transform.position);
                 Assert.AreEqual(Vector3.zero, controller.SessionState.PlayerSpawnPosition);
+                var follow = cameraRig.GetComponent<GameplayCameraFollowController>();
+                Assert.IsNotNull(follow);
+                Assert.AreSame(playerObject.transform, follow.Target);
             }
             finally
             {
                 Object.DestroyImmediate(root);
+                Object.DestroyImmediate(cameraRig);
             }
         }
     }

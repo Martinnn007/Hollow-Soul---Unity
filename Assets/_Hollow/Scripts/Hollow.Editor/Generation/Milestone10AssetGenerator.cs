@@ -134,6 +134,7 @@ namespace Hollow.Editor.Generation
             {
                 var metadata = root.GetComponent<CameraRigMetadata>() ?? root.AddComponent<CameraRigMetadata>();
                 metadata.Configure(platformKind);
+                _ = root.GetComponent<GameplayCameraFollowController>() ?? root.AddComponent<GameplayCameraFollowController>();
                 var applier = root.GetComponent<PlatformPolishApplier>() ?? root.AddComponent<PlatformPolishApplier>();
                 applier.Configure(profile);
                 applier.Apply(root.GetComponentInChildren<Camera>(includeInactive: true), presentationRoot: null);
@@ -156,6 +157,7 @@ namespace Hollow.Editor.Generation
             }
 
             var applier = rig.GetComponent<PlatformPolishApplier>() ?? rig.gameObject.AddComponent<PlatformPolishApplier>();
+            _ = rig.GetComponent<GameplayCameraFollowController>() ?? rig.gameObject.AddComponent<GameplayCameraFollowController>();
             applier.Configure(profile);
             applier.Apply(rig.GetComponentInChildren<Camera>(includeInactive: true), Object.FindAnyObjectByType<PlatformPresentationRoot>());
             EditorUtility.SetDirty(rig.gameObject);
