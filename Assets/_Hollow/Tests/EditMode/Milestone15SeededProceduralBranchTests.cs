@@ -203,7 +203,7 @@ namespace Hollow.Tests.EditMode
             branch = root.AddComponent<BranchSessionController>();
             branch.Configure(null, null);
             branch.ConfigureTemplateCatalog(LoadCatalog(), BranchGenerator.DefaultSeededMacroSeed);
-            branch.ConfigureGenerationSettings(LoadSettings());
+            branch.ConfigureGenerationSettings(CreateM15CompatibleSettings());
             sessionState = GameSessionState.Create(RuntimeSessionMode.ProfileBacked, HollowPlatformKind.WindowsStandard3D, null, Vector3.zero);
             branch.Initialize(ImportSampleRoom(), sessionState);
             return root;
@@ -225,6 +225,27 @@ namespace Hollow.Tests.EditMode
         private static BranchGenerationSettingsDefinition LoadSettings()
         {
             return AssetDatabase.LoadAssetAtPath<BranchGenerationSettingsDefinition>(SettingsPath);
+        }
+
+        private static BranchGenerationSettingsDefinition CreateM15CompatibleSettings()
+        {
+            var settings = ScriptableObject.CreateInstance<BranchGenerationSettingsDefinition>();
+            settings.Configure(
+                BranchGenerator.DefaultSeededMacroSeed,
+                nextTargetRoomCount: 8,
+                nextMaxPlacementAttempts: 250,
+                nextAllowLoops: false,
+                nextEnableBossLeaf: true,
+                nextEnableTreasureLeaf: false,
+                nextAllowedFixtureIds: new[]
+                {
+                    "combat_macro_single_1x1",
+                    "combat_macro_wide_2x1",
+                    "combat_macro_tall_1x2",
+                    "combat_macro_block_2x2",
+                    "combat_macro_l_3cell"
+                });
+            return settings;
         }
 
         private static ImportedRoomRuntimeAsset ImportSampleRoom()

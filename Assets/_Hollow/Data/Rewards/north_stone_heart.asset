@@ -15,4 +15,12 @@ MonoBehaviour:
   rewardId: stone_heart
   displayName: Stone Heart
   rewardKind: 0
+  rarity: 0
   souls: 10
+  effects:
+  - kind: 1
+    intValue: 1
+    floatValue: 0
+  - kind: 2
+    intValue: 1
+    floatValue: 0

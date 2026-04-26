@@ -15,4 +15,9 @@ MonoBehaviour:
   rewardId: quick_draw
   displayName: Quick Draw
   rewardKind: 1
+  rarity: 0
   souls: 10
+  effects:
+  - kind: 4
+    intValue: 0
+    floatValue: 0.9

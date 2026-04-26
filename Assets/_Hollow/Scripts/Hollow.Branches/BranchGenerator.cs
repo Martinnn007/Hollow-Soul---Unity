@@ -12,6 +12,7 @@ namespace Hollow.Branches
         public const string LegacyFiveRoomBranchId = "m7_five_room_cross";
         public const string MacroFixtureBranchId = "m14_macro_fixture_branch_v1";
         public const string SeededMacroBranchId = "m15_seeded_macro_branch_v1";
+        public const string FeatureBranchId = "m17_feature_branch_v1";
         public const int DefaultMacroFixtureSeed = 14001;
         public const int DefaultSeededMacroSeed = 15001;
 
@@ -67,6 +68,33 @@ namespace Hollow.Branches
                 throw new InvalidOperationException("M15 seeded macro branch generation does not support loops.");
             }
 
+            return CreateSeededBranch(content, settings, seed, SeededMacroBranchId, enableTreasureLeaf: false, milestoneLabel: "M15");
+        }
+
+        public static BranchFloorGraph CreateSeededFeatureBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
+        {
+            if (content == null || !content.HasMacroFixturePool)
+            {
+                throw new InvalidOperationException("Seeded feature branch generation requires a complete macro room pool.");
+            }
+
+            settings = settings != null ? settings : BranchGenerationSettingsDefinition.CreateRuntimeDefault();
+            if (settings.AllowLoops)
+            {
+                throw new InvalidOperationException("M17 seeded feature branch generation does not support loops.");
+            }
+
+            return CreateSeededBranch(content, settings, seed, FeatureBranchId, enableTreasureLeaf: true, milestoneLabel: "M17");
+        }
+
+        private static BranchFloorGraph CreateSeededBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            int seed,
+            string branchId,
+            bool enableTreasureLeaf,
+            string milestoneLabel)
+        {
             var resolvedSeed = seed == 0 ? settings.DefaultSeed : seed;
             var random = new System.Random(resolvedSeed);
             var roomPool = content.MacroRoomPool;
@@ -98,7 +126,7 @@ namespace Hollow.Branches
             {
                 if (!TryPlaceNextRecord(records, usedPortsByTempIndex, occupiedCells, fixturePool, candidatesByShape, fixtureIds, random, settings.MaxPlacementAttempts, tempIndex, out var record))
                 {
-                    throw new InvalidOperationException($"M15 seeded macro branch generation failed to place room {tempIndex} after {settings.MaxPlacementAttempts} attempts.");
+                    throw new InvalidOperationException($"{milestoneLabel} seeded branch generation failed to place room {tempIndex} after {settings.MaxPlacementAttempts} attempts.");
                 }
 
                 records.Add(record);
@@ -108,8 +136,9 @@ namespace Hollow.Branches
             }
 
             var bossTempIndex = settings.EnableBossLeaf ? SelectBossLeaf(records) : -1;
+            var treasureTempIndex = enableTreasureLeaf ? SelectTreasureLeaf(records, bossTempIndex) : -1;
             var idByTempIndex = AssignRoomIds(records, bossTempIndex);
-            var graph = new BranchFloorGraph(SeededMacroBranchId, resolvedSeed);
+            var graph = new BranchFloorGraph(branchId, resolvedSeed);
 
             foreach (var record in records)
             {
@@ -118,7 +147,9 @@ namespace Hollow.Branches
                     ? BranchRoomRole.Origin
                     : record.TempIndex == bossTempIndex
                         ? BranchRoomRole.Boss
-                        : RoomNumber(roomId) % 2 == 0 ? BranchRoomRole.Combat : BranchRoomRole.Reward;
+                        : record.TempIndex == treasureTempIndex
+                            ? BranchRoomRole.Treasure
+                            : RoomNumber(roomId) % 2 == 0 ? BranchRoomRole.Combat : BranchRoomRole.Reward;
                 graph.AddRoom(new BranchRoomState(
                     roomId,
                     record.PrimaryCell,
@@ -263,6 +294,29 @@ namespace Hollow.Branches
                 .ThenBy(record => $"room_{record.TempIndex:00}")
                 .First()
                 .TempIndex;
+        }
+
+        private static int SelectTreasureLeaf(IReadOnlyList<PlacementRecord> records, int bossTempIndex)
+        {
+            var parentIds = records.Where(record => record.TempIndex != 0)
+                .Select(record => record.ParentTempIndex)
+                .ToHashSet();
+            var leaves = records
+                .Where(record => record.TempIndex != 0 && record.TempIndex != bossTempIndex && !parentIds.Contains(record.TempIndex))
+                .OrderByDescending(record => record.Depth)
+                .ThenBy(record => $"room_{record.TempIndex:00}")
+                .ToList();
+            if (leaves.Count > 0)
+            {
+                return leaves[0].TempIndex;
+            }
+
+            var fallback = records
+                .Where(record => record.TempIndex != 0 && record.TempIndex != bossTempIndex)
+                .OrderByDescending(record => record.Depth)
+                .ThenBy(record => $"room_{record.TempIndex:00}")
+                .ToList();
+            return fallback.Count > 0 ? fallback[0].TempIndex : -1;
         }
 
         private static int RoomNumber(BranchRoomId roomId)

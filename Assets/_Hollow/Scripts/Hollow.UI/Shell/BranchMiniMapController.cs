@@ -45,17 +45,18 @@ namespace Hollow.UI.Shell
 
             var model = branchSessionController.CreateMiniMapModel();
             var summary = model.Summary();
-            if (!force && summary == lastSummary)
+            var itemNames = branchSessionController.RunEconomy.CollectedRewards.Count == 0
+                ? "None"
+                : string.Join(", ", branchSessionController.RunEconomy.CollectedRewards.Select(record => record.DisplayName));
+            var displayState = $"{summary}|{branchSessionController.RunEconomy.RunSouls}|{itemNames}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}";
+            if (!force && displayState == lastSummary)
             {
                 return;
             }
 
-            var itemNames = branchSessionController.RunEconomy.CollectedRewards.Count == 0
-                ? "None"
-                : string.Join(", ", branchSessionController.RunEconomy.CollectedRewards.Select(record => record.DisplayName));
-            lastSummary = summary;
+            lastSummary = displayState;
             mapText.text =
-                $"Branch Map\n{Format(model)}\nRun Souls: {branchSessionController.RunEconomy.RunSouls} | Banked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nItems: {itemNames}\nSave: {branchSessionController.SaveStatus}";
+                $"Branch Map\n{Format(model)}\nRun Souls: {branchSessionController.RunEconomy.RunSouls} | Banked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nLatest: {branchSessionController.LastRewardMessage}\nItems: {itemNames}\nSave: {branchSessionController.SaveStatus}";
         }
 
         private static string Format(BranchMiniMapModel model)

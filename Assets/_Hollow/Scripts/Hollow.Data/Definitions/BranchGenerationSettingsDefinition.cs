@@ -11,6 +11,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private int maxPlacementAttempts = 250;
         [SerializeField] private bool allowLoops;
         [SerializeField] private bool enableBossLeaf = true;
+        [SerializeField] private bool enableTreasureLeaf;
         [SerializeField] private List<string> allowedFixtureIds = new()
         {
             "combat_macro_single_1x1",
@@ -30,6 +31,8 @@ namespace Hollow.Data.Definitions
 
         public bool EnableBossLeaf => enableBossLeaf;
 
+        public bool EnableTreasureLeaf => enableTreasureLeaf;
+
         public IReadOnlyList<string> AllowedFixtureIds => allowedFixtureIds;
 
         public void Configure(
@@ -40,11 +43,31 @@ namespace Hollow.Data.Definitions
             bool nextEnableBossLeaf,
             IEnumerable<string> nextAllowedFixtureIds)
         {
+            Configure(
+                nextDefaultSeed,
+                nextTargetRoomCount,
+                nextMaxPlacementAttempts,
+                nextAllowLoops,
+                nextEnableBossLeaf,
+                nextEnableTreasureLeaf: false,
+                nextAllowedFixtureIds: nextAllowedFixtureIds);
+        }
+
+        public void Configure(
+            int nextDefaultSeed,
+            int nextTargetRoomCount,
+            int nextMaxPlacementAttempts,
+            bool nextAllowLoops,
+            bool nextEnableBossLeaf,
+            bool nextEnableTreasureLeaf,
+            IEnumerable<string> nextAllowedFixtureIds)
+        {
             defaultSeed = nextDefaultSeed == 0 ? 15001 : nextDefaultSeed;
             targetRoomCount = Mathf.Max(2, nextTargetRoomCount);
             maxPlacementAttempts = Mathf.Max(1, nextMaxPlacementAttempts);
             allowLoops = nextAllowLoops;
             enableBossLeaf = nextEnableBossLeaf;
+            enableTreasureLeaf = nextEnableTreasureLeaf;
             allowedFixtureIds = nextAllowedFixtureIds?
                 .Where(id => !string.IsNullOrWhiteSpace(id))
                 .Distinct()
@@ -60,7 +83,8 @@ namespace Hollow.Data.Definitions
                 250,
                 nextAllowLoops: false,
                 nextEnableBossLeaf: true,
-                new[]
+                nextEnableTreasureLeaf: false,
+                nextAllowedFixtureIds: new[]
                 {
                     "combat_macro_single_1x1",
                     "combat_macro_wide_2x1",

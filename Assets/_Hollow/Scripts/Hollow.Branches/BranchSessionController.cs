@@ -26,6 +26,9 @@ namespace Hollow.Branches
         [SerializeField] private GameObject hubReturnPortalPrefab;
         [SerializeField] private BranchRoomTemplateCatalogDefinition branchRoomTemplateCatalog;
         [SerializeField] private BranchGenerationSettingsDefinition branchGenerationSettings;
+        [SerializeField] private RewardPoolDefinition standardRewardPool;
+        [SerializeField] private RewardPoolDefinition treasureRewardPool;
+        [SerializeField] private RewardPoolDefinition bossRewardPool;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
         private ImportedRoomRuntimeAsset roomAsset;
@@ -56,6 +59,8 @@ namespace Hollow.Branches
 
         public string SaveStatus { get; private set; } = "Transient";
 
+        public string LastRewardMessage { get; private set; } = "None";
+
         public GameObject RewardPickupPrefab => rewardPickupPrefab;
 
         public GameObject HubReturnPortalPrefab => hubReturnPortalPrefab;
@@ -73,6 +78,12 @@ namespace Hollow.Branches
         public BranchRoomTemplateCatalogDefinition BranchRoomTemplateCatalog => branchRoomTemplateCatalog;
 
         public BranchGenerationSettingsDefinition BranchGenerationSettings => branchGenerationSettings;
+
+        public RewardPoolDefinition StandardRewardPool => standardRewardPool;
+
+        public RewardPoolDefinition TreasureRewardPool => treasureRewardPool;
+
+        public RewardPoolDefinition BossRewardPool => bossRewardPool;
 
         public int MacroBranchSeed => macroBranchSeed;
 
@@ -95,6 +106,13 @@ namespace Hollow.Branches
             {
                 macroBranchSeed = branchGenerationSettings.DefaultSeed == 0 ? BranchGenerator.DefaultSeededMacroSeed : branchGenerationSettings.DefaultSeed;
             }
+        }
+
+        public void ConfigureRewardPools(RewardPoolDefinition standardPool, RewardPoolDefinition treasurePool, RewardPoolDefinition bossPool)
+        {
+            standardRewardPool = standardPool;
+            treasureRewardPool = treasurePool;
+            bossRewardPool = bossPool;
         }
 
         public void Initialize(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState)
@@ -136,9 +154,7 @@ namespace Hollow.Branches
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
             State = BranchSessionState.Create(CreateFreshGraph());
-            proceduralRewardPlan = State.Graph.BranchId == BranchGenerator.SeededMacroBranchId
-                ? ProceduralRewardResolver.CreatePlan(State.Graph)
-                : ProceduralRewardPlan.Empty;
+            proceduralRewardPlan = CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
             LoadCurrentRoom();
             CheckpointActiveRun();
         }
@@ -157,9 +173,11 @@ namespace Hollow.Branches
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
             activeRunCompletedOrFailed = false;
             State = BranchSessionState.Create(CreateGraphForSnapshot(snapshot));
-            if (State.Graph.BranchId == BranchGenerator.SeededMacroBranchId && !proceduralRewardPlan.Rewards.Any())
+            if (IsProceduralRewardBranch(State.Graph.BranchId) && !proceduralRewardPlan.Rewards.Any())
             {
-                proceduralRewardPlan = ProceduralRewardResolver.CreatePlan(State.Graph);
+                proceduralRewardPlan = CreateRewardPlanForGraph(
+                    State.Graph,
+                    legacyFallback: snapshot?.branchId == BranchGenerator.SeededMacroBranchId);
             }
             RestoreBranchRooms(snapshot);
             State.RestoreCurrentRoom(new BranchRoomId(snapshot?.currentRoomId ?? BranchRoomId.Origin.Value));
@@ -269,6 +287,12 @@ namespace Hollow.Branches
                 : requestedPlayerLocalPosition ?? currentRoomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             playerController.transform.localPosition = playerLocalPosition;
             State.CurrentRoom.MarkVisited();
+            if (State.CurrentRoom.Role == BranchRoomRole.Treasure && !State.CurrentRoom.IsCleared)
+            {
+                State.CurrentRoom.MarkCleared();
+                State.CurrentRoom.MarkRewardPending();
+            }
+
             roomCombatController.BeginRoom(
                 roomRuntimeRoot,
                 playerController,
@@ -326,6 +350,7 @@ namespace Hollow.Branches
                 var healAmount = playerRunStats.ApplyReward(grant);
                 ApplyRunStatsToPlayer(healAmount);
                 rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
+                LastRewardMessage = RewardMessage(grant);
             }
 
             DestroyRuntimeObject(currentRewardPickup.gameObject);
@@ -482,11 +507,13 @@ namespace Hollow.Branches
                 {
                     try
                     {
-                        return BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, macroBranchSeed);
+                        return branchGenerationSettings.EnableTreasureLeaf
+                            ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, macroBranchSeed)
+                            : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, macroBranchSeed);
                     }
                     catch (Exception error)
                     {
-                        Debug.LogWarning($"M15 seeded macro branch generation failed; falling back to M14 fixed macro branch. {error.Message}");
+                        Debug.LogWarning($"Seeded macro branch generation failed; falling back to M14 fixed macro branch. {error.Message}");
                     }
                 }
 
@@ -498,6 +525,17 @@ namespace Hollow.Branches
 
         private BranchFloorGraph CreateGraphForSnapshot(RunSaveSnapshot snapshot)
         {
+            if (snapshot != null &&
+                snapshot.branchId == BranchGenerator.FeatureBranchId &&
+                branchContent != null &&
+                branchContent.HasMacroFixturePool)
+            {
+                return BranchGenerator.CreateSeededFeatureBranch(
+                    branchContent,
+                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+            }
+
             if (snapshot != null &&
                 snapshot.branchId == BranchGenerator.SeededMacroBranchId &&
                 branchContent != null &&
@@ -520,6 +558,35 @@ namespace Hollow.Branches
             }
 
             return BranchGenerator.CreateFiveRoomCross(roomAsset);
+        }
+
+        private static bool IsProceduralRewardBranch(string branchId)
+        {
+            return branchId == BranchGenerator.SeededMacroBranchId || branchId == BranchGenerator.FeatureBranchId;
+        }
+
+        private ProceduralRewardPlan CreateRewardPlanForGraph(BranchFloorGraph graph, bool legacyFallback)
+        {
+            if (graph == null || !IsProceduralRewardBranch(graph.BranchId))
+            {
+                return ProceduralRewardPlan.Empty;
+            }
+
+            return legacyFallback
+                ? ProceduralRewardResolver.CreatePlan(graph)
+                : ProceduralRewardResolver.CreateSeededPlan(graph, standardRewardPool, treasureRewardPool, bossRewardPool);
+        }
+
+        private static string RewardMessage(RewardGrant grant)
+        {
+            if (grant.IsEmpty)
+            {
+                return "No reward";
+            }
+
+            return grant.Souls > 0
+                ? $"Received: {grant.DisplayName} (+{grant.Souls} souls)"
+                : $"Received: {grant.DisplayName}";
         }
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()

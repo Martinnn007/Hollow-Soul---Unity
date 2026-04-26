@@ -38,6 +38,15 @@ namespace Hollow.Persistence
         public string displayName = string.Empty;
         public string rewardKind = string.Empty;
         public int souls;
+        public List<RunRewardEffectSaveState> effects = new();
+    }
+
+    [Serializable]
+    public sealed class RunRewardEffectSaveState
+    {
+        public string kind = string.Empty;
+        public int intValue;
+        public float floatValue;
     }
 
     [Serializable]

@@ -17,6 +17,7 @@ MonoBehaviour:
   maxPlacementAttempts: 250
   allowLoops: 0
   enableBossLeaf: 1
+  enableTreasureLeaf: 1
   allowedFixtureIds:
   - combat_macro_single_1x1
   - combat_macro_wide_2x1

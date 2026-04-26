@@ -15,7 +15,33 @@ namespace Hollow.Rewards
 
         public int ApplyReward(RewardGrant grant)
         {
-            return grant.RewardId switch
+            var effects = grant.Effects != null && grant.Effects.Count > 0
+                ? grant.Effects
+                : RewardEffect.DefaultsForRewardId(grant.RewardId);
+            var healAmount = 0;
+            foreach (var effect in effects)
+            {
+                switch (effect.Kind)
+                {
+                    case RewardEffectKind.MaxHealthBonus:
+                        MaxHealthBonus += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.Heal:
+                        healAmount += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.MoveSpeedBonus:
+                        MoveSpeedBonus += Mathf.Max(0f, effect.FloatValue);
+                        break;
+                    case RewardEffectKind.ShotCooldownMultiplier:
+                        ShotCooldownMultiplier *= effect.FloatValue <= 0f ? 1f : effect.FloatValue;
+                        break;
+                    case RewardEffectKind.ProjectileDamageBonus:
+                        ProjectileDamageBonus += Mathf.Max(0, effect.IntValue);
+                        break;
+                }
+            }
+
+            return effects.Count > 0 ? healAmount : grant.RewardId switch
             {
                 "stone_heart" => ApplyStoneHeart(),
                 "quick_draw" => ApplyQuickDraw(),

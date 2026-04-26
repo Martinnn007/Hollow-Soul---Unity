@@ -15,4 +15,9 @@ MonoBehaviour:
   rewardId: ember_charm
   displayName: Ember Charm
   rewardKind: 0
+  rarity: 0
   souls: 10
+  effects:
+  - kind: 5
+    intValue: 1
+    floatValue: 0

@@ -14,7 +14,7 @@ Designer USDA companions remain inspection/reference artifacts only. Runtime gam
 
 ## Runtime Behavior
 
-- New Run still uses the M15 seeded eight-room macro branch.
+- In M16, New Run still used the M15 seeded eight-room macro branch. Later feature milestones can select a newer branch identity while preserving this approved-room intake contract.
 - The generator uses fixture rooms as the structural fallback recipe.
 - Approved designer rooms are additive same-footprint candidates.
 - Same seed plus same approved catalog produces the same branch, room assignments, boss leaf, and reward plan.

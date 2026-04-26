@@ -20,7 +20,7 @@ namespace Hollow.Rewards
             }
 
             RunSouls += grant.Souls;
-            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls));
+            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Effects));
             return true;
         }
 

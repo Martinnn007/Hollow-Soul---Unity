@@ -25,6 +25,8 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone14MacroBranchGeneration.md` describes the seeded macro-room branch, exact port traversal, M14 catalog wiring, and legacy save compatibility.
 - `Docs/Milestone15SeededProceduralBranches.md` describes the first seeded eight-room procedural macro branch, procedural rewards, and the Stone Warden boss room.
 - `Docs/Milestone16ApprovedDesignerRoomPool.md` describes the approved Room Designer JSON intake folder and additive branch room pool.
+- `Docs/Milestone17FeatureBranchTreasureRooms.md` describes the first special feature-room role, treasure-room auto-clear behavior, and M17 branch identity.
+- `Docs/Milestone18SeededRandomRewards.md` describes seeded automatic reward pools, role-specific reward rolls, and reward effect persistence.
 
 ## Required Setup
 
