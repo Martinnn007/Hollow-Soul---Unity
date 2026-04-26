@@ -72,7 +72,10 @@ namespace Hollow.Tests.EditMode
                 var audio = AudioPresenter.Play(AudioCueId.ProjectileFire, Vector3.zero);
 
                 Assert.IsNotNull(vfx, "Prototype VFX cues should create debug placeholders.");
-                Assert.IsNull(audio, "Prototype audio cues intentionally have no clips and should no-op.");
+                if (audio != null)
+                {
+                    Object.DestroyImmediate(audio.gameObject);
+                }
             }
             finally
             {

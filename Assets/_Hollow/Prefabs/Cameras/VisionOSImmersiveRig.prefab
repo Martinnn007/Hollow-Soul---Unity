@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1534031682929101627}
   - component: {fileID: 2231202749848501317}
   - component: {fileID: 344184934733676335}
-  - component: {fileID: 5537216034812051438}
+  - component: {fileID: 5349382081327268394}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -93,7 +93,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1658111127310613213}
   m_Enabled: 1
---- !u!114 &5537216034812051438
+--- !u!114 &5349382081327268394
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -118,7 +118,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1707112889616006190}
   - component: {fileID: 7680231750041928655}
-  - component: {fileID: 8066936743905912015}
+  - component: {fileID: 6667361304127915510}
   m_Layer: 0
   m_Name: VisionOSImmersiveRig
   m_TagString: Untagged
@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.CameraRigMetadata
   platformKind: 2
---- !u!114 &8066936743905912015
+--- !u!114 &6667361304127915510
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

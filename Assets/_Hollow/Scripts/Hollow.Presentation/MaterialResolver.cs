@@ -115,6 +115,7 @@ namespace Hollow.Presentation
         internal static void ClearCache()
         {
             FallbackMaterials.Clear();
+            PresentationPrefabResolver.ClearCache();
         }
     }
 }

@@ -1,0 +1,597 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Hollow ArtPass Content
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Hollow ArtPass Content
+  m_GUID: 0efb0e33130dd45b885634dbb7909f90
+  m_SerializeEntries:
+  - m_GUID: 01c6742fbb2e74d6c870af79505d80d3
+    m_Address: hollow.artpass.material.RoomOriginMarker
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03d62c7e1fa994a728ffe54f766a6227
+    m_Address: hollow.artpass.prefab.DoorCleared
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 066a9c225a9704b478a48ccc68a97fd2
+    m_Address: hollow.artpass.prefab.EnemyCharger
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 067d8047c1fba4931801ed6f8076b383
+    m_Address: hollow.artpass.material.DesignerGround
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b168c80046204de7affa183a22b733d
+    m_Address: hollow.artpass.palette
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14ea7cd5bace843858947cb952e4c7e6
+    m_Address: hollow.artpass.material.DesignerDoorAvailable
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 174e8ee3be7d84876bdb09aa96ac0a30
+    m_Address: hollow.artpass.material.SpawnEnemy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17dc2c80477c64464a90c3cc0a25f416
+    m_Address: hollow.artpass.audio.clip.EnemyDeath
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1974c276fdf374e5e99971f231a6d718
+    m_Address: hollow.artpass.material.SpawnReward
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b2f058c247474ba5b5e884e32d16b6b
+    m_Address: hollow.artpass.material.BossKeyPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b92c05698c1e4b468c44ea3f7b8d7b4
+    m_Address: hollow.artpass.audio.clip.EnemyHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ef5d394532714970a4b9e8bea543e5b
+    m_Address: hollow.artpass.material.SpawnSafeStart
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1f6fd040962764fa4a8ef4cf2b387a2e
+    m_Address: hollow.artpass.prefab.NextBranchPortal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21a047227ed234909b7b85d373332b96
+    m_Address: hollow.artpass.prefab.EnemyHeavy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22dc3fd11efcd49bb80178e5eb7f22a2
+    m_Address: hollow.artpass.prefab.VfxProjectileFire
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 232d1dbfccc32413cb37982f1adb3c66
+    m_Address: hollow.artpass.prefab.VfxEnemyDeath
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25b0993b2342340979520ccec9249550
+    m_Address: hollow.artpass.material.VfxDebug
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 264f488be593b418eaabd25403ae3d89
+    m_Address: hollow.artpass.material.DoorLocked
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 28c3099972d5041b680c6d906bf23d0f
+    m_Address: hollow.artpass.material.CombatHitFlash
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ad847aa2b048447eb40e3ef756d383a
+    m_Address: hollow.artpass.prefab.HubShop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c3e0321eb77741d9ad058ec79652461
+    m_Address: hollow.artpass.material.Projectile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3205805b9897d4333bab8b2a8ec236d2
+    m_Address: hollow.artpass.material.EnemyNormal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33248159210b8403c98163b2c97ab650
+    m_Address: hollow.artpass.audio.clip.RoomClear
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33c63d723ef6c4a74ad080349c760842
+    m_Address: hollow.artpass.material.DoorActive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 365f0d8e58aa1411da4276e88f43f550
+    m_Address: hollow.artpass.material.PlayerBody
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36920509170114836aadb0952169b4b4
+    m_Address: hollow.artpass.material.NextBranchPortal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 38f9878edf2e2448f915a24b77b245d2
+    m_Address: hollow.artpass.prefab.EnemyTurret
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c16b12b74b6140bebdbf54a734e477c
+    m_Address: hollow.artpass.material.DesignerHole
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c96fc1ba8010411aa18869a0310b45a
+    m_Address: hollow.artpass.material.DesignerGrid
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3fe60d5acafdd4ed78c5c153ac27ed95
+    m_Address: hollow.artpass.audio.clip.DesignerPlace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ff13550ee4c94e4ead7e5fc8b40c712
+    m_Address: hollow.artpass.material.EnemyTurret
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45118fdb37581404fbf383d967072050
+    m_Address: hollow.artpass.audio.clip.DesignerErase
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4bd2725dc00c149c0abfbffb53fbcaa3
+    m_Address: hollow.artpass.material.DesignerDoorSecret
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 515fb4bd080a14709991df753e1722aa
+    m_Address: hollow.artpass.material.DesignerDoorActive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55809781bc3034485b1a1f68fe063442
+    m_Address: hollow.artpass.prefab.EnemyFlying
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a620c194a1e045f68f2c08486a6401c
+    m_Address: hollow.artpass.prefab.Projectile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b1cc96b7b82b4471b1190b55119992c
+    m_Address: hollow.artpass.material.DoorUnavailable
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d237045d786e4c1697c4edf9f43a0a0
+    m_Address: hollow.artpass.prefab.DoorLocked
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d8469c455ed74880b4928d3a7523537
+    m_Address: hollow.artpass.prefab.EnemyProjectile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6293801d727054fb3adad3fa9ba5a0d1
+    m_Address: hollow.artpass.prefab.BossKeyPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 656a2e3d4548948639f8d65a82d7cc7d
+    m_Address: hollow.artpass.prefab.VfxPortalComplete
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6928f7db7a6494074996dee80cdf192a
+    m_Address: hollow.artpass.prefab.DoorUnavailable
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c7c33e2a91884dd6899f54c0abd3325
+    m_Address: hollow.artpass.audio.clip.RewardClaim
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d6f0108fea994b3f938497a00e99db6
+    m_Address: hollow.artpass.prefab.VfxRoomClear
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7589363d7704f4435af268fb746d4580
+    m_Address: hollow.artpass.material.DesignerRock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7bbe4ce141007496b853ec4c3dbd69ca
+    m_Address: hollow.artpass.prefab.RoomFloor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e3e016b9a8f74ceca6a15f146785b2e
+    m_Address: hollow.artpass.audio.clip.PlayerHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 80e302cb74b0f4c7a9ebb1ddefd0ff3a
+    m_Address: hollow.artpass.material.DesignerSpawnEnemy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81a50ca977da94fe6a1312f3e8478397
+    m_Address: hollow.artpass.material.EnemyBoss
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 82d95a13de4c24bd886143c856f7cad8
+    m_Address: hollow.artpass.prefab.RoomObstacleRock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83e709ed925984eabb3cb67f42e66b44
+    m_Address: hollow.artpass.prefab.EnemyNormal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 864c152a314304395aa1b78710540f6e
+    m_Address: hollow.artpass.prefab.DoorActive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88c239d25fc9744ba932e5c376ecd9ac
+    m_Address: hollow.artpass.audio.clip.DoorUnlock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 895d7e1d2769f4d828c540983987e47d
+    m_Address: hollow.artpass.material.RoomObstacleRock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8bd7c1c53ac31423193e4bc8a2c98f28
+    m_Address: hollow.artpass.material.HubReturnPortal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91990a40ec9b94e678c6c70bf161edcb
+    m_Address: hollow.artpass.audio.clip.PortalComplete
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 997574b65eeb84a2bbac6c22937d701f
+    m_Address: hollow.artpass.material.EnemyFast
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99c47a43374324bd3923b6b664cf2c9b
+    m_Address: hollow.artpass.audio.clip.ProjectileFire
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99f207a2a107a4323bef4b83370458a3
+    m_Address: hollow.artpass.prefab.Player
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2704aa24e12842f68e29f50999ed2f5
+    m_Address: hollow.artpass.material.DesignerSpawnReward
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a48ab0896baa743d78847812846ba546
+    m_Address: hollow.artpass.prefab.EnemyFast
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a86a7fe2c309240c0885214c56519566
+    m_Address: hollow.artpass.material.EnemyProjectile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af80c61dca35a425b895f372372838d0
+    m_Address: hollow.artpass.prefab.RewardPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b57774646f453480e985f254ca85adb5
+    m_Address: hollow.artpass.material.EnemyFlying
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be06b06cf6b9e4d479ed7ba5d389ad9b
+    m_Address: hollow.artpass.material.EnemyCharger
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bec1f086e79d64ea4a12a3ff91cb4fdb
+    m_Address: hollow.artpass.prefab.VfxDoorUnlock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf01ed2cd4e6249c79a40e4ad6d118e7
+    m_Address: hollow.artpass.material.EnemyHeavy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf729765cde8d4c019ba216cf928cec5
+    m_Address: hollow.artpass.material.HubShop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c09ef7045212f441a911e2ea07d48beb
+    m_Address: hollow.artpass.prefab.EnemySplitter
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c704c1428e7f04c42a08188e5fe865af
+    m_Address: hollow.artpass.prefab.HubReturnPortal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9d7364993c434dbf82599b5cc9eb226
+    m_Address: hollow.artpass.material.SecretDoorDebug
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cb5aae76281464761850dd57d569f8a9
+    m_Address: hollow.artpass.material.RewardPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cdd7d4d3fa24545b9b7f3bf12cac939e
+    m_Address: hollow.artpass.material.EnemySplitter
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce5fd933603004aada47b9c812fd7a97
+    m_Address: hollow.artpass.material.RoomFloor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1bd088564ffd41afad9af7b1d2c3838
+    m_Address: hollow.artpass.prefab.SecretDoorDebug
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5335e109e90e4ad185adfe840f34686
+    m_Address: hollow.artpass.prefab.VfxRewardClaim
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db5fa33fb2e904a0bba3617d64aca578
+    m_Address: hollow.artpass.prefab.VfxEnemyHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0ce59097d58a431fa311c963767ce73
+    m_Address: hollow.artpass.material.DesignerCursor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e121b37c0199a49d7b3a0e59ef86a1a5
+    m_Address: hollow.artpass.material.DesignerSpawnSafeStart
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ecd6499bf26314d1b94c0ecd866abbff
+    m_Address: hollow.artpass.prefab.VfxPlayerHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4ce783fac5ac4240aeb66936764b35a
+    m_Address: hollow.artpass.prefab.EnemyBoss
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fbc6024e081a341b4b5d1a5b5647654b
+    m_Address: hollow.artpass.material.DoorCleared
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 26c6f40093d984e43978eafb33e375d3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7cb0b3a44b7cb4cc09153ad331b9287f, type: 2}
+    - {fileID: 11400000, guid: 88035afa2dedb49109e6c4d2e4fb688d, type: 2}

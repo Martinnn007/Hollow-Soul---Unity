@@ -1,3 +1,5 @@
+using Hollow.Data.Definitions;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -33,6 +35,7 @@ namespace Hollow.Combat
             localDirection = direction.sqrMagnitude < 0.001f ? Vector3.forward : direction.normalized;
             damage = DefaultDamage + Mathf.Max(0, damageBonus);
             ageSeconds = 0f;
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Projectile, transform, Vector3.zero, Vector3.one);
         }
 
         private void Update()

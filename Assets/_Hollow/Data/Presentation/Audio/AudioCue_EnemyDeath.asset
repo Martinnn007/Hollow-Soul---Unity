@@ -16,6 +16,6 @@ MonoBehaviour:
   displayName: 
   notes: 
   cueId: 2
-  clip: {fileID: 0}
-  volume: 0.8
-  spatialBlend: 0.65
+  clip: {fileID: 8300000, guid: 17dc2c80477c64464a90c3cc0a25f416, type: 3}
+  volume: 0.42
+  spatialBlend: 0.55

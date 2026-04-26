@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3dfb56c2ae08b473199d38b13a5d7f55, type: 3}
   m_Name: PresentationContentCatalog
   m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PresentationContentCatalog
-  materialPalette: {fileID: 11400000, guid: 95a161ace6b6f4e30807485a6be8924a, type: 2}
+  materialPalette: {fileID: 11400000, guid: 0b168c80046204de7affa183a22b733d, type: 2}
   vfxCues:
   - {fileID: 11400000, guid: 09f11d065740146329b31520c9adcfa8, type: 2}
   - {fileID: 11400000, guid: d11854e73a9f24bbba1afef48a13f864, type: 2}
@@ -35,3 +35,66 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fdb2dc19554f24e4ebc849c79729fd07, type: 2}
   - {fileID: 11400000, guid: 421b8b4d3a63845c3938f029ad076295, type: 2}
   - {fileID: 11400000, guid: cf59c72d256be4914b50420c3c080e47, type: 2}
+  prefabBindings:
+  - role: 0
+    prefab: {fileID: 917941983539342892, guid: 99f207a2a107a4323bef4b83370458a3, type: 3}
+  - role: 1
+    prefab: {fileID: 1483357449521883416, guid: 83e709ed925984eabb3cb67f42e66b44, type: 3}
+  - role: 2
+    prefab: {fileID: 389901448544783033, guid: 55809781bc3034485b1a1f68fe063442, type: 3}
+  - role: 3
+    prefab: {fileID: 2932595207559321923, guid: a48ab0896baa743d78847812846ba546, type: 3}
+  - role: 4
+    prefab: {fileID: 4776106683605258788, guid: 21a047227ed234909b7b85d373332b96, type: 3}
+  - role: 5
+    prefab: {fileID: 2817082538555172855, guid: 066a9c225a9704b478a48ccc68a97fd2, type: 3}
+  - role: 6
+    prefab: {fileID: 2658996912225546679, guid: 38f9878edf2e2448f915a24b77b245d2, type: 3}
+  - role: 7
+    prefab: {fileID: 2386449718727875023, guid: c09ef7045212f441a911e2ea07d48beb, type: 3}
+  - role: 8
+    prefab: {fileID: 1875719011195735541, guid: f4ce783fac5ac4240aeb66936764b35a, type: 3}
+  - role: 9
+    prefab: {fileID: 5620309446494051309, guid: 5a620c194a1e045f68f2c08486a6401c, type: 3}
+  - role: 10
+    prefab: {fileID: 4206168455025953465, guid: 5d8469c455ed74880b4928d3a7523537, type: 3}
+  - role: 11
+    prefab: {fileID: 2963792703504574972, guid: 7bbe4ce141007496b853ec4c3dbd69ca, type: 3}
+  - role: 12
+    prefab: {fileID: 1176759902886722516, guid: 82d95a13de4c24bd886143c856f7cad8, type: 3}
+  - role: 13
+    prefab: {fileID: 1793947062401669726, guid: 5d237045d786e4c1697c4edf9f43a0a0, type: 3}
+  - role: 14
+    prefab: {fileID: 1592424944115534183, guid: 864c152a314304395aa1b78710540f6e, type: 3}
+  - role: 15
+    prefab: {fileID: 3807402100516510411, guid: 03d62c7e1fa994a728ffe54f766a6227, type: 3}
+  - role: 16
+    prefab: {fileID: 3763621574202382597, guid: 6928f7db7a6494074996dee80cdf192a, type: 3}
+  - role: 17
+    prefab: {fileID: 6988198368379393320, guid: af80c61dca35a425b895f372372838d0, type: 3}
+  - role: 18
+    prefab: {fileID: 6888684183948481987, guid: 6293801d727054fb3adad3fa9ba5a0d1, type: 3}
+  - role: 19
+    prefab: {fileID: 6586531576154186422, guid: 2ad847aa2b048447eb40e3ef756d383a, type: 3}
+  - role: 20
+    prefab: {fileID: 2503353904978973227, guid: c704c1428e7f04c42a08188e5fe865af, type: 3}
+  - role: 21
+    prefab: {fileID: 2940853038593988533, guid: 1f6fd040962764fa4a8ef4cf2b387a2e, type: 3}
+  - role: 22
+    prefab: {fileID: 2472280122772508657, guid: d1bd088564ffd41afad9af7b1d2c3838, type: 3}
+  - role: 23
+    prefab: {fileID: 5046784053786731076, guid: 22dc3fd11efcd49bb80178e5eb7f22a2, type: 3}
+  - role: 24
+    prefab: {fileID: 8915753490519509710, guid: db5fa33fb2e904a0bba3617d64aca578, type: 3}
+  - role: 25
+    prefab: {fileID: 1527956765589687214, guid: 232d1dbfccc32413cb37982f1adb3c66, type: 3}
+  - role: 26
+    prefab: {fileID: 2210381251093052987, guid: ecd6499bf26314d1b94c0ecd866abbff, type: 3}
+  - role: 27
+    prefab: {fileID: 2714678852525105602, guid: d5335e109e90e4ad185adfe840f34686, type: 3}
+  - role: 28
+    prefab: {fileID: 8871419810575066428, guid: bec1f086e79d64ea4a12a3ff91cb4fdb, type: 3}
+  - role: 29
+    prefab: {fileID: 8749088047520801557, guid: 6d6f0108fea994b3f938497a00e99db6, type: 3}
+  - role: 30
+    prefab: {fileID: 5701202682760426314, guid: 656a2e3d4548948639f8d65a82d7cc7d, type: 3}

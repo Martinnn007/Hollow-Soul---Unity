@@ -72,6 +72,7 @@ namespace Hollow.Combat
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
             Health.Died += OnDied;
             ApplyVisualMaterial(RoleForDefinition(Definition));
+            PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDefinition(Definition), transform, Vector3.zero, Vector3.one);
 
             var presenter = GetComponent<CombatReadabilityPresenter>() ?? gameObject.AddComponent<CombatReadabilityPresenter>();
             presenter.Bind(this);
@@ -343,6 +344,30 @@ namespace Hollow.Combat
                     EnemyArchetypeId.Heavy => MaterialRole.EnemyHeavy,
                     EnemyArchetypeId.Boss => MaterialRole.EnemyBoss,
                     _ => MaterialRole.EnemyNormal
+                }
+            };
+        }
+
+        private static PresentationPrefabRole PrefabRoleForDefinition(EnemyDefinition definition)
+        {
+            if (definition == null)
+            {
+                return PresentationPrefabRole.EnemyNormal;
+            }
+
+            return definition.BehaviorId switch
+            {
+                EnemyBehaviorId.Charger => PresentationPrefabRole.EnemyCharger,
+                EnemyBehaviorId.TurretShooter => PresentationPrefabRole.EnemyTurret,
+                EnemyBehaviorId.Splitter => PresentationPrefabRole.EnemySplitter,
+                EnemyBehaviorId.BossWarden => PresentationPrefabRole.EnemyBoss,
+                EnemyBehaviorId.FlyingChaser => PresentationPrefabRole.EnemyFlying,
+                _ => definition.ArchetypeId switch
+                {
+                    EnemyArchetypeId.Fast => PresentationPrefabRole.EnemyFast,
+                    EnemyArchetypeId.Heavy => PresentationPrefabRole.EnemyHeavy,
+                    EnemyArchetypeId.Boss => PresentationPrefabRole.EnemyBoss,
+                    _ => PresentationPrefabRole.EnemyNormal
                 }
             };
         }

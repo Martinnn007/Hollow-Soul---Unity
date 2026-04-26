@@ -1,0 +1,200 @@
+using System.Collections.Generic;
+using Hollow.Data.Definitions;
+using UnityEngine;
+
+namespace Hollow.Presentation
+{
+    public static class PresentationPrefabResolver
+    {
+        private static readonly Dictionary<PresentationPrefabRole, GameObject> FallbackPrefabs = new();
+
+        public static GameObject Resolve(PresentationPrefabRole role)
+        {
+            var catalog = PresentationContentProvider.ActiveCatalog;
+            if (catalog != null && catalog.TryGetPrefab(role, out var prefab) && prefab != null)
+            {
+                return prefab;
+            }
+
+            return FallbackPrefabFor(role);
+        }
+
+        public static GameObject InstantiateVisual(PresentationPrefabRole role, Transform parent, Vector3 localPosition, Vector3 localScale)
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            RemoveExistingVisual(parent, role);
+            var prefab = Resolve(role);
+            if (prefab == null)
+            {
+                return null;
+            }
+
+            var visual = Object.Instantiate(prefab, parent);
+            visual.name = $"ArtPassVisual.{role}";
+            visual.transform.localPosition = localPosition;
+            visual.transform.localRotation = Quaternion.identity;
+            visual.transform.localScale = localScale;
+            visual.SetActive(true);
+            EnsureMarker(visual, role, prefab.TryGetComponent<PresentationVisualMarker>(out var marker) && marker.IsFallback);
+            StripColliders(visual);
+            return visual;
+        }
+
+        internal static void ClearCache()
+        {
+            foreach (var fallback in FallbackPrefabs.Values)
+            {
+                if (fallback == null)
+                {
+                    continue;
+                }
+
+                if (Application.isPlaying)
+                {
+                    Object.Destroy(fallback);
+                }
+                else
+                {
+                    Object.DestroyImmediate(fallback);
+                }
+            }
+
+            FallbackPrefabs.Clear();
+        }
+
+        private static GameObject FallbackPrefabFor(PresentationPrefabRole role)
+        {
+            if (FallbackPrefabs.TryGetValue(role, out var cached) && cached != null)
+            {
+                return cached;
+            }
+
+            var fallback = GameObject.CreatePrimitive(PrimitiveFor(role));
+            fallback.name = $"FallbackArtPass.{role}";
+            fallback.hideFlags = HideFlags.HideAndDontSave;
+            fallback.SetActive(false);
+            fallback.transform.localScale = DefaultScaleFor(role);
+            MaterialResolver.ApplyTo(fallback, MaterialRoleFor(role));
+            StripColliders(fallback);
+            EnsureMarker(fallback, role, isFallback: true);
+            FallbackPrefabs[role] = fallback;
+            return fallback;
+        }
+
+        private static void RemoveExistingVisual(Transform parent, PresentationPrefabRole role)
+        {
+            for (var index = parent.childCount - 1; index >= 0; index--)
+            {
+                var child = parent.GetChild(index);
+                var marker = child.GetComponent<PresentationVisualMarker>();
+                if (marker == null || marker.Role != role)
+                {
+                    continue;
+                }
+
+                if (Application.isPlaying)
+                {
+                    Object.Destroy(child.gameObject);
+                }
+                else
+                {
+                    Object.DestroyImmediate(child.gameObject);
+                }
+            }
+        }
+
+        private static void EnsureMarker(GameObject target, PresentationPrefabRole role, bool isFallback)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            var marker = target.GetComponent<PresentationVisualMarker>() ?? target.AddComponent<PresentationVisualMarker>();
+            marker.Configure(role, isFallback);
+        }
+
+        private static void StripColliders(GameObject visual)
+        {
+            if (visual == null)
+            {
+                return;
+            }
+
+            foreach (var collider in visual.GetComponentsInChildren<Collider>(includeInactive: true))
+            {
+                if (Application.isPlaying)
+                {
+                    Object.Destroy(collider);
+                }
+                else
+                {
+                    Object.DestroyImmediate(collider);
+                }
+            }
+        }
+
+        private static PrimitiveType PrimitiveFor(PresentationPrefabRole role)
+        {
+            return role is PresentationPrefabRole.HubReturnPortal or PresentationPrefabRole.NextBranchPortal
+                ? PrimitiveType.Cylinder
+                : role is PresentationPrefabRole.Projectile or PresentationPrefabRole.EnemyProjectile or
+                    PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup
+                    ? PrimitiveType.Sphere
+                    : PrimitiveType.Cube;
+        }
+
+        private static Vector3 DefaultScaleFor(PresentationPrefabRole role)
+        {
+            return role switch
+            {
+                PresentationPrefabRole.RoomFloor => new Vector3(1f, 0.08f, 1f),
+                PresentationPrefabRole.DoorLocked or PresentationPrefabRole.DoorActive or PresentationPrefabRole.DoorCleared or PresentationPrefabRole.DoorUnavailable => new Vector3(0.8f, 1.1f, 0.16f),
+                PresentationPrefabRole.Projectile or PresentationPrefabRole.EnemyProjectile => Vector3.one * 0.22f,
+                PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup => Vector3.one * 0.32f,
+                PresentationPrefabRole.HubReturnPortal or PresentationPrefabRole.NextBranchPortal => new Vector3(0.7f, 0.08f, 0.7f),
+                _ => Vector3.one
+            };
+        }
+
+        private static MaterialRole MaterialRoleFor(PresentationPrefabRole role)
+        {
+            return role switch
+            {
+                PresentationPrefabRole.Player => MaterialRole.PlayerBody,
+                PresentationPrefabRole.EnemyFlying => MaterialRole.EnemyFlying,
+                PresentationPrefabRole.EnemyFast => MaterialRole.EnemyFast,
+                PresentationPrefabRole.EnemyHeavy => MaterialRole.EnemyHeavy,
+                PresentationPrefabRole.EnemyCharger => MaterialRole.EnemyCharger,
+                PresentationPrefabRole.EnemyTurret => MaterialRole.EnemyTurret,
+                PresentationPrefabRole.EnemySplitter => MaterialRole.EnemySplitter,
+                PresentationPrefabRole.EnemyBoss => MaterialRole.EnemyBoss,
+                PresentationPrefabRole.Projectile => MaterialRole.Projectile,
+                PresentationPrefabRole.EnemyProjectile => MaterialRole.EnemyProjectile,
+                PresentationPrefabRole.RoomFloor => MaterialRole.RoomFloor,
+                PresentationPrefabRole.RoomObstacleRock => MaterialRole.RoomObstacleRock,
+                PresentationPrefabRole.DoorLocked => MaterialRole.DoorLocked,
+                PresentationPrefabRole.DoorActive => MaterialRole.DoorActive,
+                PresentationPrefabRole.DoorCleared => MaterialRole.DoorCleared,
+                PresentationPrefabRole.DoorUnavailable => MaterialRole.DoorUnavailable,
+                PresentationPrefabRole.RewardPickup => MaterialRole.RewardPickup,
+                PresentationPrefabRole.BossKeyPickup => MaterialRole.BossKeyPickup,
+                PresentationPrefabRole.HubShop => MaterialRole.HubShop,
+                PresentationPrefabRole.HubReturnPortal => MaterialRole.HubReturnPortal,
+                PresentationPrefabRole.NextBranchPortal => MaterialRole.NextBranchPortal,
+                PresentationPrefabRole.SecretDoorDebug => MaterialRole.SecretDoorDebug,
+                PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
+                PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
+                PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,
+                PresentationPrefabRole.VfxPortalComplete => MaterialRole.HubReturnPortal,
+                PresentationPrefabRole.VfxProjectileFire => MaterialRole.Projectile,
+                PresentationPrefabRole.VfxEnemyDeath => MaterialRole.EnemyNormal,
+                _ => MaterialRole.EnemyNormal
+            };
+        }
+    }
+}

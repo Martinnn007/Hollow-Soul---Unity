@@ -1,0 +1,37 @@
+namespace Hollow.Data.Definitions
+{
+    public enum PresentationPrefabRole
+    {
+        Player,
+        EnemyNormal,
+        EnemyFlying,
+        EnemyFast,
+        EnemyHeavy,
+        EnemyCharger,
+        EnemyTurret,
+        EnemySplitter,
+        EnemyBoss,
+        Projectile,
+        EnemyProjectile,
+        RoomFloor,
+        RoomObstacleRock,
+        DoorLocked,
+        DoorActive,
+        DoorCleared,
+        DoorUnavailable,
+        RewardPickup,
+        BossKeyPickup,
+        HubShop,
+        HubReturnPortal,
+        NextBranchPortal,
+        SecretDoorDebug,
+        VfxProjectileFire,
+        VfxEnemyHit,
+        VfxEnemyDeath,
+        VfxPlayerHit,
+        VfxRewardClaim,
+        VfxDoorUnlock,
+        VfxRoomClear,
+        VfxPortalComplete
+    }
+}

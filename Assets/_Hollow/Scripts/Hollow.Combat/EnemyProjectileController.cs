@@ -39,6 +39,7 @@ namespace Hollow.Combat
             lifetimeSeconds = Mathf.Max(0.1f, nextLifetimeSeconds);
             ageSeconds = 0f;
             MaterialResolver.ApplyTo(gameObject, MaterialRole.EnemyProjectile);
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyProjectile, transform, Vector3.zero, Vector3.one);
         }
 
         private void Update()

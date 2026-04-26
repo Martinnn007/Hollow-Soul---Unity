@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 6bb6ed976175f40b09a242d3039124e1
   m_currentHash:
     serializedVersion: 2
-    Hash: 9b109edefeeab2ffc339070f42d7f451
+    Hash: 66d8bc821456c1484e8ca602091814c5
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -60,6 +60,7 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 0
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
+  - {fileID: 11400000, guid: 35ea5f5c358654eb08e4ec70bc7e4bda, type: 2}
   - {fileID: 11400000, guid: cf2e3a1a3f8384ebca04d9864d62bb0a, type: 2}
   - {fileID: 11400000, guid: cd4fe61fa43e34596b3580247e0e89df, type: 2}
   m_BuildSettings:
@@ -113,6 +114,11 @@ MonoBehaviour:
     - hollow.platform
     - hollow.prototype-lock
     - hollow.build-automation
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    - hollow.artpass.materials
+    - hollow.artpass.vfx
+    - hollow.artpass.audio
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: b408fb567075246ccac49508ba370c67, type: 2}

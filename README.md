@@ -31,6 +31,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone20BranchFeaturesShopsSecretsKeys.md` describes boss-key locks, visible debug secrets, the inter-branch hub, hub shops, and seeded next-branch portals.
 - `Docs/Milestone21ShopChoiceUi.md` describes visible inter-branch hub shop cards and card-specific purchasable rewards.
 - `Docs/Milestone22RoomDesignerMacroAuthoringPolish.md` describes branch-ready macro-room authoring, validation-gated playtest/export, and validated export bundles.
+- `Docs/Milestone23ArtContentReplacementPipeline.md` describes the catalog-driven ArtPass prefab replacement layer, visual-only import rules, and Addressables packaging.
 
 ## Required Setup
 

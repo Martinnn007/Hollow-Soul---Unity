@@ -14,6 +14,7 @@ namespace Hollow.Rooms
         [SerializeField] private Vector2 roomSizeMeters = new(DefaultWidthMeters, DefaultDepthMeters);
         private readonly Dictionary<string, List<Renderer>> doorRenderersByDirection = new();
         private readonly Dictionary<string, Renderer> doorRenderersByPortId = new();
+        private readonly Dictionary<string, GameObject> doorMarkersByPortId = new();
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
@@ -51,6 +52,7 @@ namespace Hollow.Rooms
             ClearChildren();
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
+            doorMarkersByPortId.Clear();
             BuildFloor(asset.Layout);
             BuildObstacles(asset.Layout);
             BuildDoors(asset);
@@ -63,6 +65,7 @@ namespace Hollow.Rooms
             ClearChildren();
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
+            doorMarkersByPortId.Clear();
         }
 
         public bool TryGetDoorPort(string direction, out RoomDoorPort port)
@@ -90,6 +93,8 @@ namespace Hollow.Rooms
                 if (renderer != null)
                 {
                     renderer.sharedMaterial = material;
+                    ClearArtPassChildren(renderer.transform);
+                    PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDoorState(state), renderer.transform, Vector3.zero, Vector3.one);
                 }
             }
         }
@@ -102,6 +107,11 @@ namespace Hollow.Rooms
             }
 
             renderer.sharedMaterial = MaterialResolver.Resolve(MaterialRoleForDoorState(state));
+            if (doorMarkersByPortId.TryGetValue(portId, out var marker) && marker != null)
+            {
+                ClearArtPassChildren(marker.transform);
+                PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDoorState(state), marker.transform, Vector3.zero, Vector3.one);
+            }
         }
 
         private void ClearChildren()
@@ -130,6 +140,7 @@ namespace Hollow.Rooms
                 floor.transform.localPosition = new Vector3(region.Center.x, -0.05f, region.Center.z);
                 floor.transform.localScale = new Vector3(region.HalfSize.x * 2f, 0.1f, region.HalfSize.y * 2f);
                 MaterialResolver.ApplyTo(floor, MaterialRole.RoomFloor);
+                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RoomFloor, floor.transform, Vector3.zero, Vector3.one);
             }
 
             var origin = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -150,6 +161,7 @@ namespace Hollow.Rooms
                 block.transform.localPosition = obstacle.Center;
                 block.transform.localScale = obstacle.Size;
                 MaterialResolver.ApplyTo(block, MaterialRole.RoomObstacleRock);
+                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RoomObstacleRock, block.transform, Vector3.zero, Vector3.one);
             }
         }
 
@@ -163,8 +175,10 @@ namespace Hollow.Rooms
                 marker.transform.localPosition = new Vector3(port.Position.x, 0.65f, port.Position.z);
                 marker.transform.localScale = DoorScaleFor(port.Direction);
                 MaterialResolver.ApplyTo(marker, MaterialRole.DoorActive);
+                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.DoorActive, marker.transform, Vector3.zero, Vector3.one);
                 var renderer = marker.GetComponent<Renderer>();
                 doorRenderersByPortId[port.Id] = renderer;
+                doorMarkersByPortId[port.Id] = marker;
                 if (!doorRenderersByDirection.TryGetValue(port.Direction, out var renderers))
                 {
                     renderers = new List<Renderer>();
@@ -190,6 +204,18 @@ namespace Hollow.Rooms
                 RoomDoorVisualState.Cleared => MaterialRole.DoorCleared,
                 RoomDoorVisualState.Unavailable => MaterialRole.DoorUnavailable,
                 _ => MaterialRole.DoorActive
+            };
+        }
+
+        private static PresentationPrefabRole PrefabRoleForDoorState(RoomDoorVisualState state)
+        {
+            return state switch
+            {
+                RoomDoorVisualState.Locked => PresentationPrefabRole.DoorLocked,
+                RoomDoorVisualState.Active => PresentationPrefabRole.DoorActive,
+                RoomDoorVisualState.Cleared => PresentationPrefabRole.DoorCleared,
+                RoomDoorVisualState.Unavailable => PresentationPrefabRole.DoorUnavailable,
+                _ => PresentationPrefabRole.DoorActive
             };
         }
 
@@ -226,6 +252,27 @@ namespace Hollow.Rooms
             if (addPlayerSpawnComponent)
             {
                 marker.AddComponent<Hollow.Entities.PlayerSpawnPoint>();
+            }
+        }
+
+        private static void ClearArtPassChildren(Transform parent)
+        {
+            for (var index = parent.childCount - 1; index >= 0; index--)
+            {
+                var child = parent.GetChild(index);
+                if (child.GetComponent<PresentationVisualMarker>() == null)
+                {
+                    continue;
+                }
+
+                if (Application.isPlaying)
+                {
+                    Destroy(child.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(child.gameObject);
+                }
             }
         }
 

@@ -27,7 +27,7 @@ namespace Hollow.Presentation
         public static void Configure(PresentationContentCatalog catalog)
         {
             activeCatalog = catalog;
-            attemptedResourceLoad = catalog != null;
+            attemptedResourceLoad = true;
             MaterialResolver.ClearCache();
         }
 

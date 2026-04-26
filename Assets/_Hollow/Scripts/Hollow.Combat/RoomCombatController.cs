@@ -119,6 +119,7 @@ namespace Hollow.Combat
 
             var weapon = playerController.GetComponent<PlayerWeaponController>() ?? playerController.gameObject.AddComponent<PlayerWeaponController>();
             weapon.Configure(roomRuntimeRoot, this, projectilePrefab);
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
 
             enemies.Clear();
             initialized = true;
@@ -314,6 +315,11 @@ namespace Hollow.Combat
 
         private void TintDoorsOnClear()
         {
+            foreach (var port in roomRuntimeRoot.DoorPorts)
+            {
+                roomRuntimeRoot.SetDoorVisualStateById(port.Id, RoomDoorVisualState.Cleared);
+            }
+
             foreach (var renderer in roomRuntimeRoot.GetComponentsInChildren<Renderer>())
             {
                 if (!renderer.gameObject.name.StartsWith("doorAnchorActive.", System.StringComparison.Ordinal))

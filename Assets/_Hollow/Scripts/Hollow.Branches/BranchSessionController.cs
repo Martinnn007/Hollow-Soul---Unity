@@ -688,6 +688,7 @@ namespace Hollow.Branches
             rewardObject.transform.SetParent(playerController.transform.parent, false);
             rewardObject.transform.localPosition = new Vector3(0f, 0.35f, 0f);
             rewardObject.transform.localScale = Vector3.one * 0.35f;
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RewardPickup, rewardObject.transform, Vector3.zero, Vector3.one);
             currentRewardPickup = rewardObject.GetComponent<RoomRewardPickup>() ?? rewardObject.AddComponent<RoomRewardPickup>();
             currentRewardPickup.Configure(State.CurrentRoomId.Value);
         }
@@ -703,6 +704,7 @@ namespace Hollow.Branches
             keyObject.transform.SetParent(playerController.transform.parent, false);
             keyObject.transform.localPosition = new Vector3(0f, 0.45f, 0f);
             keyObject.transform.localScale = Vector3.one * 0.32f;
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.BossKeyPickup, keyObject.transform, Vector3.zero, Vector3.one);
             currentBossKeyPickup = keyObject.GetComponent<BossKeyPickup>() ?? keyObject.AddComponent<BossKeyPickup>();
             currentBossKeyPickup.Configure(State.CurrentRoomId.Value);
         }
@@ -732,6 +734,7 @@ namespace Hollow.Branches
             portalObject.transform.SetParent(playerController.transform.parent, false);
             portalObject.transform.localPosition = new Vector3(0f, 0.18f, 0f);
             portalObject.transform.localScale = new Vector3(0.9f, 0.08f, 0.9f);
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.HubReturnPortal, portalObject.transform, Vector3.zero, Vector3.one);
             currentHubPortal = portalObject.GetComponent<HubReturnPortal>() ?? portalObject.AddComponent<HubReturnPortal>();
         }
 
@@ -845,6 +848,7 @@ namespace Hollow.Branches
             shopObject.transform.SetParent(parent, false);
             shopObject.transform.localPosition = new Vector3(-1.5f, 0.4f, 0.9f);
             shopObject.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.HubShop, shopObject.transform, Vector3.zero, Vector3.one);
             currentHubShop = shopObject.GetComponent<HubShopController>() ?? shopObject.AddComponent<HubShopController>();
             currentHubShop.Configure(interBranchHubState);
             currentHubShop.BuildCards(runEconomy.RunSouls);
@@ -856,6 +860,7 @@ namespace Hollow.Branches
                 portalObject.transform.SetParent(parent, false);
                 portalObject.transform.localPosition = new Vector3(-0.8f + index * 0.8f, 0.18f, -1.1f);
                 portalObject.transform.localScale = new Vector3(0.42f, 0.08f, 0.42f);
+                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.NextBranchPortal, portalObject.transform, Vector3.zero, Vector3.one);
                 var portal = portalObject.GetComponent<NextBranchPortal>() ?? portalObject.AddComponent<NextBranchPortal>();
                 portal.Configure(choice);
                 currentNextBranchPortals.Add(portal);
