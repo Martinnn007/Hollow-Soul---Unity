@@ -1,0 +1,16 @@
+{
+  "name": "Hollow.Presentation",
+  "rootNamespace": "Hollow.Presentation",
+  "references": [
+    "Hollow.Platform"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

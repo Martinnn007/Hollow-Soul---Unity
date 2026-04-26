@@ -10,6 +10,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Assets/_Hollow/Data`, `Art`, `Audio`, `Prefabs`, `Scenes`, `Settings`, `Shaders`, `Tools`, and `Tests` are the canonical Hollow-owned roots.
 - `Docs/Milestone0Foundation.md` describes the current foundation and validation command.
 - `Docs/Milestone1MenuProfilesAndRouting.md` describes the first menu/profile/platform routing layer.
+- `Docs/Milestone2SharedRuntimeShell.md` describes the shared game-world shell, placeholder room, player spawn, and platform presentation scale.
 
 ## Required Setup
 

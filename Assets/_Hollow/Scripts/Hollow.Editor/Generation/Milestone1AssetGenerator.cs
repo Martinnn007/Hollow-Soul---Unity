@@ -1,10 +1,14 @@
 using System;
 using System.IO;
 using Hollow.Core.App;
+using Hollow.Entities;
 using Hollow.Persistence;
 using Hollow.Platform;
+using Hollow.Presentation;
+using Hollow.Rooms;
 using Hollow.UI.MainMenu;
 using Hollow.UI.Shell;
+using Hollow.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -26,7 +30,7 @@ namespace Hollow.Editor.Generation
             GenerateScenes();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("Generated Hollow Milestone 1 scenes and prefabs.");
+            Debug.Log("Generated Hollow Milestone 1/2 scenes and prefabs.");
         }
 
         private static void EnsureDirectories()
@@ -36,6 +40,8 @@ namespace Hollow.Editor.Generation
                 $"{Root}/Prefabs/Core",
                 $"{Root}/Prefabs/UI",
                 $"{Root}/Prefabs/Cameras",
+                $"{Root}/Prefabs/Player",
+                $"{Root}/Prefabs/Rooms",
                 $"{Root}/Scenes"
             })
             {
@@ -48,9 +54,11 @@ namespace Hollow.Editor.Generation
             SavePrefab(CreateAppRoot(), $"{Root}/Prefabs/Core/AppRoot.prefab");
             SavePrefab(CreateMainMenuRoot(), $"{Root}/Prefabs/UI/MainMenuRoot.prefab");
             SavePrefab(CreateProfileSlotCard(), $"{Root}/Prefabs/UI/ProfileSlotCard.prefab");
-            SavePrefab(CreateCameraRig("WindowsCameraRig", new Vector3(0f, 1.6f, -6f)), $"{Root}/Prefabs/Cameras/WindowsCameraRig.prefab");
-            SavePrefab(CreateCameraRig("VisionOSBoundedRig", new Vector3(0f, 1.4f, -4f)), $"{Root}/Prefabs/Cameras/VisionOSBoundedRig.prefab");
-            SavePrefab(CreateCameraRig("VisionOSImmersiveRig", new Vector3(0f, 1.7f, -5f)), $"{Root}/Prefabs/Cameras/VisionOSImmersiveRig.prefab");
+            SavePrefab(CreateRoomRuntimeRoot(), $"{Root}/Prefabs/Rooms/RoomRuntimeRoot.prefab");
+            SavePrefab(CreatePlayerCharacter(), $"{Root}/Prefabs/Player/PlayerCharacter.prefab");
+            SavePrefab(CreateCameraRig("WindowsCameraRig", HollowPlatformKind.WindowsStandard3D, new Vector3(0f, 7f, -10f), new Vector3(35f, 0f, 0f)), $"{Root}/Prefabs/Cameras/WindowsCameraRig.prefab");
+            SavePrefab(CreateCameraRig("VisionOSBoundedRig", HollowPlatformKind.VisionOSBoundedTabletop, new Vector3(0f, 1.35f, -2.4f), new Vector3(24f, 0f, 0f)), $"{Root}/Prefabs/Cameras/VisionOSBoundedRig.prefab");
+            SavePrefab(CreateCameraRig("VisionOSImmersiveRig", HollowPlatformKind.VisionOSImmersive, new Vector3(0f, 6f, -9f), new Vector3(32f, 0f, 0f)), $"{Root}/Prefabs/Cameras/VisionOSImmersiveRig.prefab");
         }
 
         private static GameObject CreateAppRoot()
@@ -80,15 +88,73 @@ namespace Hollow.Editor.Generation
             return root;
         }
 
-        private static GameObject CreateCameraRig(string name, Vector3 cameraPosition)
+        private static GameObject CreateRoomRuntimeRoot()
+        {
+            var root = new GameObject("RoomRuntimeRoot");
+            root.AddComponent<RoomRuntimeRoot>().ConfigureDefault();
+            root.AddComponent<PlaceholderRoomAuthoring>();
+
+            CreateCubeChild(root.transform, "Floor_13x7m", new Vector3(0f, -0.05f, 0f), new Vector3(13f, 0.1f, 7f));
+            CreateCubeChild(root.transform, "Wall_North", new Vector3(0f, 0.5f, -3.56f), new Vector3(13.24f, 1f, 0.12f));
+            CreateCubeChild(root.transform, "Wall_South", new Vector3(0f, 0.5f, 3.56f), new Vector3(13.24f, 1f, 0.12f));
+            CreateCubeChild(root.transform, "Wall_East", new Vector3(6.56f, 0.5f, 0f), new Vector3(0.12f, 1f, 7f));
+            CreateCubeChild(root.transform, "Wall_West", new Vector3(-6.56f, 0.5f, 0f), new Vector3(0.12f, 1f, 7f));
+            CreateCubeChild(root.transform, "OriginMarker_0_0", new Vector3(0f, 0.01f, 0f), new Vector3(0.25f, 0.02f, 0.25f));
+
+            var spawn = new GameObject("PlayerSpawn_Center", typeof(PlayerSpawnPoint));
+            spawn.transform.SetParent(root.transform, false);
+            spawn.transform.localPosition = Vector3.zero;
+            return root;
+        }
+
+        private static GameObject CreatePlayerCharacter()
+        {
+            var root = new GameObject("PlayerCharacter", typeof(CapsuleCollider));
+            root.AddComponent<PlaceholderPlayerController>().ConfigureDefault();
+
+            var collider = root.GetComponent<CapsuleCollider>();
+            collider.radius = PlaceholderPlayerController.DefaultRadiusMeters;
+            collider.height = PlaceholderPlayerController.DefaultHeightMeters;
+            collider.center = new Vector3(0f, PlaceholderPlayerController.DefaultHeightMeters * 0.5f, 0f);
+
+            var visibleCapsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            visibleCapsule.name = "PlayerHeight_1_78m";
+            visibleCapsule.transform.SetParent(root.transform, false);
+            visibleCapsule.transform.localPosition = collider.center;
+            visibleCapsule.transform.localScale = new Vector3(
+                PlaceholderPlayerController.DefaultRadiusMeters * 2f,
+                PlaceholderPlayerController.DefaultHeightMeters * 0.5f,
+                PlaceholderPlayerController.DefaultRadiusMeters * 2f);
+
+            var childCollider = visibleCapsule.GetComponent<Collider>();
+            if (childCollider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(childCollider);
+            }
+
+            return root;
+        }
+
+        private static GameObject CreateCameraRig(string name, HollowPlatformKind platformKind, Vector3 cameraPosition, Vector3 cameraRotation)
         {
             var root = new GameObject(name);
+            root.AddComponent<CameraRigMetadata>().Configure(platformKind);
             var cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
             cameraObject.transform.SetParent(root.transform, false);
             cameraObject.transform.localPosition = cameraPosition;
-            cameraObject.transform.localRotation = Quaternion.Euler(12f, 0f, 0f);
+            cameraObject.transform.localRotation = Quaternion.Euler(cameraRotation);
             cameraObject.tag = "MainCamera";
             return root;
+        }
+
+        private static GameObject CreateCubeChild(Transform parent, string name, Vector3 localPosition, Vector3 localScale)
+        {
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = name;
+            cube.transform.SetParent(parent, false);
+            cube.transform.localPosition = localPosition;
+            cube.transform.localScale = localScale;
+            return cube;
         }
 
         private static void SavePrefab(GameObject root, string path)
@@ -147,8 +213,27 @@ namespace Hollow.Editor.Generation
             InstantiatePrefab($"{Root}/Prefabs/Cameras/{cameraRigName}.prefab");
             CreateEventSystem();
             CreateDirectionalLight();
+            CreateGameSessionRoot(platformKind);
             CreateShellCanvas(platformKind);
             SaveScene(scene, $"{Root}/Scenes/{sceneName}.unity");
+        }
+
+        private static void CreateGameSessionRoot(HollowPlatformKind platformKind)
+        {
+            var root = new GameObject("GameSessionRoot");
+            root.AddComponent<GameSessionController>().Configure(platformKind);
+
+            var presentationObject = new GameObject("WorldPresentationRoot");
+            presentationObject.transform.SetParent(root.transform, false);
+            presentationObject.AddComponent<PlatformPresentationRoot>().Configure(platformKind);
+
+            var room = InstantiatePrefab($"{Root}/Prefabs/Rooms/RoomRuntimeRoot.prefab");
+            room.transform.SetParent(presentationObject.transform, false);
+            room.transform.localPosition = Vector3.zero;
+
+            var player = InstantiatePrefab($"{Root}/Prefabs/Player/PlayerCharacter.prefab");
+            player.transform.SetParent(presentationObject.transform, false);
+            player.transform.localPosition = Vector3.zero;
         }
 
         private static Scene NewScene(string name)

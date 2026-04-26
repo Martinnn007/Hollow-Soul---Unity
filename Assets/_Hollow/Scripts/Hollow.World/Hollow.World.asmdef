@@ -1,23 +1,15 @@
 {
-  "name": "Hollow.Editor",
-  "rootNamespace": "Hollow.Editor",
+  "name": "Hollow.World",
+  "rootNamespace": "Hollow.World",
   "references": [
     "Hollow.Core",
-    "Hollow.Data",
-    "Hollow.Platform",
-    "Hollow.Input",
-    "Hollow.Diagnostics",
     "Hollow.Persistence",
-    "Hollow.UI",
+    "Hollow.Platform",
     "Hollow.Presentation",
-    "Hollow.Entities",
     "Hollow.Rooms",
-    "Hollow.World",
-    "UnityEngine.UI"
+    "Hollow.Entities"
   ],
-  "includePlatforms": [
-    "Editor"
-  ],
+  "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": false,

@@ -8,7 +8,11 @@
     "Hollow.Input",
     "Hollow.Diagnostics",
     "Hollow.Persistence",
-    "Hollow.UI"
+    "Hollow.UI",
+    "Hollow.Presentation",
+    "Hollow.Entities",
+    "Hollow.Rooms",
+    "Hollow.World"
   ],
   "includePlatforms": [
     "Editor"
