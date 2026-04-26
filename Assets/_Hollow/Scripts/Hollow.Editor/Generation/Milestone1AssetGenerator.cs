@@ -21,6 +21,7 @@ namespace Hollow.Editor.Generation
     public static class Milestone1AssetGenerator
     {
         private const string Root = "Assets/_Hollow";
+        private const string SampleRoomRuntimePath = "Assets/_Hollow/Data/Rooms/Templates/combat_single_sample.hollowruntime.json";
 
         [MenuItem("Hollow/Generation/Generate Milestone 1 Assets")]
         public static void Generate()
@@ -221,7 +222,8 @@ namespace Hollow.Editor.Generation
         private static void CreateGameSessionRoot(HollowPlatformKind platformKind)
         {
             var root = new GameObject("GameSessionRoot");
-            root.AddComponent<GameSessionController>().Configure(platformKind);
+            var sampleRoomRuntimeJson = AssetDatabase.LoadAssetAtPath<TextAsset>(SampleRoomRuntimePath);
+            root.AddComponent<GameSessionController>().Configure(platformKind, sampleRoomRuntimeJson);
 
             var presentationObject = new GameObject("WorldPresentationRoot");
             presentationObject.transform.SetParent(root.transform, false);

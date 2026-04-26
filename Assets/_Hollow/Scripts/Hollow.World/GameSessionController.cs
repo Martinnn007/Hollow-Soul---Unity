@@ -12,6 +12,7 @@ namespace Hollow.World
     {
         [SerializeField] private HollowPlatformKind platformKind = HollowPlatformKind.WindowsStandard3D;
         [SerializeField] private RuntimeSessionMode sessionMode = RuntimeSessionMode.ProfileBacked;
+        [SerializeField] private TextAsset sampleRoomRuntimeJson;
         [SerializeField] private PlatformPresentationRoot presentationRoot;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlayerSpawnPoint playerSpawnPoint;
@@ -20,6 +21,8 @@ namespace Hollow.World
         public HollowPlatformKind PlatformKind => platformKind;
 
         public RuntimeSessionMode SessionMode => sessionMode;
+
+        public TextAsset SampleRoomRuntimeJson => sampleRoomRuntimeJson;
 
         public PlatformPresentationRoot PresentationRoot => presentationRoot;
 
@@ -36,6 +39,12 @@ namespace Hollow.World
             platformKind = nextPlatformKind;
         }
 
+        public void Configure(HollowPlatformKind nextPlatformKind, TextAsset roomRuntimeJson)
+        {
+            platformKind = nextPlatformKind;
+            sampleRoomRuntimeJson = roomRuntimeJson;
+        }
+
         private void Awake()
         {
             InitializeSession();
@@ -45,6 +54,8 @@ namespace Hollow.World
         {
             ResolveReferences();
             presentationRoot?.Configure(platformKind);
+            BuildImportedRoomIfAvailable();
+            ResolveReferences();
 
             var spawnPosition = playerSpawnPoint != null ? playerSpawnPoint.WorldPosition : Vector3.zero;
             var selectedProfile = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile;
@@ -59,10 +70,41 @@ namespace Hollow.World
 
         private void ResolveReferences()
         {
-            presentationRoot ??= GetComponentInChildren<PlatformPresentationRoot>(includeInactive: true);
-            roomRuntimeRoot ??= GetComponentInChildren<RoomRuntimeRoot>(includeInactive: true);
-            playerSpawnPoint ??= GetComponentInChildren<PlayerSpawnPoint>(includeInactive: true);
-            playerController ??= GetComponentInChildren<PlaceholderPlayerController>(includeInactive: true);
+            if (presentationRoot == null)
+            {
+                presentationRoot = GetComponentInChildren<PlatformPresentationRoot>(includeInactive: true);
+            }
+
+            if (roomRuntimeRoot == null)
+            {
+                roomRuntimeRoot = GetComponentInChildren<RoomRuntimeRoot>(includeInactive: true);
+            }
+
+            if (playerSpawnPoint == null)
+            {
+                playerSpawnPoint = GetComponentInChildren<PlayerSpawnPoint>(includeInactive: true);
+            }
+
+            if (playerController == null)
+            {
+                playerController = GetComponentInChildren<PlaceholderPlayerController>(includeInactive: true);
+            }
+        }
+
+        private void BuildImportedRoomIfAvailable()
+        {
+            if (sampleRoomRuntimeJson == null || roomRuntimeRoot == null)
+            {
+                return;
+            }
+
+            if (!HollowRuntimeV2Importer.TryImport(sampleRoomRuntimeJson.text, out var importedAsset, out var error))
+            {
+                Debug.LogError($"Failed to load M3 sample room '{sampleRoomRuntimeJson.name}': {error}");
+                return;
+            }
+
+            roomRuntimeRoot.BuildFrom(importedAsset);
         }
     }
 }

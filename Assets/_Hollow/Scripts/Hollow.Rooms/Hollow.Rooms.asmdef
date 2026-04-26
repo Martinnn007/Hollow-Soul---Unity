@@ -1,7 +1,9 @@
 {
   "name": "Hollow.Rooms",
   "rootNamespace": "Hollow.Rooms",
-  "references": [],
+  "references": [
+    "Hollow.Entities"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
