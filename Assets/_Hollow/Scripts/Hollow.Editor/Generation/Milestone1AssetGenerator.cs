@@ -1,10 +1,13 @@
 using System;
 using System.IO;
+using Hollow.Branches;
+using Hollow.Combat;
 using Hollow.Core.App;
 using Hollow.Entities;
 using Hollow.Persistence;
 using Hollow.Platform;
 using Hollow.Presentation;
+using Hollow.Rewards;
 using Hollow.Rooms;
 using Hollow.UI.MainMenu;
 using Hollow.UI.Shell;
@@ -22,11 +25,16 @@ namespace Hollow.Editor.Generation
     {
         private const string Root = "Assets/_Hollow";
         private const string SampleRoomRuntimePath = "Assets/_Hollow/Data/Rooms/Templates/combat_single_sample.hollowruntime.json";
+        private const string EnemyCatalogPath = "Assets/_Hollow/Data/Enemies/EnemyCatalog.asset";
+        private const string DifficultyTierPath = "Assets/_Hollow/Data/Enemies/Difficulty_DeveloperSample.asset";
+        private const string RewardPickupPrefabPath = "Assets/_Hollow/Prefabs/Rewards/RoomRewardPickup.prefab";
+        private const string HubReturnPortalPrefabPath = "Assets/_Hollow/Prefabs/Rewards/HubReturnPortal.prefab";
 
         [MenuItem("Hollow/Generation/Generate Milestone 1 Assets")]
         public static void Generate()
         {
             EnsureDirectories();
+            GenerateDataAssets();
             GeneratePrefabs();
             GenerateScenes();
             AssetDatabase.SaveAssets();
@@ -43,11 +51,84 @@ namespace Hollow.Editor.Generation
                 $"{Root}/Prefabs/Cameras",
                 $"{Root}/Prefabs/Player",
                 $"{Root}/Prefabs/Rooms",
+                $"{Root}/Prefabs/Combat",
+                $"{Root}/Prefabs/Rewards",
+                $"{Root}/Data/Enemies",
                 $"{Root}/Scenes"
             })
             {
                 Directory.CreateDirectory(path);
             }
+        }
+
+        private static void GenerateDataAssets()
+        {
+            var normal = SaveAsset(CreateEnemyDefinition(
+                "spawnEnemyNormal",
+                "Normal Chaser",
+                EnemyArchetypeId.Normal,
+                EnemyMovementMode.Grounded,
+                3,
+                1.5f,
+                1,
+                new Color(0.85f, 0.16f, 0.14f, 1f)), $"{Root}/Data/Enemies/Enemy_Normal.asset");
+            var flying = SaveAsset(CreateEnemyDefinition(
+                "spawnEnemyFlying",
+                "Flying Chaser",
+                EnemyArchetypeId.Flying,
+                EnemyMovementMode.Flying,
+                3,
+                1.8f,
+                1,
+                new Color(0.25f, 0.65f, 1f, 1f)), $"{Root}/Data/Enemies/Enemy_Flying.asset");
+            var fast = SaveAsset(CreateEnemyDefinition(
+                "spawnEnemyFast",
+                "Fast Chaser",
+                EnemyArchetypeId.Fast,
+                EnemyMovementMode.Grounded,
+                2,
+                2.4f,
+                1,
+                new Color(1f, 0.66f, 0.18f, 1f)), $"{Root}/Data/Enemies/Enemy_Fast.asset");
+            var heavy = SaveAsset(CreateEnemyDefinition(
+                "spawnEnemyHeavy",
+                "Heavy Chaser",
+                EnemyArchetypeId.Heavy,
+                EnemyMovementMode.Grounded,
+                6,
+                0.9f,
+                2,
+                new Color(0.62f, 0.22f, 0.82f, 1f)), $"{Root}/Data/Enemies/Enemy_Heavy.asset");
+
+            var catalog = ScriptableObject.CreateInstance<EnemyCatalog>();
+            catalog.Configure(new[] { normal, flying, fast, heavy }, normal);
+            SaveAsset(catalog, EnemyCatalogPath);
+
+            var difficulty = ScriptableObject.CreateInstance<DifficultyTierDefinition>();
+            difficulty.Configure("Developer Sample", 1f, 1f, 1f);
+            SaveAsset(difficulty, DifficultyTierPath);
+        }
+
+        private static EnemyDefinition CreateEnemyDefinition(
+            string spawnKind,
+            string displayName,
+            EnemyArchetypeId archetypeId,
+            EnemyMovementMode movementMode,
+            int health,
+            float speed,
+            int contactDamage,
+            Color color)
+        {
+            var definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.Configure(spawnKind, displayName, archetypeId, movementMode, health, speed, contactDamage, 1f, 0.32f, color);
+            return definition;
+        }
+
+        private static T SaveAsset<T>(T asset, string path) where T : UnityEngine.Object
+        {
+            AssetDatabase.DeleteAsset(path);
+            AssetDatabase.CreateAsset(asset, path);
+            return AssetDatabase.LoadAssetAtPath<T>(path);
         }
 
         private static void GeneratePrefabs()
@@ -57,6 +138,10 @@ namespace Hollow.Editor.Generation
             SavePrefab(CreateProfileSlotCard(), $"{Root}/Prefabs/UI/ProfileSlotCard.prefab");
             SavePrefab(CreateRoomRuntimeRoot(), $"{Root}/Prefabs/Rooms/RoomRuntimeRoot.prefab");
             SavePrefab(CreatePlayerCharacter(), $"{Root}/Prefabs/Player/PlayerCharacter.prefab");
+            SavePrefab(CreateEnemyBase(), $"{Root}/Prefabs/Combat/EnemyBase.prefab");
+            SavePrefab(CreateProjectileBase(), $"{Root}/Prefabs/Combat/ProjectileBase.prefab");
+            SavePrefab(CreateRewardPickup(), RewardPickupPrefabPath);
+            SavePrefab(CreateHubReturnPortal(), HubReturnPortalPrefabPath);
             SavePrefab(CreateCameraRig("WindowsCameraRig", HollowPlatformKind.WindowsStandard3D, new Vector3(0f, 7f, -10f), new Vector3(35f, 0f, 0f)), $"{Root}/Prefabs/Cameras/WindowsCameraRig.prefab");
             SavePrefab(CreateCameraRig("VisionOSBoundedRig", HollowPlatformKind.VisionOSBoundedTabletop, new Vector3(0f, 1.35f, -2.4f), new Vector3(24f, 0f, 0f)), $"{Root}/Prefabs/Cameras/VisionOSBoundedRig.prefab");
             SavePrefab(CreateCameraRig("VisionOSImmersiveRig", HollowPlatformKind.VisionOSImmersive, new Vector3(0f, 6f, -9f), new Vector3(32f, 0f, 0f)), $"{Root}/Prefabs/Cameras/VisionOSImmersiveRig.prefab");
@@ -112,6 +197,9 @@ namespace Hollow.Editor.Generation
         {
             var root = new GameObject("PlayerCharacter", typeof(CapsuleCollider));
             root.AddComponent<PlaceholderPlayerController>().ConfigureDefault();
+            root.AddComponent<CombatantHealth>().Configure(RoomCombatController.PlayerMaxHealth);
+            root.AddComponent<PlayerMovementController>();
+            root.AddComponent<PlayerWeaponController>();
 
             var collider = root.GetComponent<CapsuleCollider>();
             collider.radius = PlaceholderPlayerController.DefaultRadiusMeters;
@@ -133,6 +221,65 @@ namespace Hollow.Editor.Generation
                 UnityEngine.Object.DestroyImmediate(childCollider);
             }
 
+            return root;
+        }
+
+        private static GameObject CreateEnemyBase()
+        {
+            var root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            root.name = "EnemyBase";
+            root.transform.localScale = new Vector3(0.62f, 0.62f, 0.62f);
+            root.AddComponent<CombatantHealth>().Configure(ChaserEnemyController.DefaultHealth);
+            root.AddComponent<ChaserEnemyController>();
+            ApplyPrimitiveColor(root, new Color(0.85f, 0.16f, 0.14f, 1f));
+            return root;
+        }
+
+        private static GameObject CreateProjectileBase()
+        {
+            var root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            root.name = "ProjectileBase";
+            root.transform.localScale = Vector3.one * 0.22f;
+            root.AddComponent<ProjectileController>();
+            var collider = root.GetComponent<Collider>();
+            if (collider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(collider);
+            }
+
+            ApplyPrimitiveColor(root, new Color(0.9f, 0.95f, 1f, 1f));
+            return root;
+        }
+
+        private static GameObject CreateRewardPickup()
+        {
+            var root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            root.name = "RoomRewardPickup";
+            root.transform.localScale = Vector3.one * 0.35f;
+            root.AddComponent<RoomRewardPickup>();
+            var collider = root.GetComponent<Collider>();
+            if (collider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(collider);
+            }
+
+            ApplyPrimitiveColor(root, new Color(1f, 0.82f, 0.18f, 1f));
+            return root;
+        }
+
+        private static GameObject CreateHubReturnPortal()
+        {
+            var root = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            root.name = "HubReturnPortal";
+            root.transform.localScale = new Vector3(0.9f, 0.08f, 0.9f);
+            root.AddComponent<HubReturnPortal>();
+            var collider = root.GetComponent<Collider>();
+            if (collider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(collider);
+            }
+
+            ApplyPrimitiveColor(root, new Color(0.25f, 1f, 0.92f, 1f));
             return root;
         }
 
@@ -224,6 +371,14 @@ namespace Hollow.Editor.Generation
             var root = new GameObject("GameSessionRoot");
             var sampleRoomRuntimeJson = AssetDatabase.LoadAssetAtPath<TextAsset>(SampleRoomRuntimePath);
             root.AddComponent<GameSessionController>().Configure(platformKind, sampleRoomRuntimeJson);
+            var enemyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Prefabs/Combat/EnemyBase.prefab");
+            var projectilePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Prefabs/Combat/ProjectileBase.prefab");
+            var enemyCatalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogPath);
+            var difficultyTier = AssetDatabase.LoadAssetAtPath<DifficultyTierDefinition>(DifficultyTierPath);
+            var rewardPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RewardPickupPrefabPath);
+            var hubReturnPortalPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(HubReturnPortalPrefabPath);
+            root.AddComponent<RoomCombatController>().Configure(enemyPrefab, projectilePrefab, enemyCatalog, difficultyTier);
+            root.AddComponent<BranchSessionController>().Configure(rewardPrefab, hubReturnPortalPrefab);
 
             var presentationObject = new GameObject("WorldPresentationRoot");
             presentationObject.transform.SetParent(root.transform, false);
@@ -284,11 +439,27 @@ namespace Hollow.Editor.Generation
             var canvasObject = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var controller = canvasObject.AddComponent<PlatformShellController>();
             controller.Configure(platformKind);
+            canvasObject.AddComponent<CombatHudController>();
+            canvasObject.AddComponent<BranchMiniMapController>();
         }
 
         private static void SaveScene(Scene scene, string path)
         {
             EditorSceneManager.SaveScene(scene, path);
+        }
+
+        private static void ApplyPrimitiveColor(GameObject target, Color color)
+        {
+            var renderer = target.GetComponent<Renderer>();
+            if (renderer == null)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
+            {
+                color = color
+            };
         }
     }
 }

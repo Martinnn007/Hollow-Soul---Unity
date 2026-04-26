@@ -12,7 +12,10 @@
     "Hollow.Presentation",
     "Hollow.Entities",
     "Hollow.Rooms",
-    "Hollow.World"
+    "Hollow.World",
+    "Hollow.Combat",
+    "Hollow.Branches",
+    "Hollow.Rewards"
   ],
   "includePlatforms": [
     "Editor"

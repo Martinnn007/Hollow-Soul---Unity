@@ -13,6 +13,9 @@
     "Hollow.Entities",
     "Hollow.Rooms",
     "Hollow.World",
+    "Hollow.Combat",
+    "Hollow.Branches",
+    "Hollow.Rewards",
     "UnityEngine.UI"
   ],
   "includePlatforms": [

@@ -1,0 +1,19 @@
+{
+  "name": "Hollow.Combat",
+  "rootNamespace": "Hollow.Combat",
+  "references": [
+    "Hollow.Entities",
+    "Hollow.Input",
+    "Hollow.Rooms",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

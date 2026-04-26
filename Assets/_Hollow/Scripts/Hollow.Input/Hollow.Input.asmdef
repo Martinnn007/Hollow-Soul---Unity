@@ -3,7 +3,8 @@
   "rootNamespace": "Hollow.Input",
   "references": [
     "Hollow.Core",
-    "Hollow.Platform"
+    "Hollow.Platform",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

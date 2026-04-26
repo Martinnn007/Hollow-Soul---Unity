@@ -1,0 +1,53 @@
+using Hollow.Input;
+using Hollow.Rooms;
+using UnityEngine;
+
+namespace Hollow.Combat
+{
+    public sealed class PlayerWeaponController : MonoBehaviour
+    {
+        public const float DefaultCooldownSeconds = 0.22f;
+
+        [SerializeField] private float cooldownSeconds = DefaultCooldownSeconds;
+        [SerializeField] private GameObject projectilePrefab;
+        [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
+        [SerializeField] private RoomCombatController combatController;
+
+        private float nextAllowedShotTime;
+
+        public float CooldownSeconds => cooldownSeconds;
+
+        public void Configure(RoomRuntimeRoot room, RoomCombatController controller, GameObject prefab)
+        {
+            roomRuntimeRoot = room;
+            combatController = controller;
+            projectilePrefab = prefab;
+        }
+
+        private void Update()
+        {
+            var input = GameplayInputReader.ReadCurrent();
+            if (input.HasShoot)
+            {
+                TryFire(input.Shoot, Time.time);
+            }
+        }
+
+        public bool TryFire(Vector2 shootDirection, float timeSeconds)
+        {
+            var cardinal = GameplayInputReader.CardinalizeShoot(shootDirection);
+            if (cardinal.sqrMagnitude < 0.001f || timeSeconds < nextAllowedShotTime || projectilePrefab == null || combatController == null)
+            {
+                return false;
+            }
+
+            nextAllowedShotTime = timeSeconds + cooldownSeconds;
+            var projectileObject = Instantiate(projectilePrefab, transform.parent);
+            projectileObject.name = "PlayerProjectile";
+            projectileObject.transform.localPosition = transform.localPosition + new Vector3(cardinal.x, 0f, cardinal.y) * 0.42f + new Vector3(0f, 0.45f, 0f);
+            var projectile = projectileObject.GetComponent<ProjectileController>() ?? projectileObject.AddComponent<ProjectileController>();
+            projectile.Configure(roomRuntimeRoot, combatController, new Vector3(cardinal.x, 0f, cardinal.y));
+            return true;
+        }
+    }
+}

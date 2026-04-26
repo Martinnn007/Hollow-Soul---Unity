@@ -101,6 +101,9 @@ GameObject:
   - component: {fileID: 256995449777400149}
   - component: {fileID: 8004651717993114451}
   - component: {fileID: 3645221229817954147}
+  - component: {fileID: 6884480649955783043}
+  - component: {fileID: 6405129237974606141}
+  - component: {fileID: 2505458630128641707}
   m_Layer: 0
   m_Name: PlayerCharacter
   m_TagString: Untagged
@@ -160,3 +163,48 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Entities::Hollow.Entities.PlaceholderPlayerController
   heightMeters: 1.78
+--- !u!114 &6884480649955783043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8222509475206734107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef09babcb871c4862bc99b48b57ae80d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.CombatantHealth
+  maxHealth: 6
+  currentHealth: 6
+--- !u!114 &6405129237974606141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8222509475206734107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 773a2dc7cd08e46d798dc19039eb3776, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerMovementController
+  speedMetersPerSecond: 4
+  radiusMeters: 0.28
+  roomRuntimeRoot: {fileID: 0}
+--- !u!114 &2505458630128641707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8222509475206734107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da11ebaa92f024860aece1c0349026a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerWeaponController
+  cooldownSeconds: 0.22
+  projectilePrefab: {fileID: 0}
+  roomRuntimeRoot: {fileID: 0}
+  combatController: {fileID: 0}

@@ -12,6 +12,9 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone1MenuProfilesAndRouting.md` describes the first menu/profile/platform routing layer.
 - `Docs/Milestone2SharedRuntimeShell.md` describes the shared game-world shell, placeholder room, player spawn, and platform presentation scale.
 - `Docs/Milestone3HollowRuntimeV2Import.md` describes the imported static sample room and HollowRuntime V2 importer.
+- `Docs/Milestone4PlayableCombatLoop.md` describes the first playable movement, shooting, enemy, room-clear, and HUD loop.
+- `Docs/Milestone5EnemyArchetypesAndDiagnostics.md` describes data-driven enemy archetypes, difficulty tuning, readability, diagnostics, and boss-shell groundwork.
+- `Docs/Milestone6BranchTraversalRewards.md` describes the deterministic five-room branch, door traversal, minimap, runtime rewards, and hub-return portal.
 
 ## Required Setup
 

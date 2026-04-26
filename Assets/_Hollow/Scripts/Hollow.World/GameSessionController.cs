@@ -54,16 +54,27 @@ namespace Hollow.World
         {
             ResolveReferences();
             presentationRoot?.Configure(platformKind);
-            BuildImportedRoomIfAvailable();
-            ResolveReferences();
-
-            var spawnPosition = playerSpawnPoint != null ? playerSpawnPoint.WorldPosition : Vector3.zero;
+            var importedAsset = ImportRoomAssetIfAvailable();
+            var spawnPosition = importedAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             var selectedProfile = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile;
             SessionState = GameSessionState.Create(sessionMode, platformKind, selectedProfile, spawnPosition);
 
+            if (importedAsset != null && TryGetBranchSessionController(out var branchSessionController))
+            {
+                branchSessionController.Initialize(importedAsset, SessionState);
+                ResolveReferences();
+                return;
+            }
+
+            if (importedAsset != null && roomRuntimeRoot != null)
+            {
+                roomRuntimeRoot.BuildFrom(importedAsset);
+                ResolveReferences();
+            }
+
             if (playerController != null)
             {
-                playerController.transform.position = spawnPosition;
+                playerController.transform.localPosition = spawnPosition;
                 playerController.ConfigureDefault();
             }
         }
@@ -91,20 +102,35 @@ namespace Hollow.World
             }
         }
 
-        private void BuildImportedRoomIfAvailable()
+        private ImportedRoomRuntimeAsset ImportRoomAssetIfAvailable()
         {
-            if (sampleRoomRuntimeJson == null || roomRuntimeRoot == null)
+            if (sampleRoomRuntimeJson == null)
             {
-                return;
+                return null;
             }
 
             if (!HollowRuntimeV2Importer.TryImport(sampleRoomRuntimeJson.text, out var importedAsset, out var error))
             {
                 Debug.LogError($"Failed to load M3 sample room '{sampleRoomRuntimeJson.name}': {error}");
-                return;
+                return null;
             }
 
-            roomRuntimeRoot.BuildFrom(importedAsset);
+            return importedAsset;
+        }
+
+        private bool TryGetBranchSessionController(out IBranchSessionController branchSessionController)
+        {
+            foreach (var behaviour in GetComponents<MonoBehaviour>())
+            {
+                if (behaviour is IBranchSessionController controller)
+                {
+                    branchSessionController = controller;
+                    return true;
+                }
+            }
+
+            branchSessionController = null;
+            return false;
         }
     }
 }

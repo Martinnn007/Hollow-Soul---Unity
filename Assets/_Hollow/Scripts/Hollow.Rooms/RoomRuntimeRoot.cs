@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hollow.Rooms
 {
@@ -8,12 +10,25 @@ namespace Hollow.Rooms
         public const float DefaultDepthMeters = 7f;
 
         [SerializeField] private Vector2 roomSizeMeters = new(DefaultWidthMeters, DefaultDepthMeters);
+        private readonly Dictionary<string, Renderer> doorRenderersByDirection = new();
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
         public Vector3 CenterWorldPosition => transform.position;
 
         public ImportedRoomRuntimeAsset LastBuiltAsset { get; private set; }
+
+        public RoomLayout CurrentLayout => LastBuiltAsset?.Layout;
+
+        public Rect LocalBounds => CurrentLayout?.Bounds ?? Rect.MinMaxRect(-DefaultWidthMeters * 0.5f, -DefaultDepthMeters * 0.5f, DefaultWidthMeters * 0.5f, DefaultDepthMeters * 0.5f);
+
+        public System.Collections.Generic.IReadOnlyList<RoomLayoutObstacle> Obstacles => CurrentLayout?.Obstacles ?? System.Array.Empty<RoomLayoutObstacle>();
+
+        public System.Collections.Generic.IReadOnlyList<ImportedSpawnPoint> EnemySpawns => LastBuiltAsset?.EnemySpawns ?? System.Array.Empty<ImportedSpawnPoint>();
+
+        public System.Collections.Generic.IReadOnlyList<RoomDoorPort> DoorPorts => LastBuiltAsset?.DoorPorts ?? System.Array.Empty<RoomDoorPort>();
+
+        public Vector3 SafeStartLocalPosition => LastBuiltAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
 
         public void ConfigureDefault()
         {
@@ -31,10 +46,30 @@ namespace Hollow.Rooms
             LastBuiltAsset = asset;
             roomSizeMeters = new Vector2(asset.Layout.WidthTiles, asset.Layout.HeightTiles);
             ClearChildren();
+            doorRenderersByDirection.Clear();
             BuildFloor(asset.Layout);
             BuildObstacles(asset.Layout);
             BuildDoors(asset);
             BuildSpawnMarkers(asset);
+        }
+
+        public bool TryGetDoorPort(string direction, out RoomDoorPort port)
+        {
+            port = DoorPorts.FirstOrDefault(candidate => candidate.Direction == direction);
+            return port != null;
+        }
+
+        public void SetDoorVisualState(string direction, RoomDoorVisualState state)
+        {
+            if (!doorRenderersByDirection.TryGetValue(direction, out var renderer) || renderer == null)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
+            {
+                color = ColorForDoorState(state)
+            };
         }
 
         private void ClearChildren()
@@ -96,6 +131,7 @@ namespace Hollow.Rooms
                 marker.transform.localPosition = new Vector3(port.Position.x, 0.65f, port.Position.z);
                 marker.transform.localScale = DoorScaleFor(port.Direction);
                 ApplyColor(marker, new Color(0.1f, 0.48f, 0.95f, 1f));
+                doorRenderersByDirection[port.Direction] = marker.GetComponent<Renderer>();
 
                 var collider = marker.GetComponent<Collider>();
                 if (collider != null)
@@ -103,6 +139,18 @@ namespace Hollow.Rooms
                     collider.enabled = false;
                 }
             }
+        }
+
+        private static Color ColorForDoorState(RoomDoorVisualState state)
+        {
+            return state switch
+            {
+                RoomDoorVisualState.Locked => new Color(0.82f, 0.28f, 0.18f, 1f),
+                RoomDoorVisualState.Active => new Color(0.12f, 0.62f, 1f, 1f),
+                RoomDoorVisualState.Cleared => new Color(0.25f, 1f, 0.45f, 1f),
+                RoomDoorVisualState.Unavailable => new Color(0.2f, 0.22f, 0.24f, 0.55f),
+                _ => Color.white
+            };
         }
 
         private void BuildSpawnMarkers(ImportedRoomRuntimeAsset asset)

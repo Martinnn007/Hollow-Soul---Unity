@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1fec2d515af6459795b38714784fccc, type: 3}
+  m_Name: EnemyCatalog
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyCatalog
+  definitions:
+  - {fileID: 11400000, guid: 762911164358f45e9a10662b9405ede9, type: 2}
+  - {fileID: 11400000, guid: e2d11d204c6704a6888be728834fb9ab, type: 2}
+  - {fileID: 11400000, guid: 2f928323a26074fba8e9133eaab67331, type: 2}
+  - {fileID: 11400000, guid: ca724ecb923374a11b71cdd40e26ec88, type: 2}
+  fallbackDefinition: {fileID: 11400000, guid: 762911164358f45e9a10662b9405ede9, type: 2}

@@ -1,0 +1,22 @@
+{
+  "name": "Hollow.Branches",
+  "rootNamespace": "Hollow.Branches",
+  "references": [
+    "Hollow.Core",
+    "Hollow.Combat",
+    "Hollow.Entities",
+    "Hollow.Input",
+    "Hollow.Rewards",
+    "Hollow.Rooms",
+    "Hollow.World"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
