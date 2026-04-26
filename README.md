@@ -28,6 +28,8 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone17FeatureBranchTreasureRooms.md` describes the first special feature-room role, treasure-room auto-clear behavior, and M17 branch identity.
 - `Docs/Milestone18SeededRandomRewards.md` describes seeded automatic reward pools, role-specific reward rolls, and reward effect persistence.
 - `Docs/Milestone19EnemyEncounterContent.md` describes seeded encounter tables and the first distinct enemy behavior content pass.
+- `Docs/Milestone20BranchFeaturesShopsSecretsKeys.md` describes boss-key locks, visible debug secrets, the inter-branch hub, hub shops, and seeded next-branch portals.
+- `Docs/Milestone21ShopChoiceUi.md` describes visible inter-branch hub shop cards and card-specific purchasable rewards.
 
 ## Required Setup
 

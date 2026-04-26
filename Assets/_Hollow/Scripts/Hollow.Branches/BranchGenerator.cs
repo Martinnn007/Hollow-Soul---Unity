@@ -14,6 +14,7 @@ namespace Hollow.Branches
         public const string SeededMacroBranchId = "m15_seeded_macro_branch_v1";
         public const string FeatureBranchId = "m17_feature_branch_v1";
         public const string EnemyEncounterBranchId = "m19_enemy_encounter_content_v1";
+        public const string BranchFeaturesId = "m20_branch_features_v1";
         public const int DefaultMacroFixtureSeed = 14001;
         public const int DefaultSeededMacroSeed = 15001;
 
@@ -102,6 +103,25 @@ namespace Hollow.Branches
             }
 
             return CreateSeededBranch(content, settings, seed, EnemyEncounterBranchId, enableTreasureLeaf: true, milestoneLabel: "M19");
+        }
+
+        public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
+        {
+            if (content == null || !content.HasMacroFixturePool)
+            {
+                throw new InvalidOperationException("M20 branch feature generation requires a complete macro room pool.");
+            }
+
+            settings = settings != null ? settings : BranchGenerationSettingsDefinition.CreateRuntimeDefault();
+            if (settings.AllowLoops)
+            {
+                throw new InvalidOperationException("M20 branch feature generation does not support loops.");
+            }
+
+            var graph = CreateSeededBranch(content, settings, seed, BranchFeaturesId, enableTreasureLeaf: true, milestoneLabel: "M20");
+            PromoteFeatureRooms(graph);
+            ApplyBossKeyLock(graph);
+            return graph;
         }
 
         private static BranchFloorGraph CreateSeededBranch(
@@ -334,6 +354,63 @@ namespace Hollow.Branches
                 .ThenBy(record => $"room_{record.TempIndex:00}")
                 .ToList();
             return fallback.Count > 0 ? fallback[0].TempIndex : -1;
+        }
+
+        private static void PromoteFeatureRooms(BranchFloorGraph graph)
+        {
+            var treasure = graph.Rooms
+                .Where(room => room.Role == BranchRoomRole.Treasure)
+                .OrderByDescending(room => DistanceFromOrigin(graph, room.Id))
+                .ThenBy(room => room.Id.Value, StringComparer.Ordinal)
+                .FirstOrDefault();
+            if (treasure != null)
+            {
+                treasure.OverrideRole(BranchRoomRole.Secret);
+            }
+        }
+
+        private static void ApplyBossKeyLock(BranchFloorGraph graph)
+        {
+            var bossRoom = graph.Rooms.FirstOrDefault(room => room.Role == BranchRoomRole.Boss);
+            if (bossRoom == null)
+            {
+                return;
+            }
+
+            foreach (var connection in graph.Connections.Where(connection =>
+                         connection.FromRoomId == bossRoom.Id || connection.ToRoomId == bossRoom.Id))
+            {
+                connection.SetLockKind(BranchConnectionLockKind.BossKey);
+            }
+        }
+
+        private static int DistanceFromOrigin(BranchFloorGraph graph, BranchRoomId target)
+        {
+            var distances = new Dictionary<BranchRoomId, int>();
+            var queue = new Queue<BranchRoomId>();
+            distances[BranchRoomId.Origin] = 0;
+            queue.Enqueue(BranchRoomId.Origin);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (current == target)
+                {
+                    return distances[current];
+                }
+
+                foreach (var connection in graph.ConnectionsFrom(current))
+                {
+                    if (distances.ContainsKey(connection.ToRoomId))
+                    {
+                        continue;
+                    }
+
+                    distances[connection.ToRoomId] = distances[current] + 1;
+                    queue.Enqueue(connection.ToRoomId);
+                }
+            }
+
+            return 0;
         }
 
         private static int RoomNumber(BranchRoomId roomId)

@@ -100,6 +100,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - hollow.vfx
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2be4ffcc0794a4d4082b61169b384a2d
+    m_Address: hollow.material.HubShop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2cb4108a7b7524d95804c7d150581c99
     m_Address: hollow.prefab.enemy_base
     m_ReadOnly: 0
@@ -120,6 +126,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ef7cfa74b06f482db9ae07e4136334c
     m_Address: hollow.material.EnemyCharger
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35bc08bb12c96493983f0321c5d29b4b
+    m_Address: hollow.material.NextBranchPortal
     m_ReadOnly: 0
     m_SerializedLabels:
     - hollow.core
@@ -251,6 +263,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - hollow.data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b183b75b74694fdeb991991d26d2741
+    m_Address: hollow.material.BossKeyPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9bce2c4c11dbf4389a75d57e6887997e
     m_Address: hollow.material.PlayerBody
     m_ReadOnly: 0
@@ -327,6 +345,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c55634fd436b94be3a99e1ca4cf79dd7
     m_Address: hollow.material.DesignerHole
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c6998769b86aa4719892f64226e7f31c
+    m_Address: hollow.material.SecretDoorDebug
     m_ReadOnly: 0
     m_SerializedLabels:
     - hollow.core

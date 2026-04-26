@@ -36,7 +36,7 @@ namespace Hollow.Branches
                     continue;
                 }
 
-                if (room.Role == BranchRoomRole.Treasure)
+                if (room.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret)
                 {
                     rewards.Add(new RewardGrant(room.Id.Value, "treasure_cache", "Treasure Cache", RewardKind.Currency, 15));
                     continue;
@@ -90,6 +90,7 @@ namespace Hollow.Branches
             {
                 BranchRoomRole.Boss => bossRoomPool,
                 BranchRoomRole.Treasure => treasureRoomPool,
+                BranchRoomRole.Secret => treasureRoomPool,
                 _ => standardRoomPool
             };
 
@@ -101,7 +102,7 @@ namespace Hollow.Branches
             return room.Role switch
             {
                 BranchRoomRole.Boss => new RewardGrant(room.Id.Value, "boss_sigil", "Boss Sigil", RewardKind.PassiveItem, 25),
-                BranchRoomRole.Treasure => new RewardGrant(room.Id.Value, "treasure_cache", "Treasure Cache", RewardKind.Currency, 15),
+                BranchRoomRole.Treasure or BranchRoomRole.Secret => new RewardGrant(room.Id.Value, "treasure_cache", "Treasure Cache", RewardKind.Currency, 15),
                 _ => FallbackStandardReward(room.Id.Value, graph.BranchId, graph.Seed)
             };
         }

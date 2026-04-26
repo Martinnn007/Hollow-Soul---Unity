@@ -57,6 +57,14 @@ namespace Hollow.Rooms
             BuildSpawnMarkers(asset);
         }
 
+        public void ClearRuntime()
+        {
+            LastBuiltAsset = null;
+            ClearChildren();
+            doorRenderersByDirection.Clear();
+            doorRenderersByPortId.Clear();
+        }
+
         public bool TryGetDoorPort(string direction, out RoomDoorPort port)
         {
             port = DoorPorts.FirstOrDefault(candidate => candidate.Direction == direction);

@@ -48,7 +48,7 @@ namespace Hollow.Branches
 
         public RoomInstanceFootprint Footprint { get; }
 
-        public BranchRoomRole Role { get; }
+        public BranchRoomRole Role { get; private set; }
 
         public bool IsVisited { get; private set; }
 
@@ -82,6 +82,11 @@ namespace Hollow.Branches
             {
                 RewardState = RoomRewardState.Claimed;
             }
+        }
+
+        public void OverrideRole(BranchRoomRole role)
+        {
+            Role = role;
         }
 
         public void Restore(bool isVisited, bool isCleared, RoomRewardState rewardState)

@@ -6,6 +6,7 @@ namespace Hollow.Branches
         Combat = 1,
         Reward = 2,
         Boss = 3,
-        Treasure = 4
+        Treasure = 4,
+        Secret = 5
     }
 }

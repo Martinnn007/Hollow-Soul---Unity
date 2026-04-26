@@ -29,6 +29,22 @@ namespace Hollow.Rewards
             return collectedRewards.Any(record => record.RoomId == roomId);
         }
 
+        public bool SpendSouls(int amount)
+        {
+            if (amount <= 0)
+            {
+                return true;
+            }
+
+            if (RunSouls < amount)
+            {
+                return false;
+            }
+
+            RunSouls -= amount;
+            return true;
+        }
+
         public RunEconomySaveState ToSaveState()
         {
             return new RunEconomySaveState

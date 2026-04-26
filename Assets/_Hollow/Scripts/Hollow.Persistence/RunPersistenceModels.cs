@@ -12,10 +12,17 @@ namespace Hollow.Persistence
         public string currentRoomId = "origin";
         public string platformKind = string.Empty;
         public int playerCurrentHealth = 6;
+        public int branchDepth;
+        public int currentBranchSeed;
+        public string bossKeyState = "None";
+        public string bossKeyRoomId = string.Empty;
+        public string secretRoomId = string.Empty;
+        public bool bossDoorUnlocked;
         public long savedAtUtcTicks;
         public List<BranchRoomSaveState> rooms = new();
         public List<RunRewardSaveState> proceduralRewardPlan = new();
         public List<RoomEncounterSaveState> encounterPlan = new();
+        public HubShopStateSaveState interBranchHub = new();
         public RunEconomySaveState economy = new();
         public PlayerRunStatsSaveState playerStats = new();
     }
@@ -63,6 +70,34 @@ namespace Hollow.Persistence
     {
         public int runSouls;
         public List<RunRewardSaveState> collectedRewards = new();
+    }
+
+    [Serializable]
+    public sealed class HubShopStateSaveState
+    {
+        public bool isActive;
+        public List<HubShopOfferSaveState> offers = new();
+        public List<NextBranchChoiceSaveState> nextChoices = new();
+    }
+
+    [Serializable]
+    public sealed class HubShopOfferSaveState
+    {
+        public string offerId = string.Empty;
+        public string displayName = string.Empty;
+        public int price;
+        public int healAmount;
+        public bool isPurchased;
+        public RunRewardSaveState reward = new();
+    }
+
+    [Serializable]
+    public sealed class NextBranchChoiceSaveState
+    {
+        public string choiceId = string.Empty;
+        public string displayName = string.Empty;
+        public int seed;
+        public int index;
     }
 
     [Serializable]
