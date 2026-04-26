@@ -3,6 +3,8 @@ using System.Linq;
 using Hollow.Core;
 using Hollow.Core.App;
 using Hollow.Persistence;
+using Hollow.Data.Definitions;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 using UnityEngine.UI;
@@ -104,12 +106,16 @@ namespace Hollow.RoomDesigner
             else if (input.ErasePressed || CurrentTool == RoomDesignerTool.Erase && input.PlacePressed)
             {
                 EraseAtCursor();
+                VfxPresenter.Play(VfxCueId.DesignerErase, CursorWorldPosition(), previewRoot);
+                AudioPresenter.Play(AudioCueId.DesignerErase, CursorWorldPosition());
                 SaveDraft("Erased cell/entity");
                 changed = true;
             }
             else if (input.PlacePressed)
             {
                 PlaceCurrentTool();
+                VfxPresenter.Play(VfxCueId.DesignerPlace, CursorWorldPosition(), previewRoot);
+                AudioPresenter.Play(AudioCueId.DesignerPlace, CursorWorldPosition());
                 SaveDraft($"Placed {CurrentTool}");
                 changed = true;
             }
@@ -196,6 +202,13 @@ namespace Hollow.RoomDesigner
                     SetNearestDoor(RoomDesignerDoorKinds.Secret);
                     break;
             }
+        }
+
+        private Vector3 CursorWorldPosition()
+        {
+            return previewRoot != null
+                ? previewRoot.TransformPoint(new Vector3(CursorX, CursorLayer + 0.5f, CursorZ))
+                : transform.TransformPoint(new Vector3(CursorX, CursorLayer + 0.5f, CursorZ));
         }
 
         private void SetBaseCell(string kind)
@@ -295,19 +308,19 @@ namespace Hollow.RoomDesigner
             cursor.transform.SetParent(previewRoot, false);
             cursor.transform.localPosition = new Vector3(CursorX, CursorLayer + 0.55f, CursorZ);
             cursor.transform.localScale = new Vector3(1.08f, 0.08f, 1.08f);
-            ApplyColor(cursor, new Color(1f, 0.9f, 0.15f, 1f));
+            MaterialResolver.ApplyTo(cursor, MaterialRole.DesignerCursor);
         }
 
         private void BuildGrid()
         {
             for (var x = -6.5f; x <= 6.51f; x += 1f)
             {
-                BuildCube($"grid_x_{x}", new Vector3(x, 0.02f, 0f), new Vector3(0.02f, 0.02f, 7f), new Color(0.85f, 0.9f, 1f, 0.65f));
+                BuildCube($"grid_x_{x}", new Vector3(x, 0.02f, 0f), new Vector3(0.02f, 0.02f, 7f), MaterialRole.DesignerGrid);
             }
 
             for (var z = -3.5f; z <= 3.51f; z += 1f)
             {
-                BuildCube($"grid_z_{z}", new Vector3(0f, 0.025f, z), new Vector3(13f, 0.02f, 0.02f), new Color(0.85f, 0.9f, 1f, 0.65f));
+                BuildCube($"grid_z_{z}", new Vector3(0f, 0.025f, z), new Vector3(13f, 0.02f, 0.02f), MaterialRole.DesignerGrid);
             }
         }
 
@@ -315,15 +328,15 @@ namespace Hollow.RoomDesigner
         {
             if (cell.kind == RoomDesignerCellKinds.Ground)
             {
-                BuildCube($"tileGround_{cell.x}_{cell.z}", new Vector3(cell.x, -0.5f, cell.z), Vector3.one, new Color(0.23f, 0.32f, 0.38f, 1f));
+                BuildCube($"tileGround_{cell.x}_{cell.z}", new Vector3(cell.x, -0.5f, cell.z), Vector3.one, MaterialRole.DesignerGround);
             }
             else if (cell.kind == RoomDesignerCellKinds.Hole)
             {
-                BuildCube($"tileHole_{cell.x}_{cell.z}", new Vector3(cell.x, 0.03f, cell.z), new Vector3(0.86f, 0.06f, 0.86f), Color.black);
+                BuildCube($"tileHole_{cell.x}_{cell.z}", new Vector3(cell.x, 0.03f, cell.z), new Vector3(0.86f, 0.06f, 0.86f), MaterialRole.DesignerHole);
             }
             else if (cell.kind == RoomDesignerCellKinds.Rock)
             {
-                BuildCube($"rockTile_{cell.x}_{cell.z}_{cell.layer}", new Vector3(cell.x, cell.layer + 0.5f, cell.z), Vector3.one, new Color(0.42f, 0.39f, 0.34f, 1f));
+                BuildCube($"rockTile_{cell.x}_{cell.z}_{cell.layer}", new Vector3(cell.x, cell.layer + 0.5f, cell.z), Vector3.one, MaterialRole.DesignerRock);
             }
 
             if (LabelsVisible)
@@ -334,13 +347,13 @@ namespace Hollow.RoomDesigner
 
         private void BuildDoor(RoomDesignerDoorPortState door)
         {
-            var color = door.state switch
+            var role = door.state switch
             {
-                RoomDesignerDoorKinds.Door => new Color(0.1f, 0.55f, 1f, 1f),
-                RoomDesignerDoorKinds.Secret => new Color(0.9f, 0.25f, 1f, 1f),
-                _ => new Color(0.6f, 0.68f, 0.78f, 0.8f)
+                RoomDesignerDoorKinds.Door => MaterialRole.DesignerDoorActive,
+                RoomDesignerDoorKinds.Secret => MaterialRole.DesignerDoorSecret,
+                _ => MaterialRole.DesignerDoorAvailable
             };
-            BuildCube($"doorAnchor_{door.direction}_{door.state}", new Vector3(door.x, 0.65f, door.z), door.direction is "east" or "west" ? new Vector3(0.18f, 1.3f, 1f) : new Vector3(1f, 1.3f, 0.18f), color);
+            BuildCube($"doorAnchor_{door.direction}_{door.state}", new Vector3(door.x, 0.65f, door.z), door.direction is "east" or "west" ? new Vector3(0.18f, 1.3f, 1f) : new Vector3(1f, 1.3f, 0.18f), role);
             if (LabelsVisible)
             {
                 BuildLabel($"doorAnchor{door.state}", new Vector3(door.x, 1.5f, door.z));
@@ -354,22 +367,32 @@ namespace Hollow.RoomDesigner
             markerObject.transform.SetParent(previewRoot, false);
             markerObject.transform.localPosition = new Vector3(marker.x, marker.y + 0.2f, marker.z);
             markerObject.transform.localScale = Vector3.one * 0.36f;
-            ApplyColor(markerObject, marker.kind == RoomDesignerMarkerKinds.SafeStart ? new Color(0.32f, 1f, 0.56f, 1f) : marker.kind == RoomDesignerMarkerKinds.Enemy ? new Color(1f, 0.2f, 0.18f, 1f) : new Color(1f, 0.82f, 0.18f, 1f));
+            MaterialResolver.ApplyTo(markerObject, RoleForMarker(marker.kind));
             if (LabelsVisible)
             {
                 BuildLabel(marker.kind, new Vector3(marker.x, marker.y + 0.72f, marker.z));
             }
         }
 
-        private GameObject BuildCube(string name, Vector3 position, Vector3 scale, Color color)
+        private GameObject BuildCube(string name, Vector3 position, Vector3 scale, MaterialRole role)
         {
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = name;
             cube.transform.SetParent(previewRoot, false);
             cube.transform.localPosition = position;
             cube.transform.localScale = scale;
-            ApplyColor(cube, color);
+            MaterialResolver.ApplyTo(cube, role);
             return cube;
+        }
+
+        private static MaterialRole RoleForMarker(string markerKind)
+        {
+            return markerKind switch
+            {
+                RoomDesignerMarkerKinds.SafeStart => MaterialRole.DesignerSpawnSafeStart,
+                RoomDesignerMarkerKinds.Enemy => MaterialRole.DesignerSpawnEnemy,
+                _ => MaterialRole.DesignerSpawnReward
+            };
         }
 
         private void BuildLabel(string label, Vector3 position)
@@ -455,18 +478,6 @@ namespace Hollow.RoomDesigner
         {
             var selected = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile;
             return selected != null && !selected.IsEmpty ? new ProfileSlotId(selected.SlotIndex) : new ProfileSlotId(0);
-        }
-
-        private static void ApplyColor(GameObject target, Color color)
-        {
-            var renderer = target.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-                {
-                    color = color
-                };
-            }
         }
 
         private static void ClearChildren(Transform root)

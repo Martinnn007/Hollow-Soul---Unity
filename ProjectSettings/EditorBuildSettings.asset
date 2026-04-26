@@ -24,4 +24,5 @@ EditorBuildSettings:
     path: Assets/_Hollow/Scenes/RoomDesigner.unity
     guid: 3c44dee4e52cd42ef86f8234b30143df
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 3442c961a66a24c709d3d40ec5e89969, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

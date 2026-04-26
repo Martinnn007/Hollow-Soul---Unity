@@ -1,0 +1,429 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Hollow Local Content
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Hollow Local Content
+  m_GUID: e7a761b38a2f5418c8ba448dae321797
+  m_SerializeEntries:
+  - m_GUID: 012308a956b344467b21917ccf0eb437
+    m_Address: hollow.prefab.room_designer_root
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.designer
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0503ee0e3df8b4a89a74b09190a427bc
+    m_Address: hollow.material.DesignerRock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0554102f67cc144f8b78934032ffc971
+    m_Address: hollow.prefab.room_runtime_root
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.rooms
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09f11d065740146329b31520c9adcfa8
+    m_Address: hollow.vfx.ProjectileFire
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c545ba8b340e4f4c93b510773c44657
+    m_Address: hollow.platform.VisionOSBoundedTabletop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.platform
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 102a58c67a6f94489bea6e12e104d121
+    m_Address: hollow.prefab.main_menu_root
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.ui
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 12e8da0ad1e174423b78649aa0163f04
+    m_Address: hollow.material.DesignerSpawnSafeStart
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 132595a7b88ca4b4cb8953e255e1ce47
+    m_Address: hollow.material.HubReturnPortal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25b7075bd260e49c6b66a613c19602b9
+    m_Address: hollow.material.DesignerDoorAvailable
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2682024b073bf499ebee796ce36a3419
+    m_Address: hollow.prototype_lock.PrototypeLockChecklist
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    - hollow.prototype-lock
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 269255aa377954efc8bd9337ee6cc7c8
+    m_Address: hollow.material.DesignerSpawnEnemy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26a7a8a3089994a87881f20632c4f760
+    m_Address: hollow.vfx.DesignerErase
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2cb4108a7b7524d95804c7d150581c99
+    m_Address: hollow.prefab.enemy_base
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.enemies
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d949442fd7a74f7ca05b2d065d65635
+    m_Address: hollow.audio.RewardClaim
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e61575fe7cfd4991bbbfa1b0bd512e3
+    m_Address: hollow.platform.VisionOSImmersive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.platform
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e0c7b5545ca94d39bf5c0f0a7a041ae
+    m_Address: hollow.material.EnemyHeavy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3eeb170c9a0c7491cbb908b97778070e
+    m_Address: hollow.material.RoomObstacleRock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f532d94e607f44ab80a793771484187
+    m_Address: hollow.prototype_lock.BuildHandoff_Prototype
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    - hollow.prototype-lock
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 421b8b4d3a63845c3938f029ad076295
+    m_Address: hollow.audio.DesignerPlace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42aedd93ff0d3433ca6312ae8e9dbd6f
+    m_Address: hollow.material.EnemyFast
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4416237386b114c5999673b866d1d590
+    m_Address: hollow.material.DesignerSpawnReward
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53e6e6bba3c4b4146bcd9e022832a833
+    m_Address: hollow.material.SpawnEnemy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57f9ae63173744e668d4654a6114cc96
+    m_Address: hollow.material.Projectile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a51868a494044ee8b3e073abda954b1
+    m_Address: hollow.audio.EnemyDeath
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6141bbaeaac60454389c1359028428e9
+    m_Address: hollow.material.RoomFloor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e12f247fc4b24ff9b34e5fe3cbb9a11
+    m_Address: hollow.material.EnemyNormal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 732d434acc71e406d8faa53ed90a731f
+    m_Address: hollow.material.RewardPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77fced97c9174496caeef231dc0d143c
+    m_Address: hollow.rooms.combat_single_sample
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.rooms
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84f582628755244f2bceaa9735f35649
+    m_Address: hollow.vfx.EnemyDeath
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8675a1466cbd546f187a2e81be504c11
+    m_Address: hollow.platform.WindowsStandard3D
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.platform
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 878c557961d0847ceb299beb13f80484
+    m_Address: hollow.material.DoorCleared
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93867c93786824f2b9a66676ac896a37
+    m_Address: hollow.presentation.catalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 949463d2054eb4012bf7bd23f4c50677
+    m_Address: hollow.prefab.projectile_base
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.player
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94d86fb86ac374bb4b37e9db5de94553
+    m_Address: hollow.material.DesignerGround
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95a161ace6b6f4e30807485a6be8924a
+    m_Address: hollow.presentation.palette.prototype
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9bce2c4c11dbf4389a75d57e6887997e
+    m_Address: hollow.material.PlayerBody
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e26367596d1045f38ee9aa91265b337
+    m_Address: hollow.audio.ProjectileFire
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a08935c3127ab42f3827de23be332797
+    m_Address: hollow.vfx.PlayerHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5c0cbf8a7ad8491a87ae6761d5dfc9f
+    m_Address: hollow.material.DoorLocked
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a67a31d1ccaa34dbdba1a4479ba11afb
+    m_Address: hollow.material.DesignerGrid
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7d8b2b2769264700a7fcaba2d8b0d51
+    m_Address: hollow.build_automation.prototype
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.build-automation
+    - hollow.data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afbe4414f6d324727888a80276bf4122
+    m_Address: hollow.material.RoomOriginMarker
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afd32d4cc236f42b7815cd85cda342d7
+    m_Address: hollow.vfx.PortalComplete
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6223a21be7164673b44b2a79a48ce35
+    m_Address: hollow.material.DoorActive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8bce023c314b4964b5f34605cd137d6
+    m_Address: hollow.material.DesignerDoorActive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bca780ac174dc4e9d936cda47e067409
+    m_Address: hollow.audio.DoorUnlock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0102fe80b0b446719752b51221d64b8
+    m_Address: hollow.prototype_lock.PerformanceBudget_Prototype
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    - hollow.prototype-lock
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c55634fd436b94be3a99e1ca4cf79dd7
+    m_Address: hollow.material.DesignerHole
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c748573eb358a486984e4a975ea0bff7
+    m_Address: hollow.audio.PlayerHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf59c72d256be4914b50420c3c080e47
+    m_Address: hollow.audio.DesignerErase
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d11854e73a9f24bbba1afef48a13f864
+    m_Address: hollow.vfx.EnemyHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d61e7c2270f764749aaf3ce737143651
+    m_Address: hollow.vfx.RoomClear
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d839b7774bbaf48809900665b38e7d2f
+    m_Address: hollow.material.CombatHitFlash
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da9daf63893084398b1f7a40889733f8
+    m_Address: hollow.material.SpawnSafeStart
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db5d88bd530d044859e3f241cfe7281b
+    m_Address: hollow.material.DesignerCursor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df4d57a4deb544022bd8b4e40a28b243
+    m_Address: hollow.material.SpawnReward
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e76b5ef587cd04f388c0aa6f6edd0831
+    m_Address: hollow.vfx.DesignerPlace
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8d84e733cb264ce995dd43779293626
+    m_Address: hollow.material.EnemyFlying
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea68c2172bb434ed9a210976651d1d90
+    m_Address: hollow.prefab.player_character
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.player
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed763e64a177c4fabb8acbd4bde02cce
+    m_Address: hollow.audio.EnemyHit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee2c4f8360aef4cb3bb0ad685ffb870a
+    m_Address: hollow.vfx.DoorUnlock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f13bf6f6eb85048b9b2b91b2dbf30288
+    m_Address: hollow.material.VfxDebug
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4ae23d84688541ffaeee2f1cd5a613a
+    m_Address: hollow.vfx.RewardClaim
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.vfx
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fdb2dc19554f24e4ebc849c79729fd07
+    m_Address: hollow.audio.PortalComplete
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe9161b8cbbee4d429426570e7a58a20
+    m_Address: hollow.audio.RoomClear
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.audio
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: feb7c7c8a2ed14ed7aa8f07da3fe314b
+    m_Address: hollow.material.DoorUnavailable
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fec99f67a3fb449759b4aa56f97c7608
+    m_Address: hollow.material.DesignerDoorSecret
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.core
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 26c6f40093d984e43978eafb33e375d3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: cf9557565bbd84e9caff1e4c3aac0d69, type: 2}
+    - {fileID: 11400000, guid: 05d253b172caf458eb5cae68de631287, type: 2}

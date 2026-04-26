@@ -1,4 +1,6 @@
 using Hollow.Entities;
+using Hollow.Data.Definitions;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -52,7 +54,7 @@ namespace Hollow.Combat
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
             Health.Died += OnDied;
-            ApplyVisualColor(Definition.Color);
+            ApplyVisualMaterial(RoleForArchetype(archetypeId));
 
             var presenter = GetComponent<CombatReadabilityPresenter>() ?? gameObject.AddComponent<CombatReadabilityPresenter>();
             presenter.Bind(this);
@@ -97,25 +99,37 @@ namespace Hollow.Combat
             }
 
             nextAllowedContactTime = timeSeconds + contactCooldownSeconds;
-            return DamageSystem.ApplyDamage(playerHealth, new DamageRequest(contactDamage, gameObject));
+            var damaged = DamageSystem.ApplyDamage(playerHealth, new DamageRequest(contactDamage, gameObject));
+            if (damaged)
+            {
+                VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
+                AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);
+            }
+
+            return damaged;
         }
 
         private void OnDied(CombatantHealth _)
         {
+            VfxPresenter.Play(VfxCueId.EnemyDeath, transform.position, transform.parent);
+            AudioPresenter.Play(AudioCueId.EnemyDeath, transform.position);
             gameObject.SetActive(false);
         }
 
-        private void ApplyVisualColor(Color color)
+        private void ApplyVisualMaterial(MaterialRole role)
         {
             var renderer = GetComponentInChildren<Renderer>();
-            if (renderer == null)
-            {
-                return;
-            }
+            MaterialResolver.ApplyTo(renderer, role);
+        }
 
-            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
+        private static MaterialRole RoleForArchetype(EnemyArchetypeId archetype)
+        {
+            return archetype switch
             {
-                color = color
+                EnemyArchetypeId.Flying => MaterialRole.EnemyFlying,
+                EnemyArchetypeId.Fast => MaterialRole.EnemyFast,
+                EnemyArchetypeId.Heavy => MaterialRole.EnemyHeavy,
+                _ => MaterialRole.EnemyNormal
             };
         }
 

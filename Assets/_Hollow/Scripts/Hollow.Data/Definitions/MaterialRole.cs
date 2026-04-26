@@ -1,0 +1,37 @@
+namespace Hollow.Data.Definitions
+{
+    public enum MaterialRole
+    {
+        RoomFloor,
+        RoomOriginMarker,
+        RoomObstacleRock,
+        DoorLocked,
+        DoorActive,
+        DoorCleared,
+        DoorUnavailable,
+        SpawnSafeStart,
+        SpawnEnemy,
+        SpawnReward,
+        PlayerBody,
+        Projectile,
+        EnemyNormal,
+        EnemyFlying,
+        EnemyFast,
+        EnemyHeavy,
+        CombatHitFlash,
+        RewardPickup,
+        HubReturnPortal,
+        DesignerGrid,
+        DesignerCursor,
+        DesignerGround,
+        DesignerHole,
+        DesignerRock,
+        DesignerDoorAvailable,
+        DesignerDoorActive,
+        DesignerDoorSecret,
+        DesignerSpawnSafeStart,
+        DesignerSpawnEnemy,
+        DesignerSpawnReward,
+        VfxDebug
+    }
+}

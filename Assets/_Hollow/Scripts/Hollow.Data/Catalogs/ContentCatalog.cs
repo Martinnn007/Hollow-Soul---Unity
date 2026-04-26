@@ -8,9 +8,15 @@ namespace Hollow.Data.Catalogs
     {
         [SerializeField] private WorldDefinition[] worlds;
         [SerializeField] private PlatformPresentationProfile[] platformPresentationProfiles;
+        [SerializeField] private PlatformPolishProfileDefinition[] platformPolishProfiles;
+        [SerializeField] private PresentationContentCatalog presentationContent;
 
         public WorldDefinition[] Worlds => worlds;
 
         public PlatformPresentationProfile[] PlatformPresentationProfiles => platformPresentationProfiles;
+
+        public PlatformPolishProfileDefinition[] PlatformPolishProfiles => platformPolishProfiles;
+
+        public PresentationContentCatalog PresentationContent => presentationContent;
     }
 }

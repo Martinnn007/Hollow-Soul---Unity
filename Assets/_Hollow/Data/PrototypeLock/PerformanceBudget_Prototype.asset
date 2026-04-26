@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bfbc5b6edcd94f6688b9b4d911f560e, type: 3}
+  m_Name: PerformanceBudget_Prototype
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PerformanceBudgetDefinition
+  id: 
+  displayName: 
+  notes: 
+  budgets:
+  - mode: 0
+    minimumTargetFrameRate: 120
+    maximumFrameTimeMs: 8.33
+    maximumRenderScale: 1
+    maximumVisibleEnemies: 24
+    maximumProjectiles: 48
+    maximumDrawCalls: 800
+    notes: Desktop prototype budget. Keep full-scale gameplay and high refresh readability.
+  - mode: 1
+    minimumTargetFrameRate: 90
+    maximumFrameTimeMs: 11.11
+    maximumRenderScale: 0.9
+    maximumVisibleEnemies: 20
+    maximumProjectiles: 40
+    maximumDrawCalls: 550
+    notes: Bounded tabletop budget. World root scales to 0.1 while HUD and shell
+      remain unscaled.
+  - mode: 2
+    minimumTargetFrameRate: 90
+    maximumFrameTimeMs: 11.11
+    maximumRenderScale: 0.85
+    maximumVisibleEnemies: 18
+    maximumProjectiles: 36
+    maximumDrawCalls: 500
+    notes: Immersive comfort budget. Keep reduced render scale, conservative FOV,
+      and comfort vignette metadata.

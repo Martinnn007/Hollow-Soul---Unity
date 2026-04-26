@@ -1,0 +1,28 @@
+{
+  "name": "Hollow.Tests.PlayMode",
+  "rootNamespace": "Hollow.Tests.PlayMode",
+  "references": [
+    "Hollow.Core",
+    "Hollow.Persistence",
+    "Hollow.UI",
+    "Hollow.World",
+    "Hollow.Rooms",
+    "Hollow.Combat",
+    "Hollow.Branches",
+    "Hollow.Rewards",
+    "Hollow.Presentation",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}

@@ -1,4 +1,6 @@
 using UnityEngine;
+using Hollow.Data.Definitions;
+using Hollow.Presentation;
 
 namespace Hollow.Combat
 {
@@ -10,7 +12,7 @@ namespace Hollow.Combat
         private CombatantHealth health;
         private TextMesh hpLabel;
         private Renderer targetRenderer;
-        private Color baseColor = Color.white;
+        private Material baseMaterial;
         private float hitFlashRemaining;
 
         public void Bind(EnemyRuntimeController nextEnemy)
@@ -20,7 +22,7 @@ namespace Hollow.Combat
             targetRenderer = GetComponentInChildren<Renderer>();
             if (targetRenderer != null)
             {
-                baseColor = targetRenderer.sharedMaterial != null ? targetRenderer.sharedMaterial.color : Color.white;
+                baseMaterial = targetRenderer.sharedMaterial;
             }
 
             if (health != null)
@@ -51,11 +53,11 @@ namespace Hollow.Combat
             hitFlashRemaining = HitFlashDurationSeconds;
             if (targetRenderer != null)
             {
-                targetRenderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-                {
-                    color = Color.white
-                };
+                targetRenderer.sharedMaterial = MaterialResolver.Resolve(MaterialRole.CombatHitFlash);
             }
+
+            VfxPresenter.Play(VfxCueId.EnemyHit, transform.position, transform.parent);
+            AudioPresenter.Play(AudioCueId.EnemyHit, transform.position);
         }
 
         private void TickHitFlash(float deltaTime)
@@ -68,10 +70,7 @@ namespace Hollow.Combat
             hitFlashRemaining -= deltaTime;
             if (hitFlashRemaining <= 0f)
             {
-                targetRenderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-                {
-                    color = baseColor
-                };
+                targetRenderer.sharedMaterial = baseMaterial != null ? baseMaterial : MaterialResolver.Resolve(MaterialRole.EnemyNormal);
             }
         }
 

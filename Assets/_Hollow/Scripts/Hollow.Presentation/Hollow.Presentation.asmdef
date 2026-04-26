@@ -2,7 +2,10 @@
   "name": "Hollow.Presentation",
   "rootNamespace": "Hollow.Presentation",
   "references": [
-    "Hollow.Platform"
+    "Hollow.Data",
+    "Hollow.Platform",
+    "Unity.Addressables",
+    "Unity.ResourceManager"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

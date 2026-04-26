@@ -2,9 +2,11 @@ using System;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Core.App;
+using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Input;
 using Hollow.Persistence;
+using Hollow.Presentation;
 using Hollow.Rewards;
 using Hollow.Rooms;
 using Hollow.World;
@@ -214,6 +216,8 @@ namespace Hollow.Branches
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
+            VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
+            AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
             SpawnRewardIfNeeded();
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
@@ -265,6 +269,8 @@ namespace Hollow.Branches
 
             DestroyRuntimeObject(currentRewardPickup.gameObject);
             currentRewardPickup = null;
+            VfxPresenter.Play(VfxCueId.RewardClaim, playerController.transform.position, playerController.transform.parent);
+            AudioPresenter.Play(AudioCueId.RewardClaim, playerController.transform.position);
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
             return true;
@@ -283,6 +289,8 @@ namespace Hollow.Branches
             }
 
             HubReturnRequested = true;
+            VfxPresenter.Play(VfxCueId.PortalComplete, currentHubPortal.transform.position, currentHubPortal.transform.parent);
+            AudioPresenter.Play(AudioCueId.PortalComplete, currentHubPortal.transform.position);
             CompleteActiveRunIfPersistent();
             if (HollowBootstrap.Instance != null)
             {
@@ -300,7 +308,7 @@ namespace Hollow.Branches
                 return;
             }
 
-            var rewardObject = InstantiateOrCreate(rewardPickupPrefab, "RoomRewardPickup", PrimitiveType.Sphere, new Color(1f, 0.82f, 0.18f, 1f));
+            var rewardObject = InstantiateOrCreate(rewardPickupPrefab, "RoomRewardPickup", PrimitiveType.Sphere, MaterialRole.RewardPickup);
             rewardObject.transform.SetParent(playerController.transform.parent, false);
             rewardObject.transform.localPosition = new Vector3(0f, 0.35f, 0f);
             rewardObject.transform.localScale = Vector3.one * 0.35f;
@@ -315,7 +323,7 @@ namespace Hollow.Branches
                 return;
             }
 
-            var portalObject = InstantiateOrCreate(hubReturnPortalPrefab, "HubReturnPortal", PrimitiveType.Cylinder, new Color(0.25f, 1f, 0.92f, 1f));
+            var portalObject = InstantiateOrCreate(hubReturnPortalPrefab, "HubReturnPortal", PrimitiveType.Cylinder, MaterialRole.HubReturnPortal);
             portalObject.transform.SetParent(playerController.transform.parent, false);
             portalObject.transform.localPosition = new Vector3(0f, 0.18f, 0f);
             portalObject.transform.localScale = new Vector3(0.9f, 0.08f, 0.9f);
@@ -538,11 +546,11 @@ namespace Hollow.Branches
             }
         }
 
-        private static GameObject InstantiateOrCreate(GameObject prefab, string objectName, PrimitiveType primitiveType, Color color)
+        private static GameObject InstantiateOrCreate(GameObject prefab, string objectName, PrimitiveType primitiveType, MaterialRole role)
         {
             var instance = prefab != null ? Instantiate(prefab) : GameObject.CreatePrimitive(primitiveType);
             instance.name = objectName;
-            ApplyColor(instance, color);
+            MaterialResolver.ApplyTo(instance, role);
             var collider = instance.GetComponent<Collider>();
             if (collider != null)
             {
@@ -550,20 +558,6 @@ namespace Hollow.Branches
             }
 
             return instance;
-        }
-
-        private static void ApplyColor(GameObject target, Color color)
-        {
-            var renderer = target.GetComponentInChildren<Renderer>();
-            if (renderer == null)
-            {
-                return;
-            }
-
-            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-            {
-                color = color
-            };
         }
 
         private static Vector3 Flat(Vector3 value)

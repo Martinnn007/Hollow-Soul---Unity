@@ -16,7 +16,11 @@
     "Hollow.Combat",
     "Hollow.Branches",
     "Hollow.Rewards",
-    "Hollow.RoomDesigner"
+    "Hollow.RoomDesigner",
+    "Hollow.Editor",
+    "Unity.Addressables",
+    "Unity.Addressables.Editor",
+    "Unity.ResourceManager"
   ],
   "includePlatforms": [
     "Editor"

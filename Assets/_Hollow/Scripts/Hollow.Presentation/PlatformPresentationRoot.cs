@@ -19,6 +19,13 @@ namespace Hollow.Presentation
             ApplyScale();
         }
 
+        public void Configure(HollowPlatformKind nextPlatformKind, float nextWorldScale)
+        {
+            platformKind = nextPlatformKind;
+            worldScale = nextWorldScale > 0f ? nextWorldScale : PresentationScalePolicy.WorldScaleFor(platformKind);
+            ApplyScale();
+        }
+
         private void Awake()
         {
             ApplyScale();

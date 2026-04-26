@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Hollow.Data.Definitions;
 using Hollow.Entities;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -172,6 +174,8 @@ namespace Hollow.Combat
             {
                 ObjectiveState = RoomObjectiveState.Cleared;
                 TintDoorsOnClear();
+                VfxPresenter.Play(VfxCueId.RoomClear, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
+                AudioPresenter.Play(AudioCueId.RoomClear, roomRuntimeRoot.transform.position);
                 RoomCleared?.Invoke(this);
             }
 
@@ -260,10 +264,7 @@ namespace Hollow.Combat
                     continue;
                 }
 
-                renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-                {
-                    color = new Color(0.25f, 1f, 0.45f, 1f)
-                };
+                renderer.sharedMaterial = MaterialResolver.Resolve(MaterialRole.DoorCleared);
             }
         }
     }

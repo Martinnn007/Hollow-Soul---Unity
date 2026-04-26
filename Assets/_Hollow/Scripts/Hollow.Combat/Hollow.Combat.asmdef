@@ -2,8 +2,10 @@
   "name": "Hollow.Combat",
   "rootNamespace": "Hollow.Combat",
   "references": [
+    "Hollow.Data",
     "Hollow.Entities",
     "Hollow.Input",
+    "Hollow.Presentation",
     "Hollow.Rooms",
     "UnityEngine.UI"
   ],

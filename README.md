@@ -17,6 +17,10 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone6BranchTraversalRewards.md` describes the deterministic five-room branch, door traversal, minimap, runtime rewards, and hub-return portal.
 - `Docs/Milestone7RunEconomyPersistence.md` describes run-local rewards, active-run save/load, profile meta banking, and Continue/New Run flow.
 - `Docs/Milestone8RoomDesigner.md` describes the first in-game room designer, V2 JSON/USDA export, and transient playtest flow.
+- `Docs/Milestone9ContentPipeline.md` describes prototype material roles, VFX/audio cue definitions, Addressables labels, and content import validation.
+- `Docs/Milestone10PlatformPolish.md` describes Windows, Vision Pro bounded tabletop, and Vision Pro immersive presentation polish profiles.
+- `Docs/Milestone11PrototypeLock.md` describes the QA checklist, performance budgets, save/load coverage, content validation, and build handoff gate.
+- `Docs/Milestone12BuildAutomation.md` describes the full prototype audit runner, output conventions, build manifests, and Windows development build entrypoint.
 
 ## Required Setup
 

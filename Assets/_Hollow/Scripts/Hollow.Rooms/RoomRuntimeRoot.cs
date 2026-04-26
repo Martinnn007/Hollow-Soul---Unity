@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Data.Definitions;
+using Hollow.Presentation;
 
 namespace Hollow.Rooms
 {
@@ -66,10 +68,7 @@ namespace Hollow.Rooms
                 return;
             }
 
-            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-            {
-                color = ColorForDoorState(state)
-            };
+            renderer.sharedMaterial = MaterialResolver.Resolve(MaterialRoleForDoorState(state));
         }
 
         private void ClearChildren()
@@ -97,7 +96,7 @@ namespace Hollow.Rooms
                 floor.transform.SetParent(transform, false);
                 floor.transform.localPosition = new Vector3(region.Center.x, -0.05f, region.Center.z);
                 floor.transform.localScale = new Vector3(region.HalfSize.x * 2f, 0.1f, region.HalfSize.y * 2f);
-                ApplyColor(floor, new Color(0.22f, 0.29f, 0.34f, 1f));
+                MaterialResolver.ApplyTo(floor, MaterialRole.RoomFloor);
             }
 
             var origin = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -105,7 +104,7 @@ namespace Hollow.Rooms
             origin.transform.SetParent(transform, false);
             origin.transform.localPosition = new Vector3(0f, 0.012f, 0f);
             origin.transform.localScale = new Vector3(0.28f, 0.024f, 0.28f);
-            ApplyColor(origin, new Color(0.1f, 0.8f, 1f, 1f));
+            MaterialResolver.ApplyTo(origin, MaterialRole.RoomOriginMarker);
         }
 
         private void BuildObstacles(RoomLayout layout)
@@ -117,7 +116,7 @@ namespace Hollow.Rooms
                 block.transform.SetParent(transform, false);
                 block.transform.localPosition = obstacle.Center;
                 block.transform.localScale = obstacle.Size;
-                ApplyColor(block, new Color(0.36f, 0.34f, 0.31f, 1f));
+                MaterialResolver.ApplyTo(block, MaterialRole.RoomObstacleRock);
             }
         }
 
@@ -130,7 +129,7 @@ namespace Hollow.Rooms
                 marker.transform.SetParent(transform, false);
                 marker.transform.localPosition = new Vector3(port.Position.x, 0.65f, port.Position.z);
                 marker.transform.localScale = DoorScaleFor(port.Direction);
-                ApplyColor(marker, new Color(0.1f, 0.48f, 0.95f, 1f));
+                MaterialResolver.ApplyTo(marker, MaterialRole.DoorActive);
                 doorRenderersByDirection[port.Direction] = marker.GetComponent<Renderer>();
 
                 var collider = marker.GetComponent<Collider>();
@@ -141,41 +140,41 @@ namespace Hollow.Rooms
             }
         }
 
-        private static Color ColorForDoorState(RoomDoorVisualState state)
+        private static MaterialRole MaterialRoleForDoorState(RoomDoorVisualState state)
         {
             return state switch
             {
-                RoomDoorVisualState.Locked => new Color(0.82f, 0.28f, 0.18f, 1f),
-                RoomDoorVisualState.Active => new Color(0.12f, 0.62f, 1f, 1f),
-                RoomDoorVisualState.Cleared => new Color(0.25f, 1f, 0.45f, 1f),
-                RoomDoorVisualState.Unavailable => new Color(0.2f, 0.22f, 0.24f, 0.55f),
-                _ => Color.white
+                RoomDoorVisualState.Locked => MaterialRole.DoorLocked,
+                RoomDoorVisualState.Active => MaterialRole.DoorActive,
+                RoomDoorVisualState.Cleared => MaterialRole.DoorCleared,
+                RoomDoorVisualState.Unavailable => MaterialRole.DoorUnavailable,
+                _ => MaterialRole.DoorActive
             };
         }
 
         private void BuildSpawnMarkers(ImportedRoomRuntimeAsset asset)
         {
-            CreateSpawnMarker(asset.SafeStart.id, asset.SafeStart.kind, asset.SafeStart.position.ToUnityVector3(), new Color(0.36f, 1f, 0.54f, 1f), addPlayerSpawnComponent: true);
+            CreateSpawnMarker(asset.SafeStart.id, asset.SafeStart.kind, asset.SafeStart.position.ToUnityVector3(), MaterialRole.SpawnSafeStart, addPlayerSpawnComponent: true);
 
             foreach (var spawn in asset.EnemySpawns)
             {
-                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), new Color(1f, 0.25f, 0.22f, 1f), addPlayerSpawnComponent: false);
+                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), MaterialRole.SpawnEnemy, addPlayerSpawnComponent: false);
             }
 
             foreach (var spawn in asset.ItemSpawns)
             {
-                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), new Color(1f, 0.82f, 0.18f, 1f), addPlayerSpawnComponent: false);
+                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), MaterialRole.SpawnReward, addPlayerSpawnComponent: false);
             }
         }
 
-        private void CreateSpawnMarker(string id, string kind, Vector3 position, Color color, bool addPlayerSpawnComponent)
+        private void CreateSpawnMarker(string id, string kind, Vector3 position, MaterialRole role, bool addPlayerSpawnComponent)
         {
             var marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             marker.name = $"{kind}.{id}";
             marker.transform.SetParent(transform, false);
             marker.transform.localPosition = new Vector3(position.x, 0.16f, position.z);
             marker.transform.localScale = Vector3.one * 0.32f;
-            ApplyColor(marker, color);
+            MaterialResolver.ApplyTo(marker, role);
 
             var collider = marker.GetComponent<Collider>();
             if (collider != null)
@@ -196,18 +195,5 @@ namespace Hollow.Rooms
                 : new Vector3(1f, 1.3f, 0.18f);
         }
 
-        private static void ApplyColor(GameObject target, Color color)
-        {
-            var renderer = target.GetComponent<Renderer>();
-            if (renderer == null)
-            {
-                return;
-            }
-
-            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-            {
-                color = color
-            };
-        }
     }
 }

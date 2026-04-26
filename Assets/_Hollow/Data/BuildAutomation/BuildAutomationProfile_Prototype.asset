@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebf833247bee548159bdc08f38197129, type: 3}
+  m_Name: BuildAutomationProfile_Prototype
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.BuildAutomationProfileDefinition
+  id: 
+  displayName: 
+  notes: 
+  prototypeVersion: Hollow Soul Unity M12 Build Automation
+  buildRoot: output/builds
+  reportRoot: output/reports
+  windowsBuildFolderName: HollowSoul_Prototype_Windows
+  windowsExecutableName: HollowSoul
+  latestAuditJsonFileName: latest_prototype_audit.json
+  latestAuditMarkdownFileName: latest_prototype_audit.md
+  latestBuildManifestFileName: latest_build_manifest.json
+  requirePassingAuditBeforeBuild: 1
+  requiredScenes:
+  - Assets/_Hollow/Scenes/Boot.unity
+  - Assets/_Hollow/Scenes/MainMenu.unity
+  - Assets/_Hollow/Scenes/Game_Windows.unity
+  - Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity
+  - Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity
+  - Assets/_Hollow/Scenes/RoomDesigner.unity
+  validationTypes:
+  - Hollow.Editor.Validation.Milestone0Validator
+  - Hollow.Editor.Validation.Milestone1Validator
+  - Hollow.Editor.Validation.Milestone2Validator
+  - Hollow.Editor.Validation.Milestone3Validator
+  - Hollow.Editor.Validation.Milestone4Validator
+  - Hollow.Editor.Validation.Milestone5Validator
+  - Hollow.Editor.Validation.Milestone6Validator
+  - Hollow.Editor.Validation.Milestone7Validator
+  - Hollow.Editor.Validation.Milestone8Validator
+  - Hollow.Editor.Validation.Milestone9Validator
+  - Hollow.Editor.Validation.Milestone10Validator
+  - Hollow.Editor.Validation.Milestone11Validator

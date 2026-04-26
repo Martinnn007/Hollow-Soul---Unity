@@ -3,6 +3,7 @@ using System.IO;
 using Hollow.Branches;
 using Hollow.Combat;
 using Hollow.Core.App;
+using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Persistence;
 using Hollow.Platform;
@@ -221,6 +222,7 @@ namespace Hollow.Editor.Generation
                 UnityEngine.Object.DestroyImmediate(childCollider);
             }
 
+            MaterialResolver.ApplyTo(visibleCapsule, MaterialRole.PlayerBody);
             return root;
         }
 
@@ -231,7 +233,7 @@ namespace Hollow.Editor.Generation
             root.transform.localScale = new Vector3(0.62f, 0.62f, 0.62f);
             root.AddComponent<CombatantHealth>().Configure(ChaserEnemyController.DefaultHealth);
             root.AddComponent<ChaserEnemyController>();
-            ApplyPrimitiveColor(root, new Color(0.85f, 0.16f, 0.14f, 1f));
+            MaterialResolver.ApplyTo(root, MaterialRole.EnemyNormal);
             return root;
         }
 
@@ -247,7 +249,7 @@ namespace Hollow.Editor.Generation
                 UnityEngine.Object.DestroyImmediate(collider);
             }
 
-            ApplyPrimitiveColor(root, new Color(0.9f, 0.95f, 1f, 1f));
+            MaterialResolver.ApplyTo(root, MaterialRole.Projectile);
             return root;
         }
 
@@ -263,7 +265,7 @@ namespace Hollow.Editor.Generation
                 UnityEngine.Object.DestroyImmediate(collider);
             }
 
-            ApplyPrimitiveColor(root, new Color(1f, 0.82f, 0.18f, 1f));
+            MaterialResolver.ApplyTo(root, MaterialRole.RewardPickup);
             return root;
         }
 
@@ -279,7 +281,7 @@ namespace Hollow.Editor.Generation
                 UnityEngine.Object.DestroyImmediate(collider);
             }
 
-            ApplyPrimitiveColor(root, new Color(0.25f, 1f, 0.92f, 1f));
+            MaterialResolver.ApplyTo(root, MaterialRole.HubReturnPortal);
             return root;
         }
 
@@ -448,18 +450,5 @@ namespace Hollow.Editor.Generation
             EditorSceneManager.SaveScene(scene, path);
         }
 
-        private static void ApplyPrimitiveColor(GameObject target, Color color)
-        {
-            var renderer = target.GetComponent<Renderer>();
-            if (renderer == null)
-            {
-                return;
-            }
-
-            renderer.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
-            {
-                color = color
-            };
-        }
     }
 }

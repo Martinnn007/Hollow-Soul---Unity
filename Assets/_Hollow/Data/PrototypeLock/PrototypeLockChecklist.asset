@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3e842afb057d41d58455b3eda2000fc, type: 3}
+  m_Name: PrototypeLockChecklist
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PrototypeLockChecklistDefinition
+  id: 
+  displayName: 
+  notes: 
+  items:
+  - id: qa.menu-profile-flow
+    title: Menu, profile cards, Continue/New Run, and platform routing verified.
+    group: QA
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: qa.branch-combat-loop
+    title: Five-room branch, traversal gates, combat clear, rewards, and hub return
+      verified.
+    group: QA
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: qa.room-designer-export-playtest
+    title: Room Designer draft editing, export, and transient playtest verified.
+    group: QA
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: qa.transient-safety
+    title: Transient developer/challenge/designer sessions cannot mutate profile-backed
+      saves.
+    group: QA
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: save.active-run-lifecycle
+    title: New Run, checkpoint, Continue, completion banking, and death clear coverage
+      passed.
+    group: Save/Load
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: content.validation
+    title: Material palette, cue catalog, Addressables labels, prefab refs, and naming
+      validation passed.
+    group: Content
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: performance.windows
+    title: Windows standard 3D profile meets prototype frame and render-scale budgets.
+    group: Performance
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: performance.visionos-bounded
+    title: Vision Pro bounded tabletop profile keeps 0.1 world scale, HUD separation,
+      and 90 FPS target.
+    group: Performance
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: performance.visionos-immersive
+    title: Vision Pro immersive profile enables comfort metadata and 90 FPS target.
+    group: Performance
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: build.scenes-and-handoff
+    title: Build scenes, validation commands, and handoff notes are captured for
+      prototype delivery.
+    group: Build Handoff
+    required: 1
+    status: 2
+    notes: Validated by M11 generator, validator, and EditMode suite.
+  - id: deferred.final-art-audio
+    title: Final art, production SFX/music, remote Addressables, and platform certification
+      remain post-prototype scope.
+    group: Deferred Scope
+    required: 0
+    status: 4
+    notes: Documented as intentionally out of scope for this prototype lock.

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97259a087e32a48518344b4f1d5dedae, type: 3}
+  m_Name: PlatformPolish_VisionOSImmersive
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlatformPolishProfileDefinition
+  id: 
+  displayName: 
+  notes: 
+  mode: 2
+  worldScale: 1
+  cameraLocalPosition: {x: 0, y: 5.2, z: -8.2}
+  cameraLocalEulerAngles: {x: 30, y: 0, z: 0}
+  cameraFieldOfView: 52
+  nearClipPlane: 0.03
+  farClipPlane: 70
+  cameraBackgroundColor: {r: 0.01, g: 0.014, b: 0.022, a: 1}
+  ambientLightColor: {r: 0.52, g: 0.58, b: 0.7, a: 1}
+  targetFrameRate: 90
+  vSyncCount: 0
+  renderScale: 0.85
+  useComfortVignette: 1
+  comfortVignetteRadius: 0.82
+  comfortVignetteOpacity: 0.18

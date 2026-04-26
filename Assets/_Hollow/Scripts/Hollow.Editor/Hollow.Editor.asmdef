@@ -17,6 +17,8 @@
     "Hollow.Branches",
     "Hollow.Rewards",
     "Hollow.RoomDesigner",
+    "Unity.Addressables",
+    "Unity.Addressables.Editor",
     "UnityEngine.UI"
   ],
   "includePlatforms": [

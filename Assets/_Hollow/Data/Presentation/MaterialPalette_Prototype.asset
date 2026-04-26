@@ -1,0 +1,111 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 151cab11499084244a4868c86cd8fa1f, type: 3}
+  m_Name: MaterialPalette_Prototype
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.MaterialPaletteDefinition
+  id: 
+  displayName: 
+  notes: 
+  bindings:
+  - role: 0
+    material: {fileID: 2100000, guid: 6141bbaeaac60454389c1359028428e9, type: 2}
+    fallbackColor: {r: 0.22, g: 0.29, b: 0.34, a: 1}
+  - role: 1
+    material: {fileID: 2100000, guid: afbe4414f6d324727888a80276bf4122, type: 2}
+    fallbackColor: {r: 0.1, g: 0.8, b: 1, a: 1}
+  - role: 2
+    material: {fileID: 2100000, guid: 3eeb170c9a0c7491cbb908b97778070e, type: 2}
+    fallbackColor: {r: 0.36, g: 0.34, b: 0.31, a: 1}
+  - role: 3
+    material: {fileID: 2100000, guid: a5c0cbf8a7ad8491a87ae6761d5dfc9f, type: 2}
+    fallbackColor: {r: 0.82, g: 0.28, b: 0.18, a: 1}
+  - role: 4
+    material: {fileID: 2100000, guid: b6223a21be7164673b44b2a79a48ce35, type: 2}
+    fallbackColor: {r: 0.12, g: 0.62, b: 1, a: 1}
+  - role: 5
+    material: {fileID: 2100000, guid: 878c557961d0847ceb299beb13f80484, type: 2}
+    fallbackColor: {r: 0.25, g: 1, b: 0.45, a: 1}
+  - role: 6
+    material: {fileID: 2100000, guid: feb7c7c8a2ed14ed7aa8f07da3fe314b, type: 2}
+    fallbackColor: {r: 0.2, g: 0.22, b: 0.24, a: 0.55}
+  - role: 7
+    material: {fileID: 2100000, guid: da9daf63893084398b1f7a40889733f8, type: 2}
+    fallbackColor: {r: 0.36, g: 1, b: 0.54, a: 1}
+  - role: 8
+    material: {fileID: 2100000, guid: 53e6e6bba3c4b4146bcd9e022832a833, type: 2}
+    fallbackColor: {r: 1, g: 0.25, b: 0.22, a: 1}
+  - role: 9
+    material: {fileID: 2100000, guid: df4d57a4deb544022bd8b4e40a28b243, type: 2}
+    fallbackColor: {r: 1, g: 0.82, b: 0.18, a: 1}
+  - role: 10
+    material: {fileID: 2100000, guid: 9bce2c4c11dbf4389a75d57e6887997e, type: 2}
+    fallbackColor: {r: 0.36, g: 0.92, b: 0.72, a: 1}
+  - role: 11
+    material: {fileID: 2100000, guid: 57f9ae63173744e668d4654a6114cc96, type: 2}
+    fallbackColor: {r: 0.9, g: 0.95, b: 1, a: 1}
+  - role: 12
+    material: {fileID: 2100000, guid: 6e12f247fc4b24ff9b34e5fe3cbb9a11, type: 2}
+    fallbackColor: {r: 0.85, g: 0.16, b: 0.14, a: 1}
+  - role: 13
+    material: {fileID: 2100000, guid: e8d84e733cb264ce995dd43779293626, type: 2}
+    fallbackColor: {r: 0.25, g: 0.65, b: 1, a: 1}
+  - role: 14
+    material: {fileID: 2100000, guid: 42aedd93ff0d3433ca6312ae8e9dbd6f, type: 2}
+    fallbackColor: {r: 1, g: 0.66, b: 0.18, a: 1}
+  - role: 15
+    material: {fileID: 2100000, guid: 3e0c7b5545ca94d39bf5c0f0a7a041ae, type: 2}
+    fallbackColor: {r: 0.62, g: 0.22, b: 0.82, a: 1}
+  - role: 16
+    material: {fileID: 2100000, guid: d839b7774bbaf48809900665b38e7d2f, type: 2}
+    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+  - role: 17
+    material: {fileID: 2100000, guid: 732d434acc71e406d8faa53ed90a731f, type: 2}
+    fallbackColor: {r: 1, g: 0.82, b: 0.18, a: 1}
+  - role: 18
+    material: {fileID: 2100000, guid: 132595a7b88ca4b4cb8953e255e1ce47, type: 2}
+    fallbackColor: {r: 0.25, g: 1, b: 0.92, a: 1}
+  - role: 19
+    material: {fileID: 2100000, guid: a67a31d1ccaa34dbdba1a4479ba11afb, type: 2}
+    fallbackColor: {r: 0.85, g: 0.9, b: 1, a: 0.65}
+  - role: 20
+    material: {fileID: 2100000, guid: db5d88bd530d044859e3f241cfe7281b, type: 2}
+    fallbackColor: {r: 1, g: 0.9, b: 0.15, a: 1}
+  - role: 21
+    material: {fileID: 2100000, guid: 94d86fb86ac374bb4b37e9db5de94553, type: 2}
+    fallbackColor: {r: 0.23, g: 0.32, b: 0.38, a: 1}
+  - role: 22
+    material: {fileID: 2100000, guid: c55634fd436b94be3a99e1ca4cf79dd7, type: 2}
+    fallbackColor: {r: 0, g: 0, b: 0, a: 1}
+  - role: 23
+    material: {fileID: 2100000, guid: 0503ee0e3df8b4a89a74b09190a427bc, type: 2}
+    fallbackColor: {r: 0.42, g: 0.39, b: 0.34, a: 1}
+  - role: 24
+    material: {fileID: 2100000, guid: 25b7075bd260e49c6b66a613c19602b9, type: 2}
+    fallbackColor: {r: 0.6, g: 0.68, b: 0.78, a: 0.8}
+  - role: 25
+    material: {fileID: 2100000, guid: b8bce023c314b4964b5f34605cd137d6, type: 2}
+    fallbackColor: {r: 0.1, g: 0.55, b: 1, a: 1}
+  - role: 26
+    material: {fileID: 2100000, guid: fec99f67a3fb449759b4aa56f97c7608, type: 2}
+    fallbackColor: {r: 0.9, g: 0.25, b: 1, a: 1}
+  - role: 27
+    material: {fileID: 2100000, guid: 12e8da0ad1e174423b78649aa0163f04, type: 2}
+    fallbackColor: {r: 0.32, g: 1, b: 0.56, a: 1}
+  - role: 28
+    material: {fileID: 2100000, guid: 269255aa377954efc8bd9337ee6cc7c8, type: 2}
+    fallbackColor: {r: 1, g: 0.2, b: 0.18, a: 1}
+  - role: 29
+    material: {fileID: 2100000, guid: 4416237386b114c5999673b866d1d590, type: 2}
+    fallbackColor: {r: 1, g: 0.82, b: 0.18, a: 1}
+  - role: 30
+    material: {fileID: 2100000, guid: f13bf6f6eb85048b9b2b91b2dbf30288, type: 2}
+    fallbackColor: {r: 1, g: 1, b: 1, a: 0.85}

@@ -3,9 +3,11 @@
   "rootNamespace": "Hollow.RoomDesigner",
   "references": [
     "Hollow.Core",
+    "Hollow.Data",
     "Hollow.Input",
     "Hollow.Persistence",
     "Hollow.Platform",
+    "Hollow.Presentation",
     "Hollow.Rooms",
     "Unity.InputSystem",
     "UnityEngine.UI"

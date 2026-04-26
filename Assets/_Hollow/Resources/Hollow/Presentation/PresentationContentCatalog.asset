@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dfb56c2ae08b473199d38b13a5d7f55, type: 3}
+  m_Name: PresentationContentCatalog
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PresentationContentCatalog
+  materialPalette: {fileID: 11400000, guid: 95a161ace6b6f4e30807485a6be8924a, type: 2}
+  vfxCues:
+  - {fileID: 11400000, guid: 09f11d065740146329b31520c9adcfa8, type: 2}
+  - {fileID: 11400000, guid: d11854e73a9f24bbba1afef48a13f864, type: 2}
+  - {fileID: 11400000, guid: 84f582628755244f2bceaa9735f35649, type: 2}
+  - {fileID: 11400000, guid: a08935c3127ab42f3827de23be332797, type: 2}
+  - {fileID: 11400000, guid: f4ae23d84688541ffaeee2f1cd5a613a, type: 2}
+  - {fileID: 11400000, guid: ee2c4f8360aef4cb3bb0ad685ffb870a, type: 2}
+  - {fileID: 11400000, guid: d61e7c2270f764749aaf3ce737143651, type: 2}
+  - {fileID: 11400000, guid: afd32d4cc236f42b7815cd85cda342d7, type: 2}
+  - {fileID: 11400000, guid: e76b5ef587cd04f388c0aa6f6edd0831, type: 2}
+  - {fileID: 11400000, guid: 26a7a8a3089994a87881f20632c4f760, type: 2}
+  audioCues:
+  - {fileID: 11400000, guid: 9e26367596d1045f38ee9aa91265b337, type: 2}
+  - {fileID: 11400000, guid: ed763e64a177c4fabb8acbd4bde02cce, type: 2}
+  - {fileID: 11400000, guid: 5a51868a494044ee8b3e073abda954b1, type: 2}
+  - {fileID: 11400000, guid: c748573eb358a486984e4a975ea0bff7, type: 2}
+  - {fileID: 11400000, guid: 2d949442fd7a74f7ca05b2d065d65635, type: 2}
+  - {fileID: 11400000, guid: bca780ac174dc4e9d936cda47e067409, type: 2}
+  - {fileID: 11400000, guid: fe9161b8cbbee4d429426570e7a58a20, type: 2}
+  - {fileID: 11400000, guid: fdb2dc19554f24e4ebc849c79729fd07, type: 2}
+  - {fileID: 11400000, guid: 421b8b4d3a63845c3938f029ad076295, type: 2}
+  - {fileID: 11400000, guid: cf59c72d256be4914b50420c3c080e47, type: 2}

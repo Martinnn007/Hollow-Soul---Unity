@@ -1,0 +1,111 @@
+using System.Collections.Generic;
+using Hollow.Data.Definitions;
+using UnityEngine;
+
+namespace Hollow.Presentation
+{
+    public static class MaterialResolver
+    {
+        private static readonly Dictionary<MaterialRole, Material> FallbackMaterials = new();
+
+        public static Material Resolve(MaterialRole role)
+        {
+            var palette = PresentationContentProvider.ActiveCatalog != null
+                ? PresentationContentProvider.ActiveCatalog.MaterialPalette
+                : null;
+            if (palette != null && palette.TryResolve(role, out var material) && material != null)
+            {
+                return material;
+            }
+
+            if (!FallbackMaterials.TryGetValue(role, out var fallback) || fallback == null)
+            {
+                fallback = CreateRuntimeMaterial(FallbackColorFor(role));
+                fallback.name = $"Fallback_{role}";
+                FallbackMaterials[role] = fallback;
+            }
+
+            return fallback;
+        }
+
+        public static void ApplyTo(GameObject target, MaterialRole role)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            ApplyTo(target.GetComponentInChildren<Renderer>(), role);
+        }
+
+        public static void ApplyTo(Renderer renderer, MaterialRole role)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = Resolve(role);
+        }
+
+        public static Material CreateRuntimeMaterial(Color color)
+        {
+            return new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
+            {
+                color = color
+            };
+        }
+
+        public static Color FallbackColorFor(MaterialRole role)
+        {
+            var palette = PresentationContentProvider.ActiveCatalog != null
+                ? PresentationContentProvider.ActiveCatalog.MaterialPalette
+                : null;
+            if (palette != null && palette.TryGetFallbackColor(role, out var color))
+            {
+                return color;
+            }
+
+            return role switch
+            {
+                MaterialRole.RoomFloor => new Color(0.22f, 0.29f, 0.34f, 1f),
+                MaterialRole.RoomOriginMarker => new Color(0.1f, 0.8f, 1f, 1f),
+                MaterialRole.RoomObstacleRock => new Color(0.36f, 0.34f, 0.31f, 1f),
+                MaterialRole.DoorLocked => new Color(0.82f, 0.28f, 0.18f, 1f),
+                MaterialRole.DoorActive => new Color(0.12f, 0.62f, 1f, 1f),
+                MaterialRole.DoorCleared => new Color(0.25f, 1f, 0.45f, 1f),
+                MaterialRole.DoorUnavailable => new Color(0.2f, 0.22f, 0.24f, 0.55f),
+                MaterialRole.SpawnSafeStart => new Color(0.36f, 1f, 0.54f, 1f),
+                MaterialRole.SpawnEnemy => new Color(1f, 0.25f, 0.22f, 1f),
+                MaterialRole.SpawnReward => new Color(1f, 0.82f, 0.18f, 1f),
+                MaterialRole.PlayerBody => new Color(0.36f, 0.92f, 0.72f, 1f),
+                MaterialRole.Projectile => new Color(0.9f, 0.95f, 1f, 1f),
+                MaterialRole.EnemyNormal => new Color(0.85f, 0.16f, 0.14f, 1f),
+                MaterialRole.EnemyFlying => new Color(0.25f, 0.65f, 1f, 1f),
+                MaterialRole.EnemyFast => new Color(1f, 0.66f, 0.18f, 1f),
+                MaterialRole.EnemyHeavy => new Color(0.62f, 0.22f, 0.82f, 1f),
+                MaterialRole.CombatHitFlash => Color.white,
+                MaterialRole.RewardPickup => new Color(1f, 0.82f, 0.18f, 1f),
+                MaterialRole.HubReturnPortal => new Color(0.25f, 1f, 0.92f, 1f),
+                MaterialRole.DesignerGrid => new Color(0.85f, 0.9f, 1f, 0.65f),
+                MaterialRole.DesignerCursor => new Color(1f, 0.9f, 0.15f, 1f),
+                MaterialRole.DesignerGround => new Color(0.23f, 0.32f, 0.38f, 1f),
+                MaterialRole.DesignerHole => Color.black,
+                MaterialRole.DesignerRock => new Color(0.42f, 0.39f, 0.34f, 1f),
+                MaterialRole.DesignerDoorAvailable => new Color(0.6f, 0.68f, 0.78f, 0.8f),
+                MaterialRole.DesignerDoorActive => new Color(0.1f, 0.55f, 1f, 1f),
+                MaterialRole.DesignerDoorSecret => new Color(0.9f, 0.25f, 1f, 1f),
+                MaterialRole.DesignerSpawnSafeStart => new Color(0.32f, 1f, 0.56f, 1f),
+                MaterialRole.DesignerSpawnEnemy => new Color(1f, 0.2f, 0.18f, 1f),
+                MaterialRole.DesignerSpawnReward => new Color(1f, 0.82f, 0.18f, 1f),
+                MaterialRole.VfxDebug => new Color(1f, 1f, 1f, 0.85f),
+                _ => Color.white
+            };
+        }
+
+        internal static void ClearCache()
+        {
+            FallbackMaterials.Clear();
+        }
+    }
+}

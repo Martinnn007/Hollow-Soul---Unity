@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97259a087e32a48518344b4f1d5dedae, type: 3}
+  m_Name: PlatformPolish_VisionOSBoundedTabletop
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlatformPolishProfileDefinition
+  id: 
+  displayName: 
+  notes: 
+  mode: 1
+  worldScale: 0.1
+  cameraLocalPosition: {x: 0, y: 1.35, z: -2.4}
+  cameraLocalEulerAngles: {x: 24, y: 0, z: 0}
+  cameraFieldOfView: 48
+  nearClipPlane: 0.01
+  farClipPlane: 35
+  cameraBackgroundColor: {r: 0.015, g: 0.018, b: 0.025, a: 1}
+  ambientLightColor: {r: 0.58, g: 0.64, b: 0.74, a: 1}
+  targetFrameRate: 90
+  vSyncCount: 0
+  renderScale: 0.9
+  useComfortVignette: 0
+  comfortVignetteRadius: 0
+  comfortVignetteOpacity: 0

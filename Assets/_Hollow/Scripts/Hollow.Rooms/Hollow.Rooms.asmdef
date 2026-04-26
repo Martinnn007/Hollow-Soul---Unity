@@ -3,7 +3,9 @@
   "rootNamespace": "Hollow.Rooms",
   "references": [
     "Hollow.Core",
-    "Hollow.Entities"
+    "Hollow.Entities",
+    "Hollow.Data",
+    "Hollow.Presentation"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

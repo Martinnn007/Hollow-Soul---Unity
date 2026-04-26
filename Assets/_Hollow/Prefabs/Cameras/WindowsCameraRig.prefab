@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7956962899931991666}
   - component: {fileID: 6978569039808623036}
+  - component: {fileID: 3203039220883053870}
   m_Layer: 0
   m_Name: WindowsCameraRig
   m_TagString: Untagged
@@ -46,6 +47,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.CameraRigMetadata
   platformKind: 0
+--- !u!114 &3203039220883053870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3749648500055478295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9b6288a288b048128d9c319756c0fbe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.PlatformPolishApplier
+  profile: {fileID: 11400000, guid: 8675a1466cbd546f187a2e81be504c11, type: 2}
 --- !u!1 &8860015655403478186
 GameObject:
   m_ObjectHideFlags: 0
@@ -57,6 +71,7 @@ GameObject:
   - component: {fileID: 6674705883755925339}
   - component: {fileID: 5734827245526350762}
   - component: {fileID: 517355932463174227}
+  - component: {fileID: 2562277520834299616}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -88,8 +103,8 @@ Camera:
   m_GameObject: {fileID: 8860015655403478186}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.018, g: 0.023, b: 0.034, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -110,8 +125,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
+  near clip plane: 0.03
+  far clip plane: 95
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -138,3 +153,18 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8860015655403478186}
   m_Enabled: 1
+--- !u!114 &2562277520834299616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8860015655403478186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed397c1622a55421a896e1cec28488b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.ComfortVignettePresenter
+  vignetteEnabled: 0
+  radius: 0
+  opacity: 0

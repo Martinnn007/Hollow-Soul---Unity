@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14969f9816c514200b180516d6c4584e, type: 3}
+  m_Name: BuildHandoff_Prototype
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.BuildHandoffDefinition
+  id: 
+  displayName: 
+  notes: 
+  prototypeVersion: Hollow Soul Unity Prototype Lock M11
+  unityVersion: 6000.4.1f1
+  lastVerifiedMilestone: M11
+  requiredScenes:
+  - Assets/_Hollow/Scenes/Boot.unity
+  - Assets/_Hollow/Scenes/MainMenu.unity
+  - Assets/_Hollow/Scenes/Game_Windows.unity
+  - Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity
+  - Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity
+  - Assets/_Hollow/Scenes/RoomDesigner.unity
+  validationCommands:
+  - Hollow/Generation/Generate Milestone 11 Assets
+  - Hollow/Validation/Run Milestone 11 Validation
+  - 'Unity EditMode tests: Hollow.Tests.EditMode'
+  handoffNotes:
+  - Gameplay source of truth is HollowRuntime V2 JSON and runtime state models, not
+    visual meshes.
+  - Windows, Vision Pro bounded tabletop, and Vision Pro immersive share gameplay
+    code; only presentation profiles differ.
+  - Profile-backed saves are valid only in profile sessions. Transient developer
+    and designer sessions must stay non-persistent.
+  - Prototype content uses generated materials, cue definitions, and Addressables
+    labels. Final art/audio import is a later milestone.

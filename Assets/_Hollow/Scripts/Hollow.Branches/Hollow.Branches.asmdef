@@ -4,10 +4,12 @@
   "references": [
     "Hollow.Core",
     "Hollow.Combat",
+    "Hollow.Data",
     "Hollow.Entities",
     "Hollow.Input",
     "Hollow.Persistence",
     "Hollow.Platform",
+    "Hollow.Presentation",
     "Hollow.Rewards",
     "Hollow.Rooms",
     "Hollow.World"
