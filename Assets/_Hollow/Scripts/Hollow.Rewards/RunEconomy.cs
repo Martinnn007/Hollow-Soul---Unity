@@ -1,0 +1,65 @@
+using System.Collections.Generic;
+using System.Linq;
+using Hollow.Persistence;
+
+namespace Hollow.Rewards
+{
+    public sealed class RunEconomy
+    {
+        private readonly List<CollectedRewardRecord> collectedRewards = new();
+
+        public int RunSouls { get; private set; }
+
+        public IReadOnlyList<CollectedRewardRecord> CollectedRewards => collectedRewards;
+
+        public bool ApplyReward(RewardGrant grant)
+        {
+            if (grant.IsEmpty || collectedRewards.Any(record => record.RoomId == grant.RoomId || record.RewardId == grant.RewardId))
+            {
+                return false;
+            }
+
+            RunSouls += grant.Souls;
+            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls));
+            return true;
+        }
+
+        public bool HasCollectedRoomReward(string roomId)
+        {
+            return collectedRewards.Any(record => record.RoomId == roomId);
+        }
+
+        public RunEconomySaveState ToSaveState()
+        {
+            return new RunEconomySaveState
+            {
+                runSouls = RunSouls,
+                collectedRewards = collectedRewards.Select(record => record.ToSaveState()).ToList()
+            };
+        }
+
+        public static RunEconomy FromSaveState(RunEconomySaveState saveState)
+        {
+            var economy = new RunEconomy();
+            if (saveState == null)
+            {
+                return economy;
+            }
+
+            economy.RunSouls = saveState.runSouls;
+            if (saveState.collectedRewards != null)
+            {
+                foreach (var reward in saveState.collectedRewards)
+                {
+                    var record = CollectedRewardRecord.FromSaveState(reward);
+                    if (record != null)
+                    {
+                        economy.collectedRewards.Add(record);
+                    }
+                }
+            }
+
+            return economy;
+        }
+    }
+}

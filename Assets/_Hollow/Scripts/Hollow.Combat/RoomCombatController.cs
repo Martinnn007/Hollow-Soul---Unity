@@ -92,7 +92,7 @@ namespace Hollow.Combat
 
             CleanupRoomCombatObjects();
             playerHealth = playerController.GetComponent<CombatantHealth>() ?? playerController.gameObject.AddComponent<CombatantHealth>();
-            if (playerHealth.MaxHealth != PlayerMaxHealth)
+            if (playerHealth.MaxHealth < PlayerMaxHealth)
             {
                 playerHealth.Configure(PlayerMaxHealth);
             }

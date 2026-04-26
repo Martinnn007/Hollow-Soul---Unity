@@ -15,6 +15,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone4PlayableCombatLoop.md` describes the first playable movement, shooting, enemy, room-clear, and HUD loop.
 - `Docs/Milestone5EnemyArchetypesAndDiagnostics.md` describes data-driven enemy archetypes, difficulty tuning, readability, diagnostics, and boss-shell groundwork.
 - `Docs/Milestone6BranchTraversalRewards.md` describes the deterministic five-room branch, door traversal, minimap, runtime rewards, and hub-return portal.
+- `Docs/Milestone7RunEconomyPersistence.md` describes run-local rewards, active-run save/load, profile meta banking, and Continue/New Run flow.
 
 ## Required Setup
 

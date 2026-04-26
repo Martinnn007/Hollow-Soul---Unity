@@ -190,6 +190,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerMovementController
   speedMetersPerSecond: 4
+  runSpeedBonusMetersPerSecond: 0
   radiusMeters: 0.28
   roomRuntimeRoot: {fileID: 0}
 --- !u!114 &2505458630128641707
@@ -205,6 +206,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerWeaponController
   cooldownSeconds: 0.22
+  cooldownMultiplier: 1
+  projectileDamageBonus: 0
   projectilePrefab: {fileID: 0}
   roomRuntimeRoot: {fileID: 0}
   combatController: {fileID: 0}

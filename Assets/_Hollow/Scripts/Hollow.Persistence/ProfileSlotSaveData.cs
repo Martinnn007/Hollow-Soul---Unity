@@ -13,10 +13,13 @@ namespace Hollow.Persistence
         public long lastPlayedUtcTicks;
         public int totalRuns;
         public bool hasActiveRun;
+        public int bankedSouls;
+        public int completedRuns;
+        public RunSaveSnapshot activeRun;
 
         public ProfileSlotSummary ToSummary()
         {
-            return new ProfileSlotSummary(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun);
+            return new ProfileSlotSummary(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun, bankedSouls, completedRuns);
         }
 
         public static ProfileSlotSaveData FromSummary(ProfileSlotSummary summary)
@@ -29,7 +32,9 @@ namespace Hollow.Persistence
                 createdAtUtcTicks = summary.CreatedAtUtcTicks,
                 lastPlayedUtcTicks = summary.LastPlayedUtcTicks,
                 totalRuns = summary.TotalRuns,
-                hasActiveRun = summary.HasActiveRun
+                hasActiveRun = summary.HasActiveRun,
+                bankedSouls = summary.BankedSouls,
+                completedRuns = summary.CompletedRuns
             };
         }
     }
@@ -37,7 +42,7 @@ namespace Hollow.Persistence
     [Serializable]
     public sealed class ProfileStoreSaveData
     {
-        public int schemaVersion = 1;
+        public int schemaVersion = 2;
         public List<ProfileSlotSaveData> slots = new();
     }
 }

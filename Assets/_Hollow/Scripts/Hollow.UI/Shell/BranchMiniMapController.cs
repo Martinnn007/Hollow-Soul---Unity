@@ -1,4 +1,5 @@
 using Hollow.Branches;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,8 +50,12 @@ namespace Hollow.UI.Shell
                 return;
             }
 
+            var itemNames = branchSessionController.RunEconomy.CollectedRewards.Count == 0
+                ? "None"
+                : string.Join(", ", branchSessionController.RunEconomy.CollectedRewards.Select(record => record.DisplayName));
             lastSummary = summary;
-            mapText.text = $"Branch Map\n{Format(model)}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4";
+            mapText.text =
+                $"Branch Map\n{Format(model)}\nRun Souls: {branchSessionController.RunEconomy.RunSouls} | Banked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nItems: {itemNames}\nSave: {branchSessionController.SaveStatus}";
         }
 
         private static string Format(BranchMiniMapModel model)
@@ -113,7 +118,7 @@ namespace Hollow.UI.Shell
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = new Vector2(32f, -32f);
-            rect.sizeDelta = new Vector2(360f, 220f);
+            rect.sizeDelta = new Vector2(520f, 300f);
 
             mapText = textObject.GetComponent<Text>();
             mapText.font = font;

@@ -24,6 +24,19 @@ namespace Hollow.Combat
             currentHealth = maxHealth;
         }
 
+        public void Restore(int nextMaxHealth, int nextCurrentHealth)
+        {
+            maxHealth = Mathf.Max(1, nextMaxHealth);
+            currentHealth = Mathf.Clamp(nextCurrentHealth, 0, maxHealth);
+        }
+
+        public void SetMaxHealthPreservingCurrent(int nextMaxHealth, int healAmount)
+        {
+            var previousCurrent = currentHealth;
+            maxHealth = Mathf.Max(1, nextMaxHealth);
+            currentHealth = Mathf.Clamp(previousCurrent + Mathf.Max(0, healAmount), 0, maxHealth);
+        }
+
         public bool ApplyDamage(DamageRequest request)
         {
             if (!IsAlive || request.Amount <= 0)

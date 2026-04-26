@@ -48,27 +48,54 @@ namespace Hollow.UI.MainMenu
 
         public void LaunchDefaultPlatform()
         {
-            LaunchPlatform(defaultPlatformKind);
+            LaunchNewRun(defaultPlatformKind);
         }
 
         public void LaunchWindows()
         {
-            LaunchPlatform(HollowPlatformKind.WindowsStandard3D);
+            LaunchNewRun(HollowPlatformKind.WindowsStandard3D);
         }
 
         public void LaunchVisionOSBounded()
         {
-            LaunchPlatform(HollowPlatformKind.VisionOSBoundedTabletop);
+            LaunchNewRun(HollowPlatformKind.VisionOSBoundedTabletop);
         }
 
         public void LaunchVisionOSImmersive()
         {
-            LaunchPlatform(HollowPlatformKind.VisionOSImmersive);
+            LaunchNewRun(HollowPlatformKind.VisionOSImmersive);
         }
 
-        private void LaunchPlatform(HollowPlatformKind platformKind)
+        public void LaunchContinueWindows()
         {
-            var route = ViewModel.LaunchPlatform(platformKind);
+            LaunchContinueRun(HollowPlatformKind.WindowsStandard3D);
+        }
+
+        public void LaunchContinueVisionOSBounded()
+        {
+            LaunchContinueRun(HollowPlatformKind.VisionOSBoundedTabletop);
+        }
+
+        public void LaunchContinueVisionOSImmersive()
+        {
+            LaunchContinueRun(HollowPlatformKind.VisionOSImmersive);
+        }
+
+        private void LaunchNewRun(HollowPlatformKind platformKind)
+        {
+            var route = ViewModel.LaunchNewRun(platformKind);
+            if (ViewModel.State == MainMenuState.Error)
+            {
+                screen.Rebuild();
+                return;
+            }
+
+            SceneLoaderService.LoadRouteAsync(route);
+        }
+
+        private void LaunchContinueRun(HollowPlatformKind platformKind)
+        {
+            var route = ViewModel.LaunchContinueRun(platformKind);
             if (ViewModel.State == MainMenuState.Error)
             {
                 screen.Rebuild();

@@ -4,6 +4,11 @@ namespace Hollow.Rewards
     {
         public int ClaimedRewards { get; private set; }
 
+        public void SetClaimedRewards(int claimedRewards)
+        {
+            ClaimedRewards = System.Math.Max(0, claimedRewards);
+        }
+
         public void IncrementClaimedRewards()
         {
             ClaimedRewards++;

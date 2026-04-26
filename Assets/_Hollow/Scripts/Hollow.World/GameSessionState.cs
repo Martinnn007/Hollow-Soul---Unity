@@ -11,6 +11,8 @@ namespace Hollow.World
         private GameSessionState(
             RuntimeSessionMode sessionMode,
             HollowPlatformKind platformKind,
+            RunLaunchMode launchMode,
+            int profileSlotIndex,
             string profileId,
             string profileDisplayName,
             float presentationScale,
@@ -18,6 +20,8 @@ namespace Hollow.World
         {
             SessionMode = sessionMode;
             PlatformKind = platformKind;
+            LaunchMode = launchMode;
+            ProfileSlotIndex = profileSlotIndex;
             ProfileId = profileId;
             ProfileDisplayName = profileDisplayName;
             PresentationScale = presentationScale;
@@ -27,6 +31,10 @@ namespace Hollow.World
         public RuntimeSessionMode SessionMode { get; }
 
         public HollowPlatformKind PlatformKind { get; }
+
+        public RunLaunchMode LaunchMode { get; }
+
+        public int ProfileSlotIndex { get; }
 
         public string ProfileId { get; }
 
@@ -44,9 +52,21 @@ namespace Hollow.World
             ProfileSlotSummary selectedProfile,
             Vector3 playerSpawnPosition)
         {
+            return Create(sessionMode, platformKind, RunLaunchMode.NewRun, selectedProfile, playerSpawnPosition);
+        }
+
+        public static GameSessionState Create(
+            RuntimeSessionMode sessionMode,
+            HollowPlatformKind platformKind,
+            RunLaunchMode launchMode,
+            ProfileSlotSummary selectedProfile,
+            Vector3 playerSpawnPosition)
+        {
             return new GameSessionState(
                 sessionMode,
                 platformKind,
+                launchMode,
+                selectedProfile?.SlotIndex ?? -1,
                 selectedProfile?.ProfileId ?? string.Empty,
                 selectedProfile?.DisplayName ?? "Direct Scene Preview",
                 PresentationScalePolicy.WorldScaleFor(platformKind),

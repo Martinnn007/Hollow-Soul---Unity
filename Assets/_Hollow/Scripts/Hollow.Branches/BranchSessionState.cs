@@ -29,6 +29,12 @@ namespace Hollow.Branches
             CurrentRoom.MarkVisited();
         }
 
+        public void RestoreCurrentRoom(BranchRoomId roomId)
+        {
+            CurrentRoomId = roomId;
+            CurrentRoom.MarkVisited();
+        }
+
         public bool AreAllRoomsCleared()
         {
             return Graph.Rooms.All(room => room.IsCleared);

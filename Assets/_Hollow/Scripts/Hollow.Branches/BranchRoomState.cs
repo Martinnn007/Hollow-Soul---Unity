@@ -49,5 +49,12 @@ namespace Hollow.Branches
                 RewardState = RoomRewardState.Claimed;
             }
         }
+
+        public void Restore(bool isVisited, bool isCleared, RoomRewardState rewardState)
+        {
+            IsVisited = isVisited;
+            IsCleared = isCleared;
+            RewardState = rewardState;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hollow.Core;
 using Hollow.Core.App;
 using Hollow.Persistence;
 using Hollow.Platform;
@@ -80,6 +81,11 @@ namespace Hollow.UI.MainMenu
 
         public AppShellRoute LaunchPlatform(HollowPlatformKind platformKind)
         {
+            return LaunchNewRun(platformKind);
+        }
+
+        public AppShellRoute LaunchNewRun(HollowPlatformKind platformKind)
+        {
             if (!selectedProfileContext.HasSelection)
             {
                 SetError("Select or create a profile first.");
@@ -88,8 +94,39 @@ namespace Hollow.UI.MainMenu
 
             State = MainMenuState.Launching;
             var route = RouteForPlatform(platformKind);
+            var slotId = new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex);
+            if (profileStore is IRunSaveStore runSaveStore)
+            {
+                runSaveStore.ClearActiveRun(slotId);
+            }
+
+            var updated = profileStore.MarkRunStarted(slotId);
+            selectedProfileContext.UpdateSelectedProfile(updated);
+            selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
             appStateMachine.TransitionTo(route);
-            profileStore.MarkLastPlayed(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex));
+            return route;
+        }
+
+        public AppShellRoute LaunchContinueRun(HollowPlatformKind platformKind)
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return AppShellRoute.MainMenu;
+            }
+
+            if (!selectedProfileContext.SelectedProfile.HasActiveRun)
+            {
+                SetError("This profile does not have an active run to continue.");
+                return AppShellRoute.MainMenu;
+            }
+
+            State = MainMenuState.Launching;
+            var route = RouteForPlatform(platformKind);
+            selectedProfileContext.SetLaunchMode(RunLaunchMode.ContinueRun);
+            var updated = profileStore.MarkLastPlayed(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex));
+            selectedProfileContext.UpdateSelectedProfile(updated);
+            appStateMachine.TransitionTo(route);
             return route;
         }
 

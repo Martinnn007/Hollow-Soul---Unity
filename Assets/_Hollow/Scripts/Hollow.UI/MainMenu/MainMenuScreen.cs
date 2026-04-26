@@ -44,11 +44,21 @@ namespace Hollow.UI.MainMenu
 
             if (controller.ViewModel.SelectedProfile != null && !controller.ViewModel.SelectedProfile.IsEmpty)
             {
-                AddText(rootPanel, $"Selected: {controller.ViewModel.SelectedProfile.DisplayName}", 18, FontStyle.Bold, new Vector2(0f, -110f), new Vector2(620f, 34f));
-                AddButton(rootPanel, "Launch Windows", new Vector2(0f, -165f), controller.LaunchWindows);
-                AddButton(rootPanel, "Launch Vision Pro Bounded", new Vector2(0f, -220f), controller.LaunchVisionOSBounded);
-                AddButton(rootPanel, "Launch Vision Pro Immersive", new Vector2(0f, -275f), controller.LaunchVisionOSImmersive);
-                AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -330f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
+                var selected = controller.ViewModel.SelectedProfile;
+                AddText(rootPanel, $"Selected: {selected.DisplayName} | Banked Souls: {selected.BankedSouls}", 18, FontStyle.Bold, new Vector2(0f, -95f), new Vector2(620f, 34f));
+                if (selected.HasActiveRun)
+                {
+                    AddText(rootPanel, "Continue Active Run", 15, FontStyle.Bold, new Vector2(-190f, -138f), new Vector2(280f, 28f), new Color(0.88f, 1f, 0.82f));
+                    AddButton(rootPanel, "Continue Windows", new Vector2(-190f, -175f), controller.LaunchContinueWindows, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
+                    AddButton(rootPanel, "Continue Bounded", new Vector2(-190f, -225f), controller.LaunchContinueVisionOSBounded, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
+                    AddButton(rootPanel, "Continue Immersive", new Vector2(-190f, -275f), controller.LaunchContinueVisionOSImmersive, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
+                }
+
+                AddText(rootPanel, "New Run", 15, FontStyle.Bold, new Vector2(190f, -138f), new Vector2(280f, 28f), new Color(1f, 0.91f, 0.72f));
+                AddButton(rootPanel, "New Windows", new Vector2(190f, -175f), controller.LaunchWindows, null, new Vector2(300f, 40f));
+                AddButton(rootPanel, "New Bounded", new Vector2(190f, -225f), controller.LaunchVisionOSBounded, null, new Vector2(300f, 40f));
+                AddButton(rootPanel, "New Immersive", new Vector2(190f, -275f), controller.LaunchVisionOSImmersive, null, new Vector2(300f, 40f));
+                AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -335f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
             }
         }
 

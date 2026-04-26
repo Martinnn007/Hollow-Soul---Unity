@@ -11,7 +11,7 @@ namespace Hollow.UI.MainMenu
             Title = summary.IsEmpty ? $"Empty Slot {summary.SlotIndex + 1}" : summary.DisplayName;
             Subtitle = summary.IsEmpty
                 ? "Create new profile"
-                : $"Runs: {summary.TotalRuns} | Active Run: {(summary.HasActiveRun ? "Yes" : "No")}";
+                : $"Runs: {summary.TotalRuns} | Clear: {summary.CompletedRuns} | Souls: {summary.BankedSouls} | Active: {(summary.HasActiveRun ? "Yes" : "No")}";
         }
 
         public int SlotIndex { get; }

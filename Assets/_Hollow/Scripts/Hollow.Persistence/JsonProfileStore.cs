@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Hollow.Persistence
 {
-    public sealed class JsonProfileStore : IProfileStore
+    public sealed class JsonProfileStore : IProfileStore, IRunSaveStore
     {
         private const string FileName = "hollow_profiles.json";
         private readonly string savePath;
@@ -50,6 +50,9 @@ namespace Hollow.Persistence
             slot.lastPlayedUtcTicks = now;
             slot.totalRuns = 0;
             slot.hasActiveRun = false;
+            slot.bankedSouls = 0;
+            slot.completedRuns = 0;
+            slot.activeRun = null;
             SaveData(data);
             return slot.ToSummary();
         }
@@ -68,10 +71,87 @@ namespace Hollow.Persistence
             return slot.ToSummary();
         }
 
+        public ProfileSlotSummary MarkRunStarted(ProfileSlotId slotId)
+        {
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+
+            slot.totalRuns++;
+            slot.activeRun = null;
+            slot.hasActiveRun = false;
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
+            SaveData(data);
+            return slot.ToSummary();
+        }
+
         public void DeleteProfile(ProfileSlotId slotId)
         {
             var data = LoadData();
             data.slots[slotId.Value] = CreateEmptySlot(slotId.Value);
+            SaveData(data);
+        }
+
+        public bool TryLoadActiveRun(ProfileSlotId slotId, out RunSaveSnapshot snapshot)
+        {
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            snapshot = slot.activeRun;
+            if (IsMeaningfulActiveRun(snapshot))
+            {
+                return true;
+            }
+
+            snapshot = null;
+            return false;
+        }
+
+        public void SaveActiveRun(ProfileSlotId slotId, RunSaveSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot));
+            }
+
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+
+            snapshot.savedAtUtcTicks = DateTime.UtcNow.Ticks;
+            if (string.IsNullOrWhiteSpace(snapshot.runId))
+            {
+                snapshot.runId = Guid.NewGuid().ToString("N");
+            }
+
+            slot.activeRun = snapshot;
+            slot.hasActiveRun = true;
+            slot.lastPlayedUtcTicks = snapshot.savedAtUtcTicks;
+            SaveData(data);
+        }
+
+        public void ClearActiveRun(ProfileSlotId slotId)
+        {
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+
+            slot.activeRun = null;
+            slot.hasActiveRun = false;
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
+            SaveData(data);
+        }
+
+        public void CompleteActiveRun(ProfileSlotId slotId, RunCompletionSummary summary)
+        {
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+
+            slot.bankedSouls += Math.Max(0, summary?.soulsToBank ?? 0);
+            slot.completedRuns++;
+            slot.activeRun = null;
+            slot.hasActiveRun = false;
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
             SaveData(data);
         }
 
@@ -118,13 +198,17 @@ namespace Hollow.Persistence
                 createdAtUtcTicks = 0,
                 lastPlayedUtcTicks = 0,
                 totalRuns = 0,
-                hasActiveRun = false
+                hasActiveRun = false,
+                bankedSouls = 0,
+                completedRuns = 0,
+                activeRun = null
             };
         }
 
         private static void Normalize(ProfileStoreSaveData data)
         {
-            data.schemaVersion = 1;
+            var previousSchemaVersion = data.schemaVersion;
+            data.schemaVersion = 2;
             data.slots ??= new List<ProfileSlotSaveData>();
             while (data.slots.Count < ProfileSlotConstants.MaxSlots)
             {
@@ -140,7 +224,34 @@ namespace Hollow.Persistence
             {
                 data.slots[index] ??= CreateEmptySlot(index);
                 data.slots[index].slotIndex = index;
+                data.slots[index].profileId ??= string.Empty;
+                data.slots[index].displayName ??= string.Empty;
+                if (previousSchemaVersion < 2)
+                {
+                    data.slots[index].bankedSouls = 0;
+                    data.slots[index].completedRuns = 0;
+                    data.slots[index].activeRun = null;
+                }
+
+                data.slots[index].hasActiveRun = IsMeaningfulActiveRun(data.slots[index].activeRun);
+                if (!data.slots[index].hasActiveRun)
+                {
+                    data.slots[index].activeRun = null;
+                }
             }
+        }
+
+        private static void EnsureExistingProfile(ProfileSlotSaveData slot, ProfileSlotId slotId)
+        {
+            if (string.IsNullOrWhiteSpace(slot.profileId))
+            {
+                throw new InvalidOperationException($"Cannot mutate empty profile slot {slotId.Value}.");
+            }
+        }
+
+        private static bool IsMeaningfulActiveRun(RunSaveSnapshot snapshot)
+        {
+            return snapshot != null && !string.IsNullOrWhiteSpace(snapshot.runId);
         }
     }
 }

@@ -56,8 +56,10 @@ namespace Hollow.World
             presentationRoot?.Configure(platformKind);
             var importedAsset = ImportRoomAssetIfAvailable();
             var spawnPosition = importedAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
-            var selectedProfile = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile;
-            SessionState = GameSessionState.Create(sessionMode, platformKind, selectedProfile, spawnPosition);
+            var selectedProfileContext = ProfileSessionHost.Instance?.SelectedProfileContext;
+            var selectedProfile = selectedProfileContext?.SelectedProfile;
+            var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
+            SessionState = GameSessionState.Create(sessionMode, platformKind, launchMode, selectedProfile, spawnPosition);
 
             if (importedAsset != null && TryGetBranchSessionController(out var branchSessionController))
             {

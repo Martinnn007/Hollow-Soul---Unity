@@ -9,6 +9,8 @@ namespace Hollow.Persistence
 
         public IProfileStore ProfileStore { get; private set; }
 
+        public IRunSaveStore RunSaveStore { get; private set; }
+
         public SelectedProfileContext SelectedProfileContext { get; private set; }
 
         private void Awake()
@@ -21,7 +23,9 @@ namespace Hollow.Persistence
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            ProfileStore = new JsonProfileStore();
+            var jsonStore = new JsonProfileStore();
+            ProfileStore = jsonStore;
+            RunSaveStore = jsonStore;
             SelectedProfileContext = new SelectedProfileContext();
         }
     }

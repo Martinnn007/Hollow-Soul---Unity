@@ -1,7 +1,10 @@
 {
   "name": "Hollow.Rewards",
   "rootNamespace": "Hollow.Rewards",
-  "references": [],
+  "references": [
+    "Hollow.Combat",
+    "Hollow.Persistence"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

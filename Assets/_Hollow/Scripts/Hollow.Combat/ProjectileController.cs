@@ -22,10 +22,16 @@ namespace Hollow.Combat
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
+            Configure(room, controller, direction, 0);
+        }
+
+        public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction, int damageBonus)
+        {
             roomRuntimeRoot = room;
             combatController = controller;
             diagnostics = controller != null ? controller.Diagnostics : null;
             localDirection = direction.sqrMagnitude < 0.001f ? Vector3.forward : direction.normalized;
+            damage = DefaultDamage + Mathf.Max(0, damageBonus);
             ageSeconds = 0f;
         }
 

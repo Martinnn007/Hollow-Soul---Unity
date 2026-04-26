@@ -1,8 +1,10 @@
+using System;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Core.App;
 using Hollow.Entities;
 using Hollow.Input;
+using Hollow.Persistence;
 using Hollow.Rewards;
 using Hollow.Rooms;
 using Hollow.World;
@@ -26,10 +28,25 @@ namespace Hollow.Branches
         private RoomRewardPickup currentRewardPickup;
         private HubReturnPortal currentHubPortal;
         private readonly RuntimeRewardCounter rewardCounter = new();
+        private RunEconomy runEconomy = new();
+        private PlayerRunStats playerRunStats = new();
+        private IRunSaveStore runSaveStore;
+        private ProfileSlotId activeProfileSlotId;
+        private bool canPersist;
+        private bool activeRunCompletedOrFailed;
+        private bool suppressCheckpoint;
 
         public BranchSessionState State { get; private set; }
 
         public RuntimeRewardCounter RewardCounter => rewardCounter;
+
+        public RunEconomy RunEconomy => runEconomy;
+
+        public PlayerRunStats PlayerRunStats => playerRunStats;
+
+        public int BankedSouls { get; private set; }
+
+        public string SaveStatus { get; private set; } = "Transient";
 
         public GameObject RewardPickupPrefab => rewardPickupPrefab;
 
@@ -54,6 +71,7 @@ namespace Hollow.Branches
             roomAsset = nextRoomAsset;
             gameSessionState = nextSessionState;
             ResolveReferences();
+            ResolvePersistence();
 
             if (roomAsset == null || roomRuntimeRoot == null || playerController == null || roomCombatController == null)
             {
@@ -64,8 +82,51 @@ namespace Hollow.Branches
             roomCombatController.RoomCleared -= OnRoomCleared;
             roomCombatController.RoomCleared += OnRoomCleared;
 
+            if (canPersist && gameSessionState.LaunchMode == Hollow.Core.RunLaunchMode.ContinueRun && runSaveStore.TryLoadActiveRun(activeProfileSlotId, out var snapshot))
+            {
+                InitializeFromSnapshot(roomAsset, gameSessionState, snapshot);
+                return;
+            }
+
+            InitializeFresh(roomAsset, gameSessionState);
+        }
+
+        public void InitializeFresh(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState)
+        {
+            roomAsset = nextRoomAsset;
+            gameSessionState = nextSessionState;
+            ResolveReferences();
+            ResolvePersistence();
+
+            runEconomy = new RunEconomy();
+            playerRunStats = new PlayerRunStats();
+            rewardCounter.SetClaimedRewards(0);
+            activeRunCompletedOrFailed = false;
             State = BranchSessionState.Create(BranchGenerator.CreateFiveRoomCross(roomAsset));
             LoadCurrentRoom(roomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero);
+            CheckpointActiveRun();
+        }
+
+        public void InitializeFromSnapshot(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState, RunSaveSnapshot snapshot)
+        {
+            roomAsset = nextRoomAsset;
+            gameSessionState = nextSessionState;
+            ResolveReferences();
+            ResolvePersistence();
+
+            runEconomy = RunEconomy.FromSaveState(snapshot?.economy);
+            playerRunStats = PlayerRunStats.FromSaveState(snapshot?.playerStats);
+            rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
+            activeRunCompletedOrFailed = false;
+            State = BranchSessionState.Create(BranchGenerator.CreateFiveRoomCross(roomAsset));
+            RestoreBranchRooms(snapshot);
+            State.RestoreCurrentRoom(new BranchRoomId(snapshot?.currentRoomId ?? BranchRoomId.Origin.Value));
+            suppressCheckpoint = true;
+            LoadCurrentRoom(roomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero);
+            RestorePlayerHealth(snapshot);
+            ApplyRunStatsToPlayer(healAmount: 0);
+            suppressCheckpoint = false;
+            CheckpointActiveRun();
         }
 
         private void OnDestroy()
@@ -73,6 +134,10 @@ namespace Hollow.Branches
             if (roomCombatController != null)
             {
                 roomCombatController.RoomCleared -= OnRoomCleared;
+                if (roomCombatController.PlayerHealth != null)
+                {
+                    roomCombatController.PlayerHealth.Died -= OnPlayerDied;
+                }
             }
         }
 
@@ -100,6 +165,7 @@ namespace Hollow.Branches
 
             State.EnterRoom(connection.ToRoomId);
             LoadCurrentRoom(BranchTraversalService.EntryPositionFor(roomRuntimeRoot, connection.ToDirection));
+            CheckpointActiveRun();
             return true;
         }
 
@@ -145,9 +211,12 @@ namespace Hollow.Branches
             playerController.transform.localPosition = playerLocalPosition;
             State.CurrentRoom.MarkVisited();
             roomCombatController.BeginRoom(roomRuntimeRoot, playerController, State.CurrentRoom.IsCleared);
+            ApplyRunStatsToPlayer(healAmount: 0);
+            SubscribePlayerDeath();
             UpdateDoorVisuals();
             SpawnRewardIfNeeded();
             SpawnHubPortalIfReady();
+            CheckpointActiveRun();
         }
 
         private void OnRoomCleared(RoomCombatController _)
@@ -186,10 +255,18 @@ namespace Hollow.Branches
             }
 
             State.CurrentRoom.MarkRewardClaimed();
-            rewardCounter.IncrementClaimedRewards();
+            var grant = RewardResolver.Resolve(State.CurrentRoomId.Value);
+            if (runEconomy.ApplyReward(grant))
+            {
+                var healAmount = playerRunStats.ApplyReward(grant);
+                ApplyRunStatsToPlayer(healAmount);
+                rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
+            }
+
             DestroyRuntimeObject(currentRewardPickup.gameObject);
             currentRewardPickup = null;
             SpawnHubPortalIfReady();
+            CheckpointActiveRun();
             return true;
         }
 
@@ -206,6 +283,7 @@ namespace Hollow.Branches
             }
 
             HubReturnRequested = true;
+            CompleteActiveRunIfPersistent();
             if (HollowBootstrap.Instance != null)
             {
                 HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
@@ -281,6 +359,183 @@ namespace Hollow.Branches
             roomRuntimeRoot = roomRuntimeRoot != null ? roomRuntimeRoot : GetComponentInChildren<RoomRuntimeRoot>(includeInactive: true) ?? FindFirstObjectByType<RoomRuntimeRoot>();
             playerController = playerController != null ? playerController : GetComponentInChildren<PlaceholderPlayerController>(includeInactive: true) ?? FindFirstObjectByType<PlaceholderPlayerController>();
             roomCombatController = roomCombatController != null ? roomCombatController : GetComponent<RoomCombatController>() ?? FindFirstObjectByType<RoomCombatController>();
+        }
+
+        private void ResolvePersistence()
+        {
+            canPersist = false;
+            SaveStatus = "Transient";
+            BankedSouls = 0;
+
+            var profileHost = ProfileSessionHost.Instance;
+            var selectedProfile = profileHost?.SelectedProfileContext?.SelectedProfile;
+            if (selectedProfile != null)
+            {
+                BankedSouls = selectedProfile.BankedSouls;
+            }
+
+            if (gameSessionState == null || gameSessionState.ProfileSlotIndex < 0 || profileHost?.RunSaveStore == null)
+            {
+                return;
+            }
+
+            canPersist = TransientSessionGuard.CanPersist(gameSessionState.SessionMode, gameSessionState.HasProfile);
+            if (!canPersist)
+            {
+                return;
+            }
+
+            activeProfileSlotId = new ProfileSlotId(gameSessionState.ProfileSlotIndex);
+            runSaveStore = profileHost.RunSaveStore;
+            SaveStatus = "Active";
+        }
+
+        private void RestoreBranchRooms(RunSaveSnapshot snapshot)
+        {
+            if (snapshot?.rooms == null || State == null)
+            {
+                return;
+            }
+
+            foreach (var roomSave in snapshot.rooms)
+            {
+                var roomId = new BranchRoomId(roomSave.roomId);
+                if (!State.Graph.TryGetRoom(roomId, out var room))
+                {
+                    continue;
+                }
+
+                if (!Enum.TryParse(roomSave.rewardState, out RoomRewardState rewardState))
+                {
+                    rewardState = roomId == BranchRoomId.Origin ? RoomRewardState.Unavailable : RoomRewardState.None;
+                }
+
+                room.Restore(roomSave.isVisited, roomSave.isCleared, rewardState);
+            }
+        }
+
+        private void RestorePlayerHealth(RunSaveSnapshot snapshot)
+        {
+            if (snapshot == null || roomCombatController?.PlayerHealth == null)
+            {
+                return;
+            }
+
+            roomCombatController.PlayerHealth.Restore(RoomCombatController.PlayerMaxHealth + playerRunStats.MaxHealthBonus, snapshot.playerCurrentHealth);
+        }
+
+        private void SubscribePlayerDeath()
+        {
+            if (roomCombatController?.PlayerHealth == null)
+            {
+                return;
+            }
+
+            roomCombatController.PlayerHealth.Died -= OnPlayerDied;
+            roomCombatController.PlayerHealth.Died += OnPlayerDied;
+        }
+
+        private void OnPlayerDied(CombatantHealth _)
+        {
+            if (activeRunCompletedOrFailed)
+            {
+                return;
+            }
+
+            activeRunCompletedOrFailed = true;
+            if (canPersist)
+            {
+                runSaveStore.ClearActiveRun(activeProfileSlotId);
+                RefreshSelectedProfileSummary();
+            }
+
+            SaveStatus = "Run Lost";
+            if (HollowBootstrap.Instance != null)
+            {
+                HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
+                SceneLoaderService.LoadRouteAsync(AppShellRoute.MainMenu);
+            }
+        }
+
+        private void ApplyRunStatsToPlayer(int healAmount)
+        {
+            ItemEffectApplier.ApplyToPlayer(playerController != null ? playerController.gameObject : null, playerRunStats, healAmount);
+        }
+
+        private void CheckpointActiveRun()
+        {
+            if (suppressCheckpoint || !canPersist || activeRunCompletedOrFailed || runSaveStore == null)
+            {
+                return;
+            }
+
+            runSaveStore.SaveActiveRun(activeProfileSlotId, CreateSnapshot());
+            SaveStatus = "Saved";
+            RefreshSelectedProfileSummary();
+        }
+
+        public RunSaveSnapshot CreateSnapshot()
+        {
+            var snapshot = new RunSaveSnapshot
+            {
+                runId = $"m7-{gameSessionState?.ProfileId ?? "transient"}",
+                branchId = "m7_five_room_cross",
+                currentRoomId = State?.CurrentRoomId.Value ?? BranchRoomId.Origin.Value,
+                platformKind = gameSessionState?.PlatformKind.ToString() ?? string.Empty,
+                playerCurrentHealth = roomCombatController?.PlayerHealth != null ? roomCombatController.PlayerHealth.CurrentHealth : RoomCombatController.PlayerMaxHealth,
+                economy = runEconomy.ToSaveState(),
+                playerStats = playerRunStats.ToSaveState()
+            };
+
+            if (State?.Graph?.Rooms != null)
+            {
+                snapshot.rooms = State.Graph.Rooms.Select(room => new BranchRoomSaveState
+                {
+                    roomId = room.Id.Value,
+                    coordinateX = room.Coordinate.x,
+                    coordinateZ = room.Coordinate.y,
+                    isVisited = room.IsVisited,
+                    isCleared = room.IsCleared,
+                    rewardState = room.RewardState.ToString()
+                }).ToList();
+            }
+
+            return snapshot;
+        }
+
+        private void CompleteActiveRunIfPersistent()
+        {
+            if (activeRunCompletedOrFailed)
+            {
+                return;
+            }
+
+            activeRunCompletedOrFailed = true;
+            if (canPersist)
+            {
+                MetaProgressionService.CompleteRun(runSaveStore, activeProfileSlotId, runEconomy);
+                RefreshSelectedProfileSummary();
+                BankedSouls = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile?.BankedSouls ?? BankedSouls + runEconomy.RunSouls;
+            }
+
+            SaveStatus = "Completed";
+        }
+
+        private void RefreshSelectedProfileSummary()
+        {
+            var profileHost = ProfileSessionHost.Instance;
+            if (profileHost?.SelectedProfileContext == null || profileHost.ProfileStore == null || gameSessionState == null)
+            {
+                return;
+            }
+
+            var updated = profileHost.ProfileStore.LoadSlotSummaries()
+                .FirstOrDefault(summary => summary.SlotIndex == gameSessionState.ProfileSlotIndex);
+            if (updated != null)
+            {
+                profileHost.SelectedProfileContext.UpdateSelectedProfile(updated);
+                BankedSouls = updated.BankedSouls;
+            }
         }
 
         private static GameObject InstantiateOrCreate(GameObject prefab, string objectName, PrimitiveType primitiveType, Color color)

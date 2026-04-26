@@ -10,6 +10,8 @@ namespace Hollow.Persistence
 
         ProfileSlotSummary MarkLastPlayed(ProfileSlotId slotId);
 
+        ProfileSlotSummary MarkRunStarted(ProfileSlotId slotId);
+
         void DeleteProfile(ProfileSlotId slotId);
     }
 }

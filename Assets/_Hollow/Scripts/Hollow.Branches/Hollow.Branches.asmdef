@@ -6,6 +6,8 @@
     "Hollow.Combat",
     "Hollow.Entities",
     "Hollow.Input",
+    "Hollow.Persistence",
+    "Hollow.Platform",
     "Hollow.Rewards",
     "Hollow.Rooms",
     "Hollow.World"
