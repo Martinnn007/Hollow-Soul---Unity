@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 391b13e4a2cc94befb5994f5522fec5e, type: 3}
+  m_Name: BranchGenerationSettings_M15
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.BranchGenerationSettingsDefinition
+  defaultSeed: 15001
+  targetRoomCount: 8
+  maxPlacementAttempts: 250
+  allowLoops: 0
+  enableBossLeaf: 1
+  allowedFixtureIds:
+  - combat_macro_single_1x1
+  - combat_macro_wide_2x1
+  - combat_macro_tall_1x2
+  - combat_macro_block_2x2
+  - combat_macro_l_3cell

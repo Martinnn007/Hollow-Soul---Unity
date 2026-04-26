@@ -10,6 +10,7 @@ namespace Hollow.RoomDesigner
         public int schemaVersion = 1;
         public string projectId = string.Empty;
         public string displayName = "Designer Draft 13x7";
+        public RoomDesignerFootprintPreset footprintPreset = RoomDesignerFootprintPreset.Single1x1;
         public int widthTiles = 13;
         public int heightTiles = 7;
         public long createdAtUtcTicks;
@@ -20,39 +21,51 @@ namespace Hollow.RoomDesigner
 
         public static RoomDesignerProject CreateDefault(string displayName = "Designer Draft 13x7")
         {
+            return CreateDefault(RoomDesignerFootprintPreset.Single1x1, displayName);
+        }
+
+        public static RoomDesignerProject CreateDefault(RoomDesignerFootprintPreset preset, string displayName = null)
+        {
             var now = DateTime.UtcNow.Ticks;
+            var dimensions = RoomDesignerFootprintUtility.Dimensions(preset);
             var project = new RoomDesignerProject
             {
                 projectId = Guid.NewGuid().ToString("N"),
-                displayName = string.IsNullOrWhiteSpace(displayName) ? "Designer Draft 13x7" : displayName,
+                displayName = string.IsNullOrWhiteSpace(displayName) ? RoomDesignerFootprintUtility.DisplayName(preset) : displayName,
+                footprintPreset = preset,
+                widthTiles = dimensions.x,
+                heightTiles = dimensions.y,
                 createdAtUtcTicks = now,
                 updatedAtUtcTicks = now
             };
 
-            for (var z = -3; z <= 3; z++)
+            foreach (var tile in RoomDesignerFootprintUtility.GroundTiles(preset))
             {
-                for (var x = -6; x <= 6; x++)
-                {
-                    project.cells.Add(new RoomDesignerCell(x, z, 0, RoomDesignerCellKinds.Ground));
-                }
+                project.cells.Add(new RoomDesignerCell(tile.x, tile.y, 0, RoomDesignerCellKinds.Ground));
             }
 
             foreach (var position in new[] { new Vector2Int(-3, -1), new Vector2Int(-1, 1), new Vector2Int(2, -1), new Vector2Int(4, 1) })
             {
-                project.cells.Add(new RoomDesignerCell(position.x, position.y, 1, RoomDesignerCellKinds.Rock));
+                if (RoomDesignerFootprintUtility.ContainsTile(preset, position.x, position.y))
+                {
+                    project.cells.Add(new RoomDesignerCell(position.x, position.y, 1, RoomDesignerCellKinds.Rock));
+                }
             }
 
-            project.markers.Add(new RoomDesignerMarker("spawn_safeStart", RoomDesignerMarkerKinds.SafeStart, 0f, 0f, 0f));
-            project.markers.Add(new RoomDesignerMarker("spawn_enemy_0", RoomDesignerMarkerKinds.Enemy, -4f, 0f, -2f));
-            project.markers.Add(new RoomDesignerMarker("spawn_enemy_1", RoomDesignerMarkerKinds.Enemy, 4f, 0f, -2f));
-            project.markers.Add(new RoomDesignerMarker("spawn_enemy_2", RoomDesignerMarkerKinds.Enemy, -4f, 0f, 2f));
-            project.markers.Add(new RoomDesignerMarker("spawn_enemy_3", RoomDesignerMarkerKinds.Enemy, 4f, 0f, 2f));
-            project.markers.Add(new RoomDesignerMarker("spawn_reward_0", RoomDesignerMarkerKinds.RoomReward, 0f, 0f, 2f));
+            var safeStart = RoomDesignerFootprintUtility.NearestContainedTile(preset, 0, 0);
+            project.markers.Add(new RoomDesignerMarker("spawn_safeStart", RoomDesignerMarkerKinds.SafeStart, safeStart.x, 0f, safeStart.y));
 
-            project.doorPorts.Add(RoomDesignerDoorPortState.Create("north", 0, 0f, -3.5f, RoomDesignerDoorKinds.Available));
-            project.doorPorts.Add(RoomDesignerDoorPortState.Create("south", 0, 0f, 3.5f, RoomDesignerDoorKinds.Available));
-            project.doorPorts.Add(RoomDesignerDoorPortState.Create("east", 0, 6.5f, 0f, RoomDesignerDoorKinds.Available));
-            project.doorPorts.Add(RoomDesignerDoorPortState.Create("west", 0, -6.5f, 0f, RoomDesignerDoorKinds.Available));
+            var enemyTargets = new[] { new Vector2Int(-4, -2), new Vector2Int(4, -2), new Vector2Int(-4, 2), new Vector2Int(4, 2) };
+            for (var index = 0; index < enemyTargets.Length; index++)
+            {
+                var enemy = RoomDesignerFootprintUtility.NearestContainedTile(preset, enemyTargets[index].x, enemyTargets[index].y);
+                project.markers.Add(new RoomDesignerMarker($"spawn_enemy_{index}", RoomDesignerMarkerKinds.Enemy, enemy.x, 0f, enemy.y));
+            }
+
+            var reward = RoomDesignerFootprintUtility.NearestContainedTile(preset, 0, 2);
+            project.markers.Add(new RoomDesignerMarker("spawn_reward_0", RoomDesignerMarkerKinds.RoomReward, reward.x, 0f, reward.y));
+
+            project.doorPorts.AddRange(RoomDesignerFootprintUtility.CreateAvailableDoorPorts(preset));
             return project;
         }
 
@@ -117,17 +130,21 @@ namespace Hollow.RoomDesigner
         public string id;
         public string direction;
         public int laneIndex;
+        public int hostCellX;
+        public int hostCellZ;
         public float x;
         public float z;
         public string state;
 
-        public static RoomDesignerDoorPortState Create(string direction, int laneIndex, float x, float z, string state)
+        public static RoomDesignerDoorPortState Create(string direction, int laneIndex, float x, float z, string state, int hostCellX = 0, int hostCellZ = 0)
         {
             return new RoomDesignerDoorPortState
             {
                 id = $"{direction}_{laneIndex}",
                 direction = direction,
                 laneIndex = laneIndex,
+                hostCellX = hostCellX,
+                hostCellZ = hostCellZ,
                 x = x,
                 z = z,
                 state = state

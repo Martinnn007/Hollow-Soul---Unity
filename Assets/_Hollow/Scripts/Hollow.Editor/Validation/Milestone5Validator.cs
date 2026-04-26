@@ -93,9 +93,9 @@ namespace Hollow.Editor.Validation
         private static void ValidateDataAssets(List<string> failures)
         {
             var catalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>("Assets/_Hollow/Data/Enemies/EnemyCatalog.asset");
-            if (catalog == null || catalog.Definitions.Count != 4)
+            if (catalog == null || catalog.Definitions.Count < 4)
             {
-                failures.Add("EnemyCatalog.asset must contain four default enemy definitions.");
+                failures.Add("EnemyCatalog.asset must contain at least the four default enemy definitions.");
                 return;
             }
 

@@ -49,7 +49,9 @@ namespace Hollow.Rooms
             }
 
             var layout = BuildLayout(runtime);
+            var footprint = BuildFootprint(runtime);
             var doorPorts = BuildDoorPorts(runtime);
+            ValidateDoorPorts(footprint, doorPorts);
             var safeStart = new ImportedSpawnPoint
             {
                 id = "spawn_point_safeStart",
@@ -61,12 +63,32 @@ namespace Hollow.Rooms
                 runtime.canonicalRoomId,
                 runtime.displayName,
                 layout,
+                footprint,
                 doorPorts,
                 runtime.enemySpawns ?? new List<ImportedSpawnPoint>(),
                 runtime.itemSpawns ?? new List<ImportedSpawnPoint>(),
                 safeStart,
                 runtime.decor ?? new List<ImportedRoomDecor>(),
                 manifest);
+        }
+
+        private static RoomInstanceFootprint BuildFootprint(ImportedHollowRuntime runtime)
+        {
+            var source = runtime.footprint;
+            var primaryCell = new Vector2Int(source?.primaryCell?.x ?? 0, source?.primaryCell?.z ?? 0);
+            var occupiedCells = new List<Vector2Int>();
+            foreach (var cell in source?.occupiedBranchCells ?? new List<ImportedGridPosition>())
+            {
+                occupiedCells.Add(new Vector2Int(cell.x, cell.z));
+            }
+
+            if (occupiedCells.Count == 0)
+            {
+                occupiedCells.Add(primaryCell);
+            }
+
+            var chunkBasis = new Vector2Int(source?.chunkBasisTiles?.width ?? 13, source?.chunkBasisTiles?.height ?? 7);
+            return new RoomInstanceFootprint(primaryCell, occupiedCells, chunkBasis);
         }
 
         private static RoomLayout BuildLayout(ImportedHollowRuntime runtime)
@@ -149,6 +171,80 @@ namespace Hollow.Rooms
             }
 
             return ports;
+        }
+
+        private static void ValidateDoorPorts(RoomInstanceFootprint footprint, IReadOnlyList<RoomDoorPort> doorPorts)
+        {
+            if (footprint == null)
+            {
+                throw new ArgumentException("HollowRuntime V2 import failed: missing room footprint.");
+            }
+
+            var expectedPortCount = ExpectedExposedPortCount(footprint);
+            if (doorPorts.Count != expectedPortCount)
+            {
+                throw new ArgumentException($"HollowRuntime V2 import failed: footprint exposes {expectedPortCount} ports but payload contains {doorPorts.Count}.");
+            }
+
+            foreach (var port in doorPorts)
+            {
+                if (!footprint.ContainsCell(port.HostCell))
+                {
+                    throw new ArgumentException($"HollowRuntime V2 import failed: door port {port.Id} is hosted by an unoccupied cell {port.HostCell}.");
+                }
+
+                var adjacent = port.HostCell + DirectionOffset(port.Direction);
+                if (footprint.ContainsCell(adjacent))
+                {
+                    throw new ArgumentException($"HollowRuntime V2 import failed: door port {port.Id} is on an internal occupied-cell seam.");
+                }
+            }
+        }
+
+        public static int ExpectedExposedPortCount(RoomInstanceFootprint footprint)
+        {
+            if (footprint == null)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            foreach (var cell in footprint.OccupiedCells)
+            {
+                if (!footprint.ContainsCell(cell + Vector2Int.up))
+                {
+                    count++;
+                }
+
+                if (!footprint.ContainsCell(cell + Vector2Int.down))
+                {
+                    count++;
+                }
+
+                if (!footprint.ContainsCell(cell + Vector2Int.left))
+                {
+                    count++;
+                }
+
+                if (!footprint.ContainsCell(cell + Vector2Int.right))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static Vector2Int DirectionOffset(string direction)
+        {
+            return direction switch
+            {
+                "north" => new Vector2Int(0, -1),
+                "south" => new Vector2Int(0, 1),
+                "east" => new Vector2Int(1, 0),
+                "west" => new Vector2Int(-1, 0),
+                _ => Vector2Int.zero
+            };
         }
     }
 }

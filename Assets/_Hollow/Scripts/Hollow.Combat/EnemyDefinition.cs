@@ -78,5 +78,12 @@ namespace Hollow.Combat
         {
             return CreateRuntime("spawnEnemyNormal", "Normal Chaser", EnemyArchetypeId.Normal, EnemyMovementMode.Grounded, 3, 1.5f, 1, new Color(0.85f, 0.16f, 0.14f, 1f));
         }
+
+        public static EnemyDefinition CreateRuntimeBoss()
+        {
+            var definition = CreateRuntime("spawnEnemyBoss", "Stone Warden", EnemyArchetypeId.Boss, EnemyMovementMode.Grounded, 14, 0.75f, 2, new Color(0.42f, 0.34f, 0.28f, 1f));
+            definition.Configure("spawnEnemyBoss", "Stone Warden", EnemyArchetypeId.Boss, EnemyMovementMode.Grounded, 14, 0.75f, 2, 1f, 0.55f, new Color(0.42f, 0.34f, 0.28f, 1f));
+            return definition;
+        }
     }
 }

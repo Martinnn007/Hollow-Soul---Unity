@@ -74,8 +74,15 @@ namespace Hollow.RoomDesigner
             var changed = false;
             if ((input.MoveX != 0 || input.MoveZ != 0) && timeSeconds >= nextMoveTime)
             {
-                CursorX = Mathf.Clamp(CursorX + input.MoveX, -6, 6);
-                CursorZ = Mathf.Clamp(CursorZ + input.MoveZ, -3, 3);
+                RoomDesignerFootprintUtility.TileCoordinateBounds(currentProject.footprintPreset, out var minX, out var maxX, out var minZ, out var maxZ);
+                var nextX = Mathf.Clamp(CursorX + input.MoveX, minX, maxX);
+                var nextZ = Mathf.Clamp(CursorZ + input.MoveZ, minZ, maxZ);
+                if (RoomDesignerFootprintUtility.ContainsTile(currentProject.footprintPreset, nextX, nextZ))
+                {
+                    CursorX = nextX;
+                    CursorZ = nextZ;
+                }
+
                 nextMoveTime = timeSeconds + RepeatDelaySeconds;
                 changed = true;
             }
@@ -313,14 +320,15 @@ namespace Hollow.RoomDesigner
 
         private void BuildGrid()
         {
-            for (var x = -6.5f; x <= 6.51f; x += 1f)
+            RoomDesignerFootprintUtility.RoomBounds(currentProject.footprintPreset, out var minX, out var maxX, out var minZ, out var maxZ);
+            for (var x = minX; x <= maxX + 0.01f; x += 1f)
             {
-                BuildCube($"grid_x_{x}", new Vector3(x, 0.02f, 0f), new Vector3(0.02f, 0.02f, 7f), MaterialRole.DesignerGrid);
+                BuildCube($"grid_x_{x}", new Vector3(x, 0.02f, (minZ + maxZ) * 0.5f), new Vector3(0.02f, 0.02f, maxZ - minZ), MaterialRole.DesignerGrid);
             }
 
-            for (var z = -3.5f; z <= 3.51f; z += 1f)
+            for (var z = minZ; z <= maxZ + 0.01f; z += 1f)
             {
-                BuildCube($"grid_z_{z}", new Vector3(0f, 0.025f, z), new Vector3(13f, 0.02f, 0.02f), MaterialRole.DesignerGrid);
+                BuildCube($"grid_z_{z}", new Vector3((minX + maxX) * 0.5f, 0.025f, z), new Vector3(maxX - minX, 0.02f, 0.02f), MaterialRole.DesignerGrid);
             }
         }
 
@@ -461,7 +469,7 @@ namespace Hollow.RoomDesigner
             }
 
             hudText.text =
-                $"Room Designer\nTool: {CurrentTool} | Cursor: ({CursorX}, {CursorLayer}, {CursorZ}) | Labels: {(LabelsVisible ? "On" : "Off")}\nWASD/Arrows move | Q/E tool | Z/X layer | Space place | Delete erase\nP playtest | J export JSON | U export USDA | Esc menu\n{status}";
+                $"Room Designer\nFootprint: {currentProject.footprintPreset} | Tool: {CurrentTool} | Cursor: ({CursorX}, {CursorLayer}, {CursorZ}) | Labels: {(LabelsVisible ? "On" : "Off")}\nWASD/Arrows move | Q/E tool | Z/X layer | Space place | Delete erase\nP playtest | J export JSON | U export USDA | Esc menu\n{status}";
         }
 
         private void ReturnToMainMenu()

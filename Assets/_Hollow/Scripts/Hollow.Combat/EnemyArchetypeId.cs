@@ -5,6 +5,7 @@ namespace Hollow.Combat
         Normal = 0,
         Flying = 1,
         Fast = 2,
-        Heavy = 3
+        Heavy = 3,
+        Boss = 4
     }
 }

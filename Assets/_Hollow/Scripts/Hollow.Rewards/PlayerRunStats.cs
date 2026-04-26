@@ -21,6 +21,7 @@ namespace Hollow.Rewards
                 "quick_draw" => ApplyQuickDraw(),
                 "fleet_step" => ApplyFleetStep(),
                 "ember_charm" => ApplyEmberCharm(),
+                "boss_sigil" => 0,
                 _ => 0
             };
         }

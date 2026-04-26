@@ -21,6 +21,9 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone10PlatformPolish.md` describes Windows, Vision Pro bounded tabletop, and Vision Pro immersive presentation polish profiles.
 - `Docs/Milestone11PrototypeLock.md` describes the QA checklist, performance budgets, save/load coverage, content validation, and build handoff gate.
 - `Docs/Milestone12BuildAutomation.md` describes the full prototype audit runner, output conventions, build manifests, and Windows development build entrypoint.
+- `Docs/Milestone13MacroRooms.md` describes macro-room footprints, exposed door-port validation, room designer presets, and additive branch occupancy foundations.
+- `Docs/Milestone14MacroBranchGeneration.md` describes the seeded macro-room branch, exact port traversal, M14 catalog wiring, and legacy save compatibility.
+- `Docs/Milestone15SeededProceduralBranches.md` describes the first seeded eight-room procedural macro branch, procedural rewards, and the Stone Warden boss room.
 
 ## Required Setup
 

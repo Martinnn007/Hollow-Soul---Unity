@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1903597541688237703}
   - component: {fileID: 6801588470143614074}
   - component: {fileID: 1339132167031271215}
-  - component: {fileID: 2091248984944402029}
+  - component: {fileID: 4006084392385466953}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -93,7 +93,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4301176786107148124}
   m_Enabled: 1
---- !u!114 &2091248984944402029
+--- !u!114 &4006084392385466953
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -118,7 +118,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4293826081303616313}
   - component: {fileID: 2807226533732996882}
-  - component: {fileID: 425850552880631980}
+  - component: {fileID: 7906848385978267124}
   m_Layer: 0
   m_Name: VisionOSBoundedRig
   m_TagString: Untagged
@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.CameraRigMetadata
   platformKind: 1
---- !u!114 &425850552880631980
+--- !u!114 &7906848385978267124
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

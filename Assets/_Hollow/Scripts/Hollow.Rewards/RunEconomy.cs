@@ -14,7 +14,7 @@ namespace Hollow.Rewards
 
         public bool ApplyReward(RewardGrant grant)
         {
-            if (grant.IsEmpty || collectedRewards.Any(record => record.RoomId == grant.RoomId || record.RewardId == grant.RewardId))
+            if (grant.IsEmpty || collectedRewards.Any(record => record.RoomId == grant.RoomId))
             {
                 return false;
             }

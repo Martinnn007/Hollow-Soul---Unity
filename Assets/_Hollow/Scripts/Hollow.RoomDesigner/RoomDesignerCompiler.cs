@@ -26,6 +26,10 @@ namespace Hollow.RoomDesigner
                 throw new System.ArgumentNullException(nameof(project));
             }
 
+            var footprintPreset = project.footprintPreset;
+            var presetDimensions = RoomDesignerFootprintUtility.Dimensions(footprintPreset);
+            var occupiedCells = RoomDesignerFootprintUtility.OccupiedCells(footprintPreset);
+            RoomDesignerFootprintUtility.RoomBounds(footprintPreset, out var minX, out var maxX, out var minZ, out var maxZ);
             var runtime = new ImportedHollowRuntime
             {
                 schemaVersion = HollowRuntimeV2Importer.SupportedSchemaVersion,
@@ -38,21 +42,21 @@ namespace Hollow.RoomDesigner
                 tileSizeMeters = 1f,
                 dimensions = new ImportedRoomDimensions
                 {
-                    widthTiles = project.widthTiles,
-                    heightTiles = project.heightTiles,
+                    widthTiles = presetDimensions.x,
+                    heightTiles = presetDimensions.y,
                     bounds = new ImportedRoomBounds
                     {
-                        minX = -project.widthTiles * 0.5f,
-                        maxX = project.widthTiles * 0.5f,
-                        minZ = -project.heightTiles * 0.5f,
-                        maxZ = project.heightTiles * 0.5f
+                        minX = minX,
+                        maxX = maxX,
+                        minZ = minZ,
+                        maxZ = maxZ
                     }
                 },
                 footprint = new ImportedRoomFootprint
                 {
                     primaryCell = new ImportedGridPosition { x = 0, z = 0 },
-                    occupiedBranchCells = new List<ImportedGridPosition> { new() { x = 0, z = 0 } },
-                    chunkBasisTiles = new ImportedChunkBasis { width = 13, height = 7 }
+                    occupiedBranchCells = occupiedCells.Select(cell => new ImportedGridPosition { x = cell.x, z = cell.y }).ToList(),
+                    chunkBasisTiles = new ImportedChunkBasis { width = RoomDesignerFootprintUtility.ChunkWidthTiles, height = RoomDesignerFootprintUtility.ChunkHeightTiles }
                 }
             };
 
@@ -74,12 +78,20 @@ namespace Hollow.RoomDesigner
                 runtime.holeTiles.Add(new ImportedGridPosition { x = cell.x, z = cell.z });
             }
 
-            runtime.floorRegions.Add(new ImportedRoomFloorRegion
+            foreach (var cell in occupiedCells)
             {
-                id = "designer_full_floor",
-                center = new ImportedVector3 { x = 0f, y = 0f, z = 0f },
-                halfSize = new ImportedHalfSize { x = project.widthTiles * 0.5f, z = project.heightTiles * 0.5f }
-            });
+                var center = RoomDesignerFootprintUtility.ChunkCenter(footprintPreset, cell);
+                runtime.floorRegions.Add(new ImportedRoomFloorRegion
+                {
+                    id = $"designer_floor_cell_{cell.x}_{cell.y}",
+                    center = new ImportedVector3 { x = center.x, y = 0f, z = center.y },
+                    halfSize = new ImportedHalfSize
+                    {
+                        x = RoomDesignerFootprintUtility.ChunkWidthTiles * 0.5f,
+                        z = RoomDesignerFootprintUtility.ChunkHeightTiles * 0.5f
+                    }
+                });
+            }
 
             var rockIndex = 0;
             foreach (var cell in cells.Where(cell => cell.kind == RoomDesignerCellKinds.Rock))
@@ -149,7 +161,7 @@ namespace Hollow.RoomDesigner
                     id = string.IsNullOrWhiteSpace(door.id) ? $"{door.direction}_{door.laneIndex}" : door.id,
                     direction = door.direction,
                     laneIndex = door.laneIndex,
-                    hostCell = new ImportedGridPosition { x = 0, z = 0 },
+                    hostCell = new ImportedGridPosition { x = door.hostCellX, z = door.hostCellZ },
                     gridEdgeCenter = new ImportedEdgeCenter { x = door.x, z = door.z },
                     positionMeters = new ImportedVector3 { x = door.x, y = 0f, z = door.z },
                     kind = string.IsNullOrWhiteSpace(door.state) ? RoomDesignerDoorKinds.Available : door.state

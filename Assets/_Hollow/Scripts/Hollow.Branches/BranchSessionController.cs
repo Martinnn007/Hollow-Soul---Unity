@@ -24,14 +24,20 @@ namespace Hollow.Branches
         [SerializeField] private RoomCombatController roomCombatController;
         [SerializeField] private GameObject rewardPickupPrefab;
         [SerializeField] private GameObject hubReturnPortalPrefab;
+        [SerializeField] private BranchRoomTemplateCatalogDefinition branchRoomTemplateCatalog;
+        [SerializeField] private BranchGenerationSettingsDefinition branchGenerationSettings;
+        [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
         private ImportedRoomRuntimeAsset roomAsset;
+        private ImportedRoomRuntimeAsset currentRoomAsset;
+        private BranchSessionContent branchContent;
         private GameSessionState gameSessionState;
         private RoomRewardPickup currentRewardPickup;
         private HubReturnPortal currentHubPortal;
         private readonly RuntimeRewardCounter rewardCounter = new();
         private RunEconomy runEconomy = new();
         private PlayerRunStats playerRunStats = new();
+        private ProceduralRewardPlan proceduralRewardPlan = ProceduralRewardPlan.Empty;
         private IRunSaveStore runSaveStore;
         private ProfileSlotId activeProfileSlotId;
         private bool canPersist;
@@ -62,10 +68,33 @@ namespace Hollow.Branches
 
         public ImportedRoomRuntimeAsset RoomAsset => roomAsset;
 
+        public ImportedRoomRuntimeAsset CurrentRoomAsset => currentRoomAsset ?? roomAsset;
+
+        public BranchRoomTemplateCatalogDefinition BranchRoomTemplateCatalog => branchRoomTemplateCatalog;
+
+        public BranchGenerationSettingsDefinition BranchGenerationSettings => branchGenerationSettings;
+
+        public int MacroBranchSeed => macroBranchSeed;
+
         public void Configure(GameObject nextRewardPickupPrefab, GameObject nextHubReturnPortalPrefab)
         {
             rewardPickupPrefab = nextRewardPickupPrefab;
             hubReturnPortalPrefab = nextHubReturnPortalPrefab;
+        }
+
+        public void ConfigureTemplateCatalog(BranchRoomTemplateCatalogDefinition nextCatalog, int nextSeed)
+        {
+            branchRoomTemplateCatalog = nextCatalog;
+            macroBranchSeed = nextSeed == 0 ? BranchGenerator.DefaultMacroFixtureSeed : nextSeed;
+        }
+
+        public void ConfigureGenerationSettings(BranchGenerationSettingsDefinition nextSettings)
+        {
+            branchGenerationSettings = nextSettings;
+            if (branchGenerationSettings != null)
+            {
+                macroBranchSeed = branchGenerationSettings.DefaultSeed == 0 ? BranchGenerator.DefaultSeededMacroSeed : branchGenerationSettings.DefaultSeed;
+            }
         }
 
         public void Initialize(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState)
@@ -74,6 +103,7 @@ namespace Hollow.Branches
             gameSessionState = nextSessionState;
             ResolveReferences();
             ResolvePersistence();
+            ResolveBranchContent();
 
             if (roomAsset == null || roomRuntimeRoot == null || playerController == null || roomCombatController == null)
             {
@@ -99,13 +129,17 @@ namespace Hollow.Branches
             gameSessionState = nextSessionState;
             ResolveReferences();
             ResolvePersistence();
+            ResolveBranchContent();
 
             runEconomy = new RunEconomy();
             playerRunStats = new PlayerRunStats();
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
-            State = BranchSessionState.Create(BranchGenerator.CreateFiveRoomCross(roomAsset));
-            LoadCurrentRoom(roomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero);
+            State = BranchSessionState.Create(CreateFreshGraph());
+            proceduralRewardPlan = State.Graph.BranchId == BranchGenerator.SeededMacroBranchId
+                ? ProceduralRewardResolver.CreatePlan(State.Graph)
+                : ProceduralRewardPlan.Empty;
+            LoadCurrentRoom();
             CheckpointActiveRun();
         }
 
@@ -115,16 +149,22 @@ namespace Hollow.Branches
             gameSessionState = nextSessionState;
             ResolveReferences();
             ResolvePersistence();
+            ResolveBranchContent();
 
             runEconomy = RunEconomy.FromSaveState(snapshot?.economy);
             playerRunStats = PlayerRunStats.FromSaveState(snapshot?.playerStats);
+            proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
             activeRunCompletedOrFailed = false;
-            State = BranchSessionState.Create(BranchGenerator.CreateFiveRoomCross(roomAsset));
+            State = BranchSessionState.Create(CreateGraphForSnapshot(snapshot));
+            if (State.Graph.BranchId == BranchGenerator.SeededMacroBranchId && !proceduralRewardPlan.Rewards.Any())
+            {
+                proceduralRewardPlan = ProceduralRewardResolver.CreatePlan(State.Graph);
+            }
             RestoreBranchRooms(snapshot);
             State.RestoreCurrentRoom(new BranchRoomId(snapshot?.currentRoomId ?? BranchRoomId.Origin.Value));
             suppressCheckpoint = true;
-            LoadCurrentRoom(roomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero);
+            LoadCurrentRoom();
             RestorePlayerHealth(snapshot);
             ApplyRunStatsToPlayer(healAmount: 0);
             suppressCheckpoint = false;
@@ -165,8 +205,18 @@ namespace Hollow.Branches
                 return false;
             }
 
+            return TryTraverse(connection);
+        }
+
+        private bool TryTraverse(BranchConnection connection)
+        {
+            if (State == null || connection == null || !State.CurrentRoom.IsCleared)
+            {
+                return false;
+            }
+
             State.EnterRoom(connection.ToRoomId);
-            LoadCurrentRoom(BranchTraversalService.EntryPositionFor(roomRuntimeRoot, connection.ToDirection));
+            LoadCurrentRoom(entryConnection: connection);
             CheckpointActiveRun();
             return true;
         }
@@ -185,16 +235,19 @@ namespace Hollow.Branches
 
             var playerPosition = playerController.transform.localPosition;
             var nearest = State.Graph.ConnectionsFrom(State.CurrentRoomId)
-                .Where(connection => roomRuntimeRoot.TryGetDoorPort(connection.FromDirection, out _))
                 .Select(connection =>
                 {
-                    roomRuntimeRoot.TryGetDoorPort(connection.FromDirection, out var port);
+                    var hasPort = connection.HasExplicitPorts
+                        ? roomRuntimeRoot.TryGetDoorPortById(connection.FromPortId, out var port)
+                        : roomRuntimeRoot.TryGetDoorPort(connection.FromDirection, out port);
                     return new
                     {
                         Connection = connection,
-                        Distance = Vector3.Distance(Flat(playerPosition), Flat(port.Position))
+                        HasPort = hasPort,
+                        Distance = hasPort ? Vector3.Distance(Flat(playerPosition), Flat(port.Position)) : float.MaxValue
                     };
                 })
+                .Where(candidate => candidate.HasPort)
                 .OrderBy(candidate => candidate.Distance)
                 .FirstOrDefault();
 
@@ -203,16 +256,24 @@ namespace Hollow.Branches
                 return false;
             }
 
-            return TryTraverse(nearest.Connection.FromDirection);
+            return TryTraverse(nearest.Connection);
         }
 
-        private void LoadCurrentRoom(Vector3 playerLocalPosition)
+        private void LoadCurrentRoom(Vector3? requestedPlayerLocalPosition = null, BranchConnection entryConnection = null)
         {
             DestroyTransientInteractables();
-            roomRuntimeRoot.BuildFrom(roomAsset);
+            currentRoomAsset = ResolveCurrentRoomAsset();
+            roomRuntimeRoot.BuildFrom(currentRoomAsset);
+            var playerLocalPosition = entryConnection != null
+                ? BranchTraversalService.EntryPositionFor(roomRuntimeRoot, entryConnection)
+                : requestedPlayerLocalPosition ?? currentRoomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             playerController.transform.localPosition = playerLocalPosition;
             State.CurrentRoom.MarkVisited();
-            roomCombatController.BeginRoom(roomRuntimeRoot, playerController, State.CurrentRoom.IsCleared);
+            roomCombatController.BeginRoom(
+                roomRuntimeRoot,
+                playerController,
+                State.CurrentRoom.IsCleared,
+                State.CurrentRoom.Role == BranchRoomRole.Boss ? RoomCombatEncounterKind.Boss : RoomCombatEncounterKind.Standard);
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
@@ -259,7 +320,7 @@ namespace Hollow.Branches
             }
 
             State.CurrentRoom.MarkRewardClaimed();
-            var grant = RewardResolver.Resolve(State.CurrentRoomId.Value);
+            var grant = ProceduralRewardResolver.Resolve(State.CurrentRoomId.Value, proceduralRewardPlan);
             if (runEconomy.ApplyReward(grant))
             {
                 var healAmount = playerRunStats.ApplyReward(grant);
@@ -339,11 +400,17 @@ namespace Hollow.Branches
 
             foreach (var port in roomRuntimeRoot.DoorPorts)
             {
-                var hasConnection = State.Graph.TryGetConnection(State.CurrentRoomId, port.Direction, out _);
+                var hasConnection = State.Graph.TryGetConnectionByPort(State.CurrentRoomId, port.Id, out _);
+                if (!hasConnection)
+                {
+                    hasConnection = State.Graph.ConnectionsFrom(State.CurrentRoomId).All(connection => !connection.HasExplicitPorts) &&
+                                    State.Graph.TryGetConnection(State.CurrentRoomId, port.Direction, out _);
+                }
+
                 var visualState = hasConnection
                     ? State.CurrentRoom.IsCleared ? RoomDoorVisualState.Cleared : RoomDoorVisualState.Locked
                     : RoomDoorVisualState.Unavailable;
-                roomRuntimeRoot.SetDoorVisualState(port.Direction, visualState);
+                roomRuntimeRoot.SetDoorVisualStateById(port.Id, visualState);
             }
         }
 
@@ -396,6 +463,75 @@ namespace Hollow.Branches
             activeProfileSlotId = new ProfileSlotId(gameSessionState.ProfileSlotIndex);
             runSaveStore = profileHost.RunSaveStore;
             SaveStatus = "Active";
+        }
+
+        private void ResolveBranchContent()
+        {
+            branchContent = BranchSessionContent.Create(roomAsset, branchRoomTemplateCatalog, macroBranchSeed, out var error);
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                Debug.LogWarning($"Branch template catalog import warning: {error}");
+            }
+        }
+
+        private BranchFloorGraph CreateFreshGraph()
+        {
+            if (branchContent != null && branchContent.HasMacroFixturePool)
+            {
+                if (branchGenerationSettings != null)
+                {
+                    try
+                    {
+                        return BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, macroBranchSeed);
+                    }
+                    catch (Exception error)
+                    {
+                        Debug.LogWarning($"M15 seeded macro branch generation failed; falling back to M14 fixed macro branch. {error.Message}");
+                    }
+                }
+
+                return BranchGenerator.CreateMacroFixtureBranch(branchContent.MacroRoomPool, branchContent.BranchSeed);
+            }
+
+            return BranchGenerator.CreateFiveRoomCross(roomAsset);
+        }
+
+        private BranchFloorGraph CreateGraphForSnapshot(RunSaveSnapshot snapshot)
+        {
+            if (snapshot != null &&
+                snapshot.branchId == BranchGenerator.SeededMacroBranchId &&
+                branchContent != null &&
+                branchContent.HasMacroFixturePool)
+            {
+                return BranchGenerator.CreateSeededMacroBranch(
+                    branchContent,
+                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+            }
+
+            if (snapshot != null &&
+                snapshot.branchId == BranchGenerator.MacroFixtureBranchId &&
+                branchContent != null &&
+                branchContent.HasMacroFixturePool)
+            {
+                return BranchGenerator.CreateMacroFixtureBranch(
+                    branchContent.MacroRoomPool,
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+            }
+
+            return BranchGenerator.CreateFiveRoomCross(roomAsset);
+        }
+
+        private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()
+        {
+            if (State?.CurrentRoom != null &&
+                branchContent != null &&
+                branchContent.TryGetRoomAsset(State.CurrentRoom.RuntimeRoomAssetId, out var asset))
+            {
+                return asset;
+            }
+
+            return roomAsset;
         }
 
         private void RestoreBranchRooms(RunSaveSnapshot snapshot)
@@ -486,11 +622,13 @@ namespace Hollow.Branches
         {
             var snapshot = new RunSaveSnapshot
             {
-                runId = $"m7-{gameSessionState?.ProfileId ?? "transient"}",
-                branchId = "m7_five_room_cross",
+                runId = $"{State?.Graph?.BranchId ?? BranchGenerator.LegacyFiveRoomBranchId}-{gameSessionState?.ProfileId ?? "transient"}",
+                branchId = State?.Graph?.BranchId ?? BranchGenerator.LegacyFiveRoomBranchId,
+                branchSeed = State?.Graph?.Seed ?? 0,
                 currentRoomId = State?.CurrentRoomId.Value ?? BranchRoomId.Origin.Value,
                 platformKind = gameSessionState?.PlatformKind.ToString() ?? string.Empty,
                 playerCurrentHealth = roomCombatController?.PlayerHealth != null ? roomCombatController.PlayerHealth.CurrentHealth : RoomCombatController.PlayerMaxHealth,
+                proceduralRewardPlan = proceduralRewardPlan.ToSaveState(),
                 economy = runEconomy.ToSaveState(),
                 playerStats = playerRunStats.ToSaveState()
             };

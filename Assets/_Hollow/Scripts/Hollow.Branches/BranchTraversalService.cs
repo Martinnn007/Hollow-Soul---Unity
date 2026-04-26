@@ -33,5 +33,35 @@ namespace Hollow.Branches
                 _ => Vector3.zero
             };
         }
+
+        public static Vector3 EntryPositionFor(RoomRuntimeRoot room, BranchConnection connection)
+        {
+            if (connection == null)
+            {
+                return Vector3.zero;
+            }
+
+            var position = Vector3.zero;
+            if (room != null)
+            {
+                if (connection.HasExplicitPorts && room.TryGetDoorPortById(connection.ToPortId, out var explicitPort))
+                {
+                    position = explicitPort.Position;
+                }
+                else if (room.TryGetDoorPort(connection.ToDirection, out var directionalPort))
+                {
+                    position = directionalPort.Position;
+                }
+            }
+
+            return connection.ToDirection switch
+            {
+                "north" => new Vector3(position.x, 0f, position.z + DoorEntryInsetMeters),
+                "south" => new Vector3(position.x, 0f, position.z - DoorEntryInsetMeters),
+                "east" => new Vector3(position.x - DoorEntryInsetMeters, 0f, position.z),
+                "west" => new Vector3(position.x + DoorEntryInsetMeters, 0f, position.z),
+                _ => Vector3.zero
+            };
+        }
     }
 }

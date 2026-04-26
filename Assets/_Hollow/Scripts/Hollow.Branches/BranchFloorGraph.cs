@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Hollow.Branches
 {
@@ -7,6 +8,23 @@ namespace Hollow.Branches
     {
         private readonly Dictionary<BranchRoomId, BranchRoomState> rooms = new();
         private readonly List<BranchConnection> connections = new();
+
+        public BranchFloorGraph()
+            : this(BranchGenerator.LegacyFiveRoomBranchId, 0)
+        {
+        }
+
+        public BranchFloorGraph(string branchId, int seed)
+        {
+            BranchId = string.IsNullOrWhiteSpace(branchId) ? BranchGenerator.LegacyFiveRoomBranchId : branchId;
+            Seed = seed;
+        }
+
+        public string BranchId { get; }
+
+        public int Seed { get; }
+
+        public BranchCellOccupancyMap OccupancyMap { get; } = new();
 
         public IReadOnlyCollection<BranchRoomState> Rooms => rooms.Values;
 
@@ -18,14 +36,31 @@ namespace Hollow.Branches
         {
             if (room != null)
             {
+                if (room.Footprint != null && !OccupancyMap.TryRegister(room.InstanceId, room.Footprint))
+                {
+                    Debug.LogError($"Branch room '{room.Id}' overlaps an already occupied macro branch cell.");
+                    return;
+                }
+
                 rooms[room.Id] = room;
             }
         }
 
         public void AddBidirectionalConnection(BranchRoomId fromRoomId, BranchRoomId toRoomId, string fromDirection, string toDirection)
         {
-            connections.Add(new BranchConnection(fromRoomId, toRoomId, fromDirection, toDirection));
-            connections.Add(new BranchConnection(toRoomId, fromRoomId, toDirection, fromDirection));
+            AddBidirectionalConnection(fromRoomId, toRoomId, fromDirection, toDirection, string.Empty, string.Empty);
+        }
+
+        public void AddBidirectionalConnection(
+            BranchRoomId fromRoomId,
+            BranchRoomId toRoomId,
+            string fromDirection,
+            string toDirection,
+            string fromPortId,
+            string toPortId)
+        {
+            connections.Add(new BranchConnection(fromRoomId, toRoomId, fromDirection, toDirection, fromPortId, toPortId));
+            connections.Add(new BranchConnection(toRoomId, fromRoomId, toDirection, fromDirection, toPortId, fromPortId));
         }
 
         public BranchRoomState GetRoom(BranchRoomId id)
@@ -46,6 +81,12 @@ namespace Hollow.Branches
         public bool TryGetConnection(BranchRoomId roomId, string direction, out BranchConnection connection)
         {
             connection = connections.FirstOrDefault(candidate => candidate.FromRoomId == roomId && candidate.FromDirection == direction);
+            return connection != null;
+        }
+
+        public bool TryGetConnectionByPort(BranchRoomId roomId, string portId, out BranchConnection connection)
+        {
+            connection = connections.FirstOrDefault(candidate => candidate.FromRoomId == roomId && candidate.FromPortId == portId);
             return connection != null;
         }
     }

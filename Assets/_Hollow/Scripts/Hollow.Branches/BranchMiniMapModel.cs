@@ -14,6 +14,7 @@ namespace Hollow.Branches
                 .Select(room => new BranchMiniMapNode(
                     room.Id,
                     room.Coordinate,
+                    room.Role,
                     room.Id == state.CurrentRoomId,
                     room.IsVisited,
                     room.IsCleared,
@@ -26,16 +27,17 @@ namespace Hollow.Branches
         public string Summary()
         {
             return string.Join("  ", Nodes.Select(node =>
-                $"{node.Id}:{(node.IsCurrent ? "Current" : node.IsCleared ? "Cleared" : node.IsVisited ? "Visited" : "Hidden")}{(node.HasPendingReward ? "+Reward" : string.Empty)}"));
+                $"{node.Id}:{node.Role}:{(node.IsCurrent ? "Current" : node.IsCleared ? "Cleared" : node.IsVisited ? "Visited" : "Hidden")}{(node.HasPendingReward ? "+Reward" : string.Empty)}"));
         }
     }
 
     public sealed class BranchMiniMapNode
     {
-        public BranchMiniMapNode(BranchRoomId id, Vector2Int coordinate, bool isCurrent, bool isVisited, bool isCleared, bool hasPendingReward)
+        public BranchMiniMapNode(BranchRoomId id, Vector2Int coordinate, BranchRoomRole role, bool isCurrent, bool isVisited, bool isCleared, bool hasPendingReward)
         {
             Id = id;
             Coordinate = coordinate;
+            Role = role;
             IsCurrent = isCurrent;
             IsVisited = isVisited;
             IsCleared = isCleared;
@@ -45,6 +47,8 @@ namespace Hollow.Branches
         public BranchRoomId Id { get; }
 
         public Vector2Int Coordinate { get; }
+
+        public BranchRoomRole Role { get; }
 
         public bool IsCurrent { get; }
 

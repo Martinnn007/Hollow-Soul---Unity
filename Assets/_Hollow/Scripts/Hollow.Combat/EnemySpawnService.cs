@@ -68,5 +68,37 @@ namespace Hollow.Combat
 
             return enemies;
         }
+
+        public static EnemyRuntimeController SpawnBoss(
+            RoomRuntimeRoot room,
+            Transform parent,
+            GameObject enemyPrefab,
+            PlaceholderPlayerController player,
+            EnemyCatalog catalog,
+            DifficultyTierDefinition difficultyTier,
+            CombatDiagnosticsModel diagnostics)
+        {
+            if (room == null || enemyPrefab == null || parent == null)
+            {
+                return null;
+            }
+
+            var definition = EnemyDefinitionResolver.Resolve(catalog, "spawnEnemyBoss", out var usedFallback);
+            if (usedFallback)
+            {
+                definition = EnemyDefinition.CreateRuntimeBoss();
+            }
+
+            var enemyObject = Object.Instantiate(enemyPrefab, parent);
+            enemyObject.name = "Enemy.Boss.StoneWarden";
+            enemyObject.SetActive(true);
+            var safeStart = room.LastBuiltAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
+            enemyObject.transform.localPosition = RoomLocalCollision.ResolveMoveIgnoringObstacles(room, safeStart + new Vector3(0f, 0f, 1.4f), definition.RadiusMeters);
+
+            var enemy = enemyObject.GetComponent<EnemyRuntimeController>() ?? enemyObject.AddComponent<EnemyRuntimeController>();
+            enemy.Configure(room, player, definition, difficultyTier);
+            diagnostics?.SetEnemyCounts(new[] { enemy });
+            return enemy;
+        }
     }
 }

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5df957fc875f49588fd36b5fcc9e5ca, type: 3}
+  m_Name: BranchRoomTemplateCatalog_MacroFixtures
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.BranchRoomTemplateCatalogDefinition
+  id: 
+  displayName: 
+  notes: 
+  single1x1: {fileID: 4900000, guid: 20514582d78634d04827ca46b51fde00, type: 3}
+  wide2x1: {fileID: 4900000, guid: acf9faf28993c4750a9ed04c09038ee2, type: 3}
+  tall1x2: {fileID: 4900000, guid: 531eb5c6fae914b0c9151034cd96828f, type: 3}
+  block2x2: {fileID: 4900000, guid: 17abfebaa175c498bae028f31af8d92d, type: 3}
+  l3Cell: {fileID: 4900000, guid: 4aaf4479fb1ad40f39a1af10e8544a93, type: 3}
+  defaultSeed: 14001

@@ -1,4 +1,5 @@
 using Hollow.Rewards;
+using Hollow.Rooms;
 using UnityEngine;
 
 namespace Hollow.Branches
@@ -6,15 +7,48 @@ namespace Hollow.Branches
     public sealed class BranchRoomState
     {
         public BranchRoomState(BranchRoomId id, Vector2Int coordinate)
+            : this(id, coordinate, new BranchRoomInstanceId(id.Value), string.Empty, null, id == BranchRoomId.Origin ? BranchRoomRole.Origin : BranchRoomRole.Combat)
+        {
+        }
+
+        public BranchRoomState(
+            BranchRoomId id,
+            Vector2Int coordinate,
+            BranchRoomInstanceId instanceId,
+            string runtimeRoomAssetId,
+            RoomInstanceFootprint footprint)
+            : this(id, coordinate, instanceId, runtimeRoomAssetId, footprint, id == BranchRoomId.Origin ? BranchRoomRole.Origin : BranchRoomRole.Combat)
+        {
+        }
+
+        public BranchRoomState(
+            BranchRoomId id,
+            Vector2Int coordinate,
+            BranchRoomInstanceId instanceId,
+            string runtimeRoomAssetId,
+            RoomInstanceFootprint footprint,
+            BranchRoomRole role)
         {
             Id = id;
             Coordinate = coordinate;
+            InstanceId = instanceId;
+            RuntimeRoomAssetId = runtimeRoomAssetId ?? string.Empty;
+            Footprint = footprint;
+            Role = role;
             RewardState = id == BranchRoomId.Origin ? RoomRewardState.Unavailable : RoomRewardState.None;
         }
 
         public BranchRoomId Id { get; }
 
         public Vector2Int Coordinate { get; }
+
+        public BranchRoomInstanceId InstanceId { get; }
+
+        public string RuntimeRoomAssetId { get; }
+
+        public RoomInstanceFootprint Footprint { get; }
+
+        public BranchRoomRole Role { get; }
 
         public bool IsVisited { get; private set; }
 

@@ -12,7 +12,8 @@ namespace Hollow.Rooms
         public const float DefaultDepthMeters = 7f;
 
         [SerializeField] private Vector2 roomSizeMeters = new(DefaultWidthMeters, DefaultDepthMeters);
-        private readonly Dictionary<string, Renderer> doorRenderersByDirection = new();
+        private readonly Dictionary<string, List<Renderer>> doorRenderersByDirection = new();
+        private readonly Dictionary<string, Renderer> doorRenderersByPortId = new();
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
@@ -49,6 +50,7 @@ namespace Hollow.Rooms
             roomSizeMeters = new Vector2(asset.Layout.WidthTiles, asset.Layout.HeightTiles);
             ClearChildren();
             doorRenderersByDirection.Clear();
+            doorRenderersByPortId.Clear();
             BuildFloor(asset.Layout);
             BuildObstacles(asset.Layout);
             BuildDoors(asset);
@@ -61,9 +63,32 @@ namespace Hollow.Rooms
             return port != null;
         }
 
+        public bool TryGetDoorPortById(string portId, out RoomDoorPort port)
+        {
+            port = DoorPorts.FirstOrDefault(candidate => candidate.Id == portId);
+            return port != null;
+        }
+
         public void SetDoorVisualState(string direction, RoomDoorVisualState state)
         {
-            if (!doorRenderersByDirection.TryGetValue(direction, out var renderer) || renderer == null)
+            if (!doorRenderersByDirection.TryGetValue(direction, out var renderers))
+            {
+                return;
+            }
+
+            var material = MaterialResolver.Resolve(MaterialRoleForDoorState(state));
+            foreach (var renderer in renderers)
+            {
+                if (renderer != null)
+                {
+                    renderer.sharedMaterial = material;
+                }
+            }
+        }
+
+        public void SetDoorVisualStateById(string portId, RoomDoorVisualState state)
+        {
+            if (!doorRenderersByPortId.TryGetValue(portId, out var renderer) || renderer == null)
             {
                 return;
             }
@@ -130,7 +155,15 @@ namespace Hollow.Rooms
                 marker.transform.localPosition = new Vector3(port.Position.x, 0.65f, port.Position.z);
                 marker.transform.localScale = DoorScaleFor(port.Direction);
                 MaterialResolver.ApplyTo(marker, MaterialRole.DoorActive);
-                doorRenderersByDirection[port.Direction] = marker.GetComponent<Renderer>();
+                var renderer = marker.GetComponent<Renderer>();
+                doorRenderersByPortId[port.Id] = renderer;
+                if (!doorRenderersByDirection.TryGetValue(port.Direction, out var renderers))
+                {
+                    renderers = new List<Renderer>();
+                    doorRenderersByDirection[port.Direction] = renderers;
+                }
+
+                renderers.Add(renderer);
 
                 var collider = marker.GetComponent<Collider>();
                 if (collider != null)

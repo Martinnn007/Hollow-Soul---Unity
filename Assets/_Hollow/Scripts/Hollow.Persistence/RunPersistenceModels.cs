@@ -8,11 +8,13 @@ namespace Hollow.Persistence
     {
         public string runId = string.Empty;
         public string branchId = "m7_five_room_cross";
+        public int branchSeed;
         public string currentRoomId = "origin";
         public string platformKind = string.Empty;
         public int playerCurrentHealth = 6;
         public long savedAtUtcTicks;
         public List<BranchRoomSaveState> rooms = new();
+        public List<RunRewardSaveState> proceduralRewardPlan = new();
         public RunEconomySaveState economy = new();
         public PlayerRunStatsSaveState playerStats = new();
     }

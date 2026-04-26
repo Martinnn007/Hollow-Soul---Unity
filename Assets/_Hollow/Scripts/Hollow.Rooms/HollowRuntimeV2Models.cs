@@ -155,6 +155,7 @@ namespace Hollow.Rooms
             string id,
             string displayName,
             RoomLayout layout,
+            RoomInstanceFootprint footprint,
             IReadOnlyList<RoomDoorPort> doorPorts,
             IReadOnlyList<ImportedSpawnPoint> enemySpawns,
             IReadOnlyList<ImportedSpawnPoint> itemSpawns,
@@ -165,6 +166,7 @@ namespace Hollow.Rooms
             Id = id;
             DisplayName = displayName;
             Layout = layout;
+            Footprint = footprint;
             DoorPorts = doorPorts;
             EnemySpawns = enemySpawns;
             ItemSpawns = itemSpawns;
@@ -178,6 +180,8 @@ namespace Hollow.Rooms
         public string DisplayName { get; }
 
         public RoomLayout Layout { get; }
+
+        public RoomInstanceFootprint Footprint { get; }
 
         public IReadOnlyList<RoomDoorPort> DoorPorts { get; }
 

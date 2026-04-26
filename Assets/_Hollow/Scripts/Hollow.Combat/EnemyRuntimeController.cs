@@ -129,6 +129,7 @@ namespace Hollow.Combat
                 EnemyArchetypeId.Flying => MaterialRole.EnemyFlying,
                 EnemyArchetypeId.Fast => MaterialRole.EnemyFast,
                 EnemyArchetypeId.Heavy => MaterialRole.EnemyHeavy,
+                EnemyArchetypeId.Boss => MaterialRole.EnemyHeavy,
                 _ => MaterialRole.EnemyNormal
             };
         }
