@@ -181,13 +181,19 @@ namespace Hollow.Rooms
             }
 
             var expectedPortCount = ExpectedExposedPortCount(footprint);
-            if (doorPorts.Count != expectedPortCount)
+            if (doorPorts.Count == 0 || doorPorts.Count > expectedPortCount)
             {
-                throw new ArgumentException($"HollowRuntime V2 import failed: footprint exposes {expectedPortCount} ports but payload contains {doorPorts.Count}.");
+                throw new ArgumentException($"HollowRuntime V2 import failed: footprint exposes {expectedPortCount} ports but payload contains {doorPorts.Count} enabled ports.");
             }
 
+            var seenIds = new HashSet<string>();
             foreach (var port in doorPorts)
             {
+                if (!seenIds.Add(port.Id))
+                {
+                    throw new ArgumentException($"HollowRuntime V2 import failed: duplicate door port id {port.Id}.");
+                }
+
                 if (!footprint.ContainsCell(port.HostCell))
                 {
                     throw new ArgumentException($"HollowRuntime V2 import failed: door port {port.Id} is hosted by an unoccupied cell {port.HostCell}.");

@@ -10,6 +10,15 @@ namespace Hollow.RoomDesigner
         ActiveDoor = 5,
         SecretDoor = 6,
         Erase = 7,
-        Eyedropper = 8
+        Eyedropper = 8,
+        SafeStart = 9,
+        EnemyNormal = 10,
+        EnemyFlying = 11,
+        EnemyFast = 12,
+        EnemyHeavy = 13,
+        EnemyCharger = 14,
+        EnemyTurret = 15,
+        EnemySplitter = 16,
+        InactiveDoor = 17
     }
 }

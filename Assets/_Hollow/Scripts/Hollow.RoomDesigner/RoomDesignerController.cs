@@ -20,6 +20,7 @@ namespace Hollow.RoomDesigner
 
         private readonly RoomDesignerTool[] tools = Enum.GetValues(typeof(RoomDesignerTool)).Cast<RoomDesignerTool>().ToArray();
         private RoomDesignerStore store;
+        private RoomDesignerDraftLibraryState libraryState;
         private ProfileSlotId slotId;
         private RoomDesignerProject currentProject;
         private Text hudText;
@@ -28,6 +29,10 @@ namespace Hollow.RoomDesigner
         private string status = "Ready";
 
         public RoomDesignerProject CurrentProject => currentProject;
+
+        public RoomDesignerDraftLibraryState LibraryState => libraryState;
+
+        public RoomDesignerValidationReport LastValidationReport { get; private set; }
 
         public RoomDesignerTool CurrentTool => tools[Mathf.Clamp(toolIndex, 0, tools.Length - 1)];
 
@@ -48,7 +53,9 @@ namespace Hollow.RoomDesigner
         {
             store = new RoomDesignerStore();
             slotId = ResolveSlotId();
-            currentProject = store.LoadDrafts(slotId).First();
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId);
+            currentProject = libraryState.SelectedDraft;
+            SnapCursorToFootprint();
             EnsureRoots();
             RebuildPreview();
             RefreshHud();
@@ -58,10 +65,67 @@ namespace Hollow.RoomDesigner
         {
             store = nextStore;
             slotId = nextSlotId;
-            currentProject = nextProject;
+            store.SaveDraft(slotId, nextProject);
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId);
+            currentProject = libraryState.OpenDraft(nextProject.projectId);
+            SnapCursorToFootprint();
             EnsureRoots();
             RebuildPreview();
             RefreshHud();
+        }
+
+        public RoomDesignerProject CreateDraft(RoomDesignerFootprintPreset preset)
+        {
+            libraryState ??= new RoomDesignerDraftLibraryState(store ?? new RoomDesignerStore(), slotId);
+            currentProject = libraryState.CreateDraft(preset);
+            CursorX = 0;
+            CursorZ = 0;
+            CursorLayer = 0;
+            SnapCursorToFootprint();
+            status = libraryState.LatestMessage;
+            RebuildPreview();
+            RefreshHud();
+            return currentProject;
+        }
+
+        public RoomDesignerProject OpenDraft(string projectId)
+        {
+            currentProject = libraryState.OpenDraft(projectId);
+            SnapCursorToFootprint();
+            status = libraryState.LatestMessage;
+            RebuildPreview();
+            RefreshHud();
+            return currentProject;
+        }
+
+        public RoomDesignerProject DuplicateDraft(string projectId)
+        {
+            currentProject = libraryState.DuplicateDraft(projectId);
+            SnapCursorToFootprint();
+            status = libraryState.LatestMessage;
+            RebuildPreview();
+            RefreshHud();
+            return currentProject;
+        }
+
+        public RoomDesignerProject DeleteDraft(string projectId)
+        {
+            currentProject = libraryState.DeleteDraft(projectId);
+            SnapCursorToFootprint();
+            status = libraryState.LatestMessage;
+            RebuildPreview();
+            RefreshHud();
+            return currentProject;
+        }
+
+        public void SelectTool(RoomDesignerTool tool)
+        {
+            var index = Array.IndexOf(tools, tool);
+            if (index >= 0)
+            {
+                toolIndex = index;
+                RefreshHud();
+            }
         }
 
         private void Update()
@@ -71,6 +135,7 @@ namespace Hollow.RoomDesigner
 
         public void ApplyInput(RoomDesignerInputSnapshot input, float timeSeconds = 999f)
         {
+            SnapCursorToFootprint();
             var changed = false;
             if ((input.MoveX != 0 || input.MoveZ != 0) && timeSeconds >= nextMoveTime)
             {
@@ -154,8 +219,28 @@ namespace Hollow.RoomDesigner
             }
         }
 
+        private void SnapCursorToFootprint()
+        {
+            if (currentProject == null || RoomDesignerFootprintUtility.ContainsTile(currentProject.footprintPreset, CursorX, CursorZ))
+            {
+                return;
+            }
+
+            var nearest = RoomDesignerFootprintUtility.NearestContainedTile(currentProject.footprintPreset, CursorX, CursorZ);
+            CursorX = nearest.x;
+            CursorZ = nearest.y;
+        }
+
         public void PlaytestCurrentDraft()
         {
+            LastValidationReport = RoomDesignerDraftValidator.Validate(currentProject);
+            if (!LastValidationReport.IsValid)
+            {
+                status = $"Playtest blocked: {LastValidationReport.Summary()}";
+                RefreshHud();
+                return;
+            }
+
             var runtimeJson = RoomDesignerCompiler.ExportRuntimeJson(currentProject, prettyPrint: false);
             RoomPlaytestHandoff.Set(runtimeJson, RuntimeSessionMode.TransientRoomDesignerPlaytest, AppShellRoute.RoomDesigner);
             status = "Launching transient playtest";
@@ -168,19 +253,34 @@ namespace Hollow.RoomDesigner
 
         public string ExportCurrentDraft()
         {
-            var projectPath = RoomDesignerJsonExporter.ExportProject(currentProject);
-            var runtimePath = RoomDesignerJsonExporter.ExportRuntime(currentProject);
-            status = $"Exported JSON: {runtimePath}";
+            LastValidationReport = RoomDesignerDraftValidator.Validate(currentProject);
+            if (!LastValidationReport.IsValid)
+            {
+                status = $"Export blocked: {LastValidationReport.Summary()}";
+                RefreshHud();
+                return string.Empty;
+            }
+
+            var bundle = RoomDesignerExportBundle.Export(currentProject);
+            status = $"Exported bundle: {bundle.directory}";
             RefreshHud();
-            return projectPath;
+            return bundle.projectJsonPath;
         }
 
         public string ExportCurrentUsda()
         {
-            var path = RoomDesignerUsdaExporter.ExportScene(currentProject);
-            status = $"Exported USDA: {path}";
+            LastValidationReport = RoomDesignerDraftValidator.Validate(currentProject);
+            if (!LastValidationReport.IsValid)
+            {
+                status = $"USDA export blocked: {LastValidationReport.Summary()}";
+                RefreshHud();
+                return string.Empty;
+            }
+
+            var bundle = RoomDesignerExportBundle.Export(currentProject);
+            status = $"Exported USDA bundle: {bundle.usdaPath}";
             RefreshHud();
-            return path;
+            return bundle.usdaPath;
         }
 
         private void PlaceCurrentTool()
@@ -202,11 +302,38 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.RewardSpawn:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.RoomReward, "spawn_reward");
                     break;
+                case RoomDesignerTool.SafeStart:
+                    MoveSafeStart();
+                    break;
+                case RoomDesignerTool.EnemyNormal:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyNormal, "spawn_enemy_normal");
+                    break;
+                case RoomDesignerTool.EnemyFlying:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyFlying, "spawn_enemy_flying");
+                    break;
+                case RoomDesignerTool.EnemyFast:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyFast, "spawn_enemy_fast");
+                    break;
+                case RoomDesignerTool.EnemyHeavy:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyHeavy, "spawn_enemy_heavy");
+                    break;
+                case RoomDesignerTool.EnemyCharger:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyCharger, "spawn_enemy_charger");
+                    break;
+                case RoomDesignerTool.EnemyTurret:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyTurret, "spawn_enemy_turret");
+                    break;
+                case RoomDesignerTool.EnemySplitter:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySplitter, "spawn_enemy_splitter");
+                    break;
                 case RoomDesignerTool.ActiveDoor:
                     SetNearestDoor(RoomDesignerDoorKinds.Door);
                     break;
                 case RoomDesignerTool.SecretDoor:
                     SetNearestDoor(RoomDesignerDoorKinds.Secret);
+                    break;
+                case RoomDesignerTool.InactiveDoor:
+                    SetNearestDoor(RoomDesignerDoorKinds.Inactive);
                     break;
             }
         }
@@ -236,6 +363,12 @@ namespace Hollow.RoomDesigner
             currentProject.markers.Add(new RoomDesignerMarker($"{idPrefix}_{currentProject.markers.Count:00}", kind, CursorX, 0f, CursorZ));
         }
 
+        private void MoveSafeStart()
+        {
+            currentProject.markers.RemoveAll(marker => marker.kind == RoomDesignerMarkerKinds.SafeStart);
+            currentProject.markers.Add(new RoomDesignerMarker("spawn_safeStart", RoomDesignerMarkerKinds.SafeStart, CursorX, 0f, CursorZ));
+        }
+
         private void SetNearestDoor(string state)
         {
             var nearest = currentProject.doorPorts
@@ -263,9 +396,9 @@ namespace Hollow.RoomDesigner
         private void Eyedropper()
         {
             var marker = currentProject.markers.FirstOrDefault(candidate => Mathf.RoundToInt(candidate.x) == CursorX && Mathf.RoundToInt(candidate.z) == CursorZ);
-            if (marker?.kind == RoomDesignerMarkerKinds.Enemy)
+            if (marker != null && RoomDesignerMarkerKinds.IsEnemy(marker.kind))
             {
-                toolIndex = Array.IndexOf(tools, RoomDesignerTool.EnemySpawn);
+                toolIndex = Array.IndexOf(tools, ToolForEnemyKind(marker.kind));
                 return;
             }
 
@@ -281,6 +414,21 @@ namespace Hollow.RoomDesigner
                 RoomDesignerCellKinds.Hole => Array.IndexOf(tools, RoomDesignerTool.Hole),
                 RoomDesignerCellKinds.Rock => Array.IndexOf(tools, RoomDesignerTool.Rock),
                 _ => Array.IndexOf(tools, RoomDesignerTool.Ground)
+            };
+        }
+
+        private static RoomDesignerTool ToolForEnemyKind(string kind)
+        {
+            return kind switch
+            {
+                RoomDesignerMarkerKinds.EnemyFlying => RoomDesignerTool.EnemyFlying,
+                RoomDesignerMarkerKinds.EnemyFast => RoomDesignerTool.EnemyFast,
+                RoomDesignerMarkerKinds.EnemyHeavy => RoomDesignerTool.EnemyHeavy,
+                RoomDesignerMarkerKinds.EnemyCharger => RoomDesignerTool.EnemyCharger,
+                RoomDesignerMarkerKinds.EnemyTurret => RoomDesignerTool.EnemyTurret,
+                RoomDesignerMarkerKinds.EnemySplitter => RoomDesignerTool.EnemySplitter,
+                RoomDesignerMarkerKinds.EnemyNormal => RoomDesignerTool.EnemyNormal,
+                _ => RoomDesignerTool.EnemySpawn
             };
         }
 
@@ -316,6 +464,29 @@ namespace Hollow.RoomDesigner
             cursor.transform.localPosition = new Vector3(CursorX, CursorLayer + 0.55f, CursorZ);
             cursor.transform.localScale = new Vector3(1.08f, 0.08f, 1.08f);
             MaterialResolver.ApplyTo(cursor, MaterialRole.DesignerCursor);
+            AutoFitCamera();
+        }
+
+        private void AutoFitCamera()
+        {
+            var camera = Camera.main;
+            if (camera == null)
+            {
+                return;
+            }
+
+            var dimensions = RoomDesignerFootprintUtility.Dimensions(currentProject.footprintPreset);
+            var longest = Mathf.Max(dimensions.x, dimensions.y);
+            camera.transform.position = new Vector3(0f, Mathf.Max(10f, longest * 0.55f), Mathf.Max(8f, longest * 0.45f));
+            camera.transform.rotation = Quaternion.Euler(58f, 0f, 0f);
+            if (camera.orthographic)
+            {
+                camera.orthographicSize = Mathf.Max(dimensions.x * 0.42f, dimensions.y * 0.72f, 6f);
+            }
+            else
+            {
+                camera.fieldOfView = 54f;
+            }
         }
 
         private void BuildGrid()
@@ -329,6 +500,45 @@ namespace Hollow.RoomDesigner
             for (var z = minZ; z <= maxZ + 0.01f; z += 1f)
             {
                 BuildCube($"grid_z_{z}", new Vector3((minX + maxX) * 0.5f, 0.025f, z), new Vector3(maxX - minX, 0.02f, 0.02f), MaterialRole.DesignerGrid);
+            }
+
+            BuildMacroGuides();
+        }
+
+        private void BuildMacroGuides()
+        {
+            var occupied = RoomDesignerFootprintUtility.OccupiedCells(currentProject.footprintPreset);
+            var occupiedSet = occupied.ToHashSet();
+            foreach (var cell in occupied)
+            {
+                var center = RoomDesignerFootprintUtility.ChunkCenter(currentProject.footprintPreset, cell);
+                var halfX = RoomDesignerFootprintUtility.ChunkWidthTiles * 0.5f;
+                var halfZ = RoomDesignerFootprintUtility.ChunkHeightTiles * 0.5f;
+                var y = 0.09f;
+                BuildCube($"chunk_{cell.x}_{cell.y}_north", new Vector3(center.x, y, center.y - halfZ), new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, 0.04f, 0.06f), MaterialRole.DesignerDoorAvailable);
+                BuildCube($"chunk_{cell.x}_{cell.y}_south", new Vector3(center.x, y, center.y + halfZ), new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, 0.04f, 0.06f), MaterialRole.DesignerDoorAvailable);
+                BuildCube($"chunk_{cell.x}_{cell.y}_east", new Vector3(center.x + halfX, y, center.y), new Vector3(0.06f, 0.04f, RoomDesignerFootprintUtility.ChunkHeightTiles), MaterialRole.DesignerDoorAvailable);
+                BuildCube($"chunk_{cell.x}_{cell.y}_west", new Vector3(center.x - halfX, y, center.y), new Vector3(0.06f, 0.04f, RoomDesignerFootprintUtility.ChunkHeightTiles), MaterialRole.DesignerDoorAvailable);
+
+                foreach (var direction in new[] { "north", "south", "east", "west" })
+                {
+                    if (!occupiedSet.Contains(cell + RoomDesignerFootprintUtility.DirectionOffsetInt(direction)))
+                    {
+                        continue;
+                    }
+
+                    var seamCenter = direction switch
+                    {
+                        "east" => center + new Vector2(halfX, 0f),
+                        "west" => center + new Vector2(-halfX, 0f),
+                        "south" => center + new Vector2(0f, halfZ),
+                        _ => center + new Vector2(0f, -halfZ)
+                    };
+                    var scale = direction is "east" or "west"
+                        ? new Vector3(0.1f, 0.08f, RoomDesignerFootprintUtility.ChunkHeightTiles)
+                        : new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, 0.08f, 0.1f);
+                    BuildCube($"internalSeam_{cell.x}_{cell.y}_{direction}", new Vector3(seamCenter.x, 0.14f, seamCenter.y), scale, MaterialRole.DesignerGrid);
+                }
             }
         }
 
@@ -359,12 +569,13 @@ namespace Hollow.RoomDesigner
             {
                 RoomDesignerDoorKinds.Door => MaterialRole.DesignerDoorActive,
                 RoomDesignerDoorKinds.Secret => MaterialRole.DesignerDoorSecret,
+                RoomDesignerDoorKinds.Inactive => MaterialRole.DesignerGrid,
                 _ => MaterialRole.DesignerDoorAvailable
             };
-            BuildCube($"doorAnchor_{door.direction}_{door.state}", new Vector3(door.x, 0.65f, door.z), door.direction is "east" or "west" ? new Vector3(0.18f, 1.3f, 1f) : new Vector3(1f, 1.3f, 0.18f), role);
+            BuildCube($"doorAnchor_{door.id}_{door.state}", new Vector3(door.x, 0.65f, door.z), door.direction is "east" or "west" ? new Vector3(0.18f, 1.3f, 1f) : new Vector3(1f, 1.3f, 0.18f), role);
             if (LabelsVisible)
             {
-                BuildLabel($"doorAnchor{door.state}", new Vector3(door.x, 1.5f, door.z));
+                BuildLabel($"{door.id} {door.state} host({door.hostCellX},{door.hostCellZ}) lane {door.laneIndex}", new Vector3(door.x, 1.5f, door.z));
             }
         }
 
@@ -395,10 +606,14 @@ namespace Hollow.RoomDesigner
 
         private static MaterialRole RoleForMarker(string markerKind)
         {
+            if (RoomDesignerMarkerKinds.IsEnemy(markerKind))
+            {
+                return MaterialRole.DesignerSpawnEnemy;
+            }
+
             return markerKind switch
             {
                 RoomDesignerMarkerKinds.SafeStart => MaterialRole.DesignerSpawnSafeStart,
-                RoomDesignerMarkerKinds.Enemy => MaterialRole.DesignerSpawnEnemy,
                 _ => MaterialRole.DesignerSpawnReward
             };
         }
@@ -468,8 +683,27 @@ namespace Hollow.RoomDesigner
                 return;
             }
 
+            LastValidationReport = RoomDesignerDraftValidator.Validate(currentProject);
+            var dimensions = RoomDesignerFootprintUtility.Dimensions(currentProject.footprintPreset);
+            var selectedDoor = SelectedDoorSummary();
+            var enabledPorts = currentProject.doorPorts.Count(door => door.state != RoomDesignerDoorKinds.Inactive);
+            var draftCount = libraryState?.Drafts.Count ?? 0;
             hudText.text =
-                $"Room Designer\nFootprint: {currentProject.footprintPreset} | Tool: {CurrentTool} | Cursor: ({CursorX}, {CursorLayer}, {CursorZ}) | Labels: {(LabelsVisible ? "On" : "Off")}\nWASD/Arrows move | Q/E tool | Z/X layer | Space place | Delete erase\nP playtest | J export JSON | U export USDA | Esc menu\n{status}";
+                $"Room Designer - Macro Authoring\nDrafts: {draftCount} | Footprint: {currentProject.footprintPreset} ({dimensions.x}x{dimensions.y}m) | Enabled ports: {enabledPorts}/{currentProject.doorPorts.Count}\n" +
+                $"Tool: {CurrentTool} | Cursor: ({CursorX}, {CursorLayer}, {CursorZ}) | Door: {selectedDoor} | Labels: {(LabelsVisible ? "On" : "Off")}\n" +
+                $"Validation: {LastValidationReport.Summary()} | Errors: {LastValidationReport.Errors.Count} | Warnings: {LastValidationReport.Warnings.Count}\n" +
+                $"WASD/Arrows move | Q/E tool | Z/X layer | Space place | Delete erase | F eyedropper | Tab labels\n" +
+                $"P playtest | J export validated bundle | U export USDA bundle | Esc menu\n{status}";
+        }
+
+        private string SelectedDoorSummary()
+        {
+            var nearest = currentProject.doorPorts
+                .OrderBy(door => Vector2.Distance(new Vector2(door.x, door.z), new Vector2(CursorX, CursorZ)))
+                .FirstOrDefault();
+            return nearest == null
+                ? "none"
+                : $"{nearest.id} {nearest.state} host({nearest.hostCellX},{nearest.hostCellZ})";
         }
 
         private void ReturnToMainMenu()

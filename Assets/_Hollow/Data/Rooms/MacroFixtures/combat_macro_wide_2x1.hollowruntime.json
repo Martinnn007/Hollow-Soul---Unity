@@ -919,7 +919,7 @@
         "enemySpawns": [
             {
                 "id": "spawn_enemy_0",
-                "kind": "spawn_point_enemy",
+                "kind": "spawnEnemyNormal",
                 "position": {
                     "x": -4.0,
                     "y": 0.0,
@@ -928,7 +928,7 @@
             },
             {
                 "id": "spawn_enemy_1",
-                "kind": "spawn_point_enemy",
+                "kind": "spawnEnemyNormal",
                 "position": {
                     "x": 4.0,
                     "y": 0.0,
@@ -937,7 +937,7 @@
             },
             {
                 "id": "spawn_enemy_2",
-                "kind": "spawn_point_enemy",
+                "kind": "spawnEnemyNormal",
                 "position": {
                     "x": -4.0,
                     "y": 0.0,
@@ -946,7 +946,7 @@
             },
             {
                 "id": "spawn_enemy_3",
-                "kind": "spawn_point_enemy",
+                "kind": "spawnEnemyNormal",
                 "position": {
                     "x": 4.0,
                     "y": 0.0,

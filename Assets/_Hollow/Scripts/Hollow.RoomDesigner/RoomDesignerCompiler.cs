@@ -126,12 +126,12 @@ namespace Hollow.RoomDesigner
             var rewardIndex = 0;
             foreach (var marker in project.markers ?? new List<RoomDesignerMarker>())
             {
-                if (marker.kind == RoomDesignerMarkerKinds.Enemy)
+                if (RoomDesignerMarkerKinds.IsEnemy(marker.kind))
                 {
                     runtime.enemySpawns.Add(new ImportedSpawnPoint
                     {
                         id = string.IsNullOrWhiteSpace(marker.id) ? $"enemy_{enemyIndex++}" : marker.id,
-                        kind = RoomDesignerMarkerKinds.Enemy,
+                        kind = RoomDesignerMarkerKinds.RuntimeEnemyKind(marker.kind),
                         position = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z }
                     });
                 }

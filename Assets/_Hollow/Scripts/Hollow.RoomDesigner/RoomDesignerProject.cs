@@ -163,7 +163,36 @@ namespace Hollow.RoomDesigner
     {
         public const string SafeStart = "spawn_point_safeStart";
         public const string Enemy = "spawn_point_enemy";
+        public const string EnemyNormal = "spawnEnemyNormal";
+        public const string EnemyFlying = "spawnEnemyFlying";
+        public const string EnemyFast = "spawnEnemyFast";
+        public const string EnemyHeavy = "spawnEnemyHeavy";
+        public const string EnemyCharger = "spawnEnemyCharger";
+        public const string EnemyTurret = "spawnEnemyTurret";
+        public const string EnemySplitter = "spawnEnemySplitter";
         public const string RoomReward = "spawn_point_roomReward";
+
+        public static readonly string[] EnemyKinds =
+        {
+            Enemy,
+            EnemyNormal,
+            EnemyFlying,
+            EnemyFast,
+            EnemyHeavy,
+            EnemyCharger,
+            EnemyTurret,
+            EnemySplitter
+        };
+
+        public static bool IsEnemy(string kind)
+        {
+            return System.Array.IndexOf(EnemyKinds, kind) >= 0;
+        }
+
+        public static string RuntimeEnemyKind(string kind)
+        {
+            return kind == Enemy || string.IsNullOrWhiteSpace(kind) ? EnemyNormal : kind;
+        }
     }
 
     public static class RoomDesignerDoorKinds
