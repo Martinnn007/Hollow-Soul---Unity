@@ -1,93 +1,27 @@
 {
-    "reportId": "platform-build-qa-20260426-170819",
-    "generatedAtUtc": "2026-04-26T17:08:19.0928290Z",
+    "reportId": "platform-build-qa-bootstrap",
+    "generatedAtUtc": "2026-04-26T17:35:00.4195870Z",
     "prototypeVersion": "Hollow Soul Unity M24 Platform Build QA",
     "unityVersion": "6000.4.1f1",
     "gitBranch": "main",
-    "gitCommit": "046fb78",
-    "result": "PassedWithEnvironmentBlocks",
+    "gitCommit": "1b2feaa",
+    "result": "NotRun",
     "reportRoot": "output/reports",
     "buildRoot": "output/builds",
     "targets": [
         {
-            "id": "m0-m23-audit",
-            "platform": "Editor",
-            "result": "Passed",
-            "outputPath": "output/reports/latest_m24_dependency_audit.json",
-            "durationMs": 13279.635400000001,
-            "messages": [
-                "M0-M23 audit passed: 24/24."
-            ],
-            "remediation": []
-        },
-        {
-            "id": "addressables-build",
-            "platform": "Local Addressables",
-            "result": "Passed",
-            "outputPath": "Library/com.unity.addressables/aa/OSX/settings.json",
-            "durationMs": 2521.8235,
-            "messages": [
-                "Local Addressables content built successfully."
-            ],
-            "remediation": []
-        },
-        {
-            "id": "editmode-tests",
-            "platform": "Unity Test Runner",
+            "id": "m24-full-gate",
+            "platform": "All Platforms",
             "result": "NotRun",
             "outputPath": "",
             "durationMs": 0.0,
             "messages": [
-                "Run EditMode tests with `Unity -batchmode -projectPath <repo> -runTests -testPlatform editmode -testResults output/reports/m24-editmode-results.xml`."
-            ],
-            "remediation": [
-                "Run this command as a separate Unity Test Runner invocation; the in-process QA gate records the expected command and the PlayMode/EditMode suites remain independently verifiable."
-            ]
-        },
-        {
-            "id": "playmode-smoke-tests",
-            "platform": "Unity Test Runner",
-            "result": "NotRun",
-            "outputPath": "",
-            "durationMs": 0.0,
-            "messages": [
-                "Run PlayMode smoke tests with `Unity -batchmode -projectPath <repo> -runTests -testPlatform playmode -testResults output/reports/m24-playmode-results.xml`."
-            ],
-            "remediation": [
-                "Run this command as a separate Unity Test Runner invocation; the in-process QA gate records the expected command and the PlayMode/EditMode suites remain independently verifiable."
-            ]
-        },
-        {
-            "id": "windows-development-build",
-            "platform": "StandaloneWindows64",
-            "result": "BlockedByEnvironment",
-            "outputPath": "output/builds/HollowSoul_M24_Windows/HollowSoul.exe",
-            "durationMs": 0.0502,
-            "messages": [
-                "Standalone Windows 64-bit build support is not installed in this Unity editor."
-            ],
-            "remediation": [
-                "Install Unity Windows Build Support for Unity 6000.4.1f1.",
-                "Rerun Hollow/Platform QA/Build Windows Development M24."
-            ]
-        },
-        {
-            "id": "visionos-readiness",
-            "platform": "visionOS Simulator/Readiness",
-            "result": "Passed",
-            "outputPath": "",
-            "durationMs": 121.8014,
-            "messages": [
-                "Vision Pro bounded/immersive scenes, polish profiles, and simulator tooling are present."
+                "Run Hollow/Platform QA/Run Full M24 QA Gate to produce the full platform QA report."
             ],
             "remediation": []
         }
     ],
     "manualChecklist": [
-        "Windows: launch HollowSoul.exe, create/select profile, start New Run, move/shoot/clear one room, traverse a door, buy a shop card, quit and Continue.",
-        "Windows: open Room Designer, create a 1x1 draft, move cursor, place/erase a rock/enemy marker, export JSON/USDA bundle.",
-        "Vision Pro bounded: verify tabletop world scale is 0.1, HUD/minimap are readable and unscaled, and ArtPass visuals do not add gameplay colliders.",
-        "Vision Pro immersive: verify full-scale world, comfort vignette profile metadata, camera posture, and readable combat spacing.",
-        "All platforms: confirm save/profile state changes only occur in profile-backed sessions and transient designer/sample sessions stay safe."
+        "Run the full M24 QA gate before external handoff."
     ]
 }

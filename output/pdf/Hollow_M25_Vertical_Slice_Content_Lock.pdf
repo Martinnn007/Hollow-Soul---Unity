@@ -1,0 +1,116 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 2330 >>
+stream
+BT
+/F1 11 Tf
+50 742 Td
+(Hollow Soul - M25 Vertical Slice Content Lock) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Result: Passed) Tj
+0 -14 Td
+(Generated: 2026-04-26T17:36:39.4188230Z) Tj
+0 -14 Td
+(Unity: 6000.4.1f1) Tj
+0 -14 Td
+(Git: main @ 1b2feaa) Tj
+0 -14 Td
+(Branch: m20_branch_features_v1) Tj
+0 -14 Td
+(Seed: 15001) Tj
+0 -14 Td
+(Rooms: 8; Connections: 14) Tj
+0 -14 Td
+(Fixtures: 5; Approved rooms: 0) Tj
+0 -14 Td
+(Shop offers: 3; Next portals: 3) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Lock Checks) Tj
+0 -14 Td
+(- lock-definition: Passed) Tj
+0 -14 Td
+(  M25 lock asset pins branch identity, seed, catalogs, platform QA, and slice counts.) Tj
+0 -14 Td
+(- branch-content: Passed) Tj
+0 -14 Td
+(  Locked branch generated with 8 rooms, 14 directional connections, 5 fixtures, and 0) Tj
+0 -14 Td
+(approved rooms.) Tj
+0 -14 Td
+(  Boss key source: room_02; secret: room_06; boss: boss_01.) Tj
+0 -14 Td
+(- hub-shop-portals: Passed) Tj
+0 -14 Td
+(  Inter-branch hub exposes three shop offers and three seeded next-branch portal choices.) Tj
+0 -14 Td
+(- artpass-lock: Passed) Tj
+0 -14 Td
+(  Required ArtPass roles/cues resolved without prototype fallback. Warnings: 0.) Tj
+0 -14 Td
+(- platform-checklist: Passed) Tj
+0 -14 Td
+(  Windows, Vision Pro bounded, and Vision Pro immersive have equal vertical-slice checklist) Tj
+0 -14 Td
+(coverage.) Tj
+0 -14 Td
+(- m0-m24-audit: Passed) Tj
+0 -14 Td
+(  M0-M24 validators passed: 25/25.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Manual QA Checklist) Tj
+0 -14 Td
+(- Windows: start New Run with the locked seed, clear combat rooms, collect rewards, unlock) Tj
+0 -14 Td
+(the boss door, defeat boss, enter hub, buy one shop card, and inspect all three next-branch) Tj
+0 -14 Td
+(portals.) Tj
+0 -14 Td
+(- Windows: quit after a checkpoint and Continue to confirm room/reward/key/shop/hub state) Tj
+0 -14 Td
+(restores.) Tj
+0 -14 Td
+(- Vision Pro bounded: repeat route smoke with tabletop scale 0.1, HUD/minimap unscaled,) Tj
+0 -14 Td
+(readable door/shop/portal cards, and no ArtPass visual collider takeover.) Tj
+0 -14 Td
+(- Vision Pro immersive: repeat route smoke at full world scale, verify comfort) Tj
+0 -14 Td
+(posture/readability, boss/projectile clarity, and next-branch portal placement.) Tj
+0 -14 Td
+(- All platforms: confirm transient designer/sample sessions remain excluded from run saves) Tj
+0 -14 Td
+(and profile mutation.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000185 00000 n 
+0000002567 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2693
+%%EOF

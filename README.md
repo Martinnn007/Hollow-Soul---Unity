@@ -33,6 +33,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone22RoomDesignerMacroAuthoringPolish.md` describes branch-ready macro-room authoring, validation-gated playtest/export, and validated export bundles.
 - `Docs/Milestone23ArtContentReplacementPipeline.md` describes the catalog-driven ArtPass prefab replacement layer, visual-only import rules, and Addressables packaging.
 - `Docs/Milestone24PlatformBuildDeviceQA.md` describes the platform build/device QA gate, Windows development build output, Vision Pro readiness checks, runtime smoke probes, and handoff reports.
+- `Docs/Milestone25VerticalSliceContentLock.md` describes the locked vertical-slice seed, ArtPass/content checks, platform checklist, and PDF handoff.
 
 ## Required Setup
 

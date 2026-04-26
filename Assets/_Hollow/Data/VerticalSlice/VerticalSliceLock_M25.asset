@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b3a84561d6bd4d1ea9c3fa65e95da3d, type: 3}
+  m_Name: VerticalSliceLock_M25
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.VerticalSliceLockDefinition
+  id: 
+  displayName: 
+  notes: 
+  lockName: M25 Vertical Slice Content Lock
+  branchIdentity: m20_branch_features_v1
+  lockedSeed: 15001
+  roomPoolPolicy: M13 fixtures required; DesignerApproved rooms optional and additive
+  reportRoot: output/reports
+  pdfOutputPath: output/pdf/Hollow_M25_Vertical_Slice_Content_Lock.pdf
+  latestJsonFileName: latest_vertical_slice_lock.json
+  latestMarkdownFileName: latest_vertical_slice_lock.md
+  requireArtPassPrefabs: 1
+  allowEmptyApprovedRoomPool: 1
+  requireEqualPlatformChecklist: 1
+  requiredShopOfferCount: 3
+  requiredNextBranchPortalCount: 3
+  requiredRoomRoles:
+  - Origin
+  - Combat
+  - Reward
+  - Boss
+  - Secret
+  requiredPrefabRoles: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000100000001100000012000000130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e000000
+  requiredVfxCues: 00000000010000000200000003000000040000000500000006000000070000000800000009000000
+  requiredAudioCues: 00000000010000000200000003000000040000000500000006000000070000000800000009000000
+  platformChecklistTargets:
+  - Windows
+  - VisionOSBounded
+  - VisionOSImmersive
+  branchGenerationSettings: {fileID: 11400000, guid: 56b03ad05db574d0994715aad73f94c6, type: 2}
+  roomTemplateCatalog: {fileID: 11400000, guid: 3665e4cabb1ef49f89996f4d1cfb3802, type: 2}
+  presentationCatalog: {fileID: 11400000, guid: 93867c93786824f2b9a66676ac896a37, type: 2}
+  platformQaProfile: {fileID: 11400000, guid: acc6557c88e434f79b998f6ceae33be0, type: 2}

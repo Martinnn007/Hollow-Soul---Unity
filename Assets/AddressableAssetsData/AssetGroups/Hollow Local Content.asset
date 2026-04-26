@@ -215,6 +215,13 @@ MonoBehaviour:
     m_SerializedLabels:
     - hollow.core
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7643e542e31bd4d39ab052daa749e8a2
+    m_Address: hollow.vertical_slice.m25
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.data
+    - hollow.vertical-slice
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 77fced97c9174496caeef231dc0d143c
     m_Address: hollow.rooms.combat_single_sample
     m_ReadOnly: 0
