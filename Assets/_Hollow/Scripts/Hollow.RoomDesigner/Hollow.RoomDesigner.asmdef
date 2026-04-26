@@ -1,27 +1,16 @@
 {
-  "name": "Hollow.Editor",
-  "rootNamespace": "Hollow.Editor",
+  "name": "Hollow.RoomDesigner",
+  "rootNamespace": "Hollow.RoomDesigner",
   "references": [
     "Hollow.Core",
-    "Hollow.Data",
-    "Hollow.Platform",
     "Hollow.Input",
-    "Hollow.Diagnostics",
     "Hollow.Persistence",
-    "Hollow.UI",
-    "Hollow.Presentation",
-    "Hollow.Entities",
+    "Hollow.Platform",
     "Hollow.Rooms",
-    "Hollow.World",
-    "Hollow.Combat",
-    "Hollow.Branches",
-    "Hollow.Rewards",
-    "Hollow.RoomDesigner",
+    "Unity.InputSystem",
     "UnityEngine.UI"
   ],
-  "includePlatforms": [
-    "Editor"
-  ],
+  "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": false,

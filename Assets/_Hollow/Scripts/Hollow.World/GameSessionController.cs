@@ -1,4 +1,5 @@
 using Hollow.Core;
+using Hollow.Core.App;
 using Hollow.Entities;
 using Hollow.Persistence;
 using Hollow.Platform;
@@ -17,6 +18,7 @@ namespace Hollow.World
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlayerSpawnPoint playerSpawnPoint;
         [SerializeField] private PlaceholderPlayerController playerController;
+        private AppShellRoute transientReturnRoute = AppShellRoute.MainMenu;
 
         public HollowPlatformKind PlatformKind => platformKind;
 
@@ -54,14 +56,17 @@ namespace Hollow.World
         {
             ResolveReferences();
             presentationRoot?.Configure(platformKind);
-            var importedAsset = ImportRoomAssetIfAvailable();
+            var isDesignerPlaytest = RoomPlaytestHandoff.TryConsume(out var playtestJson, out var playtestMode, out var playtestReturnRoute);
+            transientReturnRoute = isDesignerPlaytest ? playtestReturnRoute : AppShellRoute.MainMenu;
+            var importedAsset = isDesignerPlaytest ? ImportRoomAsset(playtestJson, "Room Designer Playtest") : ImportRoomAssetIfAvailable();
             var spawnPosition = importedAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             var selectedProfileContext = ProfileSessionHost.Instance?.SelectedProfileContext;
             var selectedProfile = selectedProfileContext?.SelectedProfile;
             var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
-            SessionState = GameSessionState.Create(sessionMode, platformKind, launchMode, selectedProfile, spawnPosition);
+            var effectiveSessionMode = isDesignerPlaytest ? playtestMode : sessionMode;
+            SessionState = GameSessionState.Create(effectiveSessionMode, platformKind, launchMode, selectedProfile, spawnPosition);
 
-            if (importedAsset != null && TryGetBranchSessionController(out var branchSessionController))
+            if (importedAsset != null && !isDesignerPlaytest && TryGetBranchSessionController(out var branchSessionController))
             {
                 branchSessionController.Initialize(importedAsset, SessionState);
                 ResolveReferences();
@@ -78,6 +83,18 @@ namespace Hollow.World
             {
                 playerController.transform.localPosition = spawnPosition;
                 playerController.ConfigureDefault();
+            }
+        }
+
+        private void Update()
+        {
+            if (SessionState?.SessionMode == RuntimeSessionMode.TransientRoomDesignerPlaytest && Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (HollowBootstrap.Instance != null)
+                {
+                    HollowBootstrap.Instance.AppStateMachine.TransitionTo(transientReturnRoute);
+                    SceneLoaderService.LoadRouteAsync(transientReturnRoute);
+                }
             }
         }
 
@@ -111,9 +128,14 @@ namespace Hollow.World
                 return null;
             }
 
-            if (!HollowRuntimeV2Importer.TryImport(sampleRoomRuntimeJson.text, out var importedAsset, out var error))
+            return ImportRoomAsset(sampleRoomRuntimeJson.text, sampleRoomRuntimeJson.name);
+        }
+
+        private static ImportedRoomRuntimeAsset ImportRoomAsset(string json, string displayName)
+        {
+            if (!HollowRuntimeV2Importer.TryImport(json, out var importedAsset, out var error))
             {
-                Debug.LogError($"Failed to load M3 sample room '{sampleRoomRuntimeJson.name}': {error}");
+                Debug.LogError($"Failed to load room runtime '{displayName}': {error}");
                 return null;
             }
 

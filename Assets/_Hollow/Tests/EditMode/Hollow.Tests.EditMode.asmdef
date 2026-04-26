@@ -15,7 +15,8 @@
     "Hollow.World",
     "Hollow.Combat",
     "Hollow.Branches",
-    "Hollow.Rewards"
+    "Hollow.Rewards",
+    "Hollow.RoomDesigner"
   ],
   "includePlatforms": [
     "Editor"

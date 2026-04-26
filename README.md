@@ -16,6 +16,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone5EnemyArchetypesAndDiagnostics.md` describes data-driven enemy archetypes, difficulty tuning, readability, diagnostics, and boss-shell groundwork.
 - `Docs/Milestone6BranchTraversalRewards.md` describes the deterministic five-room branch, door traversal, minimap, runtime rewards, and hub-return portal.
 - `Docs/Milestone7RunEconomyPersistence.md` describes run-local rewards, active-run save/load, profile meta banking, and Continue/New Run flow.
+- `Docs/Milestone8RoomDesigner.md` describes the first in-game room designer, V2 JSON/USDA export, and transient playtest flow.
 
 ## Required Setup
 

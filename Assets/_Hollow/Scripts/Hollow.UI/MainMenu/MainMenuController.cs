@@ -81,6 +81,18 @@ namespace Hollow.UI.MainMenu
             LaunchContinueRun(HollowPlatformKind.VisionOSImmersive);
         }
 
+        public void OpenRoomDesigner()
+        {
+            var route = ViewModel.OpenRoomDesigner();
+            if (ViewModel.State == MainMenuState.Error)
+            {
+                screen.Rebuild();
+                return;
+            }
+
+            SceneLoaderService.LoadRouteAsync(route);
+        }
+
         private void LaunchNewRun(HollowPlatformKind platformKind)
         {
             var route = ViewModel.LaunchNewRun(platformKind);

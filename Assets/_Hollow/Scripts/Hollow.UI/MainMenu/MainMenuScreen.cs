@@ -58,7 +58,8 @@ namespace Hollow.UI.MainMenu
                 AddButton(rootPanel, "New Windows", new Vector2(190f, -175f), controller.LaunchWindows, null, new Vector2(300f, 40f));
                 AddButton(rootPanel, "New Bounded", new Vector2(190f, -225f), controller.LaunchVisionOSBounded, null, new Vector2(300f, 40f));
                 AddButton(rootPanel, "New Immersive", new Vector2(190f, -275f), controller.LaunchVisionOSImmersive, null, new Vector2(300f, 40f));
-                AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -335f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
+                AddButton(rootPanel, "Room Designer", new Vector2(0f, -320f), controller.OpenRoomDesigner, new Color(0.25f, 0.44f, 0.78f), new Vector2(360f, 40f));
+                AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -365f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
             }
         }
 

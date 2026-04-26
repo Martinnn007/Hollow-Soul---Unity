@@ -130,6 +130,20 @@ namespace Hollow.UI.MainMenu
             return route;
         }
 
+        public AppShellRoute OpenRoomDesigner()
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return AppShellRoute.MainMenu;
+            }
+
+            State = MainMenuState.Launching;
+            var route = AppShellRoute.RoomDesigner;
+            appStateMachine.TransitionTo(route);
+            return route;
+        }
+
         private void SetError(string message)
         {
             State = MainMenuState.Error;

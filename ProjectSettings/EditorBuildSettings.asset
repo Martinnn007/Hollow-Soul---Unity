@@ -20,5 +20,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity
     guid: b50ffa173443b45c2855fe83e48bfdda
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/RoomDesigner.unity
+    guid: 3c44dee4e52cd42ef86f8234b30143df
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
