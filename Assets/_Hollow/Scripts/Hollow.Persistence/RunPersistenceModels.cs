@@ -144,6 +144,7 @@ namespace Hollow.Persistence
     {
         public string meleeWeaponId = "starter_blade";
         public string rangedWeaponId = "starter_bolt";
+        public string activeWeaponSlot = "Ranged";
         public string activeItemId = string.Empty;
         public string consumableCardId = string.Empty;
     }

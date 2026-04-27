@@ -9,7 +9,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Length 2330 >>
+<< /Length 2423 >>
 stream
 BT
 /F1 11 Tf
@@ -18,19 +18,19 @@ BT
 0 -14 Td
 () Tj
 0 -14 Td
-(Result: Passed) Tj
+(Result: Failed) Tj
 0 -14 Td
-(Generated: 2026-04-26T17:36:39.4188230Z) Tj
+(Generated: 2026-04-27T18:19:06.4283760Z) Tj
 0 -14 Td
 (Unity: 6000.4.1f1) Tj
 0 -14 Td
-(Git: main @ 1b2feaa) Tj
+(Git: main @ cd1ff37) Tj
 0 -14 Td
 (Branch: m20_branch_features_v1) Tj
 0 -14 Td
 (Seed: 15001) Tj
 0 -14 Td
-(Rooms: 8; Connections: 14) Tj
+(Rooms: 8; Connections: 18) Tj
 0 -14 Td
 (Fixtures: 5; Approved rooms: 0) Tj
 0 -14 Td
@@ -46,7 +46,7 @@ BT
 0 -14 Td
 (- branch-content: Passed) Tj
 0 -14 Td
-(  Locked branch generated with 8 rooms, 14 directional connections, 5 fixtures, and 0) Tj
+(  Locked branch generated with 8 rooms, 18 directional connections, 5 fixtures, and 0) Tj
 0 -14 Td
 (approved rooms.) Tj
 0 -14 Td
@@ -66,9 +66,11 @@ BT
 0 -14 Td
 (coverage.) Tj
 0 -14 Td
-(- m0-m24-audit: Passed) Tj
+(- m0-m24-audit: Failed) Tj
 0 -14 Td
-(  M0-M24 validators passed: 25/25.) Tj
+(  M0-M24 validators failed: 3/25.) Tj
+0 -14 Td
+(  Remediation: Milestone14Validator; Milestone15Validator; Milestone17Validator) Tj
 0 -14 Td
 () Tj
 0 -14 Td
@@ -108,9 +110,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000185 00000 n 
-0000002567 00000 n 
+0000002660 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2693
+2786
 %%EOF

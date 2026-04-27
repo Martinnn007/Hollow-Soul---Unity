@@ -61,7 +61,7 @@ namespace Hollow.Branches
             };
         }
 
-        public static InterBranchHubState FromSaveState(HubShopStateSaveState save, int branchSeed, int branchDepth, RewardPoolDefinition standardPool)
+        public static InterBranchHubState FromSaveState(HubShopStateSaveState save, int branchSeed, int branchDepth, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool = null)
         {
             if (save == null || !save.isActive)
             {
@@ -75,7 +75,7 @@ namespace Hollow.Branches
             var refreshIndex = save.shopRefreshIndex < 0 ? 0 : save.shopRefreshIndex;
             return new InterBranchHubState(
                 true,
-                offers != null && offers.Length > 0 ? offers : HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(runSeed, worldIndex, refreshIndex), refreshIndex, standardPool),
+                offers != null && offers.Length > 0 ? offers : HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(runSeed, worldIndex, refreshIndex), refreshIndex, standardPool, weaponPool),
                 choices != null && choices.Length > 0 ? choices : CreateChoices(branchSeed, branchDepth),
                 runSeed,
                 worldIndex,
@@ -84,15 +84,25 @@ namespace Hollow.Branches
 
         public static InterBranchHubState Create(int branchSeed, int branchDepth, RewardPoolDefinition standardPool)
         {
-            return new InterBranchHubState(true, HubShopOffer.CreateSeededOffers(branchSeed, branchDepth, standardPool), CreateChoices(branchSeed, branchDepth));
+            return Create(branchSeed, branchDepth, standardPool, null);
+        }
+
+        public static InterBranchHubState Create(int branchSeed, int branchDepth, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool)
+        {
+            return new InterBranchHubState(true, HubShopOffer.CreateSeededOffers(branchSeed, branchDepth, standardPool, weaponPool), CreateChoices(branchSeed, branchDepth));
         }
 
         public static InterBranchHubState CreateWorldHub(int runSeed, int worldIndex, int shopRefreshIndex, RewardPoolDefinition standardPool)
         {
+            return CreateWorldHub(runSeed, worldIndex, shopRefreshIndex, standardPool, null);
+        }
+
+        public static InterBranchHubState CreateWorldHub(int runSeed, int worldIndex, int shopRefreshIndex, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool)
+        {
             var refresh = shopRefreshIndex < 0 ? 0 : shopRefreshIndex;
             return new InterBranchHubState(
                 true,
-                HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(runSeed, worldIndex, refresh), refresh, standardPool),
+                HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(runSeed, worldIndex, refresh), refresh, standardPool, weaponPool),
                 CreateWorldChoices(runSeed, worldIndex, new[] { HubBranchPortalState.Open, HubBranchPortalState.Open, HubBranchPortalState.Open }),
                 runSeed,
                 worldIndex,
@@ -101,9 +111,14 @@ namespace Hollow.Branches
 
         public InterBranchHubState MarkBranchPortalDefeated(string choiceId, RewardPoolDefinition standardPool)
         {
+            return MarkBranchPortalDefeated(choiceId, standardPool, null);
+        }
+
+        public InterBranchHubState MarkBranchPortalDefeated(string choiceId, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool)
+        {
             if (string.IsNullOrWhiteSpace(choiceId))
             {
-                return RefreshShop(standardPool);
+                return RefreshShop(standardPool, weaponPool);
             }
 
             var branchStates = NextBranchChoices
@@ -113,7 +128,7 @@ namespace Hollow.Branches
                 .ToArray();
             return new InterBranchHubState(
                 true,
-                HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(RunSeed, WorldIndex, ShopRefreshIndex + 1), ShopRefreshIndex + 1, standardPool),
+                HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(RunSeed, WorldIndex, ShopRefreshIndex + 1), ShopRefreshIndex + 1, standardPool, weaponPool),
                 CreateWorldChoices(RunSeed, WorldIndex, branchStates),
                 RunSeed,
                 WorldIndex,
@@ -122,9 +137,14 @@ namespace Hollow.Branches
 
         public InterBranchHubState RefreshShop(RewardPoolDefinition standardPool)
         {
+            return RefreshShop(standardPool, null);
+        }
+
+        public InterBranchHubState RefreshShop(RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool)
+        {
             return new InterBranchHubState(
                 true,
-                HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(RunSeed, WorldIndex, ShopRefreshIndex + 1), ShopRefreshIndex + 1, standardPool),
+                HubShopOffer.CreateSeededOffers(RunSeedDeriver.ShopSeed(RunSeed, WorldIndex, ShopRefreshIndex + 1), ShopRefreshIndex + 1, standardPool, weaponPool),
                 NextBranchChoices,
                 RunSeed,
                 WorldIndex,

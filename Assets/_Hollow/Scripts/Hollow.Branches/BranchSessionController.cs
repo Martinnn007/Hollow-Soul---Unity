@@ -36,6 +36,8 @@ namespace Hollow.Branches
         [SerializeField] private RewardPoolDefinition standardRewardPool;
         [SerializeField] private RewardPoolDefinition treasureRewardPool;
         [SerializeField] private RewardPoolDefinition bossRewardPool;
+        [SerializeField] private RewardPoolDefinition weaponRewardPool;
+        [SerializeField] private WeaponCatalogDefinition weaponCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
@@ -138,7 +140,7 @@ namespace Hollow.Branches
                     return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --";
                 }
 
-                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}";
+                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}";
             }
         }
 
@@ -156,7 +158,11 @@ namespace Hollow.Branches
 
         public RewardPoolDefinition BossRewardPool => bossRewardPool;
 
+        public RewardPoolDefinition WeaponRewardPool => weaponRewardPool;
+
         public EncounterCatalogDefinition EncounterCatalog => encounterCatalog;
+
+        public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
         public int MacroBranchSeed => macroBranchSeed;
 
@@ -193,6 +199,16 @@ namespace Hollow.Branches
             standardRewardPool = standardPool;
             treasureRewardPool = treasurePool;
             bossRewardPool = bossPool;
+        }
+
+        public void ConfigureWeaponRewardPool(RewardPoolDefinition nextWeaponRewardPool)
+        {
+            weaponRewardPool = nextWeaponRewardPool;
+        }
+
+        public void ConfigureWeaponCatalog(WeaponCatalogDefinition nextWeaponCatalog)
+        {
+            weaponCatalog = nextWeaponCatalog;
         }
 
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
@@ -293,7 +309,7 @@ namespace Hollow.Branches
             bossDoorUnlocked = snapshot?.bossDoorUnlocked ?? false;
             State = BranchSessionState.Create(CreateGraphForSnapshot(snapshot));
             branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
-            interBranchHubState = InterBranchHubState.FromSaveState(snapshot?.interBranchHub, currentBranchSeed, branchDepth, standardRewardPool);
+            interBranchHubState = InterBranchHubState.FromSaveState(snapshot?.interBranchHub, currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool);
             if (IsProceduralRewardBranch(State.Graph.BranchId) && !proceduralRewardPlan.Rewards.Any())
             {
                 proceduralRewardPlan = CreateRewardPlanForGraph(
@@ -520,6 +536,7 @@ namespace Hollow.Branches
             if (runEconomy.ApplyReward(grant))
             {
                 var healAmount = playerRunStats.ApplyReward(grant);
+                ApplyEquipmentReward(grant);
                 ApplyRunStatsToPlayer(healAmount);
                 rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
                 LastRewardMessage = RewardMessage(grant);
@@ -569,6 +586,7 @@ namespace Hollow.Branches
             if (!grant.IsEmpty && runEconomy.ApplyReward(grant))
             {
                 healAmount += playerRunStats.ApplyReward(grant);
+                ApplyEquipmentReward(grant);
                 rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
                 LastRewardMessage = $"Purchased: {grant.DisplayName}";
             }
@@ -636,8 +654,8 @@ namespace Hollow.Branches
                 {
                     interBranchHubState = interBranchHubState.IsActive
                         ? interBranchHubState.MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool)
-                        : InterBranchHubState.CreateWorldHub(runSeed, worldIndex, 0, standardRewardPool)
-                            .MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool);
+                        : InterBranchHubState.CreateWorldHub(runSeed, worldIndex, 0, standardRewardPool, weaponRewardPool)
+                            .MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool);
                     activeHubPortalId = string.Empty;
                 }
 
@@ -685,8 +703,8 @@ namespace Hollow.Branches
             if (!interBranchHubState.IsActive || (!restoreExistingState && !IsWorldLoopRuntime()))
             {
                 interBranchHubState = IsWorldLoopRuntime()
-                    ? InterBranchHubState.CreateWorldHub(runSeed == 0 ? currentBranchSeed : runSeed, worldIndex, interBranchHubState.ShopRefreshIndex, standardRewardPool)
-                    : InterBranchHubState.Create(currentBranchSeed == 0 ? State?.Graph?.Seed ?? macroBranchSeed : currentBranchSeed, branchDepth, standardRewardPool);
+                    ? InterBranchHubState.CreateWorldHub(runSeed == 0 ? currentBranchSeed : runSeed, worldIndex, interBranchHubState.ShopRefreshIndex, standardRewardPool, weaponRewardPool)
+                    : InterBranchHubState.Create(currentBranchSeed == 0 ? State?.Graph?.Seed ?? macroBranchSeed : currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool);
             }
 
             worldPhase = IsWorldLoopRuntime() ? RunWorldPhase.Hub : worldPhase;
@@ -1134,7 +1152,7 @@ namespace Hollow.Branches
 
             return legacyFallback
                 ? ProceduralRewardResolver.CreatePlan(graph)
-                : ProceduralRewardResolver.CreateSeededPlan(graph, standardRewardPool, treasureRewardPool, bossRewardPool);
+                : ProceduralRewardResolver.CreateSeededPlan(graph, standardRewardPool, treasureRewardPool, bossRewardPool, weaponRewardPool);
         }
 
         private static string RewardMessage(RewardGrant grant)
@@ -1264,7 +1282,40 @@ namespace Hollow.Branches
         private void ApplyRunStatsToPlayer(int healAmount)
         {
             playerRunBuild = CreateCurrentRunBuild();
-            PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, healAmount);
+            PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, weaponCatalog, healAmount);
+        }
+
+        private void ApplyEquipmentReward(RewardGrant grant)
+        {
+            if (grant.RewardKind != RewardKind.Weapon || string.IsNullOrWhiteSpace(grant.RewardId))
+            {
+                return;
+            }
+
+            playerRunBuild ??= CreateCurrentRunBuild();
+            if (weaponCatalog != null && weaponCatalog.TryGetWeapon(grant.RewardId, out var weapon))
+            {
+                if (weapon.Slot == WeaponSlot.Melee)
+                {
+                    playerRunBuild.Equipment.EquipMeleeWeapon(weapon.WeaponId);
+                    playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
+                }
+                else
+                {
+                    playerRunBuild.Equipment.EquipRangedWeapon(weapon.WeaponId);
+                    playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                }
+            }
+            else if (grant.RewardId.Contains("blade") || grant.RewardId.Contains("cleaver") || grant.RewardId.Contains("sword"))
+            {
+                playerRunBuild.Equipment.EquipMeleeWeapon(grant.RewardId);
+                playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
+            }
+            else
+            {
+                playerRunBuild.Equipment.EquipRangedWeapon(grant.RewardId);
+                playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+            }
         }
 
         private void CheckpointActiveRun()
@@ -1369,6 +1420,7 @@ namespace Hollow.Branches
                 if (weapon != null)
                 {
                     legacySave.currentStamina = weapon.CurrentStamina;
+                    legacySave.equipment.activeWeaponSlot = weapon.ActiveWeaponSlot.ToString();
                 }
             }
 

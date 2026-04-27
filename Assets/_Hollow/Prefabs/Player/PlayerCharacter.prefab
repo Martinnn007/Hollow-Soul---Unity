@@ -208,6 +208,14 @@ MonoBehaviour:
   cooldownSeconds: 0.22
   cooldownMultiplier: 1
   projectileDamageBonus: 0
+  meleeDamageBonus: 1
+  maxStamina: 100
+  currentStamina: 100
+  staminaRegenPerSecond: 18
+  activeWeaponSlot: 1
+  meleeWeaponId: starter_blade
+  rangedWeaponId: starter_bolt
+  weaponCatalog: {fileID: 0}
   projectilePrefab: {fileID: 0}
   roomRuntimeRoot: {fileID: 0}
   combatController: {fileID: 0}

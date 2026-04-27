@@ -34,6 +34,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone23ArtContentReplacementPipeline.md` describes the catalog-driven ArtPass prefab replacement layer, visual-only import rules, and Addressables packaging.
 - `Docs/Milestone24PlatformBuildDeviceQA.md` describes the platform build/device QA gate, Windows development build output, Vision Pro readiness checks, runtime smoke probes, and handoff reports.
 - `Docs/Milestone25VerticalSliceContentLock.md` describes the locked vertical-slice seed, ArtPass/content checks, platform checklist, and PDF handoff.
+- `Docs/Milestone27WeaponModeLightHeavyAttacks.md` describes catalog-backed melee/ranged weapon modes, light/heavy attacks, stamina/cooldown checks, and rare weapon rewards.
 
 ## Required Setup
 

@@ -80,6 +80,7 @@ namespace Hollow.Branches
             {
                 RewardKind.Card => "Card reward",
                 RewardKind.PassiveItem => "Passive item",
+                RewardKind.Weapon => "Weapon replacement",
                 RewardKind.Currency => "Currency",
                 _ => "Reward"
             };

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1534031682929101627}
   - component: {fileID: 2231202749848501317}
   - component: {fileID: 344184934733676335}
-  - component: {fileID: 4607835210129499760}
+  - component: {fileID: 8315310216184398191}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -93,7 +93,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1658111127310613213}
   m_Enabled: 1
---- !u!114 &4607835210129499760
+--- !u!114 &8315310216184398191
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -118,7 +118,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1707112889616006190}
   - component: {fileID: 7680231750041928655}
-  - component: {fileID: 8145985186454032508}
+  - component: {fileID: 6505799953349436736}
+  - component: {fileID: 8665962352642090009}
   m_Layer: 0
   m_Name: VisionOSImmersiveRig
   m_TagString: Untagged
@@ -155,7 +156,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.CameraRigMetadata
   platformKind: 2
---- !u!114 &8145985186454032508
+--- !u!114 &6505799953349436736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2156505777256756223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fa5c03f5e784d4aa7f2c5b87d7256f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.GameplayCameraFollowController
+  target: {fileID: 0}
+  followSharpness: 8
+--- !u!114 &8665962352642090009
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

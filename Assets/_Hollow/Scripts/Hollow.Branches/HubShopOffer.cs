@@ -71,7 +71,7 @@ namespace Hollow.Branches
                     save.isPurchased);
         }
 
-        public static IReadOnlyList<HubShopOffer> CreateSeededOffers(int branchSeed, int branchDepth, RewardPoolDefinition standardPool)
+        public static IReadOnlyList<HubShopOffer> CreateSeededOffers(int branchSeed, int branchDepth, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool = null)
         {
             var offers = new List<HubShopOffer>
             {
@@ -81,10 +81,18 @@ namespace Hollow.Branches
             for (var index = 0; index < 2; index++)
             {
                 var roomId = $"shop_offer_{branchDepth}_{index}";
-                var grant = standardPool != null && standardPool.TryRoll(roomId, "m20_hub_shop", branchSeed + branchDepth + index, out var rolled) && rolled.RewardKind != RewardKind.Currency
+                var shouldOfferWeapon = weaponPool != null && StableHash($"{branchSeed}|{branchDepth}|shop|weapon|{index}") % 5 == 0;
+                var grant = shouldOfferWeapon && weaponPool.TryRoll(roomId, "m27_hub_shop_weapons", branchSeed + branchDepth + index, out var weaponGrant)
+                    ? new RewardGrant(roomId, weaponGrant.RewardId, weaponGrant.DisplayName, weaponGrant.RewardKind, 0, weaponGrant.Effects)
+                    : standardPool != null && standardPool.TryRoll(roomId, "m20_hub_shop", branchSeed + branchDepth + index, out var rolled) && rolled.RewardKind != RewardKind.Currency
                     ? new RewardGrant(roomId, rolled.RewardId, rolled.DisplayName, rolled.RewardKind, 0, rolled.Effects)
                     : FallbackReward(roomId, branchSeed, branchDepth, index);
-                var price = grant.RewardKind == RewardKind.Card ? 14 : 16;
+                var price = grant.RewardKind switch
+                {
+                    RewardKind.Card => 14,
+                    RewardKind.Weapon => 20,
+                    _ => 16
+                };
                 offers.Add(new HubShopOffer($"reward_{index}", grant.DisplayName, price, 0, grant));
             }
 

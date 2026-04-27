@@ -1,4 +1,5 @@
 using Hollow.Persistence;
+using Hollow.Data.Definitions;
 
 namespace Hollow.Rewards
 {
@@ -7,6 +8,8 @@ namespace Hollow.Rewards
         public string MeleeWeaponId { get; private set; } = "starter_blade";
 
         public string RangedWeaponId { get; private set; } = "starter_bolt";
+
+        public WeaponSlot ActiveWeaponSlot { get; private set; } = WeaponSlot.Ranged;
 
         public string ActiveItemId { get; private set; } = string.Empty;
 
@@ -20,6 +23,11 @@ namespace Hollow.Rewards
         public void EquipRangedWeapon(string weaponId)
         {
             RangedWeaponId = string.IsNullOrWhiteSpace(weaponId) ? "starter_bolt" : weaponId;
+        }
+
+        public void SetActiveWeaponSlot(WeaponSlot slot)
+        {
+            ActiveWeaponSlot = slot;
         }
 
         public void EquipActiveItem(string itemId)
@@ -38,6 +46,7 @@ namespace Hollow.Rewards
             {
                 meleeWeaponId = MeleeWeaponId,
                 rangedWeaponId = RangedWeaponId,
+                activeWeaponSlot = ActiveWeaponSlot.ToString(),
                 activeItemId = ActiveItemId,
                 consumableCardId = ConsumableCardId
             };
@@ -53,6 +62,11 @@ namespace Hollow.Rewards
 
             slots.EquipMeleeWeapon(saveState.meleeWeaponId);
             slots.EquipRangedWeapon(saveState.rangedWeaponId);
+            if (System.Enum.TryParse(saveState.activeWeaponSlot, out WeaponSlot parsedSlot))
+            {
+                slots.SetActiveWeaponSlot(parsedSlot);
+            }
+
             slots.EquipActiveItem(saveState.activeItemId);
             slots.EquipConsumableCard(saveState.consumableCardId);
             return slots;

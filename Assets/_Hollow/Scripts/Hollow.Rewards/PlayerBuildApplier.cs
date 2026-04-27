@@ -1,4 +1,5 @@
 using Hollow.Combat;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.Rewards
@@ -6,6 +7,11 @@ namespace Hollow.Rewards
     public static class PlayerBuildApplier
     {
         public static void Apply(PlayerRunBuild build, GameObject playerObject, int healAmount = 0)
+        {
+            Apply(build, playerObject, null, healAmount);
+        }
+
+        public static void Apply(PlayerRunBuild build, GameObject playerObject, WeaponCatalogDefinition weaponCatalog, int healAmount = 0)
         {
             if (build == null || playerObject == null)
             {
@@ -36,7 +42,9 @@ namespace Hollow.Rewards
                     derived.StaminaRegenPerSecond,
                     build.Equipment.MeleeWeaponId,
                     build.Equipment.RangedWeaponId,
-                    build.CurrentStamina);
+                    build.Equipment.ActiveWeaponSlot,
+                    build.CurrentStamina,
+                    weaponCatalog);
             }
         }
     }

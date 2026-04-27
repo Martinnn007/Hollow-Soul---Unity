@@ -17,4 +17,5 @@ MonoBehaviour:
   rewardKind: 2
   rarity: 3
   souls: 25
+  coins: 0
   effects: []

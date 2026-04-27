@@ -29,11 +29,18 @@ namespace Hollow.Combat
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction, int damageBonus)
         {
+            Configure(room, controller, direction, DefaultDamage + Mathf.Max(0, damageBonus), DefaultSpeedMetersPerSecond, DefaultLifetimeSeconds);
+        }
+
+        public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction, int nextDamage, float nextSpeedMetersPerSecond, float nextLifetimeSeconds)
+        {
             roomRuntimeRoot = room;
             combatController = controller;
             diagnostics = controller != null ? controller.Diagnostics : null;
             localDirection = direction.sqrMagnitude < 0.001f ? Vector3.forward : direction.normalized;
-            damage = DefaultDamage + Mathf.Max(0, damageBonus);
+            damage = Mathf.Max(1, nextDamage);
+            speedMetersPerSecond = Mathf.Max(0.1f, nextSpeedMetersPerSecond);
+            lifetimeSeconds = Mathf.Max(0.1f, nextLifetimeSeconds);
             ageSeconds = 0f;
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Projectile, transform, Vector3.zero, Vector3.one);
         }

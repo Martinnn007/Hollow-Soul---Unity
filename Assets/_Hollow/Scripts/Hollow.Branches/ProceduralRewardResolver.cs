@@ -54,7 +54,8 @@ namespace Hollow.Branches
             BranchFloorGraph graph,
             RewardPoolDefinition standardRoomPool,
             RewardPoolDefinition treasureRoomPool,
-            RewardPoolDefinition bossRoomPool)
+            RewardPoolDefinition bossRoomPool,
+            RewardPoolDefinition weaponRewardPool = null)
         {
             if (graph == null)
             {
@@ -66,7 +67,7 @@ namespace Hollow.Branches
                          .Where(room => room.Id != BranchRoomId.Origin)
                          .OrderBy(room => room.Id.Value))
             {
-                rewards.Add(RollRewardForRoom(graph, room, standardRoomPool, treasureRoomPool, bossRoomPool));
+                rewards.Add(RollRewardForRoom(graph, room, standardRoomPool, treasureRoomPool, bossRoomPool, weaponRewardPool));
             }
 
             return new ProceduralRewardPlan(rewards);
@@ -84,8 +85,17 @@ namespace Hollow.Branches
             BranchRoomState room,
             RewardPoolDefinition standardRoomPool,
             RewardPoolDefinition treasureRoomPool,
-            RewardPoolDefinition bossRoomPool)
+            RewardPoolDefinition bossRoomPool,
+            RewardPoolDefinition weaponRewardPool)
         {
+            if (room.Role == BranchRoomRole.Boss &&
+                weaponRewardPool != null &&
+                StableHash($"{graph.BranchId}|{graph.Seed}|{room.Id.Value}|boss_weapon") % 4 == 0 &&
+                weaponRewardPool.TryRoll(room.Id.Value, graph.BranchId, graph.Seed, out var weaponGrant))
+            {
+                return weaponGrant;
+            }
+
             var pool = room.Role switch
             {
                 BranchRoomRole.Boss => bossRoomPool,

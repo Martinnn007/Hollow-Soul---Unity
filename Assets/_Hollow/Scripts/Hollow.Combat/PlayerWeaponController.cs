@@ -20,12 +20,14 @@ namespace Hollow.Combat
         [SerializeField] private WeaponSlot activeWeaponSlot = WeaponSlot.Ranged;
         [SerializeField] private string meleeWeaponId = "starter_blade";
         [SerializeField] private string rangedWeaponId = "starter_bolt";
+        [SerializeField] private WeaponCatalogDefinition weaponCatalog;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private RoomCombatController combatController;
 
         private float nextAllowedShotTime;
         private float nextAllowedMeleeTime;
+        private Vector2 lastAimDirection = Vector2.up;
 
         public float CooldownSeconds => cooldownSeconds * cooldownMultiplier;
 
@@ -38,6 +40,10 @@ namespace Hollow.Combat
         public string MeleeWeaponId => meleeWeaponId;
 
         public string RangedWeaponId => rangedWeaponId;
+
+        public string ActiveWeaponDisplayName => ResolveWeapon(activeWeaponSlot)?.DisplayName ?? activeWeaponSlot.ToString();
+
+        public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, GameObject prefab)
         {
@@ -52,6 +58,11 @@ namespace Hollow.Combat
             projectileDamageBonus = Mathf.Max(0, nextProjectileDamageBonus);
         }
 
+        public void ConfigureWeaponCatalog(WeaponCatalogDefinition nextWeaponCatalog)
+        {
+            weaponCatalog = nextWeaponCatalog;
+        }
+
         public void ConfigureBuildStats(
             float nextCooldownMultiplier,
             int nextRangedDamageBonus,
@@ -60,15 +71,23 @@ namespace Hollow.Combat
             float nextStaminaRegenPerSecond,
             string nextMeleeWeaponId,
             string nextRangedWeaponId,
-            float nextCurrentStamina)
+            WeaponSlot nextActiveWeaponSlot,
+            float nextCurrentStamina,
+            WeaponCatalogDefinition nextWeaponCatalog = null)
         {
             ConfigureStats(nextCooldownMultiplier, nextRangedDamageBonus);
+            if (nextWeaponCatalog != null)
+            {
+                weaponCatalog = nextWeaponCatalog;
+            }
+
             meleeDamageBonus = Mathf.Max(0, nextMeleeDamageBonus);
             maxStamina = Mathf.Max(1f, nextMaxStamina);
             staminaRegenPerSecond = Mathf.Max(0f, nextStaminaRegenPerSecond);
             currentStamina = Mathf.Clamp(nextCurrentStamina <= 0f ? maxStamina : nextCurrentStamina, 0f, maxStamina);
             meleeWeaponId = string.IsNullOrWhiteSpace(nextMeleeWeaponId) ? "starter_blade" : nextMeleeWeaponId;
             rangedWeaponId = string.IsNullOrWhiteSpace(nextRangedWeaponId) ? "starter_bolt" : nextRangedWeaponId;
+            activeWeaponSlot = nextActiveWeaponSlot;
         }
 
         private void Update()
@@ -80,25 +99,30 @@ namespace Hollow.Combat
                 ToggleWeaponSlot();
             }
 
+            if (input.HasShoot)
+            {
+                lastAimDirection = input.Shoot;
+            }
+
             if (input.LightAttackPressed)
             {
-                TryAttack(AttackKind.Light, input.HasShoot ? input.Shoot : Vector2.up, Time.time);
+                TryAttack(AttackKind.Light, CurrentAim(input), Time.time);
             }
 
             if (input.HeavyAttackPressed)
             {
-                TryAttack(AttackKind.Heavy, input.HasShoot ? input.Shoot : Vector2.up, Time.time);
-            }
-
-            if (input.HasShoot)
-            {
-                TryFire(input.Shoot, Time.time);
+                TryAttack(AttackKind.Heavy, CurrentAim(input), Time.time);
             }
         }
 
         public void ToggleWeaponSlot()
         {
             activeWeaponSlot = activeWeaponSlot == WeaponSlot.Ranged ? WeaponSlot.Melee : WeaponSlot.Ranged;
+        }
+
+        public void SetActiveWeaponSlot(WeaponSlot slot)
+        {
+            activeWeaponSlot = slot;
         }
 
         public bool TryAttack(AttackKind attackKind, Vector2 attackDirection, float timeSeconds)
@@ -116,25 +140,37 @@ namespace Hollow.Combat
         private bool TryFireWithAttack(AttackKind attackKind, Vector2 shootDirection, float timeSeconds)
         {
             var cardinal = GameplayInputReader.CardinalizeShoot(shootDirection);
-            var staminaCost = attackKind == AttackKind.Heavy ? 12f : 0f;
+            if (cardinal.sqrMagnitude < 0.001f)
+            {
+                cardinal = lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+            }
+
+            var weapon = ResolveWeapon(WeaponSlot.Ranged);
+            var attack = ResolveAttack(weapon, WeaponSlot.Ranged, attackKind);
             if (cardinal.sqrMagnitude < 0.001f ||
                 timeSeconds < nextAllowedShotTime ||
                 projectilePrefab == null ||
                 combatController == null ||
-                !TrySpendStamina(staminaCost))
+                !TrySpendStamina(attack.StaminaCost))
             {
                 return false;
             }
 
-            var attackCooldown = attackKind == AttackKind.Heavy ? CooldownSeconds * 2.15f : CooldownSeconds;
-            var attackDamageBonus = projectileDamageBonus + (attackKind == AttackKind.Heavy ? 1 : 0);
+            var attackCooldown = attack.CooldownSeconds * cooldownMultiplier;
+            var attackDamage = attack.Damage + projectileDamageBonus;
             nextAllowedShotTime = timeSeconds + attackCooldown;
             var projectileObject = Instantiate(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
             projectileObject.transform.localPosition = transform.localPosition + new Vector3(cardinal.x, 0f, cardinal.y) * 0.42f + new Vector3(0f, 0.45f, 0f);
             MaterialResolver.ApplyTo(projectileObject, MaterialRole.Projectile);
             var projectile = projectileObject.GetComponent<ProjectileController>() ?? projectileObject.AddComponent<ProjectileController>();
-            projectile.Configure(roomRuntimeRoot, combatController, new Vector3(cardinal.x, 0f, cardinal.y), attackDamageBonus);
+            projectile.Configure(
+                roomRuntimeRoot,
+                combatController,
+                new Vector3(cardinal.x, 0f, cardinal.y),
+                attackDamage,
+                attack.RangeMeters,
+                ProjectileController.DefaultLifetimeSeconds);
             VfxPresenter.Play(VfxCueId.ProjectileFire, projectileObject.transform.position, projectileObject.transform.parent);
             AudioPresenter.Play(AudioCueId.ProjectileFire, projectileObject.transform.position);
             return true;
@@ -145,24 +181,25 @@ namespace Hollow.Combat
             var cardinal = GameplayInputReader.CardinalizeShoot(attackDirection);
             if (cardinal.sqrMagnitude < 0.001f)
             {
-                cardinal = Vector2.up;
+                cardinal = lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
             }
 
-            var cooldown = attackKind == AttackKind.Heavy ? 0.55f * cooldownMultiplier : 0.28f * cooldownMultiplier;
-            var staminaCost = attackKind == AttackKind.Heavy ? 18f : 6f;
-            if (timeSeconds < nextAllowedMeleeTime || combatController == null || !TrySpendStamina(staminaCost))
+            var weapon = ResolveWeapon(WeaponSlot.Melee);
+            var attack = ResolveAttack(weapon, WeaponSlot.Melee, attackKind);
+            var cooldown = attack.CooldownSeconds * cooldownMultiplier;
+            if (timeSeconds < nextAllowedMeleeTime || combatController == null || !TrySpendStamina(attack.StaminaCost))
             {
                 return false;
             }
 
             nextAllowedMeleeTime = timeSeconds + Mathf.Max(0.05f, cooldown);
             var direction = new Vector3(cardinal.x, 0f, cardinal.y);
-            var hitCenter = transform.localPosition + direction * (attackKind == AttackKind.Heavy ? 0.82f : 0.68f) + new Vector3(0f, 0.45f, 0f);
-            var radius = attackKind == AttackKind.Heavy ? 0.64f : 0.48f;
+            var radius = Mathf.Max(0.25f, attack.RangeMeters * 0.48f);
+            var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, attack.RangeMeters * 0.72f) + new Vector3(0f, 0.45f, 0f);
             var target = combatController.FindEnemyHit(hitCenter, radius);
             if (target != null)
             {
-                var damage = Mathf.Max(1, meleeDamageBonus + (attackKind == AttackKind.Heavy ? 1 : 0));
+                var damage = Mathf.Max(1, attack.Damage + meleeDamageBonus);
                 DamageSystem.ApplyDamage(target.Health, new DamageRequest(damage, gameObject));
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
@@ -190,6 +227,34 @@ namespace Hollow.Combat
         private void RegenerateStamina(float deltaTime)
         {
             currentStamina = Mathf.Min(maxStamina, currentStamina + Mathf.Max(0f, deltaTime) * staminaRegenPerSecond);
+        }
+
+        private Vector2 CurrentAim(GameplayInputSnapshot input)
+        {
+            if (input.HasShoot)
+            {
+                return input.Shoot;
+            }
+
+            return lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+        }
+
+        private WeaponDefinition ResolveWeapon(WeaponSlot slot)
+        {
+            var weaponId = slot == WeaponSlot.Melee ? meleeWeaponId : rangedWeaponId;
+            return weaponCatalog != null ? weaponCatalog.Resolve(weaponId, slot) : null;
+        }
+
+        private static WeaponAttackDefinition ResolveAttack(WeaponDefinition weapon, WeaponSlot slot, AttackKind attackKind)
+        {
+            if (weapon != null)
+            {
+                return attackKind == AttackKind.Heavy ? weapon.HeavyAttack : weapon.LightAttack;
+            }
+
+            return attackKind == AttackKind.Heavy
+                ? WeaponAttackDefinition.DefaultHeavy(slot)
+                : WeaponAttackDefinition.DefaultLight(slot);
         }
     }
 }
