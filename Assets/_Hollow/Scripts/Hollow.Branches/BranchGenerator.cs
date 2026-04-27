@@ -54,6 +54,7 @@ namespace Hollow.Branches
             graph.AddBidirectionalConnection(BranchRoomId.Origin, BranchRoomId.South, "south", "north", "south_0", "north_0");
             graph.AddBidirectionalConnection(BranchRoomId.Origin, BranchRoomId.East, "east", "west", "east_0", "west_0");
             graph.AddBidirectionalConnection(BranchRoomId.Origin, BranchRoomId.West, "west", "east", "west_0", "east_1");
+            ConnectAdjacentCompatiblePorts(graph, roomPool);
             return graph;
         }
 
@@ -209,6 +210,7 @@ namespace Hollow.Branches
                     record.ToPortId);
             }
 
+            ConnectAdjacentCompatiblePorts(graph, roomPool);
             return graph;
         }
 
@@ -228,7 +230,7 @@ namespace Hollow.Branches
             {
                 var parent = records[random.Next(records.Count)];
                 var parentPorts = parent.Asset.DoorPorts
-                    .Where(port => !usedPortsByTempIndex[parent.TempIndex].Contains(port.Id))
+                    .Where(port => IsNormalConnectablePort(port) && !usedPortsByTempIndex[parent.TempIndex].Contains(port.Id))
                     .OrderBy(_ => random.Next())
                     .ToList();
                 if (parentPorts.Count == 0)
@@ -240,7 +242,7 @@ namespace Hollow.Branches
                 var childFallback = fixturePool[fixtureIds[random.Next(fixtureIds.Count)]];
                 var childAsset = ChooseCandidateForShape(candidatesByShape, childFallback, random);
                 var childPorts = childAsset.DoorPorts
-                    .Where(port => port.Direction == Opposite(parentPort.Direction))
+                    .Where(port => IsNormalConnectablePort(port) && port.Direction == Opposite(parentPort.Direction))
                     .OrderBy(_ => random.Next())
                     .ToList();
                 if (childPorts.Count == 0)
@@ -282,6 +284,56 @@ namespace Hollow.Branches
                 .ToDictionary(
                     group => group.Key,
                     group => (IReadOnlyList<ImportedRoomRuntimeAsset>)group.OrderBy(asset => asset.Id).ToArray());
+        }
+
+        public static void ConnectAdjacentCompatiblePorts(BranchFloorGraph graph, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> roomPool)
+        {
+            if (graph == null || roomPool == null)
+            {
+                return;
+            }
+
+            var roomRecords = graph.Rooms
+                .Where(room => room?.Footprint != null &&
+                               !string.IsNullOrWhiteSpace(room.RuntimeRoomAssetId) &&
+                               roomPool.ContainsKey(room.RuntimeRoomAssetId))
+                .Select(room => new AutoConnectRoomRecord(room, roomPool[room.RuntimeRoomAssetId]))
+                .ToArray();
+
+            foreach (var fromRoom in roomRecords)
+            {
+                foreach (var fromPort in fromRoom.Asset.DoorPorts.Where(IsNormalConnectablePort))
+                {
+                    var requiredToDirection = Opposite(fromPort.Direction);
+                    if (string.IsNullOrWhiteSpace(requiredToDirection))
+                    {
+                        continue;
+                    }
+
+                    var requiredToHostCell = WorldHostCell(fromRoom, fromPort) + DirectionOffset(fromPort.Direction);
+                    foreach (var toRoom in roomRecords.Where(room => room.Room.Id != fromRoom.Room.Id))
+                    {
+                        foreach (var toPort in toRoom.Asset.DoorPorts.Where(port =>
+                                     IsNormalConnectablePort(port) &&
+                                     port.Direction == requiredToDirection &&
+                                     WorldHostCell(toRoom, port) == requiredToHostCell))
+                        {
+                            if (graph.HasConnectionByPortPair(fromRoom.Room.Id, fromPort.Id, toRoom.Room.Id, toPort.Id))
+                            {
+                                continue;
+                            }
+
+                            graph.AddBidirectionalConnection(
+                                fromRoom.Room.Id,
+                                toRoom.Room.Id,
+                                fromPort.Direction,
+                                toPort.Direction,
+                                fromPort.Id,
+                                toPort.Id);
+                        }
+                    }
+                }
+            }
         }
 
         private static ImportedRoomRuntimeAsset ChooseCandidateForShape(
@@ -460,6 +512,12 @@ namespace Hollow.Branches
             return port.HostCell + offset;
         }
 
+        private static Vector2Int WorldHostCell(AutoConnectRoomRecord record, RoomDoorPort port)
+        {
+            var offset = record.Room.Footprint.PrimaryCell - record.Asset.Footprint.PrimaryCell;
+            return port.HostCell + offset;
+        }
+
         private static void RegisterCells(HashSet<Vector2Int> occupiedCells, RoomInstanceFootprint footprint)
         {
             foreach (var cell in footprint.OccupiedCells)
@@ -495,6 +553,25 @@ namespace Hollow.Branches
                 "west" => "east",
                 _ => string.Empty
             };
+        }
+
+        private static bool IsNormalConnectablePort(RoomDoorPort port)
+        {
+            return string.Equals(port?.Kind, "available", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(port?.Kind, "door", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private sealed class AutoConnectRoomRecord
+        {
+            public AutoConnectRoomRecord(BranchRoomState room, ImportedRoomRuntimeAsset asset)
+            {
+                Room = room;
+                Asset = asset;
+            }
+
+            public BranchRoomState Room { get; }
+
+            public ImportedRoomRuntimeAsset Asset { get; }
         }
 
         private sealed class PlacementRecord

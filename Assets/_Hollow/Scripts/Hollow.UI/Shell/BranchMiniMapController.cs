@@ -83,7 +83,8 @@ namespace Hollow.UI.Shell
                 return;
             }
 
-            var layout = MiniMapLayout.Create(visibleNodes, shapeRoot.rect.size);
+            var currentNode = visibleNodes.FirstOrDefault(node => node.IsCurrent);
+            var layout = MiniMapLayout.Create(visibleNodes, shapeRoot.rect.size, currentNode);
             foreach (var connection in model.Connections)
             {
                 DrawConnection(connection, shapeRoot, layout);
@@ -141,6 +142,11 @@ namespace Hollow.UI.Shell
             if (!string.IsNullOrEmpty(marker))
             {
                 DrawMarkerText(root, layout.CenterFor(node.OccupiedCells), marker, MarkerColorFor(node.Role));
+            }
+
+            if (node.IsCurrent)
+            {
+                DrawDot(root, layout.CenterFor(node.OccupiedCells), "MiniMapCurrentPositionDot", new Color(0.2f, 1f, 0.35f, 1f), 8f);
             }
         }
 
@@ -324,10 +330,15 @@ namespace Hollow.UI.Shell
 
         private void DrawOverlayDot(RectTransform root, Vector2 position, string name, Color color, float size)
         {
+            DrawDot(root, position + new Vector2(8f, -8f), name, color, size);
+        }
+
+        private void DrawDot(RectTransform root, Vector2 position, string name, Color color, float size)
+        {
             var dot = new GameObject(name, typeof(RectTransform), typeof(Image));
             dot.transform.SetParent(root, false);
             var rect = (RectTransform)dot.transform;
-            ConfigureMiniMapRect(rect, position + new Vector2(8f, -8f));
+            ConfigureMiniMapRect(rect, position);
             rect.sizeDelta = Vector2.one * size;
             dot.GetComponent<Image>().color = color;
         }
@@ -359,16 +370,16 @@ namespace Hollow.UI.Shell
 
         public readonly struct MiniMapLayout
         {
-            private readonly int minX;
-            private readonly int maxY;
+            private readonly float focusX;
+            private readonly float focusY;
             private readonly float originX;
             private readonly float originY;
             private readonly float step;
 
-            private MiniMapLayout(int minX, int maxY, float originX, float originY, float step, float cellSize, float gap)
+            private MiniMapLayout(float focusX, float focusY, float originX, float originY, float step, float cellSize, float gap)
             {
-                this.minX = minX;
-                this.maxY = maxY;
+                this.focusX = focusX;
+                this.focusY = focusY;
                 this.originX = originX;
                 this.originY = originY;
                 this.step = step;
@@ -380,26 +391,30 @@ namespace Hollow.UI.Shell
 
             public float Gap { get; }
 
-            public static MiniMapLayout Create(IReadOnlyCollection<BranchMiniMapNode> nodes, Vector2 availableSize)
+            public static MiniMapLayout Create(IReadOnlyCollection<BranchMiniMapNode> nodes, Vector2 availableSize, BranchMiniMapNode currentNode = null)
             {
                 var cells = nodes.SelectMany(node => node.OccupiedCells).ToArray();
-                var minX = cells.Min(cell => cell.x);
-                var maxX = cells.Max(cell => cell.x);
-                var minY = cells.Min(cell => cell.y);
-                var maxY = cells.Max(cell => cell.y);
-                var columns = Mathf.Max(1, maxX - minX + 1);
-                var rows = Mathf.Max(1, maxY - minY + 1);
+                var focusCells = currentNode?.OccupiedCells?.ToArray();
+                if (focusCells == null || focusCells.Length == 0)
+                {
+                    focusCells = cells;
+                }
+
+                var focusX = focusCells.Average(cell => cell.x);
+                var focusY = focusCells.Average(cell => cell.y);
+                var radiusX = Mathf.Max(0.5f, cells.Max(cell => Mathf.Abs(cell.x - (float)focusX)) + 0.5f);
+                var radiusY = Mathf.Max(0.5f, cells.Max(cell => Mathf.Abs(cell.y - (float)focusY)) + 0.5f);
+                var columns = Mathf.Max(1f, radiusX * 2f);
+                var rows = Mathf.Max(1f, radiusY * 2f);
                 var size = availableSize.x > 0f && availableSize.y > 0f ? availableSize : new Vector2(392f, 170f);
                 var step = Mathf.Clamp(Mathf.Min(size.x / columns, size.y / rows), 18f, 34f);
                 var cellSize = Mathf.Max(12f, step - 4f);
                 var gap = Mathf.Max(3f, step - cellSize);
-                var totalWidth = (columns - 1) * step + cellSize;
-                var totalHeight = (rows - 1) * step + cellSize;
                 return new MiniMapLayout(
-                    minX,
-                    maxY,
-                    (size.x - totalWidth) * 0.5f + cellSize * 0.5f,
-                    -((size.y - totalHeight) * 0.5f + cellSize * 0.5f),
+                    (float)focusX,
+                    (float)focusY,
+                    size.x * 0.5f,
+                    -size.y * 0.5f,
                     step,
                     cellSize,
                     gap);
@@ -410,7 +425,7 @@ namespace Hollow.UI.Shell
                 // The runtime branch grid stores north as decreasing Y, while the current
                 // game camera reads the opposite way on screen. Flip only the minimap
                 // presentation so traversal/generation data stays unchanged.
-                return new Vector2(originX + (cell.x - minX) * step, originY - (maxY - cell.y) * step);
+                return new Vector2(originX + (cell.x - focusX) * step, originY + (cell.y - focusY) * step);
             }
 
             public Vector2 CenterFor(IEnumerable<Vector2Int> cells)

@@ -30,6 +30,7 @@ namespace Hollow.RoomDesigner
         private readonly RoomDesignerTool[] tools = Enum.GetValues(typeof(RoomDesignerTool)).Cast<RoomDesignerTool>().ToArray();
         private readonly RoomDesignerFootprintPreset[] templatePresets = Enum.GetValues(typeof(RoomDesignerFootprintPreset)).Cast<RoomDesignerFootprintPreset>().ToArray();
         private readonly RoomDesignerCameraController cameraController = new();
+        private readonly RoomDesignerLightingController lightingController = new();
         private RoomDesignerStore store;
         private RoomDesignerDraftLibraryState libraryState;
         private ProfileSlotId slotId;
@@ -40,9 +41,12 @@ namespace Hollow.RoomDesigner
         private RectTransform controlsPanel;
         private Text controlsText;
         private RectTransform toolToolbarPanel;
+        private RectTransform previewModeButtonPanel;
+        private Text previewModeButtonText;
         private float nextMoveTime;
         private int toolIndex;
         private int librarySelectedIndex;
+        private int scenePreviewMissingBindings;
         private string pendingDeleteProjectId = string.Empty;
         private string pendingDeleteDisplayName = string.Empty;
         private string status = "Ready";
@@ -60,6 +64,8 @@ namespace Hollow.RoomDesigner
         public RoomDesignerTool CurrentTool => tools[Mathf.Clamp(toolIndex, 0, tools.Length - 1)];
 
         public Vector3 CameraTargetPosition => cameraController.TargetPosition;
+
+        public RoomDesignerPreviewMode PreviewMode { get; private set; } = RoomDesignerPreviewMode.Graybox;
 
         public int CursorX { get; private set; }
 
@@ -283,6 +289,16 @@ namespace Hollow.RoomDesigner
             }
         }
 
+        public void TogglePreviewMode()
+        {
+            PreviewMode = PreviewMode == RoomDesignerPreviewMode.Graybox
+                ? RoomDesignerPreviewMode.Scene
+                : RoomDesignerPreviewMode.Graybox;
+            status = $"Preview: {PreviewMode}";
+            RebuildPreview();
+            RefreshHud();
+        }
+
         private void Update()
         {
             ApplyInput(RoomDesignerInputReader.ReadCurrent(), Time.time);
@@ -333,6 +349,11 @@ namespace Hollow.RoomDesigner
             {
                 LabelsVisible = !LabelsVisible;
                 changed = true;
+            }
+
+            if (input.TogglePreviewModePressed)
+            {
+                TogglePreviewMode();
             }
 
             if (input.EyedropperPressed || CurrentTool == RoomDesignerTool.Eyedropper && input.PlacePressed)
@@ -698,6 +719,9 @@ namespace Hollow.RoomDesigner
         private void RebuildPreview()
         {
             EnsureRoots();
+            scenePreviewMissingBindings = 0;
+            lightingController.Ensure(transform);
+            lightingController.Apply(PreviewMode);
             if (currentProject == null)
             {
                 ClearPreview();
@@ -808,15 +832,18 @@ namespace Hollow.RoomDesigner
         {
             if (cell.kind == RoomDesignerCellKinds.Ground)
             {
-                BuildCube($"tileGround_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(1f, FlatSurfaceThickness, 1f), MaterialRole.DesignerGround);
+                var host = BuildCube($"tileGround_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(1f, FlatSurfaceThickness, 1f), MaterialRole.DesignerGround);
+                AttachSceneCellVisual(host, cell);
             }
             else if (cell.kind == RoomDesignerCellKinds.Hole)
             {
-                BuildCube($"tileHole_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(0.86f, FlatSurfaceThickness, 0.86f), MaterialRole.DesignerHole);
+                var host = BuildCube($"tileHole_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(0.86f, FlatSurfaceThickness, 0.86f), MaterialRole.DesignerHole);
+                AttachSceneCellVisual(host, cell);
             }
             else if (cell.kind == RoomDesignerCellKinds.Rock)
             {
-                BuildCube($"rockTile_{cell.x}_{cell.z}_{cell.layer}", new Vector3(cell.x, cell.layer + 0.5f, cell.z), Vector3.one, MaterialRole.DesignerRock);
+                var host = BuildCube($"rockTile_{cell.x}_{cell.z}_{cell.layer}", new Vector3(cell.x, cell.layer + 0.5f, cell.z), Vector3.one, MaterialRole.DesignerRock);
+                AttachSceneCellVisual(host, cell);
             }
 
             if (LabelsVisible && cell.kind != RoomDesignerCellKinds.Ground)
@@ -834,7 +861,8 @@ namespace Hollow.RoomDesigner
                 RoomDesignerDoorKinds.Inactive => MaterialRole.DesignerGrid,
                 _ => MaterialRole.DesignerDoorAvailable
             };
-            BuildCube($"doorAnchor_{door.id}_{door.state}", new Vector3(door.x, CenterAboveGrid(DoorAnchorHeight), door.z), door.direction is "east" or "west" ? new Vector3(0.18f, DoorAnchorHeight, 1f) : new Vector3(1f, DoorAnchorHeight, 0.18f), role);
+            var host = BuildCube($"doorAnchor_{door.id}_{door.state}", new Vector3(door.x, CenterAboveGrid(DoorAnchorHeight), door.z), door.direction is "east" or "west" ? new Vector3(0.18f, DoorAnchorHeight, 1f) : new Vector3(1f, DoorAnchorHeight, 0.18f), role);
+            AttachSceneDoorVisual(host, door);
             if (LabelsVisible)
             {
                 BuildLabel(RoomDesignerDisplayNames.ForDoor(door), new Vector3(door.x, 1.5f, door.z));
@@ -849,9 +877,49 @@ namespace Hollow.RoomDesigner
             markerObject.transform.localPosition = new Vector3(marker.x, marker.y + 0.2f, marker.z);
             markerObject.transform.localScale = Vector3.one * 0.36f;
             MaterialResolver.ApplyTo(markerObject, RoleForMarker(marker.kind));
+            AttachSceneMarkerVisual(markerObject, marker);
             if (LabelsVisible)
             {
                 BuildLabel(RoomDesignerDisplayNames.ForMarkerKind(marker.kind), new Vector3(marker.x, marker.y + 0.72f, marker.z));
+            }
+        }
+
+        private void AttachSceneCellVisual(GameObject host, RoomDesignerCell cell)
+        {
+            if (PreviewMode != RoomDesignerPreviewMode.Scene || cell.kind == RoomDesignerCellKinds.Hole)
+            {
+                return;
+            }
+
+            if (!RoomDesignerScenePreviewBuilder.BuildVisualForCell(host, cell))
+            {
+                scenePreviewMissingBindings++;
+            }
+        }
+
+        private void AttachSceneDoorVisual(GameObject host, RoomDesignerDoorPortState door)
+        {
+            if (PreviewMode != RoomDesignerPreviewMode.Scene)
+            {
+                return;
+            }
+
+            if (!RoomDesignerScenePreviewBuilder.BuildVisualForDoor(host, door))
+            {
+                scenePreviewMissingBindings++;
+            }
+        }
+
+        private void AttachSceneMarkerVisual(GameObject host, RoomDesignerMarker marker)
+        {
+            if (PreviewMode != RoomDesignerPreviewMode.Scene)
+            {
+                return;
+            }
+
+            if (!RoomDesignerScenePreviewBuilder.BuildVisualForMarker(host, marker))
+            {
+                scenePreviewMissingBindings++;
             }
         }
 
@@ -1002,6 +1070,7 @@ namespace Hollow.RoomDesigner
                 controlsText.raycastTarget = false;
             }
 
+            EnsurePreviewModeButton();
             EnsureToolToolbar();
 
             if (libraryPanel == null)
@@ -1380,6 +1449,7 @@ namespace Hollow.RoomDesigner
                 }
 
                 RefreshToolToolbar();
+                RefreshPreviewModeButton();
                 return;
             }
 
@@ -1407,12 +1477,93 @@ namespace Hollow.RoomDesigner
             if (controlsText != null)
             {
                 controlsText.text =
-                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels\n" +
+                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview\n" +
                     "P playtest | J export bundle | U export USDA | Esc library\n" +
-                    status;
+                    DesignerStatusText();
             }
 
             RefreshToolToolbar();
+            RefreshPreviewModeButton();
+        }
+
+        private string DesignerStatusText()
+        {
+            if (PreviewMode == RoomDesignerPreviewMode.Scene && scenePreviewMissingBindings > 0)
+            {
+                return $"{status} | Scene preview fallback: {scenePreviewMissingBindings} missing ArtPass binding(s)";
+            }
+
+            return status;
+        }
+
+        private void EnsurePreviewModeButton()
+        {
+            if (hudCanvas == null || previewModeButtonPanel != null)
+            {
+                return;
+            }
+
+            var buttonObject = new GameObject("RoomDesignerPreviewModeButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Outline));
+            buttonObject.transform.SetParent(hudCanvas.transform, false);
+            previewModeButtonPanel = (RectTransform)buttonObject.transform;
+            previewModeButtonPanel.anchorMin = new Vector2(1f, 1f);
+            previewModeButtonPanel.anchorMax = new Vector2(1f, 1f);
+            previewModeButtonPanel.pivot = new Vector2(1f, 1f);
+            previewModeButtonPanel.anchoredPosition = new Vector2(-24f, -132f);
+            previewModeButtonPanel.sizeDelta = new Vector2(220f, 48f);
+
+            var image = buttonObject.GetComponent<Image>();
+            image.color = new Color(0.06f, 0.07f, 0.08f, 0.86f);
+            var outline = buttonObject.GetComponent<Outline>();
+            outline.effectColor = new Color(0.3f, 0.72f, 1f, 0.72f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(TogglePreviewMode);
+
+            var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(previewModeButtonPanel, false);
+            var rect = (RectTransform)textObject.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(12f, 0f);
+            rect.offsetMax = new Vector2(-12f, 0f);
+            previewModeButtonText = textObject.GetComponent<Text>();
+            previewModeButtonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            previewModeButtonText.fontSize = 18;
+            previewModeButtonText.alignment = TextAnchor.MiddleCenter;
+            previewModeButtonText.color = Color.white;
+            previewModeButtonText.raycastTarget = false;
+            previewModeButtonPanel.gameObject.SetActive(false);
+        }
+
+        private void RefreshPreviewModeButton()
+        {
+            if (previewModeButtonPanel == null)
+            {
+                return;
+            }
+
+            var visible = Mode == RoomDesignerMode.Editing;
+            previewModeButtonPanel.gameObject.SetActive(visible);
+            if (!visible)
+            {
+                return;
+            }
+
+            var image = previewModeButtonPanel.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = PreviewMode == RoomDesignerPreviewMode.Scene
+                    ? new Color(0.08f, 0.16f, 0.11f, 0.9f)
+                    : new Color(0.06f, 0.07f, 0.08f, 0.86f);
+            }
+
+            if (previewModeButtonText != null)
+            {
+                previewModeButtonText.text = $"Preview: {PreviewMode} (V)";
+            }
         }
 
         private string SelectedDoorSummary()
@@ -1447,6 +1598,7 @@ namespace Hollow.RoomDesigner
         private void ClearPreview()
         {
             EnsureRoots();
+            lightingController.Apply(RoomDesignerPreviewMode.Graybox);
             if (previewRoot != null)
             {
                 ClearChildren(previewRoot);

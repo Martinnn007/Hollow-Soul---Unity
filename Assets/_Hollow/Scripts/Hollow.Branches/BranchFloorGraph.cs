@@ -89,5 +89,14 @@ namespace Hollow.Branches
             connection = connections.FirstOrDefault(candidate => candidate.FromRoomId == roomId && candidate.FromPortId == portId);
             return connection != null;
         }
+
+        public bool HasConnectionByPortPair(BranchRoomId fromRoomId, string fromPortId, BranchRoomId toRoomId, string toPortId)
+        {
+            return connections.Any(candidate =>
+                candidate.FromRoomId == fromRoomId &&
+                candidate.ToRoomId == toRoomId &&
+                candidate.FromPortId == (fromPortId ?? string.Empty) &&
+                candidate.ToPortId == (toPortId ?? string.Empty));
+        }
     }
 }

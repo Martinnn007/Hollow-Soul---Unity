@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Hollow.Branches;
@@ -28,7 +29,7 @@ namespace Hollow.Tests.EditMode
 
             Assert.AreEqual(BranchGenerator.MacroFixtureBranchId, graph.BranchId);
             Assert.AreEqual(5, graph.RoomCount);
-            Assert.AreEqual(8, graph.Connections.Count);
+            Assert.GreaterOrEqual(graph.Connections.Count, 8);
             Assert.AreEqual(12, graph.OccupancyMap.OwnerByCell.Count);
             AssertRoomAsset(graph, BranchRoomId.Origin, "combat_macro_single_1x1", 1);
             AssertRoomAsset(graph, BranchRoomId.North, "combat_macro_tall_1x2", 2);
@@ -39,7 +40,9 @@ namespace Hollow.Tests.EditMode
             AssertPortConnection(graph, BranchRoomId.Origin, "south_0", BranchRoomId.South, "north_0");
             AssertPortConnection(graph, BranchRoomId.Origin, "east_0", BranchRoomId.East, "west_0");
             AssertPortConnection(graph, BranchRoomId.Origin, "west_0", BranchRoomId.West, "east_1");
-            Assert.IsFalse(graph.TryGetConnectionByPort(BranchRoomId.West, "east_0", out _));
+            Assert.IsFalse(graph.Connections
+                .GroupBy(connection => $"{connection.FromRoomId.Value}:{connection.FromPortId}->{connection.ToRoomId.Value}:{connection.ToPortId}")
+                .Any(group => group.Count() > 1));
         }
 
         [Test]
@@ -59,7 +62,7 @@ namespace Hollow.Tests.EditMode
             AssertMiniMapCells(model, BranchRoomId.East, 2);
             AssertMiniMapCells(model, BranchRoomId.West, 4);
             Assert.IsTrue(model.Nodes.All(node => node.IsRevealed));
-            Assert.AreEqual(4, model.Connections.Count);
+            Assert.AreEqual(graph.Connections.Count / 2, model.Connections.Count);
             Assert.IsTrue(model.Connections.All(connection => connection.LockKind == BranchConnectionLockKind.None));
         }
 
@@ -80,12 +83,73 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(12.25f, player.transform.localPosition.x, 0.001f);
                 Assert.AreEqual(3.5f, player.transform.localPosition.z, 0.001f);
                 Assert.IsTrue(branch.State.Graph.TryGetConnectionByPort(BranchRoomId.West, "east_1", out _));
-                Assert.IsFalse(branch.State.Graph.TryGetConnectionByPort(BranchRoomId.West, "east_0", out _));
             }
             finally
             {
                 Object.DestroyImmediate(root);
             }
+        }
+
+        [Test]
+        public void AdjacentPassConnectsEveryCompatiblePortTouchingWideRoom()
+        {
+            var content = LoadContent();
+            var graph = new BranchFloorGraph("adjacent_wide_test", 0);
+            var wide = content.MacroRoomPool["combat_macro_wide_2x1"];
+            var single = content.MacroRoomPool["combat_macro_single_1x1"];
+            var wideId = new BranchRoomId("wide");
+            var northLeftId = new BranchRoomId("north_left");
+            var northRightId = new BranchRoomId("north_right");
+            AddTestRoom(graph, wideId, new Vector2Int(0, 0), wide);
+            AddTestRoom(graph, northLeftId, new Vector2Int(0, -1), single);
+            AddTestRoom(graph, northRightId, new Vector2Int(1, -1), single);
+
+            BranchGenerator.ConnectAdjacentCompatiblePorts(graph, content.MacroRoomPool);
+
+            AssertPortConnection(graph, wideId, "north_0", northLeftId, "south_0");
+            AssertPortConnection(graph, wideId, "north_1", northRightId, "south_0");
+            Assert.IsTrue(graph.Connections.Count(connection => connection.FromRoomId == wideId && connection.ToRoomId != wideId) >= 2);
+        }
+
+        [Test]
+        public void AdjacentPassConnectsLRoomMissingQuadrantOnBothValidFaces()
+        {
+            var content = LoadContent();
+            var graph = new BranchFloorGraph("adjacent_l_test", 0);
+            var lRoom = content.MacroRoomPool["combat_macro_l_3cell"];
+            var single = content.MacroRoomPool["combat_macro_single_1x1"];
+            var lId = new BranchRoomId("l_room");
+            var pocketId = new BranchRoomId("pocket");
+            AddTestRoom(graph, lId, new Vector2Int(0, 0), lRoom);
+            AddTestRoom(graph, pocketId, new Vector2Int(1, 1), single);
+
+            BranchGenerator.ConnectAdjacentCompatiblePorts(graph, content.MacroRoomPool);
+
+            Assert.AreEqual(2, graph.Connections.Count(connection => connection.FromRoomId == pocketId && connection.ToRoomId == lId));
+            Assert.AreEqual(2, graph.Connections.Count(connection => connection.FromRoomId == lId && connection.ToRoomId == pocketId));
+        }
+
+        [Test]
+        public void AdjacentPassIgnoresSecretPorts()
+        {
+            var content = LoadContent();
+            var wide = content.MacroRoomPool["combat_macro_wide_2x1"];
+            var secretSingle = WithPortKind(content.MacroRoomPool["combat_macro_single_1x1"], "south_0", "secret");
+            var roomPool = new Dictionary<string, ImportedRoomRuntimeAsset>
+            {
+                [wide.Id] = wide,
+                [secretSingle.Id] = secretSingle
+            };
+            var graph = new BranchFloorGraph("adjacent_secret_test", 0);
+            var wideId = new BranchRoomId("wide");
+            var secretId = new BranchRoomId("secret_single");
+            AddTestRoom(graph, wideId, new Vector2Int(0, 0), wide);
+            AddTestRoom(graph, secretId, new Vector2Int(0, -1), secretSingle);
+
+            BranchGenerator.ConnectAdjacentCompatiblePorts(graph, roomPool);
+
+            Assert.IsFalse(graph.TryGetConnectionByPort(wideId, "north_0", out _));
+            Assert.IsFalse(graph.TryGetConnectionByPort(secretId, "south_0", out _));
         }
 
         [Test]
@@ -244,6 +308,50 @@ namespace Hollow.Tests.EditMode
         {
             var node = model.Nodes.Single(candidate => candidate.Id == roomId);
             Assert.AreEqual(expectedCells, node.OccupiedCells.Count);
+        }
+
+        private static void AddTestRoom(BranchFloorGraph graph, BranchRoomId roomId, Vector2Int primaryCell, ImportedRoomRuntimeAsset asset)
+        {
+            graph.AddRoom(new BranchRoomState(
+                roomId,
+                primaryCell,
+                new BranchRoomInstanceId(roomId.Value),
+                asset.Id,
+                PlaceFootprint(asset.Footprint, primaryCell),
+                BranchRoomRole.Combat));
+        }
+
+        private static RoomInstanceFootprint PlaceFootprint(RoomInstanceFootprint source, Vector2Int primaryCell)
+        {
+            var offset = primaryCell - source.PrimaryCell;
+            return new RoomInstanceFootprint(
+                primaryCell,
+                source.OccupiedCells.Select(cell => cell + offset).ToArray(),
+                source.ChunkBasisTiles);
+        }
+
+        private static ImportedRoomRuntimeAsset WithPortKind(ImportedRoomRuntimeAsset source, string portId, string kind)
+        {
+            var ports = source.DoorPorts.Select(port => new RoomDoorPort(
+                    port.Id,
+                    port.Direction,
+                    port.LaneIndex,
+                    port.HostCell,
+                    port.GridEdgeCenter,
+                    port.Position,
+                    port.Id == portId ? kind : port.Kind))
+                .ToArray();
+            return new ImportedRoomRuntimeAsset(
+                $"{source.Id}_{kind}_{portId}",
+                source.DisplayName,
+                source.Layout,
+                source.Footprint,
+                ports,
+                source.EnemySpawns,
+                source.ItemSpawns,
+                source.SafeStart,
+                source.Decor,
+                source.SourceManifest);
         }
 
         private static void ClearCurrentRoom(RoomCombatController combat)

@@ -182,6 +182,10 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(southCell);
                 Assert.Less(northCell.anchoredPosition.y, originCell.anchoredPosition.y);
                 Assert.Greater(southCell.anchoredPosition.y, originCell.anchoredPosition.y);
+                var currentDot = shapeRoot.Find("MiniMapCurrentPositionDot") as RectTransform;
+                Assert.IsNotNull(currentDot);
+                Assert.AreEqual(originCell.anchoredPosition.x, currentDot.anchoredPosition.x, 0.001f);
+                Assert.AreEqual(originCell.anchoredPosition.y, currentDot.anchoredPosition.y, 0.001f);
 
                 var mapText = canvasObject.GetComponentsInChildren<Text>(true)
                     .Single(text => text.name == "BranchMiniMap.MapPanel.Text");
@@ -195,6 +199,51 @@ namespace Hollow.Tests.EditMode
             finally
             {
                 Object.DestroyImmediate(canvasObject);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MiniMapRecentersCurrentRoomAfterTraversal()
+        {
+            var root = CreateBranchHarness(out var branch, out var combat, out _);
+            var originCanvas = new GameObject("OriginCanvas", typeof(RectTransform), typeof(Canvas), typeof(BranchMiniMapController));
+            var eastCanvas = new GameObject("EastCanvas", typeof(RectTransform), typeof(Canvas), typeof(BranchMiniMapController));
+            try
+            {
+                originCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                var originController = originCanvas.GetComponent<BranchMiniMapController>();
+                originController.Bind(branch);
+                var originShapeRoot = originCanvas.GetComponentsInChildren<RectTransform>(true)
+                    .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
+                var originDot = originShapeRoot.Find("MiniMapCurrentPositionDot") as RectTransform;
+                Assert.IsNotNull(originDot);
+
+                ClearCurrentRoom(combat);
+                Assert.IsTrue(branch.TryTraverse("east"));
+
+                eastCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                var eastController = eastCanvas.GetComponent<BranchMiniMapController>();
+                eastController.Bind(branch);
+                var eastShapeRoot = eastCanvas.GetComponentsInChildren<RectTransform>(true)
+                    .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
+                var eastCell = eastShapeRoot.Find("MiniMapRoomCell_east_1_0") as RectTransform;
+                var eastDot = eastShapeRoot.Find("MiniMapCurrentPositionDot") as RectTransform;
+                var originCellAfterMove = eastShapeRoot.Find("MiniMapRoomCell_origin_0_0") as RectTransform;
+
+                Assert.IsNotNull(eastCell);
+                Assert.IsNotNull(eastDot);
+                Assert.IsNotNull(originCellAfterMove);
+                Assert.AreEqual(originDot.anchoredPosition.x, eastDot.anchoredPosition.x, 0.001f);
+                Assert.AreEqual(originDot.anchoredPosition.y, eastDot.anchoredPosition.y, 0.001f);
+                Assert.AreEqual(eastCell.anchoredPosition.x, eastDot.anchoredPosition.x, 0.001f);
+                Assert.AreEqual(eastCell.anchoredPosition.y, eastDot.anchoredPosition.y, 0.001f);
+                Assert.Less(originCellAfterMove.anchoredPosition.x, eastCell.anchoredPosition.x);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eastCanvas);
+                Object.DestroyImmediate(originCanvas);
                 Object.DestroyImmediate(root);
             }
         }

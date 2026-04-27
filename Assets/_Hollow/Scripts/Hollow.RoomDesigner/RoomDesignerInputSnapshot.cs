@@ -14,7 +14,8 @@ namespace Hollow.RoomDesigner
             bool playtestPressed,
             bool exportJsonPressed,
             bool exportUsdaPressed,
-            bool backPressed)
+            bool backPressed,
+            bool togglePreviewModePressed = false)
         {
             MoveX = moveX;
             MoveZ = moveZ;
@@ -28,6 +29,7 @@ namespace Hollow.RoomDesigner
             ExportJsonPressed = exportJsonPressed;
             ExportUsdaPressed = exportUsdaPressed;
             BackPressed = backPressed;
+            TogglePreviewModePressed = togglePreviewModePressed;
         }
 
         public int MoveX { get; }
@@ -53,5 +55,7 @@ namespace Hollow.RoomDesigner
         public bool ExportUsdaPressed { get; }
 
         public bool BackPressed { get; }
+
+        public bool TogglePreviewModePressed { get; }
     }
 }

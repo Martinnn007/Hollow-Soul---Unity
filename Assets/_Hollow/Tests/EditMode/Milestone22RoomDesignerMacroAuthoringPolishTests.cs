@@ -1,6 +1,8 @@
 using System.IO;
 using System.Linq;
+using Hollow.Data.Definitions;
 using Hollow.Persistence;
+using Hollow.Presentation;
 using Hollow.RoomDesigner;
 using Hollow.Rooms;
 using NUnit.Framework;
@@ -327,15 +329,54 @@ namespace Hollow.Tests.EditMode
             }
         }
 
+        [Test]
+        public void ControllerTogglesScenePreviewAndAttachesArtPassVisuals()
+        {
+            var root = new GameObject("RoomDesignerScenePreviewController");
+            try
+            {
+                var catalog = Resources.Load<PresentationContentCatalog>("Hollow/Presentation/PresentationContentCatalog");
+                if (catalog != null)
+                {
+                    PresentationContentProvider.Configure(catalog);
+                }
+
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault());
+
+                Assert.AreEqual(RoomDesignerPreviewMode.Graybox, controller.PreviewMode);
+
+                controller.ApplyInput(Input(togglePreview: true), 1f);
+
+                Assert.AreEqual(RoomDesignerPreviewMode.Scene, controller.PreviewMode);
+                Assert.IsNotNull(GameObject.Find("RoomDesignerSceneLightingRig"));
+                Assert.IsNotNull(GameObject.Find("RoomDesignerPreviewModeButton"));
+                AssertVisualMarker(root, PresentationPrefabRole.RoomFloor);
+                AssertVisualMarker(root, PresentationPrefabRole.RoomObstacleRock);
+                AssertVisualMarker(root, PresentationPrefabRole.Player);
+                AssertVisualMarker(root, PresentationPrefabRole.EnemyNormal);
+                AssertVisualMarker(root, PresentationPrefabRole.RewardPickup);
+                Assert.AreEqual(0, root.GetComponentsInChildren<PresentationVisualMarker>(true)
+                    .SelectMany(marker => marker.GetComponentsInChildren<Collider>(true))
+                    .Count());
+            }
+            finally
+            {
+                PresentationContentProvider.Reset();
+                Object.DestroyImmediate(root);
+            }
+        }
+
         private static RoomDesignerInputSnapshot Input(
             int moveX = 0,
             int moveZ = 0,
             int toolDelta = 0,
             int layerDelta = 0,
             bool place = false,
-            bool erase = false)
+            bool erase = false,
+            bool togglePreview = false)
         {
-            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false);
+            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview);
         }
 
         private static Transform FindChild(GameObject root, string name)
@@ -351,6 +392,12 @@ namespace Hollow.Tests.EditMode
         private static void AssertBottomOnGrid(Transform transform)
         {
             Assert.AreEqual(0f, transform.localPosition.y - transform.localScale.y * 0.5f, 0.001f, transform.name);
+        }
+
+        private static void AssertVisualMarker(GameObject root, PresentationPrefabRole role)
+        {
+            Assert.IsTrue(root.GetComponentsInChildren<PresentationVisualMarker>(true)
+                .Any(marker => marker.Role == role), $"Missing scene preview visual for {role}");
         }
     }
 }
