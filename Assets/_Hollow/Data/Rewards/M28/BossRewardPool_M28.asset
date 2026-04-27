@@ -15,4 +15,7 @@ MonoBehaviour:
   poolId: m28_boss_room_rewards
   rewards:
   - {fileID: 11400000, guid: c564dfbfba4f04a5b895f8ed501c1d0a, type: 2}
+  - {fileID: 11400000, guid: aae4064b2340d4b50bdf35822d993f33, type: 2}
+  - {fileID: 11400000, guid: cb27431cfaf1c4361aebf963dd38d3d3, type: 2}
+  - {fileID: 11400000, guid: cca1986aebb73467991dafb137de5998, type: 2}
   - {fileID: 11400000, guid: 244ccd5ac640f4375a82df43aa60a4fe, type: 2}

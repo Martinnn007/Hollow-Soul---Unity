@@ -37,6 +37,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone27WeaponModeLightHeavyAttacks.md` describes catalog-backed melee/ranged weapon modes, light/heavy attacks, stamina/cooldown checks, and rare weapon rewards.
 - `Docs/Milestone28ItemsCardsCoinsShopRewards.md` describes run coins, usable active items/cards, mixed-currency shops, and the first item/card reward pool.
 - `Docs/Milestone29CharactersPassiveIdentitySkills.md` describes the first selectable characters, run-start passive identity skills, and character picker launch flow.
+- `Docs/Milestone30SynergyTagsStarterBuildVariety.md` describes internal build tags, armor equipment, Skeletal/Dragon set pieces, and run-only set synergy bonuses.
 
 ## Required Setup
 

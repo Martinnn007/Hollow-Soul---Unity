@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.Rewards
@@ -12,6 +14,7 @@ namespace Hollow.Rewards
         [SerializeField] private RewardRarity rarity = RewardRarity.Common;
         [SerializeField] private int maxCharges;
         [SerializeField] private bool consumeOnUse;
+        [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
         [SerializeField] private RewardEffect[] effects = System.Array.Empty<RewardEffect>();
 
         public string ItemId => itemId;
@@ -26,6 +29,8 @@ namespace Hollow.Rewards
 
         public bool ConsumeOnUse => consumeOnUse;
 
+        public IReadOnlyList<BuildTag> Tags => tags;
+
         public IReadOnlyList<RewardEffect> Effects => effects;
 
         public void Configure(
@@ -37,6 +42,19 @@ namespace Hollow.Rewards
             bool nextConsumeOnUse,
             IEnumerable<RewardEffect> nextEffects)
         {
+            Configure(nextItemId, nextDisplayName, nextRewardKind, nextRarity, nextMaxCharges, nextConsumeOnUse, nextEffects, null);
+        }
+
+        public void Configure(
+            string nextItemId,
+            string nextDisplayName,
+            RewardKind nextRewardKind,
+            RewardRarity nextRarity,
+            int nextMaxCharges,
+            bool nextConsumeOnUse,
+            IEnumerable<RewardEffect> nextEffects,
+            IEnumerable<BuildTag> nextTags)
+        {
             itemId = nextItemId ?? string.Empty;
             displayName = nextDisplayName ?? string.Empty;
             rewardKind = nextRewardKind;
@@ -44,6 +62,10 @@ namespace Hollow.Rewards
             maxCharges = Mathf.Max(0, nextMaxCharges);
             consumeOnUse = nextConsumeOnUse;
             effects = RewardEffect.Clean(nextEffects);
+            tags = (nextTags ?? Enumerable.Empty<BuildTag>())
+                .Where(tag => tag != BuildTag.None)
+                .Distinct()
+                .ToArray();
         }
     }
 }

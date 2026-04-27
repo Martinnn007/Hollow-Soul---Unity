@@ -42,6 +42,9 @@ namespace Hollow.Rewards
                 case RewardKind.Weapon:
                     ApplyWeapon(grant.RewardId, build, weaponCatalog);
                     break;
+                case RewardKind.Armor:
+                    build.Equipment.EquipArmor(grant.RewardId);
+                    break;
                 case RewardKind.Heal:
                     healAmount += grant.Effects != null && grant.Effects.Count > 0
                         ? 0

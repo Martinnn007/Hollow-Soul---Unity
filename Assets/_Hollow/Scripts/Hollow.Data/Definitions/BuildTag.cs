@@ -13,6 +13,9 @@ namespace Hollow.Data.Definitions
         CoinEconomy = 8,
         Fire = 9,
         Magic = 10,
-        Explosive = 11
+        Explosive = 11,
+        Armor = 12,
+        Skeletal = 13,
+        Dragon = 14
     }
 }

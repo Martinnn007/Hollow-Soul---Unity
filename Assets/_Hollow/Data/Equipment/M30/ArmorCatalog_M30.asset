@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9a98bbeb8e284e47bb30082d13af487, type: 3}
+  m_Name: ArmorCatalog_M30
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.ArmorCatalogDefinition
+  catalogId: m30_armor_catalog_v1
+  armors:
+  - {fileID: 11400000, guid: 8703b7e3c36fb4f35b8a281a5d505f47, type: 2}
+  - {fileID: 11400000, guid: ae3d50baa66824f7aafec37c6579ea4f, type: 2}

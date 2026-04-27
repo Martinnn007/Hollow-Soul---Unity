@@ -16,13 +16,19 @@ MonoBehaviour:
   rewards:
   - {fileID: 11400000, guid: 8b409ed32781e4b27af3a6da1ae6f4cd, type: 2}
   - {fileID: 11400000, guid: 52ba956d09d1b4e4f9a9b9ba863b82be, type: 2}
+  - {fileID: 11400000, guid: a25f4e323840f48c992ed0227604c980, type: 2}
   - {fileID: 11400000, guid: 88c6c4d3dd1e748cc8d95001489efad7, type: 2}
+  - {fileID: 11400000, guid: 67f5e978a89da4ed18dfd6899be55196, type: 2}
+  - {fileID: 11400000, guid: aae4064b2340d4b50bdf35822d993f33, type: 2}
+  - {fileID: 11400000, guid: cb27431cfaf1c4361aebf963dd38d3d3, type: 2}
+  - {fileID: 11400000, guid: cca1986aebb73467991dafb137de5998, type: 2}
   - {fileID: 11400000, guid: 244ccd5ac640f4375a82df43aa60a4fe, type: 2}
   - {fileID: 11400000, guid: c0fa3e84035014a8ebc48814d19fea18, type: 2}
   - {fileID: 11400000, guid: 4c72cdd4eb46f42539c7379ad1d1cd4e, type: 2}
   - {fileID: 11400000, guid: db4708c8518dd4226ba60ec61b0f0d38, type: 2}
   - {fileID: 11400000, guid: 9059928ff13a84faeaeeede4e52a823d, type: 2}
   - {fileID: 11400000, guid: b2c4667c09fbb4a88bc89e03f6ab0146, type: 2}
+  - {fileID: 11400000, guid: d5f1e9ff8009c42138fb8e769a9ebeb3, type: 2}
   - {fileID: 11400000, guid: 519a503259a9446b5a49b14ce4ab10ab, type: 2}
   - {fileID: 11400000, guid: 3033debc2d94949378f0ca6dabaecc3d, type: 2}
   - {fileID: 11400000, guid: cde193c6960b2433daf6ae4a6477c714, type: 2}

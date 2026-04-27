@@ -18,6 +18,7 @@ MonoBehaviour:
   rarity: 4
   souls: 25
   coins: 0
+  tags: 0200000007000000
   effects:
   - kind: 1
     intValue: 1

@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.RewardPoolDefinition
   poolId: m28_treasure_room_rewards
   rewards:
+  - {fileID: 11400000, guid: 67f5e978a89da4ed18dfd6899be55196, type: 2}
+  - {fileID: 11400000, guid: aae4064b2340d4b50bdf35822d993f33, type: 2}
+  - {fileID: 11400000, guid: cb27431cfaf1c4361aebf963dd38d3d3, type: 2}
   - {fileID: 11400000, guid: 244ccd5ac640f4375a82df43aa60a4fe, type: 2}
   - {fileID: 11400000, guid: b2c4667c09fbb4a88bc89e03f6ab0146, type: 2}
+  - {fileID: 11400000, guid: d5f1e9ff8009c42138fb8e769a9ebeb3, type: 2}
   - {fileID: 11400000, guid: e41b86e7fff31418c9c29a1713eb0e50, type: 2}
   - {fileID: 11400000, guid: cde193c6960b2433daf6ae4a6477c714, type: 2}

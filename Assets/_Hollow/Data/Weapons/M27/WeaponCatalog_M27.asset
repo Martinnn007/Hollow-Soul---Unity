@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.WeaponCatalogDefinition
   catalogId: m27_weapon_catalog_v1
   weapons:
+  - {fileID: 11400000, guid: cace1de359d304099ab5a702a2efdbc1, type: 2}
+  - {fileID: 11400000, guid: c6e3814874d0d4f4596dc0633aa62605, type: 2}
+  - {fileID: 11400000, guid: 4dcdaf4856d2f4c71bc3c817f5a95128, type: 2}
   - {fileID: 11400000, guid: 4e523cceeaddd4f8989eef4c973490ba, type: 2}
   - {fileID: 11400000, guid: a2fdfafbb1d004d7ab824ad0e9a61d84, type: 2}
+  - {fileID: 11400000, guid: 5933cee254886477fba3092867db0918, type: 2}
   - {fileID: 11400000, guid: 934a2c65ade994cacac186833910203b, type: 2}
   - {fileID: 11400000, guid: 1fa037a41190a430da4457384cc64557, type: 2}

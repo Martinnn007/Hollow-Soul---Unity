@@ -14,5 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.RewardPoolDefinition
   poolId: m27_rare_weapon_rewards
   rewards:
+  - {fileID: 11400000, guid: 8db4d212bdab4431b915500ca677aba5, type: 2}
+  - {fileID: 11400000, guid: 92b00f61e5ac541f3878ef2cc2935883, type: 2}
+  - {fileID: 11400000, guid: 4170995fed95a4708b4bf1145491a91e, type: 2}
   - {fileID: 11400000, guid: 745d40eaba06c410ebcef0ce7e127455, type: 2}
   - {fileID: 11400000, guid: b08821f64a9434a8c8eedfe9ec046bb6, type: 2}
+  - {fileID: 11400000, guid: dafb9d054f95d455cb9624bc01de4c1e, type: 2}

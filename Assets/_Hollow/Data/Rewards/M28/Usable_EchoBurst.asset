@@ -18,4 +18,5 @@ MonoBehaviour:
   rarity: 1
   maxCharges: 3
   consumeOnUse: 0
+  tags: 0a000000
   effects: []

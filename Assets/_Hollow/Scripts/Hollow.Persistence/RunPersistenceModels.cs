@@ -149,6 +149,7 @@ namespace Hollow.Persistence
         public string activeItemId = string.Empty;
         public int activeItemCharges;
         public string consumableCardId = string.Empty;
+        public string armorId = string.Empty;
     }
 
     [Serializable]

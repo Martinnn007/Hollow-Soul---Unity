@@ -18,4 +18,5 @@ MonoBehaviour:
   rarity: 0
   souls: 0
   coins: 6
+  tags: 08000000
   effects: []

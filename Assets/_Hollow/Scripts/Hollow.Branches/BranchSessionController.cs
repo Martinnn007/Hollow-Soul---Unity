@@ -40,6 +40,8 @@ namespace Hollow.Branches
         [SerializeField] private WeaponCatalogDefinition weaponCatalog;
         [SerializeField] private UsableItemCatalogDefinition usableItemCatalog;
         [SerializeField] private CharacterCatalogDefinition characterCatalog;
+        [SerializeField] private ArmorCatalogDefinition armorCatalog;
+        [SerializeField] private SynergyCatalogDefinition synergyCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
@@ -73,6 +75,10 @@ namespace Hollow.Branches
         private bool canPersist;
         private bool activeRunCompletedOrFailed;
         private bool suppressCheckpoint;
+        private string activeSynergyId = string.Empty;
+        private string activeSynergyDisplayName = "None";
+        private string synergyAcquisitionMessage = string.Empty;
+        private float synergyAcquisitionMessageExpiresAt;
 
         public BranchSessionState State { get; private set; }
 
@@ -139,10 +145,12 @@ namespace Hollow.Branches
                 var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
                 if (weapon == null)
                 {
-                    return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
+                    return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --\nArmor: {ArmorSummary()}\nSet: {ActiveSynergyDisplayName}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
                 }
 
-                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
+                var message = SynergyAcquisitionMessage;
+                var setLine = string.IsNullOrWhiteSpace(message) ? $"Set: {ActiveSynergyDisplayName}" : $"Set: {ActiveSynergyDisplayName}\n{message}";
+                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}\nArmor: {ArmorSummary()}\n{setLine}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
             }
         }
 
@@ -169,6 +177,14 @@ namespace Hollow.Branches
         public UsableItemCatalogDefinition UsableItemCatalog => usableItemCatalog;
 
         public CharacterCatalogDefinition CharacterCatalog => characterCatalog;
+
+        public ArmorCatalogDefinition ArmorCatalog => armorCatalog;
+
+        public SynergyCatalogDefinition SynergyCatalog => synergyCatalog;
+
+        public string ActiveSynergyDisplayName => string.IsNullOrWhiteSpace(activeSynergyDisplayName) ? "None" : activeSynergyDisplayName;
+
+        public string SynergyAcquisitionMessage => Time.time <= synergyAcquisitionMessageExpiresAt ? synergyAcquisitionMessage : string.Empty;
 
         public int MacroBranchSeed => macroBranchSeed;
 
@@ -225,6 +241,16 @@ namespace Hollow.Branches
         public void ConfigureCharacterCatalog(CharacterCatalogDefinition nextCharacterCatalog)
         {
             characterCatalog = nextCharacterCatalog;
+        }
+
+        public void ConfigureArmorCatalog(ArmorCatalogDefinition nextArmorCatalog)
+        {
+            armorCatalog = nextArmorCatalog;
+        }
+
+        public void ConfigureSynergyCatalog(SynergyCatalogDefinition nextSynergyCatalog)
+        {
+            synergyCatalog = nextSynergyCatalog;
         }
 
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
@@ -773,7 +799,7 @@ namespace Hollow.Branches
 
             var preservedHealth = roomCombatController?.PlayerHealth != null
                 ? roomCombatController.PlayerHealth.CurrentHealth
-                : CreateCurrentRunBuild().DerivedStats.MaxHealth;
+                : CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth;
             branchDepth++;
             if (choice.Kind == HubPortalKind.NextWorld)
             {
@@ -804,7 +830,7 @@ namespace Hollow.Branches
             LoadCurrentRoom();
             if (roomCombatController?.PlayerHealth != null)
             {
-                roomCombatController.PlayerHealth.Restore(CreateCurrentRunBuild().DerivedStats.MaxHealth, preservedHealth);
+                roomCombatController.PlayerHealth.Restore(CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth, preservedHealth);
             }
 
             ApplyRunStatsToPlayer(healAmount: 0);
@@ -1252,7 +1278,7 @@ namespace Hollow.Branches
                 return;
             }
 
-            roomCombatController.PlayerHealth.Restore(CreateCurrentRunBuild().DerivedStats.MaxHealth, snapshot.playerCurrentHealth);
+            roomCombatController.PlayerHealth.Restore(CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth, snapshot.playerCurrentHealth);
         }
 
         private void SubscribePlayerDeath()
@@ -1290,7 +1316,7 @@ namespace Hollow.Branches
 
         private void ApplyRunStatsToPlayer(int healAmount)
         {
-            playerRunBuild = CreateCurrentRunBuild();
+            playerRunBuild = CreateAppliedCurrentRunBuild(announceActivation: true);
             PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, weaponCatalog, healAmount);
         }
 
@@ -1299,6 +1325,7 @@ namespace Hollow.Branches
             var selectedCharacterId = gameSessionState?.SelectedCharacterId ?? "balanced";
             var character = characterCatalog != null ? characterCatalog.Resolve(selectedCharacterId) : null;
             playerRunBuild.ConfigureCharacter(character);
+            ApplyEquipmentAndSynergyModifiers(playerRunBuild, announceActivation: false);
         }
 
         private RewardApplicationResult ApplyRewardGrant(RewardGrant grant, int extraHeal = 0)
@@ -1316,7 +1343,7 @@ namespace Hollow.Branches
 
         public bool TryUseActiveItem()
         {
-            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+            playerRunBuild = CreateAppliedCurrentRunBuild(captureRuntimeStamina: true);
             var itemId = playerRunBuild.Equipment.ActiveItemId;
             if (string.IsNullOrWhiteSpace(itemId) || usableItemCatalog == null || !usableItemCatalog.TryGet(itemId, out var item))
             {
@@ -1339,7 +1366,7 @@ namespace Hollow.Branches
 
         public bool TryUseConsumableCard()
         {
-            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+            playerRunBuild = CreateAppliedCurrentRunBuild(captureRuntimeStamina: true);
             var cardId = playerRunBuild.Equipment.ConsumableCardId;
             if (string.IsNullOrWhiteSpace(cardId) || usableItemCatalog == null || !usableItemCatalog.TryGet(cardId, out var card))
             {
@@ -1450,6 +1477,17 @@ namespace Hollow.Branches
             return usableItemCatalog != null && usableItemCatalog.TryGet(cardId, out var card) ? card.DisplayName : cardId;
         }
 
+        private string ArmorSummary()
+        {
+            var armorId = playerRunBuild?.Equipment.ArmorId ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(armorId))
+            {
+                return "None";
+            }
+
+            return armorCatalog != null && armorCatalog.TryGetArmor(armorId, out var armor) ? armor.DisplayName : armorId;
+        }
+
         private void CheckpointActiveRun()
         {
             if (suppressCheckpoint || !canPersist || activeRunCompletedOrFailed || runSaveStore == null)
@@ -1546,7 +1584,7 @@ namespace Hollow.Branches
                 legacySave.inventory = preservedSave.inventory;
                 foreach (var modifier in preservedSave.modifiers ?? new List<PlayerStatModifierSaveState>())
                 {
-                    if (!string.Equals(modifier.sourceId, "legacy_player_run_stats", StringComparison.Ordinal))
+                    if (!IsRuntimeDerivedModifier(modifier.sourceId))
                     {
                         legacySave.modifiers.Add(modifier);
                     }
@@ -1564,6 +1602,72 @@ namespace Hollow.Branches
             }
 
             return PlayerRunBuild.FromSaveState(legacySave);
+        }
+
+        private PlayerRunBuild CreateAppliedCurrentRunBuild(bool captureRuntimeStamina = false, bool announceActivation = false)
+        {
+            var build = CreateCurrentRunBuild(captureRuntimeStamina);
+            ApplyEquipmentAndSynergyModifiers(build, announceActivation);
+            return build;
+        }
+
+        private void ApplyEquipmentAndSynergyModifiers(PlayerRunBuild build, bool announceActivation)
+        {
+            if (build == null)
+            {
+                activeSynergyId = string.Empty;
+                activeSynergyDisplayName = "None";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(build.Equipment.ArmorId) && armorCatalog != null && armorCatalog.TryGetArmor(build.Equipment.ArmorId, out var armor))
+            {
+                build.AddModifier(PlayerStatModifier.FromCharacterStatModifier($"armor:{armor.ArmorId}", armor.StatModifier));
+            }
+
+            var character = characterCatalog != null ? characterCatalog.Resolve(build.SelectedCharacterId) : null;
+            var synergy = SynergyResolver.ResolveActiveSynergy(
+                build,
+                character,
+                weaponCatalog,
+                armorCatalog,
+                ActiveRewardPoolsForSynergies(),
+                usableItemCatalog,
+                synergyCatalog);
+
+            if (synergy.IsActive)
+            {
+                build.AddModifier(synergy.ToModifier());
+                if (announceActivation && !string.Equals(activeSynergyId, synergy.SynergyId, StringComparison.Ordinal))
+                {
+                    synergyAcquisitionMessage = $"You acquired a {synergy.DisplayName}!";
+                    synergyAcquisitionMessageExpiresAt = Time.time + 5f;
+                    LastRewardMessage = synergyAcquisitionMessage;
+                }
+
+                activeSynergyId = synergy.SynergyId;
+                activeSynergyDisplayName = synergy.DisplayName;
+                return;
+            }
+
+            activeSynergyId = string.Empty;
+            activeSynergyDisplayName = "None";
+        }
+
+        private IEnumerable<RewardPoolDefinition> ActiveRewardPoolsForSynergies()
+        {
+            yield return standardRewardPool;
+            yield return treasureRewardPool;
+            yield return bossRewardPool;
+            yield return weaponRewardPool;
+        }
+
+        private static bool IsRuntimeDerivedModifier(string sourceId)
+        {
+            return string.Equals(sourceId, "legacy_player_run_stats", StringComparison.Ordinal) ||
+                   (!string.IsNullOrWhiteSpace(sourceId) &&
+                    (sourceId.StartsWith("armor:", StringComparison.Ordinal) ||
+                     sourceId.StartsWith("synergy:", StringComparison.Ordinal)));
         }
 
         private void RefreshSelectedProfileSummary()

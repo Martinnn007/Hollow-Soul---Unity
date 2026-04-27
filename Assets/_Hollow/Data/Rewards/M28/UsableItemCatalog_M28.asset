@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.UsableItemCatalogDefinition
   catalogId: m28_usable_item_catalog_v1
   items:
+  - {fileID: 11400000, guid: 31ea36f8595f44c0e949bd6e6699e55c, type: 2}
+  - {fileID: 11400000, guid: ff2e9ea37cd924c19af0db733862a77b, type: 2}
   - {fileID: 11400000, guid: 4bed5b6c1fccb4240a03829b729dfbad, type: 2}
   - {fileID: 11400000, guid: 382edbfa896ef410f9df347b92664e68, type: 2}
   - {fileID: 11400000, guid: 54d665b5739c4492bb0271b147cf336b, type: 2}

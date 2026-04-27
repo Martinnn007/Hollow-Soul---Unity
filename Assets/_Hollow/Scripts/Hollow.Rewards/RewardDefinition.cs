@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using Hollow.Data.Definitions;
 
 namespace Hollow.Rewards
 {
@@ -12,6 +14,7 @@ namespace Hollow.Rewards
         [SerializeField] private RewardRarity rarity;
         [SerializeField] private int souls;
         [SerializeField] private int coins;
+        [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
         [SerializeField] private RewardEffect[] effects = System.Array.Empty<RewardEffect>();
 
         public string RewardId => rewardId;
@@ -25,6 +28,8 @@ namespace Hollow.Rewards
         public int Souls => souls;
 
         public int Coins => coins;
+
+        public IReadOnlyList<BuildTag> Tags => tags;
 
         public IReadOnlyList<RewardEffect> Effects => effects;
 
@@ -60,6 +65,19 @@ namespace Hollow.Rewards
             int nextCoins,
             IEnumerable<RewardEffect> nextEffects)
         {
+            Configure(nextRewardId, nextDisplayName, nextRewardKind, nextRarity, nextSouls, nextCoins, nextEffects, null);
+        }
+
+        public void Configure(
+            string nextRewardId,
+            string nextDisplayName,
+            RewardKind nextRewardKind,
+            RewardRarity nextRarity,
+            int nextSouls,
+            int nextCoins,
+            IEnumerable<RewardEffect> nextEffects,
+            IEnumerable<BuildTag> nextTags)
+        {
             rewardId = nextRewardId;
             displayName = nextDisplayName;
             rewardKind = nextRewardKind;
@@ -67,6 +85,10 @@ namespace Hollow.Rewards
             souls = nextSouls;
             coins = Mathf.Max(0, nextCoins);
             effects = RewardEffect.Clean(nextEffects);
+            tags = (nextTags ?? Enumerable.Empty<BuildTag>())
+                .Where(tag => tag != BuildTag.None)
+                .Distinct()
+                .ToArray();
         }
 
         public RewardGrant ToGrant(string roomId)

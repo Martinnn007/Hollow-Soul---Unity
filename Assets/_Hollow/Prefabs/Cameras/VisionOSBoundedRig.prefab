@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1903597541688237703}
   - component: {fileID: 6801588470143614074}
   - component: {fileID: 1339132167031271215}
-  - component: {fileID: 3482633124863637715}
+  - component: {fileID: 4203461989706307782}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -93,7 +93,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4301176786107148124}
   m_Enabled: 1
---- !u!114 &3482633124863637715
+--- !u!114 &4203461989706307782
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -119,7 +119,7 @@ GameObject:
   - component: {fileID: 4293826081303616313}
   - component: {fileID: 2807226533732996882}
   - component: {fileID: 324404807753498901}
-  - component: {fileID: 4008336500866705952}
+  - component: {fileID: 2670484400794173627}
   m_Layer: 0
   m_Name: VisionOSBoundedRig
   m_TagString: Untagged
@@ -170,7 +170,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.GameplayCameraFollowController
   target: {fileID: 0}
   followSharpness: 8
---- !u!114 &4008336500866705952
+--- !u!114 &2670484400794173627
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

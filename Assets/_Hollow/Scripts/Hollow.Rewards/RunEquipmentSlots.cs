@@ -17,6 +17,8 @@ namespace Hollow.Rewards
 
         public string ConsumableCardId { get; private set; } = string.Empty;
 
+        public string ArmorId { get; private set; } = string.Empty;
+
         public void EquipMeleeWeapon(string weaponId)
         {
             MeleeWeaponId = string.IsNullOrWhiteSpace(weaponId) ? "starter_blade" : weaponId;
@@ -68,6 +70,11 @@ namespace Hollow.Rewards
             ConsumableCardId = cardId ?? string.Empty;
         }
 
+        public void EquipArmor(string armorId)
+        {
+            ArmorId = armorId ?? string.Empty;
+        }
+
         public RunEquipmentSlotsSaveState ToSaveState()
         {
             return new RunEquipmentSlotsSaveState
@@ -77,7 +84,8 @@ namespace Hollow.Rewards
                 activeWeaponSlot = ActiveWeaponSlot.ToString(),
                 activeItemId = ActiveItemId,
                 activeItemCharges = ActiveItemCharges,
-                consumableCardId = ConsumableCardId
+                consumableCardId = ConsumableCardId,
+                armorId = ArmorId
             };
         }
 
@@ -99,6 +107,7 @@ namespace Hollow.Rewards
             slots.EquipActiveItem(saveState.activeItemId);
             slots.SetActiveItemCharges(saveState.activeItemCharges);
             slots.EquipConsumableCard(saveState.consumableCardId);
+            slots.EquipArmor(saveState.armorId);
             return slots;
         }
     }
