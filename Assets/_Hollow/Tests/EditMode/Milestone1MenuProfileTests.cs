@@ -55,7 +55,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void MainMenuViewModelCreatesProfileAndLaunchesPlatformRoute()
+        public void MainMenuViewModelCreatesProfileAndLaunchesAfterCharacterSelection()
         {
             var store = new JsonProfileStore(tempRoot);
             var selectedContext = new SelectedProfileContext();
@@ -63,12 +63,18 @@ namespace Hollow.Tests.EditMode
             var viewModel = new MainMenuViewModel(store, selectedContext, appState);
 
             viewModel.SelectOrCreateSlot(0);
-            var route = viewModel.LaunchPlatform(HollowPlatformKind.VisionOSBoundedTabletop);
+            viewModel.BeginNewRun(HollowPlatformKind.VisionOSBoundedTabletop);
+
+            Assert.AreEqual(MainMenuState.CharacterSelect, viewModel.State);
+            Assert.AreEqual(HollowPlatformKind.VisionOSBoundedTabletop, viewModel.PendingNewRunPlatformKind);
+
+            var route = viewModel.SelectCharacterAndLaunch("balanced");
 
             Assert.AreEqual(MainMenuState.Launching, viewModel.State);
             Assert.AreEqual(AppShellRoute.GameVisionOSBounded, route);
             Assert.AreEqual(AppShellRoute.GameVisionOSBounded, appState.CurrentRoute);
             Assert.IsTrue(selectedContext.HasSelection);
+            Assert.AreEqual("balanced", selectedContext.SelectedCharacterId);
         }
 
         [Test]

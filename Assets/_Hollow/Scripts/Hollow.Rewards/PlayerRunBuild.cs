@@ -71,6 +71,42 @@ namespace Hollow.Rewards
             CurrentStamina = Mathf.Clamp(CurrentStamina <= 0f ? BaseStats.MaxStamina : CurrentStamina, 0f, DerivedStats.MaxStamina);
         }
 
+        public void ConfigureCharacter(CharacterDefinition character)
+        {
+            if (character == null)
+            {
+                ConfigureCharacter("balanced", PlayerBaseStats.Default);
+                Equipment.EquipMeleeWeapon("starter_blade");
+                Equipment.EquipRangedWeapon("starter_bolt");
+                Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                CurrentStamina = DerivedStats.MaxStamina;
+                return;
+            }
+
+            ConfigureCharacter(character.CharacterId, character.BaseStats);
+            Equipment.EquipMeleeWeapon(character.StarterMeleeWeaponId);
+            Equipment.EquipRangedWeapon(character.StarterRangedWeaponId);
+            Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+            ApplyPassiveSkill(character.PassiveSkill);
+            if (!string.IsNullOrWhiteSpace(character.StarterPassiveRewardId))
+            {
+                Inventory.AddPassiveItem(character.StarterPassiveRewardId);
+            }
+
+            CurrentStamina = DerivedStats.MaxStamina;
+        }
+
+        public void ApplyPassiveSkill(CharacterPassiveSkillDefinition passiveSkill)
+        {
+            if (passiveSkill == null || passiveSkill.StatModifier.IsEmpty)
+            {
+                return;
+            }
+
+            var sourceId = string.IsNullOrWhiteSpace(passiveSkill.SkillId) ? "character_passive" : $"character:{passiveSkill.SkillId}";
+            AddModifier(PlayerStatModifier.FromCharacterStatModifier(sourceId, passiveSkill.StatModifier));
+        }
+
         public void AddModifier(PlayerStatModifier modifier)
         {
             if (!modifier.IsEmpty)

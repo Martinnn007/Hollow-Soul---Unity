@@ -1,4 +1,5 @@
 using System;
+using Hollow.Data.Definitions;
 using Hollow.Persistence;
 using UnityEngine;
 
@@ -63,6 +64,23 @@ namespace Hollow.Rewards
                     rangedDamage = saveState.rangedDamage,
                     attackCooldownMultiplier = saveState.attackCooldownMultiplier
                 };
+        }
+
+        public static PlayerStatModifier FromCharacterStatModifier(string sourceId, CharacterStatModifier modifier)
+        {
+            return new PlayerStatModifier
+            {
+                sourceId = sourceId ?? string.Empty,
+                maxHealth = modifier.MaxHealth,
+                speed = modifier.Speed,
+                strength = modifier.Strength,
+                maxStamina = modifier.MaxStamina,
+                staminaRegen = modifier.StaminaRegen,
+                defense = modifier.Defense,
+                meleeDamage = modifier.MeleeDamage,
+                rangedDamage = modifier.RangedDamage,
+                attackCooldownMultiplier = modifier.AttackCooldownMultiplier
+            };
         }
     }
 }

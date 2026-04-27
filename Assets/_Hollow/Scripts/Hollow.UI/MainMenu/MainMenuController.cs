@@ -95,7 +95,35 @@ namespace Hollow.UI.MainMenu
 
         private void LaunchNewRun(HollowPlatformKind platformKind)
         {
-            var route = ViewModel.LaunchNewRun(platformKind);
+            if (ViewModel.State == MainMenuState.Error)
+            {
+                screen.Rebuild();
+                return;
+            }
+
+            ViewModel.BeginNewRun(platformKind);
+            screen.Rebuild();
+        }
+
+        public void SelectBalancedCharacter()
+        {
+            SelectCharacterAndLaunch("balanced");
+        }
+
+        public void SelectHeavyCharacter()
+        {
+            SelectCharacterAndLaunch("heavy");
+        }
+
+        public void BackFromCharacterSelect()
+        {
+            ViewModel.BackFromCharacterSelect();
+            screen.Rebuild();
+        }
+
+        private void SelectCharacterAndLaunch(string characterId)
+        {
+            var route = ViewModel.SelectCharacterAndLaunch(characterId);
             if (ViewModel.State == MainMenuState.Error)
             {
                 screen.Rebuild();

@@ -42,6 +42,12 @@ namespace Hollow.UI.MainMenu
 
             BuildProfileCards();
 
+            if (controller.ViewModel.State == MainMenuState.CharacterSelect)
+            {
+                BuildCharacterSelect();
+                return;
+            }
+
             if (controller.ViewModel.SelectedProfile != null && !controller.ViewModel.SelectedProfile.IsEmpty)
             {
                 var selected = controller.ViewModel.SelectedProfile;
@@ -61,6 +67,19 @@ namespace Hollow.UI.MainMenu
                 AddButton(rootPanel, "Room Designer", new Vector2(0f, -320f), controller.OpenRoomDesigner, new Color(0.25f, 0.44f, 0.78f), new Vector2(360f, 40f));
                 AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -365f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
             }
+        }
+
+        private void BuildCharacterSelect()
+        {
+            AddText(rootPanel, $"Choose Character for {controller.ViewModel.PendingNewRunPlatformKind}", 19, FontStyle.Bold, new Vector2(0f, -95f), new Vector2(620f, 34f), new Color(1f, 0.91f, 0.72f));
+
+            var balanced = AddButton(rootPanel, "Balanced", new Vector2(-170f, -190f), controller.SelectBalancedCharacter, new Color(0.20f, 0.39f, 0.70f), new Vector2(260f, 150f));
+            AddText(balanced.transform as RectTransform, "Steady Form\n6 HP | 4.0 speed\n+10 stamina, +1 regen", 13, FontStyle.Normal, new Vector2(0f, -25f), new Vector2(230f, 92f), new Color(0.86f, 0.92f, 1f));
+
+            var heavy = AddButton(rootPanel, "Heavy", new Vector2(170f, -190f), controller.SelectHeavyCharacter, new Color(0.48f, 0.31f, 0.18f), new Vector2(260f, 150f));
+            AddText(heavy.transform as RectTransform, "Crushing Grip\n9 HP | 3.15 speed\n2 defense, melee lean", 13, FontStyle.Normal, new Vector2(0f, -25f), new Vector2(230f, 92f), new Color(1f, 0.88f, 0.72f));
+
+            AddButton(rootPanel, "Back", new Vector2(0f, -335f), controller.BackFromCharacterSelect, new Color(0.22f, 0.25f, 0.33f));
         }
 
         private void ConfigureCanvas()

@@ -1,9 +1,9 @@
 # Hollow Platform Build QA
 
 - Result: NotRun
-- Generated: 2026-04-27T20:31:37.6271770Z
+- Generated: 2026-04-27T21:09:48.8279880Z
 - Unity: 6000.4.1f1
-- Git: main @ 297ee71
+- Git: main @ 1f9ade6
 - Build root: `output/builds`
 
 | Target | Platform | Result | Output | Notes | Remediation |

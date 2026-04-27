@@ -36,6 +36,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone25VerticalSliceContentLock.md` describes the locked vertical-slice seed, ArtPass/content checks, platform checklist, and PDF handoff.
 - `Docs/Milestone27WeaponModeLightHeavyAttacks.md` describes catalog-backed melee/ranged weapon modes, light/heavy attacks, stamina/cooldown checks, and rare weapon rewards.
 - `Docs/Milestone28ItemsCardsCoinsShopRewards.md` describes run coins, usable active items/cards, mixed-currency shops, and the first item/card reward pool.
+- `Docs/Milestone29CharactersPassiveIdentitySkills.md` describes the first selectable characters, run-start passive identity skills, and character picker launch flow.
 
 ## Required Setup
 

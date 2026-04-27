@@ -63,8 +63,9 @@ namespace Hollow.World
             var selectedProfileContext = ProfileSessionHost.Instance?.SelectedProfileContext;
             var selectedProfile = selectedProfileContext?.SelectedProfile;
             var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
+            var selectedCharacterId = selectedProfileContext?.SelectedCharacterId ?? "balanced";
             var effectiveSessionMode = isDesignerPlaytest ? playtestMode : sessionMode;
-            SessionState = GameSessionState.Create(effectiveSessionMode, platformKind, launchMode, selectedProfile, spawnPosition);
+            SessionState = GameSessionState.Create(effectiveSessionMode, platformKind, launchMode, selectedProfile, spawnPosition, selectedCharacterId);
 
             if (importedAsset != null && !isDesignerPlaytest && TryGetBranchSessionController(out var branchSessionController))
             {

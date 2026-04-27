@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6e3f3b2eef64140af4239dfd0851058, type: 3}
+  m_Name: Character_Balanced
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.CharacterDefinition
+  characterId: balanced
+  displayName: Balanced
+  baseStats:
+    maxHealth: 6
+    speedMetersPerSecond: 4
+    strength: 1
+    maxStamina: 100
+    staminaRegenPerSecond: 18
+    defense: 0
+    meleeDamageBonus: 0
+    rangedDamageBonus: 0
+    attackCooldownMultiplier: 1
+  starterMeleeWeaponId: starter_blade
+  starterRangedWeaponId: starter_bolt
+  starterPassiveRewardId: 
+  passiveSkill: {fileID: 11400000, guid: 45e3831152e6044cfba2f3c6ec8c57b8, type: 2}
+  tags: 050000000200000001000000

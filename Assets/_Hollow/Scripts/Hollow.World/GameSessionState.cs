@@ -15,6 +15,7 @@ namespace Hollow.World
             int profileSlotIndex,
             string profileId,
             string profileDisplayName,
+            string selectedCharacterId,
             float presentationScale,
             Vector3 playerSpawnPosition)
         {
@@ -24,6 +25,7 @@ namespace Hollow.World
             ProfileSlotIndex = profileSlotIndex;
             ProfileId = profileId;
             ProfileDisplayName = profileDisplayName;
+            SelectedCharacterId = string.IsNullOrWhiteSpace(selectedCharacterId) ? "balanced" : selectedCharacterId;
             PresentationScale = presentationScale;
             PlayerSpawnPosition = playerSpawnPosition;
         }
@@ -39,6 +41,8 @@ namespace Hollow.World
         public string ProfileId { get; }
 
         public string ProfileDisplayName { get; }
+
+        public string SelectedCharacterId { get; }
 
         public float PresentationScale { get; }
 
@@ -62,6 +66,17 @@ namespace Hollow.World
             ProfileSlotSummary selectedProfile,
             Vector3 playerSpawnPosition)
         {
+            return Create(sessionMode, platformKind, launchMode, selectedProfile, playerSpawnPosition, "balanced");
+        }
+
+        public static GameSessionState Create(
+            RuntimeSessionMode sessionMode,
+            HollowPlatformKind platformKind,
+            RunLaunchMode launchMode,
+            ProfileSlotSummary selectedProfile,
+            Vector3 playerSpawnPosition,
+            string selectedCharacterId)
+        {
             return new GameSessionState(
                 sessionMode,
                 platformKind,
@@ -69,6 +84,7 @@ namespace Hollow.World
                 selectedProfile?.SlotIndex ?? -1,
                 selectedProfile?.ProfileId ?? string.Empty,
                 selectedProfile?.DisplayName ?? "Direct Scene Preview",
+                selectedCharacterId,
                 PresentationScalePolicy.WorldScaleFor(platformKind),
                 playerSpawnPosition);
         }

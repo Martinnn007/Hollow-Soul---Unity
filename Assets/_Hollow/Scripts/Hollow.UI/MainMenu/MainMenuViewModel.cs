@@ -13,6 +13,7 @@ namespace Hollow.UI.MainMenu
         private readonly SelectedProfileContext selectedProfileContext;
         private readonly AppStateMachine appStateMachine;
         private readonly List<ProfileSlotCardViewModel> profileCards = new();
+        private HollowPlatformKind pendingNewRunPlatformKind = HollowPlatformKind.WindowsStandard3D;
 
         public MainMenuViewModel(IProfileStore profileStore, SelectedProfileContext selectedProfileContext, AppStateMachine appStateMachine)
         {
@@ -29,6 +30,10 @@ namespace Hollow.UI.MainMenu
         public ProfileSlotSummary SelectedProfile => selectedProfileContext.SelectedProfile;
 
         public string ErrorMessage { get; private set; }
+
+        public HollowPlatformKind PendingNewRunPlatformKind => pendingNewRunPlatformKind;
+
+        public string SelectedCharacterId => selectedProfileContext.SelectedCharacterId;
 
         public void Refresh()
         {
@@ -81,10 +86,25 @@ namespace Hollow.UI.MainMenu
 
         public AppShellRoute LaunchPlatform(HollowPlatformKind platformKind)
         {
-            return LaunchNewRun(platformKind);
+            BeginNewRun(platformKind);
+            return RouteForPlatform(platformKind);
         }
 
-        public AppShellRoute LaunchNewRun(HollowPlatformKind platformKind)
+        public void BeginNewRun(HollowPlatformKind platformKind)
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return;
+            }
+
+            pendingNewRunPlatformKind = platformKind;
+            selectedProfileContext.SetSelectedCharacterId("balanced");
+            State = MainMenuState.CharacterSelect;
+            ErrorMessage = string.Empty;
+        }
+
+        public AppShellRoute SelectCharacterAndLaunch(string characterId)
         {
             if (!selectedProfileContext.HasSelection)
             {
@@ -93,7 +113,8 @@ namespace Hollow.UI.MainMenu
             }
 
             State = MainMenuState.Launching;
-            var route = RouteForPlatform(platformKind);
+            selectedProfileContext.SetSelectedCharacterId(characterId);
+            var route = RouteForPlatform(pendingNewRunPlatformKind);
             var slotId = new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex);
             if (profileStore is IRunSaveStore runSaveStore)
             {
@@ -105,6 +126,15 @@ namespace Hollow.UI.MainMenu
             selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
             appStateMachine.TransitionTo(route);
             return route;
+        }
+
+        public void BackFromCharacterSelect()
+        {
+            if (State == MainMenuState.CharacterSelect)
+            {
+                State = MainMenuState.SlotMain;
+                ErrorMessage = string.Empty;
+            }
         }
 
         public AppShellRoute LaunchContinueRun(HollowPlatformKind platformKind)

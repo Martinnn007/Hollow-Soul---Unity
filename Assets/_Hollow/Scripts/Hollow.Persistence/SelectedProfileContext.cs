@@ -8,6 +8,8 @@ namespace Hollow.Persistence
 
         public RunLaunchMode LaunchMode { get; private set; } = RunLaunchMode.NewRun;
 
+        public string SelectedCharacterId { get; private set; } = "balanced";
+
         public bool HasSelection => SelectedProfile != null && !SelectedProfile.IsEmpty;
 
         public void Select(ProfileSlotSummary profile)
@@ -26,10 +28,16 @@ namespace Hollow.Persistence
             LaunchMode = launchMode;
         }
 
+        public void SetSelectedCharacterId(string characterId)
+        {
+            SelectedCharacterId = string.IsNullOrWhiteSpace(characterId) ? "balanced" : characterId;
+        }
+
         public void Clear()
         {
             SelectedProfile = null;
             LaunchMode = RunLaunchMode.NewRun;
+            SelectedCharacterId = "balanced";
         }
     }
 }

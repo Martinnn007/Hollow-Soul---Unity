@@ -39,6 +39,7 @@ namespace Hollow.Branches
         [SerializeField] private RewardPoolDefinition weaponRewardPool;
         [SerializeField] private WeaponCatalogDefinition weaponCatalog;
         [SerializeField] private UsableItemCatalogDefinition usableItemCatalog;
+        [SerializeField] private CharacterCatalogDefinition characterCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
@@ -167,6 +168,8 @@ namespace Hollow.Branches
 
         public UsableItemCatalogDefinition UsableItemCatalog => usableItemCatalog;
 
+        public CharacterCatalogDefinition CharacterCatalog => characterCatalog;
+
         public int MacroBranchSeed => macroBranchSeed;
 
         public void Configure(GameObject nextRewardPickupPrefab, GameObject nextHubReturnPortalPrefab)
@@ -219,6 +222,11 @@ namespace Hollow.Branches
             usableItemCatalog = nextUsableItemCatalog;
         }
 
+        public void ConfigureCharacterCatalog(CharacterCatalogDefinition nextCharacterCatalog)
+        {
+            characterCatalog = nextCharacterCatalog;
+        }
+
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
         {
             encounterCatalog = nextEncounterCatalog;
@@ -261,6 +269,7 @@ namespace Hollow.Branches
             runEconomy = new RunEconomy();
             playerRunStats = new PlayerRunStats();
             playerRunBuild = new PlayerRunBuild();
+            ApplySelectedCharacterForFreshRun();
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
             branchDepth = 0;
@@ -1285,6 +1294,13 @@ namespace Hollow.Branches
             PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, weaponCatalog, healAmount);
         }
 
+        private void ApplySelectedCharacterForFreshRun()
+        {
+            var selectedCharacterId = gameSessionState?.SelectedCharacterId ?? "balanced";
+            var character = characterCatalog != null ? characterCatalog.Resolve(selectedCharacterId) : null;
+            playerRunBuild.ConfigureCharacter(character);
+        }
+
         private RewardApplicationResult ApplyRewardGrant(RewardGrant grant, int extraHeal = 0)
         {
             playerRunBuild ??= CreateCurrentRunBuild();
@@ -1528,6 +1544,13 @@ namespace Hollow.Branches
                 legacySave.currentStamina = preservedSave.currentStamina;
                 legacySave.equipment = preservedSave.equipment;
                 legacySave.inventory = preservedSave.inventory;
+                foreach (var modifier in preservedSave.modifiers ?? new List<PlayerStatModifierSaveState>())
+                {
+                    if (!string.Equals(modifier.sourceId, "legacy_player_run_stats", StringComparison.Ordinal))
+                    {
+                        legacySave.modifiers.Add(modifier);
+                    }
+                }
             }
 
             if (captureRuntimeStamina)
