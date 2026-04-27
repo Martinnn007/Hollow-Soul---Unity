@@ -8,17 +8,23 @@ namespace Hollow.Rewards
     public sealed class CollectedRewardRecord
     {
         public CollectedRewardRecord(string roomId, string rewardId, string displayName, RewardKind rewardKind, int souls)
-            : this(roomId, rewardId, displayName, rewardKind, souls, RewardEffect.DefaultsForRewardId(rewardId))
+            : this(roomId, rewardId, displayName, rewardKind, souls, 0, RewardEffect.DefaultsForRewardId(rewardId))
         {
         }
 
         public CollectedRewardRecord(string roomId, string rewardId, string displayName, RewardKind rewardKind, int souls, System.Collections.Generic.IEnumerable<RewardEffect> effects)
+            : this(roomId, rewardId, displayName, rewardKind, souls, 0, effects)
+        {
+        }
+
+        public CollectedRewardRecord(string roomId, string rewardId, string displayName, RewardKind rewardKind, int souls, int coins, System.Collections.Generic.IEnumerable<RewardEffect> effects)
         {
             RoomId = roomId ?? string.Empty;
             RewardId = rewardId ?? string.Empty;
             DisplayName = displayName ?? string.Empty;
             RewardKind = rewardKind;
             Souls = souls;
+            Coins = coins;
             Effects = RewardEffect.Clean(effects);
         }
 
@@ -32,6 +38,8 @@ namespace Hollow.Rewards
 
         public int Souls { get; }
 
+        public int Coins { get; }
+
         public System.Collections.Generic.IReadOnlyList<RewardEffect> Effects { get; }
 
         public RunRewardSaveState ToSaveState()
@@ -43,6 +51,7 @@ namespace Hollow.Rewards
                 displayName = DisplayName,
                 rewardKind = RewardKind.ToString(),
                 souls = Souls,
+                coins = Coins,
                 effects = Effects?.Select(effect => effect.ToSaveState()).ToList() ?? new System.Collections.Generic.List<RunRewardEffectSaveState>()
             };
         }
@@ -58,7 +67,7 @@ namespace Hollow.Rewards
             var effects = saveState.effects != null && saveState.effects.Count > 0
                 ? saveState.effects.Select(RewardEffect.FromSaveState).ToArray()
                 : RewardEffect.DefaultsForRewardId(saveState.rewardId);
-            return new CollectedRewardRecord(saveState.roomId, saveState.rewardId, saveState.displayName, rewardKind, saveState.souls, effects);
+            return new CollectedRewardRecord(saveState.roomId, saveState.rewardId, saveState.displayName, rewardKind, saveState.souls, saveState.coins, effects);
         }
     }
 }

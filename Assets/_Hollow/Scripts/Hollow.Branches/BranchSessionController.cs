@@ -51,6 +51,7 @@ namespace Hollow.Branches
         private readonly RuntimeRewardCounter rewardCounter = new();
         private RunEconomy runEconomy = new();
         private PlayerRunStats playerRunStats = new();
+        private PlayerRunBuild playerRunBuild = new();
         private ProceduralRewardPlan proceduralRewardPlan = ProceduralRewardPlan.Empty;
         private EncounterPlan encounterPlan = EncounterPlan.Empty;
         private BranchFeaturePlan branchFeaturePlan = BranchFeaturePlan.Empty;
@@ -126,6 +127,20 @@ namespace Hollow.Branches
         public InterBranchHubState InterBranchHubState => interBranchHubState;
 
         public bool IsInInterBranchHub => interBranchHubState.IsActive && (worldPhase == RunWorldPhase.Hub || worldPhase == RunWorldPhase.Legacy);
+
+        public string PlayerBuildHudSummary
+        {
+            get
+            {
+                var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
+                if (weapon == null)
+                {
+                    return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --";
+                }
+
+                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}";
+            }
+        }
 
         public ImportedRoomRuntimeAsset RoomAsset => roomAsset;
 
@@ -221,6 +236,7 @@ namespace Hollow.Branches
 
             runEconomy = new RunEconomy();
             playerRunStats = new PlayerRunStats();
+            playerRunBuild = new PlayerRunBuild();
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
             branchDepth = 0;
@@ -252,6 +268,7 @@ namespace Hollow.Branches
 
             runEconomy = RunEconomy.FromSaveState(snapshot?.economy);
             playerRunStats = PlayerRunStats.FromSaveState(snapshot?.playerStats);
+            playerRunBuild = PlayerRunBuild.FromSaveState(snapshot?.runBuild);
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
@@ -707,7 +724,7 @@ namespace Hollow.Branches
 
             var preservedHealth = roomCombatController?.PlayerHealth != null
                 ? roomCombatController.PlayerHealth.CurrentHealth
-                : RoomCombatController.PlayerMaxHealth + playerRunStats.MaxHealthBonus;
+                : CreateCurrentRunBuild().DerivedStats.MaxHealth;
             branchDepth++;
             if (choice.Kind == HubPortalKind.NextWorld)
             {
@@ -738,7 +755,7 @@ namespace Hollow.Branches
             LoadCurrentRoom();
             if (roomCombatController?.PlayerHealth != null)
             {
-                roomCombatController.PlayerHealth.Restore(RoomCombatController.PlayerMaxHealth + playerRunStats.MaxHealthBonus, preservedHealth);
+                roomCombatController.PlayerHealth.Restore(CreateCurrentRunBuild().DerivedStats.MaxHealth, preservedHealth);
             }
 
             ApplyRunStatsToPlayer(healAmount: 0);
@@ -1127,6 +1144,16 @@ namespace Hollow.Branches
                 return "No reward";
             }
 
+            if (grant.Souls > 0 && grant.Coins > 0)
+            {
+                return $"Received: {grant.DisplayName} (+{grant.Souls} souls, +{grant.Coins} coins)";
+            }
+
+            if (grant.Coins > 0)
+            {
+                return $"Received: {grant.DisplayName} (+{grant.Coins} coins)";
+            }
+
             return grant.Souls > 0
                 ? $"Received: {grant.DisplayName} (+{grant.Souls} souls)"
                 : $"Received: {grant.DisplayName}";
@@ -1198,7 +1225,7 @@ namespace Hollow.Branches
                 return;
             }
 
-            roomCombatController.PlayerHealth.Restore(RoomCombatController.PlayerMaxHealth + playerRunStats.MaxHealthBonus, snapshot.playerCurrentHealth);
+            roomCombatController.PlayerHealth.Restore(CreateCurrentRunBuild().DerivedStats.MaxHealth, snapshot.playerCurrentHealth);
         }
 
         private void SubscribePlayerDeath()
@@ -1236,7 +1263,8 @@ namespace Hollow.Branches
 
         private void ApplyRunStatsToPlayer(int healAmount)
         {
-            ItemEffectApplier.ApplyToPlayer(playerController != null ? playerController.gameObject : null, playerRunStats, healAmount);
+            playerRunBuild = CreateCurrentRunBuild();
+            PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, healAmount);
         }
 
         private void CheckpointActiveRun()
@@ -1276,7 +1304,8 @@ namespace Hollow.Branches
                 encounterPlan = encounterPlan.ToSaveState(),
                 interBranchHub = interBranchHubState.ToSaveState(),
                 economy = runEconomy.ToSaveState(),
-                playerStats = playerRunStats.ToSaveState()
+                playerStats = playerRunStats.ToSaveState(),
+                runBuild = CreateCurrentRunBuild(captureRuntimeStamina: true).ToSaveState()
             };
 
             if (State?.Graph?.Rooms != null)
@@ -1311,6 +1340,39 @@ namespace Hollow.Branches
             }
 
             SaveStatus = "Completed";
+        }
+
+        private PlayerRunBuild CreateCurrentRunBuild(bool captureRuntimeStamina = false)
+        {
+            var legacySave = PlayerRunBuild.FromLegacy(playerRunStats, runEconomy).ToSaveState();
+            var preservedSave = playerRunBuild?.ToSaveState();
+            if (preservedSave != null)
+            {
+                legacySave.selectedCharacterId = preservedSave.selectedCharacterId;
+                legacySave.baseMaxHealth = preservedSave.baseMaxHealth;
+                legacySave.baseSpeed = preservedSave.baseSpeed;
+                legacySave.baseStrength = preservedSave.baseStrength;
+                legacySave.baseMaxStamina = preservedSave.baseMaxStamina;
+                legacySave.baseStaminaRegen = preservedSave.baseStaminaRegen;
+                legacySave.baseDefense = preservedSave.baseDefense;
+                legacySave.baseMeleeDamageBonus = preservedSave.baseMeleeDamageBonus;
+                legacySave.baseRangedDamageBonus = preservedSave.baseRangedDamageBonus;
+                legacySave.baseAttackCooldownMultiplier = preservedSave.baseAttackCooldownMultiplier;
+                legacySave.currentStamina = preservedSave.currentStamina;
+                legacySave.equipment = preservedSave.equipment;
+                legacySave.inventory = preservedSave.inventory;
+            }
+
+            if (captureRuntimeStamina)
+            {
+                var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
+                if (weapon != null)
+                {
+                    legacySave.currentStamina = weapon.CurrentStamina;
+                }
+            }
+
+            return PlayerRunBuild.FromSaveState(legacySave);
         }
 
         private void RefreshSelectedProfileSummary()

@@ -11,6 +11,7 @@ namespace Hollow.Rewards
         [SerializeField] private RewardKind rewardKind;
         [SerializeField] private RewardRarity rarity;
         [SerializeField] private int souls;
+        [SerializeField] private int coins;
         [SerializeField] private RewardEffect[] effects = System.Array.Empty<RewardEffect>();
 
         public string RewardId => rewardId;
@@ -23,6 +24,8 @@ namespace Hollow.Rewards
 
         public int Souls => souls;
 
+        public int Coins => coins;
+
         public IReadOnlyList<RewardEffect> Effects => effects;
 
         public void Configure(string nextRewardId, string nextDisplayName, RewardKind nextRewardKind, int nextSouls)
@@ -33,6 +36,7 @@ namespace Hollow.Rewards
                 nextRewardKind,
                 RewardRarity.Common,
                 nextSouls,
+                0,
                 RewardEffect.DefaultsForRewardId(nextRewardId));
         }
 
@@ -44,17 +48,30 @@ namespace Hollow.Rewards
             int nextSouls,
             IEnumerable<RewardEffect> nextEffects)
         {
+            Configure(nextRewardId, nextDisplayName, nextRewardKind, nextRarity, nextSouls, 0, nextEffects);
+        }
+
+        public void Configure(
+            string nextRewardId,
+            string nextDisplayName,
+            RewardKind nextRewardKind,
+            RewardRarity nextRarity,
+            int nextSouls,
+            int nextCoins,
+            IEnumerable<RewardEffect> nextEffects)
+        {
             rewardId = nextRewardId;
             displayName = nextDisplayName;
             rewardKind = nextRewardKind;
             rarity = nextRarity;
             souls = nextSouls;
+            coins = Mathf.Max(0, nextCoins);
             effects = RewardEffect.Clean(nextEffects);
         }
 
         public RewardGrant ToGrant(string roomId)
         {
-            return new RewardGrant(roomId, rewardId, displayName, rewardKind, souls, effects);
+            return new RewardGrant(roomId, rewardId, displayName, rewardKind, souls, coins, effects);
         }
     }
 }

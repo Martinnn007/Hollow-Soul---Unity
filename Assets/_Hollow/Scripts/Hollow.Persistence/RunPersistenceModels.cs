@@ -30,6 +30,7 @@ namespace Hollow.Persistence
         public HubShopStateSaveState interBranchHub = new();
         public RunEconomySaveState economy = new();
         public PlayerRunStatsSaveState playerStats = new();
+        public PlayerRunBuildSaveState runBuild = new();
     }
 
     [Serializable]
@@ -51,6 +52,7 @@ namespace Hollow.Persistence
         public string displayName = string.Empty;
         public string rewardKind = string.Empty;
         public int souls;
+        public int coins;
         public List<RunRewardEffectSaveState> effects = new();
     }
 
@@ -74,6 +76,7 @@ namespace Hollow.Persistence
     public sealed class RunEconomySaveState
     {
         public int runSouls;
+        public int runCoins;
         public List<RunRewardSaveState> collectedRewards = new();
     }
 
@@ -121,6 +124,70 @@ namespace Hollow.Persistence
         public float moveSpeedBonus;
         public float shotCooldownMultiplier = 1f;
         public int projectileDamageBonus;
+        public int strengthBonus;
+        public float maxStaminaBonus;
+        public float staminaRegenBonus;
+        public int defenseBonus;
+        public int meleeDamageBonus;
+        public int rangedDamageBonus;
+    }
+
+    [Serializable]
+    public sealed class RunCurrencyWalletSaveState
+    {
+        public int runSouls;
+        public int runCoins;
+    }
+
+    [Serializable]
+    public sealed class RunEquipmentSlotsSaveState
+    {
+        public string meleeWeaponId = "starter_blade";
+        public string rangedWeaponId = "starter_bolt";
+        public string activeItemId = string.Empty;
+        public string consumableCardId = string.Empty;
+    }
+
+    [Serializable]
+    public sealed class RunInventoryStateSaveState
+    {
+        public List<string> passiveItemIds = new();
+        public List<string> passiveCardIds = new();
+    }
+
+    [Serializable]
+    public sealed class PlayerStatModifierSaveState
+    {
+        public string sourceId = string.Empty;
+        public int maxHealth;
+        public float speed;
+        public int strength;
+        public float maxStamina;
+        public float staminaRegen;
+        public int defense;
+        public int meleeDamage;
+        public int rangedDamage;
+        public float attackCooldownMultiplier;
+    }
+
+    [Serializable]
+    public sealed class PlayerRunBuildSaveState
+    {
+        public string selectedCharacterId = "balanced";
+        public float currentStamina;
+        public int baseMaxHealth = 6;
+        public float baseSpeed = 4f;
+        public int baseStrength = 1;
+        public float baseMaxStamina = 100f;
+        public float baseStaminaRegen = 18f;
+        public int baseDefense;
+        public int baseMeleeDamageBonus;
+        public int baseRangedDamageBonus;
+        public float baseAttackCooldownMultiplier = 1f;
+        public RunCurrencyWalletSaveState wallet = new();
+        public RunEquipmentSlotsSaveState equipment = new();
+        public RunInventoryStateSaveState inventory = new();
+        public List<PlayerStatModifierSaveState> modifiers = new();
     }
 
     [Serializable]

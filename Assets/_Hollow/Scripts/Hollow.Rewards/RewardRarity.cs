@@ -6,6 +6,8 @@ namespace Hollow.Rewards
         Uncommon = 1,
         Rare = 2,
         Treasure = 3,
-        Boss = 4
+        Boss = 4,
+        Epic = 5,
+        Legendary = 6
     }
 }

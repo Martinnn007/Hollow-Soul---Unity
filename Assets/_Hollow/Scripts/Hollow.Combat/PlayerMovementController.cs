@@ -28,6 +28,12 @@ namespace Hollow.Combat
             runSpeedBonusMetersPerSecond = Mathf.Max(0f, speedBonusMetersPerSecond);
         }
 
+        public void ConfigureDerivedStats(float nextSpeedMetersPerSecond)
+        {
+            speedMetersPerSecond = Mathf.Max(0.1f, nextSpeedMetersPerSecond);
+            runSpeedBonusMetersPerSecond = 0f;
+        }
+
         private void Update()
         {
             var input = GameplayInputReader.ReadCurrent();

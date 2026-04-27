@@ -1,0 +1,43 @@
+using Hollow.Combat;
+using UnityEngine;
+
+namespace Hollow.Rewards
+{
+    public static class PlayerBuildApplier
+    {
+        public static void Apply(PlayerRunBuild build, GameObject playerObject, int healAmount = 0)
+        {
+            if (build == null || playerObject == null)
+            {
+                return;
+            }
+
+            var derived = build.DerivedStats;
+            var health = playerObject.GetComponent<CombatantHealth>();
+            if (health != null)
+            {
+                health.SetMaxHealthPreservingCurrent(derived.MaxHealth, healAmount);
+            }
+
+            var movement = playerObject.GetComponent<PlayerMovementController>();
+            if (movement != null)
+            {
+                movement.ConfigureDerivedStats(derived.SpeedMetersPerSecond);
+            }
+
+            var weapon = playerObject.GetComponent<PlayerWeaponController>();
+            if (weapon != null)
+            {
+                weapon.ConfigureBuildStats(
+                    derived.AttackCooldownMultiplier,
+                    derived.RangedDamageBonus,
+                    derived.MeleeDamageBonus + derived.Strength,
+                    derived.MaxStamina,
+                    derived.StaminaRegenPerSecond,
+                    build.Equipment.MeleeWeaponId,
+                    build.Equipment.RangedWeaponId,
+                    build.CurrentStamina);
+            }
+        }
+    }
+}

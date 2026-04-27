@@ -39,6 +39,7 @@ namespace Hollow.Rewards
                     displayName = grant.DisplayName,
                     rewardKind = grant.RewardKind.ToString(),
                     souls = grant.Souls,
+                    coins = grant.Coins,
                     effects = grant.Effects?.Select(effect => effect.ToSaveState()).ToList() ?? new List<RunRewardEffectSaveState>()
                 })
                 .ToList();
@@ -55,7 +56,7 @@ namespace Hollow.Rewards
                 var effects = reward.effects != null && reward.effects.Count > 0
                     ? reward.effects.Select(RewardEffect.FromSaveState).ToArray()
                     : RewardEffect.DefaultsForRewardId(reward.rewardId);
-                grants.Add(new RewardGrant(reward.roomId, reward.rewardId, reward.displayName, rewardKind, reward.souls, effects));
+                grants.Add(new RewardGrant(reward.roomId, reward.rewardId, reward.displayName, rewardKind, reward.souls, reward.coins, effects));
             }
 
             return new ProceduralRewardPlan(grants);

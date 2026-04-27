@@ -9,7 +9,13 @@ namespace Hollow.Input
 
         public static GameplayInputSnapshot ReadCurrent()
         {
-            return new GameplayInputSnapshot(ReadMove(), ReadShoot(), ReadInteractPressed());
+            return new GameplayInputSnapshot(
+                ReadMove(),
+                ReadShoot(),
+                ReadInteractPressed(),
+                ReadSwapWeaponPressed(),
+                ReadLightAttackPressed(),
+                ReadHeavyAttackPressed());
         }
 
         public static Vector2 CardinalizeShoot(Vector2 rawShoot)
@@ -106,6 +112,54 @@ namespace Hollow.Input
 
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.buttonSouth.wasPressedThisFrame;
+        }
+
+        private static bool ReadSwapWeaponPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.tabKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.leftShoulder.wasPressedThisFrame;
+        }
+
+        private static bool ReadLightAttackPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.jKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightShoulder.wasPressedThisFrame;
+        }
+
+        private static bool ReadHeavyAttackPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.kKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.rightButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightTrigger.wasPressedThisFrame;
         }
     }
 }

@@ -12,23 +12,7 @@ namespace Hollow.Rewards
                 return;
             }
 
-            var health = playerObject.GetComponent<CombatantHealth>();
-            if (health != null)
-            {
-                health.SetMaxHealthPreservingCurrent(RoomCombatController.PlayerMaxHealth + stats.MaxHealthBonus, healAmount);
-            }
-
-            var movement = playerObject.GetComponent<PlayerMovementController>();
-            if (movement != null)
-            {
-                movement.ConfigureStats(stats.MoveSpeedBonus);
-            }
-
-            var weapon = playerObject.GetComponent<PlayerWeaponController>();
-            if (weapon != null)
-            {
-                weapon.ConfigureStats(stats.ShotCooldownMultiplier, stats.ProjectileDamageBonus);
-            }
+            PlayerBuildApplier.Apply(PlayerRunBuild.FromLegacy(stats, null), playerObject, healAmount);
         }
     }
 }

@@ -113,6 +113,7 @@ namespace Hollow.Branches
                 displayName = grant.DisplayName,
                 rewardKind = grant.RewardKind.ToString(),
                 souls = grant.Souls,
+                coins = grant.Coins,
                 effects = grant.Effects?.Select(effect => effect.ToSaveState()).ToList() ?? new List<RunRewardEffectSaveState>()
             };
         }
@@ -131,6 +132,7 @@ namespace Hollow.Branches
                 save.displayName,
                 kind,
                 save.souls,
+                save.coins,
                 save.effects?.Select(RewardEffect.FromSaveState));
         }
 

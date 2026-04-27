@@ -10,6 +10,8 @@ namespace Hollow.Rewards
 
         public int RunSouls { get; private set; }
 
+        public int RunCoins { get; private set; }
+
         public IReadOnlyList<CollectedRewardRecord> CollectedRewards => collectedRewards;
 
         public bool ApplyReward(RewardGrant grant)
@@ -20,7 +22,8 @@ namespace Hollow.Rewards
             }
 
             RunSouls += grant.Souls;
-            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Effects));
+            RunCoins += grant.Coins;
+            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Coins, grant.Effects));
             return true;
         }
 
@@ -45,11 +48,28 @@ namespace Hollow.Rewards
             return true;
         }
 
+        public bool SpendCoins(int amount)
+        {
+            if (amount <= 0)
+            {
+                return true;
+            }
+
+            if (RunCoins < amount)
+            {
+                return false;
+            }
+
+            RunCoins -= amount;
+            return true;
+        }
+
         public RunEconomySaveState ToSaveState()
         {
             return new RunEconomySaveState
             {
                 runSouls = RunSouls,
+                runCoins = RunCoins,
                 collectedRewards = collectedRewards.Select(record => record.ToSaveState()).ToList()
             };
         }
@@ -63,6 +83,7 @@ namespace Hollow.Rewards
             }
 
             economy.RunSouls = saveState.runSouls;
+            economy.RunCoins = saveState.runCoins;
             if (saveState.collectedRewards != null)
             {
                 foreach (var reward in saveState.collectedRewards)

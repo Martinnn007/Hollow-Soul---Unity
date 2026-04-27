@@ -13,6 +13,18 @@ namespace Hollow.Rewards
 
         public int ProjectileDamageBonus { get; private set; }
 
+        public int StrengthBonus { get; private set; }
+
+        public float MaxStaminaBonus { get; private set; }
+
+        public float StaminaRegenBonus { get; private set; }
+
+        public int DefenseBonus { get; private set; }
+
+        public int MeleeDamageBonus { get; private set; }
+
+        public int RangedDamageBonus { get; private set; }
+
         public int ApplyReward(RewardGrant grant)
         {
             var effects = grant.Effects != null && grant.Effects.Count > 0
@@ -38,6 +50,28 @@ namespace Hollow.Rewards
                     case RewardEffectKind.ProjectileDamageBonus:
                         ProjectileDamageBonus += Mathf.Max(0, effect.IntValue);
                         break;
+                    case RewardEffectKind.StrengthBonus:
+                        StrengthBonus += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.MaxStaminaBonus:
+                        MaxStaminaBonus += Mathf.Max(0f, effect.FloatValue);
+                        break;
+                    case RewardEffectKind.StaminaRegenBonus:
+                        StaminaRegenBonus += Mathf.Max(0f, effect.FloatValue);
+                        break;
+                    case RewardEffectKind.DefenseBonus:
+                    case RewardEffectKind.PlayerContactDamageResist:
+                        DefenseBonus += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.MeleeDamageBonus:
+                        MeleeDamageBonus += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.RangedDamageBonus:
+                        RangedDamageBonus += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.AttackCooldownMultiplier:
+                        ShotCooldownMultiplier *= effect.FloatValue <= 0f ? 1f : effect.FloatValue;
+                        break;
                 }
             }
 
@@ -59,7 +93,13 @@ namespace Hollow.Rewards
                 maxHealthBonus = MaxHealthBonus,
                 moveSpeedBonus = MoveSpeedBonus,
                 shotCooldownMultiplier = ShotCooldownMultiplier,
-                projectileDamageBonus = ProjectileDamageBonus
+                projectileDamageBonus = ProjectileDamageBonus,
+                strengthBonus = StrengthBonus,
+                maxStaminaBonus = MaxStaminaBonus,
+                staminaRegenBonus = StaminaRegenBonus,
+                defenseBonus = DefenseBonus,
+                meleeDamageBonus = MeleeDamageBonus,
+                rangedDamageBonus = RangedDamageBonus
             };
         }
 
@@ -75,7 +115,30 @@ namespace Hollow.Rewards
             stats.MoveSpeedBonus = Mathf.Max(0f, saveState.moveSpeedBonus);
             stats.ShotCooldownMultiplier = saveState.shotCooldownMultiplier <= 0f ? 1f : saveState.shotCooldownMultiplier;
             stats.ProjectileDamageBonus = Mathf.Max(0, saveState.projectileDamageBonus);
+            stats.StrengthBonus = Mathf.Max(0, saveState.strengthBonus);
+            stats.MaxStaminaBonus = Mathf.Max(0f, saveState.maxStaminaBonus);
+            stats.StaminaRegenBonus = Mathf.Max(0f, saveState.staminaRegenBonus);
+            stats.DefenseBonus = Mathf.Max(0, saveState.defenseBonus);
+            stats.MeleeDamageBonus = Mathf.Max(0, saveState.meleeDamageBonus);
+            stats.RangedDamageBonus = Mathf.Max(0, saveState.rangedDamageBonus);
             return stats;
+        }
+
+        public PlayerStatModifier ToStatModifier(string sourceId)
+        {
+            return new PlayerStatModifier
+            {
+                sourceId = sourceId ?? "legacy_player_run_stats",
+                maxHealth = MaxHealthBonus,
+                speed = MoveSpeedBonus,
+                strength = StrengthBonus,
+                maxStamina = MaxStaminaBonus,
+                staminaRegen = StaminaRegenBonus,
+                defense = DefenseBonus,
+                meleeDamage = MeleeDamageBonus,
+                rangedDamage = ProjectileDamageBonus + RangedDamageBonus,
+                attackCooldownMultiplier = ShotCooldownMultiplier
+            };
         }
 
         private int ApplyStoneHeart()

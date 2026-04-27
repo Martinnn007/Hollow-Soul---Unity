@@ -9,6 +9,14 @@ namespace Hollow.Rewards
         ShotCooldownMultiplier = 4,
         ProjectileDamageBonus = 5,
         ProjectileSpeedBonus = 6,
-        PlayerContactDamageResist = 7
+        PlayerContactDamageResist = 7,
+        StrengthBonus = 8,
+        MaxStaminaBonus = 9,
+        StaminaRegenBonus = 10,
+        DefenseBonus = 11,
+        MeleeDamageBonus = 12,
+        RangedDamageBonus = 13,
+        AttackCooldownMultiplier = 14,
+        Coins = 15
     }
 }

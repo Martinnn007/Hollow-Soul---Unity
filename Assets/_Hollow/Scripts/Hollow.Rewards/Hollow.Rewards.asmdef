@@ -3,6 +3,7 @@
   "rootNamespace": "Hollow.Rewards",
   "references": [
     "Hollow.Combat",
+    "Hollow.Data",
     "Hollow.Persistence"
   ],
   "includePlatforms": [],
