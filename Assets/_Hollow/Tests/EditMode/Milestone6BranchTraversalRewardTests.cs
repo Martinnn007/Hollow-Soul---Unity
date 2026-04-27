@@ -176,9 +176,12 @@ namespace Hollow.Tests.EditMode
 
                 var originCell = shapeRoot.Find("MiniMapRoomCell_origin_0_0") as RectTransform;
                 var northCell = shapeRoot.Find("MiniMapRoomCell_north_0_-1") as RectTransform;
+                var southCell = shapeRoot.Find("MiniMapRoomCell_south_0_1") as RectTransform;
                 Assert.IsNotNull(originCell);
                 Assert.IsNotNull(northCell);
-                Assert.Greater(northCell.anchoredPosition.y, originCell.anchoredPosition.y);
+                Assert.IsNotNull(southCell);
+                Assert.Less(northCell.anchoredPosition.y, originCell.anchoredPosition.y);
+                Assert.Greater(southCell.anchoredPosition.y, originCell.anchoredPosition.y);
 
                 var mapText = canvasObject.GetComponentsInChildren<Text>(true)
                     .Single(text => text.name == "BranchMiniMap.MapPanel.Text");

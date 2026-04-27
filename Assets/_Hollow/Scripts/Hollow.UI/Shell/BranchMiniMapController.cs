@@ -357,15 +357,15 @@ namespace Hollow.UI.Shell
         public readonly struct MiniMapLayout
         {
             private readonly int minX;
-            private readonly int minY;
+            private readonly int maxY;
             private readonly float originX;
             private readonly float originY;
             private readonly float step;
 
-            private MiniMapLayout(int minX, int minY, float originX, float originY, float step, float cellSize, float gap)
+            private MiniMapLayout(int minX, int maxY, float originX, float originY, float step, float cellSize, float gap)
             {
                 this.minX = minX;
-                this.minY = minY;
+                this.maxY = maxY;
                 this.originX = originX;
                 this.originY = originY;
                 this.step = step;
@@ -394,9 +394,9 @@ namespace Hollow.UI.Shell
                 var totalHeight = (rows - 1) * step + cellSize;
                 return new MiniMapLayout(
                     minX,
-                    minY,
+                    maxY,
                     (size.x - totalWidth) * 0.5f + cellSize * 0.5f,
-                    -(size.y - totalHeight) * 0.5f - cellSize * 0.5f,
+                    -((size.y - totalHeight) * 0.5f + cellSize * 0.5f),
                     step,
                     cellSize,
                     gap);
@@ -404,7 +404,10 @@ namespace Hollow.UI.Shell
 
             public Vector2 PositionFor(Vector2Int cell)
             {
-                return new Vector2(originX + (cell.x - minX) * step, originY - (cell.y - minY) * step);
+                // The runtime branch grid stores north as decreasing Y, while the current
+                // game camera reads the opposite way on screen. Flip only the minimap
+                // presentation so traversal/generation data stays unchanged.
+                return new Vector2(originX + (cell.x - minX) * step, originY - (maxY - cell.y) * step);
             }
 
             public Vector2 CenterFor(IEnumerable<Vector2Int> cells)
