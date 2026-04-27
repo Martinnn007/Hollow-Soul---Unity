@@ -106,6 +106,66 @@ namespace Hollow.Tests.EditMode
                 string.Join("|", InterBranchHubState.Create(20001, 2, null).NextBranchChoices.Select(choice => choice.Seed)));
         }
 
+        [Test]
+        public void WorldHubStartsWithThreeOpenBranchPortalsAndNoFourth()
+        {
+            var hub = InterBranchHubState.CreateWorldHub(12345, 1, 0, null);
+
+            Assert.AreEqual(3, hub.NextBranchChoices.Count);
+            Assert.IsTrue(hub.NextBranchChoices.All(choice => choice.Kind == HubPortalKind.Branch));
+            Assert.IsTrue(hub.NextBranchChoices.All(choice => choice.State == HubBranchPortalState.Open));
+            Assert.IsFalse(hub.NextBranchChoices.Any(choice => choice.Kind == HubPortalKind.NextWorld));
+            Assert.AreEqual(
+                RunSeedDeriver.ShopSeed(12345, 1, 0),
+                RunSeedDeriver.ShopSeed(hub.RunSeed, hub.WorldIndex, hub.ShopRefreshIndex));
+        }
+
+        [Test]
+        public void DefeatingThreeHubBranchesRevealsNextWorldPortal()
+        {
+            var hub = InterBranchHubState.CreateWorldHub(12345, 1, 0, null);
+            foreach (var choice in hub.NextBranchChoices.Where(choice => choice.Kind == HubPortalKind.Branch).ToArray())
+            {
+                hub = hub.MarkBranchPortalDefeated(choice.ChoiceId, null);
+            }
+
+            Assert.AreEqual(4, hub.NextBranchChoices.Count);
+            Assert.IsTrue(hub.AreAllBranchPortalsDefeated);
+            Assert.AreEqual(3, hub.NextBranchChoices.Count(choice => choice.Kind == HubPortalKind.Branch && choice.State == HubBranchPortalState.Defeated));
+            var nextWorld = hub.NextBranchChoices.Single(choice => choice.Kind == HubPortalKind.NextWorld);
+            Assert.AreEqual(2, nextWorld.WorldIndex);
+            Assert.AreEqual(RunSeedDeriver.PrologueBranchSeed(12345, 2), nextWorld.Seed);
+        }
+
+        [Test]
+        public void WorldThreeDefeatedHubBranchesRevealFinalExtraction()
+        {
+            var hub = InterBranchHubState.CreateWorldHub(12345, 3, 0, null);
+            foreach (var choice in hub.NextBranchChoices.Where(choice => choice.Kind == HubPortalKind.Branch).ToArray())
+            {
+                hub = hub.MarkBranchPortalDefeated(choice.ChoiceId, null);
+            }
+
+            Assert.AreEqual(1, hub.NextBranchChoices.Count(choice => choice.Kind == HubPortalKind.FinalExtraction));
+            Assert.IsFalse(hub.NextBranchChoices.Any(choice => choice.Kind == HubPortalKind.NextWorld));
+        }
+
+        [Test]
+        public void HubPortalStatePersistsDefeatedAndPurchasedShop()
+        {
+            var hub = InterBranchHubState.CreateWorldHub(12345, 1, 0, null);
+            var economy = new RunEconomy();
+            economy.ApplyReward(new RewardGrant("debug_seed_souls", "debug_souls", "Debug Souls", RewardKind.Currency, 40));
+            Assert.IsTrue(hub.ShopOffers.First(offer => offer.OfferId == "heal_2").TryPurchase(economy, out _, out _));
+            hub = hub.MarkBranchPortalDefeated(hub.NextBranchChoices[1].ChoiceId, null);
+
+            var restored = InterBranchHubState.FromSaveState(hub.ToSaveState(), hub.RunSeed, 0, null);
+
+            Assert.AreEqual(1, restored.NextBranchChoices.Count(choice => choice.State == HubBranchPortalState.Defeated));
+            Assert.AreEqual(HubBranchPortalState.Defeated, restored.NextBranchChoices[1].State);
+            Assert.AreEqual(hub.ShopRefreshIndex, restored.ShopRefreshIndex);
+        }
+
         private static BranchFloorGraph CreateM20Graph()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<BranchRoomTemplateCatalogDefinition>(Milestone14AssetGenerator.CatalogPath);

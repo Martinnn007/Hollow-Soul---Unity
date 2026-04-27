@@ -150,7 +150,7 @@ namespace Hollow.Tests.EditMode
         {
             using var seedOverride = RunSeedProvider.OverrideForTests(() => 246810);
             var profile = new ProfileSlotSummary(0, "profile-0", "Seed Runner", 0, 0, 0, false, 0, 0);
-            var root = CreateBranchHarness(out var branch, out _, out _, out _, profile);
+            var root = CreateBranchHarness(out var branch, out var unusedCombat, out var unusedPlayer, out var unusedSession, profile);
             try
             {
                 var snapshot = branch.CreateSnapshot();

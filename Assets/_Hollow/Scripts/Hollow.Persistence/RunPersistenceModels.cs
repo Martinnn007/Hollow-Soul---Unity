@@ -14,6 +14,11 @@ namespace Hollow.Persistence
         public int playerCurrentHealth = 6;
         public int branchDepth;
         public int currentBranchSeed;
+        public int runSeed;
+        public int worldIndex = 1;
+        public string worldPhase = "Legacy";
+        public string activeHubPortalId = string.Empty;
+        public int hubShopRefreshIndex;
         public string bossKeyState = "None";
         public string bossKeyRoomId = string.Empty;
         public string secretRoomId = string.Empty;
@@ -76,6 +81,11 @@ namespace Hollow.Persistence
     public sealed class HubShopStateSaveState
     {
         public bool isActive;
+        public int runSeed;
+        public int worldIndex = 1;
+        public int shopRefreshIndex;
+        public bool isNextWorldPortalAvailable;
+        public bool isFinalExtractionPortalAvailable;
         public List<HubShopOfferSaveState> offers = new();
         public List<NextBranchChoiceSaveState> nextChoices = new();
     }
@@ -98,6 +108,10 @@ namespace Hollow.Persistence
         public string displayName = string.Empty;
         public int seed;
         public int index;
+        public int worldIndex = 1;
+        public int slotIndex;
+        public string kind = "Branch";
+        public string state = "Open";
     }
 
     [Serializable]
