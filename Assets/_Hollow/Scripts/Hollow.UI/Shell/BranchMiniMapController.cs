@@ -120,10 +120,7 @@ namespace Hollow.UI.Shell
                 var cellObject = new GameObject($"MiniMapRoomCell_{node.Id.Value}_{cell.x}_{cell.y}", typeof(RectTransform), typeof(Image), typeof(Outline));
                 cellObject.transform.SetParent(root, false);
                 var rect = (RectTransform)cellObject.transform;
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = layout.PositionFor(cell);
+                ConfigureMiniMapRect(rect, layout.PositionFor(cell));
                 rect.sizeDelta = Vector2.one * layout.CellSize;
 
                 cellObject.GetComponent<Image>().color = FillColorFor(node);
@@ -154,10 +151,7 @@ namespace Hollow.UI.Shell
             var connector = new GameObject($"MiniMapConnection_{connection.FromRoomId.Value}_{connection.ToRoomId.Value}", typeof(RectTransform), typeof(Image));
             connector.transform.SetParent(root, false);
             var rect = (RectTransform)connector.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = midpoint;
+            ConfigureMiniMapRect(rect, midpoint);
             rect.sizeDelta = horizontal
                 ? new Vector2(layout.Gap + 4f, 5f)
                 : new Vector2(5f, layout.Gap + 4f);
@@ -330,10 +324,7 @@ namespace Hollow.UI.Shell
             var dot = new GameObject(name, typeof(RectTransform), typeof(Image));
             dot.transform.SetParent(root, false);
             var rect = (RectTransform)dot.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position + new Vector2(8f, 8f);
+            ConfigureMiniMapRect(rect, position + new Vector2(8f, -8f));
             rect.sizeDelta = Vector2.one * size;
             dot.GetComponent<Image>().color = color;
         }
@@ -343,10 +334,7 @@ namespace Hollow.UI.Shell
             var textObject = new GameObject($"MiniMapMarker_{marker}", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(root, false);
             var rect = (RectTransform)textObject.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
+            ConfigureMiniMapRect(rect, position);
             rect.sizeDelta = new Vector2(28f, 24f);
             var text = textObject.GetComponent<Text>();
             text.font = font;
@@ -356,6 +344,14 @@ namespace Hollow.UI.Shell
             text.color = color;
             text.raycastTarget = false;
             text.text = marker;
+        }
+
+        private static void ConfigureMiniMapRect(RectTransform rect, Vector2 anchoredPosition)
+        {
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
         }
 
         public readonly struct MiniMapLayout
@@ -396,7 +392,14 @@ namespace Hollow.UI.Shell
                 var gap = Mathf.Max(3f, step - cellSize);
                 var totalWidth = (columns - 1) * step + cellSize;
                 var totalHeight = (rows - 1) * step + cellSize;
-                return new MiniMapLayout(minX, minY, -totalWidth * 0.5f + cellSize * 0.5f, totalHeight * 0.5f - cellSize * 0.5f, step, cellSize, gap);
+                return new MiniMapLayout(
+                    minX,
+                    minY,
+                    (size.x - totalWidth) * 0.5f + cellSize * 0.5f,
+                    -(size.y - totalHeight) * 0.5f - cellSize * 0.5f,
+                    step,
+                    cellSize,
+                    gap);
             }
 
             public Vector2 PositionFor(Vector2Int cell)

@@ -16,6 +16,13 @@ namespace Hollow.RoomDesigner
     public sealed class RoomDesignerController : MonoBehaviour
     {
         private const float RepeatDelaySeconds = 0.16f;
+        private const float GridOriginY = 0f;
+        private const float GridLineThickness = 0.02f;
+        private const float FlatSurfaceThickness = 0.06f;
+        private const float CursorTileThickness = 0.08f;
+        private const float DoorAnchorHeight = 1.3f;
+        private const float MacroGuideThickness = 0.04f;
+        private const float InternalSeamThickness = 0.08f;
 
         [SerializeField] private Transform previewRoot;
         [SerializeField] private Canvas hudCanvas;
@@ -591,8 +598,8 @@ namespace Hollow.RoomDesigner
         private Vector3 CursorWorldPosition()
         {
             return previewRoot != null
-                ? previewRoot.TransformPoint(new Vector3(CursorX, CursorLayer + 0.5f, CursorZ))
-                : transform.TransformPoint(new Vector3(CursorX, CursorLayer + 0.5f, CursorZ));
+                ? previewRoot.TransformPoint(new Vector3(CursorX, CursorLayer + CenterAboveGrid(CursorTileThickness), CursorZ))
+                : transform.TransformPoint(new Vector3(CursorX, CursorLayer + CenterAboveGrid(CursorTileThickness), CursorZ));
         }
 
         private void SetBaseCell(string kind)
@@ -717,8 +724,8 @@ namespace Hollow.RoomDesigner
             var cursor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cursor.name = $"cursor_{CursorX}_{CursorZ}_{CursorLayer}";
             cursor.transform.SetParent(previewRoot, false);
-            cursor.transform.localPosition = new Vector3(CursorX, CursorLayer + 0.55f, CursorZ);
-            cursor.transform.localScale = new Vector3(1.08f, 0.08f, 1.08f);
+            cursor.transform.localPosition = new Vector3(CursorX, CursorLayer + CenterAboveGrid(CursorTileThickness), CursorZ);
+            cursor.transform.localScale = new Vector3(1.08f, CursorTileThickness, 1.08f);
             MaterialResolver.ApplyTo(cursor, MaterialRole.DesignerCursor);
             UpdateCameraTarget(immediate: false);
         }
@@ -749,12 +756,12 @@ namespace Hollow.RoomDesigner
             RoomDesignerFootprintUtility.RoomBounds(currentProject.footprintPreset, out var minX, out var maxX, out var minZ, out var maxZ);
             for (var x = minX; x <= maxX + 0.01f; x += 1f)
             {
-                BuildCube($"grid_x_{x}", new Vector3(x, 0.02f, (minZ + maxZ) * 0.5f), new Vector3(0.02f, 0.02f, maxZ - minZ), MaterialRole.DesignerGrid);
+                BuildCube($"grid_x_{x}", new Vector3(x, CenterAboveGrid(GridLineThickness), (minZ + maxZ) * 0.5f), new Vector3(0.02f, GridLineThickness, maxZ - minZ), MaterialRole.DesignerGrid);
             }
 
             for (var z = minZ; z <= maxZ + 0.01f; z += 1f)
             {
-                BuildCube($"grid_z_{z}", new Vector3((minX + maxX) * 0.5f, 0.025f, z), new Vector3(maxX - minX, 0.02f, 0.02f), MaterialRole.DesignerGrid);
+                BuildCube($"grid_z_{z}", new Vector3((minX + maxX) * 0.5f, CenterAboveGrid(GridLineThickness), z), new Vector3(maxX - minX, GridLineThickness, 0.02f), MaterialRole.DesignerGrid);
             }
 
             BuildMacroGuides();
@@ -769,11 +776,11 @@ namespace Hollow.RoomDesigner
                 var center = RoomDesignerFootprintUtility.ChunkCenter(currentProject.footprintPreset, cell);
                 var halfX = RoomDesignerFootprintUtility.ChunkWidthTiles * 0.5f;
                 var halfZ = RoomDesignerFootprintUtility.ChunkHeightTiles * 0.5f;
-                var y = 0.09f;
-                BuildCube($"chunk_{cell.x}_{cell.y}_north", new Vector3(center.x, y, center.y - halfZ), new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, 0.04f, 0.06f), MaterialRole.DesignerDoorAvailable);
-                BuildCube($"chunk_{cell.x}_{cell.y}_south", new Vector3(center.x, y, center.y + halfZ), new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, 0.04f, 0.06f), MaterialRole.DesignerDoorAvailable);
-                BuildCube($"chunk_{cell.x}_{cell.y}_east", new Vector3(center.x + halfX, y, center.y), new Vector3(0.06f, 0.04f, RoomDesignerFootprintUtility.ChunkHeightTiles), MaterialRole.DesignerDoorAvailable);
-                BuildCube($"chunk_{cell.x}_{cell.y}_west", new Vector3(center.x - halfX, y, center.y), new Vector3(0.06f, 0.04f, RoomDesignerFootprintUtility.ChunkHeightTiles), MaterialRole.DesignerDoorAvailable);
+                var y = CenterAboveGrid(MacroGuideThickness);
+                BuildCube($"chunk_{cell.x}_{cell.y}_north", new Vector3(center.x, y, center.y - halfZ), new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, MacroGuideThickness, 0.06f), MaterialRole.DesignerDoorAvailable);
+                BuildCube($"chunk_{cell.x}_{cell.y}_south", new Vector3(center.x, y, center.y + halfZ), new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, MacroGuideThickness, 0.06f), MaterialRole.DesignerDoorAvailable);
+                BuildCube($"chunk_{cell.x}_{cell.y}_east", new Vector3(center.x + halfX, y, center.y), new Vector3(0.06f, MacroGuideThickness, RoomDesignerFootprintUtility.ChunkHeightTiles), MaterialRole.DesignerDoorAvailable);
+                BuildCube($"chunk_{cell.x}_{cell.y}_west", new Vector3(center.x - halfX, y, center.y), new Vector3(0.06f, MacroGuideThickness, RoomDesignerFootprintUtility.ChunkHeightTiles), MaterialRole.DesignerDoorAvailable);
 
                 foreach (var direction in new[] { "north", "south", "east", "west" })
                 {
@@ -790,9 +797,9 @@ namespace Hollow.RoomDesigner
                         _ => center + new Vector2(0f, -halfZ)
                     };
                     var scale = direction is "east" or "west"
-                        ? new Vector3(0.1f, 0.08f, RoomDesignerFootprintUtility.ChunkHeightTiles)
-                        : new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, 0.08f, 0.1f);
-                    BuildCube($"internalSeam_{cell.x}_{cell.y}_{direction}", new Vector3(seamCenter.x, 0.14f, seamCenter.y), scale, MaterialRole.DesignerGrid);
+                        ? new Vector3(0.1f, InternalSeamThickness, RoomDesignerFootprintUtility.ChunkHeightTiles)
+                        : new Vector3(RoomDesignerFootprintUtility.ChunkWidthTiles, InternalSeamThickness, 0.1f);
+                    BuildCube($"internalSeam_{cell.x}_{cell.y}_{direction}", new Vector3(seamCenter.x, CenterAboveGrid(InternalSeamThickness), seamCenter.y), scale, MaterialRole.DesignerGrid);
                 }
             }
         }
@@ -801,11 +808,11 @@ namespace Hollow.RoomDesigner
         {
             if (cell.kind == RoomDesignerCellKinds.Ground)
             {
-                BuildCube($"tileGround_{cell.x}_{cell.z}", new Vector3(cell.x, -0.5f, cell.z), Vector3.one, MaterialRole.DesignerGround);
+                BuildCube($"tileGround_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(1f, FlatSurfaceThickness, 1f), MaterialRole.DesignerGround);
             }
             else if (cell.kind == RoomDesignerCellKinds.Hole)
             {
-                BuildCube($"tileHole_{cell.x}_{cell.z}", new Vector3(cell.x, 0.03f, cell.z), new Vector3(0.86f, 0.06f, 0.86f), MaterialRole.DesignerHole);
+                BuildCube($"tileHole_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(0.86f, FlatSurfaceThickness, 0.86f), MaterialRole.DesignerHole);
             }
             else if (cell.kind == RoomDesignerCellKinds.Rock)
             {
@@ -827,7 +834,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerDoorKinds.Inactive => MaterialRole.DesignerGrid,
                 _ => MaterialRole.DesignerDoorAvailable
             };
-            BuildCube($"doorAnchor_{door.id}_{door.state}", new Vector3(door.x, 0.65f, door.z), door.direction is "east" or "west" ? new Vector3(0.18f, 1.3f, 1f) : new Vector3(1f, 1.3f, 0.18f), role);
+            BuildCube($"doorAnchor_{door.id}_{door.state}", new Vector3(door.x, CenterAboveGrid(DoorAnchorHeight), door.z), door.direction is "east" or "west" ? new Vector3(0.18f, DoorAnchorHeight, 1f) : new Vector3(1f, DoorAnchorHeight, 0.18f), role);
             if (LabelsVisible)
             {
                 BuildLabel(RoomDesignerDisplayNames.ForDoor(door), new Vector3(door.x, 1.5f, door.z));
@@ -857,6 +864,11 @@ namespace Hollow.RoomDesigner
             cube.transform.localScale = scale;
             MaterialResolver.ApplyTo(cube, role);
             return cube;
+        }
+
+        private static float CenterAboveGrid(float height)
+        {
+            return GridOriginY + height * 0.5f;
         }
 
         private static MaterialRole RoleForMarker(string markerKind)

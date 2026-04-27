@@ -13,24 +13,32 @@ namespace Hollow.Combat
             }
 
             var clamped = ClampToBounds(room, desiredLocal, radius);
-            if (!IntersectsObstacle(room, clamped, radius))
+            if (CanOccupy(room, clamped, radius))
             {
                 return clamped;
             }
 
             var xOnly = ClampToBounds(room, new Vector3(clamped.x, currentLocal.y, currentLocal.z), radius);
-            if (!IntersectsObstacle(room, xOnly, radius))
+            if (CanOccupy(room, xOnly, radius))
             {
                 return xOnly;
             }
 
             var zOnly = ClampToBounds(room, new Vector3(currentLocal.x, currentLocal.y, clamped.z), radius);
-            return IntersectsObstacle(room, zOnly, radius) ? currentLocal : zOnly;
+            return CanOccupy(room, zOnly, radius) ? zOnly : currentLocal;
         }
 
         public static Vector3 ResolveMoveIgnoringObstacles(RoomRuntimeRoot room, Vector3 desiredLocal, float radius)
         {
-            return room == null ? desiredLocal : ClampToBounds(room, desiredLocal, radius);
+            if (room == null)
+            {
+                return desiredLocal;
+            }
+
+            var clamped = ClampToBounds(room, desiredLocal, radius);
+            return IsOutsideWalkable(room, clamped, radius)
+                ? NearestWalkablePosition(room, clamped)
+                : clamped;
         }
 
         public static bool IntersectsObstacle(RoomRuntimeRoot room, Vector3 localPosition, float radius)
@@ -65,7 +73,24 @@ namespace Hollow.Combat
             return localPosition.x < bounds.xMin + radius ||
                    localPosition.x > bounds.xMax - radius ||
                    localPosition.z < bounds.yMin + radius ||
-                   localPosition.z > bounds.yMax - radius;
+                   localPosition.z > bounds.yMax - radius ||
+                   IsOutsideWalkable(room, localPosition, radius);
+        }
+
+        public static bool IsOutsideWalkable(RoomRuntimeRoot room, Vector3 localPosition, float radius)
+        {
+            var walkableTiles = room?.CurrentLayout?.WalkableTiles;
+            if (walkableTiles == null || walkableTiles.Count == 0)
+            {
+                return false;
+            }
+
+            var clampedRadius = Mathf.Max(0f, radius);
+            return !IsPointOnWalkableTile(walkableTiles, localPosition) ||
+                   !IsPointOnWalkableTile(walkableTiles, localPosition + new Vector3(clampedRadius, 0f, 0f)) ||
+                   !IsPointOnWalkableTile(walkableTiles, localPosition + new Vector3(-clampedRadius, 0f, 0f)) ||
+                   !IsPointOnWalkableTile(walkableTiles, localPosition + new Vector3(0f, 0f, clampedRadius)) ||
+                   !IsPointOnWalkableTile(walkableTiles, localPosition + new Vector3(0f, 0f, -clampedRadius));
         }
 
         private static Vector3 ClampToBounds(RoomRuntimeRoot room, Vector3 localPosition, float radius)
@@ -74,6 +99,50 @@ namespace Hollow.Combat
             localPosition.x = Mathf.Clamp(localPosition.x, bounds.xMin + radius, bounds.xMax - radius);
             localPosition.z = Mathf.Clamp(localPosition.z, bounds.yMin + radius, bounds.yMax - radius);
             return localPosition;
+        }
+
+        private static bool CanOccupy(RoomRuntimeRoot room, Vector3 localPosition, float radius)
+        {
+            return !IsOutsideWalkable(room, localPosition, radius) && !IntersectsObstacle(room, localPosition, radius);
+        }
+
+        private static bool IsPointOnWalkableTile(System.Collections.Generic.IReadOnlyList<Vector2Int> walkableTiles, Vector3 localPosition)
+        {
+            foreach (var tile in walkableTiles)
+            {
+                if (Mathf.Abs(localPosition.x - tile.x) <= 0.5f &&
+                    Mathf.Abs(localPosition.z - tile.y) <= 0.5f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static Vector3 NearestWalkablePosition(RoomRuntimeRoot room, Vector3 localPosition)
+        {
+            var walkableTiles = room?.CurrentLayout?.WalkableTiles;
+            if (walkableTiles == null || walkableTiles.Count == 0)
+            {
+                return localPosition;
+            }
+
+            var nearest = walkableTiles[0];
+            var nearestDistance = float.MaxValue;
+            foreach (var tile in walkableTiles)
+            {
+                var dx = localPosition.x - tile.x;
+                var dz = localPosition.z - tile.y;
+                var distance = dx * dx + dz * dz;
+                if (distance < nearestDistance)
+                {
+                    nearest = tile;
+                    nearestDistance = distance;
+                }
+            }
+
+            return new Vector3(nearest.x, localPosition.y, nearest.y);
         }
     }
 }

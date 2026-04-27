@@ -218,6 +218,36 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void ControllerAlignsCursorFlatTilesAndDoorBottomsToGridOrigin()
+        {
+            var root = new GameObject("RoomDesignerGridOriginController");
+            try
+            {
+                var project = RoomDesignerProject.CreateDefault();
+                project.cells.RemoveAll(cell => cell.x == 1 && cell.z == 0 && cell.layer == 0);
+                project.cells.Add(new RoomDesignerCell(1, 0, 0, RoomDesignerCellKinds.Hole));
+
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), project);
+
+                AssertBottomOnGrid(FindChild(root, "cursor_0_0_0"));
+                AssertBottomOnGrid(FindChild(root, "tileGround_0_0"));
+                AssertBottomOnGrid(FindChild(root, "tileHole_1_0"));
+                AssertBottomOnGrid(FindChild(root, "doorAnchor_north_0_available"));
+                AssertBottomOnGrid(FindChildStartingWith(root, "grid_x_"));
+
+                var rock = root.GetComponentsInChildren<Transform>(true)
+                    .First(transform => transform.name.StartsWith("rockTile_"));
+                AssertBottomOnGrid(rock);
+                Assert.AreEqual(0.5f, rock.localPosition.y, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void DisplayNamesCoverCurrentDesignerToolsAndSemanticKinds()
         {
             foreach (RoomDesignerTool tool in System.Enum.GetValues(typeof(RoomDesignerTool)))
@@ -306,6 +336,21 @@ namespace Hollow.Tests.EditMode
             bool erase = false)
         {
             return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false);
+        }
+
+        private static Transform FindChild(GameObject root, string name)
+        {
+            return root.GetComponentsInChildren<Transform>(true).Single(transform => transform.name == name);
+        }
+
+        private static Transform FindChildStartingWith(GameObject root, string prefix)
+        {
+            return root.GetComponentsInChildren<Transform>(true).First(transform => transform.name.StartsWith(prefix));
+        }
+
+        private static void AssertBottomOnGrid(Transform transform)
+        {
+            Assert.AreEqual(0f, transform.localPosition.y - transform.localScale.y * 0.5f, 0.001f, transform.name);
         }
     }
 }

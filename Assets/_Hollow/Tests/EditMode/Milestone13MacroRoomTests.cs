@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Hollow.Branches;
+using Hollow.Combat;
 using Hollow.Editor.Generation;
 using Hollow.RoomDesigner;
 using Hollow.Rooms;
@@ -109,6 +110,30 @@ namespace Hollow.Tests.EditMode
                 Assert.IsTrue(room.TryGetDoorPortById("north_1", out var north1));
                 Assert.AreNotEqual(north0.HostCell, north1.HostCell);
                 Assert.IsTrue(room.TryGetDoorPort("north", out _));
+            }
+            finally
+            {
+                Object.DestroyImmediate(rootObject);
+            }
+        }
+
+        [Test]
+        public void LRoomMissingQuadrantIsNotWalkableAtRuntime()
+        {
+            var asset = RoomDesignerCompiler.Compile(RoomDesignerProject.CreateDefault(RoomDesignerFootprintPreset.L3Cell, "L Collision Test"));
+            var rootObject = new GameObject("M13LRuntimeRoot");
+            try
+            {
+                var room = rootObject.AddComponent<RoomRuntimeRoot>();
+                room.BuildFrom(asset);
+
+                var missingQuadrant = new Vector3(6f, 0f, 4f);
+                Assert.IsTrue(RoomLocalCollision.IsOutsideBounds(room, missingQuadrant, 0.35f));
+
+                var startInLowerLeftCell = new Vector3(-1f, 0f, 4f);
+                var resolved = RoomLocalCollision.ResolveMove(room, startInLowerLeftCell, missingQuadrant, 0.35f);
+                Assert.Less(resolved.x, 0.5f);
+                Assert.IsFalse(RoomLocalCollision.IsOutsideBounds(room, resolved, 0.35f));
             }
             finally
             {

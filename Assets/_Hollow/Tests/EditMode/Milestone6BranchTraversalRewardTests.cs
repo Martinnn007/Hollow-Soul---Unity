@@ -174,6 +174,12 @@ namespace Hollow.Tests.EditMode
                     .ToArray();
                 Assert.GreaterOrEqual(cells.Length, 5);
 
+                var originCell = shapeRoot.Find("MiniMapRoomCell_origin_0_0") as RectTransform;
+                var northCell = shapeRoot.Find("MiniMapRoomCell_north_0_-1") as RectTransform;
+                Assert.IsNotNull(originCell);
+                Assert.IsNotNull(northCell);
+                Assert.Greater(northCell.anchoredPosition.y, originCell.anchoredPosition.y);
+
                 var mapText = canvasObject.GetComponentsInChildren<Text>(true)
                     .Single(text => text.name == "BranchMiniMap.MapPanel.Text");
                 Assert.IsTrue(mapText.text.Contains("Branch Map"));
