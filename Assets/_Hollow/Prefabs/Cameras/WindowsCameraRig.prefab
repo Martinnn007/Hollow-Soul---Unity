@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7956962899931991666}
   - component: {fileID: 6978569039808623036}
   - component: {fileID: 8450792411964651840}
-  - component: {fileID: 8794454810898257012}
+  - component: {fileID: 7871489295333178411}
   m_Layer: 0
   m_Name: WindowsCameraRig
   m_TagString: Untagged
@@ -62,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.GameplayCameraFollowController
   target: {fileID: 0}
   followSharpness: 8
---- !u!114 &8794454810898257012
+--- !u!114 &7871489295333178411
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 6674705883755925339}
   - component: {fileID: 5734827245526350762}
   - component: {fileID: 517355932463174227}
-  - component: {fileID: 5899278355257396611}
+  - component: {fileID: 4307368128317852105}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -168,7 +168,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8860015655403478186}
   m_Enabled: 1
---- !u!114 &5899278355257396611
+--- !u!114 &4307368128317852105
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

@@ -13,6 +13,8 @@ namespace Hollow.Rewards
 
         public string ActiveItemId { get; private set; } = string.Empty;
 
+        public int ActiveItemCharges { get; private set; }
+
         public string ConsumableCardId { get; private set; } = string.Empty;
 
         public void EquipMeleeWeapon(string weaponId)
@@ -35,6 +37,32 @@ namespace Hollow.Rewards
             ActiveItemId = itemId ?? string.Empty;
         }
 
+        public void SetActiveItemCharges(int charges)
+        {
+            ActiveItemCharges = System.Math.Max(0, charges);
+        }
+
+        public bool SpendActiveItemCharge()
+        {
+            if (ActiveItemCharges <= 0)
+            {
+                return false;
+            }
+
+            ActiveItemCharges--;
+            return true;
+        }
+
+        public void RechargeActiveItem(int amount, int maxCharges)
+        {
+            if (string.IsNullOrWhiteSpace(ActiveItemId) || maxCharges <= 0 || amount <= 0)
+            {
+                return;
+            }
+
+            ActiveItemCharges = System.Math.Min(maxCharges, ActiveItemCharges + amount);
+        }
+
         public void EquipConsumableCard(string cardId)
         {
             ConsumableCardId = cardId ?? string.Empty;
@@ -48,6 +76,7 @@ namespace Hollow.Rewards
                 rangedWeaponId = RangedWeaponId,
                 activeWeaponSlot = ActiveWeaponSlot.ToString(),
                 activeItemId = ActiveItemId,
+                activeItemCharges = ActiveItemCharges,
                 consumableCardId = ConsumableCardId
             };
         }
@@ -68,6 +97,7 @@ namespace Hollow.Rewards
             }
 
             slots.EquipActiveItem(saveState.activeItemId);
+            slots.SetActiveItemCharges(saveState.activeItemCharges);
             slots.EquipConsumableCard(saveState.consumableCardId);
             return slots;
         }

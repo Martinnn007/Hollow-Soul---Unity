@@ -90,19 +90,14 @@ namespace Hollow.Editor.Validation
             var heal = hub.ShopOffers.FirstOrDefault(offer => offer.OfferId == "heal_2");
             if (heal == null || heal.Price != 8 || heal.HealAmount != 2)
             {
-                failures.Add("M21 heal card must cost 8 souls and heal 2 HP.");
+                failures.Add("M21 heal card must cost 8 and heal 2 HP.");
             }
 
             foreach (var offer in hub.ShopOffers.Where(offer => offer.OfferId.StartsWith("reward_")))
             {
-                if (offer.RewardGrant.RewardKind == RewardKind.Card && offer.Price != 14)
+                if (offer.RewardGrant.RewardKind != RewardKind.Weapon && offer.Price != 16)
                 {
-                    failures.Add("M21 card reward offers must cost 14 souls.");
-                }
-
-                if (offer.RewardGrant.RewardKind == RewardKind.PassiveItem && offer.Price != 16)
-                {
-                    failures.Add("M21 passive reward offers must cost 16 souls.");
+                    failures.Add("M21 reward offers must keep the simple reward-card price after later currency updates.");
                 }
             }
         }

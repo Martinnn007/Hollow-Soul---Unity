@@ -27,6 +27,9 @@ namespace Hollow.Branches
         }
 
         public void Refresh(int runSouls)
+            => Refresh(runSouls, 0);
+
+        public void Refresh(int runSouls, int runCoins)
         {
             if (offer == null)
             {
@@ -34,7 +37,7 @@ namespace Hollow.Branches
             }
 
             BuildIfNeeded();
-            viewModel = HubShopCardViewModel.FromOffer(offer, runSouls);
+            viewModel = HubShopCardViewModel.FromOffer(offer, runSouls, runCoins);
             if (label != null)
             {
                 label.text = viewModel.BodyText;

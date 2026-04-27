@@ -15,7 +15,9 @@ namespace Hollow.Input
                 ReadInteractPressed(),
                 ReadSwapWeaponPressed(),
                 ReadLightAttackPressed(),
-                ReadHeavyAttackPressed());
+                ReadHeavyAttackPressed(),
+                ReadUseActiveItemPressed(),
+                ReadUseConsumableCardPressed());
         }
 
         public static Vector2 CardinalizeShoot(Vector2 rawShoot)
@@ -160,6 +162,30 @@ namespace Hollow.Input
 
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.rightTrigger.wasPressedThisFrame;
+        }
+
+        private static bool ReadUseActiveItemPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.qKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.buttonNorth.wasPressedThisFrame;
+        }
+
+        private static bool ReadUseConsumableCardPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.fKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.buttonWest.wasPressedThisFrame;
         }
     }
 }

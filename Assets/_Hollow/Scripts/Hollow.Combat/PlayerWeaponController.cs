@@ -14,6 +14,7 @@ namespace Hollow.Combat
         [SerializeField] private float cooldownMultiplier = 1f;
         [SerializeField] private int projectileDamageBonus;
         [SerializeField] private int meleeDamageBonus = 1;
+        [SerializeField] private int temporaryDamageBonus;
         [SerializeField] private float maxStamina = 100f;
         [SerializeField] private float currentStamina = 100f;
         [SerializeField] private float staminaRegenPerSecond = 18f;
@@ -27,6 +28,7 @@ namespace Hollow.Combat
 
         private float nextAllowedShotTime;
         private float nextAllowedMeleeTime;
+        private float temporaryDamageEndTime;
         private Vector2 lastAimDirection = Vector2.up;
 
         public float CooldownSeconds => cooldownSeconds * cooldownMultiplier;
@@ -157,7 +159,7 @@ namespace Hollow.Combat
             }
 
             var attackCooldown = attack.CooldownSeconds * cooldownMultiplier;
-            var attackDamage = attack.Damage + projectileDamageBonus;
+            var attackDamage = attack.Damage + projectileDamageBonus + CurrentTemporaryDamageBonus;
             nextAllowedShotTime = timeSeconds + attackCooldown;
             var projectileObject = Instantiate(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
@@ -199,7 +201,7 @@ namespace Hollow.Combat
             var target = combatController.FindEnemyHit(hitCenter, radius);
             if (target != null)
             {
-                var damage = Mathf.Max(1, attack.Damage + meleeDamageBonus);
+                var damage = Mathf.Max(1, attack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus);
                 DamageSystem.ApplyDamage(target.Health, new DamageRequest(damage, gameObject));
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
@@ -244,6 +246,14 @@ namespace Hollow.Combat
             var weaponId = slot == WeaponSlot.Melee ? meleeWeaponId : rangedWeaponId;
             return weaponCatalog != null ? weaponCatalog.Resolve(weaponId, slot) : null;
         }
+
+        public void ApplyTemporaryDamageBonus(int damageBonus, float durationSeconds)
+        {
+            temporaryDamageBonus = Mathf.Max(0, damageBonus);
+            temporaryDamageEndTime = Time.time + Mathf.Max(0f, durationSeconds);
+        }
+
+        private int CurrentTemporaryDamageBonus => Time.time < temporaryDamageEndTime ? temporaryDamageBonus : 0;
 
         private static WeaponAttackDefinition ResolveAttack(WeaponDefinition weapon, WeaponSlot slot, AttackKind attackKind)
         {

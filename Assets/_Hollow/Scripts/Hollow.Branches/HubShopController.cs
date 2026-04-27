@@ -23,6 +23,9 @@ namespace Hollow.Branches
         }
 
         public void BuildCards(int runSouls)
+            => BuildCards(runSouls, 0);
+
+        public void BuildCards(int runSouls, int runCoins)
         {
             DestroyCards();
             for (var index = 0; index < State.ShopOffers.Count; index++)
@@ -43,16 +46,19 @@ namespace Hollow.Branches
 
                 var card = cardObject.GetComponent<HubShopCard>() ?? cardObject.AddComponent<HubShopCard>();
                 card.Configure(offer);
-                card.Refresh(runSouls);
+                card.Refresh(runSouls, runCoins);
                 cards.Add(card);
             }
         }
 
         public void RefreshCards(int runSouls)
+            => RefreshCards(runSouls, 0);
+
+        public void RefreshCards(int runSouls, int runCoins)
         {
             foreach (var card in cards.Where(card => card != null))
             {
-                card.Refresh(runSouls);
+                card.Refresh(runSouls, runCoins);
             }
         }
 

@@ -99,6 +99,7 @@ namespace Hollow.Persistence
         public string offerId = string.Empty;
         public string displayName = string.Empty;
         public int price;
+        public string priceCurrency = "Souls";
         public int healAmount;
         public bool isPurchased;
         public RunRewardSaveState reward = new();
@@ -146,6 +147,7 @@ namespace Hollow.Persistence
         public string rangedWeaponId = "starter_bolt";
         public string activeWeaponSlot = "Ranged";
         public string activeItemId = string.Empty;
+        public int activeItemCharges;
         public string consumableCardId = string.Empty;
     }
 

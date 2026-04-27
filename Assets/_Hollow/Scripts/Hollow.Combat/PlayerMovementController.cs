@@ -11,10 +11,14 @@ namespace Hollow.Combat
 
         [SerializeField] private float speedMetersPerSecond = DefaultSpeedMetersPerSecond;
         [SerializeField] private float runSpeedBonusMetersPerSecond;
+        [SerializeField] private float temporarySpeedBonusMetersPerSecond;
         [SerializeField] private float radiusMeters = PlaceholderPlayerController.DefaultRadiusMeters;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
+        private float temporarySpeedEndTime;
 
-        public float SpeedMetersPerSecond => speedMetersPerSecond + runSpeedBonusMetersPerSecond;
+        public float SpeedMetersPerSecond => speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus;
+
+        private float CurrentTemporarySpeedBonus => Time.time < temporarySpeedEndTime ? temporarySpeedBonusMetersPerSecond : 0f;
 
         public RoomRuntimeRoot RoomRuntimeRoot => roomRuntimeRoot;
 
@@ -32,6 +36,12 @@ namespace Hollow.Combat
         {
             speedMetersPerSecond = Mathf.Max(0.1f, nextSpeedMetersPerSecond);
             runSpeedBonusMetersPerSecond = 0f;
+        }
+
+        public void ApplyTemporarySpeedBonus(float bonusMetersPerSecond, float durationSeconds)
+        {
+            temporarySpeedBonusMetersPerSecond = Mathf.Max(0f, bonusMetersPerSecond);
+            temporarySpeedEndTime = Time.time + Mathf.Max(0f, durationSeconds);
         }
 
         private void Update()

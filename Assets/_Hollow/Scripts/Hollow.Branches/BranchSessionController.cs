@@ -38,6 +38,7 @@ namespace Hollow.Branches
         [SerializeField] private RewardPoolDefinition bossRewardPool;
         [SerializeField] private RewardPoolDefinition weaponRewardPool;
         [SerializeField] private WeaponCatalogDefinition weaponCatalog;
+        [SerializeField] private UsableItemCatalogDefinition usableItemCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
@@ -137,10 +138,10 @@ namespace Hollow.Branches
                 var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
                 if (weapon == null)
                 {
-                    return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --";
+                    return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
                 }
 
-                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}";
+                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
             }
         }
 
@@ -163,6 +164,8 @@ namespace Hollow.Branches
         public EncounterCatalogDefinition EncounterCatalog => encounterCatalog;
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
+
+        public UsableItemCatalogDefinition UsableItemCatalog => usableItemCatalog;
 
         public int MacroBranchSeed => macroBranchSeed;
 
@@ -209,6 +212,11 @@ namespace Hollow.Branches
         public void ConfigureWeaponCatalog(WeaponCatalogDefinition nextWeaponCatalog)
         {
             weaponCatalog = nextWeaponCatalog;
+        }
+
+        public void ConfigureUsableItemCatalog(UsableItemCatalogDefinition nextUsableItemCatalog)
+        {
+            usableItemCatalog = nextUsableItemCatalog;
         }
 
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
@@ -351,12 +359,26 @@ namespace Hollow.Branches
 
         private void Update()
         {
-            if (State == null || !GameplayInputReader.ReadCurrent().InteractPressed)
+            if (State == null)
             {
                 return;
             }
 
-            TryInteract();
+            var input = GameplayInputReader.ReadCurrent();
+            if (input.UseActiveItemPressed)
+            {
+                TryUseActiveItem();
+            }
+
+            if (input.UseConsumableCardPressed)
+            {
+                TryUseConsumableCard();
+            }
+
+            if (input.InteractPressed)
+            {
+                TryInteract();
+            }
         }
 
         public bool TryInteract()
@@ -460,6 +482,8 @@ namespace Hollow.Branches
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
+            RewardApplicationService.RechargeActiveItem(playerRunBuild, usableItemCatalog);
+            ApplyRunStatsToPlayer(healAmount: 0);
             VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
             AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
             SpawnRewardIfNeeded();
@@ -475,6 +499,8 @@ namespace Hollow.Branches
             }
 
             State.CurrentRoom.MarkCleared();
+            RewardApplicationService.RechargeActiveItem(playerRunBuild, usableItemCatalog);
+            ApplyRunStatsToPlayer(healAmount: 0);
             if (State.CurrentRoom.Id != BranchRoomId.Origin)
             {
                 State.CurrentRoom.MarkRewardPending();
@@ -533,13 +559,10 @@ namespace Hollow.Branches
 
             State.CurrentRoom.MarkRewardClaimed();
             var grant = ProceduralRewardResolver.Resolve(State.CurrentRoomId.Value, proceduralRewardPlan);
-            if (runEconomy.ApplyReward(grant))
+            var result = ApplyRewardGrant(grant);
+            if (result.Applied)
             {
-                var healAmount = playerRunStats.ApplyReward(grant);
-                ApplyEquipmentReward(grant);
-                ApplyRunStatsToPlayer(healAmount);
-                rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
-                LastRewardMessage = RewardMessage(grant);
+                LastRewardMessage = result.Message;
             }
 
             DestroyRuntimeObject(currentRewardPickup.gameObject);
@@ -567,14 +590,14 @@ namespace Hollow.Branches
             if (offer.IsPurchased)
             {
                 LastRewardMessage = $"{offer.DisplayName} is sold out";
-                currentHubShop?.RefreshCards(runEconomy.RunSouls);
+                currentHubShop?.RefreshCards(runEconomy.RunSouls, runEconomy.RunCoins);
                 return false;
             }
 
-            if (runEconomy.RunSouls < offer.Price)
+            if (!CanAfford(offer))
             {
-                LastRewardMessage = $"Need {offer.Price - runEconomy.RunSouls} more souls";
-                currentHubShop?.RefreshCards(runEconomy.RunSouls);
+                LastRewardMessage = NeedCurrencyMessage(offer);
+                currentHubShop?.RefreshCards(runEconomy.RunSouls, runEconomy.RunCoins);
                 return false;
             }
 
@@ -583,12 +606,11 @@ namespace Hollow.Branches
                 return false;
             }
 
-            if (!grant.IsEmpty && runEconomy.ApplyReward(grant))
+            if (!grant.IsEmpty)
             {
-                healAmount += playerRunStats.ApplyReward(grant);
-                ApplyEquipmentReward(grant);
-                rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
-                LastRewardMessage = $"Purchased: {grant.DisplayName}";
+                var result = ApplyRewardGrant(grant, extraHeal: healAmount);
+                LastRewardMessage = result.Applied ? $"Purchased: {grant.DisplayName}" : LastRewardMessage;
+                healAmount = 0;
             }
             else if (healAmount > 0)
             {
@@ -597,7 +619,7 @@ namespace Hollow.Branches
 
             ApplyRunStatsToPlayer(healAmount);
             currentHubShop?.Configure(interBranchHubState);
-            currentHubShop?.RefreshCards(runEconomy.RunSouls);
+            currentHubShop?.RefreshCards(runEconomy.RunSouls, runEconomy.RunCoins);
             CheckpointActiveRun();
             return true;
         }
@@ -653,7 +675,7 @@ namespace Hollow.Branches
                 if (worldPhase == RunWorldPhase.Branch && !string.IsNullOrWhiteSpace(activeHubPortalId))
                 {
                     interBranchHubState = interBranchHubState.IsActive
-                        ? interBranchHubState.MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool)
+                        ? interBranchHubState.MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool)
                         : InterBranchHubState.CreateWorldHub(runSeed, worldIndex, 0, standardRewardPool, weaponRewardPool)
                             .MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool);
                     activeHubPortalId = string.Empty;
@@ -960,7 +982,7 @@ namespace Hollow.Branches
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.HubShop, shopObject.transform, Vector3.zero, Vector3.one);
             currentHubShop = shopObject.GetComponent<HubShopController>() ?? shopObject.AddComponent<HubShopController>();
             currentHubShop.Configure(interBranchHubState);
-            currentHubShop.BuildCards(runEconomy.RunSouls);
+            currentHubShop.BuildCards(runEconomy.RunSouls, runEconomy.RunCoins);
 
             for (var index = 0; index < interBranchHubState.NextBranchChoices.Count; index++)
             {
@@ -1155,28 +1177,6 @@ namespace Hollow.Branches
                 : ProceduralRewardResolver.CreateSeededPlan(graph, standardRewardPool, treasureRewardPool, bossRewardPool, weaponRewardPool);
         }
 
-        private static string RewardMessage(RewardGrant grant)
-        {
-            if (grant.IsEmpty)
-            {
-                return "No reward";
-            }
-
-            if (grant.Souls > 0 && grant.Coins > 0)
-            {
-                return $"Received: {grant.DisplayName} (+{grant.Souls} souls, +{grant.Coins} coins)";
-            }
-
-            if (grant.Coins > 0)
-            {
-                return $"Received: {grant.DisplayName} (+{grant.Coins} coins)";
-            }
-
-            return grant.Souls > 0
-                ? $"Received: {grant.DisplayName} (+{grant.Souls} souls)"
-                : $"Received: {grant.DisplayName}";
-        }
-
         private EncounterPlan CreateEncounterPlanForGraph(BranchFloorGraph graph)
         {
             return graph != null && (graph.BranchId == BranchGenerator.EnemyEncounterBranchId || graph.BranchId == BranchGenerator.BranchFeaturesId)
@@ -1285,37 +1285,153 @@ namespace Hollow.Branches
             PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, weaponCatalog, healAmount);
         }
 
-        private void ApplyEquipmentReward(RewardGrant grant)
+        private RewardApplicationResult ApplyRewardGrant(RewardGrant grant, int extraHeal = 0)
         {
-            if (grant.RewardKind != RewardKind.Weapon || string.IsNullOrWhiteSpace(grant.RewardId))
+            playerRunBuild ??= CreateCurrentRunBuild();
+            var result = RewardApplicationService.Apply(grant, runEconomy, playerRunStats, playerRunBuild, weaponCatalog, usableItemCatalog);
+            if (result.Applied)
+            {
+                ApplyRunStatsToPlayer(result.HealAmount + Mathf.Max(0, extraHeal));
+                rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
+            }
+
+            return result;
+        }
+
+        public bool TryUseActiveItem()
+        {
+            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+            var itemId = playerRunBuild.Equipment.ActiveItemId;
+            if (string.IsNullOrWhiteSpace(itemId) || usableItemCatalog == null || !usableItemCatalog.TryGet(itemId, out var item))
+            {
+                LastRewardMessage = "No active item equipped";
+                return false;
+            }
+
+            if (!playerRunBuild.Equipment.SpendActiveItemCharge())
+            {
+                LastRewardMessage = $"{item.DisplayName} has no charges";
+                return false;
+            }
+
+            ApplyUsableEffects(item, consumeAfterUse: false);
+            LastRewardMessage = $"Used: {item.DisplayName}";
+            ApplyRunStatsToPlayer(0);
+            CheckpointActiveRun();
+            return true;
+        }
+
+        public bool TryUseConsumableCard()
+        {
+            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+            var cardId = playerRunBuild.Equipment.ConsumableCardId;
+            if (string.IsNullOrWhiteSpace(cardId) || usableItemCatalog == null || !usableItemCatalog.TryGet(cardId, out var card))
+            {
+                LastRewardMessage = "No card equipped";
+                return false;
+            }
+
+            ApplyUsableEffects(card, consumeAfterUse: true);
+            playerRunBuild.Equipment.EquipConsumableCard(string.Empty);
+            LastRewardMessage = $"Used: {card.DisplayName}";
+            ApplyRunStatsToPlayer(0);
+            CheckpointActiveRun();
+            return true;
+        }
+
+        private void ApplyUsableEffects(UsableItemDefinition usable, bool consumeAfterUse)
+        {
+            var healAmount = 0;
+            foreach (var effect in usable.Effects)
+            {
+                switch (effect.Kind)
+                {
+                    case RewardEffectKind.Heal:
+                        healAmount += Mathf.Max(0, effect.IntValue);
+                        break;
+                    case RewardEffectKind.ProjectileDamageBonus:
+                    case RewardEffectKind.MeleeDamageBonus:
+                    case RewardEffectKind.RangedDamageBonus:
+                        playerController?.GetComponent<PlayerWeaponController>()?.ApplyTemporaryDamageBonus(Mathf.Max(1, effect.IntValue), 8f);
+                        break;
+                    case RewardEffectKind.MoveSpeedBonus:
+                        playerController?.GetComponent<PlayerMovementController>()?.ApplyTemporarySpeedBonus(Mathf.Max(0f, effect.FloatValue), 8f);
+                        break;
+                    case RewardEffectKind.MaxStaminaBonus:
+                        playerRunBuild.RegenerateStamina(999f);
+                        break;
+                    case RewardEffectKind.Coins:
+                        runEconomy.ApplyReward(new RewardGrant($"usable_{usable.ItemId}_{Time.frameCount}", usable.ItemId, usable.DisplayName, RewardKind.Currency, 0, Mathf.Max(0, effect.IntValue), Array.Empty<RewardEffect>()));
+                        break;
+                }
+            }
+
+            if (usable.ItemId == "echo_burst")
+            {
+                ApplyEchoBurstDamage();
+            }
+
+            ApplyRunStatsToPlayer(healAmount);
+            if (consumeAfterUse)
+            {
+                playerRunBuild.Equipment.EquipConsumableCard(string.Empty);
+            }
+        }
+
+        private void ApplyEchoBurstDamage()
+        {
+            if (roomCombatController == null || playerController == null)
             {
                 return;
             }
 
-            playerRunBuild ??= CreateCurrentRunBuild();
-            if (weaponCatalog != null && weaponCatalog.TryGetWeapon(grant.RewardId, out var weapon))
+            var center = playerController.transform.localPosition;
+            foreach (var enemy in roomCombatController.Enemies)
             {
-                if (weapon.Slot == WeaponSlot.Melee)
+                if (enemy == null || !enemy.IsAlive || Vector3.Distance(Flat(enemy.transform.localPosition), Flat(center)) > 2.15f)
                 {
-                    playerRunBuild.Equipment.EquipMeleeWeapon(weapon.WeaponId);
-                    playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
+                    continue;
                 }
-                else
-                {
-                    playerRunBuild.Equipment.EquipRangedWeapon(weapon.WeaponId);
-                    playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
-                }
+
+                DamageSystem.ApplyDamage(enemy.Health, new DamageRequest(2, playerController.gameObject));
             }
-            else if (grant.RewardId.Contains("blade") || grant.RewardId.Contains("cleaver") || grant.RewardId.Contains("sword"))
+        }
+
+        private bool CanAfford(HubShopOffer offer)
+        {
+            return offer.PriceCurrency == ShopPriceCurrency.Coins
+                ? runEconomy.RunCoins >= offer.Price
+                : runEconomy.RunSouls >= offer.Price;
+        }
+
+        private string NeedCurrencyMessage(HubShopOffer offer)
+        {
+            var current = offer.PriceCurrency == ShopPriceCurrency.Coins ? runEconomy.RunCoins : runEconomy.RunSouls;
+            var currency = offer.PriceCurrency == ShopPriceCurrency.Coins ? "coins" : "souls";
+            return $"Need {offer.Price - current} more {currency}";
+        }
+
+        private string ActiveItemSummary()
+        {
+            var itemId = playerRunBuild?.Equipment.ActiveItemId ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(itemId))
             {
-                playerRunBuild.Equipment.EquipMeleeWeapon(grant.RewardId);
-                playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
+                return "None";
             }
-            else
+
+            var displayName = usableItemCatalog != null && usableItemCatalog.TryGet(itemId, out var item) ? item.DisplayName : itemId;
+            return $"{displayName} ({playerRunBuild.Equipment.ActiveItemCharges}/3)";
+        }
+
+        private string CardSummary()
+        {
+            var cardId = playerRunBuild?.Equipment.ConsumableCardId ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(cardId))
             {
-                playerRunBuild.Equipment.EquipRangedWeapon(grant.RewardId);
-                playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                return "None";
             }
+
+            return usableItemCatalog != null && usableItemCatalog.TryGet(cardId, out var card) ? card.DisplayName : cardId;
         }
 
         private void CheckpointActiveRun()

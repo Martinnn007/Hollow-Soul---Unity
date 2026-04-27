@@ -43,20 +43,25 @@ namespace Hollow.Branches
         public string BodyText => $"{Title}\n{PriceText}\n{EffectText}\n{StatusText}";
 
         public static HubShopCardViewModel FromOffer(HubShopOffer offer, int runSouls)
+            => FromOffer(offer, runSouls, 0);
+
+        public static HubShopCardViewModel FromOffer(HubShopOffer offer, int runSouls, int runCoins)
         {
             if (offer == null)
             {
                 return new HubShopCardViewModel(string.Empty, "Empty", string.Empty, string.Empty, string.Empty, isSold: true, isAffordable: false);
             }
 
-            var affordable = runSouls >= offer.Price;
+            var availableCurrency = offer.PriceCurrency == ShopPriceCurrency.Coins ? runCoins : runSouls;
+            var currencyName = offer.PriceCurrency == ShopPriceCurrency.Coins ? "coins" : "souls";
+            var affordable = availableCurrency >= offer.Price;
             var status = offer.IsPurchased
                 ? "SOLD"
-                : affordable ? "Press E / A to buy" : $"Need {offer.Price - runSouls} souls";
+                : affordable ? "Press E / A to buy" : $"Need {offer.Price - availableCurrency} {currencyName}";
             return new HubShopCardViewModel(
                 offer.OfferId,
                 string.IsNullOrWhiteSpace(offer.DisplayName) ? "Unknown Offer" : offer.DisplayName,
-                $"{offer.Price} souls",
+                $"{offer.Price} {currencyName}",
                 EffectTextFor(offer),
                 status,
                 offer.IsPurchased,
@@ -79,8 +84,12 @@ namespace Hollow.Branches
             return grant.RewardKind switch
             {
                 RewardKind.Card => "Card reward",
+                RewardKind.PassiveCard => "Passive card",
+                RewardKind.ActiveItem => "Active item",
+                RewardKind.ConsumableCard => "Consumable card",
                 RewardKind.PassiveItem => "Passive item",
                 RewardKind.Weapon => "Weapon replacement",
+                RewardKind.Heal => "Heal",
                 RewardKind.Currency => "Currency",
                 _ => "Reward"
             };

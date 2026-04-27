@@ -9,10 +9,16 @@ namespace Hollow.Branches
     public sealed class HubShopOffer
     {
         public HubShopOffer(string offerId, string displayName, int price, int healAmount, RewardGrant rewardGrant, bool isPurchased = false)
+            : this(offerId, displayName, price, ShopPriceCurrency.Souls, healAmount, rewardGrant, isPurchased)
+        {
+        }
+
+        public HubShopOffer(string offerId, string displayName, int price, ShopPriceCurrency priceCurrency, int healAmount, RewardGrant rewardGrant, bool isPurchased = false)
         {
             OfferId = offerId ?? string.Empty;
             DisplayName = displayName ?? string.Empty;
             Price = Math.Max(0, price);
+            PriceCurrency = priceCurrency;
             HealAmount = Math.Max(0, healAmount);
             RewardGrant = rewardGrant;
             IsPurchased = isPurchased;
@@ -24,6 +30,8 @@ namespace Hollow.Branches
 
         public int Price { get; }
 
+        public ShopPriceCurrency PriceCurrency { get; }
+
         public int HealAmount { get; }
 
         public RewardGrant RewardGrant { get; }
@@ -34,7 +42,7 @@ namespace Hollow.Branches
         {
             rewardGrant = RewardGrant;
             healAmount = HealAmount;
-            if (IsPurchased || economy == null || !economy.SpendSouls(Price))
+            if (IsPurchased || economy == null || !SpendPrice(economy))
             {
                 rewardGrant = default;
                 healAmount = 0;
@@ -52,6 +60,7 @@ namespace Hollow.Branches
                 offerId = OfferId,
                 displayName = DisplayName,
                 price = Price,
+                priceCurrency = PriceCurrency.ToString(),
                 healAmount = HealAmount,
                 isPurchased = IsPurchased,
                 reward = ToRewardSaveState(RewardGrant)
@@ -66,6 +75,7 @@ namespace Hollow.Branches
                     save.offerId,
                     save.displayName,
                     save.price,
+                    Enum.TryParse(save.priceCurrency, out ShopPriceCurrency parsedCurrency) ? parsedCurrency : ShopPriceCurrency.Souls,
                     save.healAmount,
                     FromRewardSaveState(save.reward),
                     save.isPurchased);
@@ -75,7 +85,7 @@ namespace Hollow.Branches
         {
             var offers = new List<HubShopOffer>
             {
-                new("heal_2", "Heal 2 HP", 8, 2, default)
+                new("heal_2", "Heal 2 HP", 8, ShopPriceCurrency.Coins, 2, default)
             };
 
             for (var index = 0; index < 2; index++)
@@ -89,11 +99,12 @@ namespace Hollow.Branches
                     : FallbackReward(roomId, branchSeed, branchDepth, index);
                 var price = grant.RewardKind switch
                 {
-                    RewardKind.Card => 14,
-                    RewardKind.Weapon => 20,
+                    RewardKind.Weapon => 22,
+                    RewardKind.ConsumableCard => 10,
                     _ => 16
                 };
-                offers.Add(new HubShopOffer($"reward_{index}", grant.DisplayName, price, 0, grant));
+                var currency = grant.RewardKind == RewardKind.Weapon ? ShopPriceCurrency.Souls : ShopPriceCurrency.Coins;
+                offers.Add(new HubShopOffer($"reward_{index}", grant.DisplayName, price, currency, 0, grant));
             }
 
             return offers;
@@ -110,6 +121,13 @@ namespace Hollow.Branches
             };
             var selected = pool[StableHash($"{branchSeed}|{branchDepth}|shop|{index}") % pool.Length];
             return new RewardGrant(roomId, selected.Item1, selected.Item2, selected.Item3, 0);
+        }
+
+        private bool SpendPrice(RunEconomy economy)
+        {
+            return PriceCurrency == ShopPriceCurrency.Coins
+                ? economy.SpendCoins(Price)
+                : economy.SpendSouls(Price);
         }
 
         private static RunRewardSaveState ToRewardSaveState(RewardGrant grant)

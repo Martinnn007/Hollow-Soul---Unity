@@ -191,6 +191,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerMovementController
   speedMetersPerSecond: 4
   runSpeedBonusMetersPerSecond: 0
+  temporarySpeedBonusMetersPerSecond: 0
   radiusMeters: 0.28
   roomRuntimeRoot: {fileID: 0}
 --- !u!114 &2505458630128641707
@@ -209,6 +210,7 @@ MonoBehaviour:
   cooldownMultiplier: 1
   projectileDamageBonus: 0
   meleeDamageBonus: 1
+  temporaryDamageBonus: 0
   maxStamina: 100
   currentStamina: 100
   staminaRegenPerSecond: 18
