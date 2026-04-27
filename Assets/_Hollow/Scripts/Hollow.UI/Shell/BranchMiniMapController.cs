@@ -1,4 +1,5 @@
 using Hollow.Branches;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +13,7 @@ namespace Hollow.UI.Shell
         private Text mapText;
         private Text economyText;
         private Text itemLogText;
+        private RectTransform shapeRoot;
         private Font font;
         private string lastSummary;
 
@@ -40,7 +42,7 @@ namespace Hollow.UI.Shell
         private void Refresh(bool force)
         {
             BuildIfNeeded();
-            if (branchSessionController == null || mapText == null || economyText == null || itemLogText == null)
+            if (branchSessionController == null || mapText == null || economyText == null || itemLogText == null || shapeRoot == null)
             {
                 return;
             }
@@ -57,67 +59,121 @@ namespace Hollow.UI.Shell
             }
 
             lastSummary = displayState;
-            mapText.text = $"Branch Map\n{Format(model)}\nC current | X clear | R reward | V visited";
+            mapText.text = "Branch Map\nBright: current | Gold: reward | Dark: nearby";
+            RebuildShapeMap(model);
             economyText.text =
                 $"Run Souls: {branchSessionController.RunEconomy.RunSouls}\nBanked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nSave: {branchSessionController.SaveStatus}";
             itemLogText.text = $"Latest\n{branchSessionController.LastRewardMessage}\n\nItems\n{itemNames}";
         }
 
-        private static string Format(BranchMiniMapModel model)
+        public void RebuildShapeMap(BranchMiniMapModel model)
         {
-            if (model?.Nodes == null)
+            ClearShapeMap();
+            if (model?.Nodes == null || shapeRoot == null)
             {
-                return "No branch";
+                return;
             }
 
-            if (model.Nodes.Count == 0)
+            var visibleNodes = model.Nodes.Where(node => node.IsRevealed).ToList();
+            if (visibleNodes.Count == 0)
             {
-                return "No rooms";
+                return;
             }
 
-            var minX = model.Nodes.Min(node => node.Coordinate.x);
-            var maxX = model.Nodes.Max(node => node.Coordinate.x);
-            var minY = model.Nodes.Min(node => node.Coordinate.y);
-            var maxY = model.Nodes.Max(node => node.Coordinate.y);
-            var rows = Enumerable.Range(minY, maxY - minY + 1)
-                .Select(y => string.Join(" ", Enumerable.Range(minX, maxX - minX + 1)
-                    .Select(x => NodeTokenAt(model, new Vector2Int(x, y)))));
-            return string.Join("\n", rows);
+            var layout = MiniMapLayout.Create(visibleNodes, shapeRoot.rect.size);
+            foreach (var connection in model.Connections)
+            {
+                DrawConnection(connection, shapeRoot, layout);
+            }
+
+            foreach (var node in visibleNodes)
+            {
+                DrawRoomNode(node, shapeRoot, layout);
+            }
         }
 
-        private static string NodeTokenAt(BranchMiniMapModel model, Vector2Int coordinate)
+        public void ClearShapeMap()
         {
-            foreach (var node in model.Nodes)
+            if (shapeRoot == null)
             {
-                if (node.Coordinate != coordinate)
-                {
-                    continue;
-                }
-
-                if (node.IsCurrent)
-                {
-                    return "[C]";
-                }
-
-                if (node.HasPendingReward)
-                {
-                    return "[R]";
-                }
-
-                if (node.IsCleared)
-                {
-                    return "[X]";
-                }
-
-                return node.IsVisited ? "[V]" : "[ ]";
+                return;
             }
 
-            return "   ";
+            for (var index = shapeRoot.childCount - 1; index >= 0; index--)
+            {
+                var child = shapeRoot.GetChild(index).gameObject;
+                if (Application.isPlaying)
+                {
+                    Destroy(child);
+                }
+                else
+                {
+                    DestroyImmediate(child);
+                }
+            }
+        }
+
+        public void DrawRoomNode(BranchMiniMapNode node, RectTransform root, MiniMapLayout layout)
+        {
+            foreach (var cell in node.OccupiedCells)
+            {
+                var cellObject = new GameObject($"MiniMapRoomCell_{node.Id.Value}_{cell.x}_{cell.y}", typeof(RectTransform), typeof(Image), typeof(Outline));
+                cellObject.transform.SetParent(root, false);
+                var rect = (RectTransform)cellObject.transform;
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = layout.PositionFor(cell);
+                rect.sizeDelta = Vector2.one * layout.CellSize;
+
+                cellObject.GetComponent<Image>().color = FillColorFor(node);
+                var outline = cellObject.GetComponent<Outline>();
+                outline.effectColor = OutlineColorFor(node);
+                outline.effectDistance = node.IsCurrent ? new Vector2(3f, -3f) : new Vector2(1.5f, -1.5f);
+            }
+
+            if (node.HasPendingReward)
+            {
+                DrawOverlayDot(root, layout.PositionFor(node.OccupiedCells.First()), "MiniMapRewardDot", new Color(1f, 0.78f, 0.16f, 1f), 9f);
+            }
+
+            var marker = MarkerFor(node.Role);
+            if (!string.IsNullOrEmpty(marker))
+            {
+                DrawMarkerText(root, layout.CenterFor(node.OccupiedCells), marker, MarkerColorFor(node.Role));
+            }
+        }
+
+        public void DrawConnection(BranchMiniMapConnectionVisual connection, RectTransform root, MiniMapLayout layout)
+        {
+            var from = layout.PositionFor(connection.FromCell);
+            var to = layout.PositionFor(connection.ToCell);
+            var midpoint = (from + to) * 0.5f;
+            var delta = to - from;
+            var horizontal = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
+            var connector = new GameObject($"MiniMapConnection_{connection.FromRoomId.Value}_{connection.ToRoomId.Value}", typeof(RectTransform), typeof(Image));
+            connector.transform.SetParent(root, false);
+            var rect = (RectTransform)connector.transform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = midpoint;
+            rect.sizeDelta = horizontal
+                ? new Vector2(layout.Gap + 4f, 5f)
+                : new Vector2(5f, layout.Gap + 4f);
+            connector.GetComponent<Image>().color = connection.LockKind == BranchConnectionLockKind.BossKey
+                ? new Color(0.96f, 0.55f, 0.12f, 0.95f)
+                : new Color(0.68f, 0.66f, 0.58f, 0.85f);
+
+            if (connection.LockKind == BranchConnectionLockKind.BossKey)
+            {
+                DrawMarkerText(root, midpoint, "L", new Color(1f, 0.72f, 0.25f, 1f), 12);
+            }
         }
 
         private void BuildIfNeeded()
         {
-            if (mapText != null && economyText != null && itemLogText != null)
+            if (mapText != null && economyText != null && itemLogText != null && shapeRoot != null)
             {
                 return;
             }
@@ -130,9 +186,22 @@ namespace Hollow.UI.Shell
                 new Vector2(1f, 1f),
                 new Vector2(1f, 1f),
                 new Vector2(-32f, -32f),
-                new Vector2(360f, 170f),
-                TextAnchor.UpperRight,
-                18);
+                new Vector2(420f, 250f),
+                TextAnchor.UpperLeft,
+                15);
+            var mapPanel = (RectTransform)mapText.transform.parent;
+            var mapTextRect = (RectTransform)mapText.transform;
+            mapTextRect.anchorMin = new Vector2(0f, 1f);
+            mapTextRect.anchorMax = new Vector2(1f, 1f);
+            mapTextRect.pivot = new Vector2(0f, 1f);
+            mapTextRect.anchoredPosition = new Vector2(0f, 0f);
+            mapTextRect.sizeDelta = new Vector2(0f, 58f);
+            shapeRoot = new GameObject("BranchMiniMap.ShapeRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            shapeRoot.transform.SetParent(mapPanel, false);
+            shapeRoot.anchorMin = Vector2.zero;
+            shapeRoot.anchorMax = Vector2.one;
+            shapeRoot.offsetMin = new Vector2(14f, 14f);
+            shapeRoot.offsetMax = new Vector2(-14f, -66f);
             economyText = AddPanelText(
                 "BranchMiniMap.EconomyPanel",
                 "Run Souls: 0\nBanked: 0\nRewards: 0/4\nSave: Ready",
@@ -192,6 +261,159 @@ namespace Hollow.UI.Shell
             label.raycastTarget = false;
             label.text = initialText;
             return label;
+        }
+
+        private static Color FillColorFor(BranchMiniMapNode node)
+        {
+            if (node.IsCurrent)
+            {
+                return new Color(0.88f, 0.84f, 0.7f, 0.98f);
+            }
+
+            if (!node.IsVisited && !node.IsCleared && !node.HasPendingReward)
+            {
+                return new Color(0.12f, 0.12f, 0.14f, 0.82f);
+            }
+
+            if (node.HasPendingReward)
+            {
+                return new Color(0.55f, 0.43f, 0.18f, 0.94f);
+            }
+
+            return node.IsCleared
+                ? new Color(0.28f, 0.34f, 0.39f, 0.94f)
+                : new Color(0.18f, 0.22f, 0.26f, 0.94f);
+        }
+
+        private static Color OutlineColorFor(BranchMiniMapNode node)
+        {
+            if (node.IsCurrent)
+            {
+                return new Color(0.95f, 0.92f, 0.72f, 1f);
+            }
+
+            return node.Role switch
+            {
+                BranchRoomRole.Boss => new Color(0.95f, 0.25f, 0.22f, 0.95f),
+                BranchRoomRole.Secret => new Color(0.72f, 0.42f, 1f, 0.95f),
+                BranchRoomRole.Treasure or BranchRoomRole.Reward => new Color(1f, 0.78f, 0.22f, 0.95f),
+                _ => new Color(0.72f, 0.72f, 0.68f, 0.8f)
+            };
+        }
+
+        private static string MarkerFor(BranchRoomRole role)
+        {
+            return role switch
+            {
+                BranchRoomRole.Boss => "B",
+                BranchRoomRole.Secret => "?",
+                BranchRoomRole.Treasure => "$",
+                BranchRoomRole.Reward => "R",
+                BranchRoomRole.Origin => "O",
+                _ => string.Empty
+            };
+        }
+
+        private static Color MarkerColorFor(BranchRoomRole role)
+        {
+            return role switch
+            {
+                BranchRoomRole.Boss => new Color(1f, 0.22f, 0.18f, 1f),
+                BranchRoomRole.Secret => new Color(0.86f, 0.55f, 1f, 1f),
+                BranchRoomRole.Treasure or BranchRoomRole.Reward => new Color(1f, 0.83f, 0.22f, 1f),
+                _ => Color.white
+            };
+        }
+
+        private void DrawOverlayDot(RectTransform root, Vector2 position, string name, Color color, float size)
+        {
+            var dot = new GameObject(name, typeof(RectTransform), typeof(Image));
+            dot.transform.SetParent(root, false);
+            var rect = (RectTransform)dot.transform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position + new Vector2(8f, 8f);
+            rect.sizeDelta = Vector2.one * size;
+            dot.GetComponent<Image>().color = color;
+        }
+
+        private void DrawMarkerText(RectTransform root, Vector2 position, string marker, Color color, int fontSize = 15)
+        {
+            var textObject = new GameObject($"MiniMapMarker_{marker}", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(root, false);
+            var rect = (RectTransform)textObject.transform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(28f, 24f);
+            var text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = color;
+            text.raycastTarget = false;
+            text.text = marker;
+        }
+
+        public readonly struct MiniMapLayout
+        {
+            private readonly int minX;
+            private readonly int minY;
+            private readonly float originX;
+            private readonly float originY;
+            private readonly float step;
+
+            private MiniMapLayout(int minX, int minY, float originX, float originY, float step, float cellSize, float gap)
+            {
+                this.minX = minX;
+                this.minY = minY;
+                this.originX = originX;
+                this.originY = originY;
+                this.step = step;
+                CellSize = cellSize;
+                Gap = gap;
+            }
+
+            public float CellSize { get; }
+
+            public float Gap { get; }
+
+            public static MiniMapLayout Create(IReadOnlyCollection<BranchMiniMapNode> nodes, Vector2 availableSize)
+            {
+                var cells = nodes.SelectMany(node => node.OccupiedCells).ToArray();
+                var minX = cells.Min(cell => cell.x);
+                var maxX = cells.Max(cell => cell.x);
+                var minY = cells.Min(cell => cell.y);
+                var maxY = cells.Max(cell => cell.y);
+                var columns = Mathf.Max(1, maxX - minX + 1);
+                var rows = Mathf.Max(1, maxY - minY + 1);
+                var size = availableSize.x > 0f && availableSize.y > 0f ? availableSize : new Vector2(392f, 170f);
+                var step = Mathf.Clamp(Mathf.Min(size.x / columns, size.y / rows), 18f, 34f);
+                var cellSize = Mathf.Max(12f, step - 4f);
+                var gap = Mathf.Max(3f, step - cellSize);
+                var totalWidth = (columns - 1) * step + cellSize;
+                var totalHeight = (rows - 1) * step + cellSize;
+                return new MiniMapLayout(minX, minY, -totalWidth * 0.5f + cellSize * 0.5f, totalHeight * 0.5f - cellSize * 0.5f, step, cellSize, gap);
+            }
+
+            public Vector2 PositionFor(Vector2Int cell)
+            {
+                return new Vector2(originX + (cell.x - minX) * step, originY - (cell.y - minY) * step);
+            }
+
+            public Vector2 CenterFor(IEnumerable<Vector2Int> cells)
+            {
+                var positions = cells.Select(PositionFor).ToArray();
+                if (positions.Length == 0)
+                {
+                    return Vector2.zero;
+                }
+
+                return new Vector2(positions.Average(position => position.x), positions.Average(position => position.y));
+            }
         }
     }
 }

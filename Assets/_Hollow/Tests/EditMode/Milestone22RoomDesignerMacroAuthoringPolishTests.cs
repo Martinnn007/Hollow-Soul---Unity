@@ -217,6 +217,86 @@ namespace Hollow.Tests.EditMode
             }
         }
 
+        [Test]
+        public void DisplayNamesCoverCurrentDesignerToolsAndSemanticKinds()
+        {
+            foreach (RoomDesignerTool tool in System.Enum.GetValues(typeof(RoomDesignerTool)))
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(RoomDesignerDisplayNames.ForTool(tool)), tool.ToString());
+                Assert.IsFalse(string.IsNullOrWhiteSpace(RoomDesignerDisplayNames.ForToolIcon(tool)), tool.ToString());
+            }
+
+            Assert.AreEqual("Ground", RoomDesignerDisplayNames.ForCellKind(RoomDesignerCellKinds.Ground));
+            Assert.AreEqual("Hole", RoomDesignerDisplayNames.ForCellKind(RoomDesignerCellKinds.Hole));
+            Assert.AreEqual("Rock", RoomDesignerDisplayNames.ForCellKind(RoomDesignerCellKinds.Rock));
+            Assert.AreEqual("Start", RoomDesignerDisplayNames.ForMarkerKind(RoomDesignerMarkerKinds.SafeStart));
+            Assert.AreEqual("Flying", RoomDesignerDisplayNames.ForMarkerKind(RoomDesignerMarkerKinds.EnemyFlying));
+            Assert.AreEqual("Charger", RoomDesignerDisplayNames.ForMarkerKind(RoomDesignerMarkerKinds.EnemyCharger));
+            Assert.AreEqual("N0 Door", RoomDesignerDisplayNames.ForDoor(RoomDesignerDoorPortState.Create("north", 0, 0f, -3.5f, RoomDesignerDoorKinds.Door)));
+        }
+
+        [Test]
+        public void ControllerUsesImportantShortLabelsWithoutGroundTileSpam()
+        {
+            var root = new GameObject("RoomDesignerShortLabelController");
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault());
+                controller.SelectTool(RoomDesignerTool.Hole);
+                controller.ApplyInput(Input(place: true), 1f);
+
+                var labels = Object.FindObjectsByType<TextMesh>(FindObjectsInactive.Exclude)
+                    .Where(text => text.transform.IsChildOf(root.transform))
+                    .Select(text => text.text)
+                    .ToArray();
+
+                Assert.IsFalse(labels.Contains(RoomDesignerCellKinds.Ground));
+                Assert.IsFalse(labels.Contains("Ground"));
+                Assert.IsTrue(labels.Contains("Hole"));
+                Assert.IsTrue(labels.Contains("Rock"));
+                Assert.IsTrue(labels.Contains("Start"));
+                Assert.IsTrue(labels.Any(label => label.Contains("Port") || label.Contains("Door") || label.Contains("Secret")));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ControllerShowsClickableFullToolToolbarAndHighlightsCurrentTool()
+        {
+            var root = new GameObject("RoomDesignerToolbarController");
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault());
+
+                var toolbar = GameObject.Find("RoomDesignerToolToolbar");
+                Assert.IsNotNull(toolbar);
+                Assert.IsTrue(toolbar.activeSelf);
+                Assert.AreEqual(System.Enum.GetValues(typeof(RoomDesignerTool)).Length, toolbar.transform.childCount);
+
+                var groundTile = GameObject.Find("ToolTile_Ground");
+                Assert.IsNotNull(groundTile);
+                Assert.Greater(groundTile.GetComponent<UnityEngine.UI.Outline>().effectColor.g, 0.9f);
+
+                var turretTile = GameObject.Find("ToolTile_EnemyTurret");
+                Assert.IsNotNull(turretTile);
+                turretTile.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                Assert.AreEqual(RoomDesignerTool.EnemyTurret, controller.CurrentTool);
+
+                turretTile = GameObject.Find("ToolTile_EnemyTurret");
+                Assert.IsNotNull(turretTile);
+                Assert.Greater(turretTile.GetComponent<UnityEngine.UI.Outline>().effectColor.g, 0.9f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
         private static RoomDesignerInputSnapshot Input(
             int moveX = 0,
             int moveZ = 0,

@@ -43,6 +43,27 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void MacroMiniMapModelPreservesActualRoomFootprintShapes()
+        {
+            var content = LoadContent();
+            var graph = BranchGenerator.CreateMacroFixtureBranch(content.MacroRoomPool, content.BranchSeed);
+            var state = BranchSessionState.Create(graph);
+
+            var model = new BranchMiniMapModel(state);
+
+            Assert.AreEqual(5, model.Nodes.Count);
+            Assert.AreEqual(12, model.Nodes.Sum(node => node.OccupiedCells.Count));
+            AssertMiniMapCells(model, BranchRoomId.Origin, 1);
+            AssertMiniMapCells(model, BranchRoomId.North, 2);
+            AssertMiniMapCells(model, BranchRoomId.South, 3);
+            AssertMiniMapCells(model, BranchRoomId.East, 2);
+            AssertMiniMapCells(model, BranchRoomId.West, 4);
+            Assert.IsTrue(model.Nodes.All(node => node.IsRevealed));
+            Assert.AreEqual(4, model.Connections.Count);
+            Assert.IsTrue(model.Connections.All(connection => connection.LockKind == BranchConnectionLockKind.None));
+        }
+
+        [Test]
         public void ExplicitPortTraversalLocksUntilClearAndUsesDestinationPortEntry()
         {
             var root = CreateBranchHarness(out var branch, out var combat, out var player, out _);
@@ -217,6 +238,12 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(to, connection.ToRoomId);
             Assert.AreEqual(toPortId, connection.ToPortId);
             Assert.IsTrue(connection.HasExplicitPorts);
+        }
+
+        private static void AssertMiniMapCells(BranchMiniMapModel model, BranchRoomId roomId, int expectedCells)
+        {
+            var node = model.Nodes.Single(candidate => candidate.Id == roomId);
+            Assert.AreEqual(expectedCells, node.OccupiedCells.Count);
         }
 
         private static void ClearCurrentRoom(RoomCombatController combat)

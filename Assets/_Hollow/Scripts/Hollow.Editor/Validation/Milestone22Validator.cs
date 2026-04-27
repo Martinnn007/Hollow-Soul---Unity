@@ -14,6 +14,7 @@ namespace Hollow.Editor.Validation
         private static readonly string[] RequiredFiles =
         {
             "Assets/_Hollow/Scripts/Hollow.RoomDesigner/RoomDesignerDraftLibraryState.cs",
+            "Assets/_Hollow/Scripts/Hollow.RoomDesigner/RoomDesignerDisplayNames.cs",
             "Assets/_Hollow/Scripts/Hollow.RoomDesigner/RoomDesignerValidationReport.cs",
             "Assets/_Hollow/Scripts/Hollow.RoomDesigner/RoomDesignerExportBundle.cs",
             "Assets/_Hollow/Scripts/Hollow.Editor/Generation/Milestone22AssetGenerator.cs",

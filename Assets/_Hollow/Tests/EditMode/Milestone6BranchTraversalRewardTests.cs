@@ -6,9 +6,11 @@ using Hollow.Core;
 using Hollow.Entities;
 using Hollow.Platform;
 using Hollow.Rooms;
+using Hollow.UI.Shell;
 using Hollow.World;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
@@ -141,9 +143,45 @@ namespace Hollow.Tests.EditMode
                 Assert.IsTrue(model.Nodes.Single(node => node.Id == BranchRoomId.East).IsCurrent);
                 Assert.IsTrue(model.Nodes.Single(node => node.Id == BranchRoomId.East).HasPendingReward);
                 Assert.IsTrue(model.Nodes.Single(node => node.Id == BranchRoomId.Origin).IsCleared);
+                Assert.IsTrue(model.Nodes.All(node => node.IsRevealed));
+                Assert.IsTrue(model.Nodes.All(node => node.OccupiedCells.Count == 1));
+                Assert.AreEqual(4, model.Connections.Count);
             }
             finally
             {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MiniMapControllerBuildsShapeMapGraphicsInsteadOfAsciiTokens()
+        {
+            var root = CreateBranchHarness(out var branch, out _, out _);
+            var canvasObject = new GameObject("PlatformShellCanvas", typeof(RectTransform), typeof(Canvas), typeof(BranchMiniMapController));
+            try
+            {
+                canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                var controller = canvasObject.GetComponent<BranchMiniMapController>();
+
+                controller.Bind(branch);
+
+                var shapeRoot = canvasObject.GetComponentsInChildren<RectTransform>(true)
+                    .SingleOrDefault(rect => rect.name == "BranchMiniMap.ShapeRoot");
+                Assert.IsNotNull(shapeRoot);
+
+                var cells = shapeRoot.GetComponentsInChildren<Image>(true)
+                    .Where(image => image.name.StartsWith("MiniMapRoomCell_"))
+                    .ToArray();
+                Assert.GreaterOrEqual(cells.Length, 5);
+
+                var mapText = canvasObject.GetComponentsInChildren<Text>(true)
+                    .Single(text => text.name == "BranchMiniMap.MapPanel.Text");
+                Assert.IsTrue(mapText.text.Contains("Branch Map"));
+                Assert.IsFalse(mapText.text.Contains("[C]"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasObject);
                 Object.DestroyImmediate(root);
             }
         }

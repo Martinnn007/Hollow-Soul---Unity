@@ -56,6 +56,23 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void MiniMapModelReportsVisibleSecretAndBossKeyLock()
+        {
+            var graph = CreateM20Graph();
+            var state = BranchSessionState.Create(graph);
+            foreach (var room in graph.Rooms)
+            {
+                room.MarkVisited();
+            }
+
+            var model = new BranchMiniMapModel(state);
+
+            Assert.IsTrue(model.Nodes.Any(node => node.Role == BranchRoomRole.Secret && node.IsRevealed));
+            Assert.IsTrue(model.Connections.Any(connection => connection.LockKind == BranchConnectionLockKind.BossKey));
+            Assert.AreEqual(graph.Connections.Count / 2, model.Connections.Count);
+        }
+
+        [Test]
         public void HubShopOffersAreSeededAndSpendRunSoulsOnce()
         {
             var offers = InterBranchHubState.Create(20001, 0, null).ShopOffers;

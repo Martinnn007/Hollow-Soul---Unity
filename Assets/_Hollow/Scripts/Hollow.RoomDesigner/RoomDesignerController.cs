@@ -29,6 +29,10 @@ namespace Hollow.RoomDesigner
         private RoomDesignerProject currentProject;
         private Text hudText;
         private RectTransform libraryPanel;
+        private RectTransform infoPanel;
+        private RectTransform controlsPanel;
+        private Text controlsText;
+        private RectTransform toolToolbarPanel;
         private float nextMoveTime;
         private int toolIndex;
         private int librarySelectedIndex;
@@ -268,6 +272,7 @@ namespace Hollow.RoomDesigner
             {
                 toolIndex = index;
                 RefreshHud();
+                RefreshToolToolbar();
             }
         }
 
@@ -807,9 +812,9 @@ namespace Hollow.RoomDesigner
                 BuildCube($"rockTile_{cell.x}_{cell.z}_{cell.layer}", new Vector3(cell.x, cell.layer + 0.5f, cell.z), Vector3.one, MaterialRole.DesignerRock);
             }
 
-            if (LabelsVisible)
+            if (LabelsVisible && cell.kind != RoomDesignerCellKinds.Ground)
             {
-                BuildLabel(cell.kind, new Vector3(cell.x, cell.layer + 1.08f, cell.z));
+                BuildLabel(RoomDesignerDisplayNames.ForCellKind(cell.kind), new Vector3(cell.x, cell.layer + 1.08f, cell.z));
             }
         }
 
@@ -825,7 +830,7 @@ namespace Hollow.RoomDesigner
             BuildCube($"doorAnchor_{door.id}_{door.state}", new Vector3(door.x, 0.65f, door.z), door.direction is "east" or "west" ? new Vector3(0.18f, 1.3f, 1f) : new Vector3(1f, 1.3f, 0.18f), role);
             if (LabelsVisible)
             {
-                BuildLabel($"{door.id} {door.state} host({door.hostCellX},{door.hostCellZ}) lane {door.laneIndex}", new Vector3(door.x, 1.5f, door.z));
+                BuildLabel(RoomDesignerDisplayNames.ForDoor(door), new Vector3(door.x, 1.5f, door.z));
             }
         }
 
@@ -839,7 +844,7 @@ namespace Hollow.RoomDesigner
             MaterialResolver.ApplyTo(markerObject, RoleForMarker(marker.kind));
             if (LabelsVisible)
             {
-                BuildLabel(marker.kind, new Vector3(marker.x, marker.y + 0.72f, marker.z));
+                BuildLabel(RoomDesignerDisplayNames.ForMarkerKind(marker.kind), new Vector3(marker.x, marker.y + 0.72f, marker.z));
             }
         }
 
@@ -925,23 +930,67 @@ namespace Hollow.RoomDesigner
                 }
             }
 
+            if (infoPanel == null)
+            {
+                var panelObject = new GameObject("RoomDesignerInfoPanel", typeof(RectTransform), typeof(Image));
+                panelObject.transform.SetParent(hudCanvas.transform, false);
+                infoPanel = (RectTransform)panelObject.transform;
+                infoPanel.anchorMin = new Vector2(0f, 1f);
+                infoPanel.anchorMax = new Vector2(0f, 1f);
+                infoPanel.pivot = new Vector2(0f, 1f);
+                infoPanel.anchoredPosition = new Vector2(24f, -132f);
+                infoPanel.sizeDelta = new Vector2(620f, 152f);
+                panelObject.GetComponent<Image>().color = new Color(0.04f, 0.045f, 0.05f, 0.78f);
+            }
+
             if (hudText == null)
             {
                 var textObject = new GameObject("RoomDesignerHUD.Text", typeof(RectTransform), typeof(Text));
-                textObject.transform.SetParent(hudCanvas.transform, false);
+                textObject.transform.SetParent(infoPanel, false);
                 var rect = (RectTransform)textObject.transform;
-                rect.anchorMin = new Vector2(0f, 1f);
-                rect.anchorMax = new Vector2(0f, 1f);
-                rect.pivot = new Vector2(0f, 1f);
-                rect.anchoredPosition = new Vector2(32f, -32f);
-                rect.sizeDelta = new Vector2(900f, 220f);
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = new Vector2(14f, 10f);
+                rect.offsetMax = new Vector2(-14f, -10f);
                 hudText = textObject.GetComponent<Text>();
                 hudText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                hudText.fontSize = 24;
+                hudText.fontSize = 18;
                 hudText.alignment = TextAnchor.UpperLeft;
                 hudText.color = Color.white;
                 hudText.raycastTarget = false;
             }
+
+            if (controlsPanel == null)
+            {
+                var panelObject = new GameObject("RoomDesignerControlsPanel", typeof(RectTransform), typeof(Image));
+                panelObject.transform.SetParent(hudCanvas.transform, false);
+                controlsPanel = (RectTransform)panelObject.transform;
+                controlsPanel.anchorMin = new Vector2(0f, 0f);
+                controlsPanel.anchorMax = new Vector2(0f, 0f);
+                controlsPanel.pivot = new Vector2(0f, 0f);
+                controlsPanel.anchoredPosition = new Vector2(24f, 24f);
+                controlsPanel.sizeDelta = new Vector2(860f, 86f);
+                panelObject.GetComponent<Image>().color = new Color(0.04f, 0.045f, 0.05f, 0.72f);
+            }
+
+            if (controlsText == null)
+            {
+                var textObject = new GameObject("RoomDesignerControls.Text", typeof(RectTransform), typeof(Text));
+                textObject.transform.SetParent(controlsPanel, false);
+                var rect = (RectTransform)textObject.transform;
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = new Vector2(14f, 8f);
+                rect.offsetMax = new Vector2(-14f, -8f);
+                controlsText = textObject.GetComponent<Text>();
+                controlsText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                controlsText.fontSize = 17;
+                controlsText.alignment = TextAnchor.UpperLeft;
+                controlsText.color = Color.white;
+                controlsText.raycastTarget = false;
+            }
+
+            EnsureToolToolbar();
 
             if (libraryPanel == null)
             {
@@ -1205,6 +1254,100 @@ namespace Hollow.RoomDesigner
             text.raycastTarget = false;
         }
 
+        public void EnsureToolToolbar()
+        {
+            if (hudCanvas == null || toolToolbarPanel != null)
+            {
+                return;
+            }
+
+            var panelObject = new GameObject("RoomDesignerToolToolbar", typeof(RectTransform), typeof(Image));
+            panelObject.transform.SetParent(hudCanvas.transform, false);
+            toolToolbarPanel = (RectTransform)panelObject.transform;
+            toolToolbarPanel.anchorMin = new Vector2(0.5f, 1f);
+            toolToolbarPanel.anchorMax = new Vector2(0.5f, 1f);
+            toolToolbarPanel.pivot = new Vector2(0.5f, 1f);
+            toolToolbarPanel.anchoredPosition = new Vector2(0f, -18f);
+            toolToolbarPanel.sizeDelta = new Vector2(1440f, 94f);
+            panelObject.GetComponent<Image>().color = new Color(0.035f, 0.04f, 0.045f, 0.8f);
+            toolToolbarPanel.gameObject.SetActive(false);
+        }
+
+        public void RefreshToolToolbar()
+        {
+            EnsureRoots();
+            if (toolToolbarPanel == null)
+            {
+                return;
+            }
+
+            if (Mode != RoomDesignerMode.Editing)
+            {
+                toolToolbarPanel.gameObject.SetActive(false);
+                return;
+            }
+
+            toolToolbarPanel.gameObject.SetActive(true);
+            ClearChildren(toolToolbarPanel);
+
+            const float tileWidth = 70f;
+            const float tileHeight = 72f;
+            const float gap = 7f;
+            var totalWidth = tools.Length * tileWidth + (tools.Length - 1) * gap;
+            var startX = -totalWidth * 0.5f + tileWidth * 0.5f;
+
+            for (var index = 0; index < tools.Length; index++)
+            {
+                var tool = tools[index];
+                var selected = index == toolIndex;
+                var capturedTool = tool;
+                var tileObject = new GameObject($"ToolTile_{tool}", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Outline));
+                tileObject.transform.SetParent(toolToolbarPanel, false);
+                var rect = (RectTransform)tileObject.transform;
+                rect.anchorMin = new Vector2(0.5f, 1f);
+                rect.anchorMax = new Vector2(0.5f, 1f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.sizeDelta = new Vector2(tileWidth, tileHeight);
+                rect.anchoredPosition = new Vector2(startX + index * (tileWidth + gap), -11f);
+
+                var image = tileObject.GetComponent<Image>();
+                image.color = selected
+                    ? new Color(0.16f, 0.26f, 0.19f, 0.98f)
+                    : new Color(0.1f, 0.11f, 0.13f, 0.92f);
+
+                var outline = tileObject.GetComponent<Outline>();
+                outline.effectColor = selected ? new Color(0.15f, 1f, 0.48f, 1f) : new Color(0.38f, 0.42f, 0.46f, 0.55f);
+                outline.effectDistance = selected ? new Vector2(3f, -3f) : new Vector2(1.5f, -1.5f);
+
+                var button = tileObject.GetComponent<Button>();
+                button.targetGraphic = image;
+                button.onClick.AddListener(() => SelectTool(capturedTool));
+
+                AddToolbarText(tileObject.transform, "Icon", RoomDesignerDisplayNames.ForToolIcon(tool), 19, FontStyle.Bold, new Vector2(0f, -7f), new Vector2(tileWidth, 32f), TextAnchor.MiddleCenter, selected);
+                AddToolbarText(tileObject.transform, "Name", RoomDesignerDisplayNames.ForTool(tool), selected ? 12 : 11, FontStyle.Normal, new Vector2(0f, -41f), new Vector2(tileWidth, 24f), TextAnchor.MiddleCenter, selected);
+            }
+        }
+
+        private void AddToolbarText(Transform parent, string name, string value, int fontSize, FontStyle style, Vector2 position, Vector2 size, TextAnchor alignment, bool selected)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            var rect = (RectTransform)textObject.transform;
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            var text = textObject.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.fontStyle = style;
+            text.alignment = alignment;
+            text.color = selected ? new Color(0.72f, 1f, 0.78f, 1f) : Color.white;
+            text.text = value;
+            text.raycastTarget = false;
+        }
+
         private void RefreshHud()
         {
             if (hudText == null)
@@ -1214,8 +1357,28 @@ namespace Hollow.RoomDesigner
 
             if (Mode != RoomDesignerMode.Editing || currentProject == null)
             {
-                hudText.gameObject.SetActive(false);
+                if (infoPanel != null)
+                {
+                    infoPanel.gameObject.SetActive(false);
+                }
+
+                if (controlsPanel != null)
+                {
+                    controlsPanel.gameObject.SetActive(false);
+                }
+
+                RefreshToolToolbar();
                 return;
+            }
+
+            if (infoPanel != null)
+            {
+                infoPanel.gameObject.SetActive(true);
+            }
+
+            if (controlsPanel != null)
+            {
+                controlsPanel.gameObject.SetActive(true);
             }
 
             hudText.gameObject.SetActive(true);
@@ -1225,11 +1388,19 @@ namespace Hollow.RoomDesigner
             var enabledPorts = currentProject.doorPorts.Count(door => door.state != RoomDesignerDoorKinds.Inactive);
             var draftCount = libraryState?.Drafts.Count ?? 0;
             hudText.text =
-                $"Room Designer - Macro Authoring\nDrafts: {draftCount} | Footprint: {currentProject.footprintPreset} ({dimensions.x}x{dimensions.y}m) | Enabled ports: {enabledPorts}/{currentProject.doorPorts.Count}\n" +
-                $"Tool: {CurrentTool} | Cursor: ({CursorX}, {CursorLayer}, {CursorZ}) | Door: {selectedDoor} | Labels: {(LabelsVisible ? "On" : "Off")}\n" +
-                $"Validation: {LastValidationReport.Summary()} | Errors: {LastValidationReport.Errors.Count} | Warnings: {LastValidationReport.Warnings.Count}\n" +
-                $"WASD/Arrows move | Q/E tool | Z/X layer | Space place | Delete erase | F eyedropper | Tab labels\n" +
-                $"P playtest | J export validated bundle | U export USDA bundle | Esc menu\n{status}";
+                $"Room Designer - Macro Authoring\n" +
+                $"Drafts: {draftCount} | {currentProject.footprintPreset} | {dimensions.x}x{dimensions.y}m | Ports {enabledPorts}/{currentProject.doorPorts.Count}\n" +
+                $"Cursor ({CursorX}, {CursorLayer}, {CursorZ}) | Door {selectedDoor} | Labels {(LabelsVisible ? "Important" : "Off")}\n" +
+                $"Validation: {LastValidationReport.Summary()} | E:{LastValidationReport.Errors.Count} W:{LastValidationReport.Warnings.Count}";
+            if (controlsText != null)
+            {
+                controlsText.text =
+                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels\n" +
+                    "P playtest | J export bundle | U export USDA | Esc library\n" +
+                    status;
+            }
+
+            RefreshToolToolbar();
         }
 
         private string SelectedDoorSummary()
@@ -1239,7 +1410,7 @@ namespace Hollow.RoomDesigner
                 .FirstOrDefault();
             return nearest == null
                 ? "none"
-                : $"{nearest.id} {nearest.state} host({nearest.hostCellX},{nearest.hostCellZ})";
+                : RoomDesignerDisplayNames.ForDoor(nearest);
         }
 
         private int LibraryOptionCount()

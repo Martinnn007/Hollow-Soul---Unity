@@ -102,7 +102,7 @@ namespace Hollow.Tests.EditMode
             {
                 var shell = shellObject.AddComponent<PlatformShellController>();
                 shell.Configure(HollowPlatformKind.WindowsStandard3D);
-                shell.SendMessage("Start");
+                shell.ApplyConfiguration();
 
                 Assert.AreEqual(0, shellObject.transform.childCount);
                 Assert.AreEqual(RenderMode.ScreenSpaceOverlay, shellObject.GetComponent<Canvas>().renderMode);
@@ -120,7 +120,7 @@ namespace Hollow.Tests.EditMode
             try
             {
                 var minimap = shellObject.AddComponent<BranchMiniMapController>();
-                minimap.SendMessage("Start");
+                minimap.Bind(null);
 
                 var mapPanel = shellObject.transform.Find("BranchMiniMap.MapPanel");
                 var economyPanel = shellObject.transform.Find("BranchMiniMap.EconomyPanel");

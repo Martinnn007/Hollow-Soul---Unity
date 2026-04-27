@@ -16,9 +16,14 @@ namespace Hollow.UI.Shell
             platformKind = nextPlatformKind;
         }
 
-        private void Start()
+        public void ApplyConfiguration()
         {
             Build();
+        }
+
+        private void Start()
+        {
+            ApplyConfiguration();
         }
 
         private void Build()
