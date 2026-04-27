@@ -367,6 +367,78 @@ namespace Hollow.Tests.EditMode
             }
         }
 
+        [Test]
+        public void CameraControllerSupportsPerspectiveAndTopDownModes()
+        {
+            var cameraObject = new GameObject("RoomDesignerModeCamera", typeof(Camera));
+            try
+            {
+                var camera = cameraObject.GetComponent<Camera>();
+                var controller = new RoomDesignerCameraController();
+                controller.SetTarget(new Vector3(3f, 0f, -2f), RoomDesignerFootprintPreset.Block2x2);
+
+                controller.ApplyImmediate(camera);
+                Assert.AreEqual(RoomDesignerCameraViewMode.Perspective, controller.ViewMode);
+                Assert.IsFalse(camera.orthographic);
+
+                controller.SetViewMode(RoomDesignerCameraViewMode.TopDown);
+                controller.ApplyImmediate(camera);
+
+                Assert.IsTrue(camera.orthographic);
+                Assert.AreEqual(new Vector3(3f, 0f, -2f), controller.TargetPosition);
+                Assert.Greater(camera.orthographicSize, 10f);
+                Assert.Greater(Vector3.Dot(camera.transform.forward, Vector3.down), 0.99f);
+
+                controller.SetViewMode(RoomDesignerCameraViewMode.Perspective);
+                controller.ApplyImmediate(camera);
+
+                Assert.IsFalse(camera.orthographic);
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+            }
+        }
+
+        [Test]
+        public void ControllerShowsCameraToggleButtonAndSupportsSpatialTilt()
+        {
+            var root = new GameObject("RoomDesignerCameraModeController");
+            var cameraObject = new GameObject("MainCamera", typeof(Camera));
+            cameraObject.tag = "MainCamera";
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault(RoomDesignerFootprintPreset.Wide2x1, "Camera Toggle"));
+
+                Assert.AreEqual(RoomDesignerCameraViewMode.Perspective, controller.CameraViewMode);
+                var cameraButton = GameObject.Find("RoomDesignerCameraModeButton");
+                Assert.IsNotNull(cameraButton);
+                Assert.IsTrue(cameraButton.activeSelf);
+                Assert.IsTrue(cameraButton.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains("Perspective"));
+
+                cameraButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                Assert.AreEqual(RoomDesignerCameraViewMode.TopDown, controller.CameraViewMode);
+                cameraButton = GameObject.Find("RoomDesignerCameraModeButton");
+                Assert.IsTrue(cameraButton.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains("Top"));
+
+                var previewRoot = FindChild(root, "RoomDesignerPreviewRoot");
+                Assert.AreEqual(0f, previewRoot.localEulerAngles.x, 0.001f);
+
+                controller.SetSpatialTopDownTiltForTests(true);
+                Assert.AreEqual(55f, previewRoot.localEulerAngles.x, 0.001f);
+
+                controller.ApplyInput(Input(toggleCamera: true), 1f);
+                Assert.AreEqual(RoomDesignerCameraViewMode.Perspective, controller.CameraViewMode);
+                Assert.AreEqual(0f, previewRoot.localEulerAngles.x, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(cameraObject);
+            }
+        }
+
         private static RoomDesignerInputSnapshot Input(
             int moveX = 0,
             int moveZ = 0,
@@ -374,9 +446,10 @@ namespace Hollow.Tests.EditMode
             int layerDelta = 0,
             bool place = false,
             bool erase = false,
-            bool togglePreview = false)
+            bool togglePreview = false,
+            bool toggleCamera = false)
         {
-            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview);
+            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview, toggleCamera);
         }
 
         private static Transform FindChild(GameObject root, string name)

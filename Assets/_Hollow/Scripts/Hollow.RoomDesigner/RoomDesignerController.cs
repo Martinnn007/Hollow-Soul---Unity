@@ -23,6 +23,7 @@ namespace Hollow.RoomDesigner
         private const float DoorAnchorHeight = 1.3f;
         private const float MacroGuideThickness = 0.04f;
         private const float InternalSeamThickness = 0.08f;
+        private const float SpatialTopDownTiltDegrees = 55f;
 
         [SerializeField] private Transform previewRoot;
         [SerializeField] private Canvas hudCanvas;
@@ -43,10 +44,13 @@ namespace Hollow.RoomDesigner
         private RectTransform toolToolbarPanel;
         private RectTransform previewModeButtonPanel;
         private Text previewModeButtonText;
+        private RectTransform cameraModeButtonPanel;
+        private Text cameraModeButtonText;
         private float nextMoveTime;
         private int toolIndex;
         private int librarySelectedIndex;
         private int scenePreviewMissingBindings;
+        private bool forceSpatialTopDownTiltForTests;
         private string pendingDeleteProjectId = string.Empty;
         private string pendingDeleteDisplayName = string.Empty;
         private string status = "Ready";
@@ -66,6 +70,8 @@ namespace Hollow.RoomDesigner
         public Vector3 CameraTargetPosition => cameraController.TargetPosition;
 
         public RoomDesignerPreviewMode PreviewMode { get; private set; } = RoomDesignerPreviewMode.Graybox;
+
+        public RoomDesignerCameraViewMode CameraViewMode { get; private set; } = RoomDesignerCameraViewMode.Perspective;
 
         public int CursorX { get; private set; }
 
@@ -299,6 +305,22 @@ namespace Hollow.RoomDesigner
             RefreshHud();
         }
 
+        public void ToggleCameraViewMode()
+        {
+            CameraViewMode = CameraViewMode == RoomDesignerCameraViewMode.Perspective
+                ? RoomDesignerCameraViewMode.TopDown
+                : RoomDesignerCameraViewMode.Perspective;
+            status = $"Camera: {CameraViewMode}";
+            ApplyCameraViewPresentation(immediate: false);
+            RefreshHud();
+        }
+
+        public void SetSpatialTopDownTiltForTests(bool enabled)
+        {
+            forceSpatialTopDownTiltForTests = enabled;
+            ApplyCameraViewPresentation(immediate: true);
+        }
+
         private void Update()
         {
             ApplyInput(RoomDesignerInputReader.ReadCurrent(), Time.time);
@@ -354,6 +376,11 @@ namespace Hollow.RoomDesigner
             if (input.TogglePreviewModePressed)
             {
                 TogglePreviewMode();
+            }
+
+            if (input.ToggleCameraModePressed)
+            {
+                ToggleCameraViewMode();
             }
 
             if (input.EyedropperPressed || CurrentTool == RoomDesignerTool.Eyedropper && input.PlacePressed)
@@ -483,6 +510,7 @@ namespace Hollow.RoomDesigner
             }
 
             Mode = RoomDesignerMode.Editing;
+            currentProject = project;
             CursorX = 0;
             CursorZ = 0;
             CursorLayer = 0;
@@ -494,7 +522,7 @@ namespace Hollow.RoomDesigner
 
             RebuildPreview();
             RefreshHud();
-            UpdateCameraTarget(immediate: true);
+            ApplyCameraViewPresentation(immediate: true);
         }
 
         private void SnapCursorToFootprint()
@@ -751,7 +779,7 @@ namespace Hollow.RoomDesigner
             cursor.transform.localPosition = new Vector3(CursorX, CursorLayer + CenterAboveGrid(CursorTileThickness), CursorZ);
             cursor.transform.localScale = new Vector3(1.08f, CursorTileThickness, 1.08f);
             MaterialResolver.ApplyTo(cursor, MaterialRole.DesignerCursor);
-            UpdateCameraTarget(immediate: false);
+            ApplyCameraViewPresentation(immediate: false);
         }
 
         private void UpdateCameraTarget(bool immediate)
@@ -773,6 +801,27 @@ namespace Hollow.RoomDesigner
             {
                 cameraController.ApplyImmediate(camera);
             }
+        }
+
+        private void ApplyCameraViewPresentation(bool immediate)
+        {
+            var useSpatialTilt = CameraViewMode == RoomDesignerCameraViewMode.TopDown && ShouldUseSpatialTopDownTilt();
+            if (previewRoot != null)
+            {
+                previewRoot.localRotation = useSpatialTilt
+                    ? Quaternion.Euler(SpatialTopDownTiltDegrees, 0f, 0f)
+                    : Quaternion.identity;
+            }
+
+            cameraController.SetViewMode(useSpatialTilt ? RoomDesignerCameraViewMode.Perspective : CameraViewMode);
+            UpdateCameraTarget(immediate);
+            RefreshCameraModeButton();
+        }
+
+        private bool ShouldUseSpatialTopDownTilt()
+        {
+            return forceSpatialTopDownTiltForTests
+                || Application.platform.ToString().IndexOf("Vision", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private void BuildGrid()
@@ -1071,6 +1120,7 @@ namespace Hollow.RoomDesigner
             }
 
             EnsurePreviewModeButton();
+            EnsureCameraModeButton();
             EnsureToolToolbar();
 
             if (libraryPanel == null)
@@ -1450,6 +1500,7 @@ namespace Hollow.RoomDesigner
 
                 RefreshToolToolbar();
                 RefreshPreviewModeButton();
+                RefreshCameraModeButton();
                 return;
             }
 
@@ -1477,13 +1528,14 @@ namespace Hollow.RoomDesigner
             if (controlsText != null)
             {
                 controlsText.text =
-                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview\n" +
+                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview | C camera\n" +
                     "P playtest | J export bundle | U export USDA | Esc library\n" +
                     DesignerStatusText();
             }
 
             RefreshToolToolbar();
             RefreshPreviewModeButton();
+            RefreshCameraModeButton();
         }
 
         private string DesignerStatusText()
@@ -1538,6 +1590,48 @@ namespace Hollow.RoomDesigner
             previewModeButtonPanel.gameObject.SetActive(false);
         }
 
+        private void EnsureCameraModeButton()
+        {
+            if (hudCanvas == null || cameraModeButtonPanel != null)
+            {
+                return;
+            }
+
+            var buttonObject = new GameObject("RoomDesignerCameraModeButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Outline));
+            buttonObject.transform.SetParent(hudCanvas.transform, false);
+            cameraModeButtonPanel = (RectTransform)buttonObject.transform;
+            cameraModeButtonPanel.anchorMin = new Vector2(1f, 1f);
+            cameraModeButtonPanel.anchorMax = new Vector2(1f, 1f);
+            cameraModeButtonPanel.pivot = new Vector2(1f, 1f);
+            cameraModeButtonPanel.anchoredPosition = new Vector2(-252f, -132f);
+            cameraModeButtonPanel.sizeDelta = new Vector2(220f, 48f);
+
+            var image = buttonObject.GetComponent<Image>();
+            image.color = new Color(0.06f, 0.07f, 0.08f, 0.86f);
+            var outline = buttonObject.GetComponent<Outline>();
+            outline.effectColor = new Color(0.15f, 1f, 0.48f, 0.72f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(ToggleCameraViewMode);
+
+            var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(cameraModeButtonPanel, false);
+            var rect = (RectTransform)textObject.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(12f, 0f);
+            rect.offsetMax = new Vector2(-12f, 0f);
+            cameraModeButtonText = textObject.GetComponent<Text>();
+            cameraModeButtonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            cameraModeButtonText.fontSize = 18;
+            cameraModeButtonText.alignment = TextAnchor.MiddleCenter;
+            cameraModeButtonText.color = Color.white;
+            cameraModeButtonText.raycastTarget = false;
+            cameraModeButtonPanel.gameObject.SetActive(false);
+        }
+
         private void RefreshPreviewModeButton()
         {
             if (previewModeButtonPanel == null)
@@ -1563,6 +1657,36 @@ namespace Hollow.RoomDesigner
             if (previewModeButtonText != null)
             {
                 previewModeButtonText.text = $"Preview: {PreviewMode} (V)";
+            }
+        }
+
+        private void RefreshCameraModeButton()
+        {
+            if (cameraModeButtonPanel == null)
+            {
+                return;
+            }
+
+            var visible = Mode == RoomDesignerMode.Editing;
+            cameraModeButtonPanel.gameObject.SetActive(visible);
+            if (!visible)
+            {
+                return;
+            }
+
+            var image = cameraModeButtonPanel.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = CameraViewMode == RoomDesignerCameraViewMode.TopDown
+                    ? new Color(0.08f, 0.16f, 0.11f, 0.9f)
+                    : new Color(0.06f, 0.07f, 0.08f, 0.86f);
+            }
+
+            if (cameraModeButtonText != null)
+            {
+                cameraModeButtonText.text = CameraViewMode == RoomDesignerCameraViewMode.TopDown
+                    ? "Camera: Top (C)"
+                    : "Camera: Perspective (C)";
             }
         }
 

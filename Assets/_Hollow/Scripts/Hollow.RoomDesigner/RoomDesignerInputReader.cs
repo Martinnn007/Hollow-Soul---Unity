@@ -39,7 +39,8 @@ namespace Hollow.RoomDesigner
                 Pressed(keyboard?.jKey),
                 Pressed(keyboard?.uKey),
                 Pressed(keyboard?.escapeKey) || gamepad?.startButton.wasPressedThisFrame == true,
-                Pressed(keyboard?.vKey));
+                Pressed(keyboard?.vKey),
+                Pressed(keyboard?.cKey) || gamepad?.selectButton.wasPressedThisFrame == true);
         }
 
         private static bool Pressed(params KeyControl[] keys)
