@@ -24,6 +24,7 @@ namespace Hollow.RoomDesigner
         private const float MacroGuideThickness = 0.04f;
         private const float InternalSeamThickness = 0.08f;
         private const float SpatialTopDownTiltDegrees = 55f;
+        private const float CameraZoomStep = 0.15f;
 
         [SerializeField] private Transform previewRoot;
         [SerializeField] private Canvas hudCanvas;
@@ -46,6 +47,8 @@ namespace Hollow.RoomDesigner
         private Text previewModeButtonText;
         private RectTransform cameraModeButtonPanel;
         private Text cameraModeButtonText;
+        private RectTransform zoomOutButtonPanel;
+        private RectTransform zoomInButtonPanel;
         private float nextMoveTime;
         private int toolIndex;
         private int librarySelectedIndex;
@@ -72,6 +75,8 @@ namespace Hollow.RoomDesigner
         public RoomDesignerPreviewMode PreviewMode { get; private set; } = RoomDesignerPreviewMode.Graybox;
 
         public RoomDesignerCameraViewMode CameraViewMode { get; private set; } = RoomDesignerCameraViewMode.Perspective;
+
+        public float CameraZoomMultiplier => cameraController.ZoomMultiplier;
 
         public int CursorX { get; private set; }
 
@@ -315,6 +320,22 @@ namespace Hollow.RoomDesigner
             RefreshHud();
         }
 
+        public void ZoomIn()
+        {
+            cameraController.AdjustZoom(-CameraZoomStep);
+            status = $"Zoom: {cameraController.ZoomMultiplier:0.00}x";
+            ApplyCameraViewPresentation(immediate: false);
+            RefreshHud();
+        }
+
+        public void ZoomOut()
+        {
+            cameraController.AdjustZoom(CameraZoomStep);
+            status = $"Zoom: {cameraController.ZoomMultiplier:0.00}x";
+            ApplyCameraViewPresentation(immediate: false);
+            RefreshHud();
+        }
+
         public void SetSpatialTopDownTiltForTests(bool enabled)
         {
             forceSpatialTopDownTiltForTests = enabled;
@@ -381,6 +402,15 @@ namespace Hollow.RoomDesigner
             if (input.ToggleCameraModePressed)
             {
                 ToggleCameraViewMode();
+            }
+
+            if (input.ZoomDelta > 0)
+            {
+                ZoomIn();
+            }
+            else if (input.ZoomDelta < 0)
+            {
+                ZoomOut();
             }
 
             if (input.EyedropperPressed || CurrentTool == RoomDesignerTool.Eyedropper && input.PlacePressed)
@@ -1121,6 +1151,7 @@ namespace Hollow.RoomDesigner
 
             EnsurePreviewModeButton();
             EnsureCameraModeButton();
+            EnsureZoomButtons();
             EnsureToolToolbar();
 
             if (libraryPanel == null)
@@ -1501,6 +1532,7 @@ namespace Hollow.RoomDesigner
                 RefreshToolToolbar();
                 RefreshPreviewModeButton();
                 RefreshCameraModeButton();
+                RefreshZoomButtons();
                 return;
             }
 
@@ -1528,7 +1560,7 @@ namespace Hollow.RoomDesigner
             if (controlsText != null)
             {
                 controlsText.text =
-                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview | C camera\n" +
+                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview | C camera | -/+ zoom\n" +
                     "P playtest | J export bundle | U export USDA | Esc library\n" +
                     DesignerStatusText();
             }
@@ -1536,6 +1568,7 @@ namespace Hollow.RoomDesigner
             RefreshToolToolbar();
             RefreshPreviewModeButton();
             RefreshCameraModeButton();
+            RefreshZoomButtons();
         }
 
         private string DesignerStatusText()
@@ -1632,6 +1665,56 @@ namespace Hollow.RoomDesigner
             cameraModeButtonPanel.gameObject.SetActive(false);
         }
 
+        private void EnsureZoomButtons()
+        {
+            if (hudCanvas == null || zoomOutButtonPanel != null && zoomInButtonPanel != null)
+            {
+                return;
+            }
+
+            zoomOutButtonPanel ??= CreateZoomButton("RoomDesignerZoomOutButton", "Zoom -", new Vector2(-594f, -132f), ZoomOut);
+            zoomInButtonPanel ??= CreateZoomButton("RoomDesignerZoomInButton", "Zoom +", new Vector2(-480f, -132f), ZoomIn);
+        }
+
+        private RectTransform CreateZoomButton(string name, string label, Vector2 position, Action onClick)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(Outline));
+            buttonObject.transform.SetParent(hudCanvas.transform, false);
+            var rectTransform = (RectTransform)buttonObject.transform;
+            rectTransform.anchorMin = new Vector2(1f, 1f);
+            rectTransform.anchorMax = new Vector2(1f, 1f);
+            rectTransform.pivot = new Vector2(1f, 1f);
+            rectTransform.anchoredPosition = position;
+            rectTransform.sizeDelta = new Vector2(106f, 48f);
+
+            var image = buttonObject.GetComponent<Image>();
+            image.color = new Color(0.06f, 0.07f, 0.08f, 0.86f);
+            var outline = buttonObject.GetComponent<Outline>();
+            outline.effectColor = new Color(0.78f, 0.82f, 0.9f, 0.65f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(() => onClick?.Invoke());
+
+            var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(rectTransform, false);
+            var textRect = (RectTransform)textObject.transform;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(8f, 0f);
+            textRect.offsetMax = new Vector2(-8f, 0f);
+            var text = textObject.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 17;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = label;
+            text.raycastTarget = false;
+            rectTransform.gameObject.SetActive(false);
+            return rectTransform;
+        }
+
         private void RefreshPreviewModeButton()
         {
             if (previewModeButtonPanel == null)
@@ -1687,6 +1770,20 @@ namespace Hollow.RoomDesigner
                 cameraModeButtonText.text = CameraViewMode == RoomDesignerCameraViewMode.TopDown
                     ? "Camera: Top (C)"
                     : "Camera: Perspective (C)";
+            }
+        }
+
+        private void RefreshZoomButtons()
+        {
+            var visible = Mode == RoomDesignerMode.Editing;
+            if (zoomOutButtonPanel != null)
+            {
+                zoomOutButtonPanel.gameObject.SetActive(visible);
+            }
+
+            if (zoomInButtonPanel != null)
+            {
+                zoomInButtonPanel.gameObject.SetActive(visible);
             }
         }
 

@@ -5,6 +5,8 @@ namespace Hollow.RoomDesigner
     public sealed class RoomDesignerCameraController
     {
         private const float FollowSharpness = 9f;
+        private const float MinZoomMultiplier = 0.55f;
+        private const float MaxZoomMultiplier = 1.8f;
         private Vector3 targetPosition;
         private float targetHeight = 10f;
         private float targetDistance = 8f;
@@ -15,9 +17,21 @@ namespace Hollow.RoomDesigner
 
         public RoomDesignerCameraViewMode ViewMode { get; private set; } = RoomDesignerCameraViewMode.Perspective;
 
+        public float ZoomMultiplier { get; private set; } = 1f;
+
         public void SetViewMode(RoomDesignerCameraViewMode mode)
         {
             ViewMode = mode;
+        }
+
+        public void AdjustZoom(float delta)
+        {
+            ZoomMultiplier = Mathf.Clamp(ZoomMultiplier + delta, MinZoomMultiplier, MaxZoomMultiplier);
+        }
+
+        public void ResetZoom()
+        {
+            ZoomMultiplier = 1f;
         }
 
         public void SetTarget(Vector3 roomLocalTarget, RoomDesignerFootprintPreset preset)
@@ -48,8 +62,8 @@ namespace Hollow.RoomDesigner
             }
 
             var desiredPosition = ViewMode == RoomDesignerCameraViewMode.TopDown
-                ? targetPosition + new Vector3(0f, Mathf.Max(16f, targetHeight + 8f), 0f)
-                : targetPosition + new Vector3(0f, targetHeight, -targetDistance);
+                ? targetPosition + new Vector3(0f, Mathf.Max(8f, (targetHeight + 8f) * ZoomMultiplier), 0f)
+                : targetPosition + new Vector3(0f, targetHeight * ZoomMultiplier, -targetDistance * ZoomMultiplier);
             var desiredRotation = ViewMode == RoomDesignerCameraViewMode.TopDown
                 ? Quaternion.Euler(90f, 0f, 0f)
                 : Quaternion.LookRotation((targetPosition - desiredPosition).normalized, Vector3.up);
@@ -74,9 +88,10 @@ namespace Hollow.RoomDesigner
             camera.orthographic = ViewMode == RoomDesignerCameraViewMode.TopDown;
             if (camera.orthographic)
             {
+                var zoomedOrthographicSize = targetOrthographicSize * ZoomMultiplier;
                 camera.orthographicSize = immediate || !initialized
-                    ? targetOrthographicSize
-                    : Mathf.Lerp(camera.orthographicSize, targetOrthographicSize, 1f - Mathf.Exp(-FollowSharpness * deltaTime));
+                    ? zoomedOrthographicSize
+                    : Mathf.Lerp(camera.orthographicSize, zoomedOrthographicSize, 1f - Mathf.Exp(-FollowSharpness * deltaTime));
             }
         }
     }

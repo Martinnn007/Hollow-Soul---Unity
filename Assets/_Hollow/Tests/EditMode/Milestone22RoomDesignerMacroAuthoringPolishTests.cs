@@ -380,7 +380,13 @@ namespace Hollow.Tests.EditMode
                 controller.ApplyImmediate(camera);
                 Assert.AreEqual(RoomDesignerCameraViewMode.Perspective, controller.ViewMode);
                 Assert.IsFalse(camera.orthographic);
+                var defaultPerspectiveDistance = Vector3.Distance(camera.transform.position, controller.TargetPosition);
 
+                controller.AdjustZoom(-0.15f);
+                controller.ApplyImmediate(camera);
+                Assert.Less(Vector3.Distance(camera.transform.position, controller.TargetPosition), defaultPerspectiveDistance);
+
+                controller.ResetZoom();
                 controller.SetViewMode(RoomDesignerCameraViewMode.TopDown);
                 controller.ApplyImmediate(camera);
 
@@ -388,6 +394,17 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(new Vector3(3f, 0f, -2f), controller.TargetPosition);
                 Assert.Greater(camera.orthographicSize, 10f);
                 Assert.Greater(Vector3.Dot(camera.transform.forward, Vector3.down), 0.99f);
+
+                var defaultOrthoSize = camera.orthographicSize;
+                controller.AdjustZoom(10f);
+                controller.ApplyImmediate(camera);
+                Assert.AreEqual(1.8f, controller.ZoomMultiplier, 0.001f);
+                Assert.Greater(camera.orthographicSize, defaultOrthoSize);
+
+                controller.AdjustZoom(-10f);
+                controller.ApplyImmediate(camera);
+                Assert.AreEqual(0.55f, controller.ZoomMultiplier, 0.001f);
+                Assert.Less(camera.orthographicSize, defaultOrthoSize);
 
                 controller.SetViewMode(RoomDesignerCameraViewMode.Perspective);
                 controller.ApplyImmediate(camera);
@@ -439,6 +456,53 @@ namespace Hollow.Tests.EditMode
             }
         }
 
+        [Test]
+        public void ControllerShowsZoomButtonsAndZoomsWithoutMovingTarget()
+        {
+            var root = new GameObject("RoomDesignerZoomController");
+            var cameraObject = new GameObject("MainCamera", typeof(Camera));
+            cameraObject.tag = "MainCamera";
+            try
+            {
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault(RoomDesignerFootprintPreset.Block2x2, "Zoom Draft"));
+
+                var zoomOutButton = GameObject.Find("RoomDesignerZoomOutButton");
+                var zoomInButton = GameObject.Find("RoomDesignerZoomInButton");
+                Assert.IsNotNull(zoomOutButton);
+                Assert.IsNotNull(zoomInButton);
+                Assert.IsTrue(zoomOutButton.activeSelf);
+                Assert.IsTrue(zoomInButton.activeSelf);
+
+                var target = controller.CameraTargetPosition;
+                Assert.AreEqual(1f, controller.CameraZoomMultiplier, 0.001f);
+
+                zoomInButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                Assert.Less(controller.CameraZoomMultiplier, 1f);
+                Assert.AreEqual(target, controller.CameraTargetPosition);
+
+                zoomOutButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                Assert.AreEqual(1f, controller.CameraZoomMultiplier, 0.001f);
+
+                controller.ApplyInput(Input(zoomDelta: -1), 1f);
+                Assert.Greater(controller.CameraZoomMultiplier, 1f);
+
+                controller.ApplyInput(Input(toggleCamera: true), 2f);
+                Assert.AreEqual(RoomDesignerCameraViewMode.TopDown, controller.CameraViewMode);
+                controller.SetSpatialTopDownTiltForTests(true);
+                var previewRoot = FindChild(root, "RoomDesignerPreviewRoot");
+                Assert.AreEqual(55f, previewRoot.localEulerAngles.x, 0.001f);
+
+                controller.ApplyInput(Input(zoomDelta: 1), 3f);
+                Assert.AreEqual(55f, previewRoot.localEulerAngles.x, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(cameraObject);
+            }
+        }
+
         private static RoomDesignerInputSnapshot Input(
             int moveX = 0,
             int moveZ = 0,
@@ -447,9 +511,10 @@ namespace Hollow.Tests.EditMode
             bool place = false,
             bool erase = false,
             bool togglePreview = false,
-            bool toggleCamera = false)
+            bool toggleCamera = false,
+            int zoomDelta = 0)
         {
-            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview, toggleCamera);
+            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview, toggleCamera, zoomDelta);
         }
 
         private static Transform FindChild(GameObject root, string name)

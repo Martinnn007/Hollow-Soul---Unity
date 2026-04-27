@@ -15,6 +15,7 @@ namespace Hollow.RoomDesigner
             var moveZ = Held(keyboard?.wKey, keyboard?.upArrowKey) ? 1 : Held(keyboard?.sKey, keyboard?.downArrowKey) ? -1 : 0;
             var toolDelta = Pressed(keyboard?.eKey) ? 1 : Pressed(keyboard?.qKey) ? -1 : 0;
             var layerDelta = Pressed(keyboard?.xKey) ? 1 : Pressed(keyboard?.zKey) ? -1 : 0;
+            var zoomDelta = Pressed(keyboard?.equalsKey, keyboard?.numpadPlusKey) ? 1 : Pressed(keyboard?.minusKey, keyboard?.numpadMinusKey) ? -1 : 0;
 
             if (gamepad != null)
             {
@@ -24,6 +25,7 @@ namespace Hollow.RoomDesigner
                 moveZ = NonZero(moveZ, -AxisToStep(left.y), -AxisToStep(dpad.y));
                 toolDelta = NonZero(toolDelta, gamepad.rightShoulder.wasPressedThisFrame ? 1 : 0, gamepad.leftShoulder.wasPressedThisFrame ? -1 : 0);
                 layerDelta = NonZero(layerDelta, gamepad.rightTrigger.wasPressedThisFrame ? 1 : 0, gamepad.leftTrigger.wasPressedThisFrame ? -1 : 0);
+                zoomDelta = NonZero(zoomDelta, gamepad.rightStickButton.wasPressedThisFrame ? 1 : 0, gamepad.leftStickButton.wasPressedThisFrame ? -1 : 0);
             }
 
             return new RoomDesignerInputSnapshot(
@@ -40,7 +42,8 @@ namespace Hollow.RoomDesigner
                 Pressed(keyboard?.uKey),
                 Pressed(keyboard?.escapeKey) || gamepad?.startButton.wasPressedThisFrame == true,
                 Pressed(keyboard?.vKey),
-                Pressed(keyboard?.cKey) || gamepad?.selectButton.wasPressedThisFrame == true);
+                Pressed(keyboard?.cKey) || gamepad?.selectButton.wasPressedThisFrame == true,
+                zoomDelta);
         }
 
         private static bool Pressed(params KeyControl[] keys)
