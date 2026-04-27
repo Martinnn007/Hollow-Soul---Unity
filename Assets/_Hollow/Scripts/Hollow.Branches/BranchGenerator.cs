@@ -120,7 +120,6 @@ namespace Hollow.Branches
             }
 
             var graph = CreateSeededBranch(content, settings, seed, BranchFeaturesId, enableTreasureLeaf: true, milestoneLabel: "M20");
-            PromoteFeatureRooms(graph);
             ApplyBossKeyLock(graph);
             return graph;
         }
@@ -160,7 +159,12 @@ namespace Hollow.Branches
             usedPortsByTempIndex[0] = new HashSet<string>();
             RegisterCells(occupiedCells, origin.Footprint);
 
-            for (var tempIndex = 1; tempIndex < targetRoomCount; tempIndex++)
+            var requiresBossRoom = settings.EnableBossLeaf;
+            var requiresSecretRoom = branchId == BranchFeaturesId;
+            var reservedRoomCount = (requiresBossRoom ? 1 : 0) + (requiresSecretRoom ? 1 : 0);
+            var normalPlacementTarget = Mathf.Max(0, targetRoomCount - 1 - reservedRoomCount);
+
+            for (var tempIndex = 1; tempIndex <= normalPlacementTarget; tempIndex++)
             {
                 if (!TryPlaceNextRecord(records, usedPortsByTempIndex, occupiedCells, fixturePool, candidatesByShape, fixtureIds, random, settings.MaxPlacementAttempts, tempIndex, out var record))
                 {
@@ -173,8 +177,41 @@ namespace Hollow.Branches
                 RegisterCells(occupiedCells, record.Footprint);
             }
 
-            var bossTempIndex = settings.EnableBossLeaf ? SelectBossLeaf(records) : -1;
-            var treasureTempIndex = enableTreasureLeaf ? SelectTreasureLeaf(records, bossTempIndex) : -1;
+            var secretTempIndex = -1;
+            if (requiresSecretRoom)
+            {
+                var secretTempCandidate = records.Count;
+                var secretFixtureIds = new[] { "combat_macro_single_1x1" };
+                if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, fixturePool, candidatesByShape, secretFixtureIds, random, settings.MaxPlacementAttempts, secretTempCandidate, requireSingleRoom: true, excludedParentTempIndices: null, out var secretRecord))
+                {
+                    throw new InvalidOperationException($"{milestoneLabel} seeded branch generation failed to place a terminal single-room secret after {settings.MaxPlacementAttempts} attempts.");
+                }
+
+                records.Add(secretRecord);
+                usedPortsByTempIndex[secretRecord.TempIndex] = new HashSet<string> { secretRecord.ToPortId };
+                usedPortsByTempIndex[secretRecord.ParentTempIndex].Add(secretRecord.FromPortId);
+                RegisterCells(occupiedCells, secretRecord.Footprint);
+                secretTempIndex = secretRecord.TempIndex;
+            }
+
+            var bossTempIndex = -1;
+            if (requiresBossRoom)
+            {
+                var bossTempCandidate = records.Count;
+                var excludedBossParents = secretTempIndex >= 0 ? new HashSet<int> { secretTempIndex } : null;
+                if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, fixturePool, candidatesByShape, fixtureIds, random, settings.MaxPlacementAttempts, bossTempCandidate, requireSingleRoom: false, excludedParentTempIndices: excludedBossParents, out var bossRecord))
+                {
+                    throw new InvalidOperationException($"{milestoneLabel} seeded branch generation failed to place a terminal boss room after {settings.MaxPlacementAttempts} attempts.");
+                }
+
+                records.Add(bossRecord);
+                usedPortsByTempIndex[bossRecord.TempIndex] = new HashSet<string> { bossRecord.ToPortId };
+                usedPortsByTempIndex[bossRecord.ParentTempIndex].Add(bossRecord.FromPortId);
+                RegisterCells(occupiedCells, bossRecord.Footprint);
+                bossTempIndex = bossRecord.TempIndex;
+            }
+
+            var treasureTempIndex = enableTreasureLeaf && !requiresSecretRoom ? SelectTreasureLeaf(records, bossTempIndex) : -1;
             var idByTempIndex = AssignRoomIds(records, bossTempIndex);
             var graph = new BranchFloorGraph(branchId, resolvedSeed);
 
@@ -185,7 +222,9 @@ namespace Hollow.Branches
                     ? BranchRoomRole.Origin
                     : record.TempIndex == bossTempIndex
                         ? BranchRoomRole.Boss
-                        : record.TempIndex == treasureTempIndex
+                        : record.TempIndex == secretTempIndex
+                            ? BranchRoomRole.Secret
+                            : record.TempIndex == treasureTempIndex
                             ? BranchRoomRole.Treasure
                             : RoomNumber(roomId) % 2 == 0 ? BranchRoomRole.Combat : BranchRoomRole.Reward;
                 graph.AddRoom(new BranchRoomState(
@@ -211,6 +250,11 @@ namespace Hollow.Branches
             }
 
             ConnectAdjacentCompatiblePorts(graph, roomPool);
+            if (!ValidateSpecialRoomTopology(graph, out var topologyError))
+            {
+                throw new InvalidOperationException($"{milestoneLabel} seeded branch generation produced invalid special-room topology: {topologyError}");
+            }
+
             return graph;
         }
 
@@ -276,6 +320,127 @@ namespace Hollow.Branches
             return false;
         }
 
+        private static bool TryPlaceEndpointRecord(
+            IReadOnlyList<PlacementRecord> records,
+            IReadOnlyDictionary<int, HashSet<string>> usedPortsByTempIndex,
+            HashSet<Vector2Int> occupiedCells,
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> fixturePool,
+            IReadOnlyDictionary<RoomFootprintShape, IReadOnlyList<ImportedRoomRuntimeAsset>> candidatesByShape,
+            IReadOnlyList<string> fixtureIds,
+            System.Random random,
+            int maxAttempts,
+            int tempIndex,
+            bool requireSingleRoom,
+            ISet<int> excludedParentTempIndices,
+            out PlacementRecord record)
+        {
+            var candidateAssets = CandidateAssetsForFixtureIds(fixturePool, candidatesByShape, fixtureIds, random)
+                .Where(asset => !requireSingleRoom || RoomFootprintShapeUtility.Classify(asset.Footprint) == RoomFootprintShape.Single1x1)
+                .ToList();
+            if (candidateAssets.Count == 0)
+            {
+                record = null;
+                return false;
+            }
+
+            var checkedPlacements = 0;
+            var parents = records
+                .Where(parent => excludedParentTempIndices == null || !excludedParentTempIndices.Contains(parent.TempIndex))
+                .OrderByDescending(parent => parent.Depth)
+                .ThenBy(_ => random.Next())
+                .ToList();
+
+            foreach (var parent in parents)
+            {
+                if (!usedPortsByTempIndex.TryGetValue(parent.TempIndex, out var usedParentPorts))
+                {
+                    continue;
+                }
+
+                var parentPorts = parent.Asset.DoorPorts
+                    .Where(port => IsNormalConnectablePort(port) && !usedParentPorts.Contains(port.Id))
+                    .OrderBy(_ => random.Next())
+                    .ToList();
+                foreach (var parentPort in parentPorts)
+                {
+                    foreach (var childAsset in candidateAssets.OrderBy(_ => random.Next()))
+                    {
+                        var childPorts = childAsset.DoorPorts
+                            .Where(port => IsNormalConnectablePort(port) && port.Direction == Opposite(parentPort.Direction))
+                            .OrderBy(_ => random.Next())
+                            .ToList();
+                        foreach (var childPort in childPorts)
+                        {
+                            checkedPlacements++;
+                            if (checkedPlacements > Mathf.Max(1, maxAttempts) * 16)
+                            {
+                                record = null;
+                                return false;
+                            }
+
+                            var parentWorldHost = WorldHostCell(parent, parentPort);
+                            var childWorldHost = parentWorldHost + DirectionOffset(parentPort.Direction);
+                            var childPrimary = childWorldHost - childPort.HostCell + childAsset.Footprint.PrimaryCell;
+                            var childFootprint = PlaceFootprint(childAsset.Footprint, childPrimary);
+                            if (Overlaps(occupiedCells, childFootprint) ||
+                                !IsEndpointCandidate(childAsset, childPrimary, childFootprint, records))
+                            {
+                                continue;
+                            }
+
+                            record = new PlacementRecord(tempIndex, childAsset, childPrimary, childFootprint)
+                            {
+                                ParentTempIndex = parent.TempIndex,
+                                FromDirection = parentPort.Direction,
+                                ToDirection = childPort.Direction,
+                                FromPortId = parentPort.Id,
+                                ToPortId = childPort.Id,
+                                Depth = parent.Depth + 1
+                            };
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            record = null;
+            return false;
+        }
+
+        private static List<ImportedRoomRuntimeAsset> CandidateAssetsForFixtureIds(
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> fixturePool,
+            IReadOnlyDictionary<RoomFootprintShape, IReadOnlyList<ImportedRoomRuntimeAsset>> candidatesByShape,
+            IReadOnlyList<string> fixtureIds,
+            System.Random random)
+        {
+            var assetsById = new Dictionary<string, ImportedRoomRuntimeAsset>();
+            foreach (var fixtureId in fixtureIds ?? Array.Empty<string>())
+            {
+                if (fixturePool == null || !fixturePool.TryGetValue(fixtureId, out var fallback) || fallback == null)
+                {
+                    continue;
+                }
+
+                var shape = RoomFootprintShapeUtility.Classify(fallback.Footprint);
+                if (shape != RoomFootprintShape.Unsupported &&
+                    candidatesByShape != null &&
+                    candidatesByShape.TryGetValue(shape, out var candidates) &&
+                    candidates.Count > 0)
+                {
+                    foreach (var candidate in candidates.Where(candidate => candidate != null))
+                    {
+                        assetsById[candidate.Id] = candidate;
+                    }
+                }
+                else
+                {
+                    assetsById[fallback.Id] = fallback;
+                }
+            }
+
+            return assetsById.Values.OrderBy(_ => random.Next()).ToList();
+        }
+
         private static IReadOnlyDictionary<RoomFootprintShape, IReadOnlyList<ImportedRoomRuntimeAsset>> BuildCandidatesByShape(IEnumerable<ImportedRoomRuntimeAsset> assets)
         {
             return (assets ?? Enumerable.Empty<ImportedRoomRuntimeAsset>())
@@ -334,6 +499,112 @@ namespace Hollow.Branches
                     }
                 }
             }
+        }
+
+        public static bool IsSingleRoomFootprint(BranchRoomState room)
+        {
+            return room != null && RoomFootprintShapeUtility.Classify(room.Footprint) == RoomFootprintShape.Single1x1;
+        }
+
+        public static bool ValidateSpecialRoomTopology(BranchFloorGraph graph, out string error)
+        {
+            if (graph == null)
+            {
+                error = "Graph is null.";
+                return false;
+            }
+
+            var bossRooms = graph.Rooms.Where(room => room.Role == BranchRoomRole.Boss).ToArray();
+            if (bossRooms.Length > 1)
+            {
+                error = "More than one boss room exists.";
+                return false;
+            }
+
+            if (bossRooms.Length == 1)
+            {
+                var boss = bossRooms[0];
+                var bossConnections = graph.ConnectionsFrom(boss.Id);
+                var uniqueNeighbors = bossConnections.Select(connection => connection.ToRoomId).Distinct().ToArray();
+                if (uniqueNeighbors.Length != 1 || bossConnections.Count != 1)
+                {
+                    error = $"Boss room '{boss.Id}' must have exactly one entrance, but has {uniqueNeighbors.Length} neighbor(s) and {bossConnections.Count} outgoing connection(s).";
+                    return false;
+                }
+            }
+
+            var nonSingleSecret = graph.Rooms.FirstOrDefault(room => room.Role == BranchRoomRole.Secret && !IsSingleRoomFootprint(room));
+            if (nonSingleSecret != null)
+            {
+                error = $"Secret room '{nonSingleSecret.Id}' must use a 1x1 footprint.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        private static bool IsEndpointCandidate(
+            ImportedRoomRuntimeAsset asset,
+            Vector2Int primaryCell,
+            RoomInstanceFootprint footprint,
+            IReadOnlyList<PlacementRecord> placedRecords)
+        {
+            if (asset == null || footprint == null || placedRecords == null)
+            {
+                return false;
+            }
+
+            var adjacentRooms = new HashSet<int>();
+            var adjacentFaceCount = 0;
+            foreach (var placed in placedRecords)
+            {
+                foreach (var candidateCell in footprint.OccupiedCells)
+                {
+                    foreach (var placedCell in placed.Footprint.OccupiedCells)
+                    {
+                        if (Mathf.Abs(candidateCell.x - placedCell.x) + Mathf.Abs(candidateCell.y - placedCell.y) != 1)
+                        {
+                            continue;
+                        }
+
+                        adjacentRooms.Add(placed.TempIndex);
+                        adjacentFaceCount++;
+                    }
+                }
+            }
+
+            return adjacentRooms.Count == 1 &&
+                   adjacentFaceCount == 1 &&
+                   CountCompatibleAdjacentPortPairs(asset, primaryCell, placedRecords) == 1;
+        }
+
+        private static int CountCompatibleAdjacentPortPairs(
+            ImportedRoomRuntimeAsset asset,
+            Vector2Int primaryCell,
+            IReadOnlyList<PlacementRecord> placedRecords)
+        {
+            if (asset == null || placedRecords == null)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            var offset = primaryCell - asset.Footprint.PrimaryCell;
+            foreach (var fromPort in asset.DoorPorts.Where(IsNormalConnectablePort))
+            {
+                var requiredDirection = Opposite(fromPort.Direction);
+                var requiredHostCell = fromPort.HostCell + offset + DirectionOffset(fromPort.Direction);
+                foreach (var placed in placedRecords)
+                {
+                    count += placed.Asset.DoorPorts.Count(toPort =>
+                        IsNormalConnectablePort(toPort) &&
+                        toPort.Direction == requiredDirection &&
+                        WorldHostCell(placed, toPort) == requiredHostCell);
+                }
+            }
+
+            return count;
         }
 
         private static ImportedRoomRuntimeAsset ChooseCandidateForShape(
@@ -406,19 +677,6 @@ namespace Hollow.Branches
                 .ThenBy(record => $"room_{record.TempIndex:00}")
                 .ToList();
             return fallback.Count > 0 ? fallback[0].TempIndex : -1;
-        }
-
-        private static void PromoteFeatureRooms(BranchFloorGraph graph)
-        {
-            var treasure = graph.Rooms
-                .Where(room => room.Role == BranchRoomRole.Treasure)
-                .OrderByDescending(room => DistanceFromOrigin(graph, room.Id))
-                .ThenBy(room => room.Id.Value, StringComparer.Ordinal)
-                .FirstOrDefault();
-            if (treasure != null)
-            {
-                treasure.OverrideRole(BranchRoomRole.Secret);
-            }
         }
 
         private static void ApplyBossKeyLock(BranchFloorGraph graph)

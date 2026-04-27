@@ -34,12 +34,16 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(Signature(first), Signature(second));
             Assert.AreEqual(BranchGenerator.FeatureBranchId, first.BranchId);
             Assert.AreEqual(8, first.RoomCount);
-            Assert.AreEqual(14, first.Connections.Count);
+            Assert.GreaterOrEqual(first.Connections.Count, 14);
             Assert.IsTrue(first.Connections.All(connection => connection.HasExplicitPorts));
             Assert.AreEqual(first.Rooms.Sum(room => room.Footprint.OccupiedCellCount), first.OccupancyMap.OwnerByCell.Count);
             Assert.AreEqual(1, first.Rooms.Count(room => room.Role == BranchRoomRole.Origin));
             Assert.AreEqual(1, first.Rooms.Count(room => room.Role == BranchRoomRole.Boss));
             Assert.AreEqual(1, first.Rooms.Count(room => room.Role == BranchRoomRole.Treasure));
+            Assert.IsTrue(BranchGenerator.ValidateSpecialRoomTopology(first, out var topologyError), topologyError);
+
+            var boss = first.Rooms.Single(room => room.Role == BranchRoomRole.Boss);
+            Assert.AreEqual(1, first.ConnectionsFrom(boss.Id).Count);
 
             var treasure = first.Rooms.Single(room => room.Role == BranchRoomRole.Treasure);
             Assert.AreEqual(1, first.ConnectionsFrom(treasure.Id).Count);

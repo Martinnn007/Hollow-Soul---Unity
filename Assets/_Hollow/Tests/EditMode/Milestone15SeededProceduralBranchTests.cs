@@ -51,7 +51,9 @@ namespace Hollow.Tests.EditMode
 
             var boss = graph.Rooms.Single(room => room.Role == BranchRoomRole.Boss);
             Assert.AreEqual("boss_01", boss.Id.Value);
-            Assert.GreaterOrEqual(graph.ConnectionsFrom(boss.Id).Count, 1);
+            Assert.AreEqual(1, graph.ConnectionsFrom(boss.Id).Count);
+            Assert.AreEqual(1, graph.ConnectionsFrom(boss.Id).Select(connection => connection.ToRoomId).Distinct().Count());
+            Assert.IsTrue(BranchGenerator.ValidateSpecialRoomTopology(graph, out var topologyError), topologyError);
             Assert.AreEqual(1, graph.Rooms.Count(room => room.Role == BranchRoomRole.Origin));
         }
 

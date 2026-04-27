@@ -22,7 +22,14 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(BranchGenerator.BranchFeaturesId, graph.BranchId);
             Assert.AreEqual(1, graph.Rooms.Count(room => room.Role == BranchRoomRole.Secret));
             Assert.AreEqual(1, graph.Rooms.Count(room => room.Role == BranchRoomRole.Boss));
-            Assert.IsTrue(graph.Connections.Any(connection => connection.LockKind == BranchConnectionLockKind.BossKey));
+            Assert.AreEqual(2, graph.Connections.Count(connection => connection.LockKind == BranchConnectionLockKind.BossKey));
+            Assert.IsTrue(BranchGenerator.ValidateSpecialRoomTopology(graph, out var topologyError), topologyError);
+
+            var boss = graph.Rooms.Single(room => room.Role == BranchRoomRole.Boss);
+            Assert.AreEqual(1, graph.ConnectionsFrom(boss.Id).Count);
+            var secret = graph.Rooms.Single(room => room.Role == BranchRoomRole.Secret);
+            Assert.IsTrue(BranchGenerator.IsSingleRoomFootprint(secret));
+            Assert.AreEqual(1, secret.Footprint.OccupiedCellCount);
 
             var plan = BranchFeaturePlan.Create(graph);
             Assert.IsTrue(plan.HasBossKeyRoom);

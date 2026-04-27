@@ -38,9 +38,11 @@ namespace Hollow.Tests.EditMode
             var second = EncounterResolver.CreateSeededPlan(graph, catalog, graph.Seed);
 
             Assert.AreEqual(Signature(first), Signature(second));
+            Assert.IsTrue(BranchGenerator.ValidateSpecialRoomTopology(graph, out var topologyError), topologyError);
             var treasure = graph.Rooms.Single(room => room.Role == BranchRoomRole.Treasure);
             Assert.IsFalse(first.TryResolve(treasure.Id.Value, out _));
             var boss = graph.Rooms.Single(room => room.Role == BranchRoomRole.Boss);
+            Assert.AreEqual(1, graph.ConnectionsFrom(boss.Id).Count);
             Assert.IsTrue(first.TryResolve(boss.Id.Value, out var bossAssignment));
             Assert.Contains("spawnEnemyBoss", bossAssignment.EnemySpawnKinds.ToArray());
             Assert.IsTrue(first.TryResolve(BranchRoomId.Origin.Value, out var originAssignment));
