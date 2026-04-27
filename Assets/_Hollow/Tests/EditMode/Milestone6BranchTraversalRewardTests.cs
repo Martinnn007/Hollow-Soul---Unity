@@ -187,6 +187,10 @@ namespace Hollow.Tests.EditMode
                     .Single(text => text.name == "BranchMiniMap.MapPanel.Text");
                 Assert.IsTrue(mapText.text.Contains("Branch Map"));
                 Assert.IsFalse(mapText.text.Contains("[C]"));
+
+                var economyText = canvasObject.GetComponentsInChildren<Text>(true)
+                    .Single(text => text.name == "BranchMiniMap.EconomyPanel.Text");
+                Assert.IsTrue(economyText.text.Contains("Seed:"));
             }
             finally
             {

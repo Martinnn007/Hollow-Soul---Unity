@@ -109,6 +109,53 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void EntryGraceBlocksMovementContactAndRangedAttacksUntilExpired()
+        {
+            var root = CreateHarness(out var room, out var player, out var enemyPrefab);
+            try
+            {
+                player.transform.localPosition = new Vector3(2f, 0f, 0f);
+                var chaser = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyNormal"));
+                chaser.transform.localPosition = Vector3.zero;
+                chaser.BeginEntryGrace(RoomCombatController.EntryGraceSeconds, 0f);
+
+                chaser.Tick(0.5f, 0.5f);
+                Assert.AreEqual(Vector3.zero, chaser.transform.localPosition);
+
+                chaser.Tick(0.25f, 1.1f);
+                Assert.Greater(chaser.transform.localPosition.x, 0f);
+
+                player.transform.localPosition = Vector3.zero;
+                var playerHealth = player.GetComponent<CombatantHealth>();
+                playerHealth.Configure(RoomCombatController.PlayerMaxHealth);
+                var contactEnemy = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyHeavy"));
+                contactEnemy.transform.localPosition = Vector3.zero;
+                contactEnemy.BeginEntryGrace(RoomCombatController.EntryGraceSeconds, 2f);
+
+                contactEnemy.Tick(0.2f, 2.5f);
+                Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
+
+                contactEnemy.Tick(0.2f, 3.1f);
+                Assert.Less(playerHealth.CurrentHealth, playerHealth.MaxHealth);
+
+                var turret = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyTurret"));
+                turret.ConfigureSpawnContext(enemyPrefab, null, EnemyCatalog.CreateRuntimeDefault(), DifficultyTierDefinition.CreateRuntimeDeveloperSample(), new CombatDiagnosticsModel());
+                turret.transform.localPosition = new Vector3(0f, 0f, -2f);
+                turret.BeginEntryGrace(RoomCombatController.EntryGraceSeconds, 4f);
+
+                turret.Tick(0.1f, 4.5f);
+                Assert.IsNull(root.GetComponentInChildren<EnemyProjectileController>());
+
+                turret.Tick(0.1f, 5.1f);
+                Assert.IsNotNull(root.GetComponentInChildren<EnemyProjectileController>());
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void SplitterSpawnsChildrenOnDeathAndBossFiresLowHealthBurst()
         {
             var root = CreateHarness(out var room, out var player, out var enemyPrefab);
@@ -118,9 +165,15 @@ namespace Hollow.Tests.EditMode
                 var splitter = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemySplitter"));
                 splitter.ConfigureSpawnContext(enemyPrefab, null, catalog, DifficultyTierDefinition.CreateRuntimeDeveloperSample(), new CombatDiagnosticsModel());
                 var childCount = 0;
-                splitter.SpawnedChild += _ => childCount++;
+                var childStartedInGrace = false;
+                splitter.SpawnedChild += child =>
+                {
+                    childCount++;
+                    childStartedInGrace = child.IsInEntryGrace(Time.time);
+                };
                 DamageSystem.ApplyDamage(splitter.Health, new DamageRequest(99, root));
                 Assert.AreEqual(2, childCount);
+                Assert.IsTrue(childStartedInGrace);
 
                 var boss = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemyBoss"));
                 boss.ConfigureSpawnContext(enemyPrefab, null, catalog, DifficultyTierDefinition.CreateRuntimeDeveloperSample(), new CombatDiagnosticsModel());

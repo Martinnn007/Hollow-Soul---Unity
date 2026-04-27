@@ -12,6 +12,7 @@ namespace Hollow.Combat
     public sealed class RoomCombatController : MonoBehaviour
     {
         public const int PlayerMaxHealth = 6;
+        public const float EntryGraceSeconds = 1f;
 
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject projectilePrefab;
@@ -228,6 +229,7 @@ namespace Hollow.Combat
 
             enemy.SpawnedChild -= OnEnemySpawnedChild;
             enemy.SpawnedChild += OnEnemySpawnedChild;
+            enemy.BeginEntryGrace(EntryGraceSeconds, Time.time);
             enemies.Add(enemy);
             diagnostics.SetEnemyCounts(enemies);
         }

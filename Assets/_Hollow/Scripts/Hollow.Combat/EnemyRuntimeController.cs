@@ -24,6 +24,7 @@ namespace Hollow.Combat
         private float nextAllowedAttackTime;
         private float nextAllowedChargeTime;
         private float chargeEndTime;
+        private float entryGraceEndTime;
         private bool firedLowHealthBossBurst;
         private Vector3 activeChargeDirection = Vector3.forward;
         private GameObject enemyPrefab;
@@ -51,6 +52,17 @@ namespace Hollow.Combat
         public float RadiusMeters => radiusMeters;
 
         public bool IsAlive => Health != null && Health.IsAlive;
+
+        public bool IsInEntryGrace(float timeSeconds) => timeSeconds < entryGraceEndTime;
+
+        public void BeginEntryGrace(float seconds, float currentTimeSeconds)
+        {
+            var graceEndTime = currentTimeSeconds + Mathf.Max(0f, seconds);
+            entryGraceEndTime = Mathf.Max(entryGraceEndTime, graceEndTime);
+            nextAllowedContactTime = Mathf.Max(nextAllowedContactTime, entryGraceEndTime);
+            nextAllowedAttackTime = Mathf.Max(nextAllowedAttackTime, entryGraceEndTime);
+            nextAllowedChargeTime = Mathf.Max(nextAllowedChargeTime, entryGraceEndTime);
+        }
 
         public void Configure(RoomRuntimeRoot room, PlaceholderPlayerController player, EnemyDefinition definition, DifficultyTierDefinition difficultyTier)
         {
@@ -100,6 +112,11 @@ namespace Hollow.Combat
         public void Tick(float deltaTime, float timeSeconds)
         {
             if (!IsAlive || playerController == null)
+            {
+                return;
+            }
+
+            if (IsInEntryGrace(timeSeconds))
             {
                 return;
             }
@@ -222,7 +239,7 @@ namespace Hollow.Combat
 
         public bool TryApplyContactDamage(float timeSeconds)
         {
-            if (!IsAlive || playerHealth == null || !playerHealth.IsAlive || timeSeconds < nextAllowedContactTime)
+            if (!IsAlive || playerHealth == null || !playerHealth.IsAlive || IsInEntryGrace(timeSeconds) || timeSeconds < nextAllowedContactTime)
             {
                 return false;
             }
@@ -314,6 +331,7 @@ namespace Hollow.Combat
                 var child = childObject.GetComponent<EnemyRuntimeController>() ?? childObject.AddComponent<EnemyRuntimeController>();
                 child.Configure(roomRuntimeRoot, playerController, definition, difficulty);
                 child.ConfigureSpawnContext(enemyPrefab, enemyProjectilePrefab, catalog, difficulty, diagnostics);
+                child.BeginEntryGrace(RoomCombatController.EntryGraceSeconds, Time.time);
                 SpawnedChild?.Invoke(child);
             }
         }

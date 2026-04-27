@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Core;
 using Hollow.Combat;
 using Hollow.Core.App;
 using Hollow.Data.Definitions;
@@ -210,7 +211,7 @@ namespace Hollow.Branches
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
             branchDepth = 0;
-            currentBranchSeed = macroBranchSeed;
+            currentBranchSeed = ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
             bossKeyState = BossKeyState.None;
             bossDoorUnlocked = false;
             interBranchHubState = InterBranchHubState.Inactive;
@@ -914,6 +915,7 @@ namespace Hollow.Branches
 
         private BranchFloorGraph CreateFreshGraph()
         {
+            var seed = currentBranchSeed == 0 ? macroBranchSeed : currentBranchSeed;
             if (branchContent != null && branchContent.HasMacroFixturePool)
             {
                 if (branchGenerationSettings != null)
@@ -922,12 +924,12 @@ namespace Hollow.Branches
                     {
                         if (encounterCatalog != null)
                         {
-                            return CreateM20Graph(currentBranchSeed == 0 ? macroBranchSeed : currentBranchSeed);
+                            return CreateM20Graph(seed);
                         }
 
                         return branchGenerationSettings.EnableTreasureLeaf
-                            ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, macroBranchSeed)
-                            : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, macroBranchSeed);
+                            ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, seed)
+                            : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, seed);
                     }
                     catch (Exception error)
                     {
@@ -935,10 +937,18 @@ namespace Hollow.Branches
                     }
                 }
 
-                return BranchGenerator.CreateMacroFixtureBranch(branchContent.MacroRoomPool, branchContent.BranchSeed);
+                return BranchGenerator.CreateMacroFixtureBranch(branchContent.MacroRoomPool, seed == 0 ? branchContent.BranchSeed : seed);
             }
 
             return BranchGenerator.CreateFiveRoomCross(roomAsset);
+        }
+
+        private bool ShouldUseRandomFreshRunSeed()
+        {
+            return gameSessionState != null &&
+                   gameSessionState.SessionMode == RuntimeSessionMode.ProfileBacked &&
+                   gameSessionState.LaunchMode == RunLaunchMode.NewRun &&
+                   gameSessionState.HasProfile;
         }
 
         private BranchFloorGraph CreateGraphForSnapshot(RunSaveSnapshot snapshot)

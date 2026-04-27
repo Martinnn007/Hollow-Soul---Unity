@@ -52,7 +52,10 @@ namespace Hollow.UI.Shell
             var itemNames = branchSessionController.RunEconomy.CollectedRewards.Count == 0
                 ? "None"
                 : string.Join(", ", branchSessionController.RunEconomy.CollectedRewards.Select(record => record.DisplayName));
-            var displayState = $"{summary}|{branchSessionController.RunEconomy.RunSouls}|{branchSessionController.BankedSouls}|{branchSessionController.RewardCounter.ClaimedRewards}|{itemNames}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}";
+            var activeSeed = branchSessionController.CurrentBranchSeed != 0
+                ? branchSessionController.CurrentBranchSeed
+                : branchSessionController.State?.Graph?.Seed ?? 0;
+            var displayState = $"{summary}|{branchSessionController.RunEconomy.RunSouls}|{branchSessionController.BankedSouls}|{branchSessionController.RewardCounter.ClaimedRewards}|{itemNames}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}|{activeSeed}";
             if (!force && displayState == lastSummary)
             {
                 return;
@@ -62,7 +65,7 @@ namespace Hollow.UI.Shell
             mapText.text = "Branch Map\nBright: current | Gold: reward | Dark: nearby";
             RebuildShapeMap(model);
             economyText.text =
-                $"Run Souls: {branchSessionController.RunEconomy.RunSouls}\nBanked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nSave: {branchSessionController.SaveStatus}";
+                $"Run Souls: {branchSessionController.RunEconomy.RunSouls}\nBanked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nSeed: {activeSeed}\nSave: {branchSessionController.SaveStatus}";
             itemLogText.text = $"Latest\n{branchSessionController.LastRewardMessage}\n\nItems\n{itemNames}";
         }
 
@@ -198,12 +201,12 @@ namespace Hollow.UI.Shell
             shapeRoot.offsetMax = new Vector2(-14f, -66f);
             economyText = AddPanelText(
                 "BranchMiniMap.EconomyPanel",
-                "Run Souls: 0\nBanked: 0\nRewards: 0/4\nSave: Ready",
+                "Run Souls: 0\nBanked: 0\nRewards: 0/4\nSeed: 0\nSave: Ready",
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
                 new Vector2(32f, -315f),
-                new Vector2(360f, 135f),
+                new Vector2(360f, 155f),
                 TextAnchor.UpperLeft,
                 18);
             itemLogText = AddPanelText(

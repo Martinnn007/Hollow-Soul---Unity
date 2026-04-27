@@ -6,6 +6,7 @@ using Hollow.Combat;
 using Hollow.Core;
 using Hollow.Data.Definitions;
 using Hollow.Entities;
+using Hollow.Persistence;
 using Hollow.Platform;
 using Hollow.Rewards;
 using Hollow.Rooms;
@@ -143,6 +144,27 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void ProfileBackedNewRunUsesFreshRandomSeedAndSnapshotsIt()
+        {
+            using var _ = RunSeedProvider.OverrideForTests(() => 246810);
+            var profile = new ProfileSlotSummary(0, "profile-0", "Seed Runner", 0, 0, 0, false, 0, 0);
+            var root = CreateBranchHarness(out var branch, out _, out _, out _, profile);
+            try
+            {
+                var snapshot = branch.CreateSnapshot();
+
+                Assert.AreEqual(246810, branch.CurrentBranchSeed);
+                Assert.AreEqual(246810, branch.State.Graph.Seed);
+                Assert.AreEqual(246810, snapshot.branchSeed);
+                Assert.AreEqual(246810, snapshot.currentBranchSeed);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void M14SnapshotStillRestoresFixedMacroBranch()
         {
             var root = CreateBranchHarness(out var branch, out _, out _, out var sessionState);
@@ -170,7 +192,8 @@ namespace Hollow.Tests.EditMode
             out BranchSessionController branch,
             out RoomCombatController combat,
             out PlaceholderPlayerController player,
-            out GameSessionState sessionState)
+            out GameSessionState sessionState,
+            ProfileSlotSummary selectedProfile = null)
         {
             var root = new GameObject("M15BranchHarness");
 
@@ -204,7 +227,7 @@ namespace Hollow.Tests.EditMode
             branch.Configure(null, null);
             branch.ConfigureTemplateCatalog(LoadCatalog(), BranchGenerator.DefaultSeededMacroSeed);
             branch.ConfigureGenerationSettings(CreateM15CompatibleSettings());
-            sessionState = GameSessionState.Create(RuntimeSessionMode.ProfileBacked, HollowPlatformKind.WindowsStandard3D, null, Vector3.zero);
+            sessionState = GameSessionState.Create(RuntimeSessionMode.ProfileBacked, HollowPlatformKind.WindowsStandard3D, selectedProfile, Vector3.zero);
             branch.Initialize(ImportSampleRoom(), sessionState);
             return root;
         }
