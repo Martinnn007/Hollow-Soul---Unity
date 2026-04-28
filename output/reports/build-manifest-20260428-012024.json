@@ -1,0 +1,22 @@
+{
+    "manifestId": "build-manifest-20260428-012024",
+    "generatedAtUtc": "2026-04-28T01:20:24.3759190Z",
+    "prototypeVersion": "Hollow Soul Unity M12 Build Automation",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "2c3f556",
+    "buildTarget": "StandaloneWindows64",
+    "buildResult": "ManifestOnly",
+    "buildPath": "output/builds/HollowSoul_Prototype_Windows/HollowSoul.exe",
+    "auditResult": "Passed",
+    "auditReportPath": "output/reports/latest_prototype_audit.json",
+    "addressablesProfile": "Default",
+    "scenes": [
+        "Assets/_Hollow/Scenes/Boot.unity",
+        "Assets/_Hollow/Scenes/MainMenu.unity",
+        "Assets/_Hollow/Scenes/Game_Windows.unity",
+        "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity",
+        "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity",
+        "Assets/_Hollow/Scenes/RoomDesigner.unity"
+    ]
+}

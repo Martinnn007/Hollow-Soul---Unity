@@ -43,7 +43,7 @@ namespace Hollow.Editor.Validation
 
         public static void Validate()
         {
-            Validate(exitOnFailure: Application.isBatchMode);
+            Validate(exitOnFailure: MilestoneValidationExitPolicy.ShouldExitForValidate());
         }
 
         private static void Validate(bool exitOnFailure)
@@ -161,9 +161,9 @@ namespace Hollow.Editor.Validation
                 failures.Add("M19 boss room must resolve to the Stone Warden encounter.");
             }
 
-            if (!first.TryResolve(BranchRoomId.Origin.Value, out var originAssignment) || originAssignment.EnemySpawnKinds.Count == 0)
+            if (first.TryResolve(BranchRoomId.Origin.Value, out _))
             {
-                failures.Add("M19 origin room must receive a light intro encounter.");
+                failures.Add("Origin rooms must remain safe starter rooms without combat encounters.");
             }
         }
 
@@ -179,11 +179,29 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (branch.EncounterCatalog != encounterCatalog)
+                if (branch.EncounterCatalog == null ||
+                    (branch.EncounterCatalog != encounterCatalog && !IsM19CompatibleSuccessorCatalog(branch.EncounterCatalog)))
                 {
-                    failures.Add($"{scenePath} BranchSessionController is not wired to the M19 encounter catalog.");
+                    failures.Add($"{scenePath} BranchSessionController is not wired to the M19 encounter catalog or a compatible successor catalog.");
                 }
             }
+        }
+
+        private static bool IsM19CompatibleSuccessorCatalog(EncounterCatalogDefinition catalog)
+        {
+            if (catalog == null || catalog.BossEncounter == null)
+            {
+                return false;
+            }
+
+            var ids = catalog.Encounters
+                .Where(encounter => encounter != null)
+                .Select(encounter => encounter.EncounterId)
+                .ToHashSet();
+            return ids.Contains("origin_intro") &&
+                   ids.Contains("reward_guard") &&
+                   ids.Contains("stone_warden_boss") &&
+                   catalog.Encounters.Count >= 5;
         }
 
         private static string Signature(EncounterPlan plan)

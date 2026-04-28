@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71eb7a873c4c846689b0f2e4c3cb7547, type: 3}
+  m_Name: ChallengeCatalog_M35
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.ChallengeCatalogDefinition
+  catalogId: m35_challenge_catalog_v1
+  challenges:
+  - {fileID: 11400000, guid: 42702669a22ec47489eaf8f79ffea5c0, type: 2}
+  - {fileID: 11400000, guid: 61176875560314461badb67d7892d364, type: 2}
+  - {fileID: 11400000, guid: 1cf88657bbf1441569fd7fb6f16a90e0, type: 2}

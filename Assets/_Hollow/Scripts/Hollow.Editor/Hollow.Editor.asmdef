@@ -19,6 +19,8 @@
     "Hollow.RoomDesigner",
     "Unity.Addressables",
     "Unity.Addressables.Editor",
+    "UnityEditor.TestRunner",
+    "UnityEngine.TestRunner",
     "UnityEngine.UI"
   ],
   "includePlatforms": [

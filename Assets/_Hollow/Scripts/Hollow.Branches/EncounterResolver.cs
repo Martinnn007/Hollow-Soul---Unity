@@ -17,7 +17,7 @@ namespace Hollow.Branches
             var assignments = new List<RoomEncounterAssignment>();
             foreach (var room in graph.Rooms.OrderBy(room => room.Id.Value, StringComparer.Ordinal))
             {
-                if (room.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret)
+                if (room.Role is BranchRoomRole.Origin or BranchRoomRole.Treasure or BranchRoomRole.Secret)
                 {
                     continue;
                 }

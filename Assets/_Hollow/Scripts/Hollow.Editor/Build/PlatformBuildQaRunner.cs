@@ -2,14 +2,20 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Hollow.Data.Definitions;
+using Hollow.Diagnostics;
 using Hollow.Editor.Generation;
+using Hollow.Editor.Validation;
+using Hollow.Presentation;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.Build.Reporting;
+using UnityEditor.SceneManagement;
+using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 
 namespace Hollow.Editor.Build
@@ -38,6 +44,7 @@ namespace Hollow.Editor.Build
 
         public static PlatformBuildQaReport RunFullM24Qa()
         {
+            ConfigureQaEditorRuntime();
             var profile = LoadProfileOrThrow();
             var report = CreateReport(profile);
 
@@ -47,14 +54,8 @@ namespace Hollow.Editor.Build
                 report.targets.Add(BuildLocalAddressables());
             }
 
-            report.targets.Add(RecordTestCommand(
-                "editmode-tests",
-                "Unity Test Runner",
-                "Run EditMode tests with `Unity -batchmode -projectPath <repo> -runTests -testPlatform editmode -testResults output/reports/m24-editmode-results.xml`."));
-            report.targets.Add(RecordTestCommand(
-                "playmode-smoke-tests",
-                "Unity Test Runner",
-                "Run PlayMode smoke tests with `Unity -batchmode -projectPath <repo> -runTests -testPlatform playmode -testResults output/reports/m24-playmode-results.xml`."));
+            report.targets.Add(RunEditModeTests(profile));
+            report.targets.Add(RunPlatformSceneSmoke(profile));
             report.targets.Add(BuildWindowsDevelopment(profile));
             report.targets.Add(ValidateVisionOSReadiness(profile));
             report.manualChecklist.AddRange(ManualChecklist());
@@ -62,6 +63,29 @@ namespace Hollow.Editor.Build
             WriteReports(profile, report);
             LogReport(report);
             return report;
+        }
+
+        private static void ConfigureQaEditorRuntime()
+        {
+            TryDisableBurstCompilation();
+        }
+
+        private static void TryDisableBurstCompilation()
+        {
+            try
+            {
+                var burstCompiler = Type.GetType("Unity.Burst.BurstCompiler, Unity.Burst");
+                var options = burstCompiler?.GetField("Options", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+                var enableProperty = options?.GetType().GetProperty("EnableBurstCompilation", BindingFlags.Public | BindingFlags.Instance);
+                if (enableProperty != null && enableProperty.CanWrite)
+                {
+                    enableProperty.SetValue(options, false);
+                }
+            }
+            catch (Exception exception)
+            {
+                UnityEngine.Debug.LogWarning($"M32 QA could not disable Burst compilation for batch stability: {exception.Message}");
+            }
         }
 
         public static PlatformBuildTargetResult BuildWindowsDevelopment()
@@ -255,9 +279,187 @@ namespace Hollow.Editor.Build
             return PlatformBuildTargetResult.Passed("visionos-readiness", "visionOS Simulator/Readiness", string.Empty, stopwatch.Elapsed.TotalMilliseconds, "Vision Pro bounded/immersive scenes, polish profiles, and simulator tooling are present.");
         }
 
-        private static PlatformBuildTargetResult RecordTestCommand(string id, string platform, string message)
+        private static PlatformBuildTargetResult RunEditModeTests(PlatformBuildQaProfileDefinition profile)
         {
-            return PlatformBuildTargetResult.NotRun(id, platform, message, "Run this command as a separate Unity Test Runner invocation; the in-process QA gate records the expected command and the PlayMode/EditMode suites remain independently verifiable.");
+            var stopwatch = Stopwatch.StartNew();
+            var outputPath = Path.Combine(profile.ReportRoot, "m24-editmode-results.xml");
+            try
+            {
+                Directory.CreateDirectory(profile.ReportRoot);
+                var callbacks = ScriptableObject.CreateInstance<QaTestCallbacks>();
+                callbacks.Configure(outputPath);
+                var api = ScriptableObject.CreateInstance<TestRunnerApi>();
+                api.RegisterCallbacks(callbacks, priority: 1000);
+                var settings = new ExecutionSettings(new Filter
+                {
+                    testMode = UnityEditor.TestTools.TestRunner.Api.TestMode.EditMode,
+                    assemblyNames = new[] { "Hollow.Tests.EditMode" }
+                })
+                {
+                    runSynchronously = true
+                };
+
+                var previousExitSuppression = MilestoneValidationExitPolicy.SuppressEditorExit;
+                MilestoneValidationExitPolicy.SuppressEditorExit = true;
+                try
+                {
+                    api.Execute(settings);
+                }
+                finally
+                {
+                    MilestoneValidationExitPolicy.SuppressEditorExit = previousExitSuppression;
+                    api.UnregisterCallbacks(callbacks);
+                    UnityEngine.Object.DestroyImmediate(api);
+                }
+
+                var result = callbacks.Result;
+                UnityEngine.Object.DestroyImmediate(callbacks);
+                stopwatch.Stop();
+
+                if (result == null)
+                {
+                    return PlatformBuildTargetResult.Failed(
+                        "editmode-tests",
+                        "Unity Test Runner",
+                        outputPath,
+                        stopwatch.Elapsed.TotalMilliseconds,
+                        "Unity Test Runner returned no EditMode result.",
+                        "Open the editor log and verify com.unity.test-framework can execute Hollow.Tests.EditMode.");
+                }
+
+                var total = result.PassCount + result.FailCount + result.SkipCount + result.InconclusiveCount;
+                var summary = $"EditMode tests completed: {result.PassCount}/{total} passed, {result.FailCount} failed, {result.InconclusiveCount} inconclusive, {result.SkipCount} skipped.";
+                if (result.FailCount > 0 || result.InconclusiveCount > 0 || result.TestStatus == TestStatus.Failed)
+                {
+                    return PlatformBuildTargetResult.Failed(
+                        "editmode-tests",
+                        "Unity Test Runner",
+                        outputPath,
+                        stopwatch.Elapsed.TotalMilliseconds,
+                        summary,
+                        "Open m24-editmode-results.xml and fix failing EditMode tests.");
+                }
+
+                return PlatformBuildTargetResult.Passed("editmode-tests", "Unity Test Runner", outputPath, stopwatch.Elapsed.TotalMilliseconds, summary);
+            }
+            catch (Exception exception)
+            {
+                stopwatch.Stop();
+                return PlatformBuildTargetResult.Failed(
+                    "editmode-tests",
+                    "Unity Test Runner",
+                    outputPath,
+                    stopwatch.Elapsed.TotalMilliseconds,
+                    exception.Message,
+                    "Verify Hollow.Editor references UnityEditor.TestRunner and rerun M32/M24 QA.");
+            }
+        }
+
+        private static PlatformBuildTargetResult RunPlatformSceneSmoke(PlatformBuildQaProfileDefinition profile)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var outputPath = Path.Combine(profile.ReportRoot, "m24-playmode-smoke-editor-probe.md");
+            var failures = new StringBuilder();
+            var report = new StringBuilder();
+            try
+            {
+                Directory.CreateDirectory(profile.ReportRoot);
+                ValidateQaProbeScene("Assets/_Hollow/Scenes/MainMenu.unity", "MainMenu", expectedScale: null, expectMainMenu: true, expectDesigner: false, expectGame: false, failures, report);
+                ValidateQaProbeScene("Assets/_Hollow/Scenes/RoomDesigner.unity", "RoomDesigner", expectedScale: null, expectMainMenu: false, expectDesigner: true, expectGame: false, failures, report);
+                ValidateQaProbeScene("Assets/_Hollow/Scenes/Game_Windows.unity", "Game_Windows", 1f, expectMainMenu: false, expectDesigner: false, expectGame: true, failures, report);
+                ValidateQaProbeScene("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", "Game_VisionOS_Bounded", PresentationScalePolicy.VisionOSBoundedTabletopScale, expectMainMenu: false, expectDesigner: false, expectGame: true, failures, report);
+                ValidateQaProbeScene("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", "Game_VisionOS_Immersive", 1f, expectMainMenu: false, expectDesigner: false, expectGame: true, failures, report);
+                File.WriteAllText(outputPath, report.ToString());
+                stopwatch.Stop();
+
+                if (failures.Length > 0)
+                {
+                    return PlatformBuildTargetResult.Failed(
+                        "playmode-smoke-tests",
+                        "Editor Scene Smoke",
+                        outputPath,
+                        stopwatch.Elapsed.TotalMilliseconds,
+                        failures.ToString().Trim(),
+                        "Open m24-playmode-smoke-editor-probe.md and repair scene/root/HUD regressions.");
+                }
+
+                return PlatformBuildTargetResult.Passed("playmode-smoke-tests", "Editor Scene Smoke", outputPath, stopwatch.Elapsed.TotalMilliseconds, "Platform scene smoke probe passed for MainMenu, RoomDesigner, Windows, VisionOS bounded, and VisionOS immersive.");
+            }
+            catch (Exception exception)
+            {
+                stopwatch.Stop();
+                return PlatformBuildTargetResult.Failed(
+                    "playmode-smoke-tests",
+                    "Editor Scene Smoke",
+                    outputPath,
+                    stopwatch.Elapsed.TotalMilliseconds,
+                    exception.Message,
+                    "Verify required scenes are present and can be opened in the editor.");
+            }
+        }
+
+        private static void ValidateQaProbeScene(
+            string scenePath,
+            string sceneName,
+            float? expectedScale,
+            bool expectMainMenu,
+            bool expectDesigner,
+            bool expectGame,
+            StringBuilder failures,
+            StringBuilder report)
+        {
+            if (!File.Exists(scenePath))
+            {
+                failures.AppendLine($"Missing scene: {scenePath}");
+                return;
+            }
+
+            EditorSceneManager.OpenScene(scenePath);
+            var snapshot = PlatformRuntimeQaProbe.CaptureCurrentScene();
+            report.AppendLine($"## {sceneName}");
+            report.AppendLine($"- Scene: {snapshot.sceneName}");
+            report.AppendLine($"- World scale: {snapshot.worldScale:0.###}");
+            report.AppendLine($"- HUD outside world root: {snapshot.hudOutsideWorldRoot}");
+            report.AppendLine($"- Presentation catalog: {snapshot.hasPresentationCatalog}");
+            report.AppendLine();
+
+            if (snapshot.sceneName != sceneName)
+            {
+                failures.AppendLine($"{sceneName} smoke expected active scene '{sceneName}' but captured '{snapshot.sceneName}'.");
+            }
+
+            if (expectMainMenu && !snapshot.hasMainMenuController)
+            {
+                failures.AppendLine($"{sceneName} smoke missing MainMenuController.");
+            }
+
+            if (expectDesigner && !snapshot.hasRoomDesignerController)
+            {
+                failures.AppendLine($"{sceneName} smoke missing RoomDesignerController.");
+            }
+
+            if (expectGame)
+            {
+                if (!snapshot.hasGameSessionController || !snapshot.hasRoomRuntimeRoot || !snapshot.hasPresentationRoot || !snapshot.hasPlatformShellCanvas)
+                {
+                    failures.AppendLine($"{sceneName} smoke missing game session, room runtime, presentation root, or platform shell canvas.");
+                }
+
+                if (!snapshot.hudOutsideWorldRoot)
+                {
+                    failures.AppendLine($"{sceneName} smoke detected HUD/shell under the scaled world root.");
+                }
+            }
+
+            if (expectedScale.HasValue && Mathf.Abs(snapshot.worldScale - expectedScale.Value) > 0.001f)
+            {
+                failures.AppendLine($"{sceneName} smoke expected world scale {expectedScale.Value:0.###} but captured {snapshot.worldScale:0.###}.");
+            }
+
+            if (!snapshot.hasPresentationCatalog)
+            {
+                failures.AppendLine($"{sceneName} smoke missing PresentationContentCatalog.");
+            }
         }
 
         private static void ValidateScene(PlatformBuildQaProfileDefinition profile, string scenePath, StringBuilder failures)
@@ -391,6 +593,39 @@ namespace Hollow.Editor.Build
             else
             {
                 UnityEngine.Debug.Log($"{result.id}: {result.result} - {string.Join("; ", result.messages)}");
+            }
+        }
+
+        private sealed class QaTestCallbacks : ScriptableObject, ICallbacks
+        {
+            private string outputPath = string.Empty;
+
+            public ITestResultAdaptor Result { get; private set; }
+
+            public void Configure(string nextOutputPath)
+            {
+                outputPath = nextOutputPath ?? string.Empty;
+            }
+
+            public void RunStarted(ITestAdaptor testsToRun)
+            {
+            }
+
+            public void RunFinished(ITestResultAdaptor result)
+            {
+                Result = result;
+                if (!string.IsNullOrWhiteSpace(outputPath))
+                {
+                    TestRunnerApi.SaveResultToFile(result, outputPath);
+                }
+            }
+
+            public void TestStarted(ITestAdaptor test)
+            {
+            }
+
+            public void TestFinished(ITestResultAdaptor result)
+            {
             }
         }
     }

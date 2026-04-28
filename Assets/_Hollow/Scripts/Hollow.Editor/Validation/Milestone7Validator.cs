@@ -50,7 +50,7 @@ namespace Hollow.Editor.Validation
 
         public static void Validate()
         {
-            Validate(exitOnFailure: Application.isBatchMode);
+            Validate(exitOnFailure: MilestoneValidationExitPolicy.ShouldExitForValidate());
         }
 
         private static void Validate(bool exitOnFailure)

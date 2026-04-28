@@ -48,6 +48,12 @@ namespace Hollow.UI.MainMenu
                 return;
             }
 
+            if (controller.ViewModel.State == MainMenuState.ChallengeSelect)
+            {
+                BuildChallengeSelect();
+                return;
+            }
+
             if (controller.ViewModel.SelectedProfile != null && !controller.ViewModel.SelectedProfile.IsEmpty)
             {
                 var selected = controller.ViewModel.SelectedProfile;
@@ -64,7 +70,8 @@ namespace Hollow.UI.MainMenu
                 AddButton(rootPanel, "New Windows", new Vector2(190f, -175f), controller.LaunchWindows, null, new Vector2(300f, 40f));
                 AddButton(rootPanel, "New Bounded", new Vector2(190f, -225f), controller.LaunchVisionOSBounded, null, new Vector2(300f, 40f));
                 AddButton(rootPanel, "New Immersive", new Vector2(190f, -275f), controller.LaunchVisionOSImmersive, null, new Vector2(300f, 40f));
-                AddButton(rootPanel, "Room Designer", new Vector2(0f, -320f), controller.OpenRoomDesigner, new Color(0.25f, 0.44f, 0.78f), new Vector2(360f, 40f));
+                AddButton(rootPanel, "Challenges", new Vector2(-190f, -320f), controller.OpenChallenges, new Color(0.55f, 0.24f, 0.62f), new Vector2(300f, 40f));
+                AddButton(rootPanel, "Room Designer", new Vector2(190f, -320f), controller.OpenRoomDesigner, new Color(0.25f, 0.44f, 0.78f), new Vector2(300f, 40f));
                 AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -365f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
             }
         }
@@ -80,6 +87,36 @@ namespace Hollow.UI.MainMenu
             AddText(heavy.transform as RectTransform, "Crushing Grip\n9 HP | 3.15 speed\n2 defense, melee lean", 13, FontStyle.Normal, new Vector2(0f, -25f), new Vector2(230f, 92f), new Color(1f, 0.88f, 0.72f));
 
             AddButton(rootPanel, "Back", new Vector2(0f, -335f), controller.BackFromCharacterSelect, new Color(0.22f, 0.25f, 0.33f));
+        }
+
+        private void BuildChallengeSelect()
+        {
+            AddText(rootPanel, "Challenge Mode - fixed seeds, transient runs", 19, FontStyle.Bold, new Vector2(0f, -75f), new Vector2(620f, 34f), new Color(0.94f, 0.78f, 1f));
+            var challenges = controller.ViewModel.Challenges;
+            for (var index = 0; index < challenges.Count; index++)
+            {
+                var challenge = challenges[index];
+                var y = -145f - index * 92f;
+                var panel = CreatePanel($"Challenge.{challenge.ChallengeId}", rootPanel, new Vector2(600f, 78f), new Color(0.11f, 0.09f, 0.17f, 0.92f));
+                panel.anchoredPosition = new Vector2(0f, y);
+                AddText(panel, $"{challenge.DisplayName} | Seed {challenge.FixedRunSeed}", 16, FontStyle.Bold, new Vector2(-135f, 18f), new Vector2(310f, 28f), new Color(1f, 0.91f, 0.72f));
+                AddText(panel, CompactRules(challenge.RulesSummary), 11, FontStyle.Normal, new Vector2(-135f, -17f), new Vector2(310f, 42f), new Color(0.84f, 0.83f, 0.94f));
+                AddButton(panel, "Win", new Vector2(120f, 16f), () => controller.LaunchChallengeWindows(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(86f, 28f));
+                AddButton(panel, "Bounded", new Vector2(215f, 16f), () => controller.LaunchChallengeVisionOSBounded(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(94f, 28f));
+                AddButton(panel, "Imm", new Vector2(310f, 16f), () => controller.LaunchChallengeVisionOSImmersive(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(86f, 28f));
+            }
+
+            AddButton(rootPanel, "Back", new Vector2(0f, -365f), controller.BackFromChallenges, new Color(0.22f, 0.25f, 0.33f));
+        }
+
+        private static string CompactRules(string rules)
+        {
+            if (string.IsNullOrWhiteSpace(rules))
+            {
+                return "Fixed seed challenge.";
+            }
+
+            return rules.Length <= 96 ? rules : rules.Substring(0, 93) + "...";
         }
 
         private void ConfigureCanvas()

@@ -35,13 +35,14 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void TraversalFailsBeforeRoomClear()
+        public void StarterRoomAllowsImmediateTraversal()
         {
             var root = CreateBranchHarness(out var branch, out _, out _);
             try
             {
-                Assert.IsFalse(branch.TryTraverse("north"));
-                Assert.AreEqual(BranchRoomId.Origin, branch.State.CurrentRoomId);
+                Assert.IsTrue(branch.State.CurrentRoom.IsCleared);
+                Assert.IsTrue(branch.TryTraverse("north"));
+                Assert.AreEqual(BranchRoomId.North, branch.State.CurrentRoomId);
             }
             finally
             {
@@ -55,8 +56,6 @@ namespace Hollow.Tests.EditMode
             var root = CreateBranchHarness(out var branch, out var combat, out var player);
             try
             {
-                ClearCurrentRoom(combat);
-
                 Assert.IsTrue(branch.TryTraverse("north"));
                 Assert.AreEqual(BranchRoomId.North, branch.State.CurrentRoomId);
                 Assert.AreEqual(2.75f, player.transform.localPosition.z, 0.001f);

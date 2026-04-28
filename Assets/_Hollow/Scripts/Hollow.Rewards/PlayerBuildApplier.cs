@@ -31,6 +31,12 @@ namespace Hollow.Rewards
                 movement.ConfigureDerivedStats(derived.SpeedMetersPerSecond);
             }
 
+            var defense = playerObject.GetComponent<PlayerDefenseController>();
+            if (defense != null)
+            {
+                defense.Configure(derived.Defense);
+            }
+
             var weapon = playerObject.GetComponent<PlayerWeaponController>();
             if (weapon != null)
             {

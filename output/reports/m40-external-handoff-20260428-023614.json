@@ -1,0 +1,72 @@
+{
+    "reportId": "m40-external-handoff-20260428-023614",
+    "generatedAtUtc": "2026-04-28T02:36:14.0846560Z",
+    "handoffId": "m40_vertical_slice_external_handoff_v1",
+    "displayName": "M40 Vertical Slice Re-Lock + External Handoff",
+    "result": "Failed",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "2c3f556",
+    "platformQaResult": "NotRun",
+    "verticalSliceResult": "Passed",
+    "acceptedEnvironmentBlocks": "windows-development-build",
+    "checks": [
+        {
+            "id": "required-docs",
+            "result": "Passed",
+            "messages": [
+                "All required files are present."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "required-reports",
+            "result": "Passed",
+            "messages": [
+                "All required files are present."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "m39-world-framing",
+            "result": "Passed",
+            "messages": [
+                "Run framing catalog contains 3 prototype worlds."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "platform-qa",
+            "result": "Failed",
+            "messages": [
+                "Platform QA must include passing EditMode and scene smoke targets."
+            ],
+            "remediation": [
+                "Rerun the M24 QA gate and fix test/smoke failures."
+            ]
+        },
+        {
+            "id": "vertical-slice-lock",
+            "result": "Passed",
+            "messages": [
+                "Vertical slice lock passed with 8 rooms and 16 connections."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "environment-blocks",
+            "result": "Passed",
+            "messages": [
+                "No environment blocks reported."
+            ],
+            "remediation": []
+        }
+    ],
+    "manualChecklist": [
+        "Run Windows/Vision Pro manual smoke from latest M24 QA checklist before external sharing.",
+        "If a Windows executable is required, install Unity Windows Build Support and rerun the M24 Windows build target.",
+        "Confirm M39 run-framing HUD is readable and does not obscure combat HUD/minimap in all game routes.",
+        "Use the M38 ArtPass target catalog as Rafal's source of truth for visual replacement priorities.",
+        "Do not treat ArtPass visuals as gameplay-authoritative; colliders, room layout, rewards, and saves remain runtime-model driven."
+    ]
+}

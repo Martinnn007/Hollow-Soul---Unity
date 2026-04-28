@@ -43,12 +43,33 @@ MonoBehaviour:
     - hollow.artpass
     - hollow.artpass.materials
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09441c7c077ae4b26b96a130b9819de9
+    m_Address: hollow.artpass.prefab.HubShopCard
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09bebf24f1a63498691928cd54a94bde
+    m_Address: hollow.artpass.prefab.WeaponRanged
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0b168c80046204de7affa183a22b733d
     m_Address: hollow.artpass.palette
     m_ReadOnly: 0
     m_SerializedLabels:
     - hollow.artpass
     - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0cadab0fdddd6449191c2222c93fdf20
+    m_Address: hollow.artpass.prefab.WeaponMelee
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14ea7cd5bace843858947cb952e4c7e6
     m_Address: hollow.artpass.material.DesignerDoorAvailable
@@ -407,6 +428,13 @@ MonoBehaviour:
     - hollow.artpass
     - hollow.artpass.audio
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95126a9612e41497784466f471b7966c
+    m_Address: hollow.artpass.prefab.Armor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 997574b65eeb84a2bbac6c22937d701f
     m_Address: hollow.artpass.material.EnemyFast
     m_ReadOnly: 0
@@ -463,6 +491,13 @@ MonoBehaviour:
     - hollow.artpass
     - hollow.artpass.materials
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bcc09b385bb3341f29c0e148fdb4b70e
+    m_Address: hollow.artpass.prefab.ConsumableCardPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: be06b06cf6b9e4d479ed7ba5d389ad9b
     m_Address: hollow.artpass.material.EnemyCharger
     m_ReadOnly: 0
@@ -486,6 +521,13 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf729765cde8d4c019ba216cf928cec5
     m_Address: hollow.artpass.material.HubShop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bfa7c457492d94319b58a2f4285215a4
+    m_Address: hollow.artpass.material.CombatTelegraphSafe
     m_ReadOnly: 0
     m_SerializedLabels:
     - hollow.artpass
@@ -540,6 +582,13 @@ MonoBehaviour:
     - hollow.artpass
     - hollow.artpass.prefabs
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d4db1e4cd4bda4f848c601ae87893721
+    m_Address: hollow.artpass.prefab.ActiveItemPickup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d5335e109e90e4ad185adfe840f34686
     m_Address: hollow.artpass.prefab.VfxRewardClaim
     m_ReadOnly: 0
@@ -554,6 +603,13 @@ MonoBehaviour:
     - hollow.artpass
     - hollow.artpass.vfx
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df2e6bad3956d49b5922ad31226e83af
+    m_Address: hollow.artpass.material.CombatTelegraphDanger
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0ce59097d58a431fa311c963767ce73
     m_Address: hollow.artpass.material.DesignerCursor
     m_ReadOnly: 0
@@ -563,6 +619,13 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e121b37c0199a49d7b3a0e59ef86a1a5
     m_Address: hollow.artpass.material.DesignerSpawnSafeStart
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.materials
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7b1ddb1d2942453f8f4c3bfb24d7211
+    m_Address: hollow.artpass.material.CombatTelegraphWarning
     m_ReadOnly: 0
     m_SerializedLabels:
     - hollow.artpass

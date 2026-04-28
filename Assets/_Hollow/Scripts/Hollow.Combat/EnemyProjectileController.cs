@@ -50,14 +50,39 @@ namespace Hollow.Combat
         public bool Tick(float deltaTime)
         {
             ageSeconds += Mathf.Max(0f, deltaTime);
-            transform.localPosition += localDirection * speedMetersPerSecond * deltaTime;
+            if (CheckImpact())
+            {
+                return false;
+            }
 
-            if (ageSeconds >= lifetimeSeconds ||
-                RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters) ||
-                RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            if (ageSeconds >= lifetimeSeconds)
             {
                 DestroyProjectile();
                 return false;
+            }
+
+            var movement = localDirection * speedMetersPerSecond * Mathf.Max(0f, deltaTime);
+            var stepCount = Mathf.Max(1, Mathf.CeilToInt(movement.magnitude / CombatFeelTuning.ProjectileSubstepMeters));
+            var increment = movement / stepCount;
+            for (var index = 0; index < stepCount; index++)
+            {
+                transform.localPosition += increment;
+                if (CheckImpact())
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool CheckImpact()
+        {
+            if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters) ||
+                RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            {
+                DestroyProjectile();
+                return true;
             }
 
             if (playerHealth != null && playerHealth.IsAlive && playerController != null)
@@ -73,11 +98,11 @@ namespace Hollow.Combat
                     }
 
                     DestroyProjectile();
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         private void DestroyProjectile()

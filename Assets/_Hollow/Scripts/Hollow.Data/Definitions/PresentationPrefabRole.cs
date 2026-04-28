@@ -32,6 +32,12 @@ namespace Hollow.Data.Definitions
         VfxRewardClaim,
         VfxDoorUnlock,
         VfxRoomClear,
-        VfxPortalComplete
+        VfxPortalComplete,
+        HubShopCard,
+        WeaponMelee,
+        WeaponRanged,
+        Armor,
+        ActiveItemPickup,
+        ConsumableCardPickup
     }
 }

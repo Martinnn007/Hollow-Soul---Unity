@@ -143,7 +143,8 @@ namespace Hollow.Presentation
             return role is PresentationPrefabRole.HubReturnPortal or PresentationPrefabRole.NextBranchPortal
                 ? PrimitiveType.Cylinder
                 : role is PresentationPrefabRole.Projectile or PresentationPrefabRole.EnemyProjectile or
-                    PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup
+                    PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup or
+                    PresentationPrefabRole.ActiveItemPickup
                     ? PrimitiveType.Sphere
                     : PrimitiveType.Cube;
         }
@@ -155,8 +156,11 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.RoomFloor => new Vector3(1f, 0.08f, 1f),
                 PresentationPrefabRole.DoorLocked or PresentationPrefabRole.DoorActive or PresentationPrefabRole.DoorCleared or PresentationPrefabRole.DoorUnavailable => new Vector3(0.8f, 1.1f, 0.16f),
                 PresentationPrefabRole.Projectile or PresentationPrefabRole.EnemyProjectile => Vector3.one * 0.22f,
-                PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup => Vector3.one * 0.32f,
+                PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup or PresentationPrefabRole.ActiveItemPickup => Vector3.one * 0.32f,
                 PresentationPrefabRole.HubReturnPortal or PresentationPrefabRole.NextBranchPortal => new Vector3(0.7f, 0.08f, 0.7f),
+                PresentationPrefabRole.HubShopCard => new Vector3(1f, 0.7f, 0.08f),
+                PresentationPrefabRole.WeaponMelee or PresentationPrefabRole.WeaponRanged or PresentationPrefabRole.Armor => Vector3.one * 0.55f,
+                PresentationPrefabRole.ConsumableCardPickup => new Vector3(0.36f, 0.52f, 0.04f),
                 _ => Vector3.one
             };
         }
@@ -183,10 +187,15 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.DoorUnavailable => MaterialRole.DoorUnavailable,
                 PresentationPrefabRole.RewardPickup => MaterialRole.RewardPickup,
                 PresentationPrefabRole.BossKeyPickup => MaterialRole.BossKeyPickup,
-                PresentationPrefabRole.HubShop => MaterialRole.HubShop,
+                PresentationPrefabRole.HubShop or PresentationPrefabRole.HubShopCard => MaterialRole.HubShop,
                 PresentationPrefabRole.HubReturnPortal => MaterialRole.HubReturnPortal,
                 PresentationPrefabRole.NextBranchPortal => MaterialRole.NextBranchPortal,
                 PresentationPrefabRole.SecretDoorDebug => MaterialRole.SecretDoorDebug,
+                PresentationPrefabRole.WeaponMelee => MaterialRole.PlayerBody,
+                PresentationPrefabRole.WeaponRanged => MaterialRole.Projectile,
+                PresentationPrefabRole.Armor => MaterialRole.DoorLocked,
+                PresentationPrefabRole.ActiveItemPickup => MaterialRole.RewardPickup,
+                PresentationPrefabRole.ConsumableCardPickup => MaterialRole.SpawnReward,
                 PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
                 PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
                 PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,

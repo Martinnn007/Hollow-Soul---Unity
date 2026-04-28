@@ -41,6 +41,9 @@ namespace Hollow.Data.Definitions
         DesignerSpawnSafeStart,
         DesignerSpawnEnemy,
         DesignerSpawnReward,
-        VfxDebug
+        VfxDebug,
+        CombatTelegraphSafe,
+        CombatTelegraphWarning,
+        CombatTelegraphDanger
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hollow.Core;
 using Hollow.Core.App;
+using Hollow.Data.Definitions;
 using Hollow.Persistence;
 using Hollow.Platform;
 
@@ -12,14 +13,21 @@ namespace Hollow.UI.MainMenu
         private readonly IProfileStore profileStore;
         private readonly SelectedProfileContext selectedProfileContext;
         private readonly AppStateMachine appStateMachine;
+        private readonly ChallengeCatalogDefinition challengeCatalog;
         private readonly List<ProfileSlotCardViewModel> profileCards = new();
         private HollowPlatformKind pendingNewRunPlatformKind = HollowPlatformKind.WindowsStandard3D;
 
         public MainMenuViewModel(IProfileStore profileStore, SelectedProfileContext selectedProfileContext, AppStateMachine appStateMachine)
+            : this(profileStore, selectedProfileContext, appStateMachine, null)
+        {
+        }
+
+        public MainMenuViewModel(IProfileStore profileStore, SelectedProfileContext selectedProfileContext, AppStateMachine appStateMachine, ChallengeCatalogDefinition challengeCatalog)
         {
             this.profileStore = profileStore ?? throw new ArgumentNullException(nameof(profileStore));
             this.selectedProfileContext = selectedProfileContext ?? throw new ArgumentNullException(nameof(selectedProfileContext));
             this.appStateMachine = appStateMachine ?? throw new ArgumentNullException(nameof(appStateMachine));
+            this.challengeCatalog = challengeCatalog != null ? challengeCatalog : ChallengeCatalogDefinition.CreateRuntimeDefault();
             Refresh();
         }
 
@@ -34,6 +42,8 @@ namespace Hollow.UI.MainMenu
         public HollowPlatformKind PendingNewRunPlatformKind => pendingNewRunPlatformKind;
 
         public string SelectedCharacterId => selectedProfileContext.SelectedCharacterId;
+
+        public IReadOnlyList<ChallengeDefinition> Challenges => challengeCatalog.Challenges;
 
         public void Refresh()
         {
@@ -100,6 +110,7 @@ namespace Hollow.UI.MainMenu
 
             pendingNewRunPlatformKind = platformKind;
             selectedProfileContext.SetSelectedCharacterId("balanced");
+            selectedProfileContext.SetSelectedChallengeId(string.Empty);
             State = MainMenuState.CharacterSelect;
             ErrorMessage = string.Empty;
         }
@@ -114,6 +125,7 @@ namespace Hollow.UI.MainMenu
 
             State = MainMenuState.Launching;
             selectedProfileContext.SetSelectedCharacterId(characterId);
+            selectedProfileContext.SetSelectedChallengeId(string.Empty);
             var route = RouteForPlatform(pendingNewRunPlatformKind);
             var slotId = new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex);
             if (profileStore is IRunSaveStore runSaveStore)
@@ -154,10 +166,58 @@ namespace Hollow.UI.MainMenu
             State = MainMenuState.Launching;
             var route = RouteForPlatform(platformKind);
             selectedProfileContext.SetLaunchMode(RunLaunchMode.ContinueRun);
+            selectedProfileContext.SetSelectedChallengeId(string.Empty);
             var updated = profileStore.MarkLastPlayed(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex));
             selectedProfileContext.UpdateSelectedProfile(updated);
             appStateMachine.TransitionTo(route);
             return route;
+        }
+
+        public void OpenChallenges()
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return;
+            }
+
+            selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            State = MainMenuState.ChallengeSelect;
+            ErrorMessage = string.Empty;
+        }
+
+        public AppShellRoute LaunchChallenge(string challengeId, HollowPlatformKind platformKind)
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return AppShellRoute.MainMenu;
+            }
+
+            var challenge = challengeCatalog.Resolve(challengeId);
+            if (challenge == null)
+            {
+                SetError("Challenge catalog is empty.");
+                return AppShellRoute.MainMenu;
+            }
+
+            State = MainMenuState.Launching;
+            var route = RouteForPlatform(platformKind);
+            selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
+            selectedProfileContext.SetSelectedChallengeId(challenge.ChallengeId);
+            selectedProfileContext.SetSelectedCharacterId(challenge.SelectedCharacterId);
+            appStateMachine.TransitionTo(route);
+            return route;
+        }
+
+        public void BackFromChallenges()
+        {
+            if (State == MainMenuState.ChallengeSelect)
+            {
+                State = MainMenuState.SlotMain;
+                ErrorMessage = string.Empty;
+                selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            }
         }
 
         public AppShellRoute OpenRoomDesigner()

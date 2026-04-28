@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_World3
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 3
+  displayName: The Quiet Reliquary
+  subtitle: A final prototype world for things the Hollow wanted to keep.
+  prologueLine: The reliquary opens softly, which somehow feels worse.
+  branchLine: Each branch here feels less like a place and more like a memory sorting
+    you.
+  hubLine: The reliquary hub waits without pretending to be safe.
+  bossLine: The last warden stands where extraction should be.
+  extractionLine: Extraction is possible. The Hollow will remember what you bank.

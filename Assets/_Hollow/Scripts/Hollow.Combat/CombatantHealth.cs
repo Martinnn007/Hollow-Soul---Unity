@@ -44,7 +44,21 @@ namespace Hollow.Combat
                 return false;
             }
 
-            currentHealth = Mathf.Max(0, currentHealth - request.Amount);
+            var amount = request.Amount;
+            foreach (var behaviour in GetComponents<MonoBehaviour>())
+            {
+                if (behaviour is IIncomingDamageModifier modifier && behaviour.isActiveAndEnabled)
+                {
+                    amount = Mathf.Max(0, modifier.ModifyIncomingDamage(request, amount));
+                }
+            }
+
+            if (amount <= 0)
+            {
+                return false;
+            }
+
+            currentHealth = Mathf.Max(0, currentHealth - amount);
             Damaged?.Invoke(this);
             if (currentHealth == 0)
             {

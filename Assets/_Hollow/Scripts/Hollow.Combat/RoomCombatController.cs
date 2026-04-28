@@ -120,6 +120,9 @@ namespace Hollow.Combat
 
             var weapon = playerController.GetComponent<PlayerWeaponController>() ?? playerController.gameObject.AddComponent<PlayerWeaponController>();
             weapon.Configure(roomRuntimeRoot, this, projectilePrefab);
+
+            var defense = playerController.GetComponent<PlayerDefenseController>() ?? playerController.gameObject.AddComponent<PlayerDefenseController>();
+            defense.Bind(roomRuntimeRoot);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
 
             enemies.Clear();
@@ -193,7 +196,8 @@ namespace Hollow.Combat
                 ObjectiveState,
                 difficultyTier != null ? difficultyTier.DisplayName : "Developer Sample",
                 diagnostics.EnemySummary(),
-                diagnostics.ProjectileSummary());
+                diagnostics.ProjectileSummary(),
+                playerController != null ? playerController.GetComponent<PlayerDefenseController>() : null);
         }
 
         public void EvaluateRoomState()

@@ -38,7 +38,7 @@ namespace Hollow.Editor.Validation
 
         public static void Validate()
         {
-            Validate(exitOnFailure: Application.isBatchMode);
+            Validate(exitOnFailure: MilestoneValidationExitPolicy.ShouldExitForValidate());
         }
 
         private static void Validate(bool exitOnFailure)
@@ -126,10 +126,10 @@ namespace Hollow.Editor.Validation
             var graph = BranchGenerator.CreateSeededFeatureBranch(content, settings, settings.DefaultSeed);
             if (graph.BranchId != BranchGenerator.FeatureBranchId ||
                 graph.RoomCount != settings.TargetRoomCount ||
-                graph.Connections.Count != (settings.TargetRoomCount - 1) * 2 ||
+                graph.Connections.Count < (settings.TargetRoomCount - 1) * 2 ||
                 graph.Connections.Any(connection => !connection.HasExplicitPorts))
             {
-                failures.Add("M17 feature graph must keep eight rooms, explicit directed port connections, and the M17 branch identity.");
+                failures.Add("M17 feature graph must keep eight rooms, explicit port connections, and the M17 branch identity.");
             }
 
             if (graph.OccupancyMap.OwnerByCell.Count != graph.Rooms.Sum(room => room.Footprint?.OccupiedCellCount ?? 0))
@@ -145,9 +145,19 @@ namespace Hollow.Editor.Validation
             }
 
             var treasure = graph.Rooms.FirstOrDefault(room => room.Role == BranchRoomRole.Treasure);
-            if (treasure == null || graph.ConnectionsFrom(treasure.Id).Count != 1)
+            if (treasure == null)
             {
-                failures.Add("M17 treasure room should be selected as a leaf when the generated topology allows it.");
+                failures.Add("M17 feature graph must select one treasure room.");
+            }
+
+            if (!BranchGenerator.ValidateSpecialRoomTopology(graph, out var topologyError))
+            {
+                failures.Add($"M17 special-room topology is invalid: {topologyError}");
+            }
+
+            if (!IsGraphConnected(graph))
+            {
+                failures.Add("M17 feature graph must keep every generated room reachable from origin.");
             }
 
             var rewards = ProceduralRewardResolver.CreatePlan(graph);
@@ -180,6 +190,36 @@ namespace Hollow.Editor.Validation
                     failures.Add($"{scenePath} BranchSessionController is not wired to M17 feature-branch settings.");
                 }
             }
+        }
+
+        private static bool IsGraphConnected(BranchFloorGraph graph)
+        {
+            if (graph == null || graph.RoomCount == 0)
+            {
+                return false;
+            }
+
+            var visited = new HashSet<BranchRoomId>();
+            var queue = new Queue<BranchRoomId>();
+            queue.Enqueue(BranchRoomId.Origin);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (!visited.Add(current))
+                {
+                    continue;
+                }
+
+                foreach (var connection in graph.ConnectionsFrom(current))
+                {
+                    if (!visited.Contains(connection.ToRoomId))
+                    {
+                        queue.Enqueue(connection.ToRoomId);
+                    }
+                }
+            }
+
+            return visited.Count == graph.RoomCount;
         }
     }
 }

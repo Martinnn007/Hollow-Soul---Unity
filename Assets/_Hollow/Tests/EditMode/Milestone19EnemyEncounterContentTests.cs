@@ -45,8 +45,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(1, graph.ConnectionsFrom(boss.Id).Count);
             Assert.IsTrue(first.TryResolve(boss.Id.Value, out var bossAssignment));
             Assert.Contains("spawnEnemyBoss", bossAssignment.EnemySpawnKinds.ToArray());
-            Assert.IsTrue(first.TryResolve(BranchRoomId.Origin.Value, out var originAssignment));
-            Assert.Greater(originAssignment.EnemySpawnKinds.Count, 0);
+            Assert.IsFalse(first.TryResolve(BranchRoomId.Origin.Value, out _));
         }
 
         [Test]
@@ -90,13 +89,15 @@ namespace Hollow.Tests.EditMode
             var root = CreateHarness(out var room, out var player, out var enemyPrefab);
             try
             {
-                player.transform.localPosition = new Vector3(0f, 0f, 2f);
+                player.transform.localPosition = new Vector3(1f, 0f, 2f);
                 var playerHealth = player.GetComponent<CombatantHealth>();
                 var turret = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyTurret"));
-                turret.transform.localPosition = Vector3.zero;
+                turret.transform.localPosition = new Vector3(1f, 0f, 0f);
                 turret.ConfigureSpawnContext(enemyPrefab, null, EnemyCatalog.CreateRuntimeDefault(), DifficultyTierDefinition.CreateRuntimeDeveloperSample(), new CombatDiagnosticsModel());
 
                 turret.Tick(0.1f, 2f);
+                Assert.AreEqual(EnemyReadabilityState.RangedWindup, turret.ReadabilityState);
+                turret.Tick(0.1f, 2f + EnemyRuntimeController.RangedWindupSeconds + 0.01f);
                 var projectile = root.GetComponentInChildren<EnemyProjectileController>();
                 Assert.NotNull(projectile);
                 projectile.Tick(0.32f);
@@ -149,6 +150,10 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNull(root.GetComponentInChildren<EnemyProjectileController>());
 
                 turret.Tick(0.1f, 5.1f);
+                Assert.AreEqual(EnemyReadabilityState.RangedWindup, turret.ReadabilityState);
+                Assert.IsNull(root.GetComponentInChildren<EnemyProjectileController>());
+
+                turret.Tick(0.1f, 5.1f + EnemyRuntimeController.RangedWindupSeconds + 0.01f);
                 Assert.IsNotNull(root.GetComponentInChildren<EnemyProjectileController>());
             }
             finally
@@ -181,6 +186,10 @@ namespace Hollow.Tests.EditMode
                 boss.ConfigureSpawnContext(enemyPrefab, null, catalog, DifficultyTierDefinition.CreateRuntimeDeveloperSample(), new CombatDiagnosticsModel());
                 DamageSystem.ApplyDamage(boss.Health, new DamageRequest(7, root));
                 boss.Tick(0.1f, 3f);
+                Assert.AreEqual(EnemyReadabilityState.BossBurstWindup, boss.ReadabilityState);
+                Assert.AreEqual(0, root.GetComponentsInChildren<EnemyProjectileController>().Length);
+
+                boss.Tick(0.1f, 3f + EnemyRuntimeController.BossBurstWindupSeconds + 0.01f);
                 Assert.GreaterOrEqual(root.GetComponentsInChildren<EnemyProjectileController>().Length, 4);
             }
             finally

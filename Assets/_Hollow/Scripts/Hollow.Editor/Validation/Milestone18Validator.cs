@@ -43,7 +43,7 @@ namespace Hollow.Editor.Validation
 
         public static void Validate()
         {
-            Validate(exitOnFailure: Application.isBatchMode);
+            Validate(exitOnFailure: MilestoneValidationExitPolicy.ShouldExitForValidate());
         }
 
         private static void Validate(bool exitOnFailure)
@@ -155,6 +155,10 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateScenes(RewardPoolDefinition standard, RewardPoolDefinition treasure, RewardPoolDefinition boss, List<string> failures)
         {
+            var successorStandard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone28AssetGenerator.StandardRewardPoolPath);
+            var successorTreasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone28AssetGenerator.TreasureRewardPoolPath);
+            var successorBoss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone28AssetGenerator.BossRewardPoolPath);
+
             foreach (var scenePath in GameScenes)
             {
                 EditorSceneManager.OpenScene(scenePath);
@@ -165,11 +169,48 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (branch.StandardRewardPool != standard || branch.TreasureRewardPool != treasure || branch.BossRewardPool != boss)
+                if (!IsCompatiblePool(branch.StandardRewardPool, standard, successorStandard, minRewards: 6, requiredRarity: null) ||
+                    !IsCompatiblePool(branch.TreasureRewardPool, treasure, successorTreasure, minRewards: 1, requiredRarity: RewardRarity.Treasure) ||
+                    !IsCompatiblePool(branch.BossRewardPool, boss, successorBoss, minRewards: 1, requiredRarity: RewardRarity.Boss))
                 {
-                    failures.Add($"{scenePath} BranchSessionController is not wired to M18 reward pools.");
+                    failures.Add($"{scenePath} BranchSessionController is not wired to M18-compatible reward pools.");
                 }
             }
+        }
+
+        private static bool IsCompatiblePool(
+            RewardPoolDefinition assigned,
+            RewardPoolDefinition milestone18Pool,
+            RewardPoolDefinition successorPool,
+            int minRewards,
+            RewardRarity? requiredRarity)
+        {
+            if (assigned == null)
+            {
+                return false;
+            }
+
+            if (assigned == milestone18Pool || assigned == successorPool)
+            {
+                return HasRequiredShape(assigned, minRewards, requiredRarity);
+            }
+
+            return HasRequiredShape(assigned, minRewards, requiredRarity);
+        }
+
+        private static bool HasRequiredShape(RewardPoolDefinition pool, int minRewards, RewardRarity? requiredRarity)
+        {
+            if (pool == null || pool.Rewards.Count < minRewards)
+            {
+                return false;
+            }
+
+            if (pool.Rewards.Any(reward => reward == null || string.IsNullOrWhiteSpace(reward.RewardId) || string.IsNullOrWhiteSpace(reward.DisplayName)))
+            {
+                return false;
+            }
+
+            return !requiredRarity.HasValue || pool.Rewards.Any(reward => reward != null && reward.Rarity == requiredRarity.Value);
         }
 
         private static string Signature(ProceduralRewardPlan plan)

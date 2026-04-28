@@ -46,7 +46,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(1, first.ConnectionsFrom(boss.Id).Count);
 
             var treasure = first.Rooms.Single(room => room.Role == BranchRoomRole.Treasure);
-            Assert.AreEqual(1, first.ConnectionsFrom(treasure.Id).Count);
+            Assert.GreaterOrEqual(first.ConnectionsFrom(treasure.Id).Count, 1);
 
             var legacyMacro = BranchGenerator.CreateSeededMacroBranch(content, settings, settings.DefaultSeed);
             Assert.AreEqual(BranchGenerator.SeededMacroBranchId, legacyMacro.BranchId);

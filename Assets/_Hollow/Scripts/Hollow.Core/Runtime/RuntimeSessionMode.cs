@@ -4,6 +4,7 @@ namespace Hollow.Core
     {
         ProfileBacked = 0,
         TransientDeveloperSample = 1,
-        TransientRoomDesignerPlaytest = 2
+        TransientRoomDesignerPlaytest = 2,
+        TransientChallenge = 3
     }
 }

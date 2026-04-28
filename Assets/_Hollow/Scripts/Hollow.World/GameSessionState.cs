@@ -16,6 +16,7 @@ namespace Hollow.World
             string profileId,
             string profileDisplayName,
             string selectedCharacterId,
+            string selectedChallengeId,
             float presentationScale,
             Vector3 playerSpawnPosition)
         {
@@ -26,6 +27,7 @@ namespace Hollow.World
             ProfileId = profileId;
             ProfileDisplayName = profileDisplayName;
             SelectedCharacterId = string.IsNullOrWhiteSpace(selectedCharacterId) ? "balanced" : selectedCharacterId;
+            SelectedChallengeId = selectedChallengeId ?? string.Empty;
             PresentationScale = presentationScale;
             PlayerSpawnPosition = playerSpawnPosition;
         }
@@ -43,6 +45,8 @@ namespace Hollow.World
         public string ProfileDisplayName { get; }
 
         public string SelectedCharacterId { get; }
+
+        public string SelectedChallengeId { get; }
 
         public float PresentationScale { get; }
 
@@ -77,6 +81,18 @@ namespace Hollow.World
             Vector3 playerSpawnPosition,
             string selectedCharacterId)
         {
+            return Create(sessionMode, platformKind, launchMode, selectedProfile, playerSpawnPosition, selectedCharacterId, string.Empty);
+        }
+
+        public static GameSessionState Create(
+            RuntimeSessionMode sessionMode,
+            HollowPlatformKind platformKind,
+            RunLaunchMode launchMode,
+            ProfileSlotSummary selectedProfile,
+            Vector3 playerSpawnPosition,
+            string selectedCharacterId,
+            string selectedChallengeId)
+        {
             return new GameSessionState(
                 sessionMode,
                 platformKind,
@@ -85,6 +101,7 @@ namespace Hollow.World
                 selectedProfile?.ProfileId ?? string.Empty,
                 selectedProfile?.DisplayName ?? "Direct Scene Preview",
                 selectedCharacterId,
+                selectedChallengeId,
                 PresentationScalePolicy.WorldScaleFor(platformKind),
                 playerSpawnPosition);
         }

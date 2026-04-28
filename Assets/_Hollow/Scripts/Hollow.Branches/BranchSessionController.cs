@@ -42,7 +42,9 @@ namespace Hollow.Branches
         [SerializeField] private CharacterCatalogDefinition characterCatalog;
         [SerializeField] private ArmorCatalogDefinition armorCatalog;
         [SerializeField] private SynergyCatalogDefinition synergyCatalog;
+        [SerializeField] private ChallengeCatalogDefinition challengeCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
+        [SerializeField] private RunFramingCatalogDefinition runFramingCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
         private ImportedRoomRuntimeAsset roomAsset;
@@ -79,6 +81,7 @@ namespace Hollow.Branches
         private string activeSynergyDisplayName = "None";
         private string synergyAcquisitionMessage = string.Empty;
         private float synergyAcquisitionMessageExpiresAt;
+        private ChallengeDefinition activeChallenge;
 
         public BranchSessionState State { get; private set; }
 
@@ -145,12 +148,12 @@ namespace Hollow.Branches
                 var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
                 if (weapon == null)
                 {
-                    return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: Ranged\nStamina: --\nArmor: {ArmorSummary()}\nSet: {ActiveSynergyDisplayName}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
+                    return $"Character: {playerRunBuild.SelectedCharacterId}\n{ChallengeSummaryLine()}Weapon: Ranged\nStamina: --\nArmor: {ArmorSummary()}\nSet: {ActiveSynergyDisplayName}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
                 }
 
                 var message = SynergyAcquisitionMessage;
                 var setLine = string.IsNullOrWhiteSpace(message) ? $"Set: {ActiveSynergyDisplayName}" : $"Set: {ActiveSynergyDisplayName}\n{message}";
-                return $"Character: {playerRunBuild.SelectedCharacterId}\nWeapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}\nArmor: {ArmorSummary()}\n{setLine}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
+                return $"Character: {playerRunBuild.SelectedCharacterId}\n{ChallengeSummaryLine()}Weapon: {weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}\nStamina: {weapon.CurrentStamina:0}/{weapon.MaxStamina:0}\nArmor: {ArmorSummary()}\n{setLine}\nActive: {ActiveItemSummary()}\nCard: {CardSummary()}";
             }
         }
 
@@ -181,6 +184,12 @@ namespace Hollow.Branches
         public ArmorCatalogDefinition ArmorCatalog => armorCatalog;
 
         public SynergyCatalogDefinition SynergyCatalog => synergyCatalog;
+
+        public ChallengeCatalogDefinition ChallengeCatalog => challengeCatalog;
+
+        public RunFramingCatalogDefinition RunFramingCatalog => runFramingCatalog;
+
+        public ChallengeDefinition ActiveChallenge => activeChallenge;
 
         public string ActiveSynergyDisplayName => string.IsNullOrWhiteSpace(activeSynergyDisplayName) ? "None" : activeSynergyDisplayName;
 
@@ -253,9 +262,19 @@ namespace Hollow.Branches
             synergyCatalog = nextSynergyCatalog;
         }
 
+        public void ConfigureChallengeCatalog(ChallengeCatalogDefinition nextChallengeCatalog)
+        {
+            challengeCatalog = nextChallengeCatalog;
+        }
+
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
         {
             encounterCatalog = nextEncounterCatalog;
+        }
+
+        public void ConfigureRunFramingCatalog(RunFramingCatalogDefinition nextRunFramingCatalog)
+        {
+            runFramingCatalog = nextRunFramingCatalog;
         }
 
         public void Initialize(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState)
@@ -295,11 +314,15 @@ namespace Hollow.Branches
             runEconomy = new RunEconomy();
             playerRunStats = new PlayerRunStats();
             playerRunBuild = new PlayerRunBuild();
+            activeChallenge = ResolveActiveChallenge();
             ApplySelectedCharacterForFreshRun();
+            ApplyChallengeRulesForFreshRun();
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
             branchDepth = 0;
-            runSeed = ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
+            runSeed = activeChallenge != null
+                ? activeChallenge.FixedRunSeed
+                : ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
             worldIndex = 1;
             worldPhase = IsWorldLoopRuntime() ? RunWorldPhase.Prologue : RunWorldPhase.Legacy;
             activeHubPortalId = string.Empty;
@@ -328,6 +351,7 @@ namespace Hollow.Branches
             runEconomy = RunEconomy.FromSaveState(snapshot?.economy);
             playerRunStats = PlayerRunStats.FromSaveState(snapshot?.playerStats);
             playerRunBuild = PlayerRunBuild.FromSaveState(snapshot?.runBuild);
+            activeChallenge = ResolveActiveChallenge();
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
@@ -426,6 +450,20 @@ namespace Hollow.Branches
                    TryTraverseNearestDoor();
         }
 
+        public RunFramingSnapshot CreateRunFramingSnapshot(RunFramingCatalogDefinition overrideCatalog = null)
+        {
+            var graphSeed = State?.Graph?.Seed ?? 0;
+            var branchSeed = currentBranchSeed != 0 ? currentBranchSeed : graphSeed;
+            var bossRoomActive = State?.CurrentRoom?.Role == BranchRoomRole.Boss;
+            return RunFramingService.Create(
+                overrideCatalog != null ? overrideCatalog : runFramingCatalog,
+                WorldIndex,
+                worldPhase,
+                RunSeed,
+                branchSeed,
+                bossRoomActive);
+        }
+
         public bool TryTraverse(string direction)
         {
             if (!BranchTraversalService.CanTraverse(State, direction, out var connection))
@@ -502,6 +540,11 @@ namespace Hollow.Branches
                 : requestedPlayerLocalPosition ?? currentRoomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             playerController.transform.localPosition = playerLocalPosition;
             State.CurrentRoom.MarkVisited();
+            if (State.CurrentRoom.Role == BranchRoomRole.Origin && !State.CurrentRoom.IsCleared)
+            {
+                State.CurrentRoom.MarkCleared();
+            }
+
             if (State.CurrentRoom.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret && !State.CurrentRoom.IsCleared)
             {
                 State.CurrentRoom.MarkCleared();
@@ -1118,6 +1161,48 @@ namespace Hollow.Branches
                    gameSessionState.SessionMode == RuntimeSessionMode.ProfileBacked &&
                    gameSessionState.LaunchMode == RunLaunchMode.NewRun &&
                    gameSessionState.HasProfile;
+        }
+
+        private ChallengeDefinition ResolveActiveChallenge()
+        {
+            if (gameSessionState == null || gameSessionState.SessionMode != RuntimeSessionMode.TransientChallenge)
+            {
+                return null;
+            }
+
+            var catalog = challengeCatalog != null ? challengeCatalog : ChallengeCatalogDefinition.CreateRuntimeDefault();
+            return catalog.Resolve(gameSessionState.SelectedChallengeId);
+        }
+
+        private void ApplyChallengeRulesForFreshRun()
+        {
+            if (activeChallenge == null)
+            {
+                return;
+            }
+
+            if (!activeChallenge.StatModifier.IsEmpty)
+            {
+                playerRunBuild.AddModifier(PlayerStatModifier.FromCharacterStatModifier($"challenge:{activeChallenge.ChallengeId}", activeChallenge.StatModifier));
+            }
+
+            if (activeChallenge.StartingCoins > 0)
+            {
+                runEconomy.ApplyReward(new RewardGrant("challenge_start_coins", "challenge_coins", activeChallenge.DisplayName, RewardKind.Currency, 0, activeChallenge.StartingCoins, Array.Empty<RewardEffect>()));
+            }
+
+            if (activeChallenge.StartingSouls > 0)
+            {
+                runEconomy.ApplyReward(new RewardGrant("challenge_start_souls", "challenge_souls", activeChallenge.DisplayName, RewardKind.Currency, activeChallenge.StartingSouls, 0, Array.Empty<RewardEffect>()));
+            }
+
+            LastRewardMessage = $"Challenge: {activeChallenge.DisplayName}";
+            SaveStatus = "Challenge";
+        }
+
+        private string ChallengeSummaryLine()
+        {
+            return activeChallenge == null ? string.Empty : $"Challenge: {activeChallenge.DisplayName}\n";
         }
 
         private bool IsWorldLoopRuntime()

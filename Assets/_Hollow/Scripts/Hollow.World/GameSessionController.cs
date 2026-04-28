@@ -64,8 +64,13 @@ namespace Hollow.World
             var selectedProfile = selectedProfileContext?.SelectedProfile;
             var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
             var selectedCharacterId = selectedProfileContext?.SelectedCharacterId ?? "balanced";
-            var effectiveSessionMode = isDesignerPlaytest ? playtestMode : sessionMode;
-            SessionState = GameSessionState.Create(effectiveSessionMode, platformKind, launchMode, selectedProfile, spawnPosition, selectedCharacterId);
+            var selectedChallengeId = selectedProfileContext?.SelectedChallengeId ?? string.Empty;
+            var effectiveSessionMode = isDesignerPlaytest
+                ? playtestMode
+                : !string.IsNullOrWhiteSpace(selectedChallengeId)
+                    ? RuntimeSessionMode.TransientChallenge
+                    : sessionMode;
+            SessionState = GameSessionState.Create(effectiveSessionMode, platformKind, launchMode, selectedProfile, spawnPosition, selectedCharacterId, selectedChallengeId);
 
             if (importedAsset != null && !isDesignerPlaytest && TryGetBranchSessionController(out var branchSessionController))
             {
@@ -168,16 +173,33 @@ namespace Hollow.World
                 return;
             }
 
-            var targetCamera = Camera.main != null ? Camera.main : FindAnyObjectByType<Camera>();
+            var rigMetadata = FindPlatformCameraRig();
+            var targetCamera = rigMetadata != null
+                ? rigMetadata.GetComponentInChildren<Camera>(includeInactive: true)
+                : Camera.main != null ? Camera.main : FindAnyObjectByType<Camera>();
             if (targetCamera == null)
             {
                 return;
             }
 
-            var rigMetadata = targetCamera.GetComponentInParent<CameraRigMetadata>();
+            rigMetadata ??= targetCamera.GetComponentInParent<CameraRigMetadata>();
             var host = rigMetadata != null ? rigMetadata.gameObject : targetCamera.gameObject;
             var follow = host.GetComponent<GameplayCameraFollowController>() ?? host.AddComponent<GameplayCameraFollowController>();
             follow.Configure(playerController.transform, platformKind);
+        }
+
+        private CameraRigMetadata FindPlatformCameraRig()
+        {
+            var rigs = FindObjectsByType<CameraRigMetadata>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var rig in rigs)
+            {
+                if (rig.PlatformKind == platformKind)
+                {
+                    return rig;
+                }
+            }
+
+            return rigs.Length > 0 ? rigs[0] : null;
         }
     }
 }

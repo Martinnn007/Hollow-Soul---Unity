@@ -73,9 +73,7 @@ namespace Hollow.Tests.EditMode
             try
             {
                 Assert.AreEqual(BranchGenerator.MacroFixtureBranchId, branch.State.Graph.BranchId);
-                Assert.IsFalse(branch.TryTraverse("west"));
-
-                ClearCurrentRoom(combat);
+                Assert.IsTrue(branch.State.CurrentRoom.IsCleared);
                 Assert.IsTrue(branch.TryTraverse("west"));
 
                 Assert.AreEqual(BranchRoomId.West, branch.State.CurrentRoomId);

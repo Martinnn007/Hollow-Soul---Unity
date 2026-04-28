@@ -1,0 +1,91 @@
+{
+    "reportId": "platform-build-qa-20260428-003729",
+    "generatedAtUtc": "2026-04-28T00:37:29.6112130Z",
+    "prototypeVersion": "Hollow Soul Unity M24 Platform Build QA",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "2c3f556",
+    "result": "Failed",
+    "reportRoot": "output/reports",
+    "buildRoot": "output/builds",
+    "targets": [
+        {
+            "id": "m0-m23-audit",
+            "platform": "Editor",
+            "result": "Passed",
+            "outputPath": "output/reports/latest_m24_dependency_audit.json",
+            "durationMs": 4415.3867,
+            "messages": [
+                "M0-M23 audit passed: 24/24."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "addressables-build",
+            "platform": "Local Addressables",
+            "result": "Passed",
+            "outputPath": "Library/com.unity.addressables/aa/OSX/settings.json",
+            "durationMs": 7607.0616,
+            "messages": [
+                "Local Addressables content built successfully."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "editmode-tests",
+            "platform": "Unity Test Runner",
+            "result": "Failed",
+            "outputPath": "output/reports/m24-editmode-results.xml",
+            "durationMs": 18475.9808,
+            "messages": [
+                "EditMode tests completed: 200/202 passed, 2 failed, 0 inconclusive, 0 skipped."
+            ],
+            "remediation": [
+                "Open m24-editmode-results.xml and fix failing EditMode tests."
+            ]
+        },
+        {
+            "id": "playmode-smoke-tests",
+            "platform": "Editor Scene Smoke",
+            "result": "Passed",
+            "outputPath": "output/reports/m24-playmode-smoke-editor-probe.md",
+            "durationMs": 115.01750000000001,
+            "messages": [
+                "Platform scene smoke probe passed for MainMenu, RoomDesigner, Windows, VisionOS bounded, and VisionOS immersive."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "windows-development-build",
+            "platform": "StandaloneWindows64",
+            "result": "BlockedByEnvironment",
+            "outputPath": "output/builds/HollowSoul_M24_Windows/HollowSoul.exe",
+            "durationMs": 0.029400000000000004,
+            "messages": [
+                "Standalone Windows 64-bit build support is not installed in this Unity editor."
+            ],
+            "remediation": [
+                "Install Unity Windows Build Support for Unity 6000.4.1f1.",
+                "Rerun Hollow/Platform QA/Build Windows Development M24."
+            ]
+        },
+        {
+            "id": "visionos-readiness",
+            "platform": "visionOS Simulator/Readiness",
+            "result": "Passed",
+            "outputPath": "",
+            "durationMs": 118.22340000000001,
+            "messages": [
+                "Vision Pro bounded/immersive scenes, polish profiles, and simulator tooling are present."
+            ],
+            "remediation": []
+        }
+    ],
+    "manualChecklist": [
+        "Windows: launch HollowSoul.exe, create/select profile, start New Run, move/shoot/clear one room, traverse a door, buy a shop card, quit and Continue.",
+        "Windows: open Room Designer, create a 1x1 draft, move cursor, place/erase a rock/enemy marker, export JSON/USDA bundle.",
+        "Vision Pro bounded: verify tabletop world scale is 0.1, HUD/minimap are readable and unscaled, and ArtPass visuals do not add gameplay colliders.",
+        "Vision Pro immersive: verify full-scale world, comfort vignette profile metadata, camera posture, and readable combat spacing.",
+        "All platforms: confirm save/profile state changes only occur in profile-backed sessions and transient designer/sample sessions stay safe."
+    ]
+}

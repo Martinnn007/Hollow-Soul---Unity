@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 313eb6fac8fdb46a5b741d551b595c4f, type: 3}
+  m_Name: ExternalHandoff_M40
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.ExternalHandoffDefinition
+  handoffId: m40_vertical_slice_external_handoff_v1
+  displayName: M40 Vertical Slice Re-Lock + External Handoff
+  reportRoot: output/reports
+  latestJsonFileName: latest_m40_external_handoff.json
+  latestMarkdownFileName: latest_m40_external_handoff.md
+  verticalSliceReportPath: output/reports/latest_vertical_slice_lock.json
+  platformQaReportPath: output/reports/latest_platform_build_qa.json
+  editModeResultsPath: output/reports/m24-editmode-results.xml
+  requiredDocs:
+  - Docs/Milestone38ArtPassRafalPipeline.md
+  - Docs/Milestone39StoryWorldIdentityRunFraming.md
+  requiredReports:
+  - output/reports/latest_platform_build_qa.json
+  - output/reports/latest_platform_build_qa.md
+  - output/reports/latest_vertical_slice_lock.json
+  - output/reports/latest_vertical_slice_lock.md
+  - output/reports/m24-editmode-results.xml
+  - output/reports/m39_story_world_identity_run_framing.md
+  acceptedEnvironmentBlocks:
+  - windows-development-build
+  manualHandoffChecklist:
+  - Run Windows/Vision Pro manual smoke from latest M24 QA checklist before external
+    sharing.
+  - If a Windows executable is required, install Unity Windows Build Support and
+    rerun the M24 Windows build target.
+  - Confirm M39 run-framing HUD is readable and does not obscure combat HUD/minimap
+    in all game routes.
+  - Use the M38 ArtPass target catalog as Rafal's source of truth for visual replacement
+    priorities.
+  - Do not treat ArtPass visuals as gameplay-authoritative; colliders, room layout,
+    rewards, and saves remain runtime-model driven.

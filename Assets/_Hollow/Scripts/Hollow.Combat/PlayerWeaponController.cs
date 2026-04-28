@@ -197,7 +197,7 @@ namespace Hollow.Combat
             nextAllowedMeleeTime = timeSeconds + Mathf.Max(0.05f, cooldown);
             var direction = new Vector3(cardinal.x, 0f, cardinal.y);
             var radius = Mathf.Max(0.25f, attack.RangeMeters * 0.48f);
-            var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, attack.RangeMeters * 0.72f) + new Vector3(0f, 0.45f, 0f);
+            var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, attack.RangeMeters * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);
             var target = combatController.FindEnemyHit(hitCenter, radius);
             if (target != null)
             {
@@ -224,6 +224,11 @@ namespace Hollow.Combat
 
             currentStamina -= amount;
             return true;
+        }
+
+        public bool SpendStaminaForDefense(float amount)
+        {
+            return TrySpendStamina(amount);
         }
 
         private void RegenerateStamina(float deltaTime)

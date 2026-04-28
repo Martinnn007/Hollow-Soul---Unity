@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Hollow.Branches;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
@@ -39,7 +40,7 @@ namespace Hollow.Editor.Validation
 
         public static void Validate()
         {
-            Validate(exitOnFailure: Application.isBatchMode);
+            Validate(exitOnFailure: MilestoneValidationExitPolicy.ShouldExitForValidate());
         }
 
         private static void Validate(bool exitOnFailure)
@@ -138,9 +139,14 @@ namespace Hollow.Editor.Validation
                 failures.Add("M14 macro graph has invalid branch identity or seed.");
             }
 
-            if (graph.RoomCount != 5 || graph.Connections.Count != 8 || graph.OccupancyMap.OwnerByCell.Count != 12)
+            if (graph.RoomCount != 5 || graph.OccupancyMap.OwnerByCell.Count != 12)
             {
-                failures.Add("M14 macro graph must have five rooms, eight directed connections, and twelve occupied branch cells.");
+                failures.Add("M14 macro graph must keep five logical rooms and twelve occupied branch cells.");
+            }
+
+            if (graph.Connections.Count < 8 || graph.Connections.Any(connection => !connection.HasExplicitPorts))
+            {
+                failures.Add("M14 macro graph must keep explicit port-to-port connections, including successor auto-linked adjacent doors.");
             }
 
             AssertPortConnection(graph, BranchRoomId.Origin, "north_0", BranchRoomId.North, failures);
@@ -148,10 +154,7 @@ namespace Hollow.Editor.Validation
             AssertPortConnection(graph, BranchRoomId.Origin, "east_0", BranchRoomId.East, failures);
             AssertPortConnection(graph, BranchRoomId.Origin, "west_0", BranchRoomId.West, failures);
             AssertPortConnection(graph, BranchRoomId.West, "east_1", BranchRoomId.Origin, failures);
-            if (graph.TryGetConnectionByPort(BranchRoomId.West, "east_0", out _))
-            {
-                failures.Add("M14 west block room must not connect through east_0; only east_1 is connected.");
-            }
+            ValidateNoDuplicatePortPairs(graph, failures);
         }
 
         private static void ValidateScenes(BranchRoomTemplateCatalogDefinition catalog, List<string> failures)
@@ -180,6 +183,17 @@ namespace Hollow.Editor.Validation
             if (!graph.TryGetConnectionByPort(from, portId, out var connection) || connection.ToRoomId != expectedTo)
             {
                 failures.Add($"M14 macro graph missing expected port connection {from}.{portId} -> {expectedTo}.");
+            }
+        }
+
+        private static void ValidateNoDuplicatePortPairs(BranchFloorGraph graph, List<string> failures)
+        {
+            var duplicate = graph.Connections
+                .GroupBy(connection => $"{connection.FromRoomId.Value}:{connection.FromPortId}->{connection.ToRoomId.Value}:{connection.ToPortId}")
+                .FirstOrDefault(group => group.Count() > 1);
+            if (duplicate != null)
+            {
+                failures.Add($"M14 macro graph contains duplicate explicit port connection: {duplicate.Key}.");
             }
         }
     }

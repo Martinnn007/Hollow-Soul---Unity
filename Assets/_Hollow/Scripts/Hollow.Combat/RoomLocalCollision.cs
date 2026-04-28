@@ -5,6 +5,8 @@ namespace Hollow.Combat
 {
     public static class RoomLocalCollision
     {
+        public const float MinimumRadiusMeters = CombatFeelTuning.MinimumCollisionRadiusMeters;
+
         public static Vector3 ResolveMove(RoomRuntimeRoot room, Vector3 currentLocal, Vector3 desiredLocal, float radius)
         {
             if (room == null)
@@ -12,6 +14,7 @@ namespace Hollow.Combat
                 return desiredLocal;
             }
 
+            radius = Mathf.Max(MinimumRadiusMeters, radius);
             var clamped = ClampToBounds(room, desiredLocal, radius);
             if (CanOccupy(room, clamped, radius))
             {
@@ -25,7 +28,20 @@ namespace Hollow.Combat
             }
 
             var zOnly = ClampToBounds(room, new Vector3(currentLocal.x, currentLocal.y, clamped.z), radius);
-            return CanOccupy(room, zOnly, radius) ? zOnly : currentLocal;
+            var canUseZOnly = CanOccupy(room, zOnly, radius);
+            if (!canUseZOnly)
+            {
+                return currentLocal;
+            }
+
+            if (!CanOccupy(room, xOnly, radius))
+            {
+                return zOnly;
+            }
+
+            return ProgressTowardDesired(xOnly, currentLocal, clamped) >= ProgressTowardDesired(zOnly, currentLocal, clamped)
+                ? xOnly
+                : zOnly;
         }
 
         public static Vector3 ResolveMoveIgnoringObstacles(RoomRuntimeRoot room, Vector3 desiredLocal, float radius)
@@ -35,6 +51,7 @@ namespace Hollow.Combat
                 return desiredLocal;
             }
 
+            radius = Mathf.Max(MinimumRadiusMeters, radius);
             var clamped = ClampToBounds(room, desiredLocal, radius);
             return IsOutsideWalkable(room, clamped, radius)
                 ? NearestWalkablePosition(room, clamped)
@@ -48,6 +65,7 @@ namespace Hollow.Combat
                 return false;
             }
 
+            radius = Mathf.Max(MinimumRadiusMeters, radius);
             foreach (var obstacle in room.Obstacles)
             {
                 var halfX = obstacle.Size.x * 0.5f + radius;
@@ -69,6 +87,7 @@ namespace Hollow.Combat
                 return false;
             }
 
+            radius = Mathf.Max(MinimumRadiusMeters, radius);
             var bounds = room.LocalBounds;
             return localPosition.x < bounds.xMin + radius ||
                    localPosition.x > bounds.xMax - radius ||
@@ -143,6 +162,20 @@ namespace Hollow.Combat
             }
 
             return new Vector3(nearest.x, localPosition.y, nearest.y);
+        }
+
+        private static float ProgressTowardDesired(Vector3 candidate, Vector3 current, Vector3 desired)
+        {
+            var desiredDelta = desired - current;
+            desiredDelta.y = 0f;
+            if (desiredDelta.sqrMagnitude < 0.0001f)
+            {
+                return 0f;
+            }
+
+            var candidateDelta = candidate - current;
+            candidateDelta.y = 0f;
+            return Vector3.Dot(candidateDelta, desiredDelta.normalized);
         }
     }
 }

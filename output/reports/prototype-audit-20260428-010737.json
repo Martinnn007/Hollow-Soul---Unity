@@ -1,0 +1,181 @@
+{
+    "auditId": "prototype-audit-20260428-010737",
+    "generatedAtUtc": "2026-04-28T01:07:37.7523210Z",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "2c3f556",
+    "result": "Passed",
+    "totalChecks": 24,
+    "passedChecks": 24,
+    "failedChecks": 0,
+    "entries": [
+        {
+            "id": "Milestone0Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone0Validator",
+            "passed": true,
+            "durationMs": 185.5515,
+            "messages": []
+        },
+        {
+            "id": "Milestone1Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone1Validator",
+            "passed": true,
+            "durationMs": 81.2521,
+            "messages": []
+        },
+        {
+            "id": "Milestone2Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone2Validator",
+            "passed": true,
+            "durationMs": 140.5729,
+            "messages": []
+        },
+        {
+            "id": "Milestone3Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone3Validator",
+            "passed": true,
+            "durationMs": 115.7714,
+            "messages": []
+        },
+        {
+            "id": "Milestone4Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone4Validator",
+            "passed": true,
+            "durationMs": 121.2928,
+            "messages": []
+        },
+        {
+            "id": "Milestone5Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone5Validator",
+            "passed": true,
+            "durationMs": 109.8957,
+            "messages": []
+        },
+        {
+            "id": "Milestone6Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone6Validator",
+            "passed": true,
+            "durationMs": 116.41600000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone7Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone7Validator",
+            "passed": true,
+            "durationMs": 119.7868,
+            "messages": []
+        },
+        {
+            "id": "Milestone8Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone8Validator",
+            "passed": true,
+            "durationMs": 94.8272,
+            "messages": []
+        },
+        {
+            "id": "Milestone9Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone9Validator",
+            "passed": true,
+            "durationMs": 175.03130000000003,
+            "messages": []
+        },
+        {
+            "id": "Milestone10Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone10Validator",
+            "passed": true,
+            "durationMs": 120.2857,
+            "messages": []
+        },
+        {
+            "id": "Milestone11Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone11Validator",
+            "passed": true,
+            "durationMs": 169.1454,
+            "messages": []
+        },
+        {
+            "id": "Milestone12Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone12Validator",
+            "passed": true,
+            "durationMs": 1549.2226,
+            "messages": []
+        },
+        {
+            "id": "Milestone13Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone13Validator",
+            "passed": true,
+            "durationMs": 88.89370000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone14Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone14Validator",
+            "passed": true,
+            "durationMs": 121.7107,
+            "messages": []
+        },
+        {
+            "id": "Milestone15Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone15Validator",
+            "passed": true,
+            "durationMs": 122.57180000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone16Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone16Validator",
+            "passed": true,
+            "durationMs": 124.07860000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone17Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone17Validator",
+            "passed": true,
+            "durationMs": 115.13390000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone18Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone18Validator",
+            "passed": true,
+            "durationMs": 117.7442,
+            "messages": []
+        },
+        {
+            "id": "Milestone19Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone19Validator",
+            "passed": true,
+            "durationMs": 116.41990000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone20Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone20Validator",
+            "passed": true,
+            "durationMs": 113.25580000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone21Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone21Validator",
+            "passed": true,
+            "durationMs": 118.04830000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone22Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone22Validator",
+            "passed": true,
+            "durationMs": 89.56320000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone23Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone23Validator",
+            "passed": true,
+            "durationMs": 165.2056,
+            "messages": []
+        }
+    ]
+}

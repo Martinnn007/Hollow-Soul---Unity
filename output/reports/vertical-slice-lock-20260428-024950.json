@@ -1,0 +1,77 @@
+{
+    "reportId": "vertical-slice-lock-20260428-024950",
+    "generatedAtUtc": "2026-04-28T02:49:50.8864190Z",
+    "lockName": "M25 Vertical Slice Content Lock",
+    "branchIdentity": "m20_branch_features_v1",
+    "lockedSeed": 15001,
+    "result": "Passed",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "2c3f556",
+    "reportRoot": "output/reports",
+    "pdfOutputPath": "output/pdf/Hollow_M25_Vertical_Slice_Content_Lock.pdf",
+    "roomCount": 8,
+    "connectionCount": 16,
+    "fixtureRoomCount": 5,
+    "approvedRoomCount": 5,
+    "shopOfferCount": 3,
+    "nextBranchPortalCount": 3,
+    "checks": [
+        {
+            "id": "lock-definition",
+            "result": "Passed",
+            "messages": [
+                "M25 lock asset pins branch identity, seed, catalogs, platform QA, and slice counts."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "branch-content",
+            "result": "Passed",
+            "messages": [
+                "Locked branch generated with 8 rooms, 16 directional connections, 5 fixtures, and 5 approved rooms.",
+                "Boss key source: room_04; secret: room_06; boss: boss_01."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "hub-shop-portals",
+            "result": "Passed",
+            "messages": [
+                "Inter-branch hub exposes three shop offers and three seeded next-branch portal choices."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "artpass-lock",
+            "result": "Passed",
+            "messages": [
+                "Required ArtPass roles/cues resolved without prototype fallback. Warnings: 0."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "platform-checklist",
+            "result": "Passed",
+            "messages": [
+                "Windows, Vision Pro bounded, and Vision Pro immersive have equal vertical-slice checklist coverage."
+            ],
+            "remediation": []
+        },
+        {
+            "id": "m0-m24-audit",
+            "result": "Passed",
+            "messages": [
+                "M0-M24 validators passed: 25/25."
+            ],
+            "remediation": []
+        }
+    ],
+    "manualChecklist": [
+        "Windows: start New Run with the locked seed, clear combat rooms, collect rewards, unlock the boss door, defeat boss, enter hub, buy one shop card, and inspect all three next-branch portals.",
+        "Windows: quit after a checkpoint and Continue to confirm room/reward/key/shop/hub state restores.",
+        "Vision Pro bounded: repeat route smoke with tabletop scale 0.1, HUD/minimap unscaled, readable door/shop/portal cards, and no ArtPass visual collider takeover.",
+        "Vision Pro immersive: repeat route smoke at full world scale, verify comfort posture/readability, boss/projectile clarity, and next-branch portal placement.",
+        "All platforms: confirm transient designer/sample sessions remain excluded from run saves and profile mutation."
+    ]
+}

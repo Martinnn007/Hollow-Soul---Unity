@@ -9,6 +9,11 @@ namespace Hollow.Combat
 {
     public class EnemyRuntimeController : MonoBehaviour
     {
+        public const float ChargeWindupSeconds = 0.42f;
+        public const float RangedWindupSeconds = 0.34f;
+        public const float BossBurstWindupSeconds = 0.68f;
+        public const float ChargeActiveSeconds = 0.38f;
+
         [SerializeField] private float speedMetersPerSecond = ChaserEnemyController.DefaultSpeedMetersPerSecond;
         [SerializeField] private int contactDamage = ChaserEnemyController.DefaultContactDamage;
         [SerializeField] private float contactCooldownSeconds = ChaserEnemyController.DefaultContactCooldownSeconds;
@@ -25,8 +30,11 @@ namespace Hollow.Combat
         private float nextAllowedChargeTime;
         private float chargeEndTime;
         private float entryGraceEndTime;
+        private float readabilityStateEndTime;
         private bool firedLowHealthBossBurst;
         private Vector3 activeChargeDirection = Vector3.forward;
+        private Vector3 telegraphDirection = Vector3.forward;
+        private EnemyReadabilityState readabilityState = EnemyReadabilityState.Idle;
         private GameObject enemyPrefab;
         private GameObject enemyProjectilePrefab;
         private EnemyCatalog enemyCatalog;
@@ -55,6 +63,32 @@ namespace Hollow.Combat
 
         public bool IsInEntryGrace(float timeSeconds) => timeSeconds < entryGraceEndTime;
 
+        public EnemyReadabilityState ReadabilityState => readabilityState;
+
+        public float ReadabilityStateEndTime => readabilityStateEndTime;
+
+        public Vector3 TelegraphDirection => telegraphDirection.sqrMagnitude < 0.001f ? Vector3.forward : telegraphDirection.normalized;
+
+        public EnemyReadabilityState ReadabilityStateAt(float timeSeconds)
+        {
+            if (IsInEntryGrace(timeSeconds))
+            {
+                return EnemyReadabilityState.EntryGrace;
+            }
+
+            if (readabilityState is EnemyReadabilityState.EntryGrace && timeSeconds >= readabilityStateEndTime)
+            {
+                return EnemyReadabilityState.Idle;
+            }
+
+            return readabilityState;
+        }
+
+        public float ReadabilitySecondsRemaining(float timeSeconds)
+        {
+            return Mathf.Max(0f, readabilityStateEndTime - timeSeconds);
+        }
+
         public void BeginEntryGrace(float seconds, float currentTimeSeconds)
         {
             var graceEndTime = currentTimeSeconds + Mathf.Max(0f, seconds);
@@ -62,6 +96,7 @@ namespace Hollow.Combat
             nextAllowedContactTime = Mathf.Max(nextAllowedContactTime, entryGraceEndTime);
             nextAllowedAttackTime = Mathf.Max(nextAllowedAttackTime, entryGraceEndTime);
             nextAllowedChargeTime = Mathf.Max(nextAllowedChargeTime, entryGraceEndTime);
+            StartReadabilityState(EnemyReadabilityState.EntryGrace, Mathf.Max(0f, seconds), currentTimeSeconds, Vector3.forward);
         }
 
         public void Configure(RoomRuntimeRoot room, PlaceholderPlayerController player, EnemyDefinition definition, DifficultyTierDefinition difficultyTier)
@@ -121,6 +156,11 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (ResolvePendingReadabilityState(timeSeconds))
+            {
+                return;
+            }
+
             if (behaviorId == EnemyBehaviorId.TurretShooter)
             {
                 TryRangedAttack(timeSeconds);
@@ -160,11 +200,8 @@ namespace Hollow.Combat
                 !firedLowHealthBossBurst &&
                 Health.CurrentHealth <= Mathf.CeilToInt(Health.MaxHealth * 0.5f))
             {
-                firedLowHealthBossBurst = true;
-                FireProjectile(Vector3.forward);
-                FireProjectile(Vector3.back);
-                FireProjectile(Vector3.left);
-                FireProjectile(Vector3.right);
+                StartReadabilityState(EnemyReadabilityState.BossBurstWindup, BossBurstWindupSeconds, timeSeconds, Vector3.forward);
+                return;
             }
 
             if (TickCharge(deltaTime, timeSeconds))
@@ -180,9 +217,17 @@ namespace Hollow.Combat
         {
             if (timeSeconds < chargeEndTime)
             {
+                readabilityState = EnemyReadabilityState.Charging;
+                readabilityStateEndTime = Mathf.Max(readabilityStateEndTime, chargeEndTime);
                 var desired = transform.localPosition + activeChargeDirection * Definition.ChargeSpeedMetersPerSecond * deltaTime;
                 transform.localPosition = RoomLocalCollision.ResolveMove(roomRuntimeRoot, transform.localPosition, desired, radiusMeters);
                 return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.Charging)
+            {
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
             }
 
             if (timeSeconds < nextAllowedChargeTime || playerController == null)
@@ -197,9 +242,7 @@ namespace Hollow.Combat
                 return false;
             }
 
-            activeChargeDirection = delta.normalized;
-            chargeEndTime = timeSeconds + 0.38f;
-            nextAllowedChargeTime = timeSeconds + Definition.ChargeCooldownSeconds;
+            StartReadabilityState(EnemyReadabilityState.ChargeWindup, ChargeWindupSeconds, timeSeconds, delta.normalized);
             return true;
         }
 
@@ -232,9 +275,82 @@ namespace Hollow.Combat
                 return false;
             }
 
-            nextAllowedAttackTime = timeSeconds + Definition.AttackCooldownSeconds;
-            FireProjectile(delta.normalized);
+            StartReadabilityState(EnemyReadabilityState.RangedWindup, RangedWindupSeconds, timeSeconds, delta.normalized);
             return true;
+        }
+
+        private bool ResolvePendingReadabilityState(float timeSeconds)
+        {
+            if (readabilityState == EnemyReadabilityState.EntryGrace)
+            {
+                if (timeSeconds < readabilityStateEndTime)
+                {
+                    return true;
+                }
+
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
+                return false;
+            }
+
+            if (readabilityState == EnemyReadabilityState.ChargeWindup)
+            {
+                if (timeSeconds < readabilityStateEndTime)
+                {
+                    return true;
+                }
+
+                activeChargeDirection = TelegraphDirection;
+                chargeEndTime = timeSeconds + ChargeActiveSeconds;
+                nextAllowedChargeTime = timeSeconds + Definition.ChargeCooldownSeconds;
+                readabilityState = EnemyReadabilityState.Charging;
+                readabilityStateEndTime = chargeEndTime;
+                return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.RangedWindup)
+            {
+                if (timeSeconds < readabilityStateEndTime)
+                {
+                    return true;
+                }
+
+                nextAllowedAttackTime = timeSeconds + Definition.AttackCooldownSeconds;
+                FireProjectile(TelegraphDirection);
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
+                return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.BossBurstWindup)
+            {
+                if (timeSeconds < readabilityStateEndTime)
+                {
+                    return true;
+                }
+
+                firedLowHealthBossBurst = true;
+                FireProjectile(Vector3.forward);
+                FireProjectile(Vector3.back);
+                FireProjectile(Vector3.left);
+                FireProjectile(Vector3.right);
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void StartReadabilityState(EnemyReadabilityState state, float durationSeconds, float timeSeconds, Vector3 direction)
+        {
+            readabilityState = state;
+            readabilityStateEndTime = timeSeconds + Mathf.Max(0f, durationSeconds);
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                direction.y = 0f;
+                telegraphDirection = direction.normalized;
+            }
         }
 
         public bool TryApplyContactDamage(float timeSeconds)

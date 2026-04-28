@@ -38,6 +38,17 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone28ItemsCardsCoinsShopRewards.md` describes run coins, usable active items/cards, mixed-currency shops, and the first item/card reward pool.
 - `Docs/Milestone29CharactersPassiveIdentitySkills.md` describes the first selectable characters, run-start passive identity skills, and character picker launch flow.
 - `Docs/Milestone30SynergyTagsStarterBuildVariety.md` describes internal build tags, armor equipment, Skeletal/Dragon set pieces, and run-only set synergy bonuses.
+- `Docs/Milestone31ValidationDebtRecovery.md` describes the validator rebaseline after Isaac-style macro connectivity, successor reward pools, and M30 build-system additions.
+- `Docs/Milestone32FullQaGateRebaseline.md` describes the QA gate rebaseline, in-process EditMode test execution, and editor-side platform scene smoke evidence.
+- `Docs/Milestone33CombatFeelPhysicsCameraPolish.md` describes movement/projectile substeps, obstacle sliding, and traversal-safe gameplay camera follow polish.
+- `Docs/Milestone34ShieldDefenseArmorBehavior.md` describes passive defense mitigation, shield guard stamina costs, contact pushback, and HUD defense status.
+- `Docs/Milestone35ChallengeModeV1.md` describes fixed-seed transient challenge runs, curated stat/currency rules, and challenge launch safety.
+- `Docs/Milestone36RoomEncounterContentExpansion.md` describes the first approved room-content pack and expanded seeded encounter catalog.
+- `Docs/Milestone37EnemyBossBehaviorReadability.md` describes enemy attack windups, boss burst telegraphs, and non-blocking combat readability visuals.
+- `Docs/Milestone38ArtPassRafalPipeline.md` describes Rafal's ArtPass intake folders, target catalog, visual-only prefab rules, and production handoff PDF.
+- `Docs/Milestone39StoryWorldIdentityRunFraming.md` describes the first world identity catalog and compact run-framing HUD.
+- `Docs/Milestone40VerticalSliceRelockExternalHandoff.md` describes the external handoff readiness gate that checks latest QA, vertical-slice lock, and world-framing evidence.
+- `Docs/Milestone41CurrentMilestoneAudit.md` describes the current M31-M40 audit layer that complements the historical M0-M23 dependency audit.
 
 ## Required Setup
 

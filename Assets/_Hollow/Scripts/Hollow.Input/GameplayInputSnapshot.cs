@@ -34,6 +34,20 @@ namespace Hollow.Input
             bool heavyAttackPressed,
             bool useActiveItemPressed,
             bool useConsumableCardPressed)
+            : this(move, shoot, interactPressed, swapWeaponPressed, lightAttackPressed, heavyAttackPressed, useActiveItemPressed, useConsumableCardPressed, false)
+        {
+        }
+
+        public GameplayInputSnapshot(
+            Vector2 move,
+            Vector2 shoot,
+            bool interactPressed,
+            bool swapWeaponPressed,
+            bool lightAttackPressed,
+            bool heavyAttackPressed,
+            bool useActiveItemPressed,
+            bool useConsumableCardPressed,
+            bool guardHeld)
         {
             Move = Vector2.ClampMagnitude(move, 1f);
             Shoot = GameplayInputReader.CardinalizeShoot(shoot);
@@ -43,6 +57,7 @@ namespace Hollow.Input
             HeavyAttackPressed = heavyAttackPressed;
             UseActiveItemPressed = useActiveItemPressed;
             UseConsumableCardPressed = useConsumableCardPressed;
+            GuardHeld = guardHeld;
         }
 
         public Vector2 Move { get; }
@@ -60,6 +75,8 @@ namespace Hollow.Input
         public bool UseActiveItemPressed { get; }
 
         public bool UseConsumableCardPressed { get; }
+
+        public bool GuardHeld { get; }
 
         public bool HasShoot => Shoot.sqrMagnitude > 0.001f;
     }

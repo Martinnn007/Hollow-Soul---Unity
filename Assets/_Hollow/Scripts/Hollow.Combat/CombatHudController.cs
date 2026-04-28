@@ -34,7 +34,7 @@ namespace Hollow.Combat
             }
 
             var model = combatController.CreateHudModel();
-            playerHealthText.text = $"HP {model.PlayerHealth}/{model.PlayerMaxHealth}";
+            playerHealthText.text = $"HP {model.PlayerHealth}/{model.PlayerMaxHealth} | {model.DefenseSummary}";
             enemyText.text = $"Enemies {model.EnemiesRemaining}";
             roomStateText.text = model.StatusText;
             difficultyText.text = $"Tier {model.DifficultyName}";

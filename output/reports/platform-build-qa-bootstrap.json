@@ -1,10 +1,10 @@
 {
     "reportId": "platform-build-qa-bootstrap",
-    "generatedAtUtc": "2026-04-27T22:46:31.2241270Z",
+    "generatedAtUtc": "2026-04-28T02:35:54.5199010Z",
     "prototypeVersion": "Hollow Soul Unity M24 Platform Build QA",
     "unityVersion": "6000.4.1f1",
     "gitBranch": "main",
-    "gitCommit": "f7de86c",
+    "gitCommit": "2c3f556",
     "result": "NotRun",
     "reportRoot": "output/reports",
     "buildRoot": "output/builds",

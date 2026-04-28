@@ -58,9 +58,21 @@ namespace Hollow.Combat
             }
 
             var move = Vector2.ClampMagnitude(moveInput, 1f);
-            var current = transform.localPosition;
-            var desired = current + new Vector3(move.x, 0f, move.y) * SpeedMetersPerSecond * deltaTime;
-            var resolved = RoomLocalCollision.ResolveMove(roomRuntimeRoot, current, desired, radiusMeters);
+            var step = new Vector3(move.x, 0f, move.y) * SpeedMetersPerSecond * deltaTime;
+            var stepCount = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / CombatFeelTuning.MovementSubstepMeters));
+            var increment = step / stepCount;
+            var resolved = transform.localPosition;
+            for (var index = 0; index < stepCount; index++)
+            {
+                var next = RoomLocalCollision.ResolveMove(roomRuntimeRoot, resolved, resolved + increment, radiusMeters);
+                if ((next - resolved).sqrMagnitude < 0.000001f)
+                {
+                    break;
+                }
+
+                resolved = next;
+            }
+
             transform.localPosition = resolved;
             return resolved;
         }

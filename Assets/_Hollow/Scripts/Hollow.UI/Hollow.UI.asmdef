@@ -1,11 +1,12 @@
 {
   "name": "Hollow.UI",
   "rootNamespace": "Hollow.UI",
-  "references": [
-    "Hollow.Core",
-    "Hollow.Branches",
-    "Hollow.Rewards",
-    "Hollow.Persistence",
+    "references": [
+        "Hollow.Core",
+        "Hollow.Branches",
+        "Hollow.Data",
+        "Hollow.Rewards",
+        "Hollow.Persistence",
     "Hollow.Platform",
     "UnityEngine.UI"
   ],

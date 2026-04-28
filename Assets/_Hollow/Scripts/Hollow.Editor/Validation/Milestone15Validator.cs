@@ -44,7 +44,7 @@ namespace Hollow.Editor.Validation
 
         public static void Validate()
         {
-            Validate(exitOnFailure: Application.isBatchMode);
+            Validate(exitOnFailure: MilestoneValidationExitPolicy.ShouldExitForValidate());
         }
 
         private static void Validate(bool exitOnFailure)
@@ -147,10 +147,10 @@ namespace Hollow.Editor.Validation
             if (graph.BranchId != BranchGenerator.SeededMacroBranchId ||
                 graph.Seed != BranchGenerator.DefaultSeededMacroSeed ||
                 graph.RoomCount != 8 ||
-                graph.Connections.Count != 14 ||
+                graph.Connections.Count < (graph.RoomCount - 1) * 2 ||
                 graph.Connections.Any(connection => !connection.HasExplicitPorts))
             {
-                failures.Add("M15 seeded graph must have eight rooms, fourteen directed explicit-port connections, and the M15 branch identity.");
+                failures.Add("M15 seeded graph must have eight rooms, explicit port connections, and the M15 branch identity.");
             }
 
             if (graph.OccupancyMap.OwnerByCell.Count != graph.Rooms.Sum(room => room.Footprint?.OccupiedCellCount ?? 0))
@@ -168,6 +168,16 @@ namespace Hollow.Editor.Validation
             if (boss == null || graph.ConnectionsFrom(boss.Id).Count != 1)
             {
                 failures.Add("M15 boss room must be a leaf room.");
+            }
+
+            if (!BranchGenerator.ValidateSpecialRoomTopology(graph, out var topologyError))
+            {
+                failures.Add($"M15 special-room topology is invalid: {topologyError}");
+            }
+
+            if (!IsGraphConnected(graph))
+            {
+                failures.Add("M15 seeded graph must keep every generated room reachable from origin.");
             }
 
             var rewards = ProceduralRewardResolver.CreatePlan(graph);
@@ -196,6 +206,36 @@ namespace Hollow.Editor.Validation
                     failures.Add($"{scenePath} BranchSessionController is not wired to the M15 generation settings.");
                 }
             }
+        }
+
+        private static bool IsGraphConnected(BranchFloorGraph graph)
+        {
+            if (graph == null || graph.RoomCount == 0)
+            {
+                return false;
+            }
+
+            var visited = new HashSet<BranchRoomId>();
+            var queue = new Queue<BranchRoomId>();
+            queue.Enqueue(BranchRoomId.Origin);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (!visited.Add(current))
+                {
+                    continue;
+                }
+
+                foreach (var connection in graph.ConnectionsFrom(current))
+                {
+                    if (!visited.Contains(connection.ToRoomId))
+                    {
+                        queue.Enqueue(connection.ToRoomId);
+                    }
+                }
+            }
+
+            return visited.Count == graph.RoomCount;
         }
     }
 }

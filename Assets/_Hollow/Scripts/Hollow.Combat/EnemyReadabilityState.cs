@@ -1,0 +1,12 @@
+namespace Hollow.Combat
+{
+    public enum EnemyReadabilityState
+    {
+        Idle = 0,
+        EntryGrace = 1,
+        ChargeWindup = 2,
+        Charging = 3,
+        RangedWindup = 4,
+        BossBurstWindup = 5
+    }
+}

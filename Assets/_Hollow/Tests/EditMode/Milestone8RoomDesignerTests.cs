@@ -129,10 +129,10 @@ namespace Hollow.Tests.EditMode
                 var controller = root.AddComponent<RoomDesignerController>();
                 controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault());
 
-                controller.ApplyInput(Input(moveZ: 1));
+                controller.ApplyInput(Input(moveZ: 1), 0f);
                 Assert.AreEqual(1, controller.CursorZ);
 
-                controller.ApplyInput(Input(moveZ: -1));
+                controller.ApplyInput(Input(moveZ: -1), 1f);
                 Assert.AreEqual(0, controller.CursorZ);
             }
             finally

@@ -1,0 +1,181 @@
+{
+    "auditId": "prototype-audit-20260428-000624",
+    "generatedAtUtc": "2026-04-28T00:06:24.7493940Z",
+    "unityVersion": "6000.4.1f1",
+    "gitBranch": "main",
+    "gitCommit": "2c3f556",
+    "result": "Passed",
+    "totalChecks": 24,
+    "passedChecks": 24,
+    "failedChecks": 0,
+    "entries": [
+        {
+            "id": "Milestone0Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone0Validator",
+            "passed": true,
+            "durationMs": 212.1716,
+            "messages": []
+        },
+        {
+            "id": "Milestone1Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone1Validator",
+            "passed": true,
+            "durationMs": 82.5216,
+            "messages": []
+        },
+        {
+            "id": "Milestone2Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone2Validator",
+            "passed": true,
+            "durationMs": 556.2234000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone3Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone3Validator",
+            "passed": true,
+            "durationMs": 555.3016,
+            "messages": []
+        },
+        {
+            "id": "Milestone4Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone4Validator",
+            "passed": true,
+            "durationMs": 549.8788000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone5Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone5Validator",
+            "passed": true,
+            "durationMs": 545.0761,
+            "messages": []
+        },
+        {
+            "id": "Milestone6Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone6Validator",
+            "passed": true,
+            "durationMs": 554.1369000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone7Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone7Validator",
+            "passed": true,
+            "durationMs": 573.8384,
+            "messages": []
+        },
+        {
+            "id": "Milestone8Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone8Validator",
+            "passed": true,
+            "durationMs": 260.0511,
+            "messages": []
+        },
+        {
+            "id": "Milestone9Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone9Validator",
+            "passed": true,
+            "durationMs": 180.3624,
+            "messages": []
+        },
+        {
+            "id": "Milestone10Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone10Validator",
+            "passed": true,
+            "durationMs": 550.3914,
+            "messages": []
+        },
+        {
+            "id": "Milestone11Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone11Validator",
+            "passed": true,
+            "durationMs": 185.1911,
+            "messages": []
+        },
+        {
+            "id": "Milestone12Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone12Validator",
+            "passed": true,
+            "durationMs": 4525.1195,
+            "messages": []
+        },
+        {
+            "id": "Milestone13Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone13Validator",
+            "passed": true,
+            "durationMs": 79.06400000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone14Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone14Validator",
+            "passed": true,
+            "durationMs": 526.5314000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone15Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone15Validator",
+            "passed": true,
+            "durationMs": 543.7924,
+            "messages": []
+        },
+        {
+            "id": "Milestone16Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone16Validator",
+            "passed": true,
+            "durationMs": 531.3092,
+            "messages": []
+        },
+        {
+            "id": "Milestone17Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone17Validator",
+            "passed": true,
+            "durationMs": 526.1382,
+            "messages": []
+        },
+        {
+            "id": "Milestone18Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone18Validator",
+            "passed": true,
+            "durationMs": 530.3675000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone19Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone19Validator",
+            "passed": true,
+            "durationMs": 513.5156000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone20Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone20Validator",
+            "passed": true,
+            "durationMs": 523.1668000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone21Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone21Validator",
+            "passed": true,
+            "durationMs": 524.5549,
+            "messages": []
+        },
+        {
+            "id": "Milestone22Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone22Validator",
+            "passed": true,
+            "durationMs": 89.87870000000001,
+            "messages": []
+        },
+        {
+            "id": "Milestone23Validator",
+            "validatorType": "Hollow.Editor.Validation.Milestone23Validator",
+            "passed": true,
+            "durationMs": 162.1531,
+            "messages": []
+        }
+    ]
+}

@@ -20,5 +20,10 @@ MonoBehaviour:
   tall1x2: {fileID: 4900000, guid: 531eb5c6fae914b0c9151034cd96828f, type: 3}
   block2x2: {fileID: 4900000, guid: 17abfebaa175c498bae028f31af8d92d, type: 3}
   l3Cell: {fileID: 4900000, guid: 4aaf4479fb1ad40f39a1af10e8544a93, type: 3}
-  additionalTemplates: []
+  additionalTemplates:
+  - {fileID: 4900000, guid: 6692d75fbf35640448bcd637489e208b, type: 3}
+  - {fileID: 4900000, guid: 84bdce344dce94708bd1cea54ca62753, type: 3}
+  - {fileID: 4900000, guid: f0994d9d9a4ab4e5c9b62a54ca514f22, type: 3}
+  - {fileID: 4900000, guid: 6e0915f707fe0489eb364999ab3b79e4, type: 3}
+  - {fileID: 4900000, guid: 43636eee70cad4661a840dd85fbaa4e8, type: 3}
   defaultSeed: 14001

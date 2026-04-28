@@ -6,7 +6,8 @@ namespace Hollow.UI.MainMenu
         SlotMain = 1,
         PlatformSelect = 2,
         CharacterSelect = 3,
-        Launching = 4,
-        Error = 5
+        ChallengeSelect = 4,
+        Launching = 5,
+        Error = 6
     }
 }

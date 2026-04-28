@@ -10,6 +10,8 @@ namespace Hollow.Persistence
 
         public string SelectedCharacterId { get; private set; } = "balanced";
 
+        public string SelectedChallengeId { get; private set; } = string.Empty;
+
         public bool HasSelection => SelectedProfile != null && !SelectedProfile.IsEmpty;
 
         public void Select(ProfileSlotSummary profile)
@@ -33,11 +35,17 @@ namespace Hollow.Persistence
             SelectedCharacterId = string.IsNullOrWhiteSpace(characterId) ? "balanced" : characterId;
         }
 
+        public void SetSelectedChallengeId(string challengeId)
+        {
+            SelectedChallengeId = challengeId ?? string.Empty;
+        }
+
         public void Clear()
         {
             SelectedProfile = null;
             LaunchMode = RunLaunchMode.NewRun;
             SelectedCharacterId = "balanced";
+            SelectedChallengeId = string.Empty;
         }
     }
 }

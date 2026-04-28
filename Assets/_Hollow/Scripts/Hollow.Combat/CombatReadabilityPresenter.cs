@@ -11,7 +11,10 @@ namespace Hollow.Combat
         private EnemyRuntimeController enemy;
         private CombatantHealth health;
         private TextMesh hpLabel;
+        private TextMesh stateLabel;
         private Renderer targetRenderer;
+        private Renderer ringRenderer;
+        private Renderer aimRenderer;
         private Material baseMaterial;
         private float hitFlashRemaining;
 
@@ -31,12 +34,15 @@ namespace Hollow.Combat
             }
 
             BuildLabelIfNeeded();
+            BuildTelegraphsIfNeeded();
             RefreshLabel();
+            RefreshTelegraphs();
         }
 
         private void Update()
         {
             RefreshLabel();
+            RefreshTelegraphs();
             TickHitFlash(Time.deltaTime);
         }
 
@@ -100,6 +106,113 @@ namespace Hollow.Combat
             }
 
             hpLabel.text = $"{enemy.ArchetypeId} {health.CurrentHealth}/{health.MaxHealth}";
+        }
+
+        private void BuildTelegraphsIfNeeded()
+        {
+            if (ringRenderer != null && aimRenderer != null && stateLabel != null)
+            {
+                return;
+            }
+
+            var ringObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ringObject.name = "EnemyReadabilityTelegraphRing";
+            ringObject.transform.SetParent(transform, false);
+            ringObject.transform.localPosition = new Vector3(0f, 0.025f, 0f);
+            ringObject.transform.localScale = new Vector3(1.5f, 0.012f, 1.5f);
+            DisableCollider(ringObject);
+            ringRenderer = ringObject.GetComponent<Renderer>();
+            MaterialResolver.ApplyTo(ringRenderer, MaterialRole.CombatTelegraphWarning);
+
+            var aimObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            aimObject.name = "EnemyReadabilityAimLine";
+            aimObject.transform.SetParent(transform, false);
+            aimObject.transform.localPosition = new Vector3(0f, 0.06f, 0.85f);
+            aimObject.transform.localScale = new Vector3(0.1f, 0.035f, 1.7f);
+            DisableCollider(aimObject);
+            aimRenderer = aimObject.GetComponent<Renderer>();
+            MaterialResolver.ApplyTo(aimRenderer, MaterialRole.CombatTelegraphDanger);
+
+            var labelObject = new GameObject("EnemyReadabilityStateLabel", typeof(TextMesh));
+            labelObject.transform.SetParent(transform, false);
+            labelObject.transform.localPosition = new Vector3(0f, 1.42f, 0f);
+            labelObject.transform.localScale = Vector3.one * 0.11f;
+            stateLabel = labelObject.GetComponent<TextMesh>();
+            stateLabel.anchor = TextAnchor.MiddleCenter;
+            stateLabel.alignment = TextAlignment.Center;
+            stateLabel.fontSize = 34;
+            stateLabel.color = Color.white;
+        }
+
+        private void RefreshTelegraphs()
+        {
+            if (enemy == null || ringRenderer == null || aimRenderer == null || stateLabel == null)
+            {
+                return;
+            }
+
+            var state = enemy.ReadabilityStateAt(Time.time);
+            var showRing = state is EnemyReadabilityState.EntryGrace or EnemyReadabilityState.BossBurstWindup;
+            var showAim = state is EnemyReadabilityState.ChargeWindup or EnemyReadabilityState.Charging or EnemyReadabilityState.RangedWindup;
+            ringRenderer.gameObject.SetActive(showRing);
+            aimRenderer.gameObject.SetActive(showAim);
+            stateLabel.gameObject.SetActive(state != EnemyReadabilityState.Idle);
+
+            if (showRing)
+            {
+                var role = state == EnemyReadabilityState.EntryGrace ? MaterialRole.CombatTelegraphSafe : MaterialRole.CombatTelegraphDanger;
+                MaterialResolver.ApplyTo(ringRenderer, role);
+                var radius = state == EnemyReadabilityState.BossBurstWindup ? 3.4f : Mathf.Max(1.2f, enemy.RadiusMeters * 4f);
+                ringRenderer.transform.localScale = new Vector3(radius, 0.012f, radius);
+            }
+
+            if (showAim)
+            {
+                var role = state == EnemyReadabilityState.Charging ? MaterialRole.CombatTelegraphDanger : MaterialRole.CombatTelegraphWarning;
+                MaterialResolver.ApplyTo(aimRenderer, role);
+                var direction = enemy.TelegraphDirection;
+                if (direction.sqrMagnitude > 0.001f)
+                {
+                    aimRenderer.transform.localRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+                }
+
+                var length = state == EnemyReadabilityState.RangedWindup
+                    ? Mathf.Max(2.5f, enemy.Definition != null ? enemy.Definition.AttackRangeMeters : 4f)
+                    : Mathf.Max(1.8f, enemy.Definition != null ? enemy.Definition.ChargeSpeedMetersPerSecond * EnemyRuntimeController.ChargeActiveSeconds : 2f);
+                aimRenderer.transform.localPosition = direction.normalized * (length * 0.5f);
+                aimRenderer.transform.localPosition += new Vector3(0f, 0.06f, 0f);
+                aimRenderer.transform.localScale = new Vector3(state == EnemyReadabilityState.RangedWindup ? 0.065f : 0.16f, 0.035f, length);
+            }
+
+            stateLabel.text = LabelFor(state, enemy.ReadabilitySecondsRemaining(Time.time));
+            stateLabel.color = state switch
+            {
+                EnemyReadabilityState.EntryGrace => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphSafe),
+                EnemyReadabilityState.Charging or EnemyReadabilityState.BossBurstWindup => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphDanger),
+                _ => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphWarning)
+            };
+        }
+
+        private static string LabelFor(EnemyReadabilityState state, float secondsRemaining)
+        {
+            return state switch
+            {
+                EnemyReadabilityState.EntryGrace => "Wait",
+                EnemyReadabilityState.ChargeWindup => "Charge",
+                EnemyReadabilityState.Charging => "Charge!",
+                EnemyReadabilityState.RangedWindup => "Shot",
+                EnemyReadabilityState.BossBurstWindup => "Burst",
+                _ => string.Empty
+            };
+        }
+
+        private static void DisableCollider(GameObject target)
+        {
+            var collider = target != null ? target.GetComponent<Collider>() : null;
+            if (collider != null)
+            {
+                collider.enabled = false;
+            }
         }
     }
 }

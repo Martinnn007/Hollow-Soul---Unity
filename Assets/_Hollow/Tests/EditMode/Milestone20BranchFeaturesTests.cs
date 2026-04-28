@@ -84,14 +84,14 @@ namespace Hollow.Tests.EditMode
         {
             var offers = InterBranchHubState.Create(20001, 0, null).ShopOffers;
             var economy = new RunEconomy();
-            economy.ApplyReward(new RewardGrant("debug_seed_souls", "debug_souls", "Debug Souls", RewardKind.Currency, 40));
+            economy.ApplyReward(new RewardGrant("debug_seed_coins", "debug_coins", "Debug Coins", RewardKind.Currency, 0, 40, null));
 
             var offer = offers.First(candidate => candidate.OfferId == "heal_2");
             Assert.IsTrue(offer.TryPurchase(economy, out _, out var healAmount));
             Assert.AreEqual(2, healAmount);
-            Assert.AreEqual(32, economy.RunSouls);
+            Assert.AreEqual(32, economy.RunCoins);
             Assert.IsFalse(offer.TryPurchase(economy, out _, out _));
-            Assert.AreEqual(32, economy.RunSouls);
+            Assert.AreEqual(32, economy.RunCoins);
         }
 
         [Test]
@@ -155,7 +155,7 @@ namespace Hollow.Tests.EditMode
         {
             var hub = InterBranchHubState.CreateWorldHub(12345, 1, 0, null);
             var economy = new RunEconomy();
-            economy.ApplyReward(new RewardGrant("debug_seed_souls", "debug_souls", "Debug Souls", RewardKind.Currency, 40));
+            economy.ApplyReward(new RewardGrant("debug_seed_coins", "debug_coins", "Debug Coins", RewardKind.Currency, 0, 40, null));
             Assert.IsTrue(hub.ShopOffers.First(offer => offer.OfferId == "heal_2").TryPurchase(economy, out _, out _));
             hub = hub.MarkBranchPortalDefeated(hub.NextBranchChoices[1].ChoiceId, null);
 

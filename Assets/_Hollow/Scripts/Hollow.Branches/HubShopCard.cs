@@ -12,6 +12,7 @@ namespace Hollow.Branches
         private HubShopOffer offer;
         private HubShopCardViewModel viewModel;
         private MaterialPropertyBlock materialPropertyBlock;
+        private bool visualBuilt;
 
         public string OfferId => offerId;
 
@@ -65,6 +66,12 @@ namespace Hollow.Branches
             if (cardRenderer != null)
             {
                 MaterialResolver.ApplyTo(cardRenderer, MaterialRole.HubShop);
+            }
+
+            if (!visualBuilt)
+            {
+                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.HubShopCard, transform, Vector3.zero, Vector3.one);
+                visualBuilt = true;
             }
 
             if (label != null)

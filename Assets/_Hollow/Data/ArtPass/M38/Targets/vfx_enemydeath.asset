@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bf4ad37038b4483f93f21d80ae4ae6c, type: 3}
+  m_Name: vfx_enemydeath
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.ArtPassAssetTargetDefinition
+  targetId: vfx_enemydeath
+  displayName: VfxEnemyDeath
+  group: VFX
+  prefabRole: 25
+  priority: 2
+  requiredForVerticalSlice: 1
+  owner: Rafal
+  sourceFolder: Assets/_Hollow/Art/Intake/Rafal/M38/vfx/vfx_enemydeath
+  prefabPath: Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxEnemyDeath.prefab
+  goal: Lightweight visual effect prefab with low hierarchy count and no gameplay
+    scripts.
+  requiredAssets:
+  - Prefab wrapper
+  - Effect mesh/particle primitives
+  - Material(s)
+  - Optional texture flipbook
+  acceptanceChecks:
+  - 'Scale target: short-lived; Vision-safe.'
+  - Prefab root has PresentationVisualMarker with the matching role.
+  - No gameplay colliders and no gameplay scripts on visual children.
+  - Pivot/origin is centered; floor objects and doors use bottom at y=0 where applicable.
+  - Readable from Windows perspective camera and Vision Pro bounded tabletop scale
+    0.1.
+  - Uses simple materials compatible with Unity 6 URP Linear color.
+  notes: Visual-only replacement target.

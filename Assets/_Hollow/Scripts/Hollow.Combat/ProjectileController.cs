@@ -53,7 +53,10 @@ namespace Hollow.Combat
         public bool Tick(float deltaTime)
         {
             ageSeconds += Mathf.Max(0f, deltaTime);
-            transform.localPosition += localDirection * speedMetersPerSecond * deltaTime;
+            if (CheckImpact())
+            {
+                return false;
+            }
 
             if (ageSeconds >= lifetimeSeconds)
             {
@@ -61,27 +64,44 @@ namespace Hollow.Combat
                 return false;
             }
 
-            if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            var movement = localDirection * speedMetersPerSecond * Mathf.Max(0f, deltaTime);
+            var stepCount = Mathf.Max(1, Mathf.CeilToInt(movement.magnitude / CombatFeelTuning.ProjectileSubstepMeters));
+            var increment = movement / stepCount;
+            for (var index = 0; index < stepCount; index++)
             {
-                DestroyProjectile(ProjectileDespawnReason.BoundsExit);
-                return false;
+                transform.localPosition += increment;
+                if (CheckImpact())
+                {
+                    return false;
+                }
             }
 
-            if (RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
-            {
-                DestroyProjectile(ProjectileDespawnReason.ObstacleHit);
-                return false;
-            }
+            return true;
+        }
 
+        private bool CheckImpact()
+        {
             var enemy = combatController != null ? combatController.FindEnemyHit(transform.localPosition, hitRadiusMeters) : null;
             if (enemy != null)
             {
                 DamageSystem.ApplyDamage(enemy.Health, new DamageRequest(damage, gameObject));
                 DestroyProjectile(ProjectileDespawnReason.EnemyHit);
-                return false;
+                return true;
             }
 
-            return true;
+            if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            {
+                DestroyProjectile(ProjectileDespawnReason.BoundsExit);
+                return true;
+            }
+
+            if (RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            {
+                DestroyProjectile(ProjectileDespawnReason.ObstacleHit);
+                return true;
+            }
+
+            return false;
         }
 
         private void DestroyProjectile(ProjectileDespawnReason reason)

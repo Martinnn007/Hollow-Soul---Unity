@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58ca191d5266744e1a5b40af0cf1a4ae, type: 3}
+  m_Name: CurrentMilestoneAudit_M41
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.CurrentMilestoneAuditDefinition
+  auditId: m41_current_milestone_audit_v1
+  displayName: M41 Current Milestone Audit
+  reportRoot: output/reports
+  latestJsonFileName: latest_m41_current_milestone_audit.json
+  latestMarkdownFileName: latest_m41_current_milestone_audit.md
+  validationTypes:
+  - Hollow.Editor.Validation.Milestone31Validator
+  - Hollow.Editor.Validation.Milestone32Validator
+  - Hollow.Editor.Validation.Milestone33Validator
+  - Hollow.Editor.Validation.Milestone34Validator
+  - Hollow.Editor.Validation.Milestone35Validator
+  - Hollow.Editor.Validation.Milestone36Validator
+  - Hollow.Editor.Validation.Milestone37Validator
+  - Hollow.Editor.Validation.Milestone38Validator
+  - Hollow.Editor.Validation.Milestone39Validator
+  - Hollow.Editor.Validation.Milestone40Validator
+  requiredEvidenceReports:
+  - output/reports/latest_platform_build_qa.json
+  - output/reports/latest_platform_build_qa.md
+  - output/reports/latest_vertical_slice_lock.json
+  - output/reports/latest_vertical_slice_lock.md
+  - output/reports/latest_m40_external_handoff.json
+  - output/reports/latest_m40_external_handoff.md
+  - output/reports/m24-editmode-results.xml

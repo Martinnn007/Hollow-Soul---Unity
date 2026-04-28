@@ -206,6 +206,33 @@ namespace Hollow.Editor.Generation
                     AddPrimitive(parent, PrimitiveType.Cube, "shop_stand", Vector3.zero, new Vector3(0.9f, 0.56f, 0.72f), role);
                     AddPrimitive(parent, PrimitiveType.Cube, "shop_sign", new Vector3(0f, 0.55f, -0.08f), new Vector3(0.72f, 0.22f, 0.08f), role, alpha: 0.85f);
                     break;
+                case PresentationPrefabRole.HubShopCard:
+                    AddPrimitive(parent, PrimitiveType.Cube, "card_back", Vector3.zero, new Vector3(1f, 0.72f, 0.08f), role, alpha: 0.88f);
+                    AddPrimitive(parent, PrimitiveType.Cube, "card_frame", new Vector3(0f, 0.01f, -0.045f), new Vector3(1.08f, 0.8f, 0.025f), role, alpha: 0.42f);
+                    AddPrimitive(parent, PrimitiveType.Sphere, "price_gem", new Vector3(0.36f, 0.22f, -0.08f), Vector3.one * 0.12f, role, alpha: 0.95f);
+                    break;
+                case PresentationPrefabRole.WeaponMelee:
+                    AddPrimitive(parent, PrimitiveType.Cube, "blade", new Vector3(0f, 0.32f, 0f), new Vector3(0.12f, 0.7f, 0.12f), role);
+                    AddPrimitive(parent, PrimitiveType.Cube, "hilt", new Vector3(0f, -0.05f, 0f), new Vector3(0.42f, 0.1f, 0.1f), role, alpha: 0.78f);
+                    break;
+                case PresentationPrefabRole.WeaponRanged:
+                    AddPrimitive(parent, PrimitiveType.Cube, "bow_spine", Vector3.zero, new Vector3(0.12f, 0.72f, 0.12f), role);
+                    AddPrimitive(parent, PrimitiveType.Cube, "string", new Vector3(0.18f, 0f, 0f), new Vector3(0.035f, 0.7f, 0.035f), role, alpha: 0.64f);
+                    AddPrimitive(parent, PrimitiveType.Sphere, "bolt_core", new Vector3(-0.1f, 0f, 0f), Vector3.one * 0.16f, role, alpha: 0.86f);
+                    break;
+                case PresentationPrefabRole.Armor:
+                    AddPrimitive(parent, PrimitiveType.Cube, "chest", new Vector3(0f, 0.32f, 0f), new Vector3(0.58f, 0.64f, 0.28f), role);
+                    AddPrimitive(parent, PrimitiveType.Cube, "pauldron_left", new Vector3(-0.38f, 0.46f, 0f), new Vector3(0.22f, 0.2f, 0.26f), role, alpha: 0.84f);
+                    AddPrimitive(parent, PrimitiveType.Cube, "pauldron_right", new Vector3(0.38f, 0.46f, 0f), new Vector3(0.22f, 0.2f, 0.26f), role, alpha: 0.84f);
+                    break;
+                case PresentationPrefabRole.ActiveItemPickup:
+                    AddPrimitive(parent, PrimitiveType.Sphere, "active_core", new Vector3(0f, 0.12f, 0f), Vector3.one * 0.36f, role);
+                    AddPrimitive(parent, PrimitiveType.Cylinder, "active_ring", new Vector3(0f, 0.12f, 0f), new Vector3(0.54f, 0.04f, 0.54f), role, alpha: 0.52f);
+                    break;
+                case PresentationPrefabRole.ConsumableCardPickup:
+                    AddPrimitive(parent, PrimitiveType.Cube, "card_face", new Vector3(0f, 0.14f, 0f), new Vector3(0.36f, 0.52f, 0.04f), role);
+                    AddPrimitive(parent, PrimitiveType.Cube, "card_mark", new Vector3(0f, 0.16f, -0.04f), new Vector3(0.18f, 0.18f, 0.025f), role, alpha: 0.72f);
+                    break;
                 default:
                     AddPrimitive(parent, PrimitiveType.Cube, "toy_body", new Vector3(0f, 0.28f, 0f), new Vector3(0.52f, 0.52f, 0.52f), role);
                     AddPrimitive(parent, PrimitiveType.Sphere, "toy_marker", new Vector3(0f, 0.72f, 0f), Vector3.one * 0.18f, role, alpha: 0.76f);
@@ -499,10 +526,15 @@ namespace Hollow.Editor.Generation
                 PresentationPrefabRole.DoorUnavailable => MaterialRole.DoorUnavailable,
                 PresentationPrefabRole.RewardPickup => MaterialRole.RewardPickup,
                 PresentationPrefabRole.BossKeyPickup => MaterialRole.BossKeyPickup,
-                PresentationPrefabRole.HubShop => MaterialRole.HubShop,
+                PresentationPrefabRole.HubShop or PresentationPrefabRole.HubShopCard => MaterialRole.HubShop,
                 PresentationPrefabRole.HubReturnPortal => MaterialRole.HubReturnPortal,
                 PresentationPrefabRole.NextBranchPortal => MaterialRole.NextBranchPortal,
                 PresentationPrefabRole.SecretDoorDebug => MaterialRole.SecretDoorDebug,
+                PresentationPrefabRole.WeaponMelee => MaterialRole.PlayerBody,
+                PresentationPrefabRole.WeaponRanged => MaterialRole.Projectile,
+                PresentationPrefabRole.Armor => MaterialRole.DoorLocked,
+                PresentationPrefabRole.ActiveItemPickup => MaterialRole.RewardPickup,
+                PresentationPrefabRole.ConsumableCardPickup => MaterialRole.SpawnReward,
                 PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
                 PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
                 PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,

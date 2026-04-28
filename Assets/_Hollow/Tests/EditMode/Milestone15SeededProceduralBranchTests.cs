@@ -82,9 +82,8 @@ namespace Hollow.Tests.EditMode
             {
                 Assert.AreEqual(BranchGenerator.SeededMacroBranchId, branch.State.Graph.BranchId);
                 var connection = branch.State.Graph.ConnectionsFrom(BranchRoomId.Origin).First();
-                Assert.IsFalse(branch.TryTraverse(connection.FromDirection));
+                Assert.IsTrue(branch.State.CurrentRoom.IsCleared);
 
-                ClearCurrentRoom(combat);
                 var roomRuntime = root.GetComponentInChildren<RoomRuntimeRoot>();
                 Assert.IsTrue(roomRuntime.TryGetDoorPortById(connection.FromPortId, out var port));
                 player.transform.localPosition = port.Position;
