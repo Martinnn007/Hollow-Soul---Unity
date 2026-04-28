@@ -39,6 +39,20 @@ namespace Hollow.UI.Shell
             var scaler = GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
+            EnsureRuntimeHudControllers();
+        }
+
+        private void EnsureRuntimeHudControllers()
+        {
+            if (GetComponent<PlayerBuildHudController>() == null)
+            {
+                gameObject.AddComponent<PlayerBuildHudController>();
+            }
+
+            if (GetComponent<PickupRevealController>() == null)
+            {
+                gameObject.AddComponent<PickupRevealController>();
+            }
         }
     }
 }

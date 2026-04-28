@@ -90,6 +90,7 @@ namespace Hollow.Presentation
                 MaterialRole.EnemyBoss => new Color(0.42f, 0.34f, 0.28f, 1f),
                 MaterialRole.EnemyProjectile => new Color(1f, 0.36f, 0.24f, 1f),
                 MaterialRole.CombatHitFlash => Color.white,
+                MaterialRole.CombatCorpseGhost => new Color(0.64f, 0.74f, 0.78f, 0.42f),
                 MaterialRole.CombatTelegraphSafe => new Color(0.28f, 1f, 0.72f, 0.72f),
                 MaterialRole.CombatTelegraphWarning => new Color(1f, 0.72f, 0.18f, 0.82f),
                 MaterialRole.CombatTelegraphDanger => new Color(1f, 0.12f, 0.08f, 0.9f),

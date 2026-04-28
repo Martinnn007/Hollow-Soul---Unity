@@ -24,6 +24,7 @@ namespace Hollow.Data.Definitions
         EnemyBoss,
         EnemyProjectile,
         CombatHitFlash,
+        CombatCorpseGhost,
         RewardPickup,
         HubReturnPortal,
         BossKeyPickup,

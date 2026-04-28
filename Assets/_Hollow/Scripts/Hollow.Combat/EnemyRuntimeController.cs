@@ -39,6 +39,7 @@ namespace Hollow.Combat
         private GameObject enemyProjectilePrefab;
         private EnemyCatalog enemyCatalog;
         private DifficultyTierDefinition difficultyTier;
+        private CombatFeelProfileDefinition combatFeelProfile;
         private CombatDiagnosticsModel diagnostics;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
@@ -117,12 +118,30 @@ namespace Hollow.Combat
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
+            Health.Died -= OnDied;
             Health.Died += OnDied;
             ApplyVisualMaterial(RoleForDefinition(Definition));
             PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDefinition(Definition), transform, Vector3.zero, Vector3.one);
+            ConfigureCombatFeel(null);
+        }
 
+        public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
+        {
+            combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
+            var resistance = 1f;
+            if (behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
+            {
+                resistance = combatFeelProfile.BossEnemyKnockbackMultiplier;
+            }
+            else if (archetypeId == EnemyArchetypeId.Heavy)
+            {
+                resistance = combatFeelProfile.HeavyEnemyKnockbackMultiplier;
+            }
+
+            var knockback = GetComponent<CombatKnockbackReceiver>() ?? gameObject.AddComponent<CombatKnockbackReceiver>();
+            knockback.Configure(roomRuntimeRoot, radiusMeters, movementMode == EnemyMovementMode.Flying, resistance);
             var presenter = GetComponent<CombatReadabilityPresenter>() ?? gameObject.AddComponent<CombatReadabilityPresenter>();
-            presenter.Bind(this);
+            presenter.Bind(this, combatFeelProfile);
         }
 
         public void ConfigureSpawnContext(
@@ -346,6 +365,12 @@ namespace Hollow.Combat
         {
             readabilityState = state;
             readabilityStateEndTime = timeSeconds + Mathf.Max(0f, durationSeconds);
+            if (state != EnemyReadabilityState.EntryGrace && state != EnemyReadabilityState.Idle)
+            {
+                VfxPresenter.Play(VfxCueId.EnemyWindup, transform.position, transform.parent);
+                AudioPresenter.Play(AudioCueId.EnemyWindup, transform.position);
+            }
+
             if (direction.sqrMagnitude > 0.001f)
             {
                 direction.y = 0f;
@@ -367,7 +392,14 @@ namespace Hollow.Combat
             }
 
             nextAllowedContactTime = timeSeconds + contactCooldownSeconds;
-            var damaged = DamageSystem.ApplyDamage(playerHealth, new DamageRequest(contactDamage, gameObject));
+            var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+            var direction = playerController.transform.localPosition - transform.localPosition;
+            var damaged = DamageSystem.ApplyDamage(
+                playerHealth,
+                new DamageRequest(
+                    contactDamage,
+                    gameObject,
+                    DamageFeedbackContext.Knockback(direction, profile.PlayerKnockbackMeters, profile.KnockbackSeconds)));
             if (damaged)
             {
                 VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
@@ -380,6 +412,7 @@ namespace Hollow.Combat
         private void OnDied(CombatantHealth _)
         {
             SpawnSplitChildren();
+            CorpseGhostPresenter.SpawnFrom(this, combatFeelProfile);
             VfxPresenter.Play(VfxCueId.EnemyDeath, transform.position, transform.parent);
             AudioPresenter.Play(AudioCueId.EnemyDeath, transform.position);
             gameObject.SetActive(false);
@@ -420,6 +453,7 @@ namespace Hollow.Combat
                 direction,
                 Definition.ProjectileDamage,
                 Definition.ProjectileSpeedMetersPerSecond);
+            projectile.ConfigureCombatFeel(combatFeelProfile);
         }
 
         private void SpawnSplitChildren()

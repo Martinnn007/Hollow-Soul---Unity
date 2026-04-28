@@ -11,6 +11,7 @@ namespace Hollow.Combat
         private RoomRuntimeRoot roomRuntimeRoot;
         private PlaceholderPlayerController playerController;
         private CombatantHealth playerHealth;
+        private CombatFeelProfileDefinition combatFeelProfile;
         private Vector3 localDirection = Vector3.forward;
         private float speedMetersPerSecond = 5f;
         private float lifetimeSeconds = 2f;
@@ -40,6 +41,11 @@ namespace Hollow.Combat
             ageSeconds = 0f;
             MaterialResolver.ApplyTo(gameObject, MaterialRole.EnemyProjectile);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyProjectile, transform, Vector3.zero, Vector3.one);
+        }
+
+        public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
+        {
+            combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
         }
 
         private void Update()
@@ -91,7 +97,13 @@ namespace Hollow.Combat
                 playerPosition.y = transform.localPosition.y;
                 if (Vector3.Distance(playerPosition, transform.localPosition) <= hitRadiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.08f)
                 {
-                    if (DamageSystem.ApplyDamage(playerHealth, new DamageRequest(damage, gameObject)))
+                    var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+                    if (DamageSystem.ApplyDamage(
+                            playerHealth,
+                            new DamageRequest(
+                                damage,
+                                gameObject,
+                                DamageFeedbackContext.Knockback(localDirection, profile.PlayerKnockbackMeters, profile.KnockbackSeconds))))
                     {
                         VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
                         AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);

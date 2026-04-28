@@ -18,11 +18,13 @@ namespace Hollow.Combat
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private EnemyCatalog enemyCatalog;
         [SerializeField] private DifficultyTierDefinition difficultyTier;
+        [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
 
         private readonly List<EnemyRuntimeController> enemies = new();
         private CombatantHealth playerHealth;
+        private CombatFeelProfileDefinition resolvedCombatFeelProfile;
         private bool initialized;
         private readonly CombatDiagnosticsModel diagnostics = new();
 
@@ -37,6 +39,8 @@ namespace Hollow.Combat
         public EnemyCatalog EnemyCatalog => enemyCatalog;
 
         public DifficultyTierDefinition DifficultyTier => difficultyTier;
+
+        public CombatFeelProfileDefinition CombatFeelProfile => ResolveCombatFeelProfile();
 
         public CombatDiagnosticsModel Diagnostics => diagnostics;
 
@@ -120,9 +124,12 @@ namespace Hollow.Combat
 
             var weapon = playerController.GetComponent<PlayerWeaponController>() ?? playerController.gameObject.AddComponent<PlayerWeaponController>();
             weapon.Configure(roomRuntimeRoot, this, projectilePrefab);
+            weapon.ConfigureCombatFeel(CombatFeelProfile);
 
             var defense = playerController.GetComponent<PlayerDefenseController>() ?? playerController.gameObject.AddComponent<PlayerDefenseController>();
             defense.Bind(roomRuntimeRoot);
+            var playerFeedback = playerController.GetComponent<PlayerDamageFeedbackController>() ?? playerController.gameObject.AddComponent<PlayerDamageFeedbackController>();
+            playerFeedback.Configure(roomRuntimeRoot, CombatFeelProfile);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
 
             enemies.Clear();
@@ -233,6 +240,7 @@ namespace Hollow.Combat
 
             enemy.SpawnedChild -= OnEnemySpawnedChild;
             enemy.SpawnedChild += OnEnemySpawnedChild;
+            enemy.ConfigureCombatFeel(CombatFeelProfile);
             enemy.BeginEntryGrace(EntryGraceSeconds, Time.time);
             enemies.Add(enemy);
             diagnostics.SetEnemyCounts(enemies);
@@ -254,6 +262,18 @@ namespace Hollow.Combat
             {
                 playerController = GetComponentInChildren<PlaceholderPlayerController>(includeInactive: true) ?? FindFirstObjectByType<PlaceholderPlayerController>();
             }
+        }
+
+        private CombatFeelProfileDefinition ResolveCombatFeelProfile()
+        {
+            if (combatFeelProfile != null)
+            {
+                resolvedCombatFeelProfile = combatFeelProfile;
+                return resolvedCombatFeelProfile;
+            }
+
+            resolvedCombatFeelProfile ??= CombatFeelProfileDefinition.Resolve(null);
+            return resolvedCombatFeelProfile;
         }
 
         private void AttachHud()

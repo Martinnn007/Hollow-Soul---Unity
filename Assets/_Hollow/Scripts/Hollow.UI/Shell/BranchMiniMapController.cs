@@ -55,7 +55,7 @@ namespace Hollow.UI.Shell
             var activeSeed = branchSessionController.CurrentBranchSeed != 0
                 ? branchSessionController.CurrentBranchSeed
                 : branchSessionController.State?.Graph?.Seed ?? 0;
-            var displayState = $"{summary}|{branchSessionController.RunEconomy.RunSouls}|{branchSessionController.RunEconomy.RunCoins}|{branchSessionController.BankedSouls}|{branchSessionController.RewardCounter.ClaimedRewards}|{itemNames}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}|{activeSeed}|{branchSessionController.RunSeed}|{branchSessionController.WorldIndex}|{branchSessionController.WorldPhase}|{branchSessionController.PlayerBuildHudSummary}";
+            var displayState = $"{summary}|{branchSessionController.RunEconomy.RunSouls}|{branchSessionController.RunEconomy.RunCoins}|{branchSessionController.BankedSouls}|{branchSessionController.RewardCounter.ClaimedRewards}|{itemNames}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}|{activeSeed}|{branchSessionController.RunSeed}|{branchSessionController.WorldIndex}|{branchSessionController.WorldPhase}";
             if (!force && displayState == lastSummary)
             {
                 return;
@@ -65,7 +65,7 @@ namespace Hollow.UI.Shell
             mapText.text = "Branch Map\nBright: current | Gold: reward | Dark: nearby";
             RebuildShapeMap(model);
             economyText.text =
-                $"Run Souls: {branchSessionController.RunEconomy.RunSouls}\nCoins: {branchSessionController.RunEconomy.RunCoins}\nBanked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nWorld: {branchSessionController.WorldIndex}\nRun Seed: {branchSessionController.RunSeed}\nBranch Seed: {activeSeed}\nSave: {branchSessionController.SaveStatus}\n{branchSessionController.PlayerBuildHudSummary}";
+                $"Run Souls: {branchSessionController.RunEconomy.RunSouls}\nCoins: {branchSessionController.RunEconomy.RunCoins}\nBanked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nWorld: {branchSessionController.WorldIndex}\nRun Seed: {branchSessionController.RunSeed}\nBranch Seed: {activeSeed}\nSave: {branchSessionController.SaveStatus}";
             itemLogText.text = $"Latest\n{branchSessionController.LastRewardMessage}\n\nItems\n{itemNames}";
         }
 
@@ -207,7 +207,7 @@ namespace Hollow.UI.Shell
             shapeRoot.offsetMax = new Vector2(-14f, -66f);
             economyText = AddPanelText(
                 "BranchMiniMap.EconomyPanel",
-                "Run Souls: 0\nCoins: 0\nBanked: 0\nRewards: 0/4\nWorld: 1\nRun Seed: 0\nBranch Seed: 0\nSave: Ready\nCharacter: Balanced\nWeapon: Ranged\nStamina: --",
+                "Run Souls: 0\nCoins: 0\nBanked: 0\nRewards: 0/4\nWorld: 1\nRun Seed: 0\nBranch Seed: 0\nSave: Ready",
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),

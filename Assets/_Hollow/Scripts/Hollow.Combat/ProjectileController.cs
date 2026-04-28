@@ -19,8 +19,10 @@ namespace Hollow.Combat
         private RoomRuntimeRoot roomRuntimeRoot;
         private RoomCombatController combatController;
         private CombatDiagnosticsModel diagnostics;
+        private CombatFeelProfileDefinition combatFeelProfile;
         private Vector3 localDirection = Vector3.forward;
         private float ageSeconds;
+        private bool heavyAttackProjectile;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
@@ -43,6 +45,12 @@ namespace Hollow.Combat
             lifetimeSeconds = Mathf.Max(0.1f, nextLifetimeSeconds);
             ageSeconds = 0f;
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Projectile, transform, Vector3.zero, Vector3.one);
+        }
+
+        public void ConfigureCombatFeel(CombatFeelProfileDefinition profile, bool isHeavyAttackProjectile)
+        {
+            combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
+            heavyAttackProjectile = isHeavyAttackProjectile;
         }
 
         private void Update()
@@ -84,7 +92,15 @@ namespace Hollow.Combat
             var enemy = combatController != null ? combatController.FindEnemyHit(transform.localPosition, hitRadiusMeters) : null;
             if (enemy != null)
             {
-                DamageSystem.ApplyDamage(enemy.Health, new DamageRequest(damage, gameObject));
+                var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+                var knockback = profile.EnemyProjectileKnockbackMeters *
+                                (heavyAttackProjectile ? profile.HeavyAttackKnockbackMultiplier : 1f);
+                DamageSystem.ApplyDamage(
+                    enemy.Health,
+                    new DamageRequest(
+                        damage,
+                        gameObject,
+                        DamageFeedbackContext.Knockback(localDirection, knockback, profile.KnockbackSeconds)));
                 DestroyProjectile(ProjectileDespawnReason.EnemyHit);
                 return true;
             }

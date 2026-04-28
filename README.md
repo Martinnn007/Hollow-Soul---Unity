@@ -49,6 +49,8 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone39StoryWorldIdentityRunFraming.md` describes the first world identity catalog and compact run-framing HUD.
 - `Docs/Milestone40VerticalSliceRelockExternalHandoff.md` describes the external handoff readiness gate that checks latest QA, vertical-slice lock, and world-framing evidence.
 - `Docs/Milestone41CurrentMilestoneAudit.md` describes the current M31-M40 audit layer that complements the historical M0-M23 dependency audit.
+- `Docs/Milestone42PlayerBuildUxPickupClarity.md` describes the player-build HUD, pickup reveal cards, rarity colors, and saved swap-back replacement pickups.
+- `Docs/Milestone43CombatFeelDamageFeedback.md` describes player i-frames, collision-safe knockback, subtle enemy windups, M43 feedback cues, and visual-only corpse ghosts.
 - `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup

@@ -6,10 +6,9 @@ namespace Hollow.Combat
 {
     public sealed class CombatReadabilityPresenter : MonoBehaviour
     {
-        private const float HitFlashDurationSeconds = 0.12f;
-
         private EnemyRuntimeController enemy;
         private CombatantHealth health;
+        private CombatFeelProfileDefinition combatFeelProfile;
         private TextMesh hpLabel;
         private TextMesh stateLabel;
         private Renderer targetRenderer;
@@ -20,8 +19,19 @@ namespace Hollow.Combat
 
         public void Bind(EnemyRuntimeController nextEnemy)
         {
+            Bind(nextEnemy, null);
+        }
+
+        public void Bind(EnemyRuntimeController nextEnemy, CombatFeelProfileDefinition profile)
+        {
+            if (health != null)
+            {
+                health.Damaged -= OnDamaged;
+            }
+
             enemy = nextEnemy;
             health = enemy != null ? enemy.Health : null;
+            combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
             targetRenderer = GetComponentInChildren<Renderer>();
             if (targetRenderer != null)
             {
@@ -56,7 +66,7 @@ namespace Hollow.Combat
 
         private void OnDamaged(CombatantHealth _)
         {
-            hitFlashRemaining = HitFlashDurationSeconds;
+            hitFlashRemaining = CombatFeelProfileDefinition.Resolve(combatFeelProfile).EnemyHitFlashSeconds;
             if (targetRenderer != null)
             {
                 targetRenderer.sharedMaterial = MaterialResolver.Resolve(MaterialRole.CombatHitFlash);
@@ -90,11 +100,11 @@ namespace Hollow.Combat
             var labelObject = new GameObject("EnemyHpLabel", typeof(TextMesh));
             labelObject.transform.SetParent(transform, false);
             labelObject.transform.localPosition = new Vector3(0f, 1.1f, 0f);
-            labelObject.transform.localScale = Vector3.one * 0.12f;
+            labelObject.transform.localScale = Vector3.one * 0.095f;
             hpLabel = labelObject.GetComponent<TextMesh>();
             hpLabel.anchor = TextAnchor.MiddleCenter;
             hpLabel.alignment = TextAlignment.Center;
-            hpLabel.fontSize = 32;
+            hpLabel.fontSize = 28;
             hpLabel.color = Color.white;
         }
 
@@ -135,12 +145,12 @@ namespace Hollow.Combat
 
             var labelObject = new GameObject("EnemyReadabilityStateLabel", typeof(TextMesh));
             labelObject.transform.SetParent(transform, false);
-            labelObject.transform.localPosition = new Vector3(0f, 1.42f, 0f);
-            labelObject.transform.localScale = Vector3.one * 0.11f;
+            labelObject.transform.localPosition = new Vector3(0f, 1.34f, 0f);
+            labelObject.transform.localScale = Vector3.one * 0.075f;
             stateLabel = labelObject.GetComponent<TextMesh>();
             stateLabel.anchor = TextAnchor.MiddleCenter;
             stateLabel.alignment = TextAlignment.Center;
-            stateLabel.fontSize = 34;
+            stateLabel.fontSize = 24;
             stateLabel.color = Color.white;
         }
 
@@ -152,17 +162,19 @@ namespace Hollow.Combat
             }
 
             var state = enemy.ReadabilityStateAt(Time.time);
+            var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
             var showRing = state is EnemyReadabilityState.EntryGrace or EnemyReadabilityState.BossBurstWindup;
             var showAim = state is EnemyReadabilityState.ChargeWindup or EnemyReadabilityState.Charging or EnemyReadabilityState.RangedWindup;
             ringRenderer.gameObject.SetActive(showRing);
             aimRenderer.gameObject.SetActive(showAim);
-            stateLabel.gameObject.SetActive(state != EnemyReadabilityState.Idle);
+            stateLabel.gameObject.SetActive(profile.ShowWindupLabels && state != EnemyReadabilityState.Idle);
 
             if (showRing)
             {
                 var role = state == EnemyReadabilityState.EntryGrace ? MaterialRole.CombatTelegraphSafe : MaterialRole.CombatTelegraphDanger;
                 MaterialResolver.ApplyTo(ringRenderer, role);
-                var radius = state == EnemyReadabilityState.BossBurstWindup ? 3.4f : Mathf.Max(1.2f, enemy.RadiusMeters * 4f);
+                var pulse = 1f + Mathf.Sin(Time.time * 10f) * profile.WindupPulseStrength;
+                var radius = (state == EnemyReadabilityState.BossBurstWindup ? 3.4f : Mathf.Max(1.2f, enemy.RadiusMeters * 4f)) * pulse;
                 ringRenderer.transform.localScale = new Vector3(radius, 0.012f, radius);
             }
 

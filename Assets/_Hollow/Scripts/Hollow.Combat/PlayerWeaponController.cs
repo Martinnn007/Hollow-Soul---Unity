@@ -22,6 +22,7 @@ namespace Hollow.Combat
         [SerializeField] private string meleeWeaponId = "starter_blade";
         [SerializeField] private string rangedWeaponId = "starter_bolt";
         [SerializeField] private WeaponCatalogDefinition weaponCatalog;
+        [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private RoomCombatController combatController;
@@ -63,6 +64,11 @@ namespace Hollow.Combat
         public void ConfigureWeaponCatalog(WeaponCatalogDefinition nextWeaponCatalog)
         {
             weaponCatalog = nextWeaponCatalog;
+        }
+
+        public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
+        {
+            combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
         }
 
         public void ConfigureBuildStats(
@@ -173,6 +179,9 @@ namespace Hollow.Combat
                 attackDamage,
                 attack.RangeMeters,
                 ProjectileController.DefaultLifetimeSeconds);
+            projectile.ConfigureCombatFeel(
+                CombatFeelProfileDefinition.Resolve(combatFeelProfile),
+                attackKind == AttackKind.Heavy);
             VfxPresenter.Play(VfxCueId.ProjectileFire, projectileObject.transform.position, projectileObject.transform.parent);
             AudioPresenter.Play(AudioCueId.ProjectileFire, projectileObject.transform.position);
             return true;
@@ -202,7 +211,15 @@ namespace Hollow.Combat
             if (target != null)
             {
                 var damage = Mathf.Max(1, attack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus);
-                DamageSystem.ApplyDamage(target.Health, new DamageRequest(damage, gameObject));
+                var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+                var knockback = profile.EnemyMeleeKnockbackMeters *
+                                (attackKind == AttackKind.Heavy ? profile.HeavyAttackKnockbackMultiplier : 1f);
+                DamageSystem.ApplyDamage(
+                    target.Health,
+                    new DamageRequest(
+                        damage,
+                        gameObject,
+                        DamageFeedbackContext.Knockback(direction, knockback, profile.KnockbackSeconds)));
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
             }

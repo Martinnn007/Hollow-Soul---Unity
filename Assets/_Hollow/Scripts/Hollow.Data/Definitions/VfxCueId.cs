@@ -11,6 +11,11 @@ namespace Hollow.Data.Definitions
         RoomClear,
         PortalComplete,
         DesignerPlace,
-        DesignerErase
+        DesignerErase,
+        PlayerInvulnerable,
+        KnockbackImpact,
+        EnemyWindup,
+        EnemyCorpseGhost,
+        DamageBlocked
     }
 }

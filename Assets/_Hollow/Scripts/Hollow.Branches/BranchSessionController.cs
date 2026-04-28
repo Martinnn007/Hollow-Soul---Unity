@@ -22,6 +22,7 @@ namespace Hollow.Branches
         private const float PortalInteractionRadiusMeters = 1.5f;
         private const float ShopCardInteractionRadiusMeters = 0.85f;
         private const int FinalWorldIndex = 3;
+        private const string HubReplacementContextId = "__hub__";
 
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
@@ -56,6 +57,8 @@ namespace Hollow.Branches
         private BossKeyPickup currentBossKeyPickup;
         private HubShopController currentHubShop;
         private readonly List<NextBranchPortal> currentNextBranchPortals = new();
+        private readonly List<ReplacementPickup> currentReplacementPickups = new();
+        private readonly List<ReplacementPickupState> droppedReplacementPickups = new();
         private readonly RuntimeRewardCounter rewardCounter = new();
         private RunEconomy runEconomy = new();
         private PlayerRunStats playerRunStats = new();
@@ -82,6 +85,8 @@ namespace Hollow.Branches
         private string synergyAcquisitionMessage = string.Empty;
         private float synergyAcquisitionMessageExpiresAt;
         private ChallengeDefinition activeChallenge;
+        private PickupRevealModel latestPickupReveal = PickupRevealModel.Empty;
+        private int pickupRevealSequence;
 
         public BranchSessionState State { get; private set; }
 
@@ -194,6 +199,8 @@ namespace Hollow.Branches
         public string ActiveSynergyDisplayName => string.IsNullOrWhiteSpace(activeSynergyDisplayName) ? "None" : activeSynergyDisplayName;
 
         public string SynergyAcquisitionMessage => Time.time <= synergyAcquisitionMessageExpiresAt ? synergyAcquisitionMessage : string.Empty;
+
+        public PickupRevealModel LatestPickupReveal => latestPickupReveal;
 
         public int MacroBranchSeed => macroBranchSeed;
 
@@ -314,6 +321,10 @@ namespace Hollow.Branches
             runEconomy = new RunEconomy();
             playerRunStats = new PlayerRunStats();
             playerRunBuild = new PlayerRunBuild();
+            droppedReplacementPickups.Clear();
+            currentReplacementPickups.Clear();
+            latestPickupReveal = PickupRevealModel.Empty;
+            pickupRevealSequence = 0;
             activeChallenge = ResolveActiveChallenge();
             ApplySelectedCharacterForFreshRun();
             ApplyChallengeRulesForFreshRun();
@@ -351,6 +362,18 @@ namespace Hollow.Branches
             runEconomy = RunEconomy.FromSaveState(snapshot?.economy);
             playerRunStats = PlayerRunStats.FromSaveState(snapshot?.playerStats);
             playerRunBuild = PlayerRunBuild.FromSaveState(snapshot?.runBuild);
+            droppedReplacementPickups.Clear();
+            if (snapshot?.droppedReplacementPickups != null)
+            {
+                foreach (var saveState in snapshot.droppedReplacementPickups)
+                {
+                    var pickup = ReplacementPickupState.FromSaveState(saveState);
+                    if (pickup != null)
+                    {
+                        droppedReplacementPickups.Add(pickup);
+                    }
+                }
+            }
             activeChallenge = ResolveActiveChallenge();
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
@@ -444,6 +467,7 @@ namespace Hollow.Branches
         {
             return TryClaimBossKey() ||
                    TryClaimReward() ||
+                   TryClaimReplacementPickup() ||
                    TryHandleNearestShopCard() ||
                    TryUseNextBranchPortal() ||
                    TryUseHubReturnPortal() ||
@@ -495,6 +519,38 @@ namespace Hollow.Branches
         public BranchMiniMapModel CreateMiniMapModel()
         {
             return new BranchMiniMapModel(State);
+        }
+
+        public PlayerBuildHudModel CreatePlayerBuildHudModel()
+        {
+            var appliedBuild = CreateAppliedCurrentRunBuild(captureRuntimeStamina: true);
+            var derived = appliedBuild.DerivedStats;
+            var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
+            var defense = playerController != null ? playerController.GetComponent<PlayerDefenseController>() : null;
+            var health = roomCombatController?.PlayerHealth;
+            return new PlayerBuildHudModel(
+                CharacterDisplayName(appliedBuild.SelectedCharacterId),
+                health != null ? health.CurrentHealth : Mathf.RoundToInt(derived.MaxHealth),
+                Mathf.RoundToInt(derived.MaxHealth),
+                derived.Defense,
+                defense != null && defense.IsGuarding,
+                derived.SpeedMetersPerSecond,
+                derived.Strength,
+                weapon != null ? weapon.CurrentStamina : appliedBuild.CurrentStamina,
+                weapon != null ? weapon.MaxStamina : derived.MaxStamina,
+                derived.StaminaRegenPerSecond,
+                derived.MeleeDamageBonus,
+                derived.RangedDamageBonus,
+                derived.AttackCooldownMultiplier,
+                runEconomy.RunCoins,
+                runEconomy.RunSouls,
+                weapon != null ? $"{weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}" : appliedBuild.Equipment.ActiveWeaponSlot.ToString(),
+                ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.MeleeWeaponId),
+                ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.RangedWeaponId),
+                ResolveRewardName(RewardKind.Armor, appliedBuild.Equipment.ArmorId),
+                ActiveItemSummary(appliedBuild),
+                CardSummary(appliedBuild),
+                ActiveSynergyDisplayName);
         }
 
         private bool TryTraverseNearestDoor()
@@ -565,6 +621,7 @@ namespace Hollow.Branches
             VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
             AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
             SpawnRewardIfNeeded();
+            SpawnReplacementPickupsForCurrentContext();
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
         }
@@ -609,6 +666,7 @@ namespace Hollow.Branches
             bossKeyState = BossKeyState.Held;
             State.CurrentRoom.MarkRewardClaimed();
             LastRewardMessage = "Boss Key acquired";
+            ShowStatusReveal("Boss Key", "Boss Key acquired", new Color(1f, 0.78f, 0.24f, 1f));
             DestroyRuntimeObject(currentBossKeyPickup.gameObject);
             currentBossKeyPickup = null;
             VfxPresenter.Play(VfxCueId.RewardClaim, playerController.transform.position, playerController.transform.parent);
@@ -648,6 +706,43 @@ namespace Hollow.Branches
             VfxPresenter.Play(VfxCueId.RewardClaim, playerController.transform.position, playerController.transform.parent);
             AudioPresenter.Play(AudioCueId.RewardClaim, playerController.transform.position);
             SpawnHubPortalIfReady();
+            CheckpointActiveRun();
+            return true;
+        }
+
+        private bool TryClaimReplacementPickup()
+        {
+            if (playerController == null || currentReplacementPickups.Count == 0)
+            {
+                return false;
+            }
+
+            var nearest = currentReplacementPickups
+                .Where(pickup => pickup != null)
+                .OrderBy(pickup => Vector3.Distance(Flat(playerController.transform.localPosition), Flat(pickup.transform.localPosition)))
+                .FirstOrDefault();
+            if (nearest == null ||
+                Vector3.Distance(Flat(playerController.transform.localPosition), Flat(nearest.transform.localPosition)) > RewardInteractionRadiusMeters ||
+                !nearest.Claim())
+            {
+                return false;
+            }
+
+            var state = droppedReplacementPickups.FirstOrDefault(candidate => candidate.PickupId == nearest.PickupId);
+            if (state == null)
+            {
+                return false;
+            }
+
+            droppedReplacementPickups.Remove(state);
+            currentReplacementPickups.Remove(nearest);
+            var dropPosition = nearest.transform.localPosition;
+            DestroyRuntimeObject(nearest.gameObject);
+
+            ApplyReplacementPickupState(state, dropPosition);
+            LastRewardMessage = $"Swapped back: {state.DisplayName}";
+            VfxPresenter.Play(VfxCueId.RewardClaim, playerController.transform.position, playerController.transform.parent);
+            AudioPresenter.Play(AudioCueId.RewardClaim, playerController.transform.position);
             CheckpointActiveRun();
             return true;
         }
@@ -693,6 +788,7 @@ namespace Hollow.Branches
             else if (healAmount > 0)
             {
                 LastRewardMessage = "Purchased: Heal 2 HP";
+                ShowPickupReveal(new RewardGrant($"heal_{offer.OfferId}_{Time.frameCount}", "heal", "Heal 2 HP", RewardKind.Heal, 0, 0, new[] { new RewardEffect(RewardEffectKind.Heal, healAmount) }), null);
             }
 
             ApplyRunStatsToPlayer(healAmount);
@@ -815,7 +911,9 @@ namespace Hollow.Branches
                 playerController.transform.localPosition = Vector3.zero;
             }
 
+            droppedReplacementPickups.RemoveAll(pickup => pickup.RoomId != HubReplacementContextId);
             SpawnHubShopAndPortals();
+            SpawnReplacementPickupsForCurrentContext();
             SaveStatus = "Inter-Branch Hub";
             CheckpointActiveRun();
         }
@@ -844,6 +942,7 @@ namespace Hollow.Branches
                 ? roomCombatController.PlayerHealth.CurrentHealth
                 : CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth;
             branchDepth++;
+            droppedReplacementPickups.Clear();
             if (choice.Kind == HubPortalKind.NextWorld)
             {
                 worldIndex = Math.Min(FinalWorldIndex, choice.WorldIndex);
@@ -900,6 +999,57 @@ namespace Hollow.Branches
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RewardPickup, rewardObject.transform, Vector3.zero, Vector3.one);
             currentRewardPickup = rewardObject.GetComponent<RoomRewardPickup>() ?? rewardObject.AddComponent<RoomRewardPickup>();
             currentRewardPickup.Configure(State.CurrentRoomId.Value);
+        }
+
+        private void SpawnReplacementPickupsForCurrentContext()
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var contextId = CurrentReplacementContextId();
+            foreach (var state in droppedReplacementPickups.Where(candidate => candidate.RoomId == contextId).ToArray())
+            {
+                if (currentReplacementPickups.Any(pickup => pickup != null && pickup.PickupId == state.PickupId))
+                {
+                    continue;
+                }
+
+                SpawnReplacementPickup(state);
+            }
+        }
+
+        private void SpawnReplacementPickup(ReplacementPickupState state)
+        {
+            if (state == null || playerController == null)
+            {
+                return;
+            }
+
+            var pickupObject = InstantiateOrCreate(rewardPickupPrefab, $"ReplacementPickup_{state.RewardKind}_{state.RewardId}", PrimitiveType.Sphere, MaterialRole.RewardPickup);
+            pickupObject.transform.SetParent(playerController.transform.parent, false);
+            pickupObject.transform.localPosition = state.LocalPosition;
+            pickupObject.transform.localScale = Vector3.one * 0.3f;
+            PresentationPrefabResolver.InstantiateVisual(VisualRoleForReplacement(state.RewardKind), pickupObject.transform, Vector3.zero, Vector3.one);
+            var pickup = pickupObject.GetComponent<ReplacementPickup>() ?? pickupObject.AddComponent<ReplacementPickup>();
+            pickup.Configure(state);
+            currentReplacementPickups.Add(pickup);
+        }
+
+        private void AddDroppedReplacement(ReplacementPickupState replacement)
+        {
+            if (replacement == null)
+            {
+                return;
+            }
+
+            droppedReplacementPickups.RemoveAll(candidate => candidate.PickupId == replacement.PickupId);
+            droppedReplacementPickups.Add(replacement);
+            if (replacement.RoomId == CurrentReplacementContextId())
+            {
+                SpawnReplacementPickup(replacement);
+            }
         }
 
         private void SpawnBossKeyIfNeeded()
@@ -1043,6 +1193,16 @@ namespace Hollow.Branches
             }
 
             currentNextBranchPortals.Clear();
+
+            foreach (var pickup in currentReplacementPickups)
+            {
+                if (pickup != null)
+                {
+                    DestroyRuntimeObject(pickup.gameObject);
+                }
+            }
+
+            currentReplacementPickups.Clear();
         }
 
         private void SpawnHubShopAndPortals()
@@ -1413,14 +1573,88 @@ namespace Hollow.Branches
             ApplyEquipmentAndSynergyModifiers(playerRunBuild, announceActivation: false);
         }
 
-        private RewardApplicationResult ApplyRewardGrant(RewardGrant grant, int extraHeal = 0)
+        private void ApplyReplacementPickupState(ReplacementPickupState state, Vector3 dropPosition)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+            var grant = WithRoomId(state.ToGrant(), CurrentReplacementContextId());
+            var replacement = RewardReplacementDetector.CaptureBeforeApply(
+                grant,
+                playerRunBuild,
+                weaponCatalog,
+                armorCatalog,
+                usableItemCatalog,
+                dropPosition);
+
+            switch (state.RewardKind)
+            {
+                case RewardKind.Weapon:
+                    var resolvedSlot = WeaponSlot.Ranged;
+                    if (weaponCatalog != null && weaponCatalog.TryGetWeapon(state.RewardId, out var weapon))
+                    {
+                        resolvedSlot = weapon.Slot;
+                    }
+                    else if (state.RewardId.Contains("blade") || state.RewardId.Contains("cleaver") || state.RewardId.Contains("sword") || state.RewardId.Contains("fang"))
+                    {
+                        resolvedSlot = WeaponSlot.Melee;
+                    }
+
+                    if (resolvedSlot == WeaponSlot.Melee)
+                    {
+                        playerRunBuild.Equipment.EquipMeleeWeapon(state.RewardId);
+                        playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
+                    }
+                    else
+                    {
+                        playerRunBuild.Equipment.EquipRangedWeapon(state.RewardId);
+                        playerRunBuild.Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                    }
+                    break;
+                case RewardKind.Armor:
+                    playerRunBuild.Equipment.EquipArmor(state.RewardId);
+                    break;
+                case RewardKind.ActiveItem:
+                    playerRunBuild.Equipment.EquipActiveItem(state.RewardId);
+                    playerRunBuild.Equipment.SetActiveItemCharges(state.ActiveItemCharges);
+                    break;
+                case RewardKind.ConsumableCard:
+                    playerRunBuild.Equipment.EquipConsumableCard(state.RewardId);
+                    break;
+            }
+
+            ApplyRunStatsToPlayer(0);
+            AddDroppedReplacement(replacement);
+            ShowPickupReveal(state.ToGrant(), replacement);
+        }
+
+        private RewardApplicationResult ApplyRewardGrant(RewardGrant grant, int extraHeal = 0, Vector3? replacementDropPosition = null, int restoredActiveItemCharges = -1)
         {
             playerRunBuild ??= CreateCurrentRunBuild();
+            var dropPosition = replacementDropPosition ?? CurrentReplacementDropPosition();
+            var replacementGrant = WithRoomId(grant, CurrentReplacementContextId());
+            var replacement = RewardReplacementDetector.CaptureBeforeApply(
+                replacementGrant,
+                playerRunBuild,
+                weaponCatalog,
+                armorCatalog,
+                usableItemCatalog,
+                dropPosition);
             var result = RewardApplicationService.Apply(grant, runEconomy, playerRunStats, playerRunBuild, weaponCatalog, usableItemCatalog);
             if (result.Applied)
             {
+                if (restoredActiveItemCharges >= 0 && grant.RewardKind == RewardKind.ActiveItem)
+                {
+                    playerRunBuild.Equipment.SetActiveItemCharges(restoredActiveItemCharges);
+                }
+
                 ApplyRunStatsToPlayer(result.HealAmount + Mathf.Max(0, extraHeal));
                 rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
+                AddDroppedReplacement(replacement);
+                ShowPickupReveal(grant, replacement);
             }
 
             return result;
@@ -1541,25 +1775,108 @@ namespace Hollow.Branches
 
         private string ActiveItemSummary()
         {
-            var itemId = playerRunBuild?.Equipment.ActiveItemId ?? string.Empty;
+            return ActiveItemSummary(playerRunBuild);
+        }
+
+        private string ActiveItemSummary(PlayerRunBuild build)
+        {
+            var itemId = build?.Equipment.ActiveItemId ?? string.Empty;
             if (string.IsNullOrWhiteSpace(itemId))
             {
                 return "None";
             }
 
             var displayName = usableItemCatalog != null && usableItemCatalog.TryGet(itemId, out var item) ? item.DisplayName : itemId;
-            return $"{displayName} ({playerRunBuild.Equipment.ActiveItemCharges}/3)";
+            return $"{displayName} ({build.Equipment.ActiveItemCharges}/3)";
         }
 
         private string CardSummary()
         {
-            var cardId = playerRunBuild?.Equipment.ConsumableCardId ?? string.Empty;
+            return CardSummary(playerRunBuild);
+        }
+
+        private string CardSummary(PlayerRunBuild build)
+        {
+            var cardId = build?.Equipment.ConsumableCardId ?? string.Empty;
             if (string.IsNullOrWhiteSpace(cardId))
             {
                 return "None";
             }
 
             return usableItemCatalog != null && usableItemCatalog.TryGet(cardId, out var card) ? card.DisplayName : cardId;
+        }
+
+        private string ResolveRewardName(RewardKind kind, string id)
+        {
+            return RewardPresentationResolver.ResolveName(kind, id, weaponCatalog, armorCatalog, usableItemCatalog, ActiveRewardPoolsForSynergies());
+        }
+
+        private string CharacterDisplayName(string characterId)
+        {
+            return characterCatalog != null && characterCatalog.TryGetCharacter(characterId, out var character)
+                ? character.DisplayName
+                : string.IsNullOrWhiteSpace(characterId) ? "Balanced" : characterId;
+        }
+
+        private void ShowPickupReveal(RewardGrant grant, ReplacementPickupState replacement)
+        {
+            if (grant.IsEmpty)
+            {
+                return;
+            }
+
+            var replacementText = replacement == null
+                ? string.Empty
+                : $"Dropped old: {replacement.DisplayName}";
+            latestPickupReveal = RewardPresentationResolver.CreateReveal(
+                ++pickupRevealSequence,
+                grant,
+                runEconomy,
+                weaponCatalog,
+                armorCatalog,
+                usableItemCatalog,
+                ActiveRewardPoolsForSynergies(),
+                replacementText);
+        }
+
+        private void ShowStatusReveal(string title, string message, Color color)
+        {
+            latestPickupReveal = PickupRevealModel.Message(++pickupRevealSequence, title, message, color);
+        }
+
+        private Vector3 CurrentReplacementDropPosition()
+        {
+            if (playerController == null)
+            {
+                return Vector3.zero;
+            }
+
+            var basePosition = playerController.transform.localPosition + new Vector3(0.75f, 0.35f, 0.35f);
+            return new Vector3(basePosition.x, 0.35f, basePosition.z);
+        }
+
+        private string CurrentReplacementContextId()
+        {
+            return IsInInterBranchHub ? HubReplacementContextId : State?.CurrentRoomId.Value ?? BranchRoomId.Origin.Value;
+        }
+
+        private static RewardGrant WithRoomId(RewardGrant grant, string roomId)
+        {
+            return grant.IsEmpty
+                ? grant
+                : new RewardGrant(roomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Coins, grant.Effects);
+        }
+
+        private static PresentationPrefabRole VisualRoleForReplacement(RewardKind kind)
+        {
+            return kind switch
+            {
+                RewardKind.Weapon => PresentationPrefabRole.WeaponMelee,
+                RewardKind.Armor => PresentationPrefabRole.Armor,
+                RewardKind.ActiveItem => PresentationPrefabRole.ActiveItemPickup,
+                RewardKind.ConsumableCard => PresentationPrefabRole.ConsumableCardPickup,
+                _ => PresentationPrefabRole.RewardPickup
+            };
         }
 
         private string ArmorSummary()
@@ -1611,7 +1928,8 @@ namespace Hollow.Branches
                 interBranchHub = interBranchHubState.ToSaveState(),
                 economy = runEconomy.ToSaveState(),
                 playerStats = playerRunStats.ToSaveState(),
-                runBuild = CreateCurrentRunBuild(captureRuntimeStamina: true).ToSaveState()
+                runBuild = CreateCurrentRunBuild(captureRuntimeStamina: true).ToSaveState(),
+                droppedReplacementPickups = droppedReplacementPickups.Select(pickup => pickup.ToSaveState()).ToList()
             };
 
             if (State?.Graph?.Rooms != null)
@@ -1728,6 +2046,7 @@ namespace Hollow.Branches
                     synergyAcquisitionMessage = $"You acquired a {synergy.DisplayName}!";
                     synergyAcquisitionMessageExpiresAt = Time.time + 5f;
                     LastRewardMessage = synergyAcquisitionMessage;
+                    ShowStatusReveal(synergy.DisplayName, synergyAcquisitionMessage, new Color(0.45f, 1f, 0.55f, 1f));
                 }
 
                 activeSynergyId = synergy.SynergyId;

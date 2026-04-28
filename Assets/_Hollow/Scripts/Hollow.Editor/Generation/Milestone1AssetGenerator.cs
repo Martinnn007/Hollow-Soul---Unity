@@ -444,6 +444,8 @@ namespace Hollow.Editor.Generation
             controller.Configure(platformKind);
             canvasObject.AddComponent<CombatHudController>();
             canvasObject.AddComponent<BranchMiniMapController>();
+            canvasObject.AddComponent<PlayerBuildHudController>();
+            canvasObject.AddComponent<PickupRevealController>();
         }
 
         private static void SaveScene(Scene scene, string path)

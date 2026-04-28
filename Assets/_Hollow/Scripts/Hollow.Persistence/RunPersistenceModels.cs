@@ -31,6 +31,7 @@ namespace Hollow.Persistence
         public RunEconomySaveState economy = new();
         public PlayerRunStatsSaveState playerStats = new();
         public PlayerRunBuildSaveState runBuild = new();
+        public List<DroppedReplacementPickupSaveState> droppedReplacementPickups = new();
     }
 
     [Serializable]
@@ -42,6 +43,20 @@ namespace Hollow.Persistence
         public bool isVisited;
         public bool isCleared;
         public string rewardState = "None";
+    }
+
+    [Serializable]
+    public sealed class DroppedReplacementPickupSaveState
+    {
+        public string pickupId = string.Empty;
+        public string roomId = string.Empty;
+        public string rewardKind = string.Empty;
+        public string rewardId = string.Empty;
+        public string displayName = string.Empty;
+        public int activeItemCharges;
+        public float localX;
+        public float localY;
+        public float localZ;
     }
 
     [Serializable]
