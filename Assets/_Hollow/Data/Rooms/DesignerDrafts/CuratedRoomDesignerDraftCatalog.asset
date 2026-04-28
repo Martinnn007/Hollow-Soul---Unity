@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0222d18a2b8d53dda19ce981ce4be5e, type: 3}
+  m_Name: CuratedRoomDesignerDraftCatalog
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RoomDesignerCuratedDraftCatalogDefinition
+  id: 
+  displayName: 
+  notes: 
+  catalogId: curated_runtime_room_designer_drafts_v1
+  curatedDrafts:
+  - {fileID: 4900000, guid: 4ecba9b0693ae08e63828b08a555bb7e, type: 3}
+  - {fileID: 4900000, guid: 0d43c135e4c010102d7bf2f49735bc8d, type: 3}
+  - {fileID: 4900000, guid: afa503fe9a3efef278ca29ea2a543d6a, type: 3}
+  - {fileID: 4900000, guid: caeda2033f880af1b82a292385a6327d, type: 3}
+  - {fileID: 4900000, guid: dbf55d569e6275b63ea1768f24f404d5, type: 3}
+  - {fileID: 4900000, guid: ff7e8719bf3318cfda24680876359388, type: 3}
+  - {fileID: 4900000, guid: b14215de3de09e24a87a87773e2c1143, type: 3}
+  - {fileID: 4900000, guid: b690cbf6a0a02356ac5cec386f296dea, type: 3}
+  - {fileID: 4900000, guid: 858ec2ec4be2c2e71a1bfc9e9813ce19, type: 3}
+  - {fileID: 4900000, guid: 34830c23eb41c1222961fd9c38b04db6, type: 3}

@@ -78,3 +78,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.RoomDesigner::Hollow.RoomDesigner.RoomDesignerController
   previewRoot: {fileID: 0}
   hudCanvas: {fileID: 0}
+  curatedDraftCatalog: {fileID: 11400000, guid: 5bff1fa82c86fada255ac5b8fa446a55, type: 2}

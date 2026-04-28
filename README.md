@@ -49,6 +49,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone39StoryWorldIdentityRunFraming.md` describes the first world identity catalog and compact run-framing HUD.
 - `Docs/Milestone40VerticalSliceRelockExternalHandoff.md` describes the external handoff readiness gate that checks latest QA, vertical-slice lock, and world-framing evidence.
 - `Docs/Milestone41CurrentMilestoneAudit.md` describes the current M31-M40 audit layer that complements the historical M0-M23 dependency audit.
+- `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup
 

@@ -67,6 +67,7 @@ namespace Hollow.Editor.Build
 
         private static void ConfigureQaEditorRuntime()
         {
+            AddressablesBuildReportSafety.DisableAddressablesBuildReportVisualizer(logWhenChanged: true);
             TryDisableBurstCompilation();
         }
 
@@ -170,6 +171,8 @@ namespace Hollow.Editor.Build
             var stopwatch = Stopwatch.StartNew();
             try
             {
+                AddressablesBuildReportSafety.DisableAddressablesBuildReportVisualizer(logWhenChanged: true);
+
                 var settings = AddressableAssetSettingsDefaultObject.GetSettings(create: false);
                 if (settings == null)
                 {

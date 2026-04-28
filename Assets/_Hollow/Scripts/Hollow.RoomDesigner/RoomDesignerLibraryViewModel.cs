@@ -9,6 +9,7 @@ namespace Hollow.RoomDesigner
             RoomDesignerMode mode,
             int selectedIndex,
             IReadOnlyList<RoomDesignerLibraryRow> drafts,
+            IReadOnlyList<RoomDesignerLibraryRow> curatedDrafts,
             IReadOnlyList<RoomDesignerTemplateRow> templates,
             string latestMessage,
             string pendingDeleteProjectId,
@@ -17,6 +18,7 @@ namespace Hollow.RoomDesigner
             Mode = mode;
             SelectedIndex = selectedIndex;
             Drafts = drafts ?? Array.Empty<RoomDesignerLibraryRow>();
+            CuratedDrafts = curatedDrafts ?? Array.Empty<RoomDesignerLibraryRow>();
             Templates = templates ?? Array.Empty<RoomDesignerTemplateRow>();
             LatestMessage = latestMessage ?? string.Empty;
             PendingDeleteProjectId = pendingDeleteProjectId ?? string.Empty;
@@ -28,6 +30,8 @@ namespace Hollow.RoomDesigner
         public int SelectedIndex { get; }
 
         public IReadOnlyList<RoomDesignerLibraryRow> Drafts { get; }
+
+        public IReadOnlyList<RoomDesignerLibraryRow> CuratedDrafts { get; }
 
         public IReadOnlyList<RoomDesignerTemplateRow> Templates { get; }
 

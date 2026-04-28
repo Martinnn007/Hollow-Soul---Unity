@@ -25,9 +25,14 @@ namespace Hollow.RoomDesigner
         private const float InternalSeamThickness = 0.08f;
         private const float SpatialTopDownTiltDegrees = 55f;
         private const float CameraZoomStep = 0.15f;
+        private const float LibraryListViewportHeight = 398f;
+        private const float LibraryListViewportWidth = 778f;
+        private const float LibraryListRowHeight = 34f;
+        private const float LibraryListRowGap = 6f;
 
         [SerializeField] private Transform previewRoot;
         [SerializeField] private Canvas hudCanvas;
+        [SerializeField] private RoomDesignerCuratedDraftCatalogDefinition curatedDraftCatalog;
 
         private readonly RoomDesignerTool[] tools = Enum.GetValues(typeof(RoomDesignerTool)).Cast<RoomDesignerTool>().ToArray();
         private readonly RoomDesignerFootprintPreset[] templatePresets = Enum.GetValues(typeof(RoomDesignerFootprintPreset)).Cast<RoomDesignerFootprintPreset>().ToArray();
@@ -39,6 +44,9 @@ namespace Hollow.RoomDesigner
         private RoomDesignerProject currentProject;
         private Text hudText;
         private RectTransform libraryPanel;
+        private RectTransform libraryListViewport;
+        private RectTransform libraryListContent;
+        private ScrollRect libraryScrollRect;
         private RectTransform infoPanel;
         private RectTransform controlsPanel;
         private Text controlsText;
@@ -52,6 +60,7 @@ namespace Hollow.RoomDesigner
         private float nextMoveTime;
         private int toolIndex;
         private int librarySelectedIndex;
+        private float libraryScrollOffset;
         private int scenePreviewMissingBindings;
         private bool forceSpatialTopDownTiltForTests;
         private string pendingDeleteProjectId = string.Empty;
@@ -65,6 +74,8 @@ namespace Hollow.RoomDesigner
         public RoomDesignerDraftLibraryState LibraryState => libraryState;
 
         public RoomDesignerLibraryViewModel LibraryViewModel { get; private set; }
+
+        public RoomDesignerCuratedDraftCatalogDefinition CuratedDraftCatalog => curatedDraftCatalog;
 
         public RoomDesignerValidationReport LastValidationReport { get; private set; }
 
@@ -96,7 +107,7 @@ namespace Hollow.RoomDesigner
             Mode = RoomDesignerMode.Loading;
             store = new RoomDesignerStore();
             slotId = ResolveSlotId();
-            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false);
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false, curatedDraftCatalog);
             currentProject = null;
             EnsureRoots();
             ShowLibrary();
@@ -107,7 +118,7 @@ namespace Hollow.RoomDesigner
             store = nextStore;
             slotId = nextSlotId;
             store.SaveDraft(slotId, nextProject);
-            libraryState = new RoomDesignerDraftLibraryState(store, slotId);
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: true, curatedDraftCatalog);
             EnsureRoots();
             EnterEditing(libraryState.OpenDraft(nextProject.projectId));
         }
@@ -116,10 +127,19 @@ namespace Hollow.RoomDesigner
         {
             store = nextStore;
             slotId = nextSlotId;
-            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false);
+            libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false, curatedDraftCatalog);
             currentProject = null;
             EnsureRoots();
             ShowLibrary();
+        }
+
+        public void ConfigureCuratedDraftCatalog(RoomDesignerCuratedDraftCatalogDefinition nextCuratedDraftCatalog)
+        {
+            curatedDraftCatalog = nextCuratedDraftCatalog;
+            if (store != null)
+            {
+                libraryState = new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false, curatedDraftCatalog);
+            }
         }
 
         public void ShowLibrary()
@@ -130,15 +150,15 @@ namespace Hollow.RoomDesigner
             pendingDeleteDisplayName = string.Empty;
             currentProject = null;
             store ??= new RoomDesignerStore();
-            libraryState ??= new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false);
+            libraryState ??= new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false, curatedDraftCatalog);
             libraryState.Reload();
-            if (libraryState.Drafts.Count == 0)
+            if (libraryState.Drafts.Count == 0 && libraryState.CuratedDrafts.Count == 0)
             {
                 ShowCreateTemplates();
                 return;
             }
 
-            librarySelectedIndex = Mathf.Clamp(librarySelectedIndex, 0, Mathf.Max(0, libraryState.Drafts.Count - 1));
+            librarySelectedIndex = Mathf.Clamp(librarySelectedIndex, 0, Mathf.Max(0, LibraryOptionCount() - 1));
             status = libraryState.LatestMessage;
             ClearPreview();
             RefreshHud();
@@ -153,7 +173,7 @@ namespace Hollow.RoomDesigner
             librarySelectedIndex = Mathf.Clamp(librarySelectedIndex, 0, templatePresets.Length - 1);
             pendingDeleteProjectId = string.Empty;
             pendingDeleteDisplayName = string.Empty;
-            status = libraryState != null && libraryState.Drafts.Count == 0
+            status = libraryState != null && libraryState.Drafts.Count == 0 && libraryState.CuratedDrafts.Count == 0
                 ? "No drafts yet. Choose a template to create your first room."
                 : "Choose a room template.";
             ClearPreview();
@@ -164,7 +184,7 @@ namespace Hollow.RoomDesigner
         public RoomDesignerProject CreateDraft(RoomDesignerFootprintPreset preset)
         {
             store ??= new RoomDesignerStore();
-            libraryState ??= new RoomDesignerDraftLibraryState(store, slotId);
+            libraryState ??= new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: true, curatedDraftCatalog);
             currentProject = libraryState.CreateDraft(preset);
             status = libraryState.LatestMessage;
             EnterEditing(currentProject);
@@ -197,26 +217,44 @@ namespace Hollow.RoomDesigner
             }
             else
             {
-                ShowCreateTemplates();
+                if (HasLibraryRows())
+                {
+                    ShowLibrary();
+                }
+                else
+                {
+                    ShowCreateTemplates();
+                }
             }
             return currentProject;
         }
 
         public void OpenSelectedDraft()
         {
-            if (Mode != RoomDesignerMode.Library || libraryState == null || libraryState.Drafts.Count == 0)
+            if (Mode != RoomDesignerMode.Library || libraryState == null)
             {
                 return;
             }
 
-            if (librarySelectedIndex == libraryState.Drafts.Count)
+            var curatedIndex = CuratedIndexFromSelection();
+            if (curatedIndex >= 0)
+            {
+                currentProject = libraryState.OpenCuratedAsEditableCopy(libraryState.CuratedDrafts[curatedIndex].projectId);
+                status = libraryState.LatestMessage;
+                EnterEditing(currentProject);
+                return;
+            }
+
+            var curatedCount = libraryState.CuratedDrafts.Count;
+            var draftCount = libraryState.Drafts.Count;
+            if (librarySelectedIndex == curatedCount + draftCount)
             {
                 librarySelectedIndex = 0;
                 ShowCreateTemplates();
                 return;
             }
 
-            if (librarySelectedIndex == libraryState.Drafts.Count + 1)
+            if (librarySelectedIndex == curatedCount + draftCount + 1)
             {
                 ReturnToMainMenu();
                 return;
@@ -236,7 +274,7 @@ namespace Hollow.RoomDesigner
         {
             if (Mode == RoomDesignerMode.CreateTemplate && librarySelectedIndex >= templatePresets.Length)
             {
-                if (libraryState != null && libraryState.Drafts.Count > 0)
+                if (HasLibraryRows())
                 {
                     ShowLibrary();
                 }
@@ -482,12 +520,14 @@ namespace Hollow.RoomDesigner
                 }
                 else if (Mode == RoomDesignerMode.Library)
                 {
-                    if (libraryState != null && librarySelectedIndex == libraryState.Drafts.Count)
+                    var curatedCount = libraryState?.CuratedDrafts.Count ?? 0;
+                    var draftCount = libraryState?.Drafts.Count ?? 0;
+                    if (libraryState != null && librarySelectedIndex == curatedCount + draftCount)
                     {
                         librarySelectedIndex = 0;
                         ShowCreateTemplates();
                     }
-                    else if (libraryState != null && librarySelectedIndex == libraryState.Drafts.Count + 1)
+                    else if (libraryState != null && librarySelectedIndex == curatedCount + draftCount + 1)
                     {
                         ReturnToMainMenu();
                     }
@@ -1184,7 +1224,11 @@ namespace Hollow.RoomDesigner
             }
 
             libraryPanel.gameObject.SetActive(true);
+            CaptureLibraryScrollOffset();
             ClearChildren(libraryPanel);
+            libraryListViewport = null;
+            libraryListContent = null;
+            libraryScrollRect = null;
             LibraryViewModel = BuildLibraryViewModel();
 
             AddPanelText("LibraryTitle", Mode switch
@@ -1214,56 +1258,121 @@ namespace Hollow.RoomDesigner
                 RefreshLibraryDraftPanel();
             }
 
-            AddPanelText("LibraryStatus", status, 18, FontStyle.Italic, new Vector2(36f, -708f), new Vector2(780f, 42f));
+            AddPanelText("LibraryStatus", status, 16, FontStyle.Italic, new Vector2(36f, -690f), new Vector2(780f, 30f));
             AddPanelText(
                 "LibraryControls",
-                "Keyboard/controller: WASD/Arrows/D-pad select | Enter/A open/create | Delete/B delete | Esc/Menu back",
-                17,
+                "Keyboard/controller: WASD/Arrows/D-pad select | Mouse wheel scroll | Enter/A open/create | Delete/B delete | Esc/Menu back",
+                15,
                 FontStyle.Normal,
-                new Vector2(36f, -744f),
-                new Vector2(780f, 34f));
+                new Vector2(36f, -724f),
+                new Vector2(780f, 44f));
         }
 
         private void RefreshLibraryDraftPanel()
         {
-            var y = -168f;
+            EnsureLibraryListViewport();
+            if (libraryListContent == null)
+            {
+                return;
+            }
+
+            ClearChildren(libraryListContent);
+            var y = 0f;
+            var selectedTop = -1f;
+            var selectedBottom = -1f;
+            var curatedCount = libraryState?.CuratedDrafts.Count ?? 0;
             var draftCount = libraryState?.Drafts.Count ?? 0;
+            if (curatedCount > 0)
+            {
+                AddPanelText(libraryListContent, "CuratedHeader", "Curated Runtime Rooms - opening creates an editable copy", 16, FontStyle.Bold, new Vector2(0f, y), new Vector2(740f, 26f));
+                y -= 32f;
+            }
+
+            var currentGroup = string.Empty;
+            for (var index = 0; index < curatedCount; index++)
+            {
+                var draft = libraryState.CuratedDrafts[index];
+                var nextGroup = RoomDesignerCatalogGroups.ForProject(draft);
+                if (!string.Equals(currentGroup, nextGroup, StringComparison.Ordinal))
+                {
+                    currentGroup = nextGroup;
+                    AddPanelText(libraryListContent, $"CuratedGroup_{index}", currentGroup, 15, FontStyle.Bold, new Vector2(0f, y), new Vector2(740f, 24f));
+                    y -= 28f;
+                }
+
+                var selected = librarySelectedIndex == index;
+                var label = $"{(selected ? "> " : string.Empty)}{draft.displayName}  |  {draft.footprintPreset}  |  {draft.widthTiles}x{draft.heightTiles}m  |  Open Edit Copy";
+                var capturedIndex = index;
+                if (selected)
+                {
+                    selectedTop = -y;
+                    selectedBottom = selectedTop + LibraryListRowHeight;
+                }
+
+                AddPanelButton(libraryListContent, $"CuratedDraft_{index}", label, index, new Vector2(0f, y), new Vector2(744f, LibraryListRowHeight), () =>
+                {
+                    librarySelectedIndex = capturedIndex;
+                    OpenSelectedDraft();
+                }, 16);
+                y -= LibraryListRowHeight + LibraryListRowGap;
+            }
+
+            if (draftCount > 0)
+            {
+                y -= curatedCount > 0 ? 8f : 0f;
+                AddPanelText(libraryListContent, "LocalDraftHeader", "Local Editable Drafts", 16, FontStyle.Bold, new Vector2(0f, y), new Vector2(740f, 26f));
+                y -= 32f;
+            }
+
             for (var index = 0; index < draftCount; index++)
             {
                 var draft = libraryState.Drafts[index];
-                var selected = librarySelectedIndex == index;
+                var selectionIndex = curatedCount + index;
+                var selected = librarySelectedIndex == selectionIndex;
                 var label = $"{(selected ? "> " : string.Empty)}{draft.displayName}  |  {draft.footprintPreset}  |  {draft.widthTiles}x{draft.heightTiles}m";
                 var capturedIndex = index;
-                AddPanelButton($"Draft_{index}", label, index, new Vector2(36f, y), new Vector2(640f, 48f), () =>
+                if (selected)
                 {
-                    librarySelectedIndex = capturedIndex;
+                    selectedTop = -y;
+                    selectedBottom = selectedTop + LibraryListRowHeight;
+                }
+
+                AddPanelButton(libraryListContent, $"Draft_{index}", label, selectionIndex, new Vector2(0f, y), new Vector2(610f, LibraryListRowHeight), () =>
+                {
+                    librarySelectedIndex = curatedCount + capturedIndex;
                     OpenDraft(draft.projectId);
-                });
-                AddPanelButton($"Delete_{index}", "Delete", index, new Vector2(690f, y), new Vector2(124f, 48f), () =>
+                }, 16);
+                AddPanelButton(libraryListContent, $"Delete_{index}", "Delete", selectionIndex, new Vector2(620f, y), new Vector2(124f, LibraryListRowHeight), () =>
                 {
-                    librarySelectedIndex = capturedIndex;
+                    librarySelectedIndex = curatedCount + capturedIndex;
                     RequestDeleteDraft();
-                });
-                y -= 58f;
+                }, 16);
+                y -= LibraryListRowHeight + LibraryListRowGap;
             }
 
+            var contentHeight = Mathf.Max(LibraryListViewportHeight, -y + 10f);
+            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - 18f, contentHeight);
+            KeepLibrarySelectionVisible(selectedTop, selectedBottom, contentHeight);
+
+            var createIndex = curatedCount + draftCount;
             AddPanelButton(
                 "CreateNewRoom",
-                $"{(librarySelectedIndex == draftCount ? "> " : string.Empty)}Create New Room",
-                draftCount,
-                new Vector2(36f, y - 16f),
-                new Vector2(778f, 54f),
+                $"{(librarySelectedIndex == createIndex ? "> " : string.Empty)}Create New Room",
+                createIndex,
+                new Vector2(36f, -568f),
+                new Vector2(778f, 50f),
                 () =>
                 {
                     librarySelectedIndex = 0;
                     ShowCreateTemplates();
                 });
+            var backIndex = createIndex + 1;
             AddPanelButton(
                 "BackToMenu",
-                $"{(librarySelectedIndex == draftCount + 1 ? "> " : string.Empty)}Back To Main Menu",
-                draftCount + 1,
-                new Vector2(36f, y - 82f),
-                new Vector2(778f, 54f),
+                $"{(librarySelectedIndex == backIndex ? "> " : string.Empty)}Back To Main Menu",
+                backIndex,
+                new Vector2(36f, -628f),
+                new Vector2(778f, 50f),
                 ReturnToMainMenu);
         }
 
@@ -1297,7 +1406,7 @@ namespace Hollow.RoomDesigner
                 new Vector2(778f, 54f),
                 () =>
                 {
-                    if (libraryState != null && libraryState.Drafts.Count > 0)
+                    if (HasLibraryRows())
                     {
                         ShowLibrary();
                     }
@@ -1326,6 +1435,74 @@ namespace Hollow.RoomDesigner
                 ShowLibrary);
         }
 
+        private void EnsureLibraryListViewport()
+        {
+            if (libraryPanel == null || libraryListViewport != null && libraryListContent != null)
+            {
+                return;
+            }
+
+            var viewportObject = new GameObject("RoomDesignerLibraryScrollViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
+            viewportObject.transform.SetParent(libraryPanel, false);
+            libraryListViewport = (RectTransform)viewportObject.transform;
+            libraryListViewport.anchorMin = new Vector2(0f, 1f);
+            libraryListViewport.anchorMax = new Vector2(0f, 1f);
+            libraryListViewport.pivot = new Vector2(0f, 1f);
+            libraryListViewport.anchoredPosition = new Vector2(36f, -150f);
+            libraryListViewport.sizeDelta = new Vector2(LibraryListViewportWidth, LibraryListViewportHeight);
+
+            var viewportImage = viewportObject.GetComponent<Image>();
+            viewportImage.color = new Color(0.02f, 0.025f, 0.032f, 0.34f);
+
+            var contentObject = new GameObject("Content", typeof(RectTransform));
+            contentObject.transform.SetParent(libraryListViewport, false);
+            libraryListContent = (RectTransform)contentObject.transform;
+            libraryListContent.anchorMin = new Vector2(0f, 1f);
+            libraryListContent.anchorMax = new Vector2(0f, 1f);
+            libraryListContent.pivot = new Vector2(0f, 1f);
+            libraryListContent.anchoredPosition = new Vector2(0f, libraryScrollOffset);
+            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - 18f, LibraryListViewportHeight);
+
+            libraryScrollRect = viewportObject.GetComponent<ScrollRect>();
+            libraryScrollRect.viewport = libraryListViewport;
+            libraryScrollRect.content = libraryListContent;
+            libraryScrollRect.horizontal = false;
+            libraryScrollRect.vertical = true;
+            libraryScrollRect.movementType = ScrollRect.MovementType.Clamped;
+            libraryScrollRect.scrollSensitivity = 32f;
+            libraryScrollRect.inertia = true;
+        }
+
+        private void CaptureLibraryScrollOffset()
+        {
+            if (libraryListContent != null)
+            {
+                libraryScrollOffset = Mathf.Max(0f, libraryListContent.anchoredPosition.y);
+            }
+        }
+
+        private void KeepLibrarySelectionVisible(float selectedTop, float selectedBottom, float contentHeight)
+        {
+            var maxScroll = Mathf.Max(0f, contentHeight - LibraryListViewportHeight);
+            if (selectedTop >= 0f && selectedBottom >= 0f)
+            {
+                if (selectedTop < libraryScrollOffset)
+                {
+                    libraryScrollOffset = selectedTop;
+                }
+                else if (selectedBottom > libraryScrollOffset + LibraryListViewportHeight)
+                {
+                    libraryScrollOffset = selectedBottom - LibraryListViewportHeight;
+                }
+            }
+
+            libraryScrollOffset = Mathf.Clamp(libraryScrollOffset, 0f, maxScroll);
+            if (libraryListContent != null)
+            {
+                libraryListContent.anchoredPosition = new Vector2(0f, libraryScrollOffset);
+            }
+        }
+
         private RoomDesignerLibraryViewModel BuildLibraryViewModel()
         {
             var drafts = libraryState == null
@@ -1338,11 +1515,22 @@ namespace Hollow.RoomDesigner
                         draft.widthTiles,
                         draft.heightTiles))
                     .ToArray();
+            var curatedDrafts = libraryState == null
+                ? Array.Empty<RoomDesignerLibraryRow>()
+                : libraryState.CuratedDrafts
+                    .Select(draft => new RoomDesignerLibraryRow(
+                        draft.projectId,
+                        draft.displayName,
+                        draft.footprintPreset,
+                        draft.widthTiles,
+                        draft.heightTiles))
+                    .ToArray();
             var templates = templatePresets.Select(preset => new RoomDesignerTemplateRow(preset)).ToArray();
             return new RoomDesignerLibraryViewModel(
                 Mode,
                 librarySelectedIndex,
                 drafts,
+                curatedDrafts,
                 templates,
                 status,
                 pendingDeleteProjectId,
@@ -1351,8 +1539,13 @@ namespace Hollow.RoomDesigner
 
         private Text AddPanelText(string name, string text, int fontSize, FontStyle style, Vector2 position, Vector2 size)
         {
+            return AddPanelText(libraryPanel, name, text, fontSize, style, position, size);
+        }
+
+        private Text AddPanelText(Transform parent, string name, string text, int fontSize, FontStyle style, Vector2 position, Vector2 size)
+        {
             var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
-            textObject.transform.SetParent(libraryPanel, false);
+            textObject.transform.SetParent(parent, false);
             var rect = (RectTransform)textObject.transform;
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
@@ -1372,8 +1565,13 @@ namespace Hollow.RoomDesigner
 
         private Button AddPanelButton(string name, string label, int selectionIndex, Vector2 position, Vector2 size, Action onClick)
         {
+            return AddPanelButton(libraryPanel, name, label, selectionIndex, position, size, onClick);
+        }
+
+        private Button AddPanelButton(Transform parent, string name, string label, int selectionIndex, Vector2 position, Vector2 size, Action onClick, int labelFontSize = 20)
+        {
             var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            buttonObject.transform.SetParent(libraryPanel, false);
+            buttonObject.transform.SetParent(parent, false);
             var rect = (RectTransform)buttonObject.transform;
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
@@ -1394,11 +1592,11 @@ namespace Hollow.RoomDesigner
                 onClick?.Invoke();
             });
 
-            AddButtonLabel(buttonObject.transform, label);
+            AddButtonLabel(buttonObject.transform, label, labelFontSize);
             return button;
         }
 
-        private void AddButtonLabel(Transform parent, string label)
+        private void AddButtonLabel(Transform parent, string label, int fontSize = 20)
         {
             var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(parent, false);
@@ -1409,7 +1607,7 @@ namespace Hollow.RoomDesigner
             rect.offsetMax = new Vector2(-18f, 0f);
             var text = textObject.GetComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 20;
+            text.fontSize = fontSize;
             text.alignment = TextAnchor.MiddleLeft;
             text.color = Color.white;
             text.text = label;
@@ -1801,17 +1999,32 @@ namespace Hollow.RoomDesigner
         {
             return Mode switch
             {
-                RoomDesignerMode.Library => (libraryState?.Drafts.Count ?? 0) + 2,
+                RoomDesignerMode.Library => (libraryState?.CuratedDrafts.Count ?? 0) + (libraryState?.Drafts.Count ?? 0) + 2,
                 RoomDesignerMode.CreateTemplate => templatePresets.Length + 1,
                 RoomDesignerMode.ConfirmDelete => 2,
                 _ => 0
             };
         }
 
+        private bool HasLibraryRows()
+        {
+            return libraryState != null && (libraryState.CuratedDrafts.Count > 0 || libraryState.Drafts.Count > 0);
+        }
+
         private int DraftIndexFromSelection()
         {
+            var curatedCount = libraryState?.CuratedDrafts.Count ?? 0;
             var draftCount = libraryState?.Drafts.Count ?? 0;
-            return librarySelectedIndex >= 0 && librarySelectedIndex < draftCount
+            var localIndex = librarySelectedIndex - curatedCount;
+            return localIndex >= 0 && localIndex < draftCount
+                ? localIndex
+                : -1;
+        }
+
+        private int CuratedIndexFromSelection()
+        {
+            var curatedCount = libraryState?.CuratedDrafts.Count ?? 0;
+            return librarySelectedIndex >= 0 && librarySelectedIndex < curatedCount
                 ? librarySelectedIndex
                 : -1;
         }
