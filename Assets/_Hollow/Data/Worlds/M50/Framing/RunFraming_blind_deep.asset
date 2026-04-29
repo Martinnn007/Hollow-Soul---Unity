@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_blind_deep
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 8
+  identityId: blind_deep
+  displayName: The Blind Deep
+  subtitle: An abyss without horizon, hungry enough to become a god.
+  biomeTags:
+  - 9
+  - 11
+  paletteHint: void black, cold blue, pale biolume, drowned silver
+  lightingHint: narrow bioluminescent pools in pressure-dark silence
+  materialNotes: basalt, salt crystal, slick shell, pressure-warped metal
+  prologueLine: The Deep has no sky. The Hollow Star put one inside it.
+  branchLine: Branches drift like wreckage with doors still attached.
+  hubLine: The anchor is a breath held under impossible water.
+  bossLine: The warden moves by pressure, not sight.
+  extractionLine: You surface for a moment. The abyss learns your shape.
+  branchEchoNames:
+  - No-Sun Trench
+  - Salt Lung
+  - Blind Lantern
+  - Pressure Shrine

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_broken_meridian
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 1
+  identityId: broken_meridian
+  displayName: The Broken Meridian
+  subtitle: A mixed threshold where timelines scrape against the same door.
+  biomeTags:
+  - 0
+  - 1
+  - 11
+  paletteHint: cold slate, bruised green, dead-gold seams
+  lightingHint: thin dawn light cutting through black dust
+  materialNotes: fractured stone, mismatched eras, memory-glass edges
+  prologueLine: The Hollow Star has folded a thousand first steps into one room.
+  branchLine: Branches stitch old minutes to new wounds.
+  hubLine: The memory anchor holds, but it does not forgive weight.
+  bossLine: The warden remembers a road that no longer exists.
+  extractionLine: You slip from one collapse, not from the Star.
+  branchEchoNames:
+  - Ash Suture
+  - Split Noon
+  - Clockless Gate
+  - Mourning Lane

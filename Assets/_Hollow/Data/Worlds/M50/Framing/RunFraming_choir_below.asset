@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_choir_below
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 6
+  identityId: choir_below
+  displayName: The Choir Below
+  subtitle: Hell and heaven collided, and both kept singing.
+  biomeTags:
+  - 7
+  - 6
+  - 10
+  paletteHint: sulfur red, pearl white, bruised violet, molten gold
+  lightingHint: holy backlight broken by furnace smoke
+  materialNotes: charred marble, feathers in ash, brass halos, cracked bone
+  prologueLine: A hymn rises from below, too beautiful to trust.
+  branchLine: Branches braid punishment and blessing until both cut.
+  hubLine: The anchor is a confessional built in a furnace.
+  bossLine: The warden hears every prayer and answers with weight.
+  extractionLine: You leave the hymn behind. It continues in your teeth.
+  branchEchoNames:
+  - Ash Halo
+  - Mercy Furnace
+  - Seraph Pit
+  - Choir Wound

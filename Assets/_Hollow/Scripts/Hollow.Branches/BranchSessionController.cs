@@ -1425,9 +1425,36 @@ namespace Hollow.Branches
                     : choice.Kind == HubPortalKind.Branch ? new Vector3(0.42f, 0.08f, 0.42f) : new Vector3(0.55f, 0.1f, 0.55f);
                 PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.NextBranchPortal, portalObject.transform, Vector3.zero, Vector3.one);
                 var portal = portalObject.GetComponent<NextBranchPortal>() ?? portalObject.AddComponent<NextBranchPortal>();
-                portal.Configure(choice);
+                portal.Configure(choice, DisplayNameForHubChoice(choice));
                 currentNextBranchPortals.Add(portal);
             }
+        }
+
+        private string DisplayNameForHubChoice(NextBranchChoice choice)
+        {
+            if (choice == null)
+            {
+                return string.Empty;
+            }
+
+            if (choice.Kind == HubPortalKind.Branch)
+            {
+                var echo = RunWorldItineraryService.ResolveBranchEcho(runFramingCatalog, RunSeed, choice.WorldIndex, choice.SlotIndex);
+                return string.IsNullOrWhiteSpace(echo) ? choice.DisplayName : echo;
+            }
+
+            if (choice.Kind == HubPortalKind.NextWorld)
+            {
+                var nextWorld = RunWorldItineraryService.Resolve(runFramingCatalog, RunSeed, choice.WorldIndex);
+                return nextWorld != null ? $"Descend: {nextWorld.DisplayName}" : choice.DisplayName;
+            }
+
+            if (choice.Kind == HubPortalKind.FinalExtraction)
+            {
+                return "Temporary Extraction";
+            }
+
+            return choice.DisplayName;
         }
 
         private void ResolveReferences()

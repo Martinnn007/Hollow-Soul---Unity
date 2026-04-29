@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_before_teeth
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 2
+  identityId: before_teeth
+  displayName: Before Teeth
+  subtitle: Prehistoric hunger preserved before language learned mercy.
+  biomeTags:
+  - 2
+  - 1
+  paletteHint: bone white, wet fern, tar black, volcanic ember
+  lightingHint: low amber stormlight with deep leaf shadow
+  materialNotes: fossil ribs, cracked clay, fern mats, obsidian teeth
+  prologueLine: The old world breathes under your feet, huge and unfinished.
+  branchLine: Every branch is a jaw waiting to become history.
+  hubLine: The anchor smells of rain before extinction.
+  bossLine: Something ancient stands where fear first got a name.
+  extractionLine: The beast-era sinks back under black gravity.
+  branchEchoNames:
+  - Rib Orchard
+  - Tar Choir
+  - Fern Grave
+  - First Maw

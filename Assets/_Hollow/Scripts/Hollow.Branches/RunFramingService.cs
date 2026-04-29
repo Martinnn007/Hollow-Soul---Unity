@@ -12,14 +12,20 @@ namespace Hollow.Branches
             int branchSeed,
             bool bossRoomActive)
         {
-            var title = $"World {NormalizedWorld(worldIndex)}";
+            var normalizedWorld = NormalizedWorld(worldIndex);
+            var title = $"World {normalizedWorld}";
             var subtitle = "The Hollow keeps rearranging itself.";
             var message = "Clear rooms, keep what helps, and choose how deep to go.";
-            if (catalog != null && catalog.TryGetWorld(worldIndex, out var definition))
+            var identityId = string.Empty;
+            var identityName = string.Empty;
+            var definition = RunWorldItineraryService.Resolve(catalog, runSeed, normalizedWorld);
+            if (definition != null)
             {
-                title = $"World {definition.WorldIndex}: {definition.DisplayName}";
+                title = $"World {normalizedWorld}: {definition.DisplayName}";
                 subtitle = definition.Subtitle;
                 message = MessageFor(definition, phase, bossRoomActive);
+                identityId = definition.IdentityId;
+                identityName = definition.DisplayName;
             }
             else
             {
@@ -31,7 +37,9 @@ namespace Hollow.Branches
                 subtitle,
                 PhaseLabelFor(phase, bossRoomActive),
                 message,
-                $"Run Seed {runSeed} | Branch {branchSeed}");
+                $"Run Seed {runSeed} | Branch {branchSeed}",
+                identityId,
+                identityName);
         }
 
         public static string PhaseLabelFor(RunWorldPhase phase, bool bossRoomActive)

@@ -130,9 +130,9 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (branch.RunFramingCatalog != catalog)
+                if (!IsM39CatalogOrSuccessor(branch.RunFramingCatalog, catalog))
                 {
-                    failures.Add($"{scenePath} BranchSessionController must reference the M39 run framing catalog.");
+                    failures.Add($"{scenePath} BranchSessionController must reference the M39 run framing catalog or an accepted successor catalog.");
                 }
 
                 var shellCanvas = GameObject.Find("PlatformShellCanvas");
@@ -152,11 +152,17 @@ namespace Hollow.Editor.Validation
                 {
                     failures.Add($"{scenePath} PlatformShellCanvas must include RunFramingHudController.");
                 }
-                else if (hud.Catalog != catalog)
+                else if (!IsM39CatalogOrSuccessor(hud.Catalog, catalog))
                 {
-                    failures.Add($"{scenePath} RunFramingHudController must reference the M39 run framing catalog.");
+                    failures.Add($"{scenePath} RunFramingHudController must reference the M39 run framing catalog or an accepted successor catalog.");
                 }
             }
+        }
+
+        private static bool IsM39CatalogOrSuccessor(RunFramingCatalogDefinition candidate, RunFramingCatalogDefinition m39Catalog)
+        {
+            return candidate == m39Catalog ||
+                   (candidate != null && candidate.CatalogId == Milestone50AssetGenerator.CatalogId);
         }
     }
 }
