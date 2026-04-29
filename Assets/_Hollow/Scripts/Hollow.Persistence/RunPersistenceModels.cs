@@ -7,6 +7,7 @@ namespace Hollow.Persistence
     public sealed class RunSaveSnapshot
     {
         public string runId = string.Empty;
+        public string challengeId = string.Empty;
         public string branchId = "m7_five_room_cross";
         public int branchSeed;
         public string currentRoomId = "origin";

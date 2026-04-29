@@ -9,6 +9,22 @@ namespace Hollow.Input
 
         public static GameplayInputSnapshot ReadCurrent()
         {
+            var pausePressed = ReadPausePressed();
+            if (GameplayPauseState.IsPaused)
+            {
+                return new GameplayInputSnapshot(
+                    Vector2.zero,
+                    Vector2.zero,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    pausePressed);
+            }
+
             return new GameplayInputSnapshot(
                 ReadMove(),
                 ReadShoot(),
@@ -18,7 +34,8 @@ namespace Hollow.Input
                 ReadHeavyAttackPressed(),
                 ReadUseActiveItemPressed(),
                 ReadUseConsumableCardPressed(),
-                ReadGuardHeld());
+                ReadGuardHeld(),
+                pausePressed);
         }
 
         public static Vector2 CardinalizeShoot(Vector2 rawShoot)
@@ -204,6 +221,18 @@ namespace Hollow.Input
 
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.leftTrigger.ReadValue() > 0.5f;
+        }
+
+        public static bool ReadPausePressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.startButton.wasPressedThisFrame;
         }
     }
 }

@@ -53,6 +53,11 @@ namespace Hollow.UI.Shell
             {
                 gameObject.AddComponent<PickupRevealController>();
             }
+
+            if (GetComponent<PauseMenuController>() == null)
+            {
+                gameObject.AddComponent<PauseMenuController>();
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using Hollow.Persistence;
 using Hollow.Platform;
 using Hollow.Presentation;
 using Hollow.Rooms;
+using System.Linq;
 using UnityEngine;
 
 namespace Hollow.World
@@ -35,6 +36,17 @@ namespace Hollow.World
         public PlaceholderPlayerController PlayerController => playerController;
 
         public GameSessionState SessionState { get; private set; }
+
+        public string CurrentChallengeId
+        {
+            get
+            {
+                var snapshot = CreateCurrentSnapshot();
+                return !string.IsNullOrWhiteSpace(snapshot?.challengeId)
+                    ? snapshot.challengeId
+                    : SessionState?.SelectedChallengeId ?? string.Empty;
+            }
+        }
 
         public void Configure(HollowPlatformKind nextPlatformKind)
         {
@@ -93,6 +105,70 @@ namespace Hollow.World
             }
 
             ConfigureGameplayCameraFollow();
+        }
+
+        public void RestartCurrentSession()
+        {
+            var route = PlatformPresentationModeResolver.RouteForPlatform(platformKind);
+            var snapshot = CreateCurrentSnapshot();
+            var challengeId = snapshot?.challengeId ?? SessionState?.SelectedChallengeId ?? string.Empty;
+            var characterId = snapshot?.runBuild?.selectedCharacterId ?? SessionState?.SelectedCharacterId ?? "balanced";
+            var profileHost = ProfileSessionHost.Instance;
+            var context = profileHost?.SelectedProfileContext;
+            var selectedProfile = context?.SelectedProfile;
+
+            if (context != null && selectedProfile != null && !selectedProfile.IsEmpty)
+            {
+                var slotId = new ProfileSlotId(selectedProfile.SlotIndex);
+                profileHost?.RunSaveStore?.ClearActiveRun(slotId);
+                context.SetLaunchMode(RunLaunchMode.NewRun);
+                context.SetSelectedCharacterId(characterId);
+                context.SetSelectedChallengeId(challengeId);
+
+                if (!string.IsNullOrWhiteSpace(challengeId))
+                {
+                    var seed = snapshot != null && snapshot.runSeed != 0 ? snapshot.runSeed : snapshot?.branchSeed ?? 0;
+                    profileHost?.ChallengeResultStore?.MarkChallengeAttemptStarted(slotId, challengeId, seed);
+                    var updated = profileHost?.ProfileStore?.MarkLastPlayed(slotId);
+                    if (updated != null)
+                    {
+                        context.UpdateSelectedProfile(updated);
+                    }
+                }
+                else
+                {
+                    var updated = profileHost?.ProfileStore?.MarkRunStarted(slotId);
+                    if (updated != null)
+                    {
+                        context.UpdateSelectedProfile(updated);
+                    }
+                }
+            }
+
+            TransitionAndLoad(route);
+        }
+
+        public void QuitCurrentSessionToProfileMenu()
+        {
+            var profileHost = ProfileSessionHost.Instance;
+            var context = profileHost?.SelectedProfileContext;
+            var selectedProfile = context?.SelectedProfile;
+            var snapshot = CreateCurrentSnapshot();
+            if (snapshot != null && selectedProfile != null && !selectedProfile.IsEmpty && profileHost?.RunSaveStore != null)
+            {
+                var slotId = new ProfileSlotId(selectedProfile.SlotIndex);
+                profileHost.RunSaveStore.SaveActiveRun(slotId, snapshot);
+                var updated = profileHost.ProfileStore?.LoadSlotSummaries()
+                    .FirstOrDefault(summary => summary.SlotIndex == selectedProfile.SlotIndex);
+                if (updated != null)
+                {
+                    context.UpdateSelectedProfile(updated);
+                }
+            }
+
+            context?.SetLaunchMode(RunLaunchMode.NewRun);
+            context?.SetSelectedChallengeId(string.Empty);
+            TransitionAndLoad(AppShellRoute.MainMenu);
         }
 
         private void Update()
@@ -164,6 +240,23 @@ namespace Hollow.World
 
             branchSessionController = null;
             return false;
+        }
+
+        private RunSaveSnapshot CreateCurrentSnapshot()
+        {
+            return TryGetBranchSessionController(out var branchSessionController)
+                ? branchSessionController.CreateSnapshot()
+                : null;
+        }
+
+        private static void TransitionAndLoad(AppShellRoute route)
+        {
+            if (HollowBootstrap.Instance != null)
+            {
+                HollowBootstrap.Instance.AppStateMachine.TransitionTo(route);
+            }
+
+            SceneLoaderService.LoadRouteAsync(route);
         }
 
         private void ConfigureGameplayCameraFollow()

@@ -101,6 +101,11 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            if (GameplayPauseState.IsPaused)
+            {
+                return;
+            }
+
             var input = GameplayInputReader.ReadCurrent();
             RegenerateStamina(Time.deltaTime);
             if (input.SwapWeaponPressed)

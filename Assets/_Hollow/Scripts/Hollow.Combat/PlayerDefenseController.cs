@@ -67,6 +67,11 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            if (GameplayPauseState.IsPaused)
+            {
+                return;
+            }
+
             var input = GameplayInputReader.ReadCurrent();
             Tick(input, Time.deltaTime, Time.time);
         }

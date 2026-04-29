@@ -53,6 +53,11 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            if (GameplayPauseState.IsPaused)
+            {
+                return;
+            }
+
             var input = GameplayInputReader.ReadCurrent();
             currentFrameGuardHeld = input.GuardHeld;
             Move(input.Move, Time.deltaTime);

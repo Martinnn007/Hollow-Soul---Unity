@@ -398,7 +398,7 @@ namespace Hollow.Branches
             {
                 roomHazardStates.AddRange(snapshot.roomHazardStates);
             }
-            activeChallenge = ResolveActiveChallenge();
+            activeChallenge = ResolveActiveChallenge(snapshot?.challengeId);
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
@@ -471,7 +471,7 @@ namespace Hollow.Branches
 
         private void Update()
         {
-            if (State == null)
+            if (State == null || GameplayPauseState.IsPaused)
             {
                 return;
             }
@@ -1561,15 +1561,20 @@ namespace Hollow.Branches
                    gameSessionState.HasProfile;
         }
 
-        private ChallengeDefinition ResolveActiveChallenge()
+        private ChallengeDefinition ResolveActiveChallenge(string overrideChallengeId = null)
         {
-            if (gameSessionState == null || gameSessionState.SessionMode != RuntimeSessionMode.TransientChallenge)
+            var challengeId = !string.IsNullOrWhiteSpace(overrideChallengeId)
+                ? overrideChallengeId
+                : gameSessionState != null && gameSessionState.SessionMode == RuntimeSessionMode.TransientChallenge
+                    ? gameSessionState.SelectedChallengeId
+                    : string.Empty;
+            if (string.IsNullOrWhiteSpace(challengeId))
             {
                 return null;
             }
 
             var catalog = challengeCatalog != null ? challengeCatalog : ChallengeCatalogDefinition.CreateRuntimeDefault();
-            return catalog.Resolve(gameSessionState.SelectedChallengeId);
+            return catalog.Resolve(challengeId);
         }
 
         private void ApplyChallengeRulesForFreshRun()
@@ -2310,6 +2315,7 @@ namespace Hollow.Branches
             var snapshot = new RunSaveSnapshot
             {
                 runId = $"{State?.Graph?.BranchId ?? BranchGenerator.LegacyFiveRoomBranchId}-{gameSessionState?.ProfileId ?? "transient"}",
+                challengeId = activeChallenge?.ChallengeId ?? gameSessionState?.SelectedChallengeId ?? string.Empty,
                 branchId = State?.Graph?.BranchId ?? BranchGenerator.LegacyFiveRoomBranchId,
                 branchSeed = State?.Graph?.Seed ?? 0,
                 currentRoomId = State?.CurrentRoomId.Value ?? BranchRoomId.Origin.Value,
@@ -2372,11 +2378,16 @@ namespace Hollow.Branches
 
             activeRunCompletedOrFailed = true;
             RecordChallengeCompletionIfNeeded();
-            if (canPersist)
+            if (canPersist && activeChallenge == null)
             {
                 MetaProgressionService.CompleteRun(runSaveStore, activeProfileSlotId, runEconomy);
                 RefreshSelectedProfileSummary();
                 BankedSouls = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile?.BankedSouls ?? BankedSouls + runEconomy.RunSouls;
+            }
+            else if (canPersist && runSaveStore != null)
+            {
+                runSaveStore.ClearActiveRun(activeProfileSlotId);
+                RefreshSelectedProfileSummary();
             }
 
             SaveStatus = "Completed";
