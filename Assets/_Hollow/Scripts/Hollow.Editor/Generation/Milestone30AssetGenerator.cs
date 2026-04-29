@@ -45,8 +45,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Melee,
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Heavy, BuildTag.Skeletal },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.32f, 7f, 1.05f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 0.68f, 24f, 1.25f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.78f, 8f, 1.05f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3f, 42f, 1.25f));
             var boneBow = SaveWeapon(
                 "Weapon_BoneBow.asset",
                 "bone_bow",
@@ -54,8 +54,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Ranged,
                 WeaponCategory.Bow,
                 new[] { BuildTag.Ranged, BuildTag.Fast, BuildTag.Skeletal },
-                new WeaponAttackDefinition(AttackKind.Light, 1, 0.2f, 2f, 10f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 3, 0.5f, 16f, 10f));
+                new WeaponAttackDefinition(AttackKind.Light, 1, 0.95f, 2f, 10f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 3, 8.5f, 36f, 10f));
             var dragonFang = SaveWeapon(
                 "Weapon_DragonFang.asset",
                 "dragon_fang",
@@ -63,8 +63,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Melee,
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Fire, BuildTag.Dragon },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.3f, 8f, 1.05f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 0.7f, 24f, 1.3f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.82f, 9f, 1.05f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3f, 42f, 1.3f));
             var dragonBow = SaveWeapon(
                 "Weapon_DragonBow.asset",
                 "dragon_bow",
@@ -72,8 +72,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Ranged,
                 WeaponCategory.Bow,
                 new[] { BuildTag.Ranged, BuildTag.Fire, BuildTag.Dragon },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.28f, 2f, 10.5f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 0.65f, 20f, 9.5f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 4f, 10.5f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 38f, 9.5f));
 
             var skeletalArmor = SaveArmor(
                 "Armor_SkeletalArmor.asset",

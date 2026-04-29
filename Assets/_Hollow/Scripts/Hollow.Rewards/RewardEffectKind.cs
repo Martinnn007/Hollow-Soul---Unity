@@ -17,6 +17,8 @@ namespace Hollow.Rewards
         MeleeDamageBonus = 12,
         RangedDamageBonus = 13,
         AttackCooldownMultiplier = 14,
-        Coins = 15
+        Coins = 15,
+        MeleeRangeBonusMeters = 16,
+        RangedRangeBonusMeters = 17
     }
 }

@@ -103,6 +103,13 @@ namespace Hollow.Editor.Validation
                 {
                     failures.Add($"M27 weapon {weaponId} must have meaningful light/heavy attack tuning.");
                 }
+
+                var minimumLightCooldown = weapon.Slot == WeaponSlot.Melee ? 0.6f : 0.75f;
+                var minimumHeavyCooldown = weapon.Slot == WeaponSlot.Melee ? 2.5f : 5f;
+                if (weapon.LightAttack.CooldownSeconds < minimumLightCooldown || weapon.HeavyAttack.CooldownSeconds < minimumHeavyCooldown)
+                {
+                    failures.Add($"M27 weapon {weaponId} is tuned too fast for the readable combat baseline.");
+                }
             }
 
             if (catalog.WeaponsForSlot(WeaponSlot.Melee).Count < 2 || catalog.WeaponsForSlot(WeaponSlot.Ranged).Count < 2)

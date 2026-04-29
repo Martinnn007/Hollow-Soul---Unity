@@ -20,12 +20,12 @@ MonoBehaviour:
   lightAttack:
     attackKind: 0
     damage: 1
-    cooldownSeconds: 0.22
+    cooldownSeconds: 1
     staminaCost: 0
     rangeMeters: 9
   heavyAttack:
     attackKind: 1
     damage: 2
-    cooldownSeconds: 0.48
-    staminaCost: 12
+    cooldownSeconds: 10
+    staminaCost: 35
     rangeMeters: 9

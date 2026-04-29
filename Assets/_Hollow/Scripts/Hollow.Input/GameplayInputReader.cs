@@ -234,5 +234,11 @@ namespace Hollow.Input
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.startButton.wasPressedThisFrame;
         }
+
+        public static bool ReadDebugHudTogglePressed()
+        {
+            var keyboard = Keyboard.current;
+            return keyboard != null && keyboard.f3Key.wasPressedThisFrame;
+        }
     }
 }

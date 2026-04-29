@@ -43,6 +43,8 @@ namespace Hollow.Rewards
                 var defense = BaseStats.Defense;
                 var meleeDamage = BaseStats.MeleeDamageBonus;
                 var rangedDamage = BaseStats.RangedDamageBonus;
+                var meleeRange = BaseStats.MeleeRangeBonusMeters;
+                var rangedRange = BaseStats.RangedRangeBonusMeters;
 
                 foreach (var modifier in modifiers)
                 {
@@ -54,13 +56,26 @@ namespace Hollow.Rewards
                     defense += modifier.defense;
                     meleeDamage += modifier.meleeDamage;
                     rangedDamage += modifier.rangedDamage;
+                    meleeRange += modifier.meleeRangeBonusMeters;
+                    rangedRange += modifier.rangedRangeBonusMeters;
                     if (modifier.attackCooldownMultiplier > 0f)
                     {
                         cooldownMultiplier *= modifier.attackCooldownMultiplier;
                     }
                 }
 
-                return new PlayerDerivedStats(maxHealth, speed, strength, maxStamina, staminaRegen, defense, meleeDamage, rangedDamage, cooldownMultiplier);
+                return new PlayerDerivedStats(
+                    maxHealth,
+                    speed,
+                    strength,
+                    maxStamina,
+                    staminaRegen,
+                    defense,
+                    meleeDamage,
+                    rangedDamage,
+                    cooldownMultiplier,
+                    meleeRange,
+                    rangedRange);
             }
         }
 
@@ -152,6 +167,8 @@ namespace Hollow.Rewards
                 baseMeleeDamageBonus = BaseStats.MeleeDamageBonus,
                 baseRangedDamageBonus = BaseStats.RangedDamageBonus,
                 baseAttackCooldownMultiplier = BaseStats.AttackCooldownMultiplier,
+                baseMeleeRangeBonusMeters = BaseStats.MeleeRangeBonusMeters,
+                baseRangedRangeBonusMeters = BaseStats.RangedRangeBonusMeters,
                 wallet = Wallet.ToSaveState(),
                 equipment = Equipment.ToSaveState(),
                 inventory = Inventory.ToSaveState(),
@@ -177,7 +194,9 @@ namespace Hollow.Rewards
                 saveState.baseDefense,
                 saveState.baseMeleeDamageBonus,
                 saveState.baseRangedDamageBonus,
-                saveState.baseAttackCooldownMultiplier <= 0f ? 1f : saveState.baseAttackCooldownMultiplier);
+                saveState.baseAttackCooldownMultiplier <= 0f ? 1f : saveState.baseAttackCooldownMultiplier,
+                saveState.baseMeleeRangeBonusMeters,
+                saveState.baseRangedRangeBonusMeters);
             build.Wallet = RunCurrencyWallet.FromSaveState(saveState.wallet);
             build.Equipment = RunEquipmentSlots.FromSaveState(saveState.equipment);
             build.Inventory = RunInventoryState.FromSaveState(saveState.inventory);

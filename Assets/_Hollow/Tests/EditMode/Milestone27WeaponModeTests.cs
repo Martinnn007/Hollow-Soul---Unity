@@ -4,6 +4,7 @@ using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
+using Hollow.Input;
 using Hollow.Rewards;
 using NUnit.Framework;
 using UnityEditor;
@@ -32,6 +33,24 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void StarterWeaponsUseReadableCombatBalance()
+        {
+            var catalog = LoadCatalog();
+
+            Assert.IsTrue(catalog.TryGetWeapon("starter_blade", out var starterBlade));
+            Assert.AreEqual(0.67f, starterBlade.LightAttack.CooldownSeconds, 0.001f);
+            Assert.AreEqual(6f, starterBlade.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(3.5f, starterBlade.HeavyAttack.CooldownSeconds, 0.001f);
+            Assert.AreEqual(40f, starterBlade.HeavyAttack.StaminaCost, 0.001f);
+
+            Assert.IsTrue(catalog.TryGetWeapon("starter_bolt", out var starterBolt));
+            Assert.AreEqual(1f, starterBolt.LightAttack.CooldownSeconds, 0.001f);
+            Assert.AreEqual(0f, starterBolt.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(10f, starterBolt.HeavyAttack.CooldownSeconds, 0.001f);
+            Assert.AreEqual(35f, starterBolt.HeavyAttack.StaminaCost, 0.001f);
+        }
+
+        [Test]
         public void BuildApplierPassesCatalogEquipmentAndActiveSlotToWeaponController()
         {
             var player = new GameObject("Player");
@@ -54,6 +73,67 @@ namespace Hollow.Tests.EditMode
             {
                 Object.DestroyImmediate(player);
             }
+        }
+
+        [Test]
+        public void RangeBonusesAffectEffectiveWeaponRanges()
+        {
+            var player = new GameObject("Player");
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.ConfigureBuildStats(
+                    1f,
+                    0,
+                    0,
+                    100f,
+                    18f,
+                    "starter_blade",
+                    "starter_bolt",
+                    WeaponSlot.Ranged,
+                    100f,
+                    LoadCatalog(),
+                    0.3f,
+                    1.25f);
+
+                Assert.AreEqual(1.25f, weapon.EffectiveMeleeLightRangeMeters, 0.001f);
+                Assert.AreEqual(10.25f, weapon.EffectiveRangedLightRangeMeters, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void MeleeSwipePresenterCreatesVisualOnlyRangeBox()
+        {
+            var parent = new GameObject("SwipeParent");
+            try
+            {
+                var swipe = MeleeSwipePresenter.Spawn(parent.transform, Vector3.zero, Vector3.forward, 1.75f, AttackKind.Heavy);
+
+                Assert.IsNotNull(swipe);
+                Assert.IsNull(swipe.GetComponent<Collider>());
+                Assert.AreEqual(1.75f, swipe.transform.localScale.z, 0.001f);
+                Assert.AreEqual("MeleeSwipe.Heavy", swipe.name);
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+            }
+        }
+
+        [Test]
+        public void GameplayDebugHudDefaultsHiddenAndCanToggle()
+        {
+            GameplayDebugHudState.SetVisible(false);
+            Assert.IsFalse(GameplayDebugHudState.IsVisible);
+
+            GameplayDebugHudState.Toggle();
+
+            Assert.IsTrue(GameplayDebugHudState.IsVisible);
+            GameplayDebugHudState.SetVisible(false);
         }
 
         [Test]

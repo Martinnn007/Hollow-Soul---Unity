@@ -15,6 +15,8 @@ namespace Hollow.Rewards
             float staminaRegen,
             int meleeDamage,
             int rangedDamage,
+            float meleeRangeBonusMeters,
+            float rangedRangeBonusMeters,
             float cooldownMultiplier,
             int coins,
             int souls,
@@ -38,6 +40,8 @@ namespace Hollow.Rewards
             StaminaRegen = staminaRegen;
             MeleeDamage = meleeDamage;
             RangedDamage = rangedDamage;
+            MeleeRangeBonusMeters = meleeRangeBonusMeters;
+            RangedRangeBonusMeters = rangedRangeBonusMeters;
             CooldownMultiplier = cooldownMultiplier;
             Coins = coins;
             Souls = souls;
@@ -62,6 +66,8 @@ namespace Hollow.Rewards
         public float StaminaRegen { get; }
         public int MeleeDamage { get; }
         public int RangedDamage { get; }
+        public float MeleeRangeBonusMeters { get; }
+        public float RangedRangeBonusMeters { get; }
         public float CooldownMultiplier { get; }
         public int Coins { get; }
         public int Souls { get; }
@@ -80,6 +86,7 @@ namespace Hollow.Rewards
             $"Speed: {Speed:0.0}  STR: {Strength}\n" +
             $"Stamina: {CurrentStamina:0}/{MaxStamina:0} (+{StaminaRegen:0}/s)\n" +
             $"Melee: +{MeleeDamage}  Ranged: +{RangedDamage}\n" +
+            $"Range: M +{MeleeRangeBonusMeters:0.##}m  R +{RangedRangeBonusMeters:0.##}m\n" +
             $"Cooldown: x{CooldownMultiplier:0.##}\n" +
             $"Coins: {Coins}  Souls: {Souls}\n\n" +
             $"Active: {ActiveWeapon}\n" +

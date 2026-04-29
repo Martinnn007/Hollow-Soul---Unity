@@ -1,3 +1,4 @@
+using Hollow.Input;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,13 +7,9 @@ namespace Hollow.Combat
     public sealed class CombatHudController : MonoBehaviour
     {
         private RoomCombatController combatController;
-        private Text playerHealthText;
-        private Text enemyText;
         private Text roomStateText;
-        private Text difficultyText;
-        private Text archetypeText;
-        private Text projectileText;
-        private Text directorText;
+        private Text debugText;
+        private RectTransform debugPanel;
         private Font font;
 
         public void Bind(RoomCombatController controller)
@@ -24,52 +21,70 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            if (GameplayInputReader.ReadDebugHudTogglePressed())
+            {
+                GameplayDebugHudState.Toggle();
+            }
+
             Refresh();
         }
 
         public void Refresh()
         {
-            if (combatController == null || playerHealthText == null)
+            if (combatController == null || roomStateText == null)
             {
                 return;
             }
 
             var model = combatController.CreateHudModel();
-            playerHealthText.text = $"HP {model.PlayerHealth}/{model.PlayerMaxHealth} | {model.DefenseSummary}";
-            enemyText.text = $"Enemies {model.EnemiesRemaining}";
             roomStateText.text = model.StatusText;
-            difficultyText.text = $"Tier {model.DifficultyName}";
-            archetypeText.text = $"Types {model.ArchetypeSummary}";
-            projectileText.text = model.ProjectileSummary;
-            directorText.text = model.DirectorDebugLine;
             roomStateText.color = model.RoomState == RoomObjectiveState.Cleared ? new Color(0.25f, 1f, 0.45f) : Color.white;
+            if (debugPanel != null)
+            {
+                debugPanel.gameObject.SetActive(GameplayDebugHudState.IsVisible);
+            }
+
+            if (debugText != null)
+            {
+                debugText.text =
+                    $"COMBAT DEBUG (F3)\n" +
+                    $"HP {model.PlayerHealth}/{model.PlayerMaxHealth} | {model.DefenseSummary}\n" +
+                    $"Enemies {model.EnemiesRemaining}\n" +
+                    $"Tier {model.DifficultyName}\n" +
+                    $"Types {model.ArchetypeSummary}\n" +
+                    $"{model.ProjectileSummary}\n" +
+                    $"{model.DirectorDebugLine}";
+            }
         }
 
         private void BuildIfNeeded()
         {
-            if (playerHealthText != null)
+            if (roomStateText != null)
             {
                 return;
             }
 
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            playerHealthText = AddText("CombatHud.PlayerHealth", new Vector2(-760f, 470f), 24, TextAnchor.MiddleLeft);
-            enemyText = AddText("CombatHud.Enemies", new Vector2(-760f, 430f), 24, TextAnchor.MiddleLeft);
-            roomStateText = AddText("CombatHud.RoomState", new Vector2(-760f, 390f), 24, TextAnchor.MiddleLeft);
-            difficultyText = AddText("CombatHud.Difficulty", new Vector2(-760f, 350f), 20, TextAnchor.MiddleLeft);
-            archetypeText = AddText("CombatHud.Archetypes", new Vector2(-760f, 315f), 18, TextAnchor.MiddleLeft);
-            projectileText = AddText("CombatHud.Projectiles", new Vector2(-760f, 285f), 16, TextAnchor.MiddleLeft);
-            directorText = AddText("CombatHud.Director", new Vector2(-760f, 258f), 15, TextAnchor.MiddleLeft);
+            roomStateText = AddText("CombatHud.RoomState", new Vector2(0f, 472f), 22, TextAnchor.MiddleCenter, new Vector2(520f, 42f));
+            debugPanel = AddPanel("CombatHud.DebugPanel", new Vector2(610f, -230f), new Vector2(430f, 190f));
+            debugText = AddText("CombatHud.DebugText", Vector2.zero, 16, TextAnchor.UpperLeft, new Vector2(400f, 160f), debugPanel);
+            debugPanel.gameObject.SetActive(GameplayDebugHudState.IsVisible);
         }
 
-        private Text AddText(string name, Vector2 anchoredPosition, int size, TextAnchor alignment)
+        private Text AddText(
+            string name,
+            Vector2 anchoredPosition,
+            int size,
+            TextAnchor alignment,
+            Vector2 sizeDelta,
+            Transform parentOverride = null)
         {
             var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
-            textObject.transform.SetParent(transform, false);
+            textObject.transform.SetParent(parentOverride != null ? parentOverride : transform, false);
             var rect = (RectTransform)textObject.transform;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = anchoredPosition;
-            rect.sizeDelta = new Vector2(360f, 42f);
+            rect.sizeDelta = sizeDelta;
             var label = textObject.GetComponent<Text>();
             label.font = font;
             label.fontSize = size;
@@ -77,6 +92,20 @@ namespace Hollow.Combat
             label.color = Color.white;
             label.raycastTarget = false;
             return label;
+        }
+
+        private RectTransform AddPanel(string name, Vector2 anchoredPosition, Vector2 sizeDelta)
+        {
+            var panelObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panelObject.transform.SetParent(transform, false);
+            var rect = (RectTransform)panelObject.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = sizeDelta;
+            var image = panelObject.GetComponent<Image>();
+            image.color = new Color(0.03f, 0.04f, 0.05f, 0.72f);
+            image.raycastTarget = false;
+            return rect;
         }
     }
 }

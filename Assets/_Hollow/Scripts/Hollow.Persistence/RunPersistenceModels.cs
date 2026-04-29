@@ -165,6 +165,8 @@ namespace Hollow.Persistence
         public int defenseBonus;
         public int meleeDamageBonus;
         public int rangedDamageBonus;
+        public float meleeRangeBonusMeters;
+        public float rangedRangeBonusMeters;
     }
 
     [Serializable]
@@ -206,6 +208,8 @@ namespace Hollow.Persistence
         public int meleeDamage;
         public int rangedDamage;
         public float attackCooldownMultiplier;
+        public float meleeRangeBonusMeters;
+        public float rangedRangeBonusMeters;
     }
 
     [Serializable]
@@ -222,6 +226,8 @@ namespace Hollow.Persistence
         public int baseMeleeDamageBonus;
         public int baseRangedDamageBonus;
         public float baseAttackCooldownMultiplier = 1f;
+        public float baseMeleeRangeBonusMeters;
+        public float baseRangedRangeBonusMeters;
         public RunCurrencyWalletSaveState wallet = new();
         public RunEquipmentSlotsSaveState equipment = new();
         public RunInventoryStateSaveState inventory = new();

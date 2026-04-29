@@ -25,6 +25,10 @@ namespace Hollow.Rewards
 
         public int RangedDamageBonus { get; private set; }
 
+        public float MeleeRangeBonusMeters { get; private set; }
+
+        public float RangedRangeBonusMeters { get; private set; }
+
         public int ApplyReward(RewardGrant grant)
         {
             var effects = grant.Effects != null && grant.Effects.Count > 0
@@ -72,6 +76,12 @@ namespace Hollow.Rewards
                     case RewardEffectKind.AttackCooldownMultiplier:
                         ShotCooldownMultiplier *= effect.FloatValue <= 0f ? 1f : effect.FloatValue;
                         break;
+                    case RewardEffectKind.MeleeRangeBonusMeters:
+                        MeleeRangeBonusMeters += Mathf.Max(0f, effect.FloatValue);
+                        break;
+                    case RewardEffectKind.RangedRangeBonusMeters:
+                        RangedRangeBonusMeters += Mathf.Max(0f, effect.FloatValue);
+                        break;
                 }
             }
 
@@ -99,7 +109,9 @@ namespace Hollow.Rewards
                 staminaRegenBonus = StaminaRegenBonus,
                 defenseBonus = DefenseBonus,
                 meleeDamageBonus = MeleeDamageBonus,
-                rangedDamageBonus = RangedDamageBonus
+                rangedDamageBonus = RangedDamageBonus,
+                meleeRangeBonusMeters = MeleeRangeBonusMeters,
+                rangedRangeBonusMeters = RangedRangeBonusMeters
             };
         }
 
@@ -121,6 +133,8 @@ namespace Hollow.Rewards
             stats.DefenseBonus = Mathf.Max(0, saveState.defenseBonus);
             stats.MeleeDamageBonus = Mathf.Max(0, saveState.meleeDamageBonus);
             stats.RangedDamageBonus = Mathf.Max(0, saveState.rangedDamageBonus);
+            stats.MeleeRangeBonusMeters = Mathf.Max(0f, saveState.meleeRangeBonusMeters);
+            stats.RangedRangeBonusMeters = Mathf.Max(0f, saveState.rangedRangeBonusMeters);
             return stats;
         }
 
@@ -137,7 +151,9 @@ namespace Hollow.Rewards
                 defense = DefenseBonus,
                 meleeDamage = MeleeDamageBonus,
                 rangedDamage = ProjectileDamageBonus + RangedDamageBonus,
-                attackCooldownMultiplier = ShotCooldownMultiplier
+                attackCooldownMultiplier = ShotCooldownMultiplier,
+                meleeRangeBonusMeters = MeleeRangeBonusMeters,
+                rangedRangeBonusMeters = RangedRangeBonusMeters
             };
         }
 

@@ -235,6 +235,8 @@ namespace Hollow.Rewards
                 RewardEffectKind.RangedDamageBonus => $"+{effect.IntValue} ranged damage",
                 RewardEffectKind.AttackCooldownMultiplier => $"Cooldown x{effect.FloatValue:0.##}",
                 RewardEffectKind.Coins => $"+{effect.IntValue} coins",
+                RewardEffectKind.MeleeRangeBonusMeters => $"+{effect.FloatValue:0.##}m melee range",
+                RewardEffectKind.RangedRangeBonusMeters => $"+{effect.FloatValue:0.##}m ranged range",
                 _ => string.Empty
             };
         }

@@ -88,6 +88,12 @@ namespace Hollow.Tests.EditMode
             build.Inventory.AddPassiveCard("quick_draw_rule");
             build.Wallet.AddSouls(12);
             build.Wallet.AddCoins(5);
+            build.AddModifier(new PlayerStatModifier
+            {
+                sourceId = "range_test",
+                meleeRangeBonusMeters = 0.25f,
+                rangedRangeBonusMeters = 1.5f
+            });
             Assert.IsTrue(build.SpendStamina(20f));
 
             var restored = PlayerRunBuild.FromSaveState(build.ToSaveState());
@@ -100,6 +106,8 @@ namespace Hollow.Tests.EditMode
             Assert.Contains("quick_draw_rule", (System.Collections.ICollection)restored.Inventory.PassiveCardIds);
             Assert.AreEqual(12, restored.Wallet.RunSouls);
             Assert.AreEqual(5, restored.Wallet.RunCoins);
+            Assert.AreEqual(0.25f, restored.DerivedStats.MeleeRangeBonusMeters, 0.001f);
+            Assert.AreEqual(1.5f, restored.DerivedStats.RangedRangeBonusMeters, 0.001f);
             Assert.AreEqual(80f, restored.CurrentStamina, 0.001f);
         }
 
@@ -123,6 +131,8 @@ namespace Hollow.Tests.EditMode
                     staminaRegen = 4f,
                     rangedDamage = 3,
                     meleeDamage = 2,
+                    meleeRangeBonusMeters = 0.35f,
+                    rangedRangeBonusMeters = 1.25f,
                     attackCooldownMultiplier = 0.8f
                 });
                 build.Equipment.EquipMeleeWeapon("practice_sword");
@@ -136,6 +146,8 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
                 Assert.AreEqual("practice_sword", weapon.MeleeWeaponId);
                 Assert.AreEqual("practice_bow", weapon.RangedWeaponId);
+                Assert.AreEqual(0.35f, weapon.MeleeRangeBonusMeters, 0.001f);
+                Assert.AreEqual(1.25f, weapon.RangedRangeBonusMeters, 0.001f);
             }
             finally
             {

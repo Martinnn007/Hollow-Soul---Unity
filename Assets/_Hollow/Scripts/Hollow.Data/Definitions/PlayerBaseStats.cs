@@ -15,6 +15,8 @@ namespace Hollow.Data.Definitions
         [SerializeField] private int meleeDamageBonus;
         [SerializeField] private int rangedDamageBonus;
         [SerializeField] private float attackCooldownMultiplier;
+        [SerializeField] private float meleeRangeBonusMeters;
+        [SerializeField] private float rangedRangeBonusMeters;
 
         public PlayerBaseStats(
             int maxHealth,
@@ -25,7 +27,9 @@ namespace Hollow.Data.Definitions
             int defense,
             int meleeDamageBonus,
             int rangedDamageBonus,
-            float attackCooldownMultiplier)
+            float attackCooldownMultiplier,
+            float meleeRangeBonusMeters = 0f,
+            float rangedRangeBonusMeters = 0f)
         {
             this.maxHealth = Mathf.Max(1, maxHealth);
             this.speedMetersPerSecond = Mathf.Max(0.1f, speedMetersPerSecond);
@@ -36,6 +40,8 @@ namespace Hollow.Data.Definitions
             this.meleeDamageBonus = Mathf.Max(0, meleeDamageBonus);
             this.rangedDamageBonus = Mathf.Max(0, rangedDamageBonus);
             this.attackCooldownMultiplier = attackCooldownMultiplier <= 0f ? 1f : attackCooldownMultiplier;
+            this.meleeRangeBonusMeters = Mathf.Max(0f, meleeRangeBonusMeters);
+            this.rangedRangeBonusMeters = Mathf.Max(0f, rangedRangeBonusMeters);
         }
 
         public int MaxHealth => Mathf.Max(1, maxHealth);
@@ -56,6 +62,10 @@ namespace Hollow.Data.Definitions
 
         public float AttackCooldownMultiplier => attackCooldownMultiplier <= 0f ? 1f : attackCooldownMultiplier;
 
+        public float MeleeRangeBonusMeters => Mathf.Max(0f, meleeRangeBonusMeters);
+
+        public float RangedRangeBonusMeters => Mathf.Max(0f, rangedRangeBonusMeters);
+
         public bool IsConfigured => maxHealth > 0 && speedMetersPerSecond > 0f && maxStamina > 0f;
 
         public static PlayerBaseStats Default => new(
@@ -67,6 +77,8 @@ namespace Hollow.Data.Definitions
             defense: 0,
             meleeDamageBonus: 0,
             rangedDamageBonus: 0,
-            attackCooldownMultiplier: 1f);
+            attackCooldownMultiplier: 1f,
+            meleeRangeBonusMeters: 0f,
+            rangedRangeBonusMeters: 0f);
     }
 }

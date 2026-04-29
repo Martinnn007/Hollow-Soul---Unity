@@ -15,6 +15,8 @@ namespace Hollow.Combat
         [SerializeField] private int projectileDamageBonus;
         [SerializeField] private int meleeDamageBonus = 1;
         [SerializeField] private int temporaryDamageBonus;
+        [SerializeField] private float meleeRangeBonusMeters;
+        [SerializeField] private float rangedRangeBonusMeters;
         [SerializeField] private float maxStamina = 100f;
         [SerializeField] private float currentStamina = 100f;
         [SerializeField] private float staminaRegenPerSecond = 18f;
@@ -49,6 +51,18 @@ namespace Hollow.Combat
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
+        public float MeleeRangeBonusMeters => meleeRangeBonusMeters;
+
+        public float RangedRangeBonusMeters => rangedRangeBonusMeters;
+
+        public float EffectiveMeleeLightRangeMeters => EffectiveRange(
+            ResolveAttack(ResolveWeapon(WeaponSlot.Melee), WeaponSlot.Melee, AttackKind.Light),
+            WeaponSlot.Melee);
+
+        public float EffectiveRangedLightRangeMeters => EffectiveRange(
+            ResolveAttack(ResolveWeapon(WeaponSlot.Ranged), WeaponSlot.Ranged, AttackKind.Light),
+            WeaponSlot.Ranged);
+
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, GameObject prefab)
         {
             roomRuntimeRoot = room;
@@ -82,7 +96,9 @@ namespace Hollow.Combat
             string nextRangedWeaponId,
             WeaponSlot nextActiveWeaponSlot,
             float nextCurrentStamina,
-            WeaponCatalogDefinition nextWeaponCatalog = null)
+            WeaponCatalogDefinition nextWeaponCatalog = null,
+            float nextMeleeRangeBonusMeters = 0f,
+            float nextRangedRangeBonusMeters = 0f)
         {
             ConfigureStats(nextCooldownMultiplier, nextRangedDamageBonus);
             if (nextWeaponCatalog != null)
@@ -91,6 +107,8 @@ namespace Hollow.Combat
             }
 
             meleeDamageBonus = Mathf.Max(0, nextMeleeDamageBonus);
+            meleeRangeBonusMeters = Mathf.Max(0f, nextMeleeRangeBonusMeters);
+            rangedRangeBonusMeters = Mathf.Max(0f, nextRangedRangeBonusMeters);
             maxStamina = Mathf.Max(1f, nextMaxStamina);
             staminaRegenPerSecond = Mathf.Max(0f, nextStaminaRegenPerSecond);
             currentStamina = Mathf.Clamp(nextCurrentStamina <= 0f ? maxStamina : nextCurrentStamina, 0f, maxStamina);
@@ -187,6 +205,9 @@ namespace Hollow.Combat
 
             var attackCooldown = attack.CooldownSeconds * cooldownMultiplier;
             var attackDamage = attack.Damage + projectileDamageBonus + CurrentTemporaryDamageBonus;
+            var effectiveRange = EffectiveRange(attack, WeaponSlot.Ranged);
+            var projectileSpeed = ProjectileController.DefaultSpeedMetersPerSecond;
+            var lifetimeSeconds = Mathf.Max(0.1f, effectiveRange / projectileSpeed);
             nextAllowedShotTime = timeSeconds + attackCooldown;
             var projectileObject = Instantiate(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
@@ -198,8 +219,8 @@ namespace Hollow.Combat
                 combatController,
                 new Vector3(cardinal.x, 0f, cardinal.y),
                 attackDamage,
-                attack.RangeMeters,
-                ProjectileController.DefaultLifetimeSeconds);
+                projectileSpeed,
+                lifetimeSeconds);
             projectile.ConfigureCombatFeel(
                 CombatFeelProfileDefinition.Resolve(combatFeelProfile),
                 attackKind == AttackKind.Heavy);
@@ -231,8 +252,10 @@ namespace Hollow.Combat
 
             nextAllowedMeleeTime = timeSeconds + Mathf.Max(0.05f, cooldown);
             var direction = new Vector3(cardinal.x, 0f, cardinal.y);
-            var radius = Mathf.Max(0.25f, attack.RangeMeters * 0.48f);
-            var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, attack.RangeMeters * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);
+            var effectiveRange = EffectiveRange(attack, WeaponSlot.Melee);
+            MeleeSwipePresenter.Spawn(transform.parent, transform.localPosition, direction, effectiveRange, attackKind);
+            var radius = Mathf.Max(0.25f, effectiveRange * 0.48f);
+            var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, effectiveRange * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);
             var target = combatController.FindEnemyHit(hitCenter, radius);
             if (target != null)
             {
@@ -334,6 +357,12 @@ namespace Hollow.Combat
             return attackKind == AttackKind.Heavy
                 ? WeaponAttackDefinition.DefaultHeavy(slot)
                 : WeaponAttackDefinition.DefaultLight(slot);
+        }
+
+        private float EffectiveRange(WeaponAttackDefinition attack, WeaponSlot slot)
+        {
+            var rangeBonus = slot == WeaponSlot.Melee ? meleeRangeBonusMeters : rangedRangeBonusMeters;
+            return Mathf.Max(0.1f, attack.RangeMeters + rangeBonus);
         }
     }
 }

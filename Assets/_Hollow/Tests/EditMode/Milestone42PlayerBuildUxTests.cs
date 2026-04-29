@@ -24,6 +24,8 @@ namespace Hollow.Tests.EditMode
                 18f,
                 1,
                 2,
+                0.25f,
+                1.5f,
                 0.95f,
                 9,
                 14,
@@ -39,6 +41,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(model.BodyText.Contains("Souls: 14"));
             Assert.IsTrue(model.BodyText.Contains("Set: Skeletal Set"));
             Assert.IsTrue(model.BodyText.Contains("Guard"));
+            Assert.IsTrue(model.BodyText.Contains("Range: M +0.25m  R +1.5m"));
         }
 
         [Test]

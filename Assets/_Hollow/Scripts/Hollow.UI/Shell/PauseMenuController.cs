@@ -129,7 +129,8 @@ namespace Hollow.UI.Shell
                 "Active Item: Q",
                 "Consumable Card: F",
                 "Guard: Shift",
-                "Pause: Escape"
+                "Pause: Escape",
+                "Debug Overlay: F3"
             });
             AddControlsColumn(panel, "DualShock 5", new Vector2(225f, 10f), new[]
             {

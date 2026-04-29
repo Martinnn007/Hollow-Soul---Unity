@@ -572,6 +572,8 @@ namespace Hollow.Branches
                 derived.StaminaRegenPerSecond,
                 derived.MeleeDamageBonus,
                 derived.RangedDamageBonus,
+                derived.MeleeRangeBonusMeters,
+                derived.RangedRangeBonusMeters,
                 derived.AttackCooldownMultiplier,
                 runEconomy.RunCoins,
                 runEconomy.RunSouls,
@@ -2422,6 +2424,8 @@ namespace Hollow.Branches
                 legacySave.baseMeleeDamageBonus = preservedSave.baseMeleeDamageBonus;
                 legacySave.baseRangedDamageBonus = preservedSave.baseRangedDamageBonus;
                 legacySave.baseAttackCooldownMultiplier = preservedSave.baseAttackCooldownMultiplier;
+                legacySave.baseMeleeRangeBonusMeters = preservedSave.baseMeleeRangeBonusMeters;
+                legacySave.baseRangedRangeBonusMeters = preservedSave.baseRangedRangeBonusMeters;
                 legacySave.currentStamina = preservedSave.currentStamina;
                 legacySave.equipment = preservedSave.equipment;
                 legacySave.inventory = preservedSave.inventory;

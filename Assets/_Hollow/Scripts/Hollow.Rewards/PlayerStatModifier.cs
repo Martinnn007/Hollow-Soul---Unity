@@ -18,6 +18,8 @@ namespace Hollow.Rewards
         public int meleeDamage;
         public int rangedDamage;
         public float attackCooldownMultiplier;
+        public float meleeRangeBonusMeters;
+        public float rangedRangeBonusMeters;
 
         public bool IsEmpty =>
             maxHealth == 0 &&
@@ -28,7 +30,9 @@ namespace Hollow.Rewards
             defense == 0 &&
             meleeDamage == 0 &&
             rangedDamage == 0 &&
-            Mathf.Approximately(attackCooldownMultiplier, 0f);
+            Mathf.Approximately(attackCooldownMultiplier, 0f) &&
+            Mathf.Approximately(meleeRangeBonusMeters, 0f) &&
+            Mathf.Approximately(rangedRangeBonusMeters, 0f);
 
         public PlayerStatModifierSaveState ToSaveState()
         {
@@ -43,7 +47,9 @@ namespace Hollow.Rewards
                 defense = defense,
                 meleeDamage = meleeDamage,
                 rangedDamage = rangedDamage,
-                attackCooldownMultiplier = attackCooldownMultiplier
+                attackCooldownMultiplier = attackCooldownMultiplier,
+                meleeRangeBonusMeters = meleeRangeBonusMeters,
+                rangedRangeBonusMeters = rangedRangeBonusMeters
             };
         }
 
@@ -62,7 +68,9 @@ namespace Hollow.Rewards
                     defense = saveState.defense,
                     meleeDamage = saveState.meleeDamage,
                     rangedDamage = saveState.rangedDamage,
-                    attackCooldownMultiplier = saveState.attackCooldownMultiplier
+                    attackCooldownMultiplier = saveState.attackCooldownMultiplier,
+                    meleeRangeBonusMeters = saveState.meleeRangeBonusMeters,
+                    rangedRangeBonusMeters = saveState.rangedRangeBonusMeters
                 };
         }
 
@@ -79,7 +87,9 @@ namespace Hollow.Rewards
                 defense = modifier.Defense,
                 meleeDamage = modifier.MeleeDamage,
                 rangedDamage = modifier.RangedDamage,
-                attackCooldownMultiplier = modifier.AttackCooldownMultiplier
+                attackCooldownMultiplier = modifier.AttackCooldownMultiplier,
+                meleeRangeBonusMeters = modifier.MeleeRangeBonusMeters,
+                rangedRangeBonusMeters = modifier.RangedRangeBonusMeters
             };
         }
     }

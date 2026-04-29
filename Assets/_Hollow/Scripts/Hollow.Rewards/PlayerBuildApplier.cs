@@ -50,7 +50,9 @@ namespace Hollow.Rewards
                     build.Equipment.RangedWeaponId,
                     build.Equipment.ActiveWeaponSlot,
                     build.CurrentStamina,
-                    weaponCatalog);
+                    weaponCatalog,
+                    derived.MeleeRangeBonusMeters,
+                    derived.RangedRangeBonusMeters);
             }
         }
     }

@@ -15,6 +15,8 @@ namespace Hollow.Data.Definitions
         [SerializeField] private int meleeDamage;
         [SerializeField] private int rangedDamage;
         [SerializeField] private float attackCooldownMultiplier;
+        [SerializeField] private float meleeRangeBonusMeters;
+        [SerializeField] private float rangedRangeBonusMeters;
 
         public CharacterStatModifier(
             int maxHealth = 0,
@@ -25,7 +27,9 @@ namespace Hollow.Data.Definitions
             int defense = 0,
             int meleeDamage = 0,
             int rangedDamage = 0,
-            float attackCooldownMultiplier = 0f)
+            float attackCooldownMultiplier = 0f,
+            float meleeRangeBonusMeters = 0f,
+            float rangedRangeBonusMeters = 0f)
         {
             this.maxHealth = maxHealth;
             this.speed = speed;
@@ -36,6 +40,8 @@ namespace Hollow.Data.Definitions
             this.meleeDamage = meleeDamage;
             this.rangedDamage = rangedDamage;
             this.attackCooldownMultiplier = attackCooldownMultiplier;
+            this.meleeRangeBonusMeters = meleeRangeBonusMeters;
+            this.rangedRangeBonusMeters = rangedRangeBonusMeters;
         }
 
         public int MaxHealth => maxHealth;
@@ -56,6 +62,10 @@ namespace Hollow.Data.Definitions
 
         public float AttackCooldownMultiplier => attackCooldownMultiplier;
 
+        public float MeleeRangeBonusMeters => meleeRangeBonusMeters;
+
+        public float RangedRangeBonusMeters => rangedRangeBonusMeters;
+
         public bool IsEmpty =>
             maxHealth == 0 &&
             Mathf.Approximately(speed, 0f) &&
@@ -65,6 +75,8 @@ namespace Hollow.Data.Definitions
             defense == 0 &&
             meleeDamage == 0 &&
             rangedDamage == 0 &&
-            Mathf.Approximately(attackCooldownMultiplier, 0f);
+            Mathf.Approximately(attackCooldownMultiplier, 0f) &&
+            Mathf.Approximately(meleeRangeBonusMeters, 0f) &&
+            Mathf.Approximately(rangedRangeBonusMeters, 0f);
     }
 }
