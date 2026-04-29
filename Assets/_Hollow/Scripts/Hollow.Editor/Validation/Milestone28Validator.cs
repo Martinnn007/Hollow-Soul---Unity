@@ -165,6 +165,9 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateScenes(RewardPoolDefinition standardPool, RewardPoolDefinition treasurePool, RewardPoolDefinition bossPool, UsableItemCatalogDefinition usableCatalog, List<string> failures)
         {
+            var latestStandard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.StandardRewardPoolPath);
+            var latestTreasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.TreasureRewardPoolPath);
+            var latestBoss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.BossRewardPoolPath);
             foreach (var scenePath in GameScenes)
             {
                 EditorSceneManager.OpenScene(scenePath);
@@ -175,11 +178,19 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (branch.StandardRewardPool != standardPool || branch.TreasureRewardPool != treasurePool || branch.BossRewardPool != bossPool || branch.UsableItemCatalog != usableCatalog)
+                if (!IsRewardPoolCompatible(branch.StandardRewardPool, standardPool, latestStandard) ||
+                    !IsRewardPoolCompatible(branch.TreasureRewardPool, treasurePool, latestTreasure) ||
+                    !IsRewardPoolCompatible(branch.BossRewardPool, bossPool, latestBoss) ||
+                    branch.UsableItemCatalog != usableCatalog)
                 {
-                    failures.Add($"{scenePath} BranchSessionController is not wired to M28 reward pools/catalog.");
+                    failures.Add($"{scenePath} BranchSessionController is not wired to M28-compatible reward pools/catalog.");
                 }
             }
+        }
+
+        private static bool IsRewardPoolCompatible(RewardPoolDefinition assigned, RewardPoolDefinition milestonePool, RewardPoolDefinition latestPool)
+        {
+            return assigned != null && (assigned == milestonePool || (latestPool != null && assigned == latestPool));
         }
     }
 }

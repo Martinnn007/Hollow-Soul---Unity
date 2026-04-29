@@ -84,6 +84,14 @@ namespace Hollow.Branches
             }
         }
 
+        public void MarkRewardUnavailable()
+        {
+            if (RewardState == RoomRewardState.Pending || RewardState == RoomRewardState.None)
+            {
+                RewardState = RoomRewardState.Unavailable;
+            }
+        }
+
         public void OverrideRole(BranchRoomRole role)
         {
             Role = role;

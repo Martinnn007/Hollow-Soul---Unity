@@ -29,10 +29,11 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual("starter_bolt", balanced.StarterRangedWeaponId);
             Assert.AreEqual(10f, balanced.PassiveSkill.StatModifier.MaxStamina, 0.001f);
             Assert.AreEqual(1f, balanced.PassiveSkill.StatModifier.StaminaRegen, 0.001f);
+            Assert.AreEqual(3, balanced.BaseStats.MaxHealth);
 
             Assert.IsTrue(catalog.TryGetCharacter("heavy", out var heavy));
             Assert.AreEqual("Heavy", heavy.DisplayName);
-            Assert.AreEqual(9, heavy.BaseStats.MaxHealth);
+            Assert.AreEqual(5, heavy.BaseStats.MaxHealth);
             Assert.AreEqual(3.15f, heavy.BaseStats.SpeedMetersPerSecond, 0.001f);
             Assert.AreEqual(2, heavy.BaseStats.Strength);
             Assert.AreEqual(130f, heavy.BaseStats.MaxStamina, 0.001f);
@@ -54,7 +55,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual("starter_blade", build.Equipment.MeleeWeaponId);
             Assert.AreEqual("starter_bolt", build.Equipment.RangedWeaponId);
             Assert.AreEqual(WeaponSlot.Ranged, build.Equipment.ActiveWeaponSlot);
-            Assert.AreEqual(9, build.DerivedStats.MaxHealth);
+            Assert.AreEqual(5, build.DerivedStats.MaxHealth);
             Assert.AreEqual(3.15f, build.DerivedStats.SpeedMetersPerSecond, 0.001f);
             Assert.AreEqual(2, build.DerivedStats.Strength);
             Assert.AreEqual(130f, build.DerivedStats.MaxStamina, 0.001f);

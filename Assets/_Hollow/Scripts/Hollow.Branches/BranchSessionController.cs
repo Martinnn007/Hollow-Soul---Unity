@@ -425,7 +425,7 @@ namespace Hollow.Branches
             bossDoorUnlocked = snapshot?.bossDoorUnlocked ?? false;
             State = BranchSessionState.Create(CreateGraphForSnapshot(snapshot));
             branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
-            interBranchHubState = InterBranchHubState.FromSaveState(snapshot?.interBranchHub, currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool);
+            interBranchHubState = InterBranchHubState.FromSaveState(snapshot?.interBranchHub, currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool, treasureRewardPool);
             if (IsProceduralRewardBranch(State.Graph.BranchId) && !proceduralRewardPlan.Rewards.Any())
             {
                 proceduralRewardPlan = CreateRewardPlanForGraph(
@@ -943,9 +943,9 @@ namespace Hollow.Branches
                 if (worldPhase == RunWorldPhase.Branch && !string.IsNullOrWhiteSpace(activeHubPortalId))
                 {
                     interBranchHubState = interBranchHubState.IsActive
-                        ? interBranchHubState.MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool)
-                        : InterBranchHubState.CreateWorldHub(runSeed, worldIndex, 0, standardRewardPool, weaponRewardPool)
-                            .MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool);
+                        ? interBranchHubState.MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool, treasureRewardPool)
+                        : InterBranchHubState.CreateWorldHub(runSeed, worldIndex, 0, standardRewardPool, weaponRewardPool, treasureRewardPool)
+                            .MarkBranchPortalDefeated(activeHubPortalId, standardRewardPool, weaponRewardPool, treasureRewardPool);
                     activeHubPortalId = string.Empty;
                 }
 
@@ -993,8 +993,8 @@ namespace Hollow.Branches
             if (!interBranchHubState.IsActive || (!restoreExistingState && !IsWorldLoopRuntime()))
             {
                 interBranchHubState = IsWorldLoopRuntime()
-                    ? InterBranchHubState.CreateWorldHub(runSeed == 0 ? currentBranchSeed : runSeed, worldIndex, interBranchHubState.ShopRefreshIndex, standardRewardPool, weaponRewardPool)
-                    : InterBranchHubState.Create(currentBranchSeed == 0 ? State?.Graph?.Seed ?? macroBranchSeed : currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool);
+                    ? InterBranchHubState.CreateWorldHub(runSeed == 0 ? currentBranchSeed : runSeed, worldIndex, interBranchHubState.ShopRefreshIndex, standardRewardPool, weaponRewardPool, treasureRewardPool)
+                    : InterBranchHubState.Create(currentBranchSeed == 0 ? State?.Graph?.Seed ?? macroBranchSeed : currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool, treasureRewardPool);
             }
 
             worldPhase = IsWorldLoopRuntime() ? RunWorldPhase.Hub : worldPhase;
@@ -1083,6 +1083,16 @@ namespace Hollow.Branches
             if (IsM20Branch() && branchFeaturePlan.IsBossKeyRoom(State.CurrentRoomId))
             {
                 SpawnBossKeyIfNeeded();
+                return;
+            }
+
+            var grant = ProceduralRewardResolver.Resolve(State.CurrentRoomId.Value, proceduralRewardPlan);
+            if (grant.IsEmpty)
+            {
+                State.CurrentRoom.MarkRewardUnavailable();
+                LastRewardMessage = "Nothing found";
+                SpawnHubPortalIfReady();
+                CheckpointActiveRun();
                 return;
             }
 
@@ -1571,7 +1581,7 @@ namespace Hollow.Branches
 
             if (!activeChallenge.StatModifier.IsEmpty)
             {
-                playerRunBuild.AddModifier(PlayerStatModifier.FromCharacterStatModifier($"challenge:{activeChallenge.ChallengeId}", activeChallenge.StatModifier));
+                playerRunBuild.AddModifier(CreateClampedChallengeModifier(activeChallenge));
             }
 
             if (activeChallenge.StartingCoins > 0)
@@ -1588,6 +1598,19 @@ namespace Hollow.Branches
             ApplyEquipmentAndSynergyModifiers(playerRunBuild, announceActivation: false);
             LastRewardMessage = $"Challenge: {activeChallenge.DisplayName}";
             SaveStatus = "Challenge";
+        }
+
+        private PlayerStatModifier CreateClampedChallengeModifier(ChallengeDefinition challenge)
+        {
+            var modifier = PlayerStatModifier.FromCharacterStatModifier($"challenge:{challenge.ChallengeId}", challenge.StatModifier);
+            const int minimumChallengeHealth = 2;
+            var projectedHealth = playerRunBuild.DerivedStats.MaxHealth + modifier.maxHealth;
+            if (projectedHealth < minimumChallengeHealth)
+            {
+                modifier.maxHealth += minimumChallengeHealth - projectedHealth;
+            }
+
+            return modifier;
         }
 
         private void ApplyChallengeLoadoutForFreshRun()

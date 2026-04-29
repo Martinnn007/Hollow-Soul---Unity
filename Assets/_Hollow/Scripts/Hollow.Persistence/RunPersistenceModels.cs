@@ -212,7 +212,7 @@ namespace Hollow.Persistence
     {
         public string selectedCharacterId = "balanced";
         public float currentStamina;
-        public int baseMaxHealth = 6;
+        public int baseMaxHealth = 3;
         public float baseSpeed = 4f;
         public int baseStrength = 1;
         public float baseMaxStamina = 100f;

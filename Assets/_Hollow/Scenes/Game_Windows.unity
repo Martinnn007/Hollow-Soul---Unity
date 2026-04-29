@@ -523,9 +523,9 @@ MonoBehaviour:
   nextBranchPortalPrefab: {fileID: 3059470880080516638, guid: 9333826f7001e4f89a6b06d650e93c55, type: 3}
   branchRoomTemplateCatalog: {fileID: 11400000, guid: 3665e4cabb1ef49f89996f4d1cfb3802, type: 2}
   branchGenerationSettings: {fileID: 11400000, guid: 56b03ad05db574d0994715aad73f94c6, type: 2}
-  standardRewardPool: {fileID: 11400000, guid: 2e6b1cf7225fe4884bc986b2c7323e36, type: 2}
-  treasureRewardPool: {fileID: 11400000, guid: aeb6af8a78bd14167b523b4344637e2e, type: 2}
-  bossRewardPool: {fileID: 11400000, guid: 39e19ac6a900e4db1842b2ea955ab541, type: 2}
+  standardRewardPool: {fileID: 11400000, guid: fb5338c6772c48d0b26729fe2e3e4a13, type: 2}
+  treasureRewardPool: {fileID: 11400000, guid: ba1b859fdeb6440c95b31ddcff45d400, type: 2}
+  bossRewardPool: {fileID: 11400000, guid: 768e902a08704d4d9a85149d0ad17330, type: 2}
   weaponRewardPool: {fileID: 11400000, guid: c0c32fb79be434a3cbc8f64556f117c4, type: 2}
   weaponCatalog: {fileID: 11400000, guid: a5098120641cf48dd912cff2f2e13ef0, type: 2}
   usableItemCatalog: {fileID: 11400000, guid: b9618a81bc14d4b608b57deb48372281, type: 2}

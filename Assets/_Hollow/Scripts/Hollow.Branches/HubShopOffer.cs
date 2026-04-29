@@ -81,7 +81,7 @@ namespace Hollow.Branches
                     save.isPurchased);
         }
 
-        public static IReadOnlyList<HubShopOffer> CreateSeededOffers(int branchSeed, int branchDepth, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool = null)
+        public static IReadOnlyList<HubShopOffer> CreateSeededOffers(int branchSeed, int branchDepth, RewardPoolDefinition standardPool, RewardPoolDefinition weaponPool = null, RewardPoolDefinition shopRewardPool = null)
         {
             var offers = new List<HubShopOffer>
             {
@@ -94,7 +94,9 @@ namespace Hollow.Branches
                 var shouldOfferWeapon = weaponPool != null && StableHash($"{branchSeed}|{branchDepth}|shop|weapon|{index}") % 5 == 0;
                 var grant = shouldOfferWeapon && weaponPool.TryRoll(roomId, "m27_hub_shop_weapons", branchSeed + branchDepth + index, out var weaponGrant)
                     ? new RewardGrant(roomId, weaponGrant.RewardId, weaponGrant.DisplayName, weaponGrant.RewardKind, 0, weaponGrant.Effects)
-                    : standardPool != null && standardPool.TryRoll(roomId, "m20_hub_shop", branchSeed + branchDepth + index, out var rolled) && rolled.RewardKind != RewardKind.Currency
+                    : shopRewardPool != null && shopRewardPool.TryRoll(roomId, "m51_hub_shop", branchSeed + branchDepth + index, out var shopRolled) && IsShopRewardKind(shopRolled.RewardKind)
+                    ? new RewardGrant(roomId, shopRolled.RewardId, shopRolled.DisplayName, shopRolled.RewardKind, 0, shopRolled.Effects)
+                    : standardPool != null && standardPool.TryRoll(roomId, "m20_hub_shop", branchSeed + branchDepth + index, out var rolled) && IsShopRewardKind(rolled.RewardKind)
                     ? new RewardGrant(roomId, rolled.RewardId, rolled.DisplayName, rolled.RewardKind, 0, rolled.Effects)
                     : FallbackReward(roomId, branchSeed, branchDepth, index);
                 var price = grant.RewardKind switch
@@ -108,6 +110,11 @@ namespace Hollow.Branches
             }
 
             return offers;
+        }
+
+        private static bool IsShopRewardKind(RewardKind kind)
+        {
+            return kind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Armor;
         }
 
         private static RewardGrant FallbackReward(string roomId, int branchSeed, int branchDepth, int index)

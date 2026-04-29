@@ -58,6 +58,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone48ContentExpansionLockV1.md` describes the first larger locked room/encounter content pool, M48 successor catalog wiring, curated draft mirroring, and team handoff report outputs.
 - `Docs/Milestone49ArtPassProductionIntegrationII.md` describes the direct ArtPass production-replacement workflow, visual-only safety gate, role status report, and Rafal/Martin checklist PDF.
 - `Docs/Milestone50StoryWorldIdentityRunFramingV2.md` describes the Hollow Star world identity catalog, seeded three-world itinerary, entry toast, and hub branch echo labels.
+- `Docs/Milestone51PreBetaRewardHealthRebalance.md` describes sparse ordinary-room rewards, treasure/boss/shop item gating, and the lower pre-beta character health baseline.
 - `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup

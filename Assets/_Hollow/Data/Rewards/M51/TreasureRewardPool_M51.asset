@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51e695efa471c403ca009fe62a29e856, type: 3}
+  m_Name: TreasureRewardPool_M51
+  m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.RewardPoolDefinition
+  poolId: m51_treasure_item_rewards
+  rewards:
+  - {fileID: 11400000, guid: e41b86e7fff31418c9c29a1713eb0e50, type: 2}
+  - {fileID: 11400000, guid: cde193c6960b2433daf6ae4a6477c714, type: 2}
+  - {fileID: 11400000, guid: b2c4667c09fbb4a88bc89e03f6ab0146, type: 2}
+  - {fileID: 11400000, guid: 244ccd5ac640f4375a82df43aa60a4fe, type: 2}
+  - {fileID: 11400000, guid: 67f5e978a89da4ed18dfd6899be55196, type: 2}
+  - {fileID: 11400000, guid: a25f4e323840f48c992ed0227604c980, type: 2}
+  - {fileID: 11400000, guid: d5f1e9ff8009c42138fb8e769a9ebeb3, type: 2}
+  - {fileID: 11400000, guid: aae4064b2340d4b50bdf35822d993f33, type: 2}
+  - {fileID: 11400000, guid: cb27431cfaf1c4361aebf963dd38d3d3, type: 2}
+  - {fileID: 11400000, guid: cca1986aebb73467991dafb137de5998, type: 2}

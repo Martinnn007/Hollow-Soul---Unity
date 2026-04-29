@@ -94,9 +94,9 @@ namespace Hollow.Editor.Validation
             }
             else
             {
-                if (balanced.BaseStats.MaxHealth != 6 || balanced.BaseStats.SpeedMetersPerSecond < 3.99f)
+                if (balanced.BaseStats.MaxHealth != 3 || balanced.BaseStats.SpeedMetersPerSecond < 3.99f)
                 {
-                    failures.Add("Balanced must use default stable base stats.");
+                    failures.Add("Balanced must use the M51 pre-beta 3 HP stable base stats.");
                 }
 
                 if (balanced.PassiveSkill.StatModifier.MaxStamina != 10f || balanced.PassiveSkill.StatModifier.StaminaRegen != 1f)
@@ -111,9 +111,9 @@ namespace Hollow.Editor.Validation
             }
             else
             {
-                if (heavy.BaseStats.MaxHealth != 9 || heavy.BaseStats.Defense != 2 || heavy.BaseStats.MeleeDamageBonus != 1)
+                if (heavy.BaseStats.MaxHealth != 5 || heavy.BaseStats.Defense != 2 || heavy.BaseStats.MeleeDamageBonus != 1)
                 {
-                    failures.Add("Heavy must use the locked tank base stats.");
+                    failures.Add("Heavy must use the M51 rescaled tank base stats.");
                 }
 
                 if (heavy.PassiveSkill.StatModifier.MeleeDamage != 1)

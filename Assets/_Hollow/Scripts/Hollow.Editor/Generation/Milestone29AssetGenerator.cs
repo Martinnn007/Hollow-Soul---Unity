@@ -46,7 +46,16 @@ namespace Hollow.Editor.Generation
                 "Character_Balanced.asset",
                 "balanced",
                 "Balanced",
-                PlayerBaseStats.Default,
+                new PlayerBaseStats(
+                    maxHealth: 3,
+                    speedMetersPerSecond: 4f,
+                    strength: 1,
+                    maxStamina: 100f,
+                    staminaRegenPerSecond: 18f,
+                    defense: 0,
+                    meleeDamageBonus: 0,
+                    rangedDamageBonus: 0,
+                    attackCooldownMultiplier: 1f),
                 steadyForm,
                 new[] { BuildTag.Stamina, BuildTag.Ranged, BuildTag.Melee });
             var heavy = SaveCharacter(
@@ -54,7 +63,7 @@ namespace Hollow.Editor.Generation
                 "heavy",
                 "Heavy",
                 new PlayerBaseStats(
-                    maxHealth: 9,
+                    maxHealth: 5,
                     speedMetersPerSecond: 3.15f,
                     strength: 2,
                     maxStamina: 130f,
