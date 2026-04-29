@@ -77,6 +77,32 @@ namespace Hollow.Combat
                 }
             }
 
+            foreach (var roomObject in room.InteractiveObjectMarkers)
+            {
+                if (roomObject == null || !roomObject.BlocksMovement)
+                {
+                    continue;
+                }
+
+                var halfX = roomObject.SizeMeters.x * 0.5f + radius;
+                var halfZ = roomObject.SizeMeters.z * 0.5f + radius;
+                if (Mathf.Abs(localPosition.x - roomObject.transform.localPosition.x) <= halfX &&
+                    Mathf.Abs(localPosition.z - roomObject.transform.localPosition.z) <= halfZ)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IntersectsProjectileBlocker(RoomRuntimeRoot room, Vector3 localPosition, float radius)
+        {
+            if (IntersectsObstacle(room, localPosition, radius))
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -112,6 +138,32 @@ namespace Hollow.Combat
                    !IsPointOnWalkableTile(walkableTiles, localPosition + new Vector3(0f, 0f, -clampedRadius));
         }
 
+        public static Vector3 ResolveFlyingMove(RoomRuntimeRoot room, Vector3 desiredLocal, float radius)
+        {
+            if (room == null)
+            {
+                return desiredLocal;
+            }
+
+            radius = Mathf.Max(MinimumRadiusMeters, radius);
+            var clamped = ClampToBounds(room, desiredLocal, radius);
+            return IsOutsideFloorRegions(room, clamped, radius)
+                ? NearestFloorRegionPosition(room, clamped)
+                : clamped;
+        }
+
+        public static bool IsOutsideFloorRegions(RoomRuntimeRoot room, Vector3 localPosition, float radius)
+        {
+            var regions = room?.CurrentLayout?.FloorRegions;
+            if (regions == null || regions.Count == 0)
+            {
+                return false;
+            }
+
+            var clampedRadius = Mathf.Max(0f, radius);
+            return !IsPointInAnyFloorRegion(regions, localPosition, clampedRadius);
+        }
+
         private static Vector3 ClampToBounds(RoomRuntimeRoot room, Vector3 localPosition, float radius)
         {
             var bounds = room.LocalBounds;
@@ -137,6 +189,46 @@ namespace Hollow.Combat
             }
 
             return false;
+        }
+
+        private static bool IsPointInAnyFloorRegion(System.Collections.Generic.IReadOnlyList<RoomLayoutFloorRegion> regions, Vector3 localPosition, float radius)
+        {
+            foreach (var region in regions)
+            {
+                if (Mathf.Abs(localPosition.x - region.Center.x) <= region.HalfSize.x - radius &&
+                    Mathf.Abs(localPosition.z - region.Center.z) <= region.HalfSize.y - radius)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static Vector3 NearestFloorRegionPosition(RoomRuntimeRoot room, Vector3 localPosition)
+        {
+            var regions = room?.CurrentLayout?.FloorRegions;
+            if (regions == null || regions.Count == 0)
+            {
+                return localPosition;
+            }
+
+            var nearest = localPosition;
+            var nearestDistance = float.MaxValue;
+            foreach (var region in regions)
+            {
+                var x = Mathf.Clamp(localPosition.x, region.Center.x - region.HalfSize.x, region.Center.x + region.HalfSize.x);
+                var z = Mathf.Clamp(localPosition.z, region.Center.z - region.HalfSize.y, region.Center.z + region.HalfSize.y);
+                var candidate = new Vector3(x, localPosition.y, z);
+                var distance = (candidate - localPosition).sqrMagnitude;
+                if (distance < nearestDistance)
+                {
+                    nearest = candidate;
+                    nearestDistance = distance;
+                }
+            }
+
+            return nearest;
         }
 
         private static Vector3 NearestWalkablePosition(RoomRuntimeRoot room, Vector3 localPosition)

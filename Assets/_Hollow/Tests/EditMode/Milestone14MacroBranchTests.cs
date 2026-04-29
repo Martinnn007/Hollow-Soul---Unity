@@ -348,6 +348,8 @@ namespace Hollow.Tests.EditMode
                 source.EnemySpawns,
                 source.ItemSpawns,
                 source.SafeStart,
+                source.Hazards,
+                source.InteractiveObjects,
                 source.Decor,
                 source.SourceManifest);
         }

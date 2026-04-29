@@ -1,0 +1,23 @@
+{
+    "generatedAtUtc": "2026-04-29T06:30:40.9967740Z",
+    "catalogId": "m48_content_lock_encounter_catalog_v1",
+    "approvedRoomIds": [
+        "approved_cover_arena_single_1x1",
+        "approved_pressure_lane_wide_2x1",
+        "approved_turret_spire_tall_1x2",
+        "approved_hazard_quadrant_block_2x2",
+        "approved_ambush_l_3cell"
+    ],
+    "newEncounterIds": [
+        "m48_cover_scramble",
+        "m48_lane_pursuit",
+        "m48_turret_spire",
+        "m48_splitter_pit",
+        "m48_barrel_chain",
+        "m48_reward_hazard_guard",
+        "m48_world2_pressure_mix",
+        "m48_world3_hazard_macro"
+    ],
+    "totalEncounterCount": 22,
+    "pdfPath": "output/pdf/Hollow_M48_Content_Expansion_Lock_V1.pdf"
+}

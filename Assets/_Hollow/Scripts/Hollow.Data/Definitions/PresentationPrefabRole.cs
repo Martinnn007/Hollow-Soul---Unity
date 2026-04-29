@@ -38,6 +38,10 @@ namespace Hollow.Data.Definitions
         WeaponRanged,
         Armor,
         ActiveItemPickup,
-        ConsumableCardPickup
+        ConsumableCardPickup,
+        RoomHazardSpike,
+        StandardBarrel,
+        ExplosiveBarrel,
+        HazardCoinDrop
     }
 }

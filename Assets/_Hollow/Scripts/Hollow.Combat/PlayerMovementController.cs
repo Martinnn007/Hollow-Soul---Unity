@@ -1,4 +1,5 @@
 using Hollow.Entities;
+using Hollow.Data.Definitions;
 using Hollow.Input;
 using Hollow.Rooms;
 using UnityEngine;
@@ -14,11 +15,17 @@ namespace Hollow.Combat
         [SerializeField] private float temporarySpeedBonusMetersPerSecond;
         [SerializeField] private float radiusMeters = PlaceholderPlayerController.DefaultRadiusMeters;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
+        [SerializeField] private PlayerDefenseController defenseController;
         private float temporarySpeedEndTime;
+        private bool currentFrameGuardHeld;
 
-        public float SpeedMetersPerSecond => speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus;
+        public float SpeedMetersPerSecond => (speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus) * GuardSpeedMultiplier;
 
         private float CurrentTemporarySpeedBonus => Time.time < temporarySpeedEndTime ? temporarySpeedBonusMetersPerSecond : 0f;
+
+        private float GuardSpeedMultiplier => (defenseController != null && defenseController.IsGuarding) || currentFrameGuardHeld
+            ? (defenseController != null ? defenseController.GuardMoveMultiplier : ShieldGuardProfileDefinition.Resolve(null).GuardMoveMultiplier)
+            : 1f;
 
         public RoomRuntimeRoot RoomRuntimeRoot => roomRuntimeRoot;
 
@@ -47,11 +54,18 @@ namespace Hollow.Combat
         private void Update()
         {
             var input = GameplayInputReader.ReadCurrent();
+            currentFrameGuardHeld = input.GuardHeld;
             Move(input.Move, Time.deltaTime);
+            currentFrameGuardHeld = false;
         }
 
         public Vector3 Move(Vector2 moveInput, float deltaTime)
         {
+            if (defenseController == null)
+            {
+                defenseController = GetComponent<PlayerDefenseController>();
+            }
+
             if (moveInput.sqrMagnitude < 0.0001f || deltaTime <= 0f)
             {
                 return transform.localPosition;

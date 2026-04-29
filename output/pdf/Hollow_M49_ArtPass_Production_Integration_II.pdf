@@ -1,0 +1,203 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 1961 >>
+stream
+BT
+/F1 10 Tf
+50 760 Td
+14 TL
+(Hollow M49: ArtPass Production Integration II) Tj
+T*
+(Generated: 2026-04-29T07:51:19.997713Z) Tj
+T*
+(Tracked visible roles: 41) Tj
+T*
+(Production ready: 0) Tj
+T*
+(Prototype fallback warnings: 37) Tj
+T*
+(Missing bindings: 4) Tj
+T*
+(Unsafe prefabs: 0) Tj
+T*
+() Tj
+T*
+(Direct Replacement Rules:) Tj
+T*
+(- Replace AP_* / VFX_* prefabs directly in Assets/_Hollow/Prefabs/ArtPass/.) Tj
+T*
+(- Keep PresentationVisualMarker on the root with the matching role.) Tj
+T*
+(- No gameplay colliders or gameplay scripts on visual prefabs.) Tj
+T*
+(- Missing production art is allowed; unsafe prefab wiring is not.) Tj
+T*
+() Tj
+T*
+(Core Vertical-Slice Targets:) Tj
+T*
+(- Enemy Boss: PrototypeFallback) Tj
+T*
+(- Door Active: PrototypeFallback) Tj
+T*
+(- Door Cleared: PrototypeFallback) Tj
+T*
+(- Door Locked: PrototypeFallback) Tj
+T*
+(- Enemy Normal: PrototypeFallback) Tj
+T*
+(- Hub Return Portal: PrototypeFallback) Tj
+T*
+(- Hub Shop: PrototypeFallback) Tj
+T*
+(- Hub Shop Card: PrototypeFallback) Tj
+T*
+(- Next Branch Portal: PrototypeFallback) Tj
+T*
+(- Player: PrototypeFallback) Tj
+T*
+(- Enemy Projectile: PrototypeFallback) Tj
+T*
+(- Projectile: PrototypeFallback) Tj
+T*
+(- Boss Key Pickup: PrototypeFallback) Tj
+T*
+(- Reward Pickup: PrototypeFallback) Tj
+T*
+(- Room Floor: PrototypeFallback) Tj
+T*
+(- Room Obstacle Rock: PrototypeFallback) Tj
+T*
+() Tj
+T*
+(All Visible Roles:) Tj
+T*
+(- Boss / Enemy Boss: PrototypeFallback) Tj
+T*
+(- Doors / Door Active: PrototypeFallback) Tj
+T*
+(- Doors / Door Cleared: PrototypeFallback) Tj
+T*
+(- Doors / Door Locked: PrototypeFallback) Tj
+T*
+(- Doors / Door Unavailable: PrototypeFallback) Tj
+T*
+(- Doors / Secret Door Debug: PrototypeFallback) Tj
+T*
+(- Enemies / Enemy Charger: PrototypeFallback) Tj
+T*
+(- Enemies / Enemy Fast: PrototypeFallback) Tj
+T*
+(- Enemies / Enemy Flying: PrototypeFallback) Tj
+T*
+(- Enemies / Enemy Heavy: PrototypeFallback) Tj
+T*
+(- Enemies / Enemy Normal: PrototypeFallback) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1804 >>
+stream
+BT
+/F1 10 Tf
+50 760 Td
+14 TL
+(- Enemies / Enemy Splitter: PrototypeFallback) Tj
+T*
+(- Enemies / Enemy Turret: PrototypeFallback) Tj
+T*
+(- Equipment / Armor: PrototypeFallback) Tj
+T*
+(- Equipment / Weapon Melee: PrototypeFallback) Tj
+T*
+(- Equipment / Weapon Ranged: PrototypeFallback) Tj
+T*
+(- Hazards / Explosive Barrel: MissingBinding) Tj
+T*
+(- Hazards / Hazard Coin Drop: MissingBinding) Tj
+T*
+(- Hazards / Room Hazard Spike: MissingBinding) Tj
+T*
+(- Hazards / Standard Barrel: MissingBinding) Tj
+T*
+(- Hub / Hub Return Portal: PrototypeFallback) Tj
+T*
+(- Hub / Hub Shop: PrototypeFallback) Tj
+T*
+(- Hub / Hub Shop Card: PrototypeFallback) Tj
+T*
+(- Hub / Next Branch Portal: PrototypeFallback) Tj
+T*
+(- Items / Active Item Pickup: PrototypeFallback) Tj
+T*
+(- Items / Consumable Card Pickup: PrototypeFallback) Tj
+T*
+(- Player / Player: PrototypeFallback) Tj
+T*
+(- Projectiles / Enemy Projectile: PrototypeFallback) Tj
+T*
+(- Projectiles / Projectile: PrototypeFallback) Tj
+T*
+(- Rewards / Boss Key Pickup: PrototypeFallback) Tj
+T*
+(- Rewards / Reward Pickup: PrototypeFallback) Tj
+T*
+(- Rooms / Room Floor: PrototypeFallback) Tj
+T*
+(- Rooms / Room Obstacle Rock: PrototypeFallback) Tj
+T*
+(- VFX / VFX Door Unlock: PrototypeFallback) Tj
+T*
+(- VFX / VFX Enemy Death: PrototypeFallback) Tj
+T*
+(- VFX / VFX Enemy Hit: PrototypeFallback) Tj
+T*
+(- VFX / VFX Player Hit: PrototypeFallback) Tj
+T*
+(- VFX / VFX Portal Complete: PrototypeFallback) Tj
+T*
+(- VFX / VFX Projectile Fire: PrototypeFallback) Tj
+T*
+(- VFX / VFX Reward Claim: PrototypeFallback) Tj
+T*
+(- VFX / VFX Room Clear: PrototypeFallback) Tj
+T*
+() Tj
+T*
+(Note: This PDF was generated from a filesystem scan because Unity batchmode licensing was unavailable in this session. Run the M49 Unity generator to refresh catalog-backed status.) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000002203 00000 n 
+0000002329 00000 n 
+0000004184 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4310
+%%EOF

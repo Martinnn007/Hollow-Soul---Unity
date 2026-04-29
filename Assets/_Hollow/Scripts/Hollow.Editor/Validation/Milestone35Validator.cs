@@ -124,18 +124,24 @@ namespace Hollow.Editor.Validation
             {
                 var scene = EditorSceneManager.OpenScene(scenePath);
                 var branch = Object.FindFirstObjectByType<BranchSessionController>();
-                if (branch == null || branch.ChallengeCatalog != catalog)
+                if (branch == null || !IsM35OrSuccessorCatalog(branch.ChallengeCatalog, catalog))
                 {
-                    failures.Add($"{scenePath} BranchSessionController must reference the M35 challenge catalog.");
+                    failures.Add($"{scenePath} BranchSessionController must reference the M35 challenge catalog or the M47 successor catalog.");
                 }
             }
 
             var menuScene = EditorSceneManager.OpenScene("Assets/_Hollow/Scenes/MainMenu.unity");
             var mainMenu = Object.FindFirstObjectByType<MainMenuController>();
-            if (mainMenu == null || mainMenu.ChallengeCatalog != catalog)
+            if (mainMenu == null || !IsM35OrSuccessorCatalog(mainMenu.ChallengeCatalog, catalog))
             {
-                failures.Add("MainMenuController must reference the M35 challenge catalog.");
+                failures.Add("MainMenuController must reference the M35 challenge catalog or the M47 successor catalog.");
             }
+        }
+
+        private static bool IsM35OrSuccessorCatalog(ChallengeCatalogDefinition actual, ChallengeCatalogDefinition m35Catalog)
+        {
+            return actual == m35Catalog ||
+                   (actual != null && actual.CatalogId == Milestone47AssetGenerator.CatalogId);
         }
     }
 }

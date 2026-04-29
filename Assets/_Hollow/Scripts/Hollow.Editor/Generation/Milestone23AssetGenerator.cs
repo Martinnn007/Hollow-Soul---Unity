@@ -233,6 +233,25 @@ namespace Hollow.Editor.Generation
                     AddPrimitive(parent, PrimitiveType.Cube, "card_face", new Vector3(0f, 0.14f, 0f), new Vector3(0.36f, 0.52f, 0.04f), role);
                     AddPrimitive(parent, PrimitiveType.Cube, "card_mark", new Vector3(0f, 0.16f, -0.04f), new Vector3(0.18f, 0.18f, 0.025f), role, alpha: 0.72f);
                     break;
+                case PresentationPrefabRole.RoomHazardSpike:
+                    AddPrimitive(parent, PrimitiveType.Cube, "spike_base", Vector3.zero, new Vector3(0.74f, 0.08f, 0.74f), role, alpha: 0.72f);
+                    AddPrimitive(parent, PrimitiveType.Cylinder, "spike_warning_core", new Vector3(0f, 0.12f, 0f), new Vector3(0.32f, 0.16f, 0.32f), role);
+                    AddPrimitive(parent, PrimitiveType.Cube, "spike_cross", new Vector3(0f, 0.16f, 0f), new Vector3(0.62f, 0.06f, 0.12f), role, alpha: 0.86f);
+                    AddPrimitive(parent, PrimitiveType.Cube, "spike_cross_alt", new Vector3(0f, 0.16f, 0f), new Vector3(0.12f, 0.06f, 0.62f), role, alpha: 0.86f);
+                    break;
+                case PresentationPrefabRole.StandardBarrel:
+                    AddPrimitive(parent, PrimitiveType.Cylinder, "barrel_body", new Vector3(0f, 0.42f, 0f), new Vector3(0.72f, 0.82f, 0.72f), role);
+                    AddPrimitive(parent, PrimitiveType.Cylinder, "barrel_lid", new Vector3(0f, 0.86f, 0f), new Vector3(0.78f, 0.08f, 0.78f), role, alpha: 0.76f);
+                    break;
+                case PresentationPrefabRole.ExplosiveBarrel:
+                    AddPrimitive(parent, PrimitiveType.Cylinder, "explosive_barrel_body", new Vector3(0f, 0.42f, 0f), new Vector3(0.72f, 0.82f, 0.72f), role);
+                    AddPrimitive(parent, PrimitiveType.Sphere, "explosive_core", new Vector3(0f, 0.78f, 0f), Vector3.one * 0.24f, role, alpha: 0.92f);
+                    AddPrimitive(parent, PrimitiveType.Cube, "explosive_stripe", new Vector3(0f, 0.46f, -0.36f), new Vector3(0.62f, 0.14f, 0.04f), role, alpha: 0.82f);
+                    break;
+                case PresentationPrefabRole.HazardCoinDrop:
+                    AddPrimitive(parent, PrimitiveType.Sphere, "coin_core", new Vector3(0f, 0.12f, 0f), Vector3.one * 0.24f, role);
+                    AddPrimitive(parent, PrimitiveType.Cylinder, "coin_ring", new Vector3(0f, 0.12f, 0f), new Vector3(0.34f, 0.04f, 0.34f), role, alpha: 0.74f);
+                    break;
                 default:
                     AddPrimitive(parent, PrimitiveType.Cube, "toy_body", new Vector3(0f, 0.28f, 0f), new Vector3(0.52f, 0.52f, 0.52f), role);
                     AddPrimitive(parent, PrimitiveType.Sphere, "toy_marker", new Vector3(0f, 0.72f, 0f), Vector3.one * 0.18f, role, alpha: 0.76f);
@@ -535,6 +554,10 @@ namespace Hollow.Editor.Generation
                 PresentationPrefabRole.Armor => MaterialRole.DoorLocked,
                 PresentationPrefabRole.ActiveItemPickup => MaterialRole.RewardPickup,
                 PresentationPrefabRole.ConsumableCardPickup => MaterialRole.SpawnReward,
+                PresentationPrefabRole.RoomHazardSpike => MaterialRole.RoomHazardSpike,
+                PresentationPrefabRole.StandardBarrel => MaterialRole.RoomBarrel,
+                PresentationPrefabRole.ExplosiveBarrel => MaterialRole.RoomExplosiveBarrel,
+                PresentationPrefabRole.HazardCoinDrop => MaterialRole.HazardCoinDrop,
                 PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
                 PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
                 PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,

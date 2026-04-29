@@ -19,6 +19,9 @@ namespace Hollow.RoomDesigner
         EnemyCharger = 14,
         EnemyTurret = 15,
         EnemySplitter = 16,
-        InactiveDoor = 17
+        InactiveDoor = 17,
+        Spike = 18,
+        StandardBarrel = 19,
+        ExplosiveBarrel = 20
     }
 }

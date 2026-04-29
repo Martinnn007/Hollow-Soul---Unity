@@ -119,6 +119,10 @@ namespace Hollow.Editor.Generation
             yield return Target("armor_pickup", "Armor Pickup", "Equipment", PresentationPrefabRole.Armor, ArtPassAssetTargetPriority.High, false, "Generic armor/suit pickup wrapper.", Scale("0.65m wide", "0.7m tall"));
             yield return Target("active_item_pickup", "Active Item Pickup", "Items", PresentationPrefabRole.ActiveItemPickup, ArtPassAssetTargetPriority.High, false, "Active item pickup shell for charms/totems.", Scale("0.45m diameter", "pickup-safe"));
             yield return Target("consumable_card_pickup", "Consumable Card Pickup", "Items", PresentationPrefabRole.ConsumableCardPickup, ArtPassAssetTargetPriority.High, false, "Consumable card visual shell.", Scale("0.35m wide", "0.5m tall"));
+            yield return Target("room_hazard_spike", "Spike Hazard", "Hazards", PresentationPrefabRole.RoomHazardSpike, ArtPassAssetTargetPriority.High, false, "Always-on floor hazard tile that reads clearly from perspective and top-down.", Scale("1m tile footprint", "low profile"));
+            yield return Target("standard_barrel", "Standard Barrel", "Hazards", PresentationPrefabRole.StandardBarrel, ArtPassAssetTargetPriority.High, false, "Breakable barrel cover prop, visual-only wrapper around authoritative blocker.", Scale("0.8m footprint", "1m tall"));
+            yield return Target("explosive_barrel", "Explosive Barrel", "Hazards", PresentationPrefabRole.ExplosiveBarrel, ArtPassAssetTargetPriority.High, false, "Explosive barrel with strong danger read and chain-reaction silhouette.", Scale("0.8m footprint", "1m tall"));
+            yield return Target("hazard_coin_drop", "Hazard Coin Drop", "Hazards", PresentationPrefabRole.HazardCoinDrop, ArtPassAssetTargetPriority.Medium, false, "Tiny coin pickup dropped by destructible props.", Scale("0.25m diameter", "pickup-safe"));
 
             foreach (var role in new[]
             {

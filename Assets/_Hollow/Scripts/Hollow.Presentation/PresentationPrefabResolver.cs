@@ -161,6 +161,9 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.HubShopCard => new Vector3(1f, 0.7f, 0.08f),
                 PresentationPrefabRole.WeaponMelee or PresentationPrefabRole.WeaponRanged or PresentationPrefabRole.Armor => Vector3.one * 0.55f,
                 PresentationPrefabRole.ConsumableCardPickup => new Vector3(0.36f, 0.52f, 0.04f),
+                PresentationPrefabRole.RoomHazardSpike => new Vector3(0.72f, 0.08f, 0.72f),
+                PresentationPrefabRole.StandardBarrel or PresentationPrefabRole.ExplosiveBarrel => new Vector3(0.82f, 1f, 0.82f),
+                PresentationPrefabRole.HazardCoinDrop => Vector3.one * 0.22f,
                 _ => Vector3.one
             };
         }
@@ -196,6 +199,10 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.Armor => MaterialRole.DoorLocked,
                 PresentationPrefabRole.ActiveItemPickup => MaterialRole.RewardPickup,
                 PresentationPrefabRole.ConsumableCardPickup => MaterialRole.SpawnReward,
+                PresentationPrefabRole.RoomHazardSpike => MaterialRole.RoomHazardSpike,
+                PresentationPrefabRole.StandardBarrel => MaterialRole.RoomBarrel,
+                PresentationPrefabRole.ExplosiveBarrel => MaterialRole.RoomExplosiveBarrel,
+                PresentationPrefabRole.HazardCoinDrop => MaterialRole.HazardCoinDrop,
                 PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
                 PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
                 PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,

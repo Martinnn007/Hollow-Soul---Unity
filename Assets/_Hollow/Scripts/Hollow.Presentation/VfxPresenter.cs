@@ -108,10 +108,18 @@ namespace Hollow.Presentation
                 VfxCueId.EnemyWindup => new Color(1f, 0.55f, 0.12f, 0.72f),
                 VfxCueId.EnemyCorpseGhost => new Color(0.62f, 0.78f, 0.86f, 0.42f),
                 VfxCueId.DamageBlocked => new Color(0.4f, 0.65f, 1f, 0.82f),
+                VfxCueId.ShieldGuardStart => new Color(0.22f, 0.78f, 1f, 0.58f),
+                VfxCueId.ShieldBlock => new Color(0.78f, 0.92f, 1f, 0.78f),
+                VfxCueId.ShieldParryCounter => new Color(0.45f, 1f, 0.72f, 0.9f),
+                VfxCueId.ShieldUnavailable => new Color(0.95f, 0.28f, 0.2f, 0.75f),
+                VfxCueId.HazardHit => new Color(1f, 0.12f, 0.08f, 0.82f),
+                VfxCueId.BarrelBreak => new Color(0.78f, 0.48f, 0.18f, 0.82f),
+                VfxCueId.BarrelExplode => new Color(1f, 0.42f, 0.08f, 0.95f),
+                VfxCueId.HazardCoinDrop => new Color(1f, 0.82f, 0.15f, 0.9f),
                 _ => default
             };
 
-            if (cue == VfxCueId.EnemyCorpseGhost)
+            if (cue is VfxCueId.EnemyCorpseGhost or VfxCueId.ShieldParryCounter or VfxCueId.BarrelExplode)
             {
                 scale = 0.22f;
             }

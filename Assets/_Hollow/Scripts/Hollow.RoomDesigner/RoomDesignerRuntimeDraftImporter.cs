@@ -59,6 +59,21 @@ namespace Hollow.RoomDesigner
                     RoomDesignerCellKinds.Rock));
             }
 
+            foreach (var hazard in runtime.hazards ?? new List<ImportedRoomHazard>())
+            {
+                if (hazard?.kind != RoomHazardKind.Spike)
+                {
+                    continue;
+                }
+
+                var center = hazard.center?.ToUnityVector3() ?? Vector3.zero;
+                project.cells.Add(new RoomDesignerCell(
+                    Mathf.RoundToInt(center.x),
+                    Mathf.RoundToInt(center.z),
+                    0,
+                    RoomDesignerCellKinds.Spike));
+            }
+
             var safeStart = runtime.playerSafeStart ?? new ImportedVector3();
             project.markers.Add(new RoomDesignerMarker(
                 "spawn_safeStart",
@@ -91,6 +106,24 @@ namespace Hollow.RoomDesigner
                     position.y,
                     position.z));
                 rewardIndex++;
+            }
+
+            var interactiveIndex = 0;
+            foreach (var roomObject in runtime.interactiveObjects ?? new List<ImportedRoomInteractiveObject>())
+            {
+                if (!RoomDesignerMarkerKinds.IsInteractiveObject(roomObject?.kind))
+                {
+                    continue;
+                }
+
+                var center = roomObject.center?.ToUnityVector3() ?? Vector3.zero;
+                project.markers.Add(new RoomDesignerMarker(
+                    string.IsNullOrWhiteSpace(roomObject.id) ? $"interactive_{interactiveIndex}" : roomObject.id,
+                    roomObject.kind,
+                    center.x,
+                    0f,
+                    center.z));
+                interactiveIndex++;
             }
 
             var runtimePortsById = (runtime.doorPorts ?? new List<ImportedRoomDoorPort>())

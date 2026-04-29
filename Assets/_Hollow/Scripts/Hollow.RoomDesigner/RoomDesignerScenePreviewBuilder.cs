@@ -17,6 +17,7 @@ namespace Hollow.RoomDesigner
             {
                 RoomDesignerCellKinds.Ground => AttachBoundVisual(host, PresentationPrefabRole.RoomFloor),
                 RoomDesignerCellKinds.Rock => AttachBoundVisual(host, PresentationPrefabRole.RoomObstacleRock),
+                RoomDesignerCellKinds.Spike => AttachBoundVisual(host, PresentationPrefabRole.RoomHazardSpike),
                 RoomDesignerCellKinds.Hole => true,
                 _ => false
             };
@@ -60,6 +61,8 @@ namespace Hollow.RoomDesigner
             {
                 RoomDesignerMarkerKinds.SafeStart => PresentationPrefabRole.Player,
                 RoomDesignerMarkerKinds.RoomReward => PresentationPrefabRole.RewardPickup,
+                RoomDesignerMarkerKinds.StandardBarrel => PresentationPrefabRole.StandardBarrel,
+                RoomDesignerMarkerKinds.ExplosiveBarrel => PresentationPrefabRole.ExplosiveBarrel,
                 RoomDesignerMarkerKinds.EnemyFlying => PresentationPrefabRole.EnemyFlying,
                 RoomDesignerMarkerKinds.EnemyFast => PresentationPrefabRole.EnemyFast,
                 RoomDesignerMarkerKinds.EnemyHeavy => PresentationPrefabRole.EnemyHeavy,

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d1893361a3a5479e82e4965aecb5f18, type: 3}
+  m_Name: EncounterCatalog_M46
+  m_EditorClassIdentifier: Hollow.Branches::Hollow.Branches.EncounterCatalogDefinition
+  catalogId: m46_encounter_director_catalog_v1
+  encounters:
+  - {fileID: 11400000, guid: c3e7164d788a24d9c8d60a0e8f307496, type: 2}
+  - {fileID: 11400000, guid: 86ef0a736292f4fdebaccb148679325e, type: 2}
+  - {fileID: 11400000, guid: 156abbc5a3080448a83f8eb139132c88, type: 2}
+  - {fileID: 11400000, guid: 3456804a6fd554a308f4f2f8a693c39d, type: 2}
+  - {fileID: 11400000, guid: 02d6ab29c40f84fb795d76b68ad93605, type: 2}
+  - {fileID: 11400000, guid: aab6dcc5c179145e591412955cda7f11, type: 2}
+  - {fileID: 11400000, guid: b746275aefb4b4729ad8b6aee5a32777, type: 2}
+  - {fileID: 11400000, guid: be43d3f946dd04eb0b2eb98cd35f59a5, type: 2}
+  - {fileID: 11400000, guid: 97947ccd9ffe54b84a50be08c429576f, type: 2}
+  - {fileID: 11400000, guid: 15d9d7be68fcd444f8009232fa0040d3, type: 2}
+  - {fileID: 11400000, guid: e6b25d6f34a254004b36b8b156138c2a, type: 2}
+  - {fileID: 11400000, guid: 4bfedd5f8942e4343a069aed4770776d, type: 2}
+  - {fileID: 11400000, guid: 6ab63f1babbcb45fcb02fbb479e7dbc1, type: 2}
+  - {fileID: 11400000, guid: efaade93ac6f04ba8843ecb429c134cb, type: 2}
+  bossEncounter: {fileID: 11400000, guid: efaade93ac6f04ba8843ecb429c134cb, type: 2}

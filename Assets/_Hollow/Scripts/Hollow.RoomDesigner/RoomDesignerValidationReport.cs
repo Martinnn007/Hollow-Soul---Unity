@@ -82,6 +82,7 @@ namespace Hollow.RoomDesigner
 
             ValidateSafeStart(project, report);
             ValidateMarkers(project, report);
+            ValidateHazards(project, report);
             ValidateWarnings(project, enabledPorts, report);
             ValidateRuntimeImport(project, report);
             report.isValid = report.errors.Count == 0;
@@ -125,12 +126,35 @@ namespace Hollow.RoomDesigner
                     report.AddError($"Marker id '{marker.id}' is duplicated.");
                 }
 
-                if (marker.kind == RoomDesignerMarkerKinds.RoomReward || RoomDesignerMarkerKinds.IsEnemy(marker.kind))
+                if (marker.kind == RoomDesignerMarkerKinds.RoomReward ||
+                    RoomDesignerMarkerKinds.IsEnemy(marker.kind) ||
+                    RoomDesignerMarkerKinds.IsInteractiveObject(marker.kind))
                 {
                     if (!IsWalkablePlacement(project, marker, out var reason))
                     {
                         report.AddError($"Marker '{marker.id}' is invalid: {reason}.");
                     }
+                }
+            }
+        }
+
+        private static void ValidateHazards(RoomDesignerProject project, RoomDesignerValidationReport report)
+        {
+            foreach (var spike in (project.cells ?? new List<RoomDesignerCell>()).Where(cell => cell.kind == RoomDesignerCellKinds.Spike))
+            {
+                var marker = new RoomDesignerMarker($"spike_{spike.x}_{spike.z}", RoomDesignerCellKinds.Spike, spike.x, 0f, spike.z);
+                if (!IsWalkablePlacement(project, marker, out var reason))
+                {
+                    report.AddError($"Spike at ({spike.x},{spike.z}) is invalid: {reason}.");
+                }
+
+                if ((project.markers ?? new List<RoomDesignerMarker>()).Any(candidate =>
+                        candidate != null &&
+                        Mathf.RoundToInt(candidate.x) == spike.x &&
+                        Mathf.RoundToInt(candidate.z) == spike.z &&
+                        candidate.kind == RoomDesignerMarkerKinds.SafeStart))
+                {
+                    report.AddError($"Spike at ({spike.x},{spike.z}) overlaps the safe start.");
                 }
             }
         }
@@ -210,6 +234,13 @@ namespace Hollow.RoomDesigner
             if (cells.Any(cell => cell.x == x && cell.z == z && cell.kind == RoomDesignerCellKinds.Rock))
             {
                 reason = "on a blocking rock";
+                return false;
+            }
+
+            if (marker.kind != RoomDesignerCellKinds.Spike &&
+                cells.Any(cell => cell.x == x && cell.z == z && cell.layer == 0 && cell.kind == RoomDesignerCellKinds.Spike))
+            {
+                reason = "on a spike";
                 return false;
             }
 

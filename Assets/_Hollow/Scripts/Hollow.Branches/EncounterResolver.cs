@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Data.Definitions;
 
 namespace Hollow.Branches
 {
     public static class EncounterResolver
     {
+        private const int DefaultMaxDirectedSpawns = 6;
+
         public static EncounterPlan CreateSeededPlan(BranchFloorGraph graph, EncounterCatalogDefinition catalog, int seed)
         {
             if (graph == null || catalog == null)
@@ -33,6 +36,57 @@ namespace Hollow.Branches
                 }
 
                 assignments.Add(new RoomEncounterAssignment(room.Id.Value, encounter.EncounterId, encounter.ExpandSpawnKinds()));
+            }
+
+            return new EncounterPlan(assignments);
+        }
+
+        public static EncounterPlan CreateDirectedSeededPlan(BranchFloorGraph graph, EncounterCatalogDefinition catalog, int seed, int worldIndex, EncounterDirectorProfileDefinition profile)
+        {
+            return CreateDirectedSeededPlan(graph, catalog, seed, worldIndex, profile, difficultyBandBonus: 0);
+        }
+
+        public static EncounterPlan CreateDirectedSeededPlan(BranchFloorGraph graph, EncounterCatalogDefinition catalog, int seed, int worldIndex, EncounterDirectorProfileDefinition profile, int difficultyBandBonus)
+        {
+            if (graph == null || catalog == null)
+            {
+                return EncounterPlan.Empty;
+            }
+
+            var context = new EncounterDirectorContext(graph, seed, worldIndex, profile);
+            var distances = DistancesFromOrigin(graph);
+            var assignments = new List<RoomEncounterAssignment>();
+            foreach (var room in graph.Rooms.OrderBy(room => room.Id.Value, StringComparer.Ordinal))
+            {
+                if (room.Role is BranchRoomRole.Origin or BranchRoomRole.Treasure or BranchRoomRole.Secret)
+                {
+                    continue;
+                }
+
+                distances.TryGetValue(room.Id.Value, out var roomDistance);
+                var difficultyBand = roomDistance + context.WorldConfig.DifficultyOffset + Math.Max(0, difficultyBandBonus);
+                var footprintCells = Math.Max(1, room.Footprint?.OccupiedCells?.Count ?? 1);
+                var encounter = room.Role == BranchRoomRole.Boss
+                    ? catalog.BossEncounter ?? ChooseDirectedEncounter(context, catalog, room, difficultyBand, footprintCells)
+                    : ChooseDirectedEncounter(context, catalog, room, difficultyBand, footprintCells);
+                if (encounter == null)
+                {
+                    continue;
+                }
+
+                var spawns = encounter.ExpandSpawnKinds();
+                if (room.Role != BranchRoomRole.Boss)
+                {
+                    spawns = spawns.Take(Math.Max(1, context.Profile?.MaxNonBossEnemySpawns ?? DefaultMaxDirectedSpawns)).ToArray();
+                }
+
+                assignments.Add(new RoomEncounterAssignment(
+                    room.Id.Value,
+                    encounter.EncounterId,
+                    spawns,
+                    context.WorldIndex,
+                    difficultyBand,
+                    DirectorPressureFor(context, encounter, difficultyBand)));
             }
 
             return new EncounterPlan(assignments);
@@ -80,6 +134,75 @@ namespace Hollow.Branches
             }
 
             return candidates[0];
+        }
+
+        private static EncounterDefinition ChooseDirectedEncounter(
+            EncounterDirectorContext context,
+            EncounterCatalogDefinition catalog,
+            BranchRoomState room,
+            int difficultyBand,
+            int footprintCells)
+        {
+            var candidates = catalog.Encounters
+                .Where(encounter => encounter != null && encounter.Supports(room.Role, difficultyBand, footprintCells))
+                .ToList();
+            if (candidates.Count == 0 && room.Role == BranchRoomRole.Reward)
+            {
+                candidates = catalog.Encounters
+                    .Where(encounter => encounter != null && encounter.Supports(BranchRoomRole.Combat, difficultyBand, footprintCells))
+                    .ToList();
+            }
+
+            if (candidates.Count == 0 && room.Role != BranchRoomRole.Origin)
+            {
+                candidates = catalog.Encounters
+                    .Where(encounter => encounter != null && encounter.Supports(BranchRoomRole.Combat, 0, footprintCells))
+                    .ToList();
+            }
+
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+
+            var totalWeight = candidates.Sum(candidate => DirectedWeightFor(context, candidate, difficultyBand));
+            var roll = StableHash($"{context.Graph.BranchId}|{context.Seed}|world:{context.WorldIndex}|{room.Id.Value}|{catalog.CatalogId}") % totalWeight;
+            foreach (var candidate in candidates.OrderBy(candidate => candidate.EncounterId, StringComparer.Ordinal))
+            {
+                roll -= DirectedWeightFor(context, candidate, difficultyBand);
+                if (roll < 0)
+                {
+                    return candidate;
+                }
+            }
+
+            return candidates[0];
+        }
+
+        private static int DirectedWeightFor(EncounterDirectorContext context, EncounterDefinition encounter, int difficultyBand)
+        {
+            var weight = Math.Max(1, encounter.Weight);
+            var config = context?.WorldConfig;
+            if (config == null)
+            {
+                return weight;
+            }
+
+            if (encounter.MinDifficultyBand >= 2 || difficultyBand >= 3)
+            {
+                weight += config.VeryHardEncounterWeightBonus;
+            }
+            else if (encounter.MinDifficultyBand >= 1 || difficultyBand >= 2)
+            {
+                weight += config.HardEncounterWeightBonus;
+            }
+
+            return Math.Max(1, weight);
+        }
+
+        private static int DirectorPressureFor(EncounterDirectorContext context, EncounterDefinition encounter, int difficultyBand)
+        {
+            return difficultyBand + Math.Max(0, encounter?.MinDifficultyBand ?? 0) + Math.Max(0, context?.WorldConfig?.DifficultyOffset ?? 0);
         }
 
         private static Dictionary<string, int> DistancesFromOrigin(BranchFloorGraph graph)

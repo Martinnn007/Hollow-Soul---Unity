@@ -45,6 +45,7 @@ namespace Hollow.Branches
         [SerializeField] private SynergyCatalogDefinition synergyCatalog;
         [SerializeField] private ChallengeCatalogDefinition challengeCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
+        [SerializeField] private EncounterDirectorProfileDefinition encounterDirectorProfile;
         [SerializeField] private RunFramingCatalogDefinition runFramingCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
@@ -59,6 +60,8 @@ namespace Hollow.Branches
         private readonly List<NextBranchPortal> currentNextBranchPortals = new();
         private readonly List<ReplacementPickup> currentReplacementPickups = new();
         private readonly List<ReplacementPickupState> droppedReplacementPickups = new();
+        private readonly List<HazardCoinPickup> currentHazardCoinPickups = new();
+        private readonly List<RunRoomHazardStateSave> roomHazardStates = new();
         private readonly RuntimeRewardCounter rewardCounter = new();
         private RunEconomy runEconomy = new();
         private PlayerRunStats playerRunStats = new();
@@ -76,6 +79,7 @@ namespace Hollow.Branches
         private RunWorldPhase worldPhase = RunWorldPhase.Legacy;
         private string activeHubPortalId = string.Empty;
         private IRunSaveStore runSaveStore;
+        private IChallengeResultStore challengeResultStore;
         private ProfileSlotId activeProfileSlotId;
         private bool canPersist;
         private bool activeRunCompletedOrFailed;
@@ -85,6 +89,8 @@ namespace Hollow.Branches
         private string synergyAcquisitionMessage = string.Empty;
         private float synergyAcquisitionMessageExpiresAt;
         private ChallengeDefinition activeChallenge;
+        private float challengeStartedRealtime;
+        private bool challengeCompletionRecorded;
         private PickupRevealModel latestPickupReveal = PickupRevealModel.Empty;
         private int pickupRevealSequence;
 
@@ -179,6 +185,8 @@ namespace Hollow.Branches
         public RewardPoolDefinition WeaponRewardPool => weaponRewardPool;
 
         public EncounterCatalogDefinition EncounterCatalog => encounterCatalog;
+
+        public EncounterDirectorProfileDefinition EncounterDirectorProfile => encounterDirectorProfile;
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
@@ -279,6 +287,11 @@ namespace Hollow.Branches
             encounterCatalog = nextEncounterCatalog;
         }
 
+        public void ConfigureEncounterDirectorProfile(EncounterDirectorProfileDefinition nextEncounterDirectorProfile)
+        {
+            encounterDirectorProfile = nextEncounterDirectorProfile;
+        }
+
         public void ConfigureRunFramingCatalog(RunFramingCatalogDefinition nextRunFramingCatalog)
         {
             runFramingCatalog = nextRunFramingCatalog;
@@ -300,6 +313,8 @@ namespace Hollow.Branches
 
             roomCombatController.RoomCleared -= OnRoomCleared;
             roomCombatController.RoomCleared += OnRoomCleared;
+            roomCombatController.InteractiveObjectDestroyed -= OnInteractiveObjectDestroyed;
+            roomCombatController.InteractiveObjectDestroyed += OnInteractiveObjectDestroyed;
 
             if (canPersist && gameSessionState.LaunchMode == Hollow.Core.RunLaunchMode.ContinueRun && runSaveStore.TryLoadActiveRun(activeProfileSlotId, out var snapshot))
             {
@@ -323,6 +338,8 @@ namespace Hollow.Branches
             playerRunBuild = new PlayerRunBuild();
             droppedReplacementPickups.Clear();
             currentReplacementPickups.Clear();
+            currentHazardCoinPickups.Clear();
+            roomHazardStates.Clear();
             latestPickupReveal = PickupRevealModel.Empty;
             pickupRevealSequence = 0;
             activeChallenge = ResolveActiveChallenge();
@@ -331,6 +348,8 @@ namespace Hollow.Branches
             rewardCounter.SetClaimedRewards(0);
             activeRunCompletedOrFailed = false;
             branchDepth = 0;
+            challengeStartedRealtime = activeChallenge != null ? Time.realtimeSinceStartup : 0f;
+            challengeCompletionRecorded = false;
             runSeed = activeChallenge != null
                 ? activeChallenge.FixedRunSeed
                 : ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
@@ -374,11 +393,18 @@ namespace Hollow.Branches
                     }
                 }
             }
+            roomHazardStates.Clear();
+            if (snapshot?.roomHazardStates != null)
+            {
+                roomHazardStates.AddRange(snapshot.roomHazardStates);
+            }
             activeChallenge = ResolveActiveChallenge();
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
             rewardCounter.SetClaimedRewards(runEconomy.CollectedRewards.Count);
             activeRunCompletedOrFailed = false;
+            challengeStartedRealtime = activeChallenge != null ? Time.realtimeSinceStartup : 0f;
+            challengeCompletionRecorded = false;
             branchDepth = Math.Max(0, snapshot?.branchDepth ?? 0);
             runSeed = snapshot != null && snapshot.runSeed != 0
                 ? snapshot.runSeed
@@ -406,7 +432,10 @@ namespace Hollow.Branches
                     State.Graph,
                     legacyFallback: snapshot?.branchId == BranchGenerator.SeededMacroBranchId);
             }
-            if ((State.Graph.BranchId == BranchGenerator.EnemyEncounterBranchId || State.Graph.BranchId == BranchGenerator.BranchFeaturesId) && !encounterPlan.Assignments.Any())
+            if ((State.Graph.BranchId == BranchGenerator.EnemyEncounterBranchId ||
+                 State.Graph.BranchId == BranchGenerator.BranchFeaturesId ||
+                 State.Graph.BranchId == BranchGenerator.DirectedEncounterBranchId) &&
+                !encounterPlan.Assignments.Any())
             {
                 encounterPlan = CreateEncounterPlanForGraph(State.Graph);
             }
@@ -432,6 +461,7 @@ namespace Hollow.Branches
             if (roomCombatController != null)
             {
                 roomCombatController.RoomCleared -= OnRoomCleared;
+                roomCombatController.InteractiveObjectDestroyed -= OnInteractiveObjectDestroyed;
                 if (roomCombatController.PlayerHealth != null)
                 {
                     roomCombatController.PlayerHealth.Died -= OnPlayerDied;
@@ -467,6 +497,7 @@ namespace Hollow.Branches
         {
             return TryClaimBossKey() ||
                    TryClaimReward() ||
+                   TryClaimHazardCoinPickup() ||
                    TryClaimReplacementPickup() ||
                    TryHandleNearestShopCard() ||
                    TryUseNextBranchPortal() ||
@@ -591,6 +622,12 @@ namespace Hollow.Branches
             DestroyTransientInteractables();
             currentRoomAsset = ResolveCurrentRoomAsset();
             roomRuntimeRoot.BuildFrom(currentRoomAsset);
+            if (State.CurrentRoom.Role == BranchRoomRole.Origin)
+            {
+                roomRuntimeRoot.ClearHazardsAndInteractiveObjects();
+            }
+
+            roomRuntimeRoot.ApplyInteractiveObjectState(DestroyedObjectIdsForCurrentRoom());
             var playerLocalPosition = entryConnection != null
                 ? BranchTraversalService.EntryPositionFor(roomRuntimeRoot, entryConnection)
                 : requestedPlayerLocalPosition ?? currentRoomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
@@ -621,6 +658,7 @@ namespace Hollow.Branches
             VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
             AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
             SpawnRewardIfNeeded();
+            SpawnHazardCoinPickupsForCurrentRoom();
             SpawnReplacementPickupsForCurrentContext();
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
@@ -747,6 +785,47 @@ namespace Hollow.Branches
             return true;
         }
 
+        private bool TryClaimHazardCoinPickup()
+        {
+            if (playerController == null || currentHazardCoinPickups.Count == 0)
+            {
+                return false;
+            }
+
+            var nearest = currentHazardCoinPickups
+                .Where(pickup => pickup != null && !pickup.IsClaimed)
+                .OrderBy(pickup => Vector3.Distance(Flat(playerController.transform.localPosition), Flat(pickup.transform.localPosition)))
+                .FirstOrDefault();
+            if (nearest == null ||
+                Vector3.Distance(Flat(playerController.transform.localPosition), Flat(nearest.transform.localPosition)) > RewardInteractionRadiusMeters ||
+                !nearest.Claim())
+            {
+                return false;
+            }
+
+            MarkHazardCoinCollected(nearest.RoomId, nearest.ObjectId);
+            var grant = new RewardGrant(
+                $"{nearest.RoomId}:hazard_coin:{nearest.ObjectId}",
+                "hazard_coin",
+                "Loose Coin",
+                RewardKind.Currency,
+                0,
+                nearest.CoinAmount,
+                Array.Empty<RewardEffect>());
+            if (runEconomy.ApplyReward(grant))
+            {
+                LastRewardMessage = $"+{nearest.CoinAmount} coin";
+                ShowPickupReveal(grant, null);
+            }
+
+            currentHazardCoinPickups.Remove(nearest);
+            DestroyRuntimeObject(nearest.gameObject);
+            VfxPresenter.Play(VfxCueId.HazardCoinDrop, playerController.transform.position, playerController.transform.parent);
+            AudioPresenter.Play(AudioCueId.HazardCoinDrop, playerController.transform.position);
+            CheckpointActiveRun();
+            return true;
+        }
+
         public bool TryBuyShopOffer(string offerId)
         {
             if (!IsInInterBranchHub || string.IsNullOrWhiteSpace(offerId))
@@ -757,6 +836,21 @@ namespace Hollow.Branches
             var offer = interBranchHubState.ShopOffers.FirstOrDefault(candidate => candidate.OfferId == offerId);
             if (offer == null)
             {
+                return false;
+            }
+
+            if (ChallengeHasRule(ChallengeRuleKind.BlockShops))
+            {
+                LastRewardMessage = "Challenge rule blocks shop purchases";
+                currentHubShop?.RefreshCards(runEconomy.RunSouls, runEconomy.RunCoins);
+                return false;
+            }
+
+            if (ChallengeHasRule(ChallengeRuleKind.BlockHealingRewards) &&
+                (offer.HealAmount > 0 || GrantHasHeal(offer.RewardGrant)))
+            {
+                LastRewardMessage = "Challenge rule blocks healing";
+                currentHubShop?.RefreshCards(runEconomy.RunSouls, runEconomy.RunCoins);
                 return false;
             }
 
@@ -965,7 +1059,7 @@ namespace Hollow.Branches
                 interBranchHubState = InterBranchHubState.Inactive;
             }
             HubReturnRequested = false;
-            State = BranchSessionState.Create(CreateM20Graph(currentBranchSeed));
+            State = BranchSessionState.Create(CreateWorldLoopGraph(currentBranchSeed));
             branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
             proceduralRewardPlan = CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
             encounterPlan = CreateEncounterPlanForGraph(State.Graph);
@@ -1049,6 +1143,92 @@ namespace Hollow.Branches
             if (replacement.RoomId == CurrentReplacementContextId())
             {
                 SpawnReplacementPickup(replacement);
+            }
+        }
+
+        private IEnumerable<string> DestroyedObjectIdsForCurrentRoom()
+        {
+            var roomId = State?.CurrentRoomId.Value ?? string.Empty;
+            return roomHazardStates
+                .Where(state => state != null && state.roomId == roomId && state.isDestroyed)
+                .Select(state => state.objectId)
+                .Where(id => !string.IsNullOrWhiteSpace(id));
+        }
+
+        private void OnInteractiveObjectDestroyed(RoomInteractiveObjectDestroyedContext context)
+        {
+            var roomId = State?.CurrentRoomId.Value ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(roomId) || string.IsNullOrWhiteSpace(context.ObjectId))
+            {
+                return;
+            }
+
+            var state = roomHazardStates.FirstOrDefault(candidate => candidate.roomId == roomId && candidate.objectId == context.ObjectId);
+            if (state == null)
+            {
+                state = new RunRoomHazardStateSave
+                {
+                    roomId = roomId,
+                    objectId = context.ObjectId,
+                    objectKind = context.ObjectKind
+                };
+                roomHazardStates.Add(state);
+            }
+
+            state.isDestroyed = true;
+            state.objectKind = context.ObjectKind;
+            if (context.CoinDropAmount > 0)
+            {
+                state.coinDropAmount = context.CoinDropAmount;
+                state.coinCollected = false;
+                state.localX = context.LocalPosition.x;
+                state.localY = 0.25f;
+                state.localZ = context.LocalPosition.z;
+                SpawnHazardCoinPickup(state);
+            }
+
+            CheckpointActiveRun();
+        }
+
+        private void SpawnHazardCoinPickupsForCurrentRoom()
+        {
+            var roomId = State?.CurrentRoomId.Value ?? string.Empty;
+            foreach (var state in roomHazardStates.Where(candidate =>
+                         candidate != null &&
+                         candidate.roomId == roomId &&
+                         candidate.isDestroyed &&
+                         candidate.coinDropAmount > 0 &&
+                         !candidate.coinCollected))
+            {
+                SpawnHazardCoinPickup(state);
+            }
+        }
+
+        private void SpawnHazardCoinPickup(RunRoomHazardStateSave state)
+        {
+            if (state == null ||
+                playerController == null ||
+                currentHazardCoinPickups.Any(pickup => pickup != null && pickup.RoomId == state.roomId && pickup.ObjectId == state.objectId))
+            {
+                return;
+            }
+
+            var pickupObject = InstantiateOrCreate(rewardPickupPrefab, $"HazardCoin_{state.objectId}", PrimitiveType.Sphere, MaterialRole.HazardCoinDrop);
+            pickupObject.transform.SetParent(playerController.transform.parent, false);
+            pickupObject.transform.localPosition = new Vector3(state.localX, state.localY <= 0f ? 0.25f : state.localY, state.localZ);
+            pickupObject.transform.localScale = Vector3.one * 0.22f;
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.HazardCoinDrop, pickupObject.transform, Vector3.zero, Vector3.one);
+            var pickup = pickupObject.GetComponent<HazardCoinPickup>() ?? pickupObject.AddComponent<HazardCoinPickup>();
+            pickup.Configure(state.roomId, state.objectId, state.coinDropAmount);
+            currentHazardCoinPickups.Add(pickup);
+        }
+
+        private void MarkHazardCoinCollected(string roomId, string objectId)
+        {
+            var state = roomHazardStates.FirstOrDefault(candidate => candidate.roomId == roomId && candidate.objectId == objectId);
+            if (state != null)
+            {
+                state.coinCollected = true;
             }
         }
 
@@ -1203,6 +1383,16 @@ namespace Hollow.Branches
             }
 
             currentReplacementPickups.Clear();
+
+            foreach (var pickup in currentHazardCoinPickups)
+            {
+                if (pickup != null)
+                {
+                    DestroyRuntimeObject(pickup.gameObject);
+                }
+            }
+
+            currentHazardCoinPickups.Clear();
         }
 
         private void SpawnHubShopAndPortals()
@@ -1250,17 +1440,29 @@ namespace Hollow.Branches
         private void ResolvePersistence()
         {
             canPersist = false;
+            challengeResultStore = null;
             SaveStatus = "Transient";
             BankedSouls = 0;
 
             var profileHost = ProfileSessionHost.Instance;
+            if (profileHost != null)
+            {
+                challengeResultStore = profileHost.ChallengeResultStore ?? profileHost.ProfileStore as IChallengeResultStore;
+            }
+
             var selectedProfile = profileHost?.SelectedProfileContext?.SelectedProfile;
             if (selectedProfile != null)
             {
                 BankedSouls = selectedProfile.BankedSouls;
             }
 
-            if (gameSessionState == null || gameSessionState.ProfileSlotIndex < 0 || profileHost?.RunSaveStore == null)
+            if (gameSessionState == null || gameSessionState.ProfileSlotIndex < 0)
+            {
+                return;
+            }
+
+            activeProfileSlotId = new ProfileSlotId(gameSessionState.ProfileSlotIndex);
+            if (profileHost?.RunSaveStore == null)
             {
                 return;
             }
@@ -1271,7 +1473,6 @@ namespace Hollow.Branches
                 return;
             }
 
-            activeProfileSlotId = new ProfileSlotId(gameSessionState.ProfileSlotIndex);
             runSaveStore = profileHost.RunSaveStore;
             SaveStatus = "Active";
         }
@@ -1296,7 +1497,7 @@ namespace Hollow.Branches
                     {
                         if (encounterCatalog != null)
                         {
-                            return CreateM20Graph(seed);
+                            return CreateM46Graph(seed, worldIndex);
                         }
 
                         return branchGenerationSettings.EnableTreasureLeaf
@@ -1356,13 +1557,69 @@ namespace Hollow.Branches
                 runEconomy.ApplyReward(new RewardGrant("challenge_start_souls", "challenge_souls", activeChallenge.DisplayName, RewardKind.Currency, activeChallenge.StartingSouls, 0, Array.Empty<RewardEffect>()));
             }
 
+            ApplyChallengeLoadoutForFreshRun();
+            ApplyEquipmentAndSynergyModifiers(playerRunBuild, announceActivation: false);
             LastRewardMessage = $"Challenge: {activeChallenge.DisplayName}";
             SaveStatus = "Challenge";
         }
 
+        private void ApplyChallengeLoadoutForFreshRun()
+        {
+            var loadout = activeChallenge?.Loadout;
+            if (loadout == null || loadout.IsEmpty)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loadout.MeleeWeaponId))
+            {
+                playerRunBuild.Equipment.EquipMeleeWeapon(loadout.MeleeWeaponId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(loadout.RangedWeaponId))
+            {
+                playerRunBuild.Equipment.EquipRangedWeapon(loadout.RangedWeaponId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(loadout.ArmorId))
+            {
+                playerRunBuild.Equipment.EquipArmor(loadout.ArmorId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(loadout.ActiveItemId))
+            {
+                playerRunBuild.Equipment.EquipActiveItem(loadout.ActiveItemId);
+                var maxCharges = usableItemCatalog != null && usableItemCatalog.TryGet(loadout.ActiveItemId, out var activeItem)
+                    ? Math.Max(1, activeItem.MaxCharges)
+                    : 3;
+                playerRunBuild.Equipment.SetActiveItemCharges(maxCharges);
+            }
+
+            if (!string.IsNullOrWhiteSpace(loadout.ConsumableCardId))
+            {
+                playerRunBuild.Equipment.EquipConsumableCard(loadout.ConsumableCardId);
+            }
+        }
+
         private string ChallengeSummaryLine()
         {
-            return activeChallenge == null ? string.Empty : $"Challenge: {activeChallenge.DisplayName}\n";
+            if (activeChallenge == null)
+            {
+                return string.Empty;
+            }
+
+            var elapsedSeconds = challengeStartedRealtime > 0f ? Mathf.Max(0f, Time.realtimeSinceStartup - challengeStartedRealtime) : 0f;
+            return $"Challenge: {activeChallenge.DisplayName} | Seed {activeChallenge.FixedRunSeed} | {FormatElapsed(elapsedSeconds)}\nRules: {CompactChallengeRules(activeChallenge.RulesSummary)}\n";
+        }
+
+        private bool ChallengeHasRule(ChallengeRuleKind kind)
+        {
+            return activeChallenge != null && activeChallenge.HasRule(kind);
+        }
+
+        private int ChallengeRuleIntValue(ChallengeRuleKind kind, int fallback = 0)
+        {
+            return activeChallenge != null ? activeChallenge.RuleIntValue(kind, fallback) : fallback;
         }
 
         private bool IsWorldLoopRuntime()
@@ -1375,6 +1632,16 @@ namespace Hollow.Branches
 
         private BranchFloorGraph CreateGraphForSnapshot(RunSaveSnapshot snapshot)
         {
+            if (snapshot != null &&
+                snapshot.branchId == BranchGenerator.DirectedEncounterBranchId &&
+                branchContent != null &&
+                branchContent.HasMacroFixturePool)
+            {
+                return CreateM46Graph(
+                    currentBranchSeed == 0 ? snapshot.branchSeed : currentBranchSeed,
+                    snapshot.worldIndex <= 0 ? worldIndex : snapshot.worldIndex);
+            }
+
             if (snapshot != null &&
                 snapshot.branchId == BranchGenerator.BranchFeaturesId &&
                 branchContent != null &&
@@ -1437,12 +1704,30 @@ namespace Hollow.Branches
                 seed == 0 ? macroBranchSeed : seed);
         }
 
+        private BranchFloorGraph CreateM46Graph(int seed, int nextWorldIndex)
+        {
+            return BranchGenerator.CreateDirectedEncounterBranch(
+                branchContent,
+                branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                encounterDirectorProfile,
+                nextWorldIndex <= 0 ? 1 : nextWorldIndex,
+                seed == 0 ? macroBranchSeed : seed);
+        }
+
+        private BranchFloorGraph CreateWorldLoopGraph(int seed)
+        {
+            return encounterCatalog != null
+                ? CreateM46Graph(seed, worldIndex)
+                : CreateM20Graph(seed);
+        }
+
         private static bool IsProceduralRewardBranch(string branchId)
         {
             return branchId == BranchGenerator.SeededMacroBranchId ||
                    branchId == BranchGenerator.FeatureBranchId ||
                    branchId == BranchGenerator.EnemyEncounterBranchId ||
-                   branchId == BranchGenerator.BranchFeaturesId;
+                   branchId == BranchGenerator.BranchFeaturesId ||
+                   branchId == BranchGenerator.DirectedEncounterBranchId;
         }
 
         private ProceduralRewardPlan CreateRewardPlanForGraph(BranchFloorGraph graph, bool legacyFallback)
@@ -1459,14 +1744,31 @@ namespace Hollow.Branches
 
         private EncounterPlan CreateEncounterPlanForGraph(BranchFloorGraph graph)
         {
-            return graph != null && (graph.BranchId == BranchGenerator.EnemyEncounterBranchId || graph.BranchId == BranchGenerator.BranchFeaturesId)
+            if (graph == null)
+            {
+                return EncounterPlan.Empty;
+            }
+
+            if (graph.BranchId == BranchGenerator.DirectedEncounterBranchId)
+            {
+                return EncounterResolver.CreateDirectedSeededPlan(
+                    graph,
+                    encounterCatalog,
+                    graph.Seed,
+                    worldIndex,
+                    encounterDirectorProfile,
+                    ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus));
+            }
+
+            return graph.BranchId == BranchGenerator.EnemyEncounterBranchId || graph.BranchId == BranchGenerator.BranchFeaturesId
                 ? EncounterResolver.CreateSeededPlan(graph, encounterCatalog, graph.Seed)
                 : EncounterPlan.Empty;
         }
 
         private bool IsM20Branch()
         {
-            return State?.Graph?.BranchId == BranchGenerator.BranchFeaturesId;
+            return State?.Graph?.BranchId == BranchGenerator.BranchFeaturesId ||
+                   State?.Graph?.BranchId == BranchGenerator.DirectedEncounterBranchId;
         }
 
         private RoomCombatEncounterContext CreateEncounterContextForCurrentRoom()
@@ -1477,7 +1779,12 @@ namespace Hollow.Branches
                 return RoomCombatEncounterContext.Empty;
             }
 
-            return new RoomCombatEncounterContext(assignment.EncounterId, assignment.EnemySpawnKinds);
+            return new RoomCombatEncounterContext(
+                assignment.EncounterId,
+                assignment.EnemySpawnKinds,
+                assignment.WorldIndex,
+                assignment.DifficultyBand,
+                assignment.DirectorPressure);
         }
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()
@@ -1567,7 +1874,7 @@ namespace Hollow.Branches
 
         private void ApplySelectedCharacterForFreshRun()
         {
-            var selectedCharacterId = gameSessionState?.SelectedCharacterId ?? "balanced";
+            var selectedCharacterId = activeChallenge?.SelectedCharacterId ?? gameSessionState?.SelectedCharacterId ?? "balanced";
             var character = characterCatalog != null ? characterCatalog.Resolve(selectedCharacterId) : null;
             playerRunBuild.ConfigureCharacter(character);
             ApplyEquipmentAndSynergyModifiers(playerRunBuild, announceActivation: false);
@@ -1633,6 +1940,17 @@ namespace Hollow.Branches
 
         private RewardApplicationResult ApplyRewardGrant(RewardGrant grant, int extraHeal = 0, Vector3? replacementDropPosition = null, int restoredActiveItemCharges = -1)
         {
+            if (ChallengeHasRule(ChallengeRuleKind.BlockHealingRewards) && GrantHasHeal(grant))
+            {
+                grant = WithoutHealEffects(grant);
+                extraHeal = 0;
+                LastRewardMessage = "Challenge rule blocks healing";
+                if ((grant.Effects == null || grant.Effects.Count == 0) && grant.Souls <= 0 && grant.Coins <= 0 && grant.RewardKind == RewardKind.Currency)
+                {
+                    return new RewardApplicationResult(false, 0, LastRewardMessage);
+                }
+            }
+
             playerRunBuild ??= CreateCurrentRunBuild();
             var dropPosition = replacementDropPosition ?? CurrentReplacementDropPosition();
             var replacementGrant = WithRoomId(grant, CurrentReplacementContextId());
@@ -1771,6 +2089,41 @@ namespace Hollow.Branches
             var current = offer.PriceCurrency == ShopPriceCurrency.Coins ? runEconomy.RunCoins : runEconomy.RunSouls;
             var currency = offer.PriceCurrency == ShopPriceCurrency.Coins ? "coins" : "souls";
             return $"Need {offer.Price - current} more {currency}";
+        }
+
+        private static bool GrantHasHeal(RewardGrant grant)
+        {
+            return grant.RewardKind == RewardKind.Heal ||
+                   (grant.Effects != null && grant.Effects.Any(effect => effect.Kind == RewardEffectKind.Heal));
+        }
+
+        private static RewardGrant WithoutHealEffects(RewardGrant grant)
+        {
+            return new RewardGrant(
+                grant.RoomId,
+                grant.RewardId,
+                grant.DisplayName,
+                grant.RewardKind == RewardKind.Heal ? RewardKind.Currency : grant.RewardKind,
+                grant.Souls,
+                grant.Coins,
+                grant.Effects?.Where(effect => effect.Kind != RewardEffectKind.Heal) ?? Array.Empty<RewardEffect>());
+        }
+
+        private static string CompactChallengeRules(string rules)
+        {
+            if (string.IsNullOrWhiteSpace(rules))
+            {
+                return "Fixed seed.";
+            }
+
+            rules = rules.Replace("\n", " ");
+            return rules.Length <= 64 ? rules : rules.Substring(0, 61) + "...";
+        }
+
+        private static string FormatElapsed(float seconds)
+        {
+            var safeSeconds = Mathf.Max(0, Mathf.FloorToInt(seconds));
+            return $"{safeSeconds / 60:00}:{safeSeconds % 60:00}";
         }
 
         private string ActiveItemSummary()
@@ -1929,7 +2282,19 @@ namespace Hollow.Branches
                 economy = runEconomy.ToSaveState(),
                 playerStats = playerRunStats.ToSaveState(),
                 runBuild = CreateCurrentRunBuild(captureRuntimeStamina: true).ToSaveState(),
-                droppedReplacementPickups = droppedReplacementPickups.Select(pickup => pickup.ToSaveState()).ToList()
+                droppedReplacementPickups = droppedReplacementPickups.Select(pickup => pickup.ToSaveState()).ToList(),
+                roomHazardStates = roomHazardStates.Select(state => new RunRoomHazardStateSave
+                {
+                    roomId = state.roomId,
+                    objectId = state.objectId,
+                    objectKind = state.objectKind,
+                    isDestroyed = state.isDestroyed,
+                    coinDropAmount = state.coinDropAmount,
+                    coinCollected = state.coinCollected,
+                    localX = state.localX,
+                    localY = state.localY,
+                    localZ = state.localZ
+                }).ToList()
             };
 
             if (State?.Graph?.Rooms != null)
@@ -1956,6 +2321,7 @@ namespace Hollow.Branches
             }
 
             activeRunCompletedOrFailed = true;
+            RecordChallengeCompletionIfNeeded();
             if (canPersist)
             {
                 MetaProgressionService.CompleteRun(runSaveStore, activeProfileSlotId, runEconomy);
@@ -1964,6 +2330,19 @@ namespace Hollow.Branches
             }
 
             SaveStatus = "Completed";
+        }
+
+        private void RecordChallengeCompletionIfNeeded()
+        {
+            if (activeChallenge == null || challengeResultStore == null || challengeCompletionRecorded || gameSessionState == null || gameSessionState.ProfileSlotIndex < 0)
+            {
+                return;
+            }
+
+            challengeCompletionRecorded = true;
+            var clearSeconds = challengeStartedRealtime > 0f ? Time.realtimeSinceStartup - challengeStartedRealtime : 0f;
+            challengeResultStore.CompleteChallengeAttempt(activeProfileSlotId, activeChallenge.ChallengeId, activeChallenge.FixedRunSeed, clearSeconds);
+            RefreshSelectedProfileSummary();
         }
 
         private PlayerRunBuild CreateCurrentRunBuild(bool captureRuntimeStamina = false)

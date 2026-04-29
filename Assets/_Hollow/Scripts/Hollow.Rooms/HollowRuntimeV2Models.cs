@@ -31,6 +31,8 @@ namespace Hollow.Rooms
         public List<ImportedSpawnPoint> enemySpawns = new();
         public List<ImportedSpawnPoint> itemSpawns = new();
         public List<ImportedRoomObstacle> obstacles = new();
+        public List<ImportedRoomHazard> hazards = new();
+        public List<ImportedRoomInteractiveObject> interactiveObjects = new();
         public List<ImportedRoomDecor> decor = new();
     }
 
@@ -131,6 +133,26 @@ namespace Hollow.Rooms
     }
 
     [Serializable]
+    public sealed class ImportedRoomHazard
+    {
+        public string id;
+        public string kind;
+        public ImportedVector3 center;
+        public float radius = 0.45f;
+    }
+
+    [Serializable]
+    public sealed class ImportedRoomInteractiveObject
+    {
+        public string id;
+        public string kind;
+        public ImportedVector3 center;
+        public ImportedVector3 size;
+        public bool blocksMovement = true;
+        public bool blocksProjectiles = true;
+    }
+
+    [Serializable]
     public sealed class ImportedSpawnPoint
     {
         public string id;
@@ -160,6 +182,8 @@ namespace Hollow.Rooms
             IReadOnlyList<ImportedSpawnPoint> enemySpawns,
             IReadOnlyList<ImportedSpawnPoint> itemSpawns,
             ImportedSpawnPoint safeStart,
+            IReadOnlyList<ImportedRoomHazard> hazards,
+            IReadOnlyList<ImportedRoomInteractiveObject> interactiveObjects,
             IReadOnlyList<ImportedRoomDecor> decor,
             ImportedHollowRoomManifest sourceManifest)
         {
@@ -171,6 +195,8 @@ namespace Hollow.Rooms
             EnemySpawns = enemySpawns;
             ItemSpawns = itemSpawns;
             SafeStart = safeStart;
+            Hazards = hazards;
+            InteractiveObjects = interactiveObjects;
             Decor = decor;
             SourceManifest = sourceManifest;
         }
@@ -190,6 +216,10 @@ namespace Hollow.Rooms
         public IReadOnlyList<ImportedSpawnPoint> ItemSpawns { get; }
 
         public ImportedSpawnPoint SafeStart { get; }
+
+        public IReadOnlyList<ImportedRoomHazard> Hazards { get; }
+
+        public IReadOnlyList<ImportedRoomInteractiveObject> InteractiveObjects { get; }
 
         public IReadOnlyList<ImportedRoomDecor> Decor { get; }
 

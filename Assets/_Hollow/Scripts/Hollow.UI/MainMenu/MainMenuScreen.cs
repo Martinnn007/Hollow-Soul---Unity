@@ -91,22 +91,24 @@ namespace Hollow.UI.MainMenu
 
         private void BuildChallengeSelect()
         {
-            AddText(rootPanel, "Challenge Mode - fixed seeds, transient runs", 19, FontStyle.Bold, new Vector2(0f, -75f), new Vector2(620f, 34f), new Color(0.94f, 0.78f, 1f));
+            rootPanel.sizeDelta = new Vector2(780f, 860f);
+            AddText(rootPanel, "Challenge Mode - curated fixed seeds, transient runs", 18, FontStyle.Bold, new Vector2(0f, -62f), new Vector2(700f, 30f), new Color(0.94f, 0.78f, 1f));
             var challenges = controller.ViewModel.Challenges;
             for (var index = 0; index < challenges.Count; index++)
             {
                 var challenge = challenges[index];
-                var y = -145f - index * 92f;
-                var panel = CreatePanel($"Challenge.{challenge.ChallengeId}", rootPanel, new Vector2(600f, 78f), new Color(0.11f, 0.09f, 0.17f, 0.92f));
+                var y = -125f - index * 58f;
+                var panel = CreatePanel($"Challenge.{challenge.ChallengeId}", rootPanel, new Vector2(690f, 52f), new Color(0.11f, 0.09f, 0.17f, 0.92f));
                 panel.anchoredPosition = new Vector2(0f, y);
-                AddText(panel, $"{challenge.DisplayName} | Seed {challenge.FixedRunSeed}", 16, FontStyle.Bold, new Vector2(-135f, 18f), new Vector2(310f, 28f), new Color(1f, 0.91f, 0.72f));
-                AddText(panel, CompactRules(challenge.RulesSummary), 11, FontStyle.Normal, new Vector2(-135f, -17f), new Vector2(310f, 42f), new Color(0.84f, 0.83f, 0.94f));
-                AddButton(panel, "Win", new Vector2(120f, 16f), () => controller.LaunchChallengeWindows(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(86f, 28f));
-                AddButton(panel, "Bounded", new Vector2(215f, 16f), () => controller.LaunchChallengeVisionOSBounded(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(94f, 28f));
-                AddButton(panel, "Imm", new Vector2(310f, 16f), () => controller.LaunchChallengeVisionOSImmersive(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(86f, 28f));
+                AddText(panel, $"{challenge.DisplayName} | Seed {challenge.FixedRunSeed}", 14, FontStyle.Bold, new Vector2(-210f, 11f), new Vector2(250f, 22f), new Color(1f, 0.91f, 0.72f));
+                AddText(panel, controller.ViewModel.ChallengeRecordSummary(challenge.ChallengeId), 10, FontStyle.Normal, new Vector2(-210f, -11f), new Vector2(250f, 20f), new Color(0.78f, 0.94f, 0.86f));
+                AddText(panel, CompactRules(challenge.RulesSummary), 10, FontStyle.Normal, new Vector2(30f, -1f), new Vector2(220f, 38f), new Color(0.84f, 0.83f, 0.94f));
+                AddButton(panel, "Win", new Vector2(185f, 0f), () => controller.LaunchChallengeWindows(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(58f, 30f));
+                AddButton(panel, "Bounded", new Vector2(260f, 0f), () => controller.LaunchChallengeVisionOSBounded(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(82f, 30f));
+                AddButton(panel, "Imm", new Vector2(327f, 0f), () => controller.LaunchChallengeVisionOSImmersive(challenge.ChallengeId), new Color(0.55f, 0.24f, 0.62f), new Vector2(54f, 30f));
             }
 
-            AddButton(rootPanel, "Back", new Vector2(0f, -365f), controller.BackFromChallenges, new Color(0.22f, 0.25f, 0.33f));
+            AddButton(rootPanel, "Back", new Vector2(0f, -390f), controller.BackFromChallenges, new Color(0.22f, 0.25f, 0.33f));
         }
 
         private static string CompactRules(string rules)
@@ -116,7 +118,8 @@ namespace Hollow.UI.MainMenu
                 return "Fixed seed challenge.";
             }
 
-            return rules.Length <= 96 ? rules : rules.Substring(0, 93) + "...";
+            rules = rules.Replace("\n", " ");
+            return rules.Length <= 92 ? rules : rules.Substring(0, 89) + "...";
         }
 
         private void ConfigureCanvas()

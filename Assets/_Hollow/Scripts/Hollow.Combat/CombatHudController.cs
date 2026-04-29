@@ -12,6 +12,7 @@ namespace Hollow.Combat
         private Text difficultyText;
         private Text archetypeText;
         private Text projectileText;
+        private Text directorText;
         private Font font;
 
         public void Bind(RoomCombatController controller)
@@ -40,6 +41,7 @@ namespace Hollow.Combat
             difficultyText.text = $"Tier {model.DifficultyName}";
             archetypeText.text = $"Types {model.ArchetypeSummary}";
             projectileText.text = model.ProjectileSummary;
+            directorText.text = model.DirectorDebugLine;
             roomStateText.color = model.RoomState == RoomObjectiveState.Cleared ? new Color(0.25f, 1f, 0.45f) : Color.white;
         }
 
@@ -57,6 +59,7 @@ namespace Hollow.Combat
             difficultyText = AddText("CombatHud.Difficulty", new Vector2(-760f, 350f), 20, TextAnchor.MiddleLeft);
             archetypeText = AddText("CombatHud.Archetypes", new Vector2(-760f, 315f), 18, TextAnchor.MiddleLeft);
             projectileText = AddText("CombatHud.Projectiles", new Vector2(-760f, 285f), 16, TextAnchor.MiddleLeft);
+            directorText = AddText("CombatHud.Director", new Vector2(-760f, 258f), 15, TextAnchor.MiddleLeft);
         }
 
         private Text AddText(string name, Vector2 anchoredPosition, int size, TextAnchor alignment)

@@ -45,6 +45,18 @@ namespace Hollow.UI.MainMenu
 
         public IReadOnlyList<ChallengeDefinition> Challenges => challengeCatalog.Challenges;
 
+        public string ChallengeRecordSummary(string challengeId)
+        {
+            if (!selectedProfileContext.HasSelection || profileStore is not IChallengeResultStore challengeResultStore)
+            {
+                return "Best: -- | Attempts: 0";
+            }
+
+            var record = challengeResultStore.GetChallengeRecord(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex), challengeId);
+            var best = record.HasBestClearTime ? FormatTime(record.BestClearTimeSeconds) : "--";
+            return $"Best: {best} | Attempts: {record.Attempts} | Clears: {record.Completions}";
+        }
+
         public void Refresh()
         {
             profileCards.Clear();
@@ -206,6 +218,17 @@ namespace Hollow.UI.MainMenu
             selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
             selectedProfileContext.SetSelectedChallengeId(challenge.ChallengeId);
             selectedProfileContext.SetSelectedCharacterId(challenge.SelectedCharacterId);
+            if (profileStore is IChallengeResultStore challengeResultStore)
+            {
+                challengeResultStore.MarkChallengeAttemptStarted(
+                    new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex),
+                    challenge.ChallengeId,
+                    challenge.FixedRunSeed);
+                var updated = profileStore.MarkLastPlayed(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex));
+                selectedProfileContext.UpdateSelectedProfile(updated);
+                Refresh();
+            }
+
             appStateMachine.TransitionTo(route);
             return route;
         }
@@ -238,6 +261,12 @@ namespace Hollow.UI.MainMenu
         {
             State = MainMenuState.Error;
             ErrorMessage = message;
+        }
+
+        private static string FormatTime(float seconds)
+        {
+            var safeSeconds = Math.Max(0, (int)Math.Round(seconds));
+            return $"{safeSeconds / 60:00}:{safeSeconds % 60:00}";
         }
     }
 }

@@ -26,6 +26,9 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.EnemyTurret => "Turret",
                 RoomDesignerTool.EnemySplitter => "Splitter",
                 RoomDesignerTool.InactiveDoor => "Inactive",
+                RoomDesignerTool.Spike => "Spike",
+                RoomDesignerTool.StandardBarrel => "Barrel",
+                RoomDesignerTool.ExplosiveBarrel => "Boom",
                 _ => tool.ToString()
             };
         }
@@ -52,6 +55,9 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.EnemyTurret => "TRT",
                 RoomDesignerTool.EnemySplitter => "SPL",
                 RoomDesignerTool.InactiveDoor => "OFF",
+                RoomDesignerTool.Spike => "SPK",
+                RoomDesignerTool.StandardBarrel => "BRL",
+                RoomDesignerTool.ExplosiveBarrel => "XPL",
                 _ => tool.ToString().Substring(0, Math.Min(3, tool.ToString().Length)).ToUpperInvariant()
             };
         }
@@ -63,6 +69,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerCellKinds.Ground => "Ground",
                 RoomDesignerCellKinds.Hole => "Hole",
                 RoomDesignerCellKinds.Rock => "Rock",
+                RoomDesignerCellKinds.Spike => "Spike",
                 _ => Shorten(kind)
             };
         }
@@ -81,6 +88,8 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyCharger => "Charger",
                 RoomDesignerMarkerKinds.EnemyTurret => "Turret",
                 RoomDesignerMarkerKinds.EnemySplitter => "Splitter",
+                RoomDesignerMarkerKinds.StandardBarrel => "Barrel",
+                RoomDesignerMarkerKinds.ExplosiveBarrel => "Boom",
                 _ => Shorten(kind)
             };
         }

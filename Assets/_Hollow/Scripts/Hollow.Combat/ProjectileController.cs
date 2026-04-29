@@ -105,6 +105,14 @@ namespace Hollow.Combat
                 return true;
             }
 
+            var destructible = combatController != null ? combatController.FindDestructibleHit(transform.localPosition, hitRadiusMeters) : null;
+            if (destructible != null)
+            {
+                destructible.TryApplyHit(damage, gameObject);
+                DestroyProjectile(ProjectileDespawnReason.ObstacleHit);
+                return true;
+            }
+
             if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
             {
                 DestroyProjectile(ProjectileDespawnReason.BoundsExit);

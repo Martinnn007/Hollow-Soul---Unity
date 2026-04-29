@@ -26,6 +26,7 @@ namespace Hollow.Combat
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private RoomCombatController combatController;
+        [SerializeField] private PlayerDefenseController defenseController;
 
         private float nextAllowedShotTime;
         private float nextAllowedMeleeTime;
@@ -112,6 +113,11 @@ namespace Hollow.Combat
                 lastAimDirection = input.Shoot;
             }
 
+            if (input.GuardHeld)
+            {
+                return;
+            }
+
             if (input.LightAttackPressed)
             {
                 TryAttack(AttackKind.Light, CurrentAim(input), Time.time);
@@ -135,6 +141,11 @@ namespace Hollow.Combat
 
         public bool TryAttack(AttackKind attackKind, Vector2 attackDirection, float timeSeconds)
         {
+            if (IsGuarding)
+            {
+                return false;
+            }
+
             return activeWeaponSlot == WeaponSlot.Melee
                 ? TryMeleeAttack(attackKind, attackDirection, timeSeconds)
                 : TryFireWithAttack(attackKind, attackDirection, timeSeconds);
@@ -147,6 +158,11 @@ namespace Hollow.Combat
 
         private bool TryFireWithAttack(AttackKind attackKind, Vector2 shootDirection, float timeSeconds)
         {
+            if (IsGuarding)
+            {
+                return false;
+            }
+
             var cardinal = GameplayInputReader.CardinalizeShoot(shootDirection);
             if (cardinal.sqrMagnitude < 0.001f)
             {
@@ -189,6 +205,11 @@ namespace Hollow.Combat
 
         private bool TryMeleeAttack(AttackKind attackKind, Vector2 attackDirection, float timeSeconds)
         {
+            if (IsGuarding)
+            {
+                return false;
+            }
+
             var cardinal = GameplayInputReader.CardinalizeShoot(attackDirection);
             if (cardinal.sqrMagnitude < 0.001f)
             {
@@ -222,6 +243,14 @@ namespace Hollow.Combat
                         DamageFeedbackContext.Knockback(direction, knockback, profile.KnockbackSeconds)));
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
+            }
+            else
+            {
+                var destructible = combatController.FindDestructibleHit(hitCenter, radius);
+                if (destructible != null)
+                {
+                    destructible.TryApplyHit(Mathf.Max(1, attack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus), gameObject);
+                }
             }
 
             return true;
@@ -267,6 +296,19 @@ namespace Hollow.Combat
         {
             var weaponId = slot == WeaponSlot.Melee ? meleeWeaponId : rangedWeaponId;
             return weaponCatalog != null ? weaponCatalog.Resolve(weaponId, slot) : null;
+        }
+
+        private bool IsGuarding
+        {
+            get
+            {
+                if (defenseController == null)
+                {
+                    defenseController = GetComponent<PlayerDefenseController>();
+                }
+
+                return defenseController != null && defenseController.IsGuarding;
+            }
         }
 
         public void ApplyTemporaryDamageBonus(int damageBonus, float durationSeconds)

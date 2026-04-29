@@ -15,6 +15,8 @@ namespace Hollow.Rooms
         private readonly Dictionary<string, List<Renderer>> doorRenderersByDirection = new();
         private readonly Dictionary<string, Renderer> doorRenderersByPortId = new();
         private readonly Dictionary<string, GameObject> doorMarkersByPortId = new();
+        private readonly List<RoomHazardMarker> hazardMarkers = new();
+        private readonly List<RoomInteractiveObjectMarker> interactiveObjectMarkers = new();
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
@@ -27,6 +29,10 @@ namespace Hollow.Rooms
         public Rect LocalBounds => CurrentLayout?.Bounds ?? Rect.MinMaxRect(-DefaultWidthMeters * 0.5f, -DefaultDepthMeters * 0.5f, DefaultWidthMeters * 0.5f, DefaultDepthMeters * 0.5f);
 
         public System.Collections.Generic.IReadOnlyList<RoomLayoutObstacle> Obstacles => CurrentLayout?.Obstacles ?? System.Array.Empty<RoomLayoutObstacle>();
+
+        public System.Collections.Generic.IReadOnlyList<RoomHazardMarker> HazardMarkers => hazardMarkers;
+
+        public System.Collections.Generic.IReadOnlyList<RoomInteractiveObjectMarker> InteractiveObjectMarkers => interactiveObjectMarkers;
 
         public System.Collections.Generic.IReadOnlyList<ImportedSpawnPoint> EnemySpawns => LastBuiltAsset?.EnemySpawns ?? System.Array.Empty<ImportedSpawnPoint>();
 
@@ -53,8 +59,12 @@ namespace Hollow.Rooms
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
             doorMarkersByPortId.Clear();
+            hazardMarkers.Clear();
+            interactiveObjectMarkers.Clear();
             BuildFloor(asset.Layout);
             BuildObstacles(asset.Layout);
+            BuildHazards(asset);
+            BuildInteractiveObjects(asset);
             BuildDoors(asset);
             BuildSpawnMarkers(asset);
         }
@@ -66,6 +76,8 @@ namespace Hollow.Rooms
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
             doorMarkersByPortId.Clear();
+            hazardMarkers.Clear();
+            interactiveObjectMarkers.Clear();
         }
 
         public bool TryGetDoorPort(string direction, out RoomDoorPort port)
@@ -112,6 +124,43 @@ namespace Hollow.Rooms
                 ClearArtPassChildren(marker.transform);
                 PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDoorState(state), marker.transform, Vector3.zero, Vector3.one);
             }
+        }
+
+        public void ApplyInteractiveObjectState(System.Collections.Generic.IEnumerable<string> destroyedObjectIds)
+        {
+            var destroyed = new HashSet<string>(destroyedObjectIds ?? System.Array.Empty<string>());
+            foreach (var marker in interactiveObjectMarkers)
+            {
+                if (marker == null || !destroyed.Contains(marker.ObjectId))
+                {
+                    continue;
+                }
+
+                marker.MarkDestroyed();
+                marker.gameObject.SetActive(false);
+            }
+        }
+
+        public void ClearHazardsAndInteractiveObjects()
+        {
+            foreach (var hazard in hazardMarkers.ToArray())
+            {
+                if (hazard != null)
+                {
+                    DestroyRuntimeChild(hazard.gameObject);
+                }
+            }
+
+            foreach (var marker in interactiveObjectMarkers.ToArray())
+            {
+                if (marker != null)
+                {
+                    DestroyRuntimeChild(marker.gameObject);
+                }
+            }
+
+            hazardMarkers.Clear();
+            interactiveObjectMarkers.Clear();
         }
 
         private void ClearChildren()
@@ -162,6 +211,69 @@ namespace Hollow.Rooms
                 block.transform.localScale = obstacle.Size;
                 MaterialResolver.ApplyTo(block, MaterialRole.RoomObstacleRock);
                 PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RoomObstacleRock, block.transform, Vector3.zero, Vector3.one);
+            }
+        }
+
+        private void BuildHazards(ImportedRoomRuntimeAsset asset)
+        {
+            foreach (var hazard in asset.Hazards ?? System.Array.Empty<ImportedRoomHazard>())
+            {
+                if (hazard == null)
+                {
+                    continue;
+                }
+
+                var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                marker.name = $"{hazard.kind}.{hazard.id}";
+                marker.transform.SetParent(transform, false);
+                var position = hazard.center?.ToUnityVector3() ?? Vector3.zero;
+                marker.transform.localPosition = new Vector3(position.x, 0.025f, position.z);
+                marker.transform.localScale = new Vector3(0.72f, 0.05f, 0.72f);
+                MaterialResolver.ApplyTo(marker, MaterialRole.RoomHazardSpike);
+                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RoomHazardSpike, marker.transform, Vector3.zero, Vector3.one);
+                var collider = marker.GetComponent<Collider>();
+                if (collider != null)
+                {
+                    collider.enabled = false;
+                }
+
+                var hazardMarker = marker.AddComponent<RoomHazardMarker>();
+                hazardMarker.Configure(hazard);
+                hazardMarkers.Add(hazardMarker);
+            }
+        }
+
+        private void BuildInteractiveObjects(ImportedRoomRuntimeAsset asset)
+        {
+            foreach (var roomObject in asset.InteractiveObjects ?? System.Array.Empty<ImportedRoomInteractiveObject>())
+            {
+                if (roomObject == null)
+                {
+                    continue;
+                }
+
+                var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                marker.name = $"{roomObject.kind}.{roomObject.id}";
+                marker.transform.SetParent(transform, false);
+                marker.transform.localPosition = roomObject.center?.ToUnityVector3() ?? Vector3.zero;
+                marker.transform.localScale = roomObject.size?.ToUnityVector3() ?? Vector3.one;
+                var materialRole = roomObject.kind == RoomInteractiveObjectKind.ExplosiveBarrel
+                    ? MaterialRole.RoomExplosiveBarrel
+                    : MaterialRole.RoomBarrel;
+                var prefabRole = roomObject.kind == RoomInteractiveObjectKind.ExplosiveBarrel
+                    ? PresentationPrefabRole.ExplosiveBarrel
+                    : PresentationPrefabRole.StandardBarrel;
+                MaterialResolver.ApplyTo(marker, materialRole);
+                PresentationPrefabResolver.InstantiateVisual(prefabRole, marker.transform, Vector3.zero, Vector3.one);
+                var collider = marker.GetComponent<Collider>();
+                if (collider != null)
+                {
+                    collider.enabled = false;
+                }
+
+                var objectMarker = marker.AddComponent<RoomInteractiveObjectMarker>();
+                objectMarker.Configure(roomObject);
+                interactiveObjectMarkers.Add(objectMarker);
             }
         }
 
@@ -273,6 +385,23 @@ namespace Hollow.Rooms
                 {
                     DestroyImmediate(child.gameObject);
                 }
+            }
+        }
+
+        private static void DestroyRuntimeChild(GameObject child)
+        {
+            if (child == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(child);
+            }
+            else
+            {
+                DestroyImmediate(child);
             }
         }
 

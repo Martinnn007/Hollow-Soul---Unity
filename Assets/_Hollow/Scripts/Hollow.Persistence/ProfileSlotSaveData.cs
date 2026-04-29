@@ -16,6 +16,7 @@ namespace Hollow.Persistence
         public int bankedSouls;
         public int completedRuns;
         public RunSaveSnapshot activeRun;
+        public List<ChallengeRecordSaveState> challengeRecords = new();
 
         public ProfileSlotSummary ToSummary()
         {
@@ -42,7 +43,7 @@ namespace Hollow.Persistence
     [Serializable]
     public sealed class ProfileStoreSaveData
     {
-        public int schemaVersion = 2;
+        public int schemaVersion = 3;
         public List<ProfileSlotSaveData> slots = new();
     }
 }

@@ -68,6 +68,8 @@ namespace Hollow.Rooms
                 runtime.enemySpawns ?? new List<ImportedSpawnPoint>(),
                 runtime.itemSpawns ?? new List<ImportedSpawnPoint>(),
                 safeStart,
+                runtime.hazards ?? new List<ImportedRoomHazard>(),
+                runtime.interactiveObjects ?? new List<ImportedRoomInteractiveObject>(),
                 runtime.decor ?? new List<ImportedRoomDecor>(),
                 manifest);
         }

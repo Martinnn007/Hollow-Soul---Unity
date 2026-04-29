@@ -57,9 +57,12 @@ namespace Hollow.Editor.Validation
         private static void ValidateSourceCoverage(List<string> failures)
         {
             var sourcePaths = CuratedRoomDesignerDraftGenerator.SourceRuntimeRoomPaths();
-            if (sourcePaths.Count != 10)
+            var expectedCount = Milestone13AssetGenerator.MacroFixtures.Length +
+                                Milestone36AssetGenerator.ApprovedRoomIds.Count +
+                                Milestone48AssetGenerator.ApprovedRoomIds.Count;
+            if (sourcePaths.Count != expectedCount)
             {
-                failures.Add($"Expected 10 curated runtime room sources, found {sourcePaths.Count}.");
+                failures.Add($"Expected {expectedCount} curated runtime room sources, found {sourcePaths.Count}.");
             }
 
             foreach (var sourcePath in sourcePaths)

@@ -19,16 +19,23 @@ namespace Hollow.Combat
         [SerializeField] private EnemyCatalog enemyCatalog;
         [SerializeField] private DifficultyTierDefinition difficultyTier;
         [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
+        [SerializeField] private RoomHazardTuningProfileDefinition hazardTuningProfile;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
 
         private readonly List<EnemyRuntimeController> enemies = new();
+        private readonly List<RoomHazardController> hazards = new();
+        private readonly List<DestructibleRoomObjectController> destructibleObjects = new();
         private CombatantHealth playerHealth;
         private CombatFeelProfileDefinition resolvedCombatFeelProfile;
+        private RoomHazardTuningProfileDefinition resolvedHazardTuningProfile;
+        private RoomCombatEncounterContext activeEncounterContext = RoomCombatEncounterContext.Empty;
         private bool initialized;
         private readonly CombatDiagnosticsModel diagnostics = new();
 
         public event Action<RoomCombatController> RoomCleared;
+
+        public event Action<RoomInteractiveObjectDestroyedContext> InteractiveObjectDestroyed;
 
         public RoomObjectiveState ObjectiveState { get; private set; } = RoomObjectiveState.WaitingToStart;
 
@@ -46,7 +53,11 @@ namespace Hollow.Combat
 
         public IReadOnlyList<EnemyRuntimeController> Enemies => enemies;
 
+        public IReadOnlyList<DestructibleRoomObjectController> DestructibleObjects => destructibleObjects;
+
         public CombatantHealth PlayerHealth => playerHealth;
+
+        public PlaceholderPlayerController PlayerController => playerController;
 
         public void Configure(GameObject nextEnemyPrefab, GameObject nextProjectilePrefab)
         {
@@ -107,12 +118,14 @@ namespace Hollow.Combat
         {
             roomRuntimeRoot = room;
             playerController = player;
+            activeEncounterContext = encounterContext ?? RoomCombatEncounterContext.Empty;
             if (roomRuntimeRoot == null || playerController == null)
             {
                 return;
             }
 
             CleanupRoomCombatObjects();
+            ConfigureRoomHazards();
             playerHealth = playerController.GetComponent<CombatantHealth>() ?? playerController.gameObject.AddComponent<CombatantHealth>();
             if (playerHealth.MaxHealth < PlayerMaxHealth)
             {
@@ -128,6 +141,7 @@ namespace Hollow.Combat
 
             var defense = playerController.GetComponent<PlayerDefenseController>() ?? playerController.gameObject.AddComponent<PlayerDefenseController>();
             defense.Bind(roomRuntimeRoot);
+            defense.ConfigureShieldProfile(ShieldGuardProfileDefinition.Resolve(null));
             var playerFeedback = playerController.GetComponent<PlayerDamageFeedbackController>() ?? playerController.gameObject.AddComponent<PlayerDamageFeedbackController>();
             playerFeedback.Configure(roomRuntimeRoot, CombatFeelProfile);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
@@ -194,6 +208,26 @@ namespace Hollow.Combat
             return null;
         }
 
+        public DestructibleRoomObjectController FindDestructibleHit(Vector3 localPosition, float radius)
+        {
+            foreach (var roomObject in destructibleObjects)
+            {
+                if (roomObject == null || roomObject.IsDestroyed)
+                {
+                    continue;
+                }
+
+                var objectPosition = roomObject.transform.localPosition;
+                objectPosition.y = localPosition.y;
+                if (Vector3.Distance(objectPosition, localPosition) <= roomObject.RadiusMeters + radius)
+                {
+                    return roomObject;
+                }
+            }
+
+            return null;
+        }
+
         public CombatHudModel CreateHudModel()
         {
             return new CombatHudModel(
@@ -204,7 +238,8 @@ namespace Hollow.Combat
                 difficultyTier != null ? difficultyTier.DisplayName : "Developer Sample",
                 diagnostics.EnemySummary(),
                 diagnostics.ProjectileSummary(),
-                playerController != null ? playerController.GetComponent<PlayerDefenseController>() : null);
+                playerController != null ? playerController.GetComponent<PlayerDefenseController>() : null,
+                activeEncounterContext);
         }
 
         public void EvaluateRoomState()
@@ -246,6 +281,50 @@ namespace Hollow.Combat
             diagnostics.SetEnemyCounts(enemies);
         }
 
+        private void ConfigureRoomHazards()
+        {
+            hazards.Clear();
+            destructibleObjects.Clear();
+            var tuning = ResolveHazardTuningProfile();
+            if (roomRuntimeRoot == null)
+            {
+                return;
+            }
+
+            foreach (var marker in roomRuntimeRoot.HazardMarkers)
+            {
+                if (marker == null || marker.HazardKind != RoomHazardKind.Spike)
+                {
+                    continue;
+                }
+
+                var spike = marker.GetComponent<SpikeHazardController>() ?? marker.gameObject.AddComponent<SpikeHazardController>();
+                spike.Configure(marker, roomRuntimeRoot, this, playerController, tuning);
+                hazards.Add(spike);
+            }
+
+            foreach (var marker in roomRuntimeRoot.InteractiveObjectMarkers)
+            {
+                if (marker == null || marker.IsDestroyed)
+                {
+                    continue;
+                }
+
+                var destructible = marker.ObjectKind == RoomInteractiveObjectKind.ExplosiveBarrel
+                    ? marker.GetComponent<ExplosiveBarrelController>() ?? marker.gameObject.AddComponent<ExplosiveBarrelController>()
+                    : marker.GetComponent<DestructibleRoomObjectController>() ?? marker.gameObject.AddComponent<DestructibleRoomObjectController>();
+                destructible.Destroyed -= OnInteractiveObjectDestroyed;
+                destructible.Destroyed += OnInteractiveObjectDestroyed;
+                destructible.Configure(marker, roomRuntimeRoot, this, tuning);
+                destructibleObjects.Add(destructible);
+            }
+        }
+
+        private void OnInteractiveObjectDestroyed(DestructibleRoomObjectController _, RoomInteractiveObjectDestroyedContext context)
+        {
+            InteractiveObjectDestroyed?.Invoke(context);
+        }
+
         private void OnEnemySpawnedChild(EnemyRuntimeController child)
         {
             RegisterEnemy(child);
@@ -274,6 +353,16 @@ namespace Hollow.Combat
 
             resolvedCombatFeelProfile ??= CombatFeelProfileDefinition.Resolve(null);
             return resolvedCombatFeelProfile;
+        }
+
+        private RoomHazardTuningProfileDefinition ResolveHazardTuningProfile()
+        {
+            if (resolvedHazardTuningProfile == null)
+            {
+                resolvedHazardTuningProfile = RoomHazardTuningProfileDefinition.Resolve(hazardTuningProfile);
+            }
+
+            return resolvedHazardTuningProfile;
         }
 
         private void AttachHud()

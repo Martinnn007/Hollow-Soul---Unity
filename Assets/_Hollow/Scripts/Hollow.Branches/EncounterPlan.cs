@@ -33,7 +33,10 @@ namespace Hollow.Branches
                 {
                     roomId = assignment.RoomId,
                     encounterId = assignment.EncounterId,
-                    enemySpawnKinds = assignment.EnemySpawnKinds.ToList()
+                    enemySpawnKinds = assignment.EnemySpawnKinds.ToList(),
+                    worldIndex = assignment.WorldIndex,
+                    difficultyBand = assignment.DifficultyBand,
+                    directorPressure = assignment.DirectorPressure
                 })
                 .ToList();
         }
@@ -41,7 +44,7 @@ namespace Hollow.Branches
         public static EncounterPlan FromSaveState(IEnumerable<RoomEncounterSaveState> saveState)
         {
             return new EncounterPlan((saveState ?? System.Array.Empty<RoomEncounterSaveState>())
-                .Select(state => new RoomEncounterAssignment(state.roomId, state.encounterId, state.enemySpawnKinds)));
+                .Select(state => new RoomEncounterAssignment(state.roomId, state.encounterId, state.enemySpawnKinds, state.worldIndex, state.difficultyBand, state.directorPressure)));
         }
     }
 }

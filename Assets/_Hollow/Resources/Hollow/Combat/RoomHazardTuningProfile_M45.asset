@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40d54c6240554a8ba5c1d1d40b932b2f, type: 3}
+  m_Name: RoomHazardTuningProfile_M45
+  m_EditorClassIdentifier: 
+  id: room_hazard_tuning_m45
+  displayName: M45 Room Hazards
+  notes: Always-on spikes, deterministic destructible barrels, and explosive chain
+    reaction tuning.
+  spikeDamage: 1
+  spikeCooldownSeconds: 0.85
+  barrelHealth: 1
+  explosiveBarrelDamage: 2
+  explosiveBarrelPlayerDamage: 1
+  explosionRadiusMeters: 1.8
+  bossExplosionDamageMultiplier: 0.5
+  standardBarrelCoinDropChancePercent: 12
+  standardBarrelCoinDropAmount: 1

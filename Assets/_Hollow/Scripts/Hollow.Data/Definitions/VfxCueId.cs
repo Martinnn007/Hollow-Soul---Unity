@@ -16,6 +16,14 @@ namespace Hollow.Data.Definitions
         KnockbackImpact,
         EnemyWindup,
         EnemyCorpseGhost,
-        DamageBlocked
+        DamageBlocked,
+        ShieldGuardStart,
+        ShieldBlock,
+        ShieldParryCounter,
+        ShieldUnavailable,
+        HazardHit,
+        BarrelBreak,
+        BarrelExplode,
+        HazardCoinDrop
     }
 }

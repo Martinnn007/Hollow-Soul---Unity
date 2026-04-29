@@ -1,1253 +1,1279 @@
 {
-  "schemaVersion": 1,
-  "projectId": "curated_approved_lane_wide_2x1",
-  "displayName": "Approved Twin Lane 2x1",
-  "footprintPreset": 1,
-  "widthTiles": 26,
-  "heightTiles": 7,
-  "createdAtUtcTicks": 0,
-  "updatedAtUtcTicks": 0,
-  "cells": [
-    {
-      "x": -13,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -13,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -13,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -13,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -13,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -13,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -13,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -12,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -11,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -10,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -9,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -7,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -6,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -5,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -4,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -3,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -2,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -1,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": -3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": -2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": -1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": 0,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": 1,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": 2,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 0,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 1,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 2,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 3,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 4,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 5,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 6,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 7,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 8,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 9,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 10,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 11,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": 12,
-      "z": 3,
-      "layer": 0,
-      "kind": "tileGround"
-    },
-    {
-      "x": -8,
-      "z": -2,
-      "layer": 0,
-      "kind": "rockTile"
-    },
-    {
-      "x": -6,
-      "z": 1,
-      "layer": 0,
-      "kind": "rockTile"
-    },
-    {
-      "x": -3,
-      "z": -1,
-      "layer": 0,
-      "kind": "rockTile"
-    },
-    {
-      "x": 2,
-      "z": 1,
-      "layer": 0,
-      "kind": "rockTile"
-    },
-    {
-      "x": 5,
-      "z": -2,
-      "layer": 0,
-      "kind": "rockTile"
-    },
-    {
-      "x": 8,
-      "z": 2,
-      "layer": 0,
-      "kind": "rockTile"
-    }
-  ],
-  "markers": [
-    {
-      "id": "spawn_safeStart",
-      "kind": "spawn_point_safeStart",
-      "x": -9.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    {
-      "id": "spawn_enemy_0",
-      "kind": "spawnEnemyCharger",
-      "x": -10.0,
-      "y": 0.0,
-      "z": -2.0
-    },
-    {
-      "id": "spawn_enemy_1",
-      "kind": "spawnEnemyTurret",
-      "x": -2.0,
-      "y": 0.0,
-      "z": 2.0
-    },
-    {
-      "id": "spawn_enemy_2",
-      "kind": "spawnEnemyFast",
-      "x": 4.0,
-      "y": 0.0,
-      "z": -2.0
-    },
-    {
-      "id": "spawn_enemy_3",
-      "kind": "spawnEnemyFlying",
-      "x": 10.0,
-      "y": 0.0,
-      "z": 2.0
-    },
-    {
-      "id": "spawn_enemy_4",
-      "kind": "spawnEnemyNormal",
-      "x": 7.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    {
-      "id": "spawn_reward_0",
-      "kind": "spawn_point_roomReward",
-      "x": 9.0,
-      "y": 0.0,
-      "z": 0.0
-    }
-  ],
-  "doorPorts": [
-    {
-      "id": "north_0",
-      "direction": "north",
-      "laneIndex": 0,
-      "hostCellX": 0,
-      "hostCellZ": 0,
-      "x": -6.5,
-      "z": -3.5,
-      "state": "door"
-    },
-    {
-      "id": "north_1",
-      "direction": "north",
-      "laneIndex": 1,
-      "hostCellX": 1,
-      "hostCellZ": 0,
-      "x": 6.5,
-      "z": -3.5,
-      "state": "door"
-    },
-    {
-      "id": "south_0",
-      "direction": "south",
-      "laneIndex": 0,
-      "hostCellX": 0,
-      "hostCellZ": 0,
-      "x": -6.5,
-      "z": 3.5,
-      "state": "door"
-    },
-    {
-      "id": "south_1",
-      "direction": "south",
-      "laneIndex": 1,
-      "hostCellX": 1,
-      "hostCellZ": 0,
-      "x": 6.5,
-      "z": 3.5,
-      "state": "door"
-    },
-    {
-      "id": "east_0",
-      "direction": "east",
-      "laneIndex": 0,
-      "hostCellX": 1,
-      "hostCellZ": 0,
-      "x": 13.0,
-      "z": 0.0,
-      "state": "door"
-    },
-    {
-      "id": "west_0",
-      "direction": "west",
-      "laneIndex": 0,
-      "hostCellX": 0,
-      "hostCellZ": 0,
-      "x": -13.0,
-      "z": 0.0,
-      "state": "door"
-    }
-  ]
+    "schemaVersion": 1,
+    "projectId": "curated_approved_lane_wide_2x1",
+    "displayName": "Approved Twin Lane 2x1",
+    "footprintPreset": 1,
+    "widthTiles": 26,
+    "heightTiles": 7,
+    "createdAtUtcTicks": 0,
+    "updatedAtUtcTicks": 0,
+    "cells": [
+        {
+            "x": -13,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -13,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -13,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -13,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -13,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -13,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -13,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -12,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -11,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -10,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -9,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -7,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 7,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 8,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 9,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 10,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 11,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 12,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -8,
+            "z": -2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": -6,
+            "z": 1,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": -3,
+            "z": -1,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": 2,
+            "z": 1,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": 5,
+            "z": -2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": 8,
+            "z": 2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": -5,
+            "z": 0,
+            "layer": 0,
+            "kind": "hazardSpike"
+        },
+        {
+            "x": 6,
+            "z": 1,
+            "layer": 0,
+            "kind": "hazardSpike"
+        }
+    ],
+    "markers": [
+        {
+            "id": "spawn_safeStart",
+            "kind": "spawn_point_safeStart",
+            "x": -9.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        {
+            "id": "spawn_enemy_0",
+            "kind": "spawnEnemyCharger",
+            "x": -10.0,
+            "y": 0.0,
+            "z": -2.0
+        },
+        {
+            "id": "spawn_enemy_1",
+            "kind": "spawnEnemyTurret",
+            "x": -2.0,
+            "y": 0.0,
+            "z": 2.0
+        },
+        {
+            "id": "spawn_enemy_2",
+            "kind": "spawnEnemyFast",
+            "x": 4.0,
+            "y": 0.0,
+            "z": -2.0
+        },
+        {
+            "id": "spawn_enemy_3",
+            "kind": "spawnEnemyFlying",
+            "x": 10.0,
+            "y": 0.0,
+            "z": 2.0
+        },
+        {
+            "id": "spawn_enemy_4",
+            "kind": "spawnEnemyNormal",
+            "x": 7.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        {
+            "id": "spawn_reward_0",
+            "kind": "spawn_point_roomReward",
+            "x": 9.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        {
+            "id": "barrel_00",
+            "kind": "barrelStandard",
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        {
+            "id": "barrel_explosive_00",
+            "kind": "barrelExplosive",
+            "x": 11.0,
+            "y": 0.0,
+            "z": -1.0
+        }
+    ],
+    "doorPorts": [
+        {
+            "id": "north_0",
+            "direction": "north",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": -6.5,
+            "z": -3.5,
+            "state": "door"
+        },
+        {
+            "id": "north_1",
+            "direction": "north",
+            "laneIndex": 1,
+            "hostCellX": 1,
+            "hostCellZ": 0,
+            "x": 6.5,
+            "z": -3.5,
+            "state": "door"
+        },
+        {
+            "id": "south_0",
+            "direction": "south",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": -6.5,
+            "z": 3.5,
+            "state": "door"
+        },
+        {
+            "id": "south_1",
+            "direction": "south",
+            "laneIndex": 1,
+            "hostCellX": 1,
+            "hostCellZ": 0,
+            "x": 6.5,
+            "z": 3.5,
+            "state": "door"
+        },
+        {
+            "id": "east_0",
+            "direction": "east",
+            "laneIndex": 0,
+            "hostCellX": 1,
+            "hostCellZ": 0,
+            "x": 13.0,
+            "z": 0.0,
+            "state": "door"
+        },
+        {
+            "id": "west_0",
+            "direction": "west",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": -13.0,
+            "z": 0.0,
+            "state": "door"
+        }
+    ]
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Hollow.Persistence
 {
-    public sealed class JsonProfileStore : IProfileStore, IRunSaveStore
+    public sealed class JsonProfileStore : IProfileStore, IRunSaveStore, IChallengeResultStore
     {
         private const string FileName = "hollow_profiles.json";
         private readonly string savePath;
@@ -155,6 +155,81 @@ namespace Hollow.Persistence
             SaveData(data);
         }
 
+        public IReadOnlyList<ChallengeResultRecord> LoadChallengeRecords(ProfileSlotId slotId)
+        {
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+            return (slot.challengeRecords ?? new List<ChallengeRecordSaveState>())
+                .Where(record => record != null && !string.IsNullOrWhiteSpace(record.challengeId))
+                .OrderBy(record => record.challengeId, StringComparer.Ordinal)
+                .Select(record => record.ToRecord())
+                .ToArray();
+        }
+
+        public ChallengeResultRecord GetChallengeRecord(ProfileSlotId slotId, string challengeId)
+        {
+            if (string.IsNullOrWhiteSpace(challengeId))
+            {
+                return new ChallengeResultRecord(string.Empty, 0, 0, 0f, string.Empty, 0);
+            }
+
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+            return FindChallengeRecord(slot, challengeId)?.ToRecord()
+                   ?? new ChallengeResultRecord(challengeId, 0, 0, 0f, string.Empty, 0);
+        }
+
+        public ChallengeResultRecord MarkChallengeAttemptStarted(ProfileSlotId slotId, string challengeId, int seed)
+        {
+            if (string.IsNullOrWhiteSpace(challengeId))
+            {
+                throw new ArgumentException("Challenge id cannot be empty.", nameof(challengeId));
+            }
+
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+            var record = GetOrCreateChallengeRecord(slot, challengeId);
+            record.attempts++;
+            record.lastResult = "Started";
+            record.lastPlayedSeed = Math.Max(0, seed);
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
+            SaveData(data);
+            return record.ToRecord();
+        }
+
+        public ChallengeResultRecord CompleteChallengeAttempt(ProfileSlotId slotId, string challengeId, int seed, float clearTimeSeconds)
+        {
+            if (string.IsNullOrWhiteSpace(challengeId))
+            {
+                throw new ArgumentException("Challenge id cannot be empty.", nameof(challengeId));
+            }
+
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+            var record = GetOrCreateChallengeRecord(slot, challengeId);
+            record.completions++;
+            if (record.attempts < record.completions)
+            {
+                record.attempts = record.completions;
+            }
+
+            var safeClearTime = Math.Max(0f, clearTimeSeconds);
+            if (safeClearTime > 0f && (record.bestClearTimeSeconds <= 0f || safeClearTime < record.bestClearTimeSeconds))
+            {
+                record.bestClearTimeSeconds = safeClearTime;
+            }
+
+            record.lastResult = "Completed";
+            record.lastPlayedSeed = Math.Max(0, seed);
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
+            SaveData(data);
+            return record.ToRecord();
+        }
+
         private ProfileStoreSaveData LoadData()
         {
             if (!File.Exists(savePath))
@@ -201,14 +276,15 @@ namespace Hollow.Persistence
                 hasActiveRun = false,
                 bankedSouls = 0,
                 completedRuns = 0,
-                activeRun = null
+                activeRun = null,
+                challengeRecords = new List<ChallengeRecordSaveState>()
             };
         }
 
         private static void Normalize(ProfileStoreSaveData data)
         {
             var previousSchemaVersion = data.schemaVersion;
-            data.schemaVersion = 2;
+            data.schemaVersion = 3;
             data.slots ??= new List<ProfileSlotSaveData>();
             while (data.slots.Count < ProfileSlotConstants.MaxSlots)
             {
@@ -226,6 +302,12 @@ namespace Hollow.Persistence
                 data.slots[index].slotIndex = index;
                 data.slots[index].profileId ??= string.Empty;
                 data.slots[index].displayName ??= string.Empty;
+                data.slots[index].challengeRecords ??= new List<ChallengeRecordSaveState>();
+                data.slots[index].challengeRecords.RemoveAll(record => record == null || string.IsNullOrWhiteSpace(record.challengeId));
+                data.slots[index].challengeRecords = data.slots[index].challengeRecords
+                    .GroupBy(record => record.challengeId)
+                    .Select(group => group.First())
+                    .ToList();
                 if (previousSchemaVersion < 2)
                 {
                     data.slots[index].bankedSouls = 0;
@@ -252,6 +334,34 @@ namespace Hollow.Persistence
         private static bool IsMeaningfulActiveRun(RunSaveSnapshot snapshot)
         {
             return snapshot != null && !string.IsNullOrWhiteSpace(snapshot.runId);
+        }
+
+        private static ChallengeRecordSaveState FindChallengeRecord(ProfileSlotSaveData slot, string challengeId)
+        {
+            slot.challengeRecords ??= new List<ChallengeRecordSaveState>();
+            return slot.challengeRecords.FirstOrDefault(record => record != null && record.challengeId == challengeId);
+        }
+
+        private static ChallengeRecordSaveState GetOrCreateChallengeRecord(ProfileSlotSaveData slot, string challengeId)
+        {
+            slot.challengeRecords ??= new List<ChallengeRecordSaveState>();
+            var record = FindChallengeRecord(slot, challengeId);
+            if (record != null)
+            {
+                return record;
+            }
+
+            record = new ChallengeRecordSaveState
+            {
+                challengeId = challengeId,
+                attempts = 0,
+                completions = 0,
+                bestClearTimeSeconds = 0f,
+                lastResult = string.Empty,
+                lastPlayedSeed = 0
+            };
+            slot.challengeRecords.Add(record);
+            return record;
         }
     }
 }

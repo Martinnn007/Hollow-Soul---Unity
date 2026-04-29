@@ -25,6 +25,10 @@ namespace Hollow.Data.Definitions
         EnemyProjectile,
         CombatHitFlash,
         CombatCorpseGhost,
+        ShieldGuard,
+        ShieldParry,
+        ShieldBlock,
+        ShieldUnavailable,
         RewardPickup,
         HubReturnPortal,
         BossKeyPickup,
@@ -45,6 +49,13 @@ namespace Hollow.Data.Definitions
         VfxDebug,
         CombatTelegraphSafe,
         CombatTelegraphWarning,
-        CombatTelegraphDanger
+        CombatTelegraphDanger,
+        RoomHazardSpike,
+        RoomBarrel,
+        RoomExplosiveBarrel,
+        DesignerSpike,
+        DesignerBarrel,
+        DesignerExplosiveBarrel,
+        HazardCoinDrop
     }
 }

@@ -270,11 +270,23 @@ namespace Hollow.Editor.Validation
                     failures.Add($"{scenePath} BranchSessionController must reference the M36-updated room catalog/settings.");
                 }
 
-                if (branch.EncounterCatalog != encounterCatalog)
+                if (!IsM36OrSuccessorEncounterCatalog(branch.EncounterCatalog, encounterCatalog))
                 {
-                    failures.Add($"{scenePath} BranchSessionController must reference the M36 encounter catalog.");
+                    failures.Add($"{scenePath} BranchSessionController must reference the M36 encounter catalog or an accepted successor.");
                 }
             }
+        }
+
+        private static bool IsM36OrSuccessorEncounterCatalog(EncounterCatalogDefinition actual, EncounterCatalogDefinition m36Catalog)
+        {
+            if (actual == null)
+            {
+                return false;
+            }
+
+            return actual == m36Catalog ||
+                   actual.CatalogId == "m46_encounter_director_catalog_v1" ||
+                   actual.CatalogId == Milestone48AssetGenerator.CatalogId;
         }
 
         private static string Signature(EncounterPlan plan)

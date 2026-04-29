@@ -51,6 +51,12 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone41CurrentMilestoneAudit.md` describes the current M31-M40 audit layer that complements the historical M0-M23 dependency audit.
 - `Docs/Milestone42PlayerBuildUxPickupClarity.md` describes the player-build HUD, pickup reveal cards, rarity colors, and saved swap-back replacement pickups.
 - `Docs/Milestone43CombatFeelDamageFeedback.md` describes player i-frames, collision-safe knockback, subtle enemy windups, M43 feedback cues, and visual-only corpse ghosts.
+- `Docs/Milestone44ShieldArmorBehaviorV2.md` describes universal aim-facing guard, perfect parry timing, threat kinds, shield visuals, and armor-as-stat-equipment behavior.
+- `Docs/Milestone45RoomHazardsInteractivePhysicsV1.md` describes authored spikes, pit-aware movement, destructible barrels, explosive barrel chains, and room-local hazard persistence.
+- `Docs/Milestone46EncounterDirectorDifficultyCurve.md` describes directed world-length branches, weighted encounter pressure, deterministic encounter metadata, and the combat HUD director debug line.
+- `Docs/Milestone47ChallengeModeV2CuratedSeeds.md` describes six curated fixed-seed full-run challenges, transient challenge safety, V2 loadouts/rules, and profile challenge result records.
+- `Docs/Milestone48ContentExpansionLockV1.md` describes the first larger locked room/encounter content pool, M48 successor catalog wiring, curated draft mirroring, and team handoff report outputs.
+- `Docs/Milestone49ArtPassProductionIntegrationII.md` describes the direct ArtPass production-replacement workflow, visual-only safety gate, role status report, and Rafal/Martin checklist PDF.
 - `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup

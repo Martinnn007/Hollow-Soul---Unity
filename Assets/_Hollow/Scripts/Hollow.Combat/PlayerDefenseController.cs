@@ -1,5 +1,7 @@
 using Hollow.Entities;
+using Hollow.Data.Definitions;
 using Hollow.Input;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -9,27 +11,52 @@ namespace Hollow.Combat
     {
         public const int DefensePerPassiveDamageReduction = 2;
         public const int GuardDamageReduction = 1;
-        public const float GuardDrainStaminaPerSecond = 6f;
-        public const float GuardBlockStaminaCost = 10f;
-        public const float GuardPushMeters = 0.65f;
+        public const float GuardDrainStaminaPerSecond = 12f;
+        public const float GuardBlockStaminaCost = 12f;
+        public const float GuardPushMeters = 0.25f;
+        public const float ParryWindowSeconds = 0.3f;
+        public const float GuardConeDegrees = 140f;
+        public const float ParryStaminaCost = 16f;
 
         [SerializeField] private int defense;
         [SerializeField] private bool isGuarding;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlayerWeaponController weaponController;
+        [SerializeField] private ShieldGuardProfileDefinition shieldProfile;
+
+        private ShieldGuardVisualController visualController;
+        private Vector3 guardFacing = Vector3.forward;
+        private float parryWindowEndTime;
+        private bool lastGuardHeld;
+        private bool parryConsumed;
 
         public int Defense => defense;
 
         public bool IsGuarding => isGuarding;
 
+        public bool IsInParryWindow => IsInParryWindowAt(Time.time);
+
+        public ShieldGuardResult LastGuardResult { get; private set; }
+
         public int LastDamageReduction { get; private set; }
 
         public bool LastHitWasGuarded { get; private set; }
+
+        public Vector3 GuardFacing => guardFacing.sqrMagnitude < 0.001f ? Vector3.forward : guardFacing.normalized;
+
+        public float GuardMoveMultiplier => ShieldGuardProfileDefinition.Resolve(shieldProfile).GuardMoveMultiplier;
 
         public void Configure(int nextDefense)
         {
             defense = Mathf.Max(0, nextDefense);
             ResolveReferences();
+        }
+
+        public void ConfigureShieldProfile(ShieldGuardProfileDefinition profile)
+        {
+            shieldProfile = ShieldGuardProfileDefinition.Resolve(profile);
+            ResolveReferences();
+            visualController?.Configure(shieldProfile);
         }
 
         public void Bind(RoomRuntimeRoot room)
@@ -41,29 +68,73 @@ namespace Hollow.Combat
         private void Update()
         {
             var input = GameplayInputReader.ReadCurrent();
-            Tick(input.GuardHeld, Time.deltaTime);
+            Tick(input, Time.deltaTime, Time.time);
         }
 
         public void Tick(bool guardHeld, float deltaTime)
         {
+            Tick(
+                new GameplayInputSnapshot(
+                    Vector2.zero,
+                    Vector2.zero,
+                    interactPressed: false,
+                    swapWeaponPressed: false,
+                    lightAttackPressed: false,
+                    heavyAttackPressed: false,
+                    useActiveItemPressed: false,
+                    useConsumableCardPressed: false,
+                    guardHeld: guardHeld),
+                deltaTime,
+                Time.time);
+        }
+
+        public void Tick(GameplayInputSnapshot input, float deltaTime, float timeSeconds)
+        {
             ResolveReferences();
-            if (!guardHeld)
+            UpdateGuardFacing(input);
+            if (!input.GuardHeld)
             {
                 isGuarding = false;
+                lastGuardHeld = false;
+                visualController?.SetState(false, false, GuardFacing);
                 return;
             }
 
-            var drainCost = GuardDrainStaminaPerSecond * Mathf.Max(0f, deltaTime);
-            isGuarding = weaponController == null || weaponController.SpendStaminaForDefense(drainCost);
+            var profile = ShieldGuardProfileDefinition.Resolve(shieldProfile);
+            if (!lastGuardHeld)
+            {
+                parryConsumed = false;
+                parryWindowEndTime = timeSeconds + profile.ParryWindowSeconds;
+                VfxPresenter.Play(VfxCueId.ShieldGuardStart, transform.position, transform.parent);
+                AudioPresenter.Play(AudioCueId.ShieldGuardStart, transform.position);
+            }
+
+            lastGuardHeld = true;
+            var drainCost = profile.GuardDrainStaminaPerSecond * Mathf.Max(0f, deltaTime);
+            isGuarding = SpendStamina(drainCost);
+            if (!isGuarding)
+            {
+                LastGuardResult = ShieldGuardResult.FailedNoStamina;
+                visualController?.ShowFeedback(LastGuardResult);
+            }
+
+            visualController?.SetState(isGuarding, IsInParryWindowAt(timeSeconds), GuardFacing);
         }
 
         public int ModifyIncomingDamage(DamageRequest request, int currentAmount)
         {
             LastDamageReduction = 0;
             LastHitWasGuarded = false;
+            LastGuardResult = ShieldGuardResult.None;
             if (currentAmount <= 0)
             {
                 return 0;
+            }
+
+            var damageFeedback = GetComponent<PlayerDamageFeedbackController>();
+            if (damageFeedback != null && damageFeedback.IsInvulnerable)
+            {
+                return currentAmount;
             }
 
             var reducedAmount = currentAmount;
@@ -72,26 +143,99 @@ namespace Hollow.Combat
             {
                 reducedAmount -= passiveReduction;
                 LastDamageReduction += passiveReduction;
+                LastGuardResult = ShieldGuardResult.PassiveReduced;
             }
 
-            if (isGuarding && SpendGuardBlockCost())
+            if (!isGuarding || request.ThreatKind == DamageThreatKind.Environmental)
+            {
+                return reducedAmount;
+            }
+
+            var profile = ShieldGuardProfileDefinition.Resolve(shieldProfile);
+            var sourceDirection = SourceDirection(request);
+            if (!IsInsideGuardCone(sourceDirection, profile.GuardConeDegrees))
+            {
+                LastGuardResult = ShieldGuardResult.FailedOutOfCone;
+                visualController?.ShowFeedback(LastGuardResult);
+                return reducedAmount;
+            }
+
+            var parryable = request.ThreatKind == DamageThreatKind.Light;
+            if (parryable && IsInParryWindow && !parryConsumed)
+            {
+                if (SpendStamina(profile.ParryStaminaCost))
+                {
+                    parryConsumed = true;
+                    LastHitWasGuarded = true;
+                    LastDamageReduction += reducedAmount;
+                    LastGuardResult = ShieldGuardResult.PerfectParry;
+                    ApplyParryCounter(request, sourceDirection, profile);
+                    PlayGuardFeedback(LastGuardResult);
+                    return 0;
+                }
+
+                LastGuardResult = ShieldGuardResult.FailedNoStamina;
+            }
+
+            if (SpendStamina(profile.GuardHitStaminaCost))
             {
                 var beforeGuard = reducedAmount;
-                reducedAmount = Mathf.Max(0, reducedAmount - GuardDamageReduction);
+                reducedAmount = Mathf.Max(0, reducedAmount - profile.GuardDamageReduction);
                 LastDamageReduction += beforeGuard - reducedAmount;
                 LastHitWasGuarded = true;
-                PushSourceAway(request.Source);
+                LastGuardResult = parryable ? ShieldGuardResult.GuardBlocked : ShieldGuardResult.RejectedThreat;
+                PushSourceAway(request.Source, profile.GuardPushMeters);
+                PlayGuardFeedback(LastGuardResult);
+                return reducedAmount;
             }
 
+            LastGuardResult = ShieldGuardResult.FailedNoStamina;
+            visualController?.ShowFeedback(LastGuardResult);
             return reducedAmount;
         }
 
-        private bool SpendGuardBlockCost()
+        public bool IsInParryWindowAt(float timeSeconds)
         {
-            return weaponController == null || weaponController.SpendStaminaForDefense(GuardBlockStaminaCost);
+            return isGuarding && !parryConsumed && timeSeconds <= parryWindowEndTime;
         }
 
-        private void PushSourceAway(GameObject source)
+        private bool SpendStamina(float amount)
+        {
+            return weaponController == null || weaponController.SpendStaminaForDefense(amount);
+        }
+
+        private void ApplyParryCounter(DamageRequest request, Vector3 sourceDirection, ShieldGuardProfileDefinition profile)
+        {
+            var source = request.Source;
+            if (source == null)
+            {
+                return;
+            }
+
+            var projectile = source.GetComponentInParent<EnemyProjectileController>();
+            if (projectile != null)
+            {
+                projectile.Neutralize();
+                return;
+            }
+
+            var enemy = source.GetComponentInParent<EnemyRuntimeController>();
+            if (enemy == null || !enemy.IsAlive || profile.ParryCounterDamage <= 0)
+            {
+                return;
+            }
+
+            DamageSystem.ApplyDamage(
+                enemy.Health,
+                new DamageRequest(
+                    profile.ParryCounterDamage,
+                    gameObject,
+                    DamageFeedbackContext.Knockback(sourceDirection, profile.GuardPushMeters, 0.08f),
+                    DamageThreatKind.Light));
+            PushSourceAway(source, profile.GuardPushMeters);
+        }
+
+        private void PushSourceAway(GameObject source, float meters)
         {
             if (source == null)
             {
@@ -111,10 +255,80 @@ namespace Hollow.Combat
                 direction = Vector3.forward;
             }
 
-            var desired = enemy.transform.localPosition + direction.normalized * GuardPushMeters;
+            var desired = enemy.transform.localPosition + direction.normalized * Mathf.Max(0f, meters);
             enemy.transform.localPosition = roomRuntimeRoot != null
                 ? RoomLocalCollision.ResolveMove(roomRuntimeRoot, enemy.transform.localPosition, desired, enemy.RadiusMeters)
                 : desired;
+        }
+
+        private void PlayGuardFeedback(ShieldGuardResult result)
+        {
+            visualController?.ShowFeedback(result);
+            var cue = result switch
+            {
+                ShieldGuardResult.PerfectParry => VfxCueId.ShieldParryCounter,
+                ShieldGuardResult.GuardBlocked => VfxCueId.ShieldBlock,
+                ShieldGuardResult.RejectedThreat => VfxCueId.ShieldBlock,
+                _ => VfxCueId.ShieldUnavailable
+            };
+            var audioCue = result switch
+            {
+                ShieldGuardResult.PerfectParry => AudioCueId.ShieldParryCounter,
+                ShieldGuardResult.GuardBlocked => AudioCueId.ShieldBlock,
+                ShieldGuardResult.RejectedThreat => AudioCueId.ShieldBlock,
+                _ => AudioCueId.ShieldUnavailable
+            };
+            VfxPresenter.Play(cue, transform.position, transform.parent);
+            AudioPresenter.Play(audioCue, transform.position);
+        }
+
+        private void UpdateGuardFacing(GameplayInputSnapshot input)
+        {
+            var facing = input.HasShoot
+                ? new Vector3(input.Shoot.x, 0f, input.Shoot.y)
+                : input.Move.sqrMagnitude > 0.001f
+                    ? new Vector3(input.Move.x, 0f, input.Move.y)
+                    : GuardFacing;
+            facing.y = 0f;
+            if (facing.sqrMagnitude > 0.001f)
+            {
+                guardFacing = facing.normalized;
+            }
+        }
+
+        private Vector3 SourceDirection(DamageRequest request)
+        {
+            if (request.Source != null)
+            {
+                var direction = request.Source.transform.position - transform.position;
+                direction.y = 0f;
+                if (direction.sqrMagnitude > 0.001f)
+                {
+                    return direction.normalized;
+                }
+            }
+
+            if (request.Feedback.HasDirection)
+            {
+                var direction = -request.Feedback.Direction;
+                direction.y = 0f;
+                if (direction.sqrMagnitude > 0.001f)
+                {
+                    return direction.normalized;
+                }
+            }
+
+            return Vector3.zero;
+        }
+
+        private bool IsInsideGuardCone(Vector3 sourceDirection, float coneDegrees)
+        {
+            if (sourceDirection.sqrMagnitude < 0.001f)
+            {
+                return true;
+            }
+
+            return Vector3.Angle(GuardFacing, sourceDirection.normalized) <= coneDegrees * 0.5f;
         }
 
         private void ResolveReferences()
@@ -127,6 +341,17 @@ namespace Hollow.Combat
             if (roomRuntimeRoot == null)
             {
                 roomRuntimeRoot = GetComponentInParent<RoomRuntimeRoot>() ?? FindFirstObjectByType<RoomRuntimeRoot>();
+            }
+
+            if (shieldProfile == null)
+            {
+                shieldProfile = ShieldGuardProfileDefinition.Resolve(null);
+            }
+
+            if (visualController == null)
+            {
+                visualController = GetComponent<ShieldGuardVisualController>() ?? gameObject.AddComponent<ShieldGuardVisualController>();
+                visualController.Configure(shieldProfile);
             }
         }
     }

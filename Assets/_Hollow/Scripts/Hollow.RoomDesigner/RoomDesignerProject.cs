@@ -157,6 +157,7 @@ namespace Hollow.RoomDesigner
         public const string Ground = "tileGround";
         public const string Hole = "tileHole";
         public const string Rock = "rockTile";
+        public const string Spike = "hazardSpike";
     }
 
     public static class RoomDesignerMarkerKinds
@@ -171,6 +172,8 @@ namespace Hollow.RoomDesigner
         public const string EnemyTurret = "spawnEnemyTurret";
         public const string EnemySplitter = "spawnEnemySplitter";
         public const string RoomReward = "spawn_point_roomReward";
+        public const string StandardBarrel = "barrelStandard";
+        public const string ExplosiveBarrel = "barrelExplosive";
 
         public static readonly string[] EnemyKinds =
         {
@@ -187,6 +190,11 @@ namespace Hollow.RoomDesigner
         public static bool IsEnemy(string kind)
         {
             return System.Array.IndexOf(EnemyKinds, kind) >= 0;
+        }
+
+        public static bool IsInteractiveObject(string kind)
+        {
+            return kind == StandardBarrel || kind == ExplosiveBarrel;
         }
 
         public static string RuntimeEnemyKind(string kind)

@@ -1,0 +1,547 @@
+{
+  "generatedAtUtc": "2026-04-29T07:51:19.997713Z",
+  "catalogPath": "Assets/_Hollow/Resources/Hollow/Presentation/PresentationContentCatalog.asset",
+  "artPassRoot": "Assets/_Hollow/Prefabs/ArtPass",
+  "targets": [
+    {
+      "role": "Player",
+      "displayName": "Player",
+      "group": "Player",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_Player.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "Player still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyNormal",
+      "displayName": "Enemy Normal",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyNormal.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemyNormal still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyFlying",
+      "displayName": "Enemy Flying",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyFlying.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemyFlying still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyFast",
+      "displayName": "Enemy Fast",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyFast.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemyFast still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyHeavy",
+      "displayName": "Enemy Heavy",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyHeavy.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemyHeavy still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyCharger",
+      "displayName": "Enemy Charger",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyCharger.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemyCharger still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyTurret",
+      "displayName": "Enemy Turret",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemyTurret still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemySplitter",
+      "displayName": "Enemy Splitter",
+      "group": "Enemies",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemySplitter.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "EnemySplitter still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyBoss",
+      "displayName": "Enemy Boss",
+      "group": "Boss",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyBoss.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "EnemyBoss still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "Projectile",
+      "displayName": "Projectile",
+      "group": "Projectiles",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_Projectile.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "Projectile still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "EnemyProjectile",
+      "displayName": "Enemy Projectile",
+      "group": "Projectiles",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_EnemyProjectile.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "EnemyProjectile still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "RoomFloor",
+      "displayName": "Room Floor",
+      "group": "Rooms",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_RoomFloor.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "RoomFloor still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "RoomObstacleRock",
+      "displayName": "Room Obstacle Rock",
+      "group": "Rooms",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_RoomObstacleRock.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "RoomObstacleRock still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "DoorLocked",
+      "displayName": "Door Locked",
+      "group": "Doors",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_DoorLocked.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "DoorLocked still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "DoorActive",
+      "displayName": "Door Active",
+      "group": "Doors",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_DoorActive.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "DoorActive still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "DoorCleared",
+      "displayName": "Door Cleared",
+      "group": "Doors",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_DoorCleared.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "DoorCleared still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "DoorUnavailable",
+      "displayName": "Door Unavailable",
+      "group": "Doors",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_DoorUnavailable.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "DoorUnavailable still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "RewardPickup",
+      "displayName": "Reward Pickup",
+      "group": "Rewards",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_RewardPickup.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "RewardPickup still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "BossKeyPickup",
+      "displayName": "Boss Key Pickup",
+      "group": "Rewards",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_BossKeyPickup.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "BossKeyPickup still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "HubShop",
+      "displayName": "Hub Shop",
+      "group": "Hub",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_HubShop.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "HubShop still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "HubReturnPortal",
+      "displayName": "Hub Return Portal",
+      "group": "Hub",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_HubReturnPortal.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "HubReturnPortal still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "NextBranchPortal",
+      "displayName": "Next Branch Portal",
+      "group": "Hub",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_NextBranchPortal.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "NextBranchPortal still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "SecretDoorDebug",
+      "displayName": "Secret Door Debug",
+      "group": "Doors",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_SecretDoorDebug.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [
+        "SecretDoorDebug still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxProjectileFire",
+      "displayName": "VFX Projectile Fire",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxProjectileFire.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxProjectileFire still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxEnemyHit",
+      "displayName": "VFX Enemy Hit",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxEnemyHit.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxEnemyHit still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxEnemyDeath",
+      "displayName": "VFX Enemy Death",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxEnemyDeath.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxEnemyDeath still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxPlayerHit",
+      "displayName": "VFX Player Hit",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxPlayerHit.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxPlayerHit still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxRewardClaim",
+      "displayName": "VFX Reward Claim",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxRewardClaim.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxRewardClaim still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxDoorUnlock",
+      "displayName": "VFX Door Unlock",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxDoorUnlock.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxDoorUnlock still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxRoomClear",
+      "displayName": "VFX Room Clear",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxRoomClear.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxRoomClear still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "VfxPortalComplete",
+      "displayName": "VFX Portal Complete",
+      "group": "VFX",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxPortalComplete.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "VfxPortalComplete still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "HubShopCard",
+      "displayName": "Hub Shop Card",
+      "group": "Hub",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_HubShopCard.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": true,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "HubShopCard still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "WeaponMelee",
+      "displayName": "Weapon Melee",
+      "group": "Equipment",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_WeaponMelee.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "WeaponMelee still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "WeaponRanged",
+      "displayName": "Weapon Ranged",
+      "group": "Equipment",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_WeaponRanged.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "WeaponRanged still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "Armor",
+      "displayName": "Armor",
+      "group": "Equipment",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_Armor.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "Armor still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "ActiveItemPickup",
+      "displayName": "Active Item Pickup",
+      "group": "Items",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_ActiveItemPickup.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "ActiveItemPickup still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "ConsumableCardPickup",
+      "displayName": "Consumable Card Pickup",
+      "group": "Items",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_ConsumableCardPickup.prefab",
+      "status": "PrototypeFallback",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [
+        "ConsumableCardPickup still appears to use generated primitive placeholder art. This is allowed for M49 but should be replaced by production art later."
+      ],
+      "errors": []
+    },
+    {
+      "role": "RoomHazardSpike",
+      "displayName": "Room Hazard Spike",
+      "group": "Hazards",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_RoomHazardSpike.prefab",
+      "status": "MissingBinding",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [],
+      "errors": [
+        "Expected active ArtPass prefab is currently missing on disk: Assets/_Hollow/Prefabs/ArtPass/AP_RoomHazardSpike.prefab. Run the Unity M49 generator once licensing is available."
+      ]
+    },
+    {
+      "role": "StandardBarrel",
+      "displayName": "Standard Barrel",
+      "group": "Hazards",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_StandardBarrel.prefab",
+      "status": "MissingBinding",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [],
+      "errors": [
+        "Expected active ArtPass prefab is currently missing on disk: Assets/_Hollow/Prefabs/ArtPass/AP_StandardBarrel.prefab. Run the Unity M49 generator once licensing is available."
+      ]
+    },
+    {
+      "role": "ExplosiveBarrel",
+      "displayName": "Explosive Barrel",
+      "group": "Hazards",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_ExplosiveBarrel.prefab",
+      "status": "MissingBinding",
+      "corePriority": false,
+      "sceneModePreviewRole": true,
+      "warnings": [],
+      "errors": [
+        "Expected active ArtPass prefab is currently missing on disk: Assets/_Hollow/Prefabs/ArtPass/AP_ExplosiveBarrel.prefab. Run the Unity M49 generator once licensing is available."
+      ]
+    },
+    {
+      "role": "HazardCoinDrop",
+      "displayName": "Hazard Coin Drop",
+      "group": "Hazards",
+      "prefabPath": "Assets/_Hollow/Prefabs/ArtPass/AP_HazardCoinDrop.prefab",
+      "status": "MissingBinding",
+      "corePriority": false,
+      "sceneModePreviewRole": false,
+      "warnings": [],
+      "errors": [
+        "Expected active ArtPass prefab is currently missing on disk: Assets/_Hollow/Prefabs/ArtPass/AP_HazardCoinDrop.prefab. Run the Unity M49 generator once licensing is available."
+      ]
+    }
+  ],
+  "totalTargets": 41,
+  "productionReadyCount": 0,
+  "prototypeFallbackCount": 37,
+  "missingBindingCount": 4,
+  "unsafePrefabCount": 0,
+  "warningCount": 37,
+  "errorCount": 4
+}

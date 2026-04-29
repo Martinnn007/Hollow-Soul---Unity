@@ -206,7 +206,7 @@ namespace Hollow.Combat
             {
                 var desired = transform.localPosition + delta.normalized * speedMetersPerSecond * deltaTime;
                 transform.localPosition = movementMode == EnemyMovementMode.Flying
-                    ? RoomLocalCollision.ResolveMoveIgnoringObstacles(roomRuntimeRoot, desired, radiusMeters)
+                    ? RoomLocalCollision.ResolveFlyingMove(roomRuntimeRoot, desired, radiusMeters)
                     : RoomLocalCollision.ResolveMove(roomRuntimeRoot, transform.localPosition, desired, radiusMeters);
             }
 
@@ -276,7 +276,7 @@ namespace Hollow.Combat
 
             var desired = transform.localPosition + delta.normalized * speedMetersPerSecond * deltaTime;
             transform.localPosition = movementMode == EnemyMovementMode.Flying
-                ? RoomLocalCollision.ResolveMoveIgnoringObstacles(roomRuntimeRoot, desired, radiusMeters)
+                ? RoomLocalCollision.ResolveFlyingMove(roomRuntimeRoot, desired, radiusMeters)
                 : RoomLocalCollision.ResolveMove(roomRuntimeRoot, transform.localPosition, desired, radiusMeters);
         }
 
@@ -335,7 +335,9 @@ namespace Hollow.Combat
                 }
 
                 nextAllowedAttackTime = timeSeconds + Definition.AttackCooldownSeconds;
-                FireProjectile(TelegraphDirection);
+                FireProjectile(
+                    TelegraphDirection,
+                    behaviorId == EnemyBehaviorId.BossWarden ? DamageThreatKind.StrongProjectile : DamageThreatKind.Light);
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
                 return true;
@@ -349,10 +351,10 @@ namespace Hollow.Combat
                 }
 
                 firedLowHealthBossBurst = true;
-                FireProjectile(Vector3.forward);
-                FireProjectile(Vector3.back);
-                FireProjectile(Vector3.left);
-                FireProjectile(Vector3.right);
+                FireProjectile(Vector3.forward, DamageThreatKind.StrongProjectile);
+                FireProjectile(Vector3.back, DamageThreatKind.StrongProjectile);
+                FireProjectile(Vector3.left, DamageThreatKind.StrongProjectile);
+                FireProjectile(Vector3.right, DamageThreatKind.StrongProjectile);
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
                 return true;
@@ -399,7 +401,8 @@ namespace Hollow.Combat
                 new DamageRequest(
                     contactDamage,
                     gameObject,
-                    DamageFeedbackContext.Knockback(direction, profile.PlayerKnockbackMeters, profile.KnockbackSeconds)));
+                    DamageFeedbackContext.Knockback(direction, profile.PlayerKnockbackMeters, profile.KnockbackSeconds),
+                    ContactThreatKind()));
             if (damaged)
             {
                 VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
@@ -418,7 +421,7 @@ namespace Hollow.Combat
             gameObject.SetActive(false);
         }
 
-        private void FireProjectile(Vector3 direction)
+        private void FireProjectile(Vector3 direction, DamageThreatKind threatKind)
         {
             var projectileObject = enemyProjectilePrefab != null
                 ? Instantiate(enemyProjectilePrefab, transform.parent)
@@ -454,6 +457,22 @@ namespace Hollow.Combat
                 Definition.ProjectileDamage,
                 Definition.ProjectileSpeedMetersPerSecond);
             projectile.ConfigureCombatFeel(combatFeelProfile);
+            projectile.ConfigureThreat(threatKind);
+        }
+
+        private DamageThreatKind ContactThreatKind()
+        {
+            if (behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
+            {
+                return DamageThreatKind.Boss;
+            }
+
+            if (behaviorId == EnemyBehaviorId.Charger || archetypeId == EnemyArchetypeId.Heavy || readabilityState == EnemyReadabilityState.Charging)
+            {
+                return DamageThreatKind.Heavy;
+            }
+
+            return DamageThreatKind.Light;
         }
 
         private void SpawnSplitChildren()

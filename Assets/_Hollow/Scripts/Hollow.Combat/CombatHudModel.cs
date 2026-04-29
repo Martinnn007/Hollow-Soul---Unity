@@ -28,6 +28,20 @@ namespace Hollow.Combat
             string archetypeSummary,
             string projectileSummary,
             PlayerDefenseController defenseController)
+            : this(playerHealth, playerMaxHealth, enemiesRemaining, roomState, difficultyName, archetypeSummary, projectileSummary, defenseController, RoomCombatEncounterContext.Empty)
+        {
+        }
+
+        public CombatHudModel(
+            int playerHealth,
+            int playerMaxHealth,
+            int enemiesRemaining,
+            RoomObjectiveState roomState,
+            string difficultyName,
+            string archetypeSummary,
+            string projectileSummary,
+            PlayerDefenseController defenseController,
+            RoomCombatEncounterContext encounterContext)
         {
             PlayerHealth = playerHealth;
             PlayerMaxHealth = playerMaxHealth;
@@ -38,7 +52,10 @@ namespace Hollow.Combat
             ProjectileSummary = projectileSummary;
             Defense = defenseController != null ? defenseController.Defense : 0;
             IsGuarding = defenseController != null && defenseController.IsGuarding;
+            IsInParryWindow = defenseController != null && defenseController.IsInParryWindow;
+            LastGuardResult = defenseController != null ? defenseController.LastGuardResult : ShieldGuardResult.None;
             LastDamageReduction = defenseController != null ? defenseController.LastDamageReduction : 0;
+            DirectorDebugLine = encounterContext != null ? encounterContext.DirectorDebugLine : "Director: --";
         }
 
         public int PlayerHealth { get; }
@@ -59,10 +76,34 @@ namespace Hollow.Combat
 
         public bool IsGuarding { get; }
 
+        public bool IsInParryWindow { get; }
+
+        public ShieldGuardResult LastGuardResult { get; }
+
         public int LastDamageReduction { get; }
+
+        public string DirectorDebugLine { get; }
 
         public string StatusText => RoomState == RoomObjectiveState.Cleared ? "Room Clear" : "In Combat";
 
-        public string DefenseSummary => IsGuarding ? $"DEF {Defense} | Shield Up" : $"DEF {Defense}";
+        public string DefenseSummary
+        {
+            get
+            {
+                if (IsInParryWindow)
+                {
+                    return $"DEF {Defense} | Parry";
+                }
+
+                if (IsGuarding)
+                {
+                    return $"DEF {Defense} | Shield";
+                }
+
+                return LastGuardResult == ShieldGuardResult.PerfectParry
+                    ? $"DEF {Defense} | Parried"
+                    : $"DEF {Defense}";
+            }
+        }
     }
 }

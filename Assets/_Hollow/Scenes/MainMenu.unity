@@ -134,7 +134,7 @@ PrefabInstance:
     - target: {fileID: 3767758232146646262, guid: 102a58c67a6f94489bea6e12e104d121, type: 3}
       propertyPath: challengeCatalog
       value: 
-      objectReference: {fileID: 11400000, guid: cfa2d8c386eaa4cac8fae0af57004a74, type: 2}
+      objectReference: {fileID: 11400000, guid: af4608588ace94abd911b55114d1a17d, type: 2}
     - target: {fileID: 8847058328433743026, guid: 102a58c67a6f94489bea6e12e104d121, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

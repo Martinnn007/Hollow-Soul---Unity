@@ -1,8 +1,7 @@
 # M43 Combat Feel V2 + Damage Feedback
 
-- Adds `CombatFeelProfileDefinition` as the editable source for i-frames, knockback, flashes, subtle windups, and corpse ghost timing.
-- Adds player damage feedback with `0.6s` invulnerability and minimal flash.
-- Adds collision-safe knockback for player and enemies, with boss/heavy resistance.
-- Adds visual-only `1.5s` enemy corpse ghosts.
-- Adds VFX/audio cue IDs for player invulnerability, knockback impact, enemy windup, corpse ghosts, and blocked damage.
-- No hit-stop, camera shake, or damage numbers are introduced.
+- Player invulnerability: `0.6s`.
+- Player knockback: `0.7m`; enemy melee/projectile knockback: `0.55m` / `0.38m`.
+- Boss/heavy knockback resistance multipliers: `0.25` / `0.55`.
+- Corpse ghost linger: `1.5s`.
+- No hit-stop, camera shake, or damage-number UI is generated in this milestone.

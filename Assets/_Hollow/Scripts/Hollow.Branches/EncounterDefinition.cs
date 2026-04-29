@@ -24,6 +24,14 @@ namespace Hollow.Branches
 
         public int Weight => Mathf.Max(1, weight);
 
+        public int MinDifficultyBand => minDifficultyBand;
+
+        public int MaxDifficultyBand => maxDifficultyBand;
+
+        public int MinFootprintCells => minFootprintCells;
+
+        public int MaxFootprintCells => maxFootprintCells;
+
         public IReadOnlyList<EncounterSpawnEntry> Spawns => spawns;
 
         public void Configure(

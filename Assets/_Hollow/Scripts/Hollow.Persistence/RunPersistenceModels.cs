@@ -32,6 +32,7 @@ namespace Hollow.Persistence
         public PlayerRunStatsSaveState playerStats = new();
         public PlayerRunBuildSaveState runBuild = new();
         public List<DroppedReplacementPickupSaveState> droppedReplacementPickups = new();
+        public List<RunRoomHazardStateSave> roomHazardStates = new();
     }
 
     [Serializable]
@@ -54,6 +55,20 @@ namespace Hollow.Persistence
         public string rewardId = string.Empty;
         public string displayName = string.Empty;
         public int activeItemCharges;
+        public float localX;
+        public float localY;
+        public float localZ;
+    }
+
+    [Serializable]
+    public sealed class RunRoomHazardStateSave
+    {
+        public string roomId = string.Empty;
+        public string objectId = string.Empty;
+        public string objectKind = string.Empty;
+        public bool isDestroyed;
+        public int coinDropAmount;
+        public bool coinCollected;
         public float localX;
         public float localY;
         public float localZ;
@@ -85,6 +100,9 @@ namespace Hollow.Persistence
         public string roomId = string.Empty;
         public string encounterId = string.Empty;
         public List<string> enemySpawnKinds = new();
+        public int worldIndex;
+        public int difficultyBand;
+        public int directorPressure;
     }
 
     [Serializable]

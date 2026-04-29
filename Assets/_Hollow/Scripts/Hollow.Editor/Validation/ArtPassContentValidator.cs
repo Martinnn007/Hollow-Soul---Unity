@@ -89,9 +89,13 @@ namespace Hollow.Editor.Validation
 
             foreach (VfxCueId cueId in Enum.GetValues(typeof(VfxCueId)))
             {
-                if (!catalog.TryGetVfxCue(cueId, out var cue) || cue == null || cue.Prefab == null)
+                if (!catalog.TryGetVfxCue(cueId, out var cue) || cue == null)
                 {
-                    report.AddFailure($"ArtPass VFX cue {cueId} must have a placeholder prefab.");
+                    report.AddFailure($"ArtPass VFX cue {cueId} must have a placeholder prefab or debug primitive fallback.");
+                }
+                else if (cue.Prefab == null && !cue.CreateDebugPrimitive)
+                {
+                    report.AddFailure($"ArtPass VFX cue {cueId} must have a placeholder prefab or debug primitive fallback.");
                 }
             }
 

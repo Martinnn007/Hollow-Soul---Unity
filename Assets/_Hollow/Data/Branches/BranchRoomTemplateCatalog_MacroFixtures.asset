@@ -21,9 +21,14 @@ MonoBehaviour:
   block2x2: {fileID: 4900000, guid: 17abfebaa175c498bae028f31af8d92d, type: 3}
   l3Cell: {fileID: 4900000, guid: 4aaf4479fb1ad40f39a1af10e8544a93, type: 3}
   additionalTemplates:
+  - {fileID: 4900000, guid: 590ab94da36694cab81ea4c50660f0da, type: 3}
   - {fileID: 4900000, guid: 6692d75fbf35640448bcd637489e208b, type: 3}
+  - {fileID: 4900000, guid: b63b456acf1f145bfb409693f36fa521, type: 3}
   - {fileID: 4900000, guid: 84bdce344dce94708bd1cea54ca62753, type: 3}
+  - {fileID: 4900000, guid: be44cf3f351ac4a5fa066ca30ab3e0cd, type: 3}
   - {fileID: 4900000, guid: f0994d9d9a4ab4e5c9b62a54ca514f22, type: 3}
+  - {fileID: 4900000, guid: c06b0c2b6754a4396a46bf68aa5d25e2, type: 3}
   - {fileID: 4900000, guid: 6e0915f707fe0489eb364999ab3b79e4, type: 3}
+  - {fileID: 4900000, guid: 8654a6dee9f8445b2a275eb2bb99f51d, type: 3}
   - {fileID: 4900000, guid: 43636eee70cad4661a840dd85fbaa4e8, type: 3}
   defaultSeed: 14001

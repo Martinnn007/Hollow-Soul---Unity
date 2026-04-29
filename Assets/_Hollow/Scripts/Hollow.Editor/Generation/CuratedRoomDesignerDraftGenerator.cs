@@ -60,6 +60,7 @@ namespace Hollow.Editor.Generation
             var paths = new List<string>();
             paths.AddRange(Milestone13AssetGenerator.MacroFixtures.Select(fixture => fixture.AssetPath));
             paths.AddRange(Milestone36AssetGenerator.ApprovedRoomIds.Select(id => $"{Milestone16AssetGenerator.ApprovedRoomDirectory}/{id}.hollowruntime.json"));
+            paths.AddRange(Milestone48AssetGenerator.ApprovedRoomIds.Select(id => $"{Milestone16AssetGenerator.ApprovedRoomDirectory}/{id}.hollowruntime.json"));
             return paths
                 .Where(path => !string.IsNullOrWhiteSpace(path))
                 .Distinct()

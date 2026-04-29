@@ -15,6 +15,7 @@ namespace Hollow.Branches
         public const string FeatureBranchId = "m17_feature_branch_v1";
         public const string EnemyEncounterBranchId = "m19_enemy_encounter_content_v1";
         public const string BranchFeaturesId = "m20_branch_features_v1";
+        public const string DirectedEncounterBranchId = "m46_encounter_director_curve_v1";
         public const int DefaultMacroFixtureSeed = 14001;
         public const int DefaultSeededMacroSeed = 15001;
 
@@ -124,13 +125,46 @@ namespace Hollow.Branches
             return graph;
         }
 
+        public static BranchFloorGraph CreateDirectedEncounterBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            EncounterDirectorProfileDefinition directorProfile,
+            int worldIndex,
+            int seed)
+        {
+            if (content == null || !content.HasMacroFixturePool)
+            {
+                throw new InvalidOperationException("M46 directed encounter branch generation requires a complete macro room pool.");
+            }
+
+            settings = settings != null ? settings : BranchGenerationSettingsDefinition.CreateRuntimeDefault();
+            if (settings.AllowLoops)
+            {
+                throw new InvalidOperationException("M46 directed encounter branch generation does not support loops.");
+            }
+
+            var profile = EncounterDirectorProfileDefinition.Resolve(directorProfile);
+            var targetRooms = profile.WorldConfigFor(worldIndex).TargetRoomCount;
+            var graph = CreateSeededBranch(
+                content,
+                settings,
+                seed,
+                DirectedEncounterBranchId,
+                enableTreasureLeaf: true,
+                milestoneLabel: "M46",
+                targetRoomCountOverride: targetRooms);
+            ApplyBossKeyLock(graph);
+            return graph;
+        }
+
         private static BranchFloorGraph CreateSeededBranch(
             BranchSessionContent content,
             BranchGenerationSettingsDefinition settings,
             int seed,
             string branchId,
             bool enableTreasureLeaf,
-            string milestoneLabel)
+            string milestoneLabel,
+            int targetRoomCountOverride = 0)
         {
             var resolvedSeed = seed == 0 ? settings.DefaultSeed : seed;
             var random = new System.Random(resolvedSeed);
@@ -147,20 +181,19 @@ namespace Hollow.Branches
                 fixtureIds = fixturePool.Keys.OrderBy(id => id).ToList();
             }
 
-            var targetRoomCount = Mathf.Max(2, settings.TargetRoomCount);
+            var targetRoomCount = Mathf.Max(2, targetRoomCountOverride > 0 ? targetRoomCountOverride : settings.TargetRoomCount);
             var records = new List<PlacementRecord>();
             var usedPortsByTempIndex = new Dictionary<int, HashSet<string>>();
             var occupiedCells = new HashSet<Vector2Int>();
 
-            var originFallback = RequireRoom(fixturePool, "combat_macro_single_1x1");
-            var originAsset = ChooseCandidateForShape(candidatesByShape, originFallback, random);
+            var originAsset = RequireRoom(fixturePool, "combat_macro_single_1x1");
             var origin = new PlacementRecord(0, originAsset, Vector2Int.zero, PlaceFootprint(originAsset.Footprint, Vector2Int.zero));
             records.Add(origin);
             usedPortsByTempIndex[0] = new HashSet<string>();
             RegisterCells(occupiedCells, origin.Footprint);
 
             var requiresBossRoom = settings.EnableBossLeaf;
-            var requiresSecretRoom = branchId == BranchFeaturesId;
+            var requiresSecretRoom = branchId == BranchFeaturesId || branchId == DirectedEncounterBranchId;
             var reservedRoomCount = (requiresBossRoom ? 1 : 0) + (requiresSecretRoom ? 1 : 0);
             var normalPlacementTarget = Mathf.Max(0, targetRoomCount - 1 - reservedRoomCount);
 

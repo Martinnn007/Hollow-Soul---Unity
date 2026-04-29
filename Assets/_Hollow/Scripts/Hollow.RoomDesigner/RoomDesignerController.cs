@@ -672,6 +672,9 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.Rock:
                     SetStackCell(RoomDesignerCellKinds.Rock);
                     break;
+                case RoomDesignerTool.Spike:
+                    SetHazardCell(RoomDesignerCellKinds.Spike);
+                    break;
                 case RoomDesignerTool.EnemySpawn:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.Enemy, "spawn_enemy");
                     break;
@@ -702,6 +705,12 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.EnemySplitter:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySplitter, "spawn_enemy_splitter");
                     break;
+                case RoomDesignerTool.StandardBarrel:
+                    AddOrReplaceInteractiveObject(RoomDesignerMarkerKinds.StandardBarrel, "barrel_standard");
+                    break;
+                case RoomDesignerTool.ExplosiveBarrel:
+                    AddOrReplaceInteractiveObject(RoomDesignerMarkerKinds.ExplosiveBarrel, "barrel_explosive");
+                    break;
                 case RoomDesignerTool.ActiveDoor:
                     SetNearestDoor(RoomDesignerDoorKinds.Door);
                     break;
@@ -723,8 +732,12 @@ namespace Hollow.RoomDesigner
 
         private void SetBaseCell(string kind)
         {
-            currentProject.cells.RemoveAll(cell => cell.x == CursorX && cell.z == CursorZ && cell.layer == 0 && (cell.kind == RoomDesignerCellKinds.Ground || cell.kind == RoomDesignerCellKinds.Hole));
+            currentProject.cells.RemoveAll(cell => cell.x == CursorX && cell.z == CursorZ && cell.layer == 0 && (cell.kind == RoomDesignerCellKinds.Ground || cell.kind == RoomDesignerCellKinds.Hole || cell.kind == RoomDesignerCellKinds.Spike));
             currentProject.cells.Add(new RoomDesignerCell(CursorX, CursorZ, 0, kind));
+            if (kind == RoomDesignerCellKinds.Hole)
+            {
+                currentProject.markers.RemoveAll(marker => Mathf.RoundToInt(marker.x) == CursorX && Mathf.RoundToInt(marker.z) == CursorZ && RoomDesignerMarkerKinds.IsInteractiveObject(marker.kind));
+            }
         }
 
         private void SetStackCell(string kind)
@@ -733,9 +746,27 @@ namespace Hollow.RoomDesigner
             currentProject.cells.Add(new RoomDesignerCell(CursorX, CursorZ, CursorLayer, kind));
         }
 
+        private void SetHazardCell(string kind)
+        {
+            if (!currentProject.cells.Any(cell => cell.x == CursorX && cell.z == CursorZ && cell.layer == 0 && cell.kind == RoomDesignerCellKinds.Ground))
+            {
+                currentProject.cells.Add(new RoomDesignerCell(CursorX, CursorZ, 0, RoomDesignerCellKinds.Ground));
+            }
+
+            currentProject.cells.RemoveAll(cell => cell.x == CursorX && cell.z == CursorZ && cell.layer == 0 && cell.kind == RoomDesignerCellKinds.Hole);
+            currentProject.cells.RemoveAll(cell => cell.x == CursorX && cell.z == CursorZ && cell.layer == 0 && cell.kind == kind);
+            currentProject.cells.Add(new RoomDesignerCell(CursorX, CursorZ, 0, kind));
+        }
+
         private void AddOrReplaceMarker(string kind, string idPrefix)
         {
             currentProject.markers.RemoveAll(marker => marker.kind == kind && Mathf.RoundToInt(marker.x) == CursorX && Mathf.RoundToInt(marker.z) == CursorZ);
+            currentProject.markers.Add(new RoomDesignerMarker($"{idPrefix}_{currentProject.markers.Count:00}", kind, CursorX, 0f, CursorZ));
+        }
+
+        private void AddOrReplaceInteractiveObject(string kind, string idPrefix)
+        {
+            currentProject.markers.RemoveAll(marker => Mathf.RoundToInt(marker.x) == CursorX && Mathf.RoundToInt(marker.z) == CursorZ && RoomDesignerMarkerKinds.IsInteractiveObject(marker.kind));
             currentProject.markers.Add(new RoomDesignerMarker($"{idPrefix}_{currentProject.markers.Count:00}", kind, CursorX, 0f, CursorZ));
         }
 
@@ -789,6 +820,7 @@ namespace Hollow.RoomDesigner
             {
                 RoomDesignerCellKinds.Hole => Array.IndexOf(tools, RoomDesignerTool.Hole),
                 RoomDesignerCellKinds.Rock => Array.IndexOf(tools, RoomDesignerTool.Rock),
+                RoomDesignerCellKinds.Spike => Array.IndexOf(tools, RoomDesignerTool.Spike),
                 _ => Array.IndexOf(tools, RoomDesignerTool.Ground)
             };
         }
@@ -964,6 +996,11 @@ namespace Hollow.RoomDesigner
                 var host = BuildCube($"rockTile_{cell.x}_{cell.z}_{cell.layer}", new Vector3(cell.x, cell.layer + 0.5f, cell.z), Vector3.one, MaterialRole.DesignerRock);
                 AttachSceneCellVisual(host, cell);
             }
+            else if (cell.kind == RoomDesignerCellKinds.Spike)
+            {
+                var host = BuildCube($"hazardSpike_{cell.x}_{cell.z}", new Vector3(cell.x, CenterAboveGrid(FlatSurfaceThickness), cell.z), new Vector3(0.82f, FlatSurfaceThickness, 0.82f), MaterialRole.DesignerSpike);
+                AttachSceneCellVisual(host, cell);
+            }
 
             if (LabelsVisible && cell.kind != RoomDesignerCellKinds.Ground)
             {
@@ -1068,6 +1105,8 @@ namespace Hollow.RoomDesigner
             return markerKind switch
             {
                 RoomDesignerMarkerKinds.SafeStart => MaterialRole.DesignerSpawnSafeStart,
+                RoomDesignerMarkerKinds.StandardBarrel => MaterialRole.DesignerBarrel,
+                RoomDesignerMarkerKinds.ExplosiveBarrel => MaterialRole.DesignerExplosiveBarrel,
                 _ => MaterialRole.DesignerSpawnReward
             };
         }

@@ -17,10 +17,15 @@ MonoBehaviour:
   notes: 
   catalogId: curated_runtime_room_designer_drafts_v1
   curatedDrafts:
+  - {fileID: 4900000, guid: d4af3b363b5f44be68031cff6d6ab725, type: 3}
   - {fileID: 4900000, guid: 4ecba9b0693ae08e63828b08a555bb7e, type: 3}
+  - {fileID: 4900000, guid: c8b6140d126fe42e0a6e104b0594de58, type: 3}
   - {fileID: 4900000, guid: 0d43c135e4c010102d7bf2f49735bc8d, type: 3}
+  - {fileID: 4900000, guid: 326b530babd6a4613bfabfc0323a51c6, type: 3}
   - {fileID: 4900000, guid: afa503fe9a3efef278ca29ea2a543d6a, type: 3}
+  - {fileID: 4900000, guid: c79f61147ab2a461280410553811508b, type: 3}
   - {fileID: 4900000, guid: caeda2033f880af1b82a292385a6327d, type: 3}
+  - {fileID: 4900000, guid: f43814568e43a4517b06f81adc37fa7b, type: 3}
   - {fileID: 4900000, guid: dbf55d569e6275b63ea1768f24f404d5, type: 3}
   - {fileID: 4900000, guid: ff7e8719bf3318cfda24680876359388, type: 3}
   - {fileID: 4900000, guid: b14215de3de09e24a87a87773e2c1143, type: 3}

@@ -106,6 +106,18 @@ namespace Hollow.RoomDesigner
                 });
             }
 
+            var spikeIndex = 0;
+            foreach (var cell in cells.Where(cell => cell.kind == RoomDesignerCellKinds.Spike))
+            {
+                runtime.hazards.Add(new ImportedRoomHazard
+                {
+                    id = $"spike_{spikeIndex++:00}",
+                    kind = RoomHazardKind.Spike,
+                    center = new ImportedVector3 { x = cell.x, y = 0f, z = cell.z },
+                    radius = 0.45f
+                });
+            }
+
             runtime.playerSafeStart = SafeStart(project);
             BuildMarkers(project, runtime);
             BuildDoorPorts(project, runtime);
@@ -142,6 +154,18 @@ namespace Hollow.RoomDesigner
                         id = string.IsNullOrWhiteSpace(marker.id) ? $"roomReward_{rewardIndex++}" : marker.id,
                         kind = RoomDesignerMarkerKinds.RoomReward,
                         position = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z }
+                    });
+                }
+                else if (RoomDesignerMarkerKinds.IsInteractiveObject(marker.kind))
+                {
+                    runtime.interactiveObjects.Add(new ImportedRoomInteractiveObject
+                    {
+                        id = string.IsNullOrWhiteSpace(marker.id) ? $"interactive_{runtime.interactiveObjects.Count:00}" : marker.id,
+                        kind = marker.kind,
+                        center = new ImportedVector3 { x = marker.x, y = 0.5f, z = marker.z },
+                        size = new ImportedVector3 { x = 0.82f, y = 1f, z = 0.82f },
+                        blocksMovement = true,
+                        blocksProjectiles = true
                     });
                 }
             }

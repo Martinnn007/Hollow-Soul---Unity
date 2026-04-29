@@ -18,6 +18,8 @@ namespace Hollow.Combat
         private float ageSeconds;
         private int damage = 1;
         private float hitRadiusMeters = 0.24f;
+        private DamageThreatKind threatKind = DamageThreatKind.Light;
+        private bool destroyed;
 
         public int Damage => damage;
 
@@ -46,6 +48,16 @@ namespace Hollow.Combat
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
         {
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
+        }
+
+        public void ConfigureThreat(DamageThreatKind nextThreatKind)
+        {
+            threatKind = nextThreatKind;
+        }
+
+        public void Neutralize()
+        {
+            DestroyProjectile();
         }
 
         private void Update()
@@ -103,7 +115,8 @@ namespace Hollow.Combat
                             new DamageRequest(
                                 damage,
                                 gameObject,
-                                DamageFeedbackContext.Knockback(localDirection, profile.PlayerKnockbackMeters, profile.KnockbackSeconds))))
+                                DamageFeedbackContext.Knockback(localDirection, profile.PlayerKnockbackMeters, profile.KnockbackSeconds),
+                                threatKind)))
                     {
                         VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
                         AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);
@@ -119,6 +132,12 @@ namespace Hollow.Combat
 
         private void DestroyProjectile()
         {
+            if (destroyed)
+            {
+                return;
+            }
+
+            destroyed = true;
             if (Application.isPlaying)
             {
                 Destroy(gameObject);
