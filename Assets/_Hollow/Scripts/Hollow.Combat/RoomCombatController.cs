@@ -17,6 +17,7 @@ namespace Hollow.Combat
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private EnemyCatalog enemyCatalog;
+        [SerializeField] private BossCatalogDefinition bossCatalog;
         [SerializeField] private DifficultyTierDefinition difficultyTier;
         [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
         [SerializeField] private RoomHazardTuningProfileDefinition hazardTuningProfile;
@@ -45,6 +46,8 @@ namespace Hollow.Combat
 
         public EnemyCatalog EnemyCatalog => enemyCatalog;
 
+        public BossCatalogDefinition BossCatalog => bossCatalog;
+
         public DifficultyTierDefinition DifficultyTier => difficultyTier;
 
         public CombatFeelProfileDefinition CombatFeelProfile => ResolveCombatFeelProfile();
@@ -52,6 +55,8 @@ namespace Hollow.Combat
         public CombatDiagnosticsModel Diagnostics => diagnostics;
 
         public IReadOnlyList<EnemyRuntimeController> Enemies => enemies;
+
+        public EnemyRuntimeController ActiveBoss => enemies.FirstOrDefault(enemy => enemy != null && enemy.IsAlive && enemy.BossDefinition != null);
 
         public IReadOnlyList<DestructibleRoomObjectController> DestructibleObjects => destructibleObjects;
 
@@ -71,6 +76,11 @@ namespace Hollow.Combat
             projectilePrefab = nextProjectilePrefab;
             enemyCatalog = nextEnemyCatalog;
             difficultyTier = nextDifficultyTier;
+        }
+
+        public void ConfigureBossCatalog(BossCatalogDefinition nextBossCatalog)
+        {
+            bossCatalog = nextBossCatalog;
         }
 
         private void Start()
@@ -160,7 +170,7 @@ namespace Hollow.Combat
 
             if (encounterKind == RoomCombatEncounterKind.Boss)
             {
-                var boss = EnemySpawnService.SpawnBoss(roomRuntimeRoot, playerController.transform.parent, enemyPrefab, projectilePrefab, playerController, enemyCatalog, difficultyTier, diagnostics);
+                var boss = EnemySpawnService.SpawnBoss(roomRuntimeRoot, playerController.transform.parent, enemyPrefab, projectilePrefab, playerController, enemyCatalog, difficultyTier, diagnostics, bossCatalog, activeEncounterContext);
                 if (boss != null)
                 {
                     RegisterEnemy(boss);
@@ -375,6 +385,8 @@ namespace Hollow.Combat
 
             var hud = shellCanvas.GetComponent<CombatHudController>() ?? shellCanvas.AddComponent<CombatHudController>();
             hud.Bind(this);
+            var bossHud = shellCanvas.GetComponent<BossHudController>() ?? shellCanvas.AddComponent<BossHudController>();
+            bossHud.Bind(this);
         }
 
         private void CleanupRoomCombatObjects()

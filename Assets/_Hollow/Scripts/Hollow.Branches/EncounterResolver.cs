@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Combat;
 using Hollow.Data.Definitions;
 
 namespace Hollow.Branches
@@ -48,6 +49,18 @@ namespace Hollow.Branches
 
         public static EncounterPlan CreateDirectedSeededPlan(BranchFloorGraph graph, EncounterCatalogDefinition catalog, int seed, int worldIndex, EncounterDirectorProfileDefinition profile, int difficultyBandBonus)
         {
+            return CreateDirectedSeededPlan(graph, catalog, seed, worldIndex, profile, difficultyBandBonus, null);
+        }
+
+        public static EncounterPlan CreateDirectedSeededPlan(
+            BranchFloorGraph graph,
+            EncounterCatalogDefinition catalog,
+            int seed,
+            int worldIndex,
+            EncounterDirectorProfileDefinition profile,
+            int difficultyBandBonus,
+            BossCatalogDefinition bossCatalog)
+        {
             if (graph == null || catalog == null)
             {
                 return EncounterPlan.Empty;
@@ -80,13 +93,20 @@ namespace Hollow.Branches
                     spawns = spawns.Take(Math.Max(1, context.Profile?.MaxNonBossEnemySpawns ?? DefaultMaxDirectedSpawns)).ToArray();
                 }
 
+                var boss = room.Role == BranchRoomRole.Boss
+                    ? BossSelectionResolver.Resolve(bossCatalog, seed, graph.Seed, context.WorldIndex, room.Id.Value, graph.BranchId)
+                    : null;
                 assignments.Add(new RoomEncounterAssignment(
                     room.Id.Value,
                     encounter.EncounterId,
                     spawns,
                     context.WorldIndex,
                     difficultyBand,
-                    DirectorPressureFor(context, encounter, difficultyBand)));
+                    DirectorPressureFor(context, encounter, difficultyBand),
+                    boss != null ? boss.BossId : string.Empty,
+                    boss != null ? boss.Arena.arenaId : string.Empty,
+                    boss != null ? (int)boss.WorldBand : 0,
+                    string.Empty));
             }
 
             return new EncounterPlan(assignments);

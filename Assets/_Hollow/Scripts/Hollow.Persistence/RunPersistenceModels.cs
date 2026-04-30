@@ -138,6 +138,10 @@ namespace Hollow.Persistence
         public int worldIndex;
         public int difficultyBand;
         public int directorPressure;
+        public string bossId = string.Empty;
+        public string bossArenaId = string.Empty;
+        public int bossWorldBand;
+        public string bossPhaseState = string.Empty;
     }
 
     [Serializable]

@@ -48,6 +48,7 @@ namespace Hollow.Branches
         [SerializeField] private SynergyCatalogDefinition synergyCatalog;
         [SerializeField] private ChallengeCatalogDefinition challengeCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
+        [SerializeField] private BossCatalogDefinition bossCatalog;
         [SerializeField] private EncounterDirectorProfileDefinition encounterDirectorProfile;
         [SerializeField] private RunFramingCatalogDefinition runFramingCatalog;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
@@ -197,6 +198,8 @@ namespace Hollow.Branches
 
         public EncounterCatalogDefinition EncounterCatalog => encounterCatalog;
 
+        public BossCatalogDefinition BossCatalog => bossCatalog;
+
         public EncounterDirectorProfileDefinition EncounterDirectorProfile => encounterDirectorProfile;
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
@@ -296,6 +299,11 @@ namespace Hollow.Branches
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
         {
             encounterCatalog = nextEncounterCatalog;
+        }
+
+        public void ConfigureBossCatalog(BossCatalogDefinition nextBossCatalog)
+        {
+            bossCatalog = nextBossCatalog;
         }
 
         public void ConfigureEncounterDirectorProfile(EncounterDirectorProfileDefinition nextEncounterDirectorProfile)
@@ -1908,6 +1916,10 @@ namespace Hollow.Branches
             roomRuntimeRoot = roomRuntimeRoot != null ? roomRuntimeRoot : GetComponentInChildren<RoomRuntimeRoot>(includeInactive: true) ?? FindFirstObjectByType<RoomRuntimeRoot>();
             playerController = playerController != null ? playerController : GetComponentInChildren<PlaceholderPlayerController>(includeInactive: true) ?? FindFirstObjectByType<PlaceholderPlayerController>();
             roomCombatController = roomCombatController != null ? roomCombatController : GetComponent<RoomCombatController>() ?? FindFirstObjectByType<RoomCombatController>();
+            if (roomCombatController != null)
+            {
+                roomCombatController.ConfigureBossCatalog(bossCatalog);
+            }
         }
 
         private void ResolvePersistence()
@@ -2197,12 +2209,22 @@ namespace Hollow.Branches
 
         private BranchFloorGraph CreateM46Graph(int seed, int nextWorldIndex)
         {
+            var resolvedSeed = seed == 0 ? macroBranchSeed : seed;
+            var resolvedWorldIndex = nextWorldIndex <= 0 ? 1 : nextWorldIndex;
+            var selectedBoss = BossSelectionResolver.Resolve(
+                bossCatalog,
+                resolvedSeed,
+                resolvedSeed,
+                resolvedWorldIndex,
+                "boss_01",
+                BranchGenerator.DirectedEncounterBranchId);
             return BranchGenerator.CreateDirectedEncounterBranch(
                 branchContent,
                 branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
                 encounterDirectorProfile,
-                nextWorldIndex <= 0 ? 1 : nextWorldIndex,
-                seed == 0 ? macroBranchSeed : seed);
+                resolvedWorldIndex,
+                resolvedSeed,
+                selectedBoss != null ? selectedBoss.Arena.arenaId : string.Empty);
         }
 
         private BranchFloorGraph CreateWorldLoopGraph(int seed)
@@ -2248,7 +2270,8 @@ namespace Hollow.Branches
                     graph.Seed,
                     worldIndex,
                     encounterDirectorProfile,
-                    ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus));
+                    ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus),
+                    bossCatalog);
             }
 
             return graph.BranchId == BranchGenerator.EnemyEncounterBranchId || graph.BranchId == BranchGenerator.BranchFeaturesId
@@ -2275,7 +2298,11 @@ namespace Hollow.Branches
                 assignment.EnemySpawnKinds,
                 assignment.WorldIndex,
                 assignment.DifficultyBand,
-                assignment.DirectorPressure);
+                assignment.DirectorPressure,
+                assignment.BossId,
+                assignment.BossArenaId,
+                assignment.BossWorldBand,
+                assignment.BossPhaseState);
         }
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()

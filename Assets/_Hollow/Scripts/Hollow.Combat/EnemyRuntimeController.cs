@@ -41,6 +41,8 @@ namespace Hollow.Combat
         private DifficultyTierDefinition difficultyTier;
         private CombatFeelProfileDefinition combatFeelProfile;
         private CombatDiagnosticsModel diagnostics;
+        private BossDefinition bossDefinition;
+        private BossRuntimeController bossRuntime;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
 
@@ -65,6 +67,10 @@ namespace Hollow.Combat
         public bool IsInEntryGrace(float timeSeconds) => timeSeconds < entryGraceEndTime;
 
         public EnemyReadabilityState ReadabilityState => readabilityState;
+
+        public BossDefinition BossDefinition => bossDefinition;
+
+        public string BossStatusText => bossRuntime != null ? bossRuntime.StatusText : "Engaging";
 
         public float ReadabilityStateEndTime => readabilityStateEndTime;
 
@@ -106,6 +112,8 @@ namespace Hollow.Combat
             playerController = player;
             playerHealth = playerController != null ? playerController.GetComponent<CombatantHealth>() : null;
             Definition = definition != null ? definition : EnemyDefinition.CreateRuntimeNormal();
+            bossDefinition = null;
+            bossRuntime = null;
             var tuning = difficultyTier != null ? difficultyTier.Tuning : DifficultyTierDefinition.CreateRuntimeDeveloperSample().Tuning;
 
             archetypeId = Definition.ArchetypeId;
@@ -123,6 +131,30 @@ namespace Hollow.Combat
             ApplyVisualMaterial(RoleForDefinition(Definition));
             PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDefinition(Definition), transform, Vector3.zero, Vector3.one);
             ConfigureCombatFeel(null);
+        }
+
+        public void ConfigureBoss(BossDefinition definition)
+        {
+            bossDefinition = definition;
+            if (bossDefinition == null || Health == null)
+            {
+                return;
+            }
+
+            archetypeId = EnemyArchetypeId.Boss;
+            behaviorId = EnemyBehaviorId.BossWarden;
+            movementMode = EnemyMovementMode.Grounded;
+            speedMetersPerSecond = bossDefinition.SpeedMetersPerSecond;
+            contactDamage = bossDefinition.ContactDamage;
+            contactCooldownSeconds = bossDefinition.ContactCooldownSeconds;
+            radiusMeters = bossDefinition.RadiusMeters;
+            gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
+            transform.localScale = Vector3.one * bossDefinition.VisualScale;
+            Health.Configure(bossDefinition.MaxHealth);
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyBoss, transform, Vector3.zero, Vector3.one);
+            bossRuntime = GetComponent<BossRuntimeController>() ?? gameObject.AddComponent<BossRuntimeController>();
+            bossRuntime.Configure(this, bossDefinition, roomRuntimeRoot, playerController, enemyProjectilePrefab, combatFeelProfile);
+            ConfigureCombatFeel(combatFeelProfile);
         }
 
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
@@ -177,6 +209,13 @@ namespace Hollow.Combat
 
             if (ResolvePendingReadabilityState(timeSeconds))
             {
+                return;
+            }
+
+            if (bossRuntime != null)
+            {
+                bossRuntime.Tick(deltaTime, timeSeconds);
+                TryApplyContactDamage(timeSeconds);
                 return;
             }
 
@@ -410,6 +449,30 @@ namespace Hollow.Combat
             }
 
             return damaged;
+        }
+
+        public EnemyRuntimeController SpawnChildEnemy(string spawnKind, Vector3 localPosition)
+        {
+            if (enemyPrefab == null ||
+                roomRuntimeRoot == null ||
+                playerController == null)
+            {
+                return null;
+            }
+
+            var catalog = enemyCatalog != null ? enemyCatalog : EnemyCatalog.CreateRuntimeDefault();
+            var definition = EnemyDefinitionResolver.Resolve(catalog, spawnKind, out _);
+            var difficulty = difficultyTier != null ? difficultyTier : DifficultyTierDefinition.CreateRuntimeDeveloperSample();
+            var childObject = Instantiate(enemyPrefab, transform.parent);
+            childObject.name = $"Enemy.BossSummon.{definition.SpawnKind}";
+            childObject.SetActive(true);
+            childObject.transform.localPosition = RoomLocalCollision.ResolveMoveIgnoringObstacles(roomRuntimeRoot, localPosition, definition.RadiusMeters);
+            var child = childObject.GetComponent<EnemyRuntimeController>() ?? childObject.AddComponent<EnemyRuntimeController>();
+            child.Configure(roomRuntimeRoot, playerController, definition, difficulty);
+            child.ConfigureSpawnContext(enemyPrefab, enemyProjectilePrefab, catalog, difficulty, diagnostics);
+            child.BeginEntryGrace(RoomCombatController.EntryGraceSeconds, Time.time);
+            SpawnedChild?.Invoke(child);
+            return child;
         }
 
         private void OnDied(CombatantHealth _)

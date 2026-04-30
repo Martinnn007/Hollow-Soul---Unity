@@ -11,6 +11,20 @@ namespace Hollow.Combat
         }
 
         public RoomCombatEncounterContext(string encounterId, IEnumerable<string> enemySpawnKinds, int worldIndex, int difficultyBand, int directorPressure)
+            : this(encounterId, enemySpawnKinds, worldIndex, difficultyBand, directorPressure, string.Empty, string.Empty, 0, string.Empty)
+        {
+        }
+
+        public RoomCombatEncounterContext(
+            string encounterId,
+            IEnumerable<string> enemySpawnKinds,
+            int worldIndex,
+            int difficultyBand,
+            int directorPressure,
+            string bossId,
+            string bossArenaId,
+            int bossWorldBand,
+            string bossPhaseState)
         {
             EncounterId = string.IsNullOrWhiteSpace(encounterId) ? string.Empty : encounterId;
             EnemySpawnKinds = enemySpawnKinds?
@@ -19,6 +33,10 @@ namespace Hollow.Combat
             WorldIndex = worldIndex;
             DifficultyBand = difficultyBand;
             DirectorPressure = directorPressure;
+            BossId = string.IsNullOrWhiteSpace(bossId) ? string.Empty : bossId;
+            BossArenaId = string.IsNullOrWhiteSpace(bossArenaId) ? string.Empty : bossArenaId;
+            BossWorldBand = bossWorldBand;
+            BossPhaseState = string.IsNullOrWhiteSpace(bossPhaseState) ? string.Empty : bossPhaseState;
         }
 
         public static RoomCombatEncounterContext Empty { get; } = new(string.Empty, System.Array.Empty<string>());
@@ -33,10 +51,20 @@ namespace Hollow.Combat
 
         public int DirectorPressure { get; }
 
+        public string BossId { get; }
+
+        public string BossArenaId { get; }
+
+        public int BossWorldBand { get; }
+
+        public string BossPhaseState { get; }
+
         public bool HasAssignedSpawns => EnemySpawnKinds.Count > 0;
 
+        public bool HasBossAssignment => !string.IsNullOrWhiteSpace(BossId);
+
         public string DirectorDebugLine => WorldIndex > 0 && !string.IsNullOrWhiteSpace(EncounterId)
-            ? $"Director: W{WorldIndex} B{DifficultyBand} | {EncounterId}"
+            ? $"Director: W{WorldIndex} B{DifficultyBand} | {EncounterId}{(HasBossAssignment ? $" | Boss {BossId}" : string.Empty)}"
             : "Director: --";
     }
 }

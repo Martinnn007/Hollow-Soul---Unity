@@ -86,6 +86,21 @@ namespace Hollow.Combat
             DifficultyTierDefinition difficultyTier,
             CombatDiagnosticsModel diagnostics)
         {
+            return SpawnBoss(room, parent, enemyPrefab, enemyProjectilePrefab, player, catalog, difficultyTier, diagnostics, null, null);
+        }
+
+        public static EnemyRuntimeController SpawnBoss(
+            RoomRuntimeRoot room,
+            Transform parent,
+            GameObject enemyPrefab,
+            GameObject enemyProjectilePrefab,
+            PlaceholderPlayerController player,
+            EnemyCatalog catalog,
+            DifficultyTierDefinition difficultyTier,
+            CombatDiagnosticsModel diagnostics,
+            BossCatalogDefinition bossCatalog,
+            RoomCombatEncounterContext encounterContext)
+        {
             if (room == null || enemyPrefab == null || parent == null)
             {
                 return null;
@@ -106,6 +121,13 @@ namespace Hollow.Combat
             var enemy = enemyObject.GetComponent<EnemyRuntimeController>() ?? enemyObject.AddComponent<EnemyRuntimeController>();
             enemy.Configure(room, player, definition, difficultyTier);
             enemy.ConfigureSpawnContext(enemyPrefab, enemyProjectilePrefab, catalog, difficultyTier, diagnostics);
+            var resolvedBossCatalog = bossCatalog != null ? bossCatalog : BossCatalogDefinition.CreateRuntimeDefault();
+            var bossDefinition = encounterContext != null &&
+                                 !string.IsNullOrWhiteSpace(encounterContext.BossId) &&
+                                 resolvedBossCatalog.TryGetBoss(encounterContext.BossId, out var assignedBoss)
+                ? assignedBoss
+                : resolvedBossCatalog.FallbackBoss;
+            enemy.ConfigureBoss(bossDefinition);
             diagnostics?.SetEnemyCounts(new[] { enemy });
             return enemy;
         }

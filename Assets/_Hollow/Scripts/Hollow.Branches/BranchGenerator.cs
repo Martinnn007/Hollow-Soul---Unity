@@ -132,6 +132,17 @@ namespace Hollow.Branches
             int worldIndex,
             int seed)
         {
+            return CreateDirectedEncounterBranch(content, settings, directorProfile, worldIndex, seed, string.Empty);
+        }
+
+        public static BranchFloorGraph CreateDirectedEncounterBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            EncounterDirectorProfileDefinition directorProfile,
+            int worldIndex,
+            int seed,
+            string bossRoomAssetId)
+        {
             if (content == null || !content.HasMacroFixturePool)
             {
                 throw new InvalidOperationException("M46 directed encounter branch generation requires a complete macro room pool.");
@@ -152,7 +163,8 @@ namespace Hollow.Branches
                 DirectedEncounterBranchId,
                 enableTreasureLeaf: true,
                 milestoneLabel: "M46",
-                targetRoomCountOverride: targetRooms);
+                targetRoomCountOverride: targetRooms,
+                bossRoomAssetId: bossRoomAssetId);
             ApplyBossKeyLock(graph);
             return graph;
         }
@@ -164,7 +176,8 @@ namespace Hollow.Branches
             string branchId,
             bool enableTreasureLeaf,
             string milestoneLabel,
-            int targetRoomCountOverride = 0)
+            int targetRoomCountOverride = 0,
+            string bossRoomAssetId = "")
         {
             var resolvedSeed = seed == 0 ? settings.DefaultSeed : seed;
             var random = new System.Random(resolvedSeed);
@@ -232,7 +245,10 @@ namespace Hollow.Branches
             {
                 var bossTempCandidate = records.Count;
                 var excludedBossParents = secretTempIndex >= 0 ? new HashSet<int> { secretTempIndex } : null;
-                if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, fixturePool, candidatesByShape, fixtureIds, random, settings.MaxPlacementAttempts, bossTempCandidate, requireSingleRoom: false, excludedParentTempIndices: excludedBossParents, out var bossRecord))
+                var bossFixtureIds = !string.IsNullOrWhiteSpace(bossRoomAssetId) && roomPool.ContainsKey(bossRoomAssetId)
+                    ? new[] { bossRoomAssetId }
+                    : fixtureIds;
+                if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, roomPool, candidatesByShape, bossFixtureIds, random, settings.MaxPlacementAttempts, bossTempCandidate, requireSingleRoom: false, excludedParentTempIndices: excludedBossParents, out var bossRecord, exactFixtureIds: !string.IsNullOrWhiteSpace(bossRoomAssetId)))
                 {
                     throw new InvalidOperationException($"{milestoneLabel} seeded branch generation failed to place a terminal boss room after {settings.MaxPlacementAttempts} attempts.");
                 }
@@ -365,9 +381,16 @@ namespace Hollow.Branches
             int tempIndex,
             bool requireSingleRoom,
             ISet<int> excludedParentTempIndices,
-            out PlacementRecord record)
+            out PlacementRecord record,
+            bool exactFixtureIds = false)
         {
-            var candidateAssets = CandidateAssetsForFixtureIds(fixturePool, candidatesByShape, fixtureIds, random)
+            var candidateAssets = (exactFixtureIds
+                    ? (fixtureIds ?? Array.Empty<string>())
+                        .Select(id => fixturePool != null && fixturePool.TryGetValue(id, out var asset) ? asset : null)
+                        .Where(asset => asset != null)
+                        .OrderBy(_ => random.Next())
+                        .ToList()
+                    : CandidateAssetsForFixtureIds(fixturePool, candidatesByShape, fixtureIds, random))
                 .Where(asset => !requireSingleRoom || RoomFootprintShapeUtility.Classify(asset.Footprint) == RoomFootprintShape.Single1x1)
                 .ToList();
             if (candidateAssets.Count == 0)
