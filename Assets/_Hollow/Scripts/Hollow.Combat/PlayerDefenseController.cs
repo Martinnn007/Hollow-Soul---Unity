@@ -345,7 +345,7 @@ namespace Hollow.Combat
 
             if (roomRuntimeRoot == null)
             {
-                roomRuntimeRoot = GetComponentInParent<RoomRuntimeRoot>() ?? FindFirstObjectByType<RoomRuntimeRoot>();
+                roomRuntimeRoot = GetComponentInParent<RoomRuntimeRoot>() ?? FindAnyObjectByType<RoomRuntimeRoot>();
             }
 
             if (shieldProfile == null)

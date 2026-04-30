@@ -316,7 +316,7 @@ namespace Hollow.Editor.Validation
             foreach (var scenePath in GameScenes)
             {
                 var scene = EditorSceneManager.OpenScene(scenePath);
-                var branch = Object.FindFirstObjectByType<BranchSessionController>();
+                var branch = Object.FindAnyObjectByType<BranchSessionController>();
                 if (branch == null)
                 {
                     failures.Add($"{scenePath} is missing BranchSessionController.");

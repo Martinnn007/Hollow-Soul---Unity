@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Hollow.Branches;
 using Hollow.Combat;
+using Hollow.Editor.Generation;
 using Hollow.Rooms;
 using UnityEditor;
 

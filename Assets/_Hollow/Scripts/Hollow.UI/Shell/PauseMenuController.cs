@@ -236,7 +236,7 @@ namespace Hollow.UI.Shell
         {
             if (gameSessionController == null)
             {
-                gameSessionController = FindFirstObjectByType<GameSessionController>();
+                gameSessionController = FindAnyObjectByType<GameSessionController>();
             }
         }
 

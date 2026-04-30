@@ -245,7 +245,7 @@ namespace Hollow.Branches
             {
                 var bossTempCandidate = records.Count;
                 var excludedBossParents = secretTempIndex >= 0 ? new HashSet<int> { secretTempIndex } : null;
-                var bossFixtureIds = !string.IsNullOrWhiteSpace(bossRoomAssetId) && roomPool.ContainsKey(bossRoomAssetId)
+                IReadOnlyList<string> bossFixtureIds = !string.IsNullOrWhiteSpace(bossRoomAssetId) && roomPool.ContainsKey(bossRoomAssetId)
                     ? new[] { bossRoomAssetId }
                     : fixtureIds;
                 if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, roomPool, candidatesByShape, bossFixtureIds, random, settings.MaxPlacementAttempts, bossTempCandidate, requireSingleRoom: false, excludedParentTempIndices: excludedBossParents, out var bossRecord, exactFixtureIds: !string.IsNullOrWhiteSpace(bossRoomAssetId)))

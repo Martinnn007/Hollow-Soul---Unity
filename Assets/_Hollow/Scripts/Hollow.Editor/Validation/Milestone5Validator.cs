@@ -138,7 +138,7 @@ namespace Hollow.Editor.Validation
             }
 
             EditorSceneManager.OpenScene(scenePath);
-            var combat = Object.FindFirstObjectByType<RoomCombatController>();
+            var combat = Object.FindAnyObjectByType<RoomCombatController>();
             if (combat == null)
             {
                 failures.Add($"{scenePath} is missing RoomCombatController.");
@@ -162,13 +162,13 @@ namespace Hollow.Editor.Validation
                 failures.Add($"{scenePath} PlatformShellCanvas must include CombatHudController.");
             }
 
-            var presentationRoot = Object.FindFirstObjectByType<PlatformPresentationRoot>();
+            var presentationRoot = Object.FindAnyObjectByType<PlatformPresentationRoot>();
             if (presentationRoot == null || Mathf.Abs(presentationRoot.WorldScale - PresentationScalePolicy.WorldScaleFor(expectedPlatformKind)) > 0.0001f)
             {
                 failures.Add($"{scenePath} has invalid presentation scaling.");
             }
 
-            var session = Object.FindFirstObjectByType<GameSessionController>();
+            var session = Object.FindAnyObjectByType<GameSessionController>();
             if (session == null || session.SampleRoomRuntimeJson == null)
             {
                 failures.Add($"{scenePath} is missing sample room JSON wiring.");

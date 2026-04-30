@@ -9,7 +9,7 @@ namespace Hollow.Combat
 {
     public sealed class SpikeHazardController : RoomHazardController
     {
-        private readonly Dictionary<int, float> nextAllowedDamageByTarget = new();
+        private readonly Dictionary<GameObject, float> nextAllowedDamageByTarget = new();
 
         private void Update()
         {
@@ -63,9 +63,8 @@ namespace Hollow.Combat
 
         private bool TryApplyHazardDamage(CombatantHealth health, GameObject target, float timeSeconds)
         {
-            var targetId = target != null ? target.GetInstanceID() : 0;
-            if (targetId == 0 ||
-                nextAllowedDamageByTarget.TryGetValue(targetId, out var nextTime) && timeSeconds < nextTime)
+            if (target == null ||
+                nextAllowedDamageByTarget.TryGetValue(target, out var nextTime) && timeSeconds < nextTime)
             {
                 return false;
             }
@@ -84,7 +83,7 @@ namespace Hollow.Combat
                 return false;
             }
 
-            nextAllowedDamageByTarget[targetId] = timeSeconds + Tuning.SpikeCooldownSeconds;
+            nextAllowedDamageByTarget[target] = timeSeconds + Tuning.SpikeCooldownSeconds;
             VfxPresenter.Play(VfxCueId.HazardHit, target.transform.position, target.transform.parent);
             AudioPresenter.Play(AudioCueId.HazardHit, target.transform.position);
             return true;

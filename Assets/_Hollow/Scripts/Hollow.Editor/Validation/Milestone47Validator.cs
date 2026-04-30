@@ -144,7 +144,7 @@ namespace Hollow.Editor.Validation
             foreach (var scenePath in GameScenes)
             {
                 var scene = EditorSceneManager.OpenScene(scenePath);
-                var branch = Object.FindFirstObjectByType<BranchSessionController>();
+                var branch = Object.FindAnyObjectByType<BranchSessionController>();
                 if (branch == null || branch.ChallengeCatalog != catalog)
                 {
                     failures.Add($"{scenePath} BranchSessionController must reference the M47 challenge catalog.");
@@ -152,7 +152,7 @@ namespace Hollow.Editor.Validation
             }
 
             var menuScene = EditorSceneManager.OpenScene("Assets/_Hollow/Scenes/MainMenu.unity");
-            var mainMenu = Object.FindFirstObjectByType<MainMenuController>();
+            var mainMenu = Object.FindAnyObjectByType<MainMenuController>();
             if (mainMenu == null || mainMenu.ChallengeCatalog != catalog)
             {
                 failures.Add("MainMenuController must reference the M47 challenge catalog.");

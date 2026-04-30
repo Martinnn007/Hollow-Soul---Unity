@@ -20,7 +20,7 @@ namespace Hollow.Combat
 
         public bool TryLaunchSelectedBoss()
         {
-            roomCombatController = roomCombatController != null ? roomCombatController : FindFirstObjectByType<RoomCombatController>();
+            roomCombatController = roomCombatController != null ? roomCombatController : FindAnyObjectByType<RoomCombatController>();
             if (roomCombatController == null)
             {
                 return false;
@@ -33,7 +33,7 @@ namespace Hollow.Combat
 
         public bool TryLaunchSelectedBoss(RoomRuntimeRoot room, PlaceholderPlayerController player)
         {
-            roomCombatController = roomCombatController != null ? roomCombatController : FindFirstObjectByType<RoomCombatController>();
+            roomCombatController = roomCombatController != null ? roomCombatController : FindAnyObjectByType<RoomCombatController>();
             if (roomCombatController == null || room == null || player == null)
             {
                 return false;

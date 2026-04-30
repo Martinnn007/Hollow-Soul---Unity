@@ -59,7 +59,7 @@ namespace Hollow.Diagnostics
 
         private static T FindFirst<T>() where T : UnityEngine.Object
         {
-            return UnityEngine.Object.FindFirstObjectByType<T>(FindObjectsInactive.Include);
+            return UnityEngine.Object.FindAnyObjectByType<T>(FindObjectsInactive.Include);
         }
     }
 
