@@ -230,8 +230,8 @@ namespace Hollow.Branches
 
             if (prefabRole != default)
             {
-                var prop = CreateArtPassHost($"DebugProp.{entity}", position, prefabRole);
-                AddLabel(prop.transform, entity);
+                var artPassProp = CreateArtPassHost($"DebugProp.{entity}", position, prefabRole);
+                AddLabel(artPassProp.transform, entity);
                 return;
             }
 
@@ -242,8 +242,8 @@ namespace Hollow.Branches
             var scale = entity == "spike" || entity == "pit_marker"
                 ? new Vector3(0.8f, 0.08f, 0.8f)
                 : Vector3.one * 0.8f;
-            var prop = CreatePrimitive($"DebugProp.{entity}", primitive, position + Vector3.up * scale.y * 0.5f, scale, role);
-            AddLabel(prop.transform, entity);
+            var primitiveProp = CreatePrimitive($"DebugProp.{entity}", primitive, position + Vector3.up * scale.y * 0.5f, scale, role);
+            AddLabel(primitiveProp.transform, entity);
         }
 
         private void SpawnProjectileOrVfx(string entity, Vector3 position)
