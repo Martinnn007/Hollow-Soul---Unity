@@ -156,6 +156,15 @@ namespace Hollow.RoomDesigner
                         position = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z }
                     });
                 }
+                else if (marker.kind == RoomDesignerMarkerKinds.ChestSpawn)
+                {
+                    runtime.itemSpawns.Add(new ImportedSpawnPoint
+                    {
+                        id = string.IsNullOrWhiteSpace(marker.id) ? $"chestSpawn_{rewardIndex++}" : marker.id,
+                        kind = RoomDesignerMarkerKinds.ChestSpawn,
+                        position = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z }
+                    });
+                }
                 else if (RoomDesignerMarkerKinds.IsInteractiveObject(marker.kind))
                 {
                     runtime.interactiveObjects.Add(new ImportedRoomInteractiveObject

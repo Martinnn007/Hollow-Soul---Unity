@@ -144,7 +144,8 @@ namespace Hollow.Presentation
                 ? PrimitiveType.Cylinder
                 : role is PresentationPrefabRole.Projectile or PresentationPrefabRole.EnemyProjectile or
                     PresentationPrefabRole.RewardPickup or PresentationPrefabRole.BossKeyPickup or
-                    PresentationPrefabRole.ActiveItemPickup
+                    PresentationPrefabRole.ActiveItemPickup or PresentationPrefabRole.CoinCopper or
+                    PresentationPrefabRole.CoinSilver or PresentationPrefabRole.CoinGold
                     ? PrimitiveType.Sphere
                     : PrimitiveType.Cube;
         }
@@ -163,7 +164,8 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.ConsumableCardPickup => new Vector3(0.36f, 0.52f, 0.04f),
                 PresentationPrefabRole.RoomHazardSpike => new Vector3(0.72f, 0.08f, 0.72f),
                 PresentationPrefabRole.StandardBarrel or PresentationPrefabRole.ExplosiveBarrel => new Vector3(0.82f, 1f, 0.82f),
-                PresentationPrefabRole.HazardCoinDrop => Vector3.one * 0.22f,
+                PresentationPrefabRole.HazardCoinDrop or PresentationPrefabRole.CoinCopper or PresentationPrefabRole.CoinSilver or PresentationPrefabRole.CoinGold => Vector3.one * 0.22f,
+                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden => new Vector3(0.75f, 0.5f, 0.6f),
                 _ => Vector3.one
             };
         }
@@ -203,11 +205,18 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.StandardBarrel => MaterialRole.RoomBarrel,
                 PresentationPrefabRole.ExplosiveBarrel => MaterialRole.RoomExplosiveBarrel,
                 PresentationPrefabRole.HazardCoinDrop => MaterialRole.HazardCoinDrop,
+                PresentationPrefabRole.ChestNormal => MaterialRole.ChestNormal,
+                PresentationPrefabRole.ChestGolden => MaterialRole.ChestGolden,
+                PresentationPrefabRole.CoinCopper => MaterialRole.CoinCopper,
+                PresentationPrefabRole.CoinSilver => MaterialRole.CoinSilver,
+                PresentationPrefabRole.CoinGold => MaterialRole.CoinGold,
                 PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
                 PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
                 PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,
                 PresentationPrefabRole.VfxPortalComplete => MaterialRole.HubReturnPortal,
                 PresentationPrefabRole.VfxProjectileFire => MaterialRole.Projectile,
+                PresentationPrefabRole.VfxChestOpen => MaterialRole.ChestGolden,
+                PresentationPrefabRole.VfxCoinPickup => MaterialRole.CoinGold,
                 PresentationPrefabRole.VfxEnemyDeath => MaterialRole.EnemyNormal,
                 _ => MaterialRole.EnemyNormal
             };

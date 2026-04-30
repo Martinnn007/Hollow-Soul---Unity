@@ -35,14 +35,14 @@ namespace Hollow.Data.Definitions
         {
             return slot == WeaponSlot.Melee
                 ? new WeaponAttackDefinition(AttackKind.Light, 1, 0.67f, 6f, 0.95f)
-                : new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 0f, 9f);
+                : new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 0f, 6f);
         }
 
         public static WeaponAttackDefinition DefaultHeavy(WeaponSlot slot)
         {
             return slot == WeaponSlot.Melee
                 ? new WeaponAttackDefinition(AttackKind.Heavy, 2, 3.5f, 40f, 1.15f)
-                : new WeaponAttackDefinition(AttackKind.Heavy, 2, 10f, 35f, 9f);
+                : new WeaponAttackDefinition(AttackKind.Heavy, 2, 10f, 35f, 6f);
         }
     }
 }

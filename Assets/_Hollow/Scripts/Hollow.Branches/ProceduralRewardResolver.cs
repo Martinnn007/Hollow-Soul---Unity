@@ -138,25 +138,29 @@ namespace Hollow.Branches
 
         private static RewardGrant RollPreBetaStandardReward(string roomId, string branchId, int seed)
         {
-            var roll = StableHash($"{branchId}|{seed}|{roomId}|m51_sparse_standard") % 100;
-            if (roll < 38)
+            var roll = StableHash($"{branchId}|{seed}|{roomId}|m52_chests_coin_drops") % 100;
+            if (roll < 2)
             {
-                var coins = 5 + StableHash($"{branchId}|{seed}|{roomId}|m51_coin_amount") % 4;
-                return new RewardGrant(roomId, "small_coin_pouch", "Small Coin Pouch", RewardKind.Currency, 0, coins, System.Array.Empty<RewardEffect>());
+                return new RewardGrant(roomId, ChestRewardResolver.GoldenChestRewardId, "Golden Chest", RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
             }
 
-            if (roll < 62)
+            if (roll < 14)
             {
-                return new RewardGrant(roomId, "hp_refill", "HP Refill", RewardKind.Heal, 0, 0, new[] { new RewardEffect(RewardEffectKind.Heal, intValue: 99) });
+                return new RewardGrant(roomId, ChestRewardResolver.NormalChestRewardId, "Normal Chest", RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
             }
 
-            if (roll < 74)
+            if (roll < 52)
             {
-                var coins = 9 + StableHash($"{branchId}|{seed}|{roomId}|m51_chest_amount") % 5;
-                return new RewardGrant(roomId, "standard_treasure_chest", "Treasure Chest", RewardKind.Currency, 0, coins, System.Array.Empty<RewardEffect>());
+                var coins = 5 + StableHash($"{branchId}|{seed}|{roomId}|m52_loose_coin_amount") % 4;
+                return new RewardGrant(roomId, ChestRewardResolver.SmallCoinPouchRewardId, "Loose Coins", RewardKind.Currency, 0, coins, System.Array.Empty<RewardEffect>());
             }
 
-            return default;
+            if (roll < 76)
+            {
+                return ChestRewardResolver.HpRefillGrant(roomId);
+            }
+
+            return new RewardGrant(roomId, string.Empty, string.Empty, RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
         }
 
         private static RewardGrant FallbackStandardReward(string roomId, string branchId, int seed)

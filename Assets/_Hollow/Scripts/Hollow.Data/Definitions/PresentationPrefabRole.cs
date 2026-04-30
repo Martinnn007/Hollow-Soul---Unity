@@ -42,6 +42,13 @@ namespace Hollow.Data.Definitions
         RoomHazardSpike,
         StandardBarrel,
         ExplosiveBarrel,
-        HazardCoinDrop
+        HazardCoinDrop,
+        ChestNormal,
+        ChestGolden,
+        CoinCopper,
+        CoinSilver,
+        CoinGold,
+        VfxChestOpen,
+        VfxCoinPickup
     }
 }

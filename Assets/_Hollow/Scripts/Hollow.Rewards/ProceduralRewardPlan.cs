@@ -14,7 +14,7 @@ namespace Hollow.Rewards
         {
             foreach (var grant in grants ?? Array.Empty<RewardGrant>())
             {
-                if (!grant.IsEmpty && !string.IsNullOrWhiteSpace(grant.RoomId))
+                if (!string.IsNullOrWhiteSpace(grant.RoomId))
                 {
                     rewardsByRoomId[grant.RoomId] = grant;
                 }

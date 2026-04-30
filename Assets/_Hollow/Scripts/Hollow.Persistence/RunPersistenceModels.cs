@@ -34,6 +34,8 @@ namespace Hollow.Persistence
         public PlayerRunBuildSaveState runBuild = new();
         public List<DroppedReplacementPickupSaveState> droppedReplacementPickups = new();
         public List<RunRoomHazardStateSave> roomHazardStates = new();
+        public List<RunChestStateSave> roomChestStates = new();
+        public List<RunCoinPickupSaveState> looseCoinPickups = new();
     }
 
     [Serializable]
@@ -70,6 +72,38 @@ namespace Hollow.Persistence
         public bool isDestroyed;
         public int coinDropAmount;
         public bool coinCollected;
+        public float localX;
+        public float localY;
+        public float localZ;
+    }
+
+    [Serializable]
+    public sealed class RunChestStateSave
+    {
+        public string roomId = string.Empty;
+        public string chestId = string.Empty;
+        public string kind = "Normal";
+        public string state = "Unopened";
+        public bool contentsClaimed;
+        public string contentRewardId = string.Empty;
+        public string contentDisplayName = string.Empty;
+        public string contentRewardKind = string.Empty;
+        public int contentSouls;
+        public int contentCoins;
+        public List<RunRewardEffectSaveState> contentEffects = new();
+        public float localX;
+        public float localY;
+        public float localZ;
+    }
+
+    [Serializable]
+    public sealed class RunCoinPickupSaveState
+    {
+        public string roomId = string.Empty;
+        public string pickupId = string.Empty;
+        public string denomination = "Copper";
+        public int value = 1;
+        public bool isCollected;
         public float localX;
         public float localY;
         public float localZ;

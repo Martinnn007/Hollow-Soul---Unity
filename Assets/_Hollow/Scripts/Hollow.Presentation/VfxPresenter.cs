@@ -116,10 +116,12 @@ namespace Hollow.Presentation
                 VfxCueId.BarrelBreak => new Color(0.78f, 0.48f, 0.18f, 0.82f),
                 VfxCueId.BarrelExplode => new Color(1f, 0.42f, 0.08f, 0.95f),
                 VfxCueId.HazardCoinDrop => new Color(1f, 0.82f, 0.15f, 0.9f),
+                VfxCueId.ChestOpen => new Color(1f, 0.76f, 0.18f, 0.92f),
+                VfxCueId.CoinPickup => new Color(1f, 0.86f, 0.28f, 0.9f),
                 _ => default
             };
 
-            if (cue is VfxCueId.EnemyCorpseGhost or VfxCueId.ShieldParryCounter or VfxCueId.BarrelExplode)
+            if (cue is VfxCueId.EnemyCorpseGhost or VfxCueId.ShieldParryCounter or VfxCueId.BarrelExplode or VfxCueId.ChestOpen)
             {
                 scale = 0.22f;
             }

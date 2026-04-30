@@ -711,6 +711,9 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.ExplosiveBarrel:
                     AddOrReplaceInteractiveObject(RoomDesignerMarkerKinds.ExplosiveBarrel, "barrel_explosive");
                     break;
+                case RoomDesignerTool.ChestSpawn:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.ChestSpawn, "spawn_chest");
+                    break;
                 case RoomDesignerTool.ActiveDoor:
                     SetNearestDoor(RoomDesignerDoorKinds.Door);
                     break;
@@ -812,6 +815,12 @@ namespace Hollow.RoomDesigner
             if (marker?.kind == RoomDesignerMarkerKinds.RoomReward)
             {
                 toolIndex = Array.IndexOf(tools, RoomDesignerTool.RewardSpawn);
+                return;
+            }
+
+            if (marker?.kind == RoomDesignerMarkerKinds.ChestSpawn)
+            {
+                toolIndex = Array.IndexOf(tools, RoomDesignerTool.ChestSpawn);
                 return;
             }
 
@@ -1107,6 +1116,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.SafeStart => MaterialRole.DesignerSpawnSafeStart,
                 RoomDesignerMarkerKinds.StandardBarrel => MaterialRole.DesignerBarrel,
                 RoomDesignerMarkerKinds.ExplosiveBarrel => MaterialRole.DesignerExplosiveBarrel,
+                RoomDesignerMarkerKinds.ChestSpawn => MaterialRole.DesignerChest,
                 _ => MaterialRole.DesignerSpawnReward
             };
         }

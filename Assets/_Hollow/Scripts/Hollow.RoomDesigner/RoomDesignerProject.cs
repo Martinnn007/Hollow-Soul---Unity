@@ -172,6 +172,7 @@ namespace Hollow.RoomDesigner
         public const string EnemyTurret = "spawnEnemyTurret";
         public const string EnemySplitter = "spawnEnemySplitter";
         public const string RoomReward = "spawn_point_roomReward";
+        public const string ChestSpawn = "spawn_point_chest";
         public const string StandardBarrel = "barrelStandard";
         public const string ExplosiveBarrel = "barrelExplosive";
 
@@ -195,6 +196,11 @@ namespace Hollow.RoomDesigner
         public static bool IsInteractiveObject(string kind)
         {
             return kind == StandardBarrel || kind == ExplosiveBarrel;
+        }
+
+        public static bool IsPlacementMarker(string kind)
+        {
+            return kind == RoomReward || kind == ChestSpawn || IsEnemy(kind) || IsInteractiveObject(kind);
         }
 
         public static string RuntimeEnemyKind(string kind)

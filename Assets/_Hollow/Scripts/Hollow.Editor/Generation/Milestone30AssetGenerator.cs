@@ -54,8 +54,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Ranged,
                 WeaponCategory.Bow,
                 new[] { BuildTag.Ranged, BuildTag.Fast, BuildTag.Skeletal },
-                new WeaponAttackDefinition(AttackKind.Light, 1, 0.95f, 2f, 10f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 3, 8.5f, 36f, 10f));
+                new WeaponAttackDefinition(AttackKind.Light, 1, 0.95f, 2f, 6.67f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 3, 8.5f, 36f, 6.67f));
             var dragonFang = SaveWeapon(
                 "Weapon_DragonFang.asset",
                 "dragon_fang",
@@ -72,8 +72,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Ranged,
                 WeaponCategory.Bow,
                 new[] { BuildTag.Ranged, BuildTag.Fire, BuildTag.Dragon },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 4f, 10.5f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 38f, 9.5f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 4f, 7f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 38f, 6.33f));
 
             var skeletalArmor = SaveArmor(
                 "Armor_SkeletalArmor.asset",

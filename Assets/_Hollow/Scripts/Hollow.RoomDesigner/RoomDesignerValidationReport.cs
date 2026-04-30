@@ -126,14 +126,26 @@ namespace Hollow.RoomDesigner
                     report.AddError($"Marker id '{marker.id}' is duplicated.");
                 }
 
-                if (marker.kind == RoomDesignerMarkerKinds.RoomReward ||
-                    RoomDesignerMarkerKinds.IsEnemy(marker.kind) ||
-                    RoomDesignerMarkerKinds.IsInteractiveObject(marker.kind))
+                if (RoomDesignerMarkerKinds.IsPlacementMarker(marker.kind))
                 {
                     if (!IsWalkablePlacement(project, marker, out var reason))
                     {
                         report.AddError($"Marker '{marker.id}' is invalid: {reason}.");
                     }
+                }
+
+                if (marker.kind == RoomDesignerMarkerKinds.ChestSpawn &&
+                    markers.Any(candidate =>
+                        candidate != null &&
+                        candidate != marker &&
+                        Mathf.RoundToInt(candidate.x) == Mathf.RoundToInt(marker.x) &&
+                        Mathf.RoundToInt(candidate.z) == Mathf.RoundToInt(marker.z) &&
+                        (candidate.kind == RoomDesignerMarkerKinds.SafeStart ||
+                         candidate.kind == RoomDesignerMarkerKinds.RoomReward ||
+                         RoomDesignerMarkerKinds.IsEnemy(candidate.kind) ||
+                         RoomDesignerMarkerKinds.IsInteractiveObject(candidate.kind))))
+                {
+                    report.AddError($"Chest marker '{marker.id}' overlaps another marker.");
                 }
             }
         }

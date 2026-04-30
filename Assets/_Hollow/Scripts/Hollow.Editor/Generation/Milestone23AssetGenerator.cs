@@ -249,8 +249,17 @@ namespace Hollow.Editor.Generation
                     AddPrimitive(parent, PrimitiveType.Cube, "explosive_stripe", new Vector3(0f, 0.46f, -0.36f), new Vector3(0.62f, 0.14f, 0.04f), role, alpha: 0.82f);
                     break;
                 case PresentationPrefabRole.HazardCoinDrop:
+                case PresentationPrefabRole.CoinCopper:
+                case PresentationPrefabRole.CoinSilver:
+                case PresentationPrefabRole.CoinGold:
                     AddPrimitive(parent, PrimitiveType.Sphere, "coin_core", new Vector3(0f, 0.12f, 0f), Vector3.one * 0.24f, role);
                     AddPrimitive(parent, PrimitiveType.Cylinder, "coin_ring", new Vector3(0f, 0.12f, 0f), new Vector3(0.34f, 0.04f, 0.34f), role, alpha: 0.74f);
+                    break;
+                case PresentationPrefabRole.ChestNormal:
+                case PresentationPrefabRole.ChestGolden:
+                    AddPrimitive(parent, PrimitiveType.Cube, "chest_body", new Vector3(0f, 0.26f, 0f), new Vector3(0.78f, 0.42f, 0.58f), role);
+                    AddPrimitive(parent, PrimitiveType.Cube, "chest_lid", new Vector3(0f, 0.54f, -0.04f), new Vector3(0.84f, 0.16f, 0.62f), role, alpha: 0.88f);
+                    AddPrimitive(parent, PrimitiveType.Cube, "chest_clasp", new Vector3(0f, 0.42f, -0.34f), new Vector3(0.18f, 0.18f, 0.06f), role, alpha: 0.96f);
                     break;
                 default:
                     AddPrimitive(parent, PrimitiveType.Cube, "toy_body", new Vector3(0f, 0.28f, 0f), new Vector3(0.52f, 0.52f, 0.52f), role);
@@ -360,6 +369,8 @@ namespace Hollow.Editor.Generation
                 VfxCueId.DoorUnlock => PresentationPrefabRole.VfxDoorUnlock,
                 VfxCueId.RoomClear => PresentationPrefabRole.VfxRoomClear,
                 VfxCueId.PortalComplete => PresentationPrefabRole.VfxPortalComplete,
+                VfxCueId.ChestOpen => PresentationPrefabRole.VfxChestOpen,
+                VfxCueId.CoinPickup => PresentationPrefabRole.VfxCoinPickup,
                 _ => PresentationPrefabRole.VfxProjectileFire
             };
 
@@ -558,11 +569,18 @@ namespace Hollow.Editor.Generation
                 PresentationPrefabRole.StandardBarrel => MaterialRole.RoomBarrel,
                 PresentationPrefabRole.ExplosiveBarrel => MaterialRole.RoomExplosiveBarrel,
                 PresentationPrefabRole.HazardCoinDrop => MaterialRole.HazardCoinDrop,
+                PresentationPrefabRole.ChestNormal => MaterialRole.ChestNormal,
+                PresentationPrefabRole.ChestGolden => MaterialRole.ChestGolden,
+                PresentationPrefabRole.CoinCopper => MaterialRole.CoinCopper,
+                PresentationPrefabRole.CoinSilver => MaterialRole.CoinSilver,
+                PresentationPrefabRole.CoinGold => MaterialRole.CoinGold,
                 PresentationPrefabRole.VfxEnemyHit or PresentationPrefabRole.VfxPlayerHit => MaterialRole.CombatHitFlash,
                 PresentationPrefabRole.VfxRewardClaim => MaterialRole.RewardPickup,
                 PresentationPrefabRole.VfxDoorUnlock or PresentationPrefabRole.VfxRoomClear => MaterialRole.DoorCleared,
                 PresentationPrefabRole.VfxPortalComplete => MaterialRole.HubReturnPortal,
                 PresentationPrefabRole.VfxProjectileFire => MaterialRole.Projectile,
+                PresentationPrefabRole.VfxChestOpen => MaterialRole.ChestGolden,
+                PresentationPrefabRole.VfxCoinPickup => MaterialRole.CoinGold,
                 PresentationPrefabRole.VfxEnemyDeath => MaterialRole.EnemyNormal,
                 _ => MaterialRole.EnemyNormal
             };

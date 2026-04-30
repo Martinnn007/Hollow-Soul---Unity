@@ -123,6 +123,11 @@ namespace Hollow.Editor.Generation
             yield return Target("standard_barrel", "Standard Barrel", "Hazards", PresentationPrefabRole.StandardBarrel, ArtPassAssetTargetPriority.High, false, "Breakable barrel cover prop, visual-only wrapper around authoritative blocker.", Scale("0.8m footprint", "1m tall"));
             yield return Target("explosive_barrel", "Explosive Barrel", "Hazards", PresentationPrefabRole.ExplosiveBarrel, ArtPassAssetTargetPriority.High, false, "Explosive barrel with strong danger read and chain-reaction silhouette.", Scale("0.8m footprint", "1m tall"));
             yield return Target("hazard_coin_drop", "Hazard Coin Drop", "Hazards", PresentationPrefabRole.HazardCoinDrop, ArtPassAssetTargetPriority.Medium, false, "Tiny coin pickup dropped by destructible props.", Scale("0.25m diameter", "pickup-safe"));
+            yield return Target("normal_chest", "Normal Chest", "Chests", PresentationPrefabRole.ChestNormal, ArtPassAssetTargetPriority.High, false, "Brown wooden chest opened with Interact after room clear.", Scale("0.8m wide", "0.55m tall"));
+            yield return Target("golden_chest", "Golden Chest", "Chests", PresentationPrefabRole.ChestGolden, ArtPassAssetTargetPriority.High, false, "Rare gold-accent chest with better standard-room prizes.", Scale("0.85m wide", "0.6m tall"));
+            yield return Target("coin_copper", "Copper Coin", "Coins", PresentationPrefabRole.CoinCopper, ArtPassAssetTargetPriority.Medium, false, "Common coin pickup worth 1.", Scale("0.22m diameter", "pickup-safe"));
+            yield return Target("coin_silver", "Silver Coin", "Coins", PresentationPrefabRole.CoinSilver, ArtPassAssetTargetPriority.Medium, false, "Rare coin pickup worth 5.", Scale("0.24m diameter", "pickup-safe"));
+            yield return Target("coin_gold", "Gold Coin", "Coins", PresentationPrefabRole.CoinGold, ArtPassAssetTargetPriority.Medium, false, "Very rare coin pickup worth 10.", Scale("0.28m diameter", "pickup-safe"));
 
             foreach (var role in new[]
             {
@@ -133,7 +138,9 @@ namespace Hollow.Editor.Generation
                 PresentationPrefabRole.VfxRewardClaim,
                 PresentationPrefabRole.VfxDoorUnlock,
                 PresentationPrefabRole.VfxRoomClear,
-                PresentationPrefabRole.VfxPortalComplete
+                PresentationPrefabRole.VfxPortalComplete,
+                PresentationPrefabRole.VfxChestOpen,
+                PresentationPrefabRole.VfxCoinPickup
             })
             {
                 yield return Target(

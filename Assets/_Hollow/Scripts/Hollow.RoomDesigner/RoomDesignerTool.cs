@@ -22,6 +22,7 @@ namespace Hollow.RoomDesigner
         InactiveDoor = 17,
         Spike = 18,
         StandardBarrel = 19,
-        ExplosiveBarrel = 20
+        ExplosiveBarrel = 20,
+        ChestSpawn = 21
     }
 }

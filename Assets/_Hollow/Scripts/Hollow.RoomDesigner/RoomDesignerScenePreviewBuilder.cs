@@ -61,6 +61,7 @@ namespace Hollow.RoomDesigner
             {
                 RoomDesignerMarkerKinds.SafeStart => PresentationPrefabRole.Player,
                 RoomDesignerMarkerKinds.RoomReward => PresentationPrefabRole.RewardPickup,
+                RoomDesignerMarkerKinds.ChestSpawn => PresentationPrefabRole.ChestNormal,
                 RoomDesignerMarkerKinds.StandardBarrel => PresentationPrefabRole.StandardBarrel,
                 RoomDesignerMarkerKinds.ExplosiveBarrel => PresentationPrefabRole.ExplosiveBarrel,
                 RoomDesignerMarkerKinds.EnemyFlying => PresentationPrefabRole.EnemyFlying,

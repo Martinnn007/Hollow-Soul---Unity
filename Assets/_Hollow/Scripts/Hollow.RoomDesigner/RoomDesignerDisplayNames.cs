@@ -29,6 +29,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.Spike => "Spike",
                 RoomDesignerTool.StandardBarrel => "Barrel",
                 RoomDesignerTool.ExplosiveBarrel => "Boom",
+                RoomDesignerTool.ChestSpawn => "Chest",
                 _ => tool.ToString()
             };
         }
@@ -58,6 +59,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.Spike => "SPK",
                 RoomDesignerTool.StandardBarrel => "BRL",
                 RoomDesignerTool.ExplosiveBarrel => "XPL",
+                RoomDesignerTool.ChestSpawn => "CHS",
                 _ => tool.ToString().Substring(0, Math.Min(3, tool.ToString().Length)).ToUpperInvariant()
             };
         }
@@ -90,6 +92,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemySplitter => "Splitter",
                 RoomDesignerMarkerKinds.StandardBarrel => "Barrel",
                 RoomDesignerMarkerKinds.ExplosiveBarrel => "Boom",
+                RoomDesignerMarkerKinds.ChestSpawn => "Chest",
                 _ => Shorten(kind)
             };
         }

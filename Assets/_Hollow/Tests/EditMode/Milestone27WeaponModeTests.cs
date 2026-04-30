@@ -97,7 +97,7 @@ namespace Hollow.Tests.EditMode
                     1.25f);
 
                 Assert.AreEqual(1.25f, weapon.EffectiveMeleeLightRangeMeters, 0.001f);
-                Assert.AreEqual(10.25f, weapon.EffectiveRangedLightRangeMeters, 0.001f);
+                Assert.AreEqual(7.25f, weapon.EffectiveRangedLightRangeMeters, 0.001f);
             }
             finally
             {

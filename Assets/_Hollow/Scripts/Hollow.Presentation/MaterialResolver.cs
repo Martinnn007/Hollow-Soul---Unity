@@ -102,6 +102,11 @@ namespace Hollow.Presentation
                 MaterialRole.RoomBarrel => new Color(0.58f, 0.35f, 0.16f, 1f),
                 MaterialRole.RoomExplosiveBarrel => new Color(1f, 0.38f, 0.08f, 1f),
                 MaterialRole.HazardCoinDrop => new Color(1f, 0.78f, 0.12f, 1f),
+                MaterialRole.ChestNormal => new Color(0.54f, 0.31f, 0.13f, 1f),
+                MaterialRole.ChestGolden => new Color(1f, 0.76f, 0.18f, 1f),
+                MaterialRole.CoinCopper => new Color(0.82f, 0.42f, 0.2f, 1f),
+                MaterialRole.CoinSilver => new Color(0.78f, 0.82f, 0.86f, 1f),
+                MaterialRole.CoinGold => new Color(1f, 0.82f, 0.18f, 1f),
                 MaterialRole.RewardPickup => new Color(1f, 0.82f, 0.18f, 1f),
                 MaterialRole.HubReturnPortal => new Color(0.25f, 1f, 0.92f, 1f),
                 MaterialRole.BossKeyPickup => new Color(1f, 0.88f, 0.22f, 1f),
@@ -122,6 +127,7 @@ namespace Hollow.Presentation
                 MaterialRole.DesignerSpike => new Color(1f, 0.18f, 0.12f, 0.92f),
                 MaterialRole.DesignerBarrel => new Color(0.62f, 0.38f, 0.18f, 1f),
                 MaterialRole.DesignerExplosiveBarrel => new Color(1f, 0.44f, 0.08f, 1f),
+                MaterialRole.DesignerChest => new Color(0.86f, 0.58f, 0.22f, 1f),
                 MaterialRole.VfxDebug => new Color(1f, 1f, 1f, 0.85f),
                 _ => Color.white
             };

@@ -19,10 +19,13 @@ namespace Hollow.Branches
     public sealed class BranchSessionController : MonoBehaviour, IBranchSessionController
     {
         private const float RewardInteractionRadiusMeters = 1.25f;
+        private const float CoinPickupRadiusMeters = 0.55f;
         private const float PortalInteractionRadiusMeters = 1.5f;
         private const float ShopCardInteractionRadiusMeters = 0.85f;
         private const int FinalWorldIndex = 3;
         private const string HubReplacementContextId = "__hub__";
+        private const string RuntimeRewardMarkerKind = "spawn_point_roomReward";
+        private const string RuntimeChestMarkerKind = "spawn_point_chest";
 
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
@@ -61,7 +64,11 @@ namespace Hollow.Branches
         private readonly List<ReplacementPickup> currentReplacementPickups = new();
         private readonly List<ReplacementPickupState> droppedReplacementPickups = new();
         private readonly List<HazardCoinPickup> currentHazardCoinPickups = new();
+        private readonly List<RoomChestController> currentRoomChests = new();
+        private readonly List<CoinPickupController> currentCoinPickups = new();
         private readonly List<RunRoomHazardStateSave> roomHazardStates = new();
+        private readonly List<RunChestStateSave> roomChestStates = new();
+        private readonly List<RunCoinPickupSaveState> looseCoinPickupStates = new();
         private readonly RuntimeRewardCounter rewardCounter = new();
         private RunEconomy runEconomy = new();
         private PlayerRunStats playerRunStats = new();
@@ -119,6 +126,10 @@ namespace Hollow.Branches
         public GameObject NextBranchPortalPrefab => nextBranchPortalPrefab;
 
         public RoomRewardPickup CurrentRewardPickup => currentRewardPickup;
+
+        public IReadOnlyList<RoomChestController> CurrentRoomChests => currentRoomChests;
+
+        public IReadOnlyList<CoinPickupController> CurrentCoinPickups => currentCoinPickups;
 
         public HubReturnPortal CurrentHubPortal => currentHubPortal;
 
@@ -340,6 +351,10 @@ namespace Hollow.Branches
             currentReplacementPickups.Clear();
             currentHazardCoinPickups.Clear();
             roomHazardStates.Clear();
+            currentRoomChests.Clear();
+            currentCoinPickups.Clear();
+            roomChestStates.Clear();
+            looseCoinPickupStates.Clear();
             latestPickupReveal = PickupRevealModel.Empty;
             pickupRevealSequence = 0;
             activeChallenge = ResolveActiveChallenge();
@@ -397,6 +412,17 @@ namespace Hollow.Branches
             if (snapshot?.roomHazardStates != null)
             {
                 roomHazardStates.AddRange(snapshot.roomHazardStates);
+            }
+            roomChestStates.Clear();
+            if (snapshot?.roomChestStates != null)
+            {
+                roomChestStates.AddRange(snapshot.roomChestStates);
+            }
+
+            looseCoinPickupStates.Clear();
+            if (snapshot?.looseCoinPickups != null)
+            {
+                looseCoinPickupStates.AddRange(snapshot.looseCoinPickups);
             }
             activeChallenge = ResolveActiveChallenge(snapshot?.challengeId);
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
@@ -476,6 +502,7 @@ namespace Hollow.Branches
                 return;
             }
 
+            TryCollectCoinPickupsByProximity();
             var input = GameplayInputReader.ReadCurrent();
             if (input.UseActiveItemPressed)
             {
@@ -496,6 +523,7 @@ namespace Hollow.Branches
         public bool TryInteract()
         {
             return TryClaimBossKey() ||
+                   TryOpenNearestChest() ||
                    TryClaimReward() ||
                    TryClaimHazardCoinPickup() ||
                    TryClaimReplacementPickup() ||
@@ -661,6 +689,8 @@ namespace Hollow.Branches
             AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
             SpawnRewardIfNeeded();
             SpawnHazardCoinPickupsForCurrentRoom();
+            SpawnSavedChestsForCurrentRoom();
+            SpawnLooseCoinPickupsForCurrentRoom();
             SpawnReplacementPickupsForCurrentContext();
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
@@ -748,6 +778,87 @@ namespace Hollow.Branches
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
             return true;
+        }
+
+        private bool TryOpenNearestChest()
+        {
+            if (playerController == null || State == null || currentRoomChests.Count == 0)
+            {
+                return false;
+            }
+
+            var nearest = currentRoomChests
+                .Where(chest => chest != null && !chest.IsOpened)
+                .OrderBy(chest => Vector3.Distance(Flat(playerController.transform.localPosition), Flat(chest.transform.localPosition)))
+                .FirstOrDefault();
+            if (nearest == null ||
+                Vector3.Distance(Flat(playerController.transform.localPosition), Flat(nearest.transform.localPosition)) > RewardInteractionRadiusMeters ||
+                !nearest.Open())
+            {
+                return false;
+            }
+
+            var state = FindChestState(nearest.RoomId, nearest.ChestId);
+            if (state == null)
+            {
+                return false;
+            }
+
+            state.state = ChestState.Opened.ToString();
+            state.contentsClaimed = true;
+            State.CurrentRoom.MarkRewardClaimed();
+            ApplyChestContents(state, nearest.transform.localPosition);
+            VfxPresenter.Play(VfxCueId.ChestOpen, nearest.transform.position, nearest.transform.parent);
+            AudioPresenter.Play(AudioCueId.ChestOpen, nearest.transform.position);
+            SpawnHubPortalIfReady();
+            CheckpointActiveRun();
+            return true;
+        }
+
+        private bool TryCollectCoinPickupsByProximity()
+        {
+            if (playerController == null || currentCoinPickups.Count == 0)
+            {
+                return false;
+            }
+
+            var collectedAny = false;
+            foreach (var pickup in currentCoinPickups.Where(pickup => pickup != null && !pickup.IsCollected).ToArray())
+            {
+                if (Vector3.Distance(Flat(playerController.transform.localPosition), Flat(pickup.transform.localPosition)) > CoinPickupRadiusMeters ||
+                    !pickup.Collect())
+                {
+                    continue;
+                }
+
+                MarkCoinPickupCollected(pickup.RoomId, pickup.PickupId);
+                var grant = new RewardGrant(
+                    pickup.PickupId,
+                    CoinDenominationResolver.RewardIdFor(pickup.Denomination),
+                    CoinDenominationResolver.DisplayNameFor(pickup.Denomination),
+                    RewardKind.Currency,
+                    0,
+                    pickup.Value,
+                    Array.Empty<RewardEffect>());
+                if (runEconomy.ApplyReward(grant))
+                {
+                    LastRewardMessage = $"+{pickup.Value} coin";
+                    ShowPickupReveal(grant, null);
+                }
+
+                currentCoinPickups.Remove(pickup);
+                DestroyRuntimeObject(pickup.gameObject);
+                VfxPresenter.Play(VfxCueId.CoinPickup, playerController.transform.position, playerController.transform.parent);
+                AudioPresenter.Play(AudioCueId.CoinPickup, playerController.transform.position);
+                collectedAny = true;
+            }
+
+            if (collectedAny)
+            {
+                CheckpointActiveRun();
+            }
+
+            return collectedAny;
         }
 
         private bool TryClaimReplacementPickup()
@@ -1008,6 +1119,8 @@ namespace Hollow.Branches
             }
 
             droppedReplacementPickups.RemoveAll(pickup => pickup.RoomId != HubReplacementContextId);
+            roomChestStates.Clear();
+            looseCoinPickupStates.Clear();
             SpawnHubShopAndPortals();
             SpawnReplacementPickupsForCurrentContext();
             SaveStatus = "Inter-Branch Hub";
@@ -1039,6 +1152,8 @@ namespace Hollow.Branches
                 : CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth;
             branchDepth++;
             droppedReplacementPickups.Clear();
+            roomChestStates.Clear();
+            looseCoinPickupStates.Clear();
             if (choice.Kind == HubPortalKind.NextWorld)
             {
                 worldIndex = Math.Min(FinalWorldIndex, choice.WorldIndex);
@@ -1098,13 +1213,195 @@ namespace Hollow.Branches
                 return;
             }
 
+            if (ChestRewardResolver.IsChestReward(grant))
+            {
+                SpawnChestForReward(grant);
+                return;
+            }
+
+            if (grant.RewardKind == RewardKind.Currency && grant.RewardId == ChestRewardResolver.SmallCoinPouchRewardId && grant.Coins > 0)
+            {
+                SpawnCoinsForValue(
+                    State.CurrentRoomId.Value,
+                    $"{State.CurrentRoomId.Value}_loose_reward",
+                    grant.Coins,
+                    CurrentRewardSpawnPosition(preferChestMarker: false),
+                    StableHash($"{State.Graph.BranchId}|{State.Graph.Seed}|{State.CurrentRoomId.Value}|loose_reward"));
+                State.CurrentRoom.MarkRewardClaimed();
+                LastRewardMessage = $"{grant.Coins} coins spilled";
+                SpawnHubPortalIfReady();
+                CheckpointActiveRun();
+                return;
+            }
+
             var rewardObject = InstantiateOrCreate(rewardPickupPrefab, "RoomRewardPickup", PrimitiveType.Sphere, MaterialRole.RewardPickup);
             rewardObject.transform.SetParent(playerController.transform.parent, false);
-            rewardObject.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+            rewardObject.transform.localPosition = CurrentRewardSpawnPosition(preferChestMarker: false);
             rewardObject.transform.localScale = Vector3.one * 0.35f;
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RewardPickup, rewardObject.transform, Vector3.zero, Vector3.one);
             currentRewardPickup = rewardObject.GetComponent<RoomRewardPickup>() ?? rewardObject.AddComponent<RoomRewardPickup>();
             currentRewardPickup.Configure(State.CurrentRoomId.Value);
+        }
+
+        private void SpawnChestForReward(RewardGrant grant)
+        {
+            if (State == null || playerController == null)
+            {
+                return;
+            }
+
+            var roomId = State.CurrentRoomId.Value;
+            var chestId = $"{roomId}_{grant.RewardId}";
+            var state = FindChestState(roomId, chestId);
+            if (state == null)
+            {
+                state = CreateChestState(grant, chestId);
+                roomChestStates.Add(state);
+            }
+
+            SpawnChest(state);
+            LastRewardMessage = state.kind == ChestKind.Golden.ToString() ? "Golden chest appeared" : "Chest appeared";
+            CheckpointActiveRun();
+        }
+
+        private RunChestStateSave CreateChestState(RewardGrant grant, string chestId)
+        {
+            var roomId = State.CurrentRoomId.Value;
+            var kind = ChestRewardResolver.KindForGrant(grant);
+            var contents = ChestRewardResolver.ResolveContents(State.Graph.BranchId, State.Graph.Seed, roomId, kind);
+            var contentGrant = contents.RewardGrant;
+            var position = CurrentRewardSpawnPosition(preferChestMarker: true);
+            return new RunChestStateSave
+            {
+                roomId = roomId,
+                chestId = chestId,
+                kind = kind.ToString(),
+                state = ChestState.Unopened.ToString(),
+                contentsClaimed = false,
+                contentRewardId = contentGrant.RewardId,
+                contentDisplayName = contentGrant.DisplayName,
+                contentRewardKind = contentGrant.IsEmpty ? string.Empty : contentGrant.RewardKind.ToString(),
+                contentSouls = contentGrant.Souls,
+                contentCoins = contents.CoinValue,
+                contentEffects = contentGrant.Effects?.Select(effect => effect.ToSaveState()).ToList() ?? new List<RunRewardEffectSaveState>(),
+                localX = position.x,
+                localY = position.y,
+                localZ = position.z
+            };
+        }
+
+        private void SpawnSavedChestsForCurrentRoom()
+        {
+            var roomId = State?.CurrentRoomId.Value ?? string.Empty;
+            foreach (var state in roomChestStates.Where(candidate => candidate != null && candidate.roomId == roomId))
+            {
+                SpawnChest(state);
+            }
+        }
+
+        private void SpawnChest(RunChestStateSave state)
+        {
+            if (state == null ||
+                playerController == null ||
+                currentRoomChests.Any(chest => chest != null && chest.RoomId == state.roomId && chest.ChestId == state.chestId))
+            {
+                return;
+            }
+
+            var kind = Enum.TryParse(state.kind, out ChestKind parsedKind) ? parsedKind : ChestKind.Normal;
+            var chestState = Enum.TryParse(state.state, out ChestState parsedState) ? parsedState : ChestState.Unopened;
+            var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            var materialRole = kind == ChestKind.Golden ? MaterialRole.ChestGolden : MaterialRole.ChestNormal;
+            var chestObject = InstantiateOrCreate(rewardPickupPrefab, $"Chest_{kind}_{state.chestId}", PrimitiveType.Cube, materialRole);
+            chestObject.transform.SetParent(playerController.transform.parent, false);
+            chestObject.transform.localPosition = new Vector3(state.localX, state.localY <= 0f ? 0.35f : state.localY, state.localZ);
+            PresentationPrefabResolver.InstantiateVisual(role, chestObject.transform, Vector3.zero, Vector3.one);
+            var chest = chestObject.GetComponent<RoomChestController>() ?? chestObject.AddComponent<RoomChestController>();
+            chest.Configure(state.roomId, state.chestId, kind, chestState);
+            currentRoomChests.Add(chest);
+        }
+
+        private void ApplyChestContents(RunChestStateSave state, Vector3 chestPosition)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            if (state.contentCoins > 0)
+            {
+                SpawnCoinsForValue(
+                    state.roomId,
+                    $"{state.chestId}_contents",
+                    state.contentCoins,
+                    chestPosition,
+                    StableHash($"{State?.Graph?.BranchId}|{State?.Graph?.Seed ?? 0}|{state.roomId}|{state.chestId}|coins"));
+            }
+
+            var grant = RewardGrantFromChestState(state);
+            if (!grant.IsEmpty)
+            {
+                var result = ApplyRewardGrant(grant);
+                if (result.Applied)
+                {
+                    LastRewardMessage = result.Message;
+                }
+            }
+            else if (state.contentCoins > 0)
+            {
+                LastRewardMessage = $"{state.contentCoins} coins spilled";
+                ShowStatusReveal("Chest Opened", $"{state.contentCoins} coins spilled", new Color(1f, 0.82f, 0.18f, 1f));
+            }
+            else
+            {
+                LastRewardMessage = "Chest was empty";
+            }
+        }
+
+        private RewardGrant RewardGrantFromChestState(RunChestStateSave state)
+        {
+            if (state == null ||
+                string.IsNullOrWhiteSpace(state.contentRewardId) ||
+                !Enum.TryParse(state.contentRewardKind, out RewardKind rewardKind))
+            {
+                return default;
+            }
+
+            var effects = state.contentEffects != null
+                ? state.contentEffects.Select(RewardEffect.FromSaveState).ToArray()
+                : Array.Empty<RewardEffect>();
+
+            return new RewardGrant(
+                $"{state.roomId}:chest:{state.chestId}:reward",
+                state.contentRewardId,
+                state.contentDisplayName,
+                rewardKind,
+                state.contentSouls,
+                0,
+                effects);
+        }
+
+        private RunChestStateSave FindChestState(string roomId, string chestId)
+        {
+            return roomChestStates.FirstOrDefault(candidate => candidate != null && candidate.roomId == roomId && candidate.chestId == chestId);
+        }
+
+        private Vector3 CurrentRewardSpawnPosition(bool preferChestMarker)
+        {
+            if (currentRoomAsset?.ItemSpawns != null)
+            {
+                var marker = preferChestMarker
+                    ? currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeChestMarkerKind)
+                    : null;
+                marker ??= currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeRewardMarkerKind);
+                if (marker?.position != null)
+                {
+                    return new Vector3(marker.position.x, 0.35f, marker.position.z);
+                }
+            }
+
+            var safeStart = currentRoomAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
+            return new Vector3(Mathf.Clamp(safeStart.x + 1.2f, -2.5f, 2.5f), 0.35f, Mathf.Clamp(safeStart.z + 0.8f, -1.5f, 1.5f));
         }
 
         private void SpawnReplacementPickupsForCurrentContext()
@@ -1165,6 +1462,123 @@ namespace Hollow.Branches
                 .Where(state => state != null && state.roomId == roomId && state.isDestroyed)
                 .Select(state => state.objectId)
                 .Where(id => !string.IsNullOrWhiteSpace(id));
+        }
+
+        private void SpawnCoinsForValue(string roomId, string sourceId, int totalValue, Vector3 origin, int seed)
+        {
+            if (totalValue <= 0 || string.IsNullOrWhiteSpace(roomId) || string.IsNullOrWhiteSpace(sourceId))
+            {
+                return;
+            }
+
+            var denominations = CoinDenominationResolver.ResolveExactValue(totalValue, seed);
+            for (var index = 0; index < denominations.Count; index++)
+            {
+                var pickupId = $"{sourceId}_{index:00}";
+                if (looseCoinPickupStates.Any(state => state.pickupId == pickupId))
+                {
+                    continue;
+                }
+
+                var denomination = denominations[index];
+                var offset = CoinScatterOffset(seed, index, denominations.Count);
+                var state = new RunCoinPickupSaveState
+                {
+                    roomId = roomId,
+                    pickupId = pickupId,
+                    denomination = denomination.ToString(),
+                    value = CoinDenominationResolver.ValueFor(denomination),
+                    isCollected = false,
+                    localX = origin.x + offset.x,
+                    localY = 0.24f,
+                    localZ = origin.z + offset.z
+                };
+                looseCoinPickupStates.Add(state);
+                SpawnCoinPickup(state);
+            }
+        }
+
+        private void SpawnLooseCoinPickupsForCurrentRoom()
+        {
+            var roomId = State?.CurrentRoomId.Value ?? string.Empty;
+            foreach (var state in looseCoinPickupStates.Where(candidate => candidate != null && candidate.roomId == roomId && !candidate.isCollected))
+            {
+                SpawnCoinPickup(state);
+            }
+        }
+
+        private void SpawnCoinPickup(RunCoinPickupSaveState state)
+        {
+            if (state == null ||
+                playerController == null ||
+                state.isCollected ||
+                currentCoinPickups.Any(pickup => pickup != null && pickup.PickupId == state.pickupId))
+            {
+                return;
+            }
+
+            var denomination = Enum.TryParse(state.denomination, out CoinDenomination parsedDenomination)
+                ? parsedDenomination
+                : CoinDenomination.Copper;
+            var pickupObject = InstantiateOrCreate(rewardPickupPrefab, $"Coin_{denomination}_{state.pickupId}", PrimitiveType.Sphere, MaterialRoleForCoin(denomination));
+            pickupObject.transform.SetParent(playerController.transform.parent, false);
+            pickupObject.transform.localPosition = new Vector3(state.localX, state.localY <= 0f ? 0.24f : state.localY, state.localZ);
+            pickupObject.transform.localScale = Vector3.one * ScaleForCoin(denomination);
+            PresentationPrefabResolver.InstantiateVisual(PrefabRoleForCoin(denomination), pickupObject.transform, Vector3.zero, Vector3.one);
+            var pickup = pickupObject.GetComponent<CoinPickupController>() ?? pickupObject.AddComponent<CoinPickupController>();
+            pickup.Configure(state.roomId, state.pickupId, denomination, state.value <= 0 ? CoinDenominationResolver.ValueFor(denomination) : state.value, state.isCollected);
+            currentCoinPickups.Add(pickup);
+        }
+
+        private void MarkCoinPickupCollected(string roomId, string pickupId)
+        {
+            var state = looseCoinPickupStates.FirstOrDefault(candidate => candidate.roomId == roomId && candidate.pickupId == pickupId);
+            if (state != null)
+            {
+                state.isCollected = true;
+            }
+        }
+
+        private static Vector3 CoinScatterOffset(int seed, int index, int count)
+        {
+            if (count <= 1)
+            {
+                return Vector3.zero;
+            }
+
+            var angle = (StableHash($"{seed}|coin_angle|{index}") % 628) / 100f;
+            var radius = 0.22f + 0.08f * (index % 4);
+            return new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+        }
+
+        private static float ScaleForCoin(CoinDenomination denomination)
+        {
+            return denomination switch
+            {
+                CoinDenomination.Gold => 0.28f,
+                CoinDenomination.Silver => 0.24f,
+                _ => 0.2f
+            };
+        }
+
+        private static PresentationPrefabRole PrefabRoleForCoin(CoinDenomination denomination)
+        {
+            return denomination switch
+            {
+                CoinDenomination.Gold => PresentationPrefabRole.CoinGold,
+                CoinDenomination.Silver => PresentationPrefabRole.CoinSilver,
+                _ => PresentationPrefabRole.CoinCopper
+            };
+        }
+
+        private static MaterialRole MaterialRoleForCoin(CoinDenomination denomination)
+        {
+            return denomination switch
+            {
+                CoinDenomination.Gold => MaterialRole.CoinGold,
+                CoinDenomination.Silver => MaterialRole.CoinSilver,
+                _ => MaterialRole.CoinCopper
+            };
         }
 
         private void OnInteractiveObjectDestroyed(RoomInteractiveObjectDestroyedContext context)
@@ -1405,6 +1819,26 @@ namespace Hollow.Branches
             }
 
             currentHazardCoinPickups.Clear();
+
+            foreach (var chest in currentRoomChests)
+            {
+                if (chest != null)
+                {
+                    DestroyRuntimeObject(chest.gameObject);
+                }
+            }
+
+            currentRoomChests.Clear();
+
+            foreach (var pickup in currentCoinPickups)
+            {
+                if (pickup != null)
+                {
+                    DestroyRuntimeObject(pickup.gameObject);
+                }
+            }
+
+            currentCoinPickups.Clear();
         }
 
         private void SpawnHubShopAndPortals()
@@ -2352,6 +2786,39 @@ namespace Hollow.Branches
                     localX = state.localX,
                     localY = state.localY,
                     localZ = state.localZ
+                }).ToList(),
+                roomChestStates = roomChestStates.Select(state => new RunChestStateSave
+                {
+                    roomId = state.roomId,
+                    chestId = state.chestId,
+                    kind = state.kind,
+                    state = state.state,
+                    contentsClaimed = state.contentsClaimed,
+                    contentRewardId = state.contentRewardId,
+                    contentDisplayName = state.contentDisplayName,
+                    contentRewardKind = state.contentRewardKind,
+                    contentSouls = state.contentSouls,
+                    contentCoins = state.contentCoins,
+                    contentEffects = state.contentEffects?.Select(effect => new RunRewardEffectSaveState
+                    {
+                        kind = effect.kind,
+                        intValue = effect.intValue,
+                        floatValue = effect.floatValue
+                    }).ToList() ?? new List<RunRewardEffectSaveState>(),
+                    localX = state.localX,
+                    localY = state.localY,
+                    localZ = state.localZ
+                }).ToList(),
+                looseCoinPickups = looseCoinPickupStates.Select(state => new RunCoinPickupSaveState
+                {
+                    roomId = state.roomId,
+                    pickupId = state.pickupId,
+                    denomination = state.denomination,
+                    value = state.value,
+                    isCollected = state.isCollected,
+                    localX = state.localX,
+                    localY = state.localY,
+                    localZ = state.localZ
                 }).ToList()
             };
 
@@ -2552,6 +3019,21 @@ namespace Hollow.Branches
         private static Vector3 Flat(Vector3 value)
         {
             return new Vector3(value.x, 0f, value.z);
+        }
+
+        private static int StableHash(string value)
+        {
+            unchecked
+            {
+                var hash = 2166136261u;
+                foreach (var character in value ?? string.Empty)
+                {
+                    hash ^= (uint)character;
+                    hash *= 16777619u;
+                }
+
+                return (int)(hash & 0x7fffffff);
+            }
         }
 
         private static void DestroyRuntimeObject(GameObject target)

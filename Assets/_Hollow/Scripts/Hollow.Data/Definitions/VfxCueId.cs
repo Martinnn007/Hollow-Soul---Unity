@@ -24,6 +24,8 @@ namespace Hollow.Data.Definitions
         HazardHit,
         BarrelBreak,
         BarrelExplode,
-        HazardCoinDrop
+        HazardCoinDrop,
+        ChestOpen,
+        CoinPickup
     }
 }

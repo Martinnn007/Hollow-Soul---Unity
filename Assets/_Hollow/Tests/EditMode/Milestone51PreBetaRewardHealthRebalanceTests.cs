@@ -38,7 +38,8 @@ namespace Hollow.Tests.EditMode
                 for (var seed = 51001; seed < 51160; seed++)
                 {
                     var plan = ProceduralRewardResolver.CreateSeededPlan(CreateGraph(seed), standard, null, null);
-                    if (!plan.TryResolve("combat_01", out var grant))
+                    Assert.IsTrue(plan.TryResolve("combat_01", out var grant));
+                    if (grant.IsEmpty)
                     {
                         sawNothing = true;
                         continue;

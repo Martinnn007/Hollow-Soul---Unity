@@ -56,6 +56,12 @@ namespace Hollow.Data.Definitions
         DesignerSpike,
         DesignerBarrel,
         DesignerExplosiveBarrel,
-        HazardCoinDrop
+        HazardCoinDrop,
+        ChestNormal,
+        ChestGolden,
+        CoinCopper,
+        CoinSilver,
+        CoinGold,
+        DesignerChest
     }
 }

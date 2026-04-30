@@ -99,9 +99,12 @@ namespace Hollow.RoomDesigner
             foreach (var spawn in runtime.itemSpawns ?? new List<ImportedSpawnPoint>())
             {
                 var position = spawn.position ?? new ImportedVector3();
+                var markerKind = spawn.kind == RoomDesignerMarkerKinds.ChestSpawn
+                    ? RoomDesignerMarkerKinds.ChestSpawn
+                    : RoomDesignerMarkerKinds.RoomReward;
                 project.markers.Add(new RoomDesignerMarker(
                     string.IsNullOrWhiteSpace(spawn.id) ? $"spawn_reward_{rewardIndex}" : spawn.id,
-                    RoomDesignerMarkerKinds.RoomReward,
+                    markerKind,
                     position.x,
                     position.y,
                     position.z));

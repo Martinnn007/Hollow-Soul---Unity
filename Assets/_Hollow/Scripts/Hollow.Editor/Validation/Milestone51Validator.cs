@@ -116,6 +116,12 @@ namespace Hollow.Editor.Validation
                 var plan = ProceduralRewardResolver.CreateSeededPlan(CreateGraph(seed), standard, treasure, boss);
                 if (!plan.TryResolve("combat_01", out var grant))
                 {
+                    failures.Add("M51 standard reward plan did not include an authoritative combat room entry.");
+                    break;
+                }
+
+                if (grant.IsEmpty)
+                {
                     sawNothing = true;
                     continue;
                 }
@@ -164,6 +170,7 @@ namespace Hollow.Editor.Validation
                 return;
             }
 
+            var m52SuccessorStandard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone52AssetGenerator.StandardRewardPoolPath);
             foreach (var scenePath in GameScenes)
             {
                 EditorSceneManager.OpenScene(scenePath);
@@ -174,9 +181,11 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (branch.StandardRewardPool != standard || branch.TreasureRewardPool != treasure || branch.BossRewardPool != boss)
+                var standardMatches = branch.StandardRewardPool == standard ||
+                                      (m52SuccessorStandard != null && branch.StandardRewardPool == m52SuccessorStandard);
+                if (!standardMatches || branch.TreasureRewardPool != treasure || branch.BossRewardPool != boss)
                 {
-                    failures.Add($"{scenePath} BranchSessionController must reference M51 reward pools.");
+                    failures.Add($"{scenePath} BranchSessionController must reference M51 reward pools or the M52 successor standard pool.");
                 }
             }
         }
