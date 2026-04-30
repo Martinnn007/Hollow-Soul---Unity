@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Hollow.Branches;
 using Hollow.Data.Definitions;
 using Hollow.RoomDesigner;
 using Hollow.Rooms;
@@ -62,8 +63,10 @@ namespace Hollow.Editor.Generation
             paths.AddRange(Milestone36AssetGenerator.ApprovedRoomIds.Select(id => $"{Milestone16AssetGenerator.ApprovedRoomDirectory}/{id}.hollowruntime.json"));
             paths.AddRange(Milestone48AssetGenerator.ApprovedRoomIds.Select(id => $"{Milestone16AssetGenerator.ApprovedRoomDirectory}/{id}.hollowruntime.json"));
             paths.AddRange(Milestone53AssetGenerator.ApprovedBossArenaIds.Select(id => $"{Milestone16AssetGenerator.ApprovedRoomDirectory}/{id}.hollowruntime.json"));
+            paths.AddRange(DeveloperLabDefinition.RoomAssetIds.Select(id => $"{Milestone55AssetGenerator.LabRoomDirectory}/{id}.hollowruntime.json"));
             return paths
                 .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Where(File.Exists)
                 .Distinct()
                 .OrderBy(path => path)
                 .ToArray();

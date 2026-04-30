@@ -43,6 +43,7 @@ namespace Hollow.Combat
         private CombatDiagnosticsModel diagnostics;
         private BossDefinition bossDefinition;
         private BossRuntimeController bossRuntime;
+        private InspectionEntityMode inspectionMode = InspectionEntityMode.LiveRuntime;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
 
@@ -75,6 +76,10 @@ namespace Hollow.Combat
         public float ReadabilityStateEndTime => readabilityStateEndTime;
 
         public Vector3 TelegraphDirection => telegraphDirection.sqrMagnitude < 0.001f ? Vector3.forward : telegraphDirection.normalized;
+
+        public InspectionEntityMode InspectionMode => inspectionMode;
+
+        public bool IsInspectionFrozen => inspectionMode == InspectionEntityMode.FrozenRuntime;
 
         public EnemyReadabilityState ReadabilityStateAt(float timeSeconds)
         {
@@ -190,6 +195,15 @@ namespace Hollow.Combat
             diagnostics = nextDiagnostics;
         }
 
+        public void SetInspectionMode(InspectionEntityMode mode)
+        {
+            inspectionMode = mode;
+            if (bossRuntime != null)
+            {
+                bossRuntime.SetInspectionMode(mode);
+            }
+        }
+
         private void Update()
         {
             Tick(Time.deltaTime, Time.time);
@@ -197,7 +211,7 @@ namespace Hollow.Combat
 
         public void Tick(float deltaTime, float timeSeconds)
         {
-            if (!IsAlive || playerController == null)
+            if (!IsAlive || playerController == null || IsInspectionFrozen)
             {
                 return;
             }
@@ -421,7 +435,7 @@ namespace Hollow.Combat
 
         public bool TryApplyContactDamage(float timeSeconds)
         {
-            if (!IsAlive || playerHealth == null || !playerHealth.IsAlive || IsInEntryGrace(timeSeconds) || timeSeconds < nextAllowedContactTime)
+            if (!IsAlive || IsInspectionFrozen || playerHealth == null || !playerHealth.IsAlive || IsInEntryGrace(timeSeconds) || timeSeconds < nextAllowedContactTime)
             {
                 return false;
             }
@@ -540,7 +554,8 @@ namespace Hollow.Combat
 
         private void SpawnSplitChildren()
         {
-            if (behaviorId != EnemyBehaviorId.Splitter ||
+            if (IsInspectionFrozen ||
+                behaviorId != EnemyBehaviorId.Splitter ||
                 Definition.SplitCount <= 0 ||
                 enemyPrefab == null ||
                 roomRuntimeRoot == null ||

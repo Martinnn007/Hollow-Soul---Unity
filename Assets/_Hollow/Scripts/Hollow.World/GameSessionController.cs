@@ -77,9 +77,12 @@ namespace Hollow.World
             var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
             var selectedCharacterId = selectedProfileContext?.SelectedCharacterId ?? "balanced";
             var selectedChallengeId = selectedProfileContext?.SelectedChallengeId ?? string.Empty;
+            var developerLabRequested = selectedProfileContext?.DeveloperLabRequested ?? false;
             var effectiveSessionMode = isDesignerPlaytest
                 ? playtestMode
-                : !string.IsNullOrWhiteSpace(selectedChallengeId)
+                : developerLabRequested
+                    ? RuntimeSessionMode.DeveloperLab
+                    : !string.IsNullOrWhiteSpace(selectedChallengeId)
                     ? RuntimeSessionMode.TransientChallenge
                     : sessionMode;
             SessionState = GameSessionState.Create(effectiveSessionMode, platformKind, launchMode, selectedProfile, spawnPosition, selectedCharacterId, selectedChallengeId);
@@ -116,6 +119,16 @@ namespace Hollow.World
             var profileHost = ProfileSessionHost.Instance;
             var context = profileHost?.SelectedProfileContext;
             var selectedProfile = context?.SelectedProfile;
+
+            if (SessionState?.SessionMode == RuntimeSessionMode.DeveloperLab)
+            {
+                context?.SetLaunchMode(RunLaunchMode.NewRun);
+                context?.SetSelectedCharacterId(characterId);
+                context?.SetSelectedChallengeId(string.Empty);
+                context?.SetDeveloperLabRequested(true);
+                TransitionAndLoad(route);
+                return;
+            }
 
             if (context != null && selectedProfile != null && !selectedProfile.IsEmpty)
             {
@@ -154,7 +167,11 @@ namespace Hollow.World
             var context = profileHost?.SelectedProfileContext;
             var selectedProfile = context?.SelectedProfile;
             var snapshot = CreateCurrentSnapshot();
-            if (snapshot != null && selectedProfile != null && !selectedProfile.IsEmpty && profileHost?.RunSaveStore != null)
+            if (SessionState?.SessionMode != RuntimeSessionMode.DeveloperLab &&
+                snapshot != null &&
+                selectedProfile != null &&
+                !selectedProfile.IsEmpty &&
+                profileHost?.RunSaveStore != null)
             {
                 var slotId = new ProfileSlotId(selectedProfile.SlotIndex);
                 profileHost.RunSaveStore.SaveActiveRun(slotId, snapshot);
@@ -168,6 +185,7 @@ namespace Hollow.World
 
             context?.SetLaunchMode(RunLaunchMode.NewRun);
             context?.SetSelectedChallengeId(string.Empty);
+            context?.SetDeveloperLabRequested(false);
             TransitionAndLoad(AppShellRoute.MainMenu);
         }
 

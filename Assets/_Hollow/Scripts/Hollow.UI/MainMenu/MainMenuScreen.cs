@@ -31,7 +31,7 @@ namespace Hollow.UI.MainMenu
 
             ClearChildren();
 
-            rootPanel = CreatePanel("Panel", transform, new Vector2(680f, 760f), new Color(0.04f, 0.05f, 0.08f, 0.92f));
+            rootPanel = CreatePanel("Panel", transform, new Vector2(680f, 860f), new Color(0.04f, 0.05f, 0.08f, 0.92f));
             AddText(rootPanel, "Hollow Soul", 42, FontStyle.Bold, new Vector2(0f, 315f), new Vector2(620f, 64f));
             AddText(rootPanel, "Unity foundation menu - shared logic, platform-specific presentation", 16, FontStyle.Normal, new Vector2(0f, 270f), new Vector2(620f, 40f));
 
@@ -72,7 +72,8 @@ namespace Hollow.UI.MainMenu
                 AddButton(rootPanel, "New Immersive", new Vector2(190f, -275f), controller.LaunchVisionOSImmersive, null, new Vector2(300f, 40f));
                 AddButton(rootPanel, "Challenges", new Vector2(-190f, -320f), controller.OpenChallenges, new Color(0.55f, 0.24f, 0.62f), new Vector2(300f, 40f));
                 AddButton(rootPanel, "Room Designer", new Vector2(190f, -320f), controller.OpenRoomDesigner, new Color(0.25f, 0.44f, 0.78f), new Vector2(300f, 40f));
-                AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -365f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
+                AddButton(rootPanel, "Developer Lab", new Vector2(0f, -365f), controller.LaunchDeveloperLab, new Color(0.26f, 0.52f, 0.38f), new Vector2(300f, 40f));
+                AddButton(rootPanel, "Back To Profiles", new Vector2(0f, -410f), controller.BackToProfiles, new Color(0.22f, 0.25f, 0.33f));
             }
         }
 

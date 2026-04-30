@@ -29,10 +29,17 @@ namespace Hollow.Combat
         private bool spawnedSecondMirrorSplit;
         private bool spawnedLarvaMinions;
         private string statusText = "Watching";
+        private InspectionEntityMode inspectionMode = InspectionEntityMode.LiveRuntime;
 
         public BossDefinition Definition => definition;
 
         public string StatusText => statusText;
+
+        public void SetInspectionMode(InspectionEntityMode mode)
+        {
+            inspectionMode = mode;
+            statusText = mode == InspectionEntityMode.FrozenRuntime ? "Frozen for inspection" : statusText;
+        }
 
         public void Configure(
             EnemyRuntimeController nextOwner,
@@ -59,7 +66,11 @@ namespace Hollow.Combat
         public void Tick(float deltaTime, float timeSeconds)
         {
             CleanupProjectiles();
-            if (owner == null || definition == null || player == null || !owner.IsAlive)
+            if (inspectionMode == InspectionEntityMode.FrozenRuntime ||
+                owner == null ||
+                definition == null ||
+                player == null ||
+                !owner.IsAlive)
             {
                 return;
             }

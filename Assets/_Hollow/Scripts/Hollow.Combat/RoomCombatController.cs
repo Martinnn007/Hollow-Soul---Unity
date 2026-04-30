@@ -32,6 +32,8 @@ namespace Hollow.Combat
         private RoomHazardTuningProfileDefinition resolvedHazardTuningProfile;
         private RoomCombatEncounterContext activeEncounterContext = RoomCombatEncounterContext.Empty;
         private bool initialized;
+        private InspectionEntityMode inspectionMode = InspectionEntityMode.LiveRuntime;
+        private bool ignoreEnemiesForRoomClear;
         private readonly CombatDiagnosticsModel diagnostics = new();
 
         public event Action<RoomCombatController> RoomCleared;
@@ -64,6 +66,10 @@ namespace Hollow.Combat
 
         public PlaceholderPlayerController PlayerController => playerController;
 
+        public InspectionEntityMode InspectionMode => inspectionMode;
+
+        public bool IgnoresEnemiesForRoomClear => ignoreEnemiesForRoomClear;
+
         public void Configure(GameObject nextEnemyPrefab, GameObject nextProjectilePrefab)
         {
             enemyPrefab = nextEnemyPrefab;
@@ -81,6 +87,12 @@ namespace Hollow.Combat
         public void ConfigureBossCatalog(BossCatalogDefinition nextBossCatalog)
         {
             bossCatalog = nextBossCatalog;
+        }
+
+        public void ConfigureInspectionMode(InspectionEntityMode mode, bool ignoreRoomClear)
+        {
+            inspectionMode = mode;
+            ignoreEnemiesForRoomClear = ignoreRoomClear;
         }
 
         private void Start()
@@ -259,6 +271,14 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (ignoreEnemiesForRoomClear)
+            {
+                ObjectiveState = RoomObjectiveState.Cleared;
+                TintDoorsOnClear();
+                diagnostics.SetEnemyCounts(enemies);
+                return;
+            }
+
             if (EnemiesRemaining() == 0)
             {
                 ObjectiveState = RoomObjectiveState.Cleared;
@@ -273,6 +293,11 @@ namespace Hollow.Combat
 
         public int EnemiesRemaining()
         {
+            if (ignoreEnemiesForRoomClear)
+            {
+                return 0;
+            }
+
             return enemies.Count(enemy => enemy != null && enemy.IsAlive);
         }
 
@@ -286,6 +311,7 @@ namespace Hollow.Combat
             enemy.SpawnedChild -= OnEnemySpawnedChild;
             enemy.SpawnedChild += OnEnemySpawnedChild;
             enemy.ConfigureCombatFeel(CombatFeelProfile);
+            enemy.SetInspectionMode(inspectionMode);
             enemy.BeginEntryGrace(EntryGraceSeconds, Time.time);
             enemies.Add(enemy);
             diagnostics.SetEnemyCounts(enemies);

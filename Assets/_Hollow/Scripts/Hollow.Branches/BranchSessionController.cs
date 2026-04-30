@@ -226,6 +226,14 @@ namespace Hollow.Branches
 
         public int MacroBranchSeed => macroBranchSeed;
 
+        public bool IsDeveloperLab => gameSessionState?.SessionMode == RuntimeSessionMode.DeveloperLab;
+
+        public RoomCombatController RoomCombatController => roomCombatController;
+
+        public PlaceholderPlayerController PlayerController => playerController;
+
+        public RoomRuntimeRoot RuntimeRoomRoot => roomRuntimeRoot;
+
         public void Configure(GameObject nextRewardPickupPrefab, GameObject nextHubReturnPortalPrefab)
         {
             rewardPickupPrefab = nextRewardPickupPrefab;
@@ -365,7 +373,7 @@ namespace Hollow.Branches
             looseCoinPickupStates.Clear();
             latestPickupReveal = PickupRevealModel.Empty;
             pickupRevealSequence = 0;
-            activeChallenge = ResolveActiveChallenge();
+            activeChallenge = IsDeveloperLab ? null : ResolveActiveChallenge();
             ApplySelectedCharacterForFreshRun();
             ApplyChallengeRulesForFreshRun();
             rewardCounter.SetClaimedRewards(0);
@@ -373,13 +381,17 @@ namespace Hollow.Branches
             branchDepth = 0;
             challengeStartedRealtime = activeChallenge != null ? Time.realtimeSinceStartup : 0f;
             challengeCompletionRecorded = false;
-            runSeed = activeChallenge != null
+            runSeed = IsDeveloperLab
+                ? DeveloperLabDefinition.Seed
+                : activeChallenge != null
                 ? activeChallenge.FixedRunSeed
                 : ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
             worldIndex = 1;
-            worldPhase = IsWorldLoopRuntime() ? RunWorldPhase.Prologue : RunWorldPhase.Legacy;
+            worldPhase = IsDeveloperLab ? RunWorldPhase.Legacy : IsWorldLoopRuntime() ? RunWorldPhase.Prologue : RunWorldPhase.Legacy;
             activeHubPortalId = string.Empty;
-            currentBranchSeed = worldPhase == RunWorldPhase.Prologue
+            currentBranchSeed = IsDeveloperLab
+                ? DeveloperLabDefinition.Seed
+                : worldPhase == RunWorldPhase.Prologue
                 ? RunSeedDeriver.PrologueBranchSeed(runSeed, worldIndex)
                 : runSeed;
             bossKeyState = BossKeyState.None;
@@ -683,6 +695,7 @@ namespace Hollow.Branches
                 State.CurrentRoom.MarkRewardPending();
             }
 
+            roomCombatController.ConfigureInspectionMode(IsDeveloperLab ? InspectionEntityMode.FrozenRuntime : InspectionEntityMode.LiveRuntime, IsDeveloperLab);
             roomCombatController.BeginRoom(
                 roomRuntimeRoot,
                 playerController,
@@ -701,6 +714,8 @@ namespace Hollow.Branches
             SpawnSavedChestsForCurrentRoom();
             SpawnLooseCoinPickupsForCurrentRoom();
             SpawnReplacementPickupsForCurrentContext();
+            PopulateDeveloperLabRoomIfNeeded();
+            EnsureDebugSpawnMenu();
             SpawnHubPortalIfReady();
             CheckpointActiveRun();
         }
@@ -723,6 +738,39 @@ namespace Hollow.Branches
             UpdateDoorVisuals();
             SpawnRewardIfNeeded();
             SpawnHubPortalIfReady();
+        }
+
+        private void PopulateDeveloperLabRoomIfNeeded()
+        {
+            if (!IsDeveloperLab || State?.CurrentRoom == null)
+            {
+                return;
+            }
+
+            DeveloperLabRoomPopulator.Populate(
+                State.CurrentRoomId,
+                roomRuntimeRoot,
+                playerController,
+                roomCombatController,
+                enemyCatalog: roomCombatController != null ? roomCombatController.EnemyCatalog : null,
+                bossCatalog: bossCatalog,
+                difficultyTier: roomCombatController != null ? roomCombatController.DifficultyTier : null);
+        }
+
+        private void EnsureDebugSpawnMenu()
+        {
+            if (gameObject == null || roomRuntimeRoot == null || playerController == null || roomCombatController == null)
+            {
+                return;
+            }
+
+            if (!Application.isEditor && !Debug.isDebugBuild)
+            {
+                return;
+            }
+
+            var menu = GetComponent<DebugSpawnMenuController>() ?? gameObject.AddComponent<DebugSpawnMenuController>();
+            menu.Bind(this);
         }
 
         private bool TryClaimBossKey()
@@ -1975,6 +2023,11 @@ namespace Hollow.Branches
         private BranchFloorGraph CreateFreshGraph()
         {
             var seed = currentBranchSeed == 0 ? macroBranchSeed : currentBranchSeed;
+            if (IsDeveloperLab && branchContent != null)
+            {
+                return DeveloperInspectionBranchBuilder.CreateGraph(branchContent, DeveloperLabDefinition.Seed);
+            }
+
             if (branchContent != null && branchContent.HasMacroFixturePool)
             {
                 if (branchGenerationSettings != null)
@@ -2107,6 +2160,11 @@ namespace Hollow.Branches
 
         private string ChallengeSummaryLine()
         {
+            if (IsDeveloperLab)
+            {
+                return $"Developer Lab: M55 inspection branch | F4 spawn menu | Seed {DeveloperLabDefinition.Seed}\n";
+            }
+
             if (activeChallenge == null)
             {
                 return string.Empty;
@@ -2128,7 +2186,8 @@ namespace Hollow.Branches
 
         private bool IsWorldLoopRuntime()
         {
-            return branchContent != null &&
+            return !IsDeveloperLab &&
+                   branchContent != null &&
                    branchContent.HasMacroFixturePool &&
                    branchGenerationSettings != null &&
                    encounterCatalog != null;
@@ -2764,7 +2823,7 @@ namespace Hollow.Branches
 
         private void CheckpointActiveRun()
         {
-            if (suppressCheckpoint || !canPersist || activeRunCompletedOrFailed || runSaveStore == null)
+            if (IsDeveloperLab || suppressCheckpoint || !canPersist || activeRunCompletedOrFailed || runSaveStore == null)
             {
                 return;
             }

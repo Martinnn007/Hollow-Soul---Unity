@@ -123,6 +123,7 @@ namespace Hollow.UI.MainMenu
             pendingNewRunPlatformKind = platformKind;
             selectedProfileContext.SetSelectedCharacterId("balanced");
             selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            selectedProfileContext.SetDeveloperLabRequested(false);
             State = MainMenuState.CharacterSelect;
             ErrorMessage = string.Empty;
         }
@@ -138,6 +139,7 @@ namespace Hollow.UI.MainMenu
             State = MainMenuState.Launching;
             selectedProfileContext.SetSelectedCharacterId(characterId);
             selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            selectedProfileContext.SetDeveloperLabRequested(false);
             var route = RouteForPlatform(pendingNewRunPlatformKind);
             var slotId = new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex);
             if (profileStore is IRunSaveStore runSaveStore)
@@ -179,6 +181,7 @@ namespace Hollow.UI.MainMenu
             var route = RouteForPlatform(platformKind);
             selectedProfileContext.SetLaunchMode(RunLaunchMode.ContinueRun);
             selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            selectedProfileContext.SetDeveloperLabRequested(false);
             var updated = profileStore.MarkLastPlayed(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex));
             selectedProfileContext.UpdateSelectedProfile(updated);
             appStateMachine.TransitionTo(route);
@@ -194,6 +197,7 @@ namespace Hollow.UI.MainMenu
             }
 
             selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            selectedProfileContext.SetDeveloperLabRequested(false);
             State = MainMenuState.ChallengeSelect;
             ErrorMessage = string.Empty;
         }
@@ -217,6 +221,7 @@ namespace Hollow.UI.MainMenu
             var route = RouteForPlatform(platformKind);
             selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
             selectedProfileContext.SetSelectedChallengeId(challenge.ChallengeId);
+            selectedProfileContext.SetDeveloperLabRequested(false);
             selectedProfileContext.SetSelectedCharacterId(challenge.SelectedCharacterId);
             if (profileStore is IChallengeResultStore challengeResultStore)
             {
@@ -240,7 +245,26 @@ namespace Hollow.UI.MainMenu
                 State = MainMenuState.SlotMain;
                 ErrorMessage = string.Empty;
                 selectedProfileContext.SetSelectedChallengeId(string.Empty);
+                selectedProfileContext.SetDeveloperLabRequested(false);
             }
+        }
+
+        public AppShellRoute LaunchDeveloperLab()
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return AppShellRoute.MainMenu;
+            }
+
+            State = MainMenuState.Launching;
+            selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
+            selectedProfileContext.SetSelectedCharacterId("balanced");
+            selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            selectedProfileContext.SetDeveloperLabRequested(true);
+            var route = AppShellRoute.GameWindows;
+            appStateMachine.TransitionTo(route);
+            return route;
         }
 
         public AppShellRoute OpenRoomDesigner()
@@ -253,6 +277,7 @@ namespace Hollow.UI.MainMenu
 
             State = MainMenuState.Launching;
             var route = AppShellRoute.RoomDesigner;
+            selectedProfileContext.SetDeveloperLabRequested(false);
             appStateMachine.TransitionTo(route);
             return route;
         }
