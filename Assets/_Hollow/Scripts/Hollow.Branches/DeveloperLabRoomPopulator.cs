@@ -100,13 +100,13 @@ namespace Hollow.Branches
 
         private static void PopulateEnvironment(Transform root)
         {
-            AddDisplay(root, "Rock obstacle", new Vector3(-8f, 0.5f, 1.6f), new Vector3(1f, 1f, 1f), MaterialRole.RoomObstacleRock, PrimitiveType.Cube);
+            AddArtPassDisplay(root, "Rock obstacle", new Vector3(-8f, 0.5f, 1.6f), PresentationPrefabRole.RoomObstacleRock);
             AddDisplay(root, "Pit / hole marker", new Vector3(-5.5f, 0.03f, 1.6f), new Vector3(1.2f, 0.06f, 1.2f), MaterialRole.DesignerHole, PrimitiveType.Cube);
-            AddDisplay(root, "Spike hazard", new Vector3(-3f, 0.08f, 1.6f), new Vector3(0.8f, 0.12f, 0.8f), MaterialRole.RoomHazardSpike, PrimitiveType.Cylinder);
-            AddDisplay(root, "Standard barrel", new Vector3(-0.5f, 0.45f, 1.6f), new Vector3(0.7f, 0.9f, 0.7f), MaterialRole.RoomBarrel, PrimitiveType.Cylinder);
-            AddDisplay(root, "Explosive barrel", new Vector3(2f, 0.45f, 1.6f), new Vector3(0.7f, 0.9f, 0.7f), MaterialRole.RoomExplosiveBarrel, PrimitiveType.Cylinder);
-            AddDisplay(root, "Door active", new Vector3(4.5f, 0.65f, 1.6f), new Vector3(1f, 1.3f, 0.18f), MaterialRole.DoorActive, PrimitiveType.Cube);
-            AddDisplay(root, "Door locked", new Vector3(7f, 0.65f, 1.6f), new Vector3(1f, 1.3f, 0.18f), MaterialRole.DoorLocked, PrimitiveType.Cube);
+            AddArtPassDisplay(root, "Spike hazard", new Vector3(-3f, 0.08f, 1.6f), PresentationPrefabRole.RoomHazardSpike);
+            AddArtPassDisplay(root, "Standard barrel", new Vector3(-0.5f, 0.45f, 1.6f), PresentationPrefabRole.StandardBarrel);
+            AddArtPassDisplay(root, "Explosive barrel", new Vector3(2f, 0.45f, 1.6f), PresentationPrefabRole.ExplosiveBarrel);
+            AddArtPassDisplay(root, "Door active", new Vector3(4.5f, 0.65f, 1.6f), PresentationPrefabRole.DoorActive);
+            AddArtPassDisplay(root, "Door locked", new Vector3(7f, 0.65f, 1.6f), PresentationPrefabRole.DoorLocked);
         }
 
         private static void PopulateEconomy(Transform root)
@@ -114,10 +114,10 @@ namespace Hollow.Branches
             AddCoin(root, CoinDenomination.Copper, new Vector3(-8f, 0.24f, 1.4f));
             AddCoin(root, CoinDenomination.Silver, new Vector3(-6.8f, 0.24f, 1.4f));
             AddCoin(root, CoinDenomination.Gold, new Vector3(-5.6f, 0.24f, 1.4f));
-            AddDisplay(root, "HP refill", new Vector3(-3.4f, 0.32f, 1.4f), Vector3.one * 0.58f, MaterialRole.RewardPickup, PrimitiveType.Sphere);
+            AddArtPassDisplay(root, "HP refill", new Vector3(-3.4f, 0.32f, 1.4f), PresentationPrefabRole.RewardPickup);
             AddChest(root, ChestKind.Normal, new Vector3(-0.8f, 0.34f, 1.4f));
             AddChest(root, ChestKind.Golden, new Vector3(1.8f, 0.34f, 1.4f));
-            AddDisplay(root, "Room reward pickup", new Vector3(4.6f, 0.32f, 1.4f), Vector3.one * 0.62f, MaterialRole.RewardPickup, PrimitiveType.Sphere);
+            AddArtPassDisplay(root, "Room reward pickup", new Vector3(4.6f, 0.32f, 1.4f), PresentationPrefabRole.RewardPickup);
         }
 
         private static void PopulateBuildPickups(Transform root)
@@ -126,7 +126,7 @@ namespace Hollow.Branches
             {
                 var x = -10f + (index % 6) * 4f;
                 var z = index < 6 ? 1.9f : index < 12 ? 0f : -1.9f;
-                AddDisplay(root, BuildPickupLabels[index], new Vector3(x, 0.32f, z), Vector3.one * 0.5f, MaterialRole.RewardPickup, PrimitiveType.Cube);
+                AddArtPassDisplay(root, BuildPickupLabels[index], new Vector3(x, 0.32f, z), RoleForBuildPickup(BuildPickupLabels[index]));
             }
         }
 
@@ -141,13 +141,13 @@ namespace Hollow.Branches
 
         private static void PopulateProjectilesAndVfx(Transform root)
         {
-            AddDisplay(root, "Player projectile", new Vector3(-8f, 0.28f, 1.4f), Vector3.one * 0.28f, MaterialRole.Projectile, PrimitiveType.Sphere);
+            AddArtPassDisplay(root, "Player projectile", new Vector3(-8f, 0.28f, 1.4f), PresentationPrefabRole.Projectile);
             AddDisplay(root, "Power red shot", new Vector3(-6.4f, 0.28f, 1.4f), Vector3.one * 0.32f, MaterialRole.ProjectilePower, PrimitiveType.Sphere);
-            AddDisplay(root, "Enemy projectile", new Vector3(-4.8f, 0.28f, 1.4f), Vector3.one * 0.32f, MaterialRole.EnemyProjectile, PrimitiveType.Sphere);
+            AddArtPassDisplay(root, "Enemy projectile", new Vector3(-4.8f, 0.28f, 1.4f), PresentationPrefabRole.EnemyProjectile);
             AddDisplay(root, "Shield guard", new Vector3(-2.6f, 0.5f, 1.4f), new Vector3(0.08f, 1f, 1.4f), MaterialRole.ShieldGuard, PrimitiveType.Cube);
             AddDisplay(root, "Shield parry", new Vector3(-0.8f, 0.5f, 1.4f), new Vector3(0.08f, 1f, 1.4f), MaterialRole.ShieldParry, PrimitiveType.Cube);
-            AddDisplay(root, "Explosion cue", new Vector3(1.4f, 0.24f, 1.4f), Vector3.one * 0.8f, MaterialRole.RoomExplosiveBarrel, PrimitiveType.Sphere);
-            AddDisplay(root, "Pickup VFX", new Vector3(3.8f, 0.24f, 1.4f), Vector3.one * 0.5f, MaterialRole.VfxDebug, PrimitiveType.Sphere);
+            AddArtPassDisplay(root, "Explosion cue", new Vector3(1.4f, 0.24f, 1.4f), PresentationPrefabRole.VfxChestOpen);
+            AddArtPassDisplay(root, "Pickup VFX", new Vector3(3.8f, 0.24f, 1.4f), PresentationPrefabRole.VfxRewardClaim);
         }
 
         private static void PopulateHazardLaneNotes(Transform root)
@@ -157,12 +157,12 @@ namespace Hollow.Branches
 
         private static void PopulateProgressionProps(Transform root)
         {
-            AddDisplay(root, "Boss key", new Vector3(-8f, 0.38f, 1.4f), Vector3.one * 0.48f, MaterialRole.BossKeyPickup, PrimitiveType.Sphere);
-            AddDisplay(root, "Shop stand/card", new Vector3(-5.2f, 0.48f, 1.4f), new Vector3(1f, 0.9f, 0.45f), MaterialRole.HubShop, PrimitiveType.Cube);
-            AddDisplay(root, "Hub portal", new Vector3(-2f, 0.6f, 1.4f), Vector3.one * 0.9f, MaterialRole.HubReturnPortal, PrimitiveType.Cylinder);
-            AddDisplay(root, "Branch portal", new Vector3(1f, 0.6f, 1.4f), Vector3.one * 0.9f, MaterialRole.NextBranchPortal, PrimitiveType.Cylinder);
-            AddDisplay(root, "Defeated portal", new Vector3(4f, 0.6f, 1.4f), Vector3.one * 0.9f, MaterialRole.DoorUnavailable, PrimitiveType.Cylinder);
-            AddDisplay(root, "Final portal", new Vector3(7f, 0.6f, 1.4f), Vector3.one * 0.9f, MaterialRole.SecretDoorDebug, PrimitiveType.Cylinder);
+            AddArtPassDisplay(root, "Boss key", new Vector3(-8f, 0.38f, 1.4f), PresentationPrefabRole.BossKeyPickup);
+            AddArtPassDisplay(root, "Shop stand/card", new Vector3(-5.2f, 0.48f, 1.4f), PresentationPrefabRole.HubShop);
+            AddArtPassDisplay(root, "Hub portal", new Vector3(-2f, 0.6f, 1.4f), PresentationPrefabRole.HubReturnPortal);
+            AddArtPassDisplay(root, "Branch portal", new Vector3(1f, 0.6f, 1.4f), PresentationPrefabRole.NextBranchPortal);
+            AddArtPassDisplay(root, "Defeated portal", new Vector3(4f, 0.6f, 1.4f), PresentationPrefabRole.DoorUnavailable);
+            AddArtPassDisplay(root, "Final portal", new Vector3(7f, 0.6f, 1.4f), PresentationPrefabRole.SecretDoorDebug);
         }
 
         private static void PopulateBosses(
@@ -304,25 +304,68 @@ namespace Hollow.Branches
             return display;
         }
 
+        private static GameObject AddArtPassDisplay(Transform root, string label, Vector3 localPosition, PresentationPrefabRole role)
+        {
+            var display = new GameObject($"LabDisplay.{label}");
+            display.transform.SetParent(root, false);
+            display.transform.localPosition = localPosition;
+            PresentationPrefabResolver.InstantiateVisual(role, display.transform, Vector3.zero, Vector3.one);
+            AddLabel(display.transform, label, new Vector3(0f, 0.92f, 0f), Color.white, 0.065f);
+            return display;
+        }
+
         private static void AddCoin(Transform root, CoinDenomination denomination, Vector3 localPosition)
         {
             var role = denomination switch
             {
-                CoinDenomination.Silver => MaterialRole.CoinSilver,
-                CoinDenomination.Gold => MaterialRole.CoinGold,
-                _ => MaterialRole.CoinCopper
+                CoinDenomination.Silver => PresentationPrefabRole.CoinSilver,
+                CoinDenomination.Gold => PresentationPrefabRole.CoinGold,
+                _ => PresentationPrefabRole.CoinCopper
             };
-            var coin = AddDisplay(root, $"{denomination} coin", localPosition, Vector3.one * (denomination == CoinDenomination.Gold ? 0.42f : 0.32f), role, PrimitiveType.Cylinder);
+            var coin = AddArtPassDisplay(root, $"{denomination} coin", localPosition, role);
             var pickup = coin.AddComponent<CoinPickupController>();
             pickup.Configure("developer_lab", $"lab_{denomination}", denomination, CoinDenominationResolver.ValueFor(denomination), false);
         }
 
         private static void AddChest(Transform root, ChestKind kind, Vector3 localPosition)
         {
-            var role = kind == ChestKind.Golden ? MaterialRole.ChestGolden : MaterialRole.ChestNormal;
-            var chest = AddDisplay(root, $"{kind} chest", localPosition, new Vector3(0.8f, 0.48f, 0.62f), role, PrimitiveType.Cube);
+            var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            var chest = AddArtPassDisplay(root, $"{kind} chest", localPosition, role);
             var controller = chest.AddComponent<RoomChestController>();
             controller.Configure("developer_lab", $"lab_{kind}", kind, ChestState.Unopened);
+        }
+
+        private static PresentationPrefabRole RoleForBuildPickup(string pickupId)
+        {
+            if (pickupId.Contains("blade", StringComparison.OrdinalIgnoreCase) ||
+                pickupId.Contains("sword", StringComparison.OrdinalIgnoreCase) ||
+                pickupId.Contains("fang", StringComparison.OrdinalIgnoreCase))
+            {
+                return PresentationPrefabRole.WeaponMelee;
+            }
+
+            if (pickupId.Contains("bolt", StringComparison.OrdinalIgnoreCase) ||
+                pickupId.Contains("bow", StringComparison.OrdinalIgnoreCase))
+            {
+                return PresentationPrefabRole.WeaponRanged;
+            }
+
+            if (pickupId.Contains("armor", StringComparison.OrdinalIgnoreCase))
+            {
+                return PresentationPrefabRole.Armor;
+            }
+
+            if (pickupId is "mending_charm" or "echo_burst")
+            {
+                return PresentationPrefabRole.ActiveItemPickup;
+            }
+
+            if (pickupId.EndsWith("_card", StringComparison.OrdinalIgnoreCase))
+            {
+                return PresentationPrefabRole.ConsumableCardPickup;
+            }
+
+            return PresentationPrefabRole.RewardPickup;
         }
 
         private static TextMesh AddLabel(Transform parent, string text, Vector3 localPosition, Color color, float scale)

@@ -2162,7 +2162,7 @@ namespace Hollow.Branches
         {
             if (IsDeveloperLab)
             {
-                return $"Developer Lab: M55 inspection branch | F4 spawn menu | Seed {DeveloperLabDefinition.Seed}\n";
+                return $"Developer Lab: M55 inspection branch | Debug Spawn button | Seed {DeveloperLabDefinition.Seed}\n";
             }
 
             if (activeChallenge == null)

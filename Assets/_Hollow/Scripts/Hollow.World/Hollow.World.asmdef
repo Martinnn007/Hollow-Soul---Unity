@@ -7,7 +7,8 @@
     "Hollow.Platform",
     "Hollow.Presentation",
     "Hollow.Rooms",
-    "Hollow.Entities"
+    "Hollow.Entities",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

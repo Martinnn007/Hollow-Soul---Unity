@@ -7,6 +7,7 @@ using Hollow.Presentation;
 using Hollow.Rooms;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Hollow.World
 {
@@ -191,7 +192,9 @@ namespace Hollow.World
 
         private void Update()
         {
-            if (SessionState?.SessionMode == RuntimeSessionMode.TransientRoomDesignerPlaytest && Input.GetKeyDown(KeyCode.Escape))
+            if (SessionState?.SessionMode == RuntimeSessionMode.TransientRoomDesignerPlaytest &&
+                Keyboard.current != null &&
+                Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 if (HollowBootstrap.Instance != null)
                 {

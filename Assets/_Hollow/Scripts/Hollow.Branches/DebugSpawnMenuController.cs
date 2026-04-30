@@ -46,54 +46,53 @@ namespace Hollow.Branches
             if (!IsAvailable())
             {
                 visible = false;
-                return;
-            }
-
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F4))
-            {
-                visible = !visible;
-            }
-
-            if (!visible)
-            {
-                return;
-            }
-
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F6))
-            {
-                CycleGroup(1);
-            }
-
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F7))
-            {
-                CycleEntity(1);
-            }
-
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F8))
-            {
-                spawnFrozen = !spawnFrozen;
-            }
-
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F5))
-            {
-                SpawnSelected();
             }
         }
 
         private void OnGUI()
         {
-            if (!visible || !IsAvailable())
+            if (!IsAvailable())
             {
                 return;
             }
 
-            windowRect = GUILayout.Window(WindowId, windowRect, DrawWindow, "Developer Spawn Menu (F4)");
+            DrawToggleButton();
+            if (!visible)
+            {
+                return;
+            }
+
+            windowRect = GUILayout.Window(WindowId, windowRect, DrawWindow, "Developer Spawn Menu");
+        }
+
+        private void DrawToggleButton()
+        {
+            const float width = 168f;
+            const float height = 42f;
+            const float margin = 22f;
+            var rect = new Rect(
+                Mathf.Max(margin, Screen.width - width - margin),
+                Mathf.Max(margin, Screen.height - height - margin),
+                width,
+                height);
+
+            var previous = GUI.backgroundColor;
+            GUI.backgroundColor = visible
+                ? new Color(0.42f, 0.18f, 0.12f, 0.95f)
+                : new Color(0.12f, 0.36f, 0.24f, 0.95f);
+            if (GUI.Button(rect, visible ? "Close Debug" : "Debug Spawn"))
+            {
+                visible = !visible;
+            }
+
+            GUI.backgroundColor = previous;
         }
 
         private void DrawWindow(int id)
         {
             var group = CurrentGroup();
             GUILayout.Label("Editor/development only. Spawns are non-authoritative and never count for room clear.");
+            GUILayout.Label("Use the bottom-right button to open or close this menu.");
             GUILayout.Space(6f);
             GUILayout.Label($"Group: {group.Name}");
             GUILayout.Label($"Entity: {CurrentEntity()}");
@@ -105,7 +104,7 @@ namespace Hollow.Branches
                 CycleGroup(-1);
             }
 
-            if (GUILayout.Button("Next Group (F6)"))
+            if (GUILayout.Button("Next Group"))
             {
                 CycleGroup(1);
             }
@@ -116,13 +115,13 @@ namespace Hollow.Branches
                 CycleEntity(-1);
             }
 
-            if (GUILayout.Button("Next Entity (F7)"))
+            if (GUILayout.Button("Next Entity"))
             {
                 CycleEntity(1);
             }
             GUILayout.EndHorizontal();
-            spawnFrozen = GUILayout.Toggle(spawnFrozen, "Spawn frozen (F8)");
-            if (GUILayout.Button("Spawn In Front Of Player (F5)"))
+            spawnFrozen = GUILayout.Toggle(spawnFrozen, "Spawn frozen");
+            if (GUILayout.Button("Spawn In Front Of Player"))
             {
                 SpawnSelected();
             }
@@ -186,7 +185,7 @@ namespace Hollow.Branches
                     SpawnPortalOrDoor(entity, position);
                     break;
                 default:
-                    SpawnPickupStand(entity, position);
+                    SpawnPickupStand(group.Name, entity, position);
                     break;
             }
         }
@@ -200,11 +199,11 @@ namespace Hollow.Branches
                     : CoinDenomination.Copper;
             var role = denomination switch
             {
-                CoinDenomination.Gold => MaterialRole.CoinGold,
-                CoinDenomination.Silver => MaterialRole.CoinSilver,
-                _ => MaterialRole.CoinCopper
+                CoinDenomination.Gold => PresentationPrefabRole.CoinGold,
+                CoinDenomination.Silver => PresentationPrefabRole.CoinSilver,
+                _ => PresentationPrefabRole.CoinCopper
             };
-            var coin = CreatePrimitive($"DebugCoin.{denomination}", PrimitiveType.Cylinder, position, Vector3.one * 0.34f, role);
+            var coin = CreateArtPassHost($"DebugCoin.{denomination}", position, role);
             coin.AddComponent<CoinPickupController>().Configure("debug_spawn", Guid.NewGuid().ToString("N"), denomination, CoinDenominationResolver.ValueFor(denomination), false);
             AddLabel(coin.transform, $"{denomination} coin");
         }
@@ -212,22 +211,31 @@ namespace Hollow.Branches
         private void SpawnChest(string entity, Vector3 position)
         {
             var kind = entity.Contains("golden", StringComparison.OrdinalIgnoreCase) ? ChestKind.Golden : ChestKind.Normal;
-            var role = kind == ChestKind.Golden ? MaterialRole.ChestGolden : MaterialRole.ChestNormal;
-            var chest = CreatePrimitive($"DebugChest.{kind}", PrimitiveType.Cube, position + Vector3.up * 0.18f, new Vector3(0.8f, 0.48f, 0.62f), role);
+            var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            var chest = CreateArtPassHost($"DebugChest.{kind}", position + Vector3.up * 0.18f, role);
             chest.AddComponent<RoomChestController>().Configure("debug_spawn", Guid.NewGuid().ToString("N"), kind, ChestState.Unopened);
             AddLabel(chest.transform, $"{kind} chest");
         }
 
         private void SpawnProp(string entity, Vector3 position)
         {
-            var role = entity switch
+            var prefabRole = entity switch
             {
-                "spike" => MaterialRole.RoomHazardSpike,
-                "standard_barrel" => MaterialRole.RoomBarrel,
-                "explosive_barrel" => MaterialRole.RoomExplosiveBarrel,
-                "pit_marker" => MaterialRole.DesignerHole,
-                _ => MaterialRole.RoomObstacleRock
+                "rock" => PresentationPrefabRole.RoomObstacleRock,
+                "spike" => PresentationPrefabRole.RoomHazardSpike,
+                "standard_barrel" => PresentationPrefabRole.StandardBarrel,
+                "explosive_barrel" => PresentationPrefabRole.ExplosiveBarrel,
+                _ => default
             };
+
+            if (prefabRole != default)
+            {
+                var prop = CreateArtPassHost($"DebugProp.{entity}", position, prefabRole);
+                AddLabel(prop.transform, entity);
+                return;
+            }
+
+            var role = MaterialRole.DesignerHole;
             var primitive = entity.Contains("barrel", StringComparison.OrdinalIgnoreCase) || entity == "spike"
                 ? PrimitiveType.Cylinder
                 : PrimitiveType.Cube;
@@ -240,12 +248,25 @@ namespace Hollow.Branches
 
         private void SpawnProjectileOrVfx(string entity, Vector3 position)
         {
+            var prefabRole = entity switch
+            {
+                "player_projectile" => PresentationPrefabRole.Projectile,
+                "enemy_projectile" => PresentationPrefabRole.EnemyProjectile,
+                "explosion" => PresentationPrefabRole.VfxChestOpen,
+                _ => default
+            };
+
+            if (prefabRole != default)
+            {
+                var artPassVisual = CreateArtPassHost($"DebugVfx.{entity}", position + Vector3.up * 0.3f, prefabRole);
+                AddLabel(artPassVisual.transform, entity);
+                return;
+            }
+
             var role = entity switch
             {
                 "power_projectile" => MaterialRole.ProjectilePower,
-                "enemy_projectile" => MaterialRole.EnemyProjectile,
                 "shield_guard" => MaterialRole.ShieldGuard,
-                "explosion" => MaterialRole.RoomExplosiveBarrel,
                 _ => MaterialRole.Projectile
             };
             var scale = entity == "shield_guard" ? new Vector3(0.08f, 1f, 1.4f) : Vector3.one * 0.36f;
@@ -257,23 +278,42 @@ namespace Hollow.Branches
         {
             var role = entity switch
             {
-                "door_locked" => MaterialRole.DoorLocked,
-                "door_cleared" => MaterialRole.DoorCleared,
-                "hub_portal" => MaterialRole.HubReturnPortal,
-                "branch_portal" => MaterialRole.NextBranchPortal,
-                "defeated_portal" => MaterialRole.DoorUnavailable,
-                "final_portal" => MaterialRole.SecretDoorDebug,
-                _ => MaterialRole.DoorActive
+                "door_locked" => PresentationPrefabRole.DoorLocked,
+                "door_cleared" => PresentationPrefabRole.DoorCleared,
+                "hub_portal" => PresentationPrefabRole.HubReturnPortal,
+                "branch_portal" => PresentationPrefabRole.NextBranchPortal,
+                "defeated_portal" => PresentationPrefabRole.DoorUnavailable,
+                "final_portal" => PresentationPrefabRole.SecretDoorDebug,
+                _ => PresentationPrefabRole.DoorActive
             };
-            var primitive = entity.Contains("portal", StringComparison.OrdinalIgnoreCase) ? PrimitiveType.Cylinder : PrimitiveType.Cube;
-            var visual = CreatePrimitive($"DebugPortalDoor.{entity}", primitive, position + Vector3.up * 0.55f, Vector3.one * 0.9f, role);
+            var visual = CreateArtPassHost($"DebugPortalDoor.{entity}", position + Vector3.up * 0.55f, role);
             AddLabel(visual.transform, entity);
         }
 
-        private void SpawnPickupStand(string entity, Vector3 position)
+        private void SpawnPickupStand(string groupName, string entity, Vector3 position)
         {
-            var pickup = CreatePrimitive($"DebugPickup.{entity}", PrimitiveType.Cube, position + Vector3.up * 0.28f, Vector3.one * 0.55f, MaterialRole.RewardPickup);
+            var role = groupName switch
+            {
+                "Weapons" when entity.Contains("blade", StringComparison.OrdinalIgnoreCase) ||
+                               entity.Contains("sword", StringComparison.OrdinalIgnoreCase) ||
+                               entity.Contains("fang", StringComparison.OrdinalIgnoreCase) => PresentationPrefabRole.WeaponMelee,
+                "Weapons" => PresentationPrefabRole.WeaponRanged,
+                "Armor" => PresentationPrefabRole.Armor,
+                "Actives" => PresentationPrefabRole.ActiveItemPickup,
+                "Cards" => PresentationPrefabRole.ConsumableCardPickup,
+                _ => PresentationPrefabRole.RewardPickup
+            };
+            var pickup = CreateArtPassHost($"DebugPickup.{entity}", position + Vector3.up * 0.28f, role);
             AddLabel(pickup.transform, entity);
+        }
+
+        private GameObject CreateArtPassHost(string name, Vector3 localPosition, PresentationPrefabRole role)
+        {
+            var target = new GameObject(name);
+            target.transform.SetParent(session.PlayerController.transform.parent != null ? session.PlayerController.transform.parent : session.RuntimeRoomRoot.transform, false);
+            target.transform.localPosition = localPosition;
+            PresentationPrefabResolver.InstantiateVisual(role, target.transform, Vector3.zero, Vector3.one);
+            return target;
         }
 
         private GameObject CreatePrimitive(string name, PrimitiveType primitive, Vector3 localPosition, Vector3 localScale, MaterialRole role)
