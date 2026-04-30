@@ -14,6 +14,7 @@ namespace Hollow.Rewards
         [SerializeField] private RewardRarity rarity;
         [SerializeField] private int souls;
         [SerializeField] private int coins;
+        [SerializeField] private int maxStacks = 1;
         [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
         [SerializeField] private RewardEffect[] effects = System.Array.Empty<RewardEffect>();
 
@@ -28,6 +29,8 @@ namespace Hollow.Rewards
         public int Souls => souls;
 
         public int Coins => coins;
+
+        public int MaxStacks => Mathf.Max(1, maxStacks);
 
         public IReadOnlyList<BuildTag> Tags => tags;
 
@@ -78,12 +81,27 @@ namespace Hollow.Rewards
             IEnumerable<RewardEffect> nextEffects,
             IEnumerable<BuildTag> nextTags)
         {
+            Configure(nextRewardId, nextDisplayName, nextRewardKind, nextRarity, nextSouls, nextCoins, nextEffects, nextTags, 1);
+        }
+
+        public void Configure(
+            string nextRewardId,
+            string nextDisplayName,
+            RewardKind nextRewardKind,
+            RewardRarity nextRarity,
+            int nextSouls,
+            int nextCoins,
+            IEnumerable<RewardEffect> nextEffects,
+            IEnumerable<BuildTag> nextTags,
+            int nextMaxStacks)
+        {
             rewardId = nextRewardId;
             displayName = nextDisplayName;
             rewardKind = nextRewardKind;
             rarity = nextRarity;
             souls = nextSouls;
             coins = Mathf.Max(0, nextCoins);
+            maxStacks = Mathf.Max(1, nextMaxStacks);
             effects = RewardEffect.Clean(nextEffects);
             tags = (nextTags ?? Enumerable.Empty<BuildTag>())
                 .Where(tag => tag != BuildTag.None)
@@ -93,7 +111,7 @@ namespace Hollow.Rewards
 
         public RewardGrant ToGrant(string roomId)
         {
-            return new RewardGrant(roomId, rewardId, displayName, rewardKind, souls, coins, effects);
+            return new RewardGrant(roomId, rewardId, displayName, rewardKind, souls, coins, effects, MaxStacks);
         }
     }
 }

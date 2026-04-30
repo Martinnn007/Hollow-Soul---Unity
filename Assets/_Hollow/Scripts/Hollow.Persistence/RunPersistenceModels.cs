@@ -118,6 +118,7 @@ namespace Hollow.Persistence
         public string rewardKind = string.Empty;
         public int souls;
         public int coins;
+        public int maxStacks = 1;
         public List<RunRewardEffectSaveState> effects = new();
     }
 
@@ -230,7 +231,15 @@ namespace Hollow.Persistence
     public sealed class RunInventoryStateSaveState
     {
         public List<string> passiveItemIds = new();
+        public List<PassiveItemStackSaveState> passiveItemStacks = new();
         public List<string> passiveCardIds = new();
+    }
+
+    [Serializable]
+    public sealed class PassiveItemStackSaveState
+    {
+        public string itemId = string.Empty;
+        public int count = 1;
     }
 
     [Serializable]

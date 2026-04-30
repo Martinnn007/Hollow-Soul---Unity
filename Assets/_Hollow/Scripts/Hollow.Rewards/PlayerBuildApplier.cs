@@ -53,6 +53,7 @@ namespace Hollow.Rewards
                     weaponCatalog,
                     derived.MeleeRangeBonusMeters,
                     derived.RangedRangeBonusMeters);
+                weapon.ConfigureProjectilePassives(ProjectilePassiveResolver.Resolve(build));
             }
         }
     }

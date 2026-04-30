@@ -62,6 +62,7 @@ namespace Hollow.Data.Definitions
         CoinCopper,
         CoinSilver,
         CoinGold,
-        DesignerChest
+        DesignerChest,
+        ProjectilePower
     }
 }

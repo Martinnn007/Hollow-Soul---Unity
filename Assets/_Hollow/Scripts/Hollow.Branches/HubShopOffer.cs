@@ -93,11 +93,11 @@ namespace Hollow.Branches
                 var roomId = $"shop_offer_{branchDepth}_{index}";
                 var shouldOfferWeapon = weaponPool != null && StableHash($"{branchSeed}|{branchDepth}|shop|weapon|{index}") % 5 == 0;
                 var grant = shouldOfferWeapon && weaponPool.TryRoll(roomId, "m27_hub_shop_weapons", branchSeed + branchDepth + index, out var weaponGrant)
-                    ? new RewardGrant(roomId, weaponGrant.RewardId, weaponGrant.DisplayName, weaponGrant.RewardKind, 0, weaponGrant.Effects)
+                    ? new RewardGrant(roomId, weaponGrant.RewardId, weaponGrant.DisplayName, weaponGrant.RewardKind, 0, 0, weaponGrant.Effects, weaponGrant.MaxStacks)
                     : shopRewardPool != null && shopRewardPool.TryRoll(roomId, "m51_hub_shop", branchSeed + branchDepth + index, out var shopRolled) && IsShopRewardKind(shopRolled.RewardKind)
-                    ? new RewardGrant(roomId, shopRolled.RewardId, shopRolled.DisplayName, shopRolled.RewardKind, 0, shopRolled.Effects)
+                    ? new RewardGrant(roomId, shopRolled.RewardId, shopRolled.DisplayName, shopRolled.RewardKind, 0, 0, shopRolled.Effects, shopRolled.MaxStacks)
                     : standardPool != null && standardPool.TryRoll(roomId, "m20_hub_shop", branchSeed + branchDepth + index, out var rolled) && IsShopRewardKind(rolled.RewardKind)
-                    ? new RewardGrant(roomId, rolled.RewardId, rolled.DisplayName, rolled.RewardKind, 0, rolled.Effects)
+                    ? new RewardGrant(roomId, rolled.RewardId, rolled.DisplayName, rolled.RewardKind, 0, 0, rolled.Effects, rolled.MaxStacks)
                     : FallbackReward(roomId, branchSeed, branchDepth, index);
                 var price = grant.RewardKind switch
                 {
@@ -147,6 +147,7 @@ namespace Hollow.Branches
                 rewardKind = grant.RewardKind.ToString(),
                 souls = grant.Souls,
                 coins = grant.Coins,
+                maxStacks = grant.MaxStacks,
                 effects = grant.Effects?.Select(effect => effect.ToSaveState()).ToList() ?? new List<RunRewardEffectSaveState>()
             };
         }
@@ -166,7 +167,8 @@ namespace Hollow.Branches
                 kind,
                 save.souls,
                 save.coins,
-                save.effects?.Select(RewardEffect.FromSaveState));
+                save.effects?.Select(RewardEffect.FromSaveState),
+                save.maxStacks);
         }
 
         private static int StableHash(string value)

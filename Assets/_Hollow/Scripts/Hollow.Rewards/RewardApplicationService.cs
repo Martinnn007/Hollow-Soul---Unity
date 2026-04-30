@@ -26,7 +26,7 @@ namespace Hollow.Rewards
             switch (grant.RewardKind)
             {
                 case RewardKind.PassiveItem:
-                    build.Inventory.AddPassiveItem(grant.RewardId);
+                    build.Inventory.AddPassiveItem(grant.RewardId, grant.MaxStacks);
                     break;
                 case RewardKind.Card:
                 case RewardKind.PassiveCard:

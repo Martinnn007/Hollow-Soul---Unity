@@ -577,6 +577,7 @@ namespace Hollow.Branches
                 return false;
             }
 
+            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
             State.EnterRoom(connection.ToRoomId);
             LoadCurrentRoom(entryConnection: connection);
             CheckpointActiveRun();
@@ -2735,7 +2736,7 @@ namespace Hollow.Branches
         {
             return grant.IsEmpty
                 ? grant
-                : new RewardGrant(roomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Coins, grant.Effects);
+                : new RewardGrant(roomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Coins, grant.Effects, grant.MaxStacks);
         }
 
         private static PresentationPrefabRole VisualRoleForReplacement(RewardKind kind)

@@ -61,6 +61,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone51PreBetaRewardHealthRebalance.md` describes sparse ordinary-room rewards, treasure/boss/shop item gating, and the lower pre-beta character health baseline.
 - `Docs/Milestone52ChestsCoinDrops.md` describes interactable normal/golden chests, visible copper/silver/gold coins, Room Designer chest markers, and M52 persistence rules.
 - `Docs/Milestone53BossRosterFramework.md` describes the 10-boss roster, seeded boss selection, boss arenas, boss HUD, and fixed-HP boss framework.
+- `Docs/Milestone54ItemCatalogueProjectilePassives.md` describes the item catalogue PDF, projectile passive item pool, strongest-wins multi-shot logic, Power-up red shots, and Fire-rate Up stacks.
 - `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup

@@ -237,6 +237,15 @@ namespace Hollow.Rewards
                 RewardEffectKind.Coins => $"+{effect.IntValue} coins",
                 RewardEffectKind.MeleeRangeBonusMeters => $"+{effect.FloatValue:0.##}m melee range",
                 RewardEffectKind.RangedRangeBonusMeters => $"+{effect.FloatValue:0.##}m ranged range",
+                RewardEffectKind.ProjectilePatternRank => effect.IntValue switch
+                {
+                    4 => "Quad-shot pattern",
+                    3 => "Triple-shot pattern",
+                    2 => "Double-barrel pattern",
+                    _ => "Projectile pattern"
+                },
+                RewardEffectKind.RangedDamageMultiplier => $"Ranged damage x{effect.FloatValue:0.##}",
+                RewardEffectKind.RangedLightFireRateBonusPerSecond => $"+{effect.FloatValue:0.##}/s ranged light fire rate",
                 _ => string.Empty
             };
         }

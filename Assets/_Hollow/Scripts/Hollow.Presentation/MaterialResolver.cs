@@ -80,6 +80,7 @@ namespace Hollow.Presentation
                 MaterialRole.SpawnReward => new Color(1f, 0.82f, 0.18f, 1f),
                 MaterialRole.PlayerBody => new Color(0.36f, 0.92f, 0.72f, 1f),
                 MaterialRole.Projectile => new Color(0.9f, 0.95f, 1f, 1f),
+                MaterialRole.ProjectilePower => new Color(1f, 0.12f, 0.08f, 1f),
                 MaterialRole.EnemyNormal => new Color(0.85f, 0.16f, 0.14f, 1f),
                 MaterialRole.EnemyFlying => new Color(0.25f, 0.65f, 1f, 1f),
                 MaterialRole.EnemyFast => new Color(1f, 0.66f, 0.18f, 1f),

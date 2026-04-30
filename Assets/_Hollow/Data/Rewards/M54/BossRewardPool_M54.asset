@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51e695efa471c403ca009fe62a29e856, type: 3}
+  m_Name: BossRewardPool_M54
+  m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.RewardPoolDefinition
+  poolId: m54_boss_projectile_passive_rewards
+  rewards:
+  - {fileID: 11400000, guid: c564dfbfba4f04a5b895f8ed501c1d0a, type: 2}
+  - {fileID: 11400000, guid: 244ccd5ac640f4375a82df43aa60a4fe, type: 2}
+  - {fileID: 11400000, guid: aae4064b2340d4b50bdf35822d993f33, type: 2}
+  - {fileID: 11400000, guid: cb27431cfaf1c4361aebf963dd38d3d3, type: 2}
+  - {fileID: 11400000, guid: cca1986aebb73467991dafb137de5998, type: 2}
+  - {fileID: 11400000, guid: b08821f64a9434a8c8eedfe9ec046bb6, type: 2}
+  - {fileID: 11400000, guid: 745d40eaba06c410ebcef0ce7e127455, type: 2}
+  - {fileID: 11400000, guid: 9ee4b50a98854d9ba8d9a23a5f5893e8, type: 2}
+  - {fileID: 11400000, guid: c3fbd578ecdc4bfb873835883918d768, type: 2}
+  - {fileID: 11400000, guid: d8a5d0325d46450c96f4c4a7cc6ce164, type: 2}
+  - {fileID: 11400000, guid: 3bb6d370e7dc4a65988501b521e7d584, type: 2}
+  - {fileID: 11400000, guid: f7182952c1cd4aaebb6a3ecb454cf64b, type: 2}

@@ -18,6 +18,11 @@ namespace Hollow.Rewards
         }
 
         public CollectedRewardRecord(string roomId, string rewardId, string displayName, RewardKind rewardKind, int souls, int coins, System.Collections.Generic.IEnumerable<RewardEffect> effects)
+            : this(roomId, rewardId, displayName, rewardKind, souls, coins, effects, 1)
+        {
+        }
+
+        public CollectedRewardRecord(string roomId, string rewardId, string displayName, RewardKind rewardKind, int souls, int coins, System.Collections.Generic.IEnumerable<RewardEffect> effects, int maxStacks)
         {
             RoomId = roomId ?? string.Empty;
             RewardId = rewardId ?? string.Empty;
@@ -26,6 +31,7 @@ namespace Hollow.Rewards
             Souls = souls;
             Coins = coins;
             Effects = RewardEffect.Clean(effects);
+            MaxStacks = System.Math.Max(1, maxStacks);
         }
 
         public string RoomId { get; }
@@ -42,6 +48,8 @@ namespace Hollow.Rewards
 
         public System.Collections.Generic.IReadOnlyList<RewardEffect> Effects { get; }
 
+        public int MaxStacks { get; }
+
         public RunRewardSaveState ToSaveState()
         {
             return new RunRewardSaveState
@@ -52,6 +60,7 @@ namespace Hollow.Rewards
                 rewardKind = RewardKind.ToString(),
                 souls = Souls,
                 coins = Coins,
+                maxStacks = MaxStacks,
                 effects = Effects?.Select(effect => effect.ToSaveState()).ToList() ?? new System.Collections.Generic.List<RunRewardEffectSaveState>()
             };
         }
@@ -67,7 +76,7 @@ namespace Hollow.Rewards
             var effects = saveState.effects != null && saveState.effects.Count > 0
                 ? saveState.effects.Select(RewardEffect.FromSaveState).ToArray()
                 : RewardEffect.DefaultsForRewardId(saveState.rewardId);
-            return new CollectedRewardRecord(saveState.roomId, saveState.rewardId, saveState.displayName, rewardKind, saveState.souls, saveState.coins, effects);
+            return new CollectedRewardRecord(saveState.roomId, saveState.rewardId, saveState.displayName, rewardKind, saveState.souls, saveState.coins, effects, saveState.maxStacks);
         }
     }
 }

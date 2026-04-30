@@ -23,7 +23,7 @@ namespace Hollow.Rewards
 
             RunSouls += grant.Souls;
             RunCoins += grant.Coins;
-            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Coins, grant.Effects));
+            collectedRewards.Add(new CollectedRewardRecord(grant.RoomId, grant.RewardId, grant.DisplayName, grant.RewardKind, grant.Souls, grant.Coins, grant.Effects, grant.MaxStacks));
             return true;
         }
 

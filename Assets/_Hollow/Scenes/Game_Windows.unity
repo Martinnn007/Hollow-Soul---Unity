@@ -524,8 +524,8 @@ MonoBehaviour:
   branchRoomTemplateCatalog: {fileID: 11400000, guid: 3665e4cabb1ef49f89996f4d1cfb3802, type: 2}
   branchGenerationSettings: {fileID: 11400000, guid: 56b03ad05db574d0994715aad73f94c6, type: 2}
   standardRewardPool: {fileID: 11400000, guid: fb5338c6772c48d0b26729fe2e3e4a13, type: 2}
-  treasureRewardPool: {fileID: 11400000, guid: ba1b859fdeb6440c95b31ddcff45d400, type: 2}
-  bossRewardPool: {fileID: 11400000, guid: 768e902a08704d4d9a85149d0ad17330, type: 2}
+  treasureRewardPool: {fileID: 11400000, guid: 59cf432c81f74982b29e5f25c8d29e74, type: 2}
+  bossRewardPool: {fileID: 11400000, guid: 872e6e3966a74a2fa7c17450ebf6ca76, type: 2}
   weaponRewardPool: {fileID: 11400000, guid: c0c32fb79be434a3cbc8f64556f117c4, type: 2}
   weaponCatalog: {fileID: 11400000, guid: a5098120641cf48dd912cff2f2e13ef0, type: 2}
   usableItemCatalog: {fileID: 11400000, guid: b9618a81bc14d4b608b57deb48372281, type: 2}

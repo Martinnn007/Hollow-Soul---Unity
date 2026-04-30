@@ -17,6 +17,7 @@ namespace Hollow.Combat
         [SerializeField] private int temporaryDamageBonus;
         [SerializeField] private float meleeRangeBonusMeters;
         [SerializeField] private float rangedRangeBonusMeters;
+        private ProjectilePassiveState projectilePassiveState = ProjectilePassiveState.Default;
         [SerializeField] private float maxStamina = 100f;
         [SerializeField] private float currentStamina = 100f;
         [SerializeField] private float staminaRegenPerSecond = 18f;
@@ -84,6 +85,13 @@ namespace Hollow.Combat
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
         {
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
+        }
+
+        public void ConfigureProjectilePassives(ProjectilePassiveState nextProjectilePassiveState)
+        {
+            projectilePassiveState = nextProjectilePassiveState.PatternKind == 0
+                ? ProjectilePassiveState.Default
+                : nextProjectilePassiveState;
         }
 
         public void ConfigureBuildStats(
@@ -203,21 +211,42 @@ namespace Hollow.Combat
                 return false;
             }
 
-            var attackCooldown = attack.CooldownSeconds * cooldownMultiplier;
-            var attackDamage = attack.Damage + projectileDamageBonus + CurrentTemporaryDamageBonus;
+            var attackCooldown = EffectiveRangedCooldown(attack, attackKind);
+            var attackDamage = Mathf.Max(1, Mathf.RoundToInt((attack.Damage + projectileDamageBonus + CurrentTemporaryDamageBonus) * projectilePassiveState.RangedDamageMultiplier));
             var effectiveRange = EffectiveRange(attack, WeaponSlot.Ranged);
             var projectileSpeed = ProjectileController.DefaultSpeedMetersPerSecond;
             var lifetimeSeconds = Mathf.Max(0.1f, effectiveRange / projectileSpeed);
             nextAllowedShotTime = timeSeconds + attackCooldown;
+            foreach (var shot in BuildProjectileShots(cardinal))
+            {
+                SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, attackKind);
+            }
+
+            AudioPresenter.Play(AudioCueId.ProjectileFire, transform.position);
+            return true;
+        }
+
+        private void SpawnProjectile(ProjectileShotSpec shot, int attackDamage, float projectileSpeed, float lifetimeSeconds, AttackKind attackKind)
+        {
+            var direction = shot.Direction.sqrMagnitude > 0.001f ? shot.Direction.normalized : Vector2.up;
+            var side = new Vector2(-direction.y, direction.x);
             var projectileObject = Instantiate(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
-            projectileObject.transform.localPosition = transform.localPosition + new Vector3(cardinal.x, 0f, cardinal.y) * 0.42f + new Vector3(0f, 0.45f, 0f);
-            MaterialResolver.ApplyTo(projectileObject, MaterialRole.Projectile);
+            projectileObject.transform.localPosition =
+                transform.localPosition +
+                new Vector3(direction.x, 0f, direction.y) * 0.42f +
+                new Vector3(side.x, 0f, side.y) * shot.LateralOffsetMeters +
+                new Vector3(0f, 0.45f, 0f);
+            MaterialResolver.ApplyTo(
+                projectileObject,
+                projectilePassiveState.VisualStyle == ProjectileVisualStyle.RedPower
+                    ? MaterialRole.ProjectilePower
+                    : MaterialRole.Projectile);
             var projectile = projectileObject.GetComponent<ProjectileController>() ?? projectileObject.AddComponent<ProjectileController>();
             projectile.Configure(
                 roomRuntimeRoot,
                 combatController,
-                new Vector3(cardinal.x, 0f, cardinal.y),
+                new Vector3(direction.x, 0f, direction.y),
                 attackDamage,
                 projectileSpeed,
                 lifetimeSeconds);
@@ -225,8 +254,66 @@ namespace Hollow.Combat
                 CombatFeelProfileDefinition.Resolve(combatFeelProfile),
                 attackKind == AttackKind.Heavy);
             VfxPresenter.Play(VfxCueId.ProjectileFire, projectileObject.transform.position, projectileObject.transform.parent);
-            AudioPresenter.Play(AudioCueId.ProjectileFire, projectileObject.transform.position);
-            return true;
+        }
+
+        private ProjectileShotSpec[] BuildProjectileShots(Vector2 aimDirection)
+        {
+            var baseDirection = aimDirection.sqrMagnitude > 0.001f ? aimDirection.normalized : Vector2.up;
+            return projectilePassiveState.PatternKind switch
+            {
+                ProjectilePatternKind.DoubleBarrel => new[]
+                {
+                    new ProjectileShotSpec(baseDirection, -0.11f),
+                    new ProjectileShotSpec(baseDirection, 0.11f)
+                },
+                ProjectilePatternKind.TripleShot => new[]
+                {
+                    new ProjectileShotSpec(Rotate(baseDirection, -30f), 0f),
+                    new ProjectileShotSpec(baseDirection, 0f),
+                    new ProjectileShotSpec(Rotate(baseDirection, 30f), 0f)
+                },
+                ProjectilePatternKind.QuadShot => new[]
+                {
+                    new ProjectileShotSpec(baseDirection, -0.09f),
+                    new ProjectileShotSpec(baseDirection, 0.09f),
+                    new ProjectileShotSpec(Rotate(baseDirection, -30f), 0f),
+                    new ProjectileShotSpec(Rotate(baseDirection, 30f), 0f)
+                },
+                _ => new[] { new ProjectileShotSpec(baseDirection, 0f) }
+            };
+        }
+
+        private float EffectiveRangedCooldown(WeaponAttackDefinition attack, AttackKind attackKind)
+        {
+            if (attackKind != AttackKind.Light || projectilePassiveState.RangedLightFireRateBonusPerSecond <= 0f)
+            {
+                return Mathf.Max(0.05f, attack.CooldownSeconds * cooldownMultiplier);
+            }
+
+            var baseShotsPerSecond = 1f / Mathf.Max(0.05f, attack.CooldownSeconds);
+            var effectiveShotsPerSecond = baseShotsPerSecond + projectilePassiveState.RangedLightFireRateBonusPerSecond;
+            return Mathf.Max(0.05f, (1f / effectiveShotsPerSecond) * cooldownMultiplier);
+        }
+
+        private static Vector2 Rotate(Vector2 value, float degrees)
+        {
+            var radians = degrees * Mathf.Deg2Rad;
+            var sin = Mathf.Sin(radians);
+            var cos = Mathf.Cos(radians);
+            return new Vector2(value.x * cos - value.y * sin, value.x * sin + value.y * cos).normalized;
+        }
+
+        private readonly struct ProjectileShotSpec
+        {
+            public ProjectileShotSpec(Vector2 direction, float lateralOffsetMeters)
+            {
+                Direction = direction;
+                LateralOffsetMeters = lateralOffsetMeters;
+            }
+
+            public Vector2 Direction { get; }
+
+            public float LateralOffsetMeters { get; }
         }
 
         private bool TryMeleeAttack(AttackKind attackKind, Vector2 attackDirection, float timeSeconds)

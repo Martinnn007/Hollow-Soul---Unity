@@ -19,6 +19,9 @@ namespace Hollow.Rewards
         AttackCooldownMultiplier = 14,
         Coins = 15,
         MeleeRangeBonusMeters = 16,
-        RangedRangeBonusMeters = 17
+        RangedRangeBonusMeters = 17,
+        ProjectilePatternRank = 18,
+        RangedDamageMultiplier = 19,
+        RangedLightFireRateBonusPerSecond = 20
     }
 }

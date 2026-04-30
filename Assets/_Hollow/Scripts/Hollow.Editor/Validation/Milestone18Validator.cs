@@ -161,6 +161,9 @@ namespace Hollow.Editor.Validation
             var m51Standard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.StandardRewardPoolPath);
             var m51Treasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.TreasureRewardPoolPath);
             var m51Boss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.BossRewardPoolPath);
+            var m52Standard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone52AssetGenerator.StandardRewardPoolPath);
+            var m54Treasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone54AssetGenerator.TreasureRewardPoolPath);
+            var m54Boss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone54AssetGenerator.BossRewardPoolPath);
 
             foreach (var scenePath in GameScenes)
             {
@@ -172,9 +175,9 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (!IsCompatiblePool(branch.StandardRewardPool, standard, successorStandard, m51Standard, minRewards: 6, successorMinRewards: 3, requiredRarity: null) ||
-                    !IsCompatiblePool(branch.TreasureRewardPool, treasure, successorTreasure, m51Treasure, minRewards: 1, successorMinRewards: 1, requiredRarity: RewardRarity.Treasure) ||
-                    !IsCompatiblePool(branch.BossRewardPool, boss, successorBoss, m51Boss, minRewards: 1, successorMinRewards: 1, requiredRarity: RewardRarity.Boss))
+                if (!IsCompatiblePool(branch.StandardRewardPool, standard, successorStandard, m51Standard, m52Standard, minRewards: 6, successorMinRewards: 3, requiredRarity: null) ||
+                    !IsCompatiblePool(branch.TreasureRewardPool, treasure, successorTreasure, m51Treasure, m54Treasure, minRewards: 1, successorMinRewards: 1, requiredRarity: RewardRarity.Treasure) ||
+                    !IsCompatiblePool(branch.BossRewardPool, boss, successorBoss, m51Boss, m54Boss, minRewards: 1, successorMinRewards: 1, requiredRarity: RewardRarity.Boss))
                 {
                     failures.Add($"{scenePath} BranchSessionController is not wired to M18-compatible reward pools.");
                 }
@@ -186,6 +189,7 @@ namespace Hollow.Editor.Validation
             RewardPoolDefinition milestone18Pool,
             RewardPoolDefinition successorPool,
             RewardPoolDefinition latestPool,
+            RewardPoolDefinition latestSuccessorPool,
             int minRewards,
             int successorMinRewards,
             RewardRarity? requiredRarity)
@@ -200,7 +204,7 @@ namespace Hollow.Editor.Validation
                 return HasRequiredShape(assigned, minRewards, requiredRarity);
             }
 
-            if (assigned == latestPool)
+            if (assigned == latestPool || assigned == latestSuccessorPool)
             {
                 return HasRequiredShape(assigned, successorMinRewards, requiredRarity);
             }

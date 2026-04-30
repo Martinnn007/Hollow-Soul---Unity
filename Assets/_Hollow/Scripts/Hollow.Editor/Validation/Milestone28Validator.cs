@@ -168,6 +168,9 @@ namespace Hollow.Editor.Validation
             var latestStandard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.StandardRewardPoolPath);
             var latestTreasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.TreasureRewardPoolPath);
             var latestBoss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone51AssetGenerator.BossRewardPoolPath);
+            var m52Standard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone52AssetGenerator.StandardRewardPoolPath);
+            var m54Treasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone54AssetGenerator.TreasureRewardPoolPath);
+            var m54Boss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone54AssetGenerator.BossRewardPoolPath);
             foreach (var scenePath in GameScenes)
             {
                 EditorSceneManager.OpenScene(scenePath);
@@ -178,9 +181,9 @@ namespace Hollow.Editor.Validation
                     continue;
                 }
 
-                if (!IsRewardPoolCompatible(branch.StandardRewardPool, standardPool, latestStandard) ||
-                    !IsRewardPoolCompatible(branch.TreasureRewardPool, treasurePool, latestTreasure) ||
-                    !IsRewardPoolCompatible(branch.BossRewardPool, bossPool, latestBoss) ||
+                if (!IsRewardPoolCompatible(branch.StandardRewardPool, standardPool, latestStandard, m52Standard) ||
+                    !IsRewardPoolCompatible(branch.TreasureRewardPool, treasurePool, latestTreasure, m54Treasure) ||
+                    !IsRewardPoolCompatible(branch.BossRewardPool, bossPool, latestBoss, m54Boss) ||
                     branch.UsableItemCatalog != usableCatalog)
                 {
                     failures.Add($"{scenePath} BranchSessionController is not wired to M28-compatible reward pools/catalog.");
@@ -188,9 +191,9 @@ namespace Hollow.Editor.Validation
             }
         }
 
-        private static bool IsRewardPoolCompatible(RewardPoolDefinition assigned, RewardPoolDefinition milestonePool, RewardPoolDefinition latestPool)
+        private static bool IsRewardPoolCompatible(RewardPoolDefinition assigned, RewardPoolDefinition milestonePool, params RewardPoolDefinition[] successorPools)
         {
-            return assigned != null && (assigned == milestonePool || (latestPool != null && assigned == latestPool));
+            return assigned != null && (assigned == milestonePool || successorPools.Any(pool => pool != null && assigned == pool));
         }
     }
 }

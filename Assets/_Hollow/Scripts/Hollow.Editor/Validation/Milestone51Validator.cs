@@ -171,6 +171,8 @@ namespace Hollow.Editor.Validation
             }
 
             var m52SuccessorStandard = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone52AssetGenerator.StandardRewardPoolPath);
+            var m54SuccessorTreasure = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone54AssetGenerator.TreasureRewardPoolPath);
+            var m54SuccessorBoss = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone54AssetGenerator.BossRewardPoolPath);
             foreach (var scenePath in GameScenes)
             {
                 EditorSceneManager.OpenScene(scenePath);
@@ -183,9 +185,13 @@ namespace Hollow.Editor.Validation
 
                 var standardMatches = branch.StandardRewardPool == standard ||
                                       (m52SuccessorStandard != null && branch.StandardRewardPool == m52SuccessorStandard);
-                if (!standardMatches || branch.TreasureRewardPool != treasure || branch.BossRewardPool != boss)
+                var treasureMatches = branch.TreasureRewardPool == treasure ||
+                                      (m54SuccessorTreasure != null && branch.TreasureRewardPool == m54SuccessorTreasure);
+                var bossMatches = branch.BossRewardPool == boss ||
+                                  (m54SuccessorBoss != null && branch.BossRewardPool == m54SuccessorBoss);
+                if (!standardMatches || !treasureMatches || !bossMatches)
                 {
-                    failures.Add($"{scenePath} BranchSessionController must reference M51 reward pools or the M52 successor standard pool.");
+                    failures.Add($"{scenePath} BranchSessionController must reference M51 reward pools or approved successor pools.");
                 }
             }
         }
