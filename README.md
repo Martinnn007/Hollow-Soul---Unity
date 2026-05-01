@@ -62,6 +62,17 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone52ChestsCoinDrops.md` describes interactable normal/golden chests, visible copper/silver/gold coins, Room Designer chest markers, and M52 persistence rules.
 - `Docs/Milestone53BossRosterFramework.md` describes the 10-boss roster, seeded boss selection, boss arenas, boss HUD, and fixed-HP boss framework.
 - `Docs/Milestone54ItemCatalogueProjectilePassives.md` describes the item catalogue PDF, projectile passive item pool, strongest-wins multi-shot logic, Power-up red shots, and Fire-rate Up stacks.
+- `Docs/Milestone55DeveloperInspectionBranch.md` describes the Developer Lab branch, frozen inspection entities, and bottom-right debug spawn menu.
+- `Docs/Milestone56ArtPassWrapperCalibrationAssetIntakeQA.md` describes the ArtPass wrapper calibration standard, bounds/material/catalog checks, and asset acceptance reporting.
+- `Docs/Milestone57DeveloperLabCoverageLock.md` describes the Developer Lab coverage lock for every visible ArtPass/runtime role.
+- `Docs/Milestone58BetaRewardEconomyChestBalance.md` describes the beta reward economy and chest pacing expectations after the sparse M51/M52 reward pass.
+- `Docs/Milestone59CombatInputControllerReliability.md` describes the controller/keyboard reliability gate and legacy input cleanup target.
+- `Docs/Milestone60BossPolishBossLabV2.md` describes the beta boss polish subset and Boss Lab V2 inspection goals.
+- `Docs/Milestone61RoomPoolQualityApprovalWorkflow.md` describes the Draft -> Reviewed -> Approved Runtime room promotion workflow.
+- `Docs/Milestone62RunReadabilityBetaHudCleanup.md` describes the beta HUD/readability pass and debug-text hiding rules.
+- `Docs/Milestone63BetaContentSelectionLock.md` describes the beta content whitelist and catalogue/report outputs.
+- `Docs/Milestone64VerticalSliceBetaLockGate.md` describes the beta lock validation gate and report model.
+- `Docs/Milestone65BetaHandoffBuildQaPack.md` describes the QA handoff pack, tester routes, and build/readiness checklist.
 - `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup

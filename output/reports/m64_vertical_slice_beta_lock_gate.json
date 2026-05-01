@@ -1,0 +1,8 @@
+{
+  "generatedAtUtc": "2026-05-01T00:42:29.486813+00:00",
+  "milestone": "M64",
+  "title": "Vertical Slice Beta Lock Gate",
+  "status": "BlockedByEnvironment",
+  "details": "Unity batchmode generation was blocked by licensing initialization; fallback JSON does not contain live AssetDatabase scan data.",
+  "remediation": "Run Hollow/Generation/Generate Milestone 65 Assets in Unity after licensing is available."
+}
