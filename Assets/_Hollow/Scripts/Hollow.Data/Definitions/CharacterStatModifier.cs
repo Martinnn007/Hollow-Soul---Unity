@@ -14,6 +14,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private int defense;
         [SerializeField] private int meleeDamage;
         [SerializeField] private int rangedDamage;
+        [SerializeField] private int stability;
         [SerializeField] private float attackCooldownMultiplier;
         [SerializeField] private float meleeRangeBonusMeters;
         [SerializeField] private float rangedRangeBonusMeters;
@@ -29,7 +30,8 @@ namespace Hollow.Data.Definitions
             int rangedDamage = 0,
             float attackCooldownMultiplier = 0f,
             float meleeRangeBonusMeters = 0f,
-            float rangedRangeBonusMeters = 0f)
+            float rangedRangeBonusMeters = 0f,
+            int stability = 0)
         {
             this.maxHealth = maxHealth;
             this.speed = speed;
@@ -39,6 +41,7 @@ namespace Hollow.Data.Definitions
             this.defense = defense;
             this.meleeDamage = meleeDamage;
             this.rangedDamage = rangedDamage;
+            this.stability = stability;
             this.attackCooldownMultiplier = attackCooldownMultiplier;
             this.meleeRangeBonusMeters = meleeRangeBonusMeters;
             this.rangedRangeBonusMeters = rangedRangeBonusMeters;
@@ -60,6 +63,8 @@ namespace Hollow.Data.Definitions
 
         public int RangedDamage => rangedDamage;
 
+        public int Stability => stability;
+
         public float AttackCooldownMultiplier => attackCooldownMultiplier;
 
         public float MeleeRangeBonusMeters => meleeRangeBonusMeters;
@@ -75,6 +80,7 @@ namespace Hollow.Data.Definitions
             defense == 0 &&
             meleeDamage == 0 &&
             rangedDamage == 0 &&
+            stability == 0 &&
             Mathf.Approximately(attackCooldownMultiplier, 0f) &&
             Mathf.Approximately(meleeRangeBonusMeters, 0f) &&
             Mathf.Approximately(rangedRangeBonusMeters, 0f);

@@ -18,5 +18,6 @@ MonoBehaviour:
   rarity: 0
   souls: 0
   coins: 6
-  tags: []
+  maxStacks: 1
+  tags: 
   effects: []

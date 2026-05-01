@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Ember Bolt
   slot: 1
   category: 2
+  loadClass: 1
   tags: 02000000090000000a000000
   lightAttack:
     attackKind: 0

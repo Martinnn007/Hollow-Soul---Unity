@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 397e39664dc524fb2a94999af50ed3cb, type: 3}
+  m_Name: Boss_choir_of_teeth
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.BossDefinition
+  bossId: choir_of_teeth
+  displayName: Choir of Teeth
+  worldBand: 3
+  behaviorId: 7
+  maxHealth: 42
+  speedMetersPerSecond: 0.8
+  contactDamage: 1
+  contactCooldownSeconds: 1
+  radiusMeters: 0.82
+  projectileSpeedMetersPerSecond: 4.8
+  visualScale: 2.7
+  debugColor: {r: 0.92, g: 0.86, b: 0.72, a: 1}
+  arena:
+    arenaId: boss_arena_hell_heaven_dais
+    displayName: Hell/Heaven Split Dais
+  phases:
+  - healthThreshold01: 1
+    displayName: Phase 1
+    statusText: Testing the remnant
+  - healthThreshold01: 0.5
+    displayName: Phase 2
+    statusText: Roused
+  attacks:
+  - kind: 3
+    cooldownSeconds: 2.3
+    windupSeconds: 0.45
+    damage: 1
+    projectileCount: 12
+  - kind: 11
+    cooldownSeconds: 3.5
+    windupSeconds: 0.65
+    damage: 2
+    projectileCount: 16

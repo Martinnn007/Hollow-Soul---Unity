@@ -16,10 +16,7 @@ MonoBehaviour:
   identityId: choir_below
   displayName: The Choir Below
   subtitle: Hell and heaven collided, and both kept singing.
-  biomeTags:
-  - 7
-  - 6
-  - 10
+  biomeTags: 07000000060000000a000000
   paletteHint: sulfur red, pearl white, bruised violet, molten gold
   lightingHint: holy backlight broken by furnace smoke
   materialNotes: charred marble, feathers in ash, brass halos, cracked bone

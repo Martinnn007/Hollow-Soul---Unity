@@ -90,7 +90,7 @@ namespace Hollow.Editor.Validation
                     sawNormal |= grant.RewardId == ChestRewardResolver.NormalChestRewardId;
                     sawCoins |= grant.RewardId == ChestRewardResolver.SmallCoinPouchRewardId && grant.Coins > 0;
                     sawHeal |= grant.RewardKind == RewardKind.Heal;
-                    if (grant.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor)
+                    if (grant.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor or RewardKind.Shield)
                     {
                         failures.Add($"Standard room rolled forbidden build-changing reward {grant.RewardId}.");
                         break;

@@ -206,6 +206,7 @@ namespace Hollow.Persistence
         public int rangedDamageBonus;
         public float meleeRangeBonusMeters;
         public float rangedRangeBonusMeters;
+        public int stabilityBonus;
     }
 
     [Serializable]
@@ -225,6 +226,7 @@ namespace Hollow.Persistence
         public int activeItemCharges;
         public string consumableCardId = string.Empty;
         public string armorId = string.Empty;
+        public string shieldId = "starter_buckler";
     }
 
     [Serializable]
@@ -254,6 +256,7 @@ namespace Hollow.Persistence
         public int defense;
         public int meleeDamage;
         public int rangedDamage;
+        public int stability;
         public float attackCooldownMultiplier;
         public float meleeRangeBonusMeters;
         public float rangedRangeBonusMeters;
@@ -272,6 +275,7 @@ namespace Hollow.Persistence
         public int baseDefense;
         public int baseMeleeDamageBonus;
         public int baseRangedDamageBonus;
+        public int baseStability = 1;
         public float baseAttackCooldownMultiplier = 1f;
         public float baseMeleeRangeBonusMeters;
         public float baseRangedRangeBonusMeters;

@@ -16,9 +16,7 @@ MonoBehaviour:
   identityId: before_teeth
   displayName: Before Teeth
   subtitle: Prehistoric hunger preserved before language learned mercy.
-  biomeTags:
-  - 2
-  - 1
+  biomeTags: 0200000001000000
   paletteHint: bone white, wet fern, tar black, volcanic ember
   lightingHint: low amber stormlight with deep leaf shadow
   materialNotes: fossil ribs, cracked clay, fern mats, obsidian teeth

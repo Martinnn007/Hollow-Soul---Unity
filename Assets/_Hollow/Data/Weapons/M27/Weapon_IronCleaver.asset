@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Iron Cleaver
   slot: 0
   category: 0
+  loadClass: 2
   tags: 0100000003000000
   lightAttack:
     attackKind: 0

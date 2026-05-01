@@ -16,9 +16,7 @@ MonoBehaviour:
   identityId: black_keep
   displayName: The Black Keep
   subtitle: Medieval terror built from siege smoke and failed prayers.
-  biomeTags:
-  - 4
-  - 10
+  biomeTags: 040000000a000000
   paletteHint: iron black, candle ochre, dried blood, ash gray
   lightingHint: torch pockets swallowed by cold vaulted dark
   materialNotes: ironwork, torn banners, wet stone, wax, splintered oak

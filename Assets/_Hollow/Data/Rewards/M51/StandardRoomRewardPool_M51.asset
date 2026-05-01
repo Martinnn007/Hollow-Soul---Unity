@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.RewardPoolDefinition
   poolId: m51_standard_room_rewards
   rewards:
-  - {fileID: 11400000, guid: 177f814918fa4db6aadfd2c239c7f485, type: 2}
   - {fileID: 11400000, guid: cbab00d2502a45d39bac83269fa0c5a5, type: 2}
+  - {fileID: 11400000, guid: 177f814918fa4db6aadfd2c239c7f485, type: 2}
   - {fileID: 11400000, guid: 0f223b4b2226446884d56b0f972703aa, type: 2}

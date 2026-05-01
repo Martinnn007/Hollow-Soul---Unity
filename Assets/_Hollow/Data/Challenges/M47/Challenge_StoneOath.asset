@@ -25,7 +25,10 @@ MonoBehaviour:
     defense: 2
     meleeDamage: 0
     rangedDamage: 0
+    stability: 0
     attackCooldownMultiplier: 0
+    meleeRangeBonusMeters: 0
+    rangedRangeBonusMeters: 0
   startingCoins: 6
   startingSouls: 0
   loadout:

@@ -13,12 +13,25 @@ namespace Hollow.Rewards
 
         public static void Apply(PlayerRunBuild build, GameObject playerObject, WeaponCatalogDefinition weaponCatalog, int healAmount = 0)
         {
+            Apply(build, playerObject, weaponCatalog, null, null, healAmount);
+        }
+
+        public static void Apply(
+            PlayerRunBuild build,
+            GameObject playerObject,
+            WeaponCatalogDefinition weaponCatalog,
+            ArmorCatalogDefinition armorCatalog,
+            ShieldCatalogDefinition shieldCatalog,
+            int healAmount = 0)
+        {
             if (build == null || playerObject == null)
             {
                 return;
             }
 
             var derived = build.DerivedStats;
+            var load = EquipmentLoadResolver.Resolve(build, weaponCatalog, armorCatalog, shieldCatalog);
+            var stability = derived.Stability + load.ArmorStabilityBonus;
             var health = playerObject.GetComponent<CombatantHealth>();
             if (health != null)
             {
@@ -28,13 +41,20 @@ namespace Hollow.Rewards
             var movement = playerObject.GetComponent<PlayerMovementController>();
             if (movement != null)
             {
-                movement.ConfigureDerivedStats(derived.SpeedMetersPerSecond);
+                movement.ConfigureDerivedStats(derived.SpeedMetersPerSecond * load.SpeedMultiplier);
             }
 
             var defense = playerObject.GetComponent<PlayerDefenseController>();
             if (defense != null)
             {
                 defense.Configure(derived.Defense);
+                defense.ConfigureStability(stability, load.ActiveGuardShieldStabilityBonus, load.GuardStaminaCostMultiplier);
+            }
+
+            var knockback = playerObject.GetComponent<CombatKnockbackReceiver>();
+            if (knockback != null)
+            {
+                knockback.ConfigureStability(stability);
             }
 
             var weapon = playerObject.GetComponent<PlayerWeaponController>();
@@ -52,7 +72,8 @@ namespace Hollow.Rewards
                     build.CurrentStamina,
                     weaponCatalog,
                     derived.MeleeRangeBonusMeters,
-                    derived.RangedRangeBonusMeters);
+                    derived.RangedRangeBonusMeters,
+                    load.AttackStaminaCostMultiplier);
                 weapon.ConfigureProjectilePassives(ProjectilePassiveResolver.Resolve(build));
             }
         }

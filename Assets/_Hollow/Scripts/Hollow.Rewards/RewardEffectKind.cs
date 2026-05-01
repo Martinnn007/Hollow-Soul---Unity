@@ -22,6 +22,7 @@ namespace Hollow.Rewards
         RangedRangeBonusMeters = 17,
         ProjectilePatternRank = 18,
         RangedDamageMultiplier = 19,
-        RangedLightFireRateBonusPerSecond = 20
+        RangedLightFireRateBonusPerSecond = 20,
+        StabilityBonus = 21
     }
 }

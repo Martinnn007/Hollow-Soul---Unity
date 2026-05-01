@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Bone Bow
   slot: 1
   category: 1
+  loadClass: 1
   tags: 02000000040000000d000000
   lightAttack:
     attackKind: 0

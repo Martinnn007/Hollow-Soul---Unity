@@ -16,9 +16,7 @@ MonoBehaviour:
   identityId: last_hour
   displayName: The Last Hour
   subtitle: The end of times, looped until even endings are tired.
-  biomeTags:
-  - 8
-  - 1
+  biomeTags: 0800000001000000
   paletteHint: eclipse black, pale brass, smoke blue, dying crimson
   lightingHint: long sunset with stars visible through the floor
   materialNotes: broken clocks, meteor dust, glass sand, burnt paper

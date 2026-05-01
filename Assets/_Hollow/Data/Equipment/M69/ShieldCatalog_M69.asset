@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a0551c1ecf8454984d4d5ca36fbfd8, type: 3}
+  m_Name: ShieldCatalog_M69
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.ShieldCatalogDefinition
+  catalogId: m69_shield_catalog_v1
+  shields:
+  - {fileID: 11400000, guid: 46999257066f444a6831699c2455a0ae, type: 2}
+  - {fileID: 11400000, guid: 7d47480f1ebcc41998d07dc4913904cb, type: 2}
+  - {fileID: 11400000, guid: a05f3b1ffdc654a87ba777a37ba5a4b2, type: 2}

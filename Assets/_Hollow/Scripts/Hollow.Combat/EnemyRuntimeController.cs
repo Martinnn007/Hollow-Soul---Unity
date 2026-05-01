@@ -455,7 +455,8 @@ namespace Hollow.Combat
                     contactDamage,
                     gameObject,
                     DamageFeedbackContext.Knockback(direction, profile.PlayerKnockbackMeters, profile.KnockbackSeconds),
-                    ContactThreatKind()));
+                    ContactThreatKind(),
+                    DamageClassification.PhysicalContact(ForceClassForThreat(ContactThreatKind()))));
             if (damaged)
             {
                 VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
@@ -550,6 +551,17 @@ namespace Hollow.Combat
             }
 
             return DamageThreatKind.Light;
+        }
+
+        private static ImpactForceClass ForceClassForThreat(DamageThreatKind threatKind)
+        {
+            return threatKind switch
+            {
+                DamageThreatKind.Boss => ImpactForceClass.Massive,
+                DamageThreatKind.Heavy or DamageThreatKind.StrongProjectile => ImpactForceClass.Heavy,
+                DamageThreatKind.Environmental => ImpactForceClass.Medium,
+                _ => ImpactForceClass.Light
+            };
         }
 
         private void SpawnSplitChildren()

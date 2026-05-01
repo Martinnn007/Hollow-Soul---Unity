@@ -16,9 +16,7 @@ MonoBehaviour:
   identityId: blind_deep
   displayName: The Blind Deep
   subtitle: An abyss without horizon, hungry enough to become a god.
-  biomeTags:
-  - 9
-  - 11
+  biomeTags: 090000000b000000
   paletteHint: void black, cold blue, pale biolume, drowned silver
   lightingHint: narrow bioluminescent pools in pressure-dark silence
   materialNotes: basalt, salt crystal, slick shell, pressure-warped metal

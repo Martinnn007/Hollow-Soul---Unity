@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Dragon Fang
   slot: 0
   category: 0
+  loadClass: 1
   tags: 01000000090000000e000000
   lightAttack:
     attackKind: 0

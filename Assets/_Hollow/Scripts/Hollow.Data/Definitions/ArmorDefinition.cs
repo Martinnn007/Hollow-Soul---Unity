@@ -19,6 +19,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private string armorId;
         [SerializeField] private string displayName;
         [SerializeField] private ArmorRarity rarity = ArmorRarity.Common;
+        [SerializeField] private EquipmentLoadClass loadClass = EquipmentLoadClass.Light;
         [SerializeField] private CharacterStatModifier statModifier;
         [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
 
@@ -27,6 +28,8 @@ namespace Hollow.Data.Definitions
         public string DisplayName => displayName;
 
         public ArmorRarity Rarity => rarity;
+
+        public EquipmentLoadClass LoadClass => loadClass;
 
         public CharacterStatModifier StatModifier => statModifier;
 
@@ -37,11 +40,13 @@ namespace Hollow.Data.Definitions
             string nextDisplayName,
             ArmorRarity nextRarity,
             CharacterStatModifier nextStatModifier,
-            IEnumerable<BuildTag> nextTags)
+            IEnumerable<BuildTag> nextTags,
+            EquipmentLoadClass nextLoadClass = EquipmentLoadClass.Light)
         {
             armorId = nextArmorId ?? string.Empty;
             displayName = nextDisplayName ?? string.Empty;
             rarity = nextRarity;
+            loadClass = nextLoadClass;
             statModifier = nextStatModifier;
             tags = (nextTags ?? Enumerable.Empty<BuildTag>())
                 .Where(tag => tag != BuildTag.None)

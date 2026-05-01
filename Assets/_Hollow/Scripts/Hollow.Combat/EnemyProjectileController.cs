@@ -116,7 +116,8 @@ namespace Hollow.Combat
                                 damage,
                                 gameObject,
                                 DamageFeedbackContext.Knockback(localDirection, profile.PlayerKnockbackMeters, profile.KnockbackSeconds),
-                                threatKind)))
+                                threatKind,
+                                DamageClassification.PhysicalProjectile(ForceClassForThreat(threatKind)))))
                     {
                         VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
                         AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);
@@ -128,6 +129,17 @@ namespace Hollow.Combat
             }
 
             return false;
+        }
+
+        private static ImpactForceClass ForceClassForThreat(DamageThreatKind threatKind)
+        {
+            return threatKind switch
+            {
+                DamageThreatKind.Boss => ImpactForceClass.Massive,
+                DamageThreatKind.Heavy or DamageThreatKind.StrongProjectile => ImpactForceClass.Heavy,
+                DamageThreatKind.Environmental => ImpactForceClass.Medium,
+                _ => ImpactForceClass.Light
+            };
         }
 
         private void DestroyProjectile()

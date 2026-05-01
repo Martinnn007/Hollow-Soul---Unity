@@ -100,7 +100,8 @@ namespace Hollow.Combat
                     new DamageRequest(
                         damage,
                         gameObject,
-                        DamageFeedbackContext.Knockback(localDirection, knockback, profile.KnockbackSeconds)));
+                        DamageFeedbackContext.Knockback(localDirection, knockback, profile.KnockbackSeconds),
+                        DamageClassification.PhysicalProjectile(heavyAttackProjectile ? ImpactForceClass.Medium : ImpactForceClass.Light)));
                 DestroyProjectile(ProjectileDespawnReason.EnemyHit);
                 return true;
             }

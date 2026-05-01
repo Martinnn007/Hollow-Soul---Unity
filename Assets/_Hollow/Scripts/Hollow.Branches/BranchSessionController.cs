@@ -45,6 +45,7 @@ namespace Hollow.Branches
         [SerializeField] private UsableItemCatalogDefinition usableItemCatalog;
         [SerializeField] private CharacterCatalogDefinition characterCatalog;
         [SerializeField] private ArmorCatalogDefinition armorCatalog;
+        [SerializeField] private ShieldCatalogDefinition shieldCatalog;
         [SerializeField] private SynergyCatalogDefinition synergyCatalog;
         [SerializeField] private ChallengeCatalogDefinition challengeCatalog;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
@@ -211,6 +212,8 @@ namespace Hollow.Branches
 
         public ArmorCatalogDefinition ArmorCatalog => armorCatalog;
 
+        public ShieldCatalogDefinition ShieldCatalog => shieldCatalog;
+
         public SynergyCatalogDefinition SynergyCatalog => synergyCatalog;
 
         public ChallengeCatalogDefinition ChallengeCatalog => challengeCatalog;
@@ -293,6 +296,11 @@ namespace Hollow.Branches
         public void ConfigureArmorCatalog(ArmorCatalogDefinition nextArmorCatalog)
         {
             armorCatalog = nextArmorCatalog;
+        }
+
+        public void ConfigureShieldCatalog(ShieldCatalogDefinition nextShieldCatalog)
+        {
+            shieldCatalog = nextShieldCatalog;
         }
 
         public void ConfigureSynergyCatalog(SynergyCatalogDefinition nextSynergyCatalog)
@@ -619,6 +627,7 @@ namespace Hollow.Branches
                 health != null ? health.CurrentHealth : Mathf.RoundToInt(derived.MaxHealth),
                 Mathf.RoundToInt(derived.MaxHealth),
                 derived.Defense,
+                derived.Stability + EquipmentLoadResolver.Resolve(appliedBuild, weaponCatalog, armorCatalog, shieldCatalog).ArmorStabilityBonus,
                 defense != null && defense.IsGuarding,
                 derived.SpeedMetersPerSecond,
                 derived.Strength,
@@ -636,6 +645,8 @@ namespace Hollow.Branches
                 ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.MeleeWeaponId),
                 ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.RangedWeaponId),
                 ResolveRewardName(RewardKind.Armor, appliedBuild.Equipment.ArmorId),
+                ResolveRewardName(RewardKind.Shield, appliedBuild.Equipment.ShieldId),
+                EquipmentLoadResolver.Resolve(appliedBuild, weaponCatalog, armorCatalog, shieldCatalog),
                 ActiveItemSummary(appliedBuild),
                 CardSummary(appliedBuild),
                 ActiveSynergyDisplayName);
@@ -2453,7 +2464,7 @@ namespace Hollow.Branches
         private void ApplyRunStatsToPlayer(int healAmount)
         {
             playerRunBuild = CreateAppliedCurrentRunBuild(announceActivation: true);
-            PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, weaponCatalog, healAmount);
+            PlayerBuildApplier.Apply(playerRunBuild, playerController != null ? playerController.gameObject : null, weaponCatalog, armorCatalog, shieldCatalog, healAmount);
         }
 
         private void ApplySelectedCharacterForFreshRun()
@@ -2478,6 +2489,7 @@ namespace Hollow.Branches
                 playerRunBuild,
                 weaponCatalog,
                 armorCatalog,
+                shieldCatalog,
                 usableItemCatalog,
                 dropPosition);
 
@@ -2507,6 +2519,9 @@ namespace Hollow.Branches
                     break;
                 case RewardKind.Armor:
                     playerRunBuild.Equipment.EquipArmor(state.RewardId);
+                    break;
+                case RewardKind.Shield:
+                    playerRunBuild.Equipment.EquipShield(state.RewardId);
                     break;
                 case RewardKind.ActiveItem:
                     playerRunBuild.Equipment.EquipActiveItem(state.RewardId);
@@ -2543,9 +2558,10 @@ namespace Hollow.Branches
                 playerRunBuild,
                 weaponCatalog,
                 armorCatalog,
+                shieldCatalog,
                 usableItemCatalog,
                 dropPosition);
-            var result = RewardApplicationService.Apply(grant, runEconomy, playerRunStats, playerRunBuild, weaponCatalog, usableItemCatalog);
+            var result = RewardApplicationService.Apply(grant, runEconomy, playerRunStats, playerRunBuild, weaponCatalog, shieldCatalog, usableItemCatalog);
             if (result.Applied)
             {
                 if (restoredActiveItemCharges >= 0 && grant.RewardKind == RewardKind.ActiveItem)
@@ -2745,7 +2761,7 @@ namespace Hollow.Branches
 
         private string ResolveRewardName(RewardKind kind, string id)
         {
-            return RewardPresentationResolver.ResolveName(kind, id, weaponCatalog, armorCatalog, usableItemCatalog, ActiveRewardPoolsForSynergies());
+            return RewardPresentationResolver.ResolveName(kind, id, weaponCatalog, armorCatalog, shieldCatalog, usableItemCatalog, ActiveRewardPoolsForSynergies());
         }
 
         private string CharacterDisplayName(string characterId)
@@ -2771,6 +2787,7 @@ namespace Hollow.Branches
                 runEconomy,
                 weaponCatalog,
                 armorCatalog,
+                shieldCatalog,
                 usableItemCatalog,
                 ActiveRewardPoolsForSynergies(),
                 replacementText);
@@ -2810,6 +2827,7 @@ namespace Hollow.Branches
             {
                 RewardKind.Weapon => PresentationPrefabRole.WeaponMelee,
                 RewardKind.Armor => PresentationPrefabRole.Armor,
+                RewardKind.Shield => PresentationPrefabRole.RewardPickup,
                 RewardKind.ActiveItem => PresentationPrefabRole.ActiveItemPickup,
                 RewardKind.ConsumableCard => PresentationPrefabRole.ConsumableCardPickup,
                 _ => PresentationPrefabRole.RewardPickup

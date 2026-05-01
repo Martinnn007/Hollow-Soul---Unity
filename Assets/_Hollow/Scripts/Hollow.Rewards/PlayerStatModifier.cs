@@ -17,6 +17,7 @@ namespace Hollow.Rewards
         public int defense;
         public int meleeDamage;
         public int rangedDamage;
+        public int stability;
         public float attackCooldownMultiplier;
         public float meleeRangeBonusMeters;
         public float rangedRangeBonusMeters;
@@ -30,6 +31,7 @@ namespace Hollow.Rewards
             defense == 0 &&
             meleeDamage == 0 &&
             rangedDamage == 0 &&
+            stability == 0 &&
             Mathf.Approximately(attackCooldownMultiplier, 0f) &&
             Mathf.Approximately(meleeRangeBonusMeters, 0f) &&
             Mathf.Approximately(rangedRangeBonusMeters, 0f);
@@ -47,6 +49,7 @@ namespace Hollow.Rewards
                 defense = defense,
                 meleeDamage = meleeDamage,
                 rangedDamage = rangedDamage,
+                stability = stability,
                 attackCooldownMultiplier = attackCooldownMultiplier,
                 meleeRangeBonusMeters = meleeRangeBonusMeters,
                 rangedRangeBonusMeters = rangedRangeBonusMeters
@@ -68,6 +71,7 @@ namespace Hollow.Rewards
                     defense = saveState.defense,
                     meleeDamage = saveState.meleeDamage,
                     rangedDamage = saveState.rangedDamage,
+                    stability = saveState.stability,
                     attackCooldownMultiplier = saveState.attackCooldownMultiplier,
                     meleeRangeBonusMeters = saveState.meleeRangeBonusMeters,
                     rangedRangeBonusMeters = saveState.rangedRangeBonusMeters
@@ -87,6 +91,7 @@ namespace Hollow.Rewards
                 defense = modifier.Defense,
                 meleeDamage = modifier.MeleeDamage,
                 rangedDamage = modifier.RangedDamage,
+                stability = modifier.Stability,
                 attackCooldownMultiplier = modifier.AttackCooldownMultiplier,
                 meleeRangeBonusMeters = modifier.MeleeRangeBonusMeters,
                 rangedRangeBonusMeters = modifier.RangedRangeBonusMeters

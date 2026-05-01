@@ -17,7 +17,21 @@ namespace Hollow.Rewards
             IEnumerable<RewardPoolDefinition> rewardPools,
             string replacementText = "")
         {
-            var info = ResolveRewardInfo(grant, weapons, armors, usables, rewardPools);
+            return CreateReveal(sequence, grant, economy, weapons, armors, null, usables, rewardPools, replacementText);
+        }
+
+        public static PickupRevealModel CreateReveal(
+            int sequence,
+            RewardGrant grant,
+            RunEconomy economy,
+            WeaponCatalogDefinition weapons,
+            ArmorCatalogDefinition armors,
+            ShieldCatalogDefinition shields,
+            UsableItemCatalogDefinition usables,
+            IEnumerable<RewardPoolDefinition> rewardPools,
+            string replacementText = "")
+        {
+            var info = ResolveRewardInfo(grant, weapons, armors, shields, usables, rewardPools);
             var currency = CurrencyText(grant, economy);
             var effect = string.IsNullOrWhiteSpace(currency) ? info.EffectText : $"{info.EffectText} {currency}".Trim();
             return new PickupRevealModel(
@@ -39,6 +53,17 @@ namespace Hollow.Rewards
             UsableItemCatalogDefinition usables,
             IEnumerable<RewardPoolDefinition> rewardPools)
         {
+            return ResolveRewardInfo(grant, weapons, armors, null, usables, rewardPools);
+        }
+
+        public static RewardPresentationInfo ResolveRewardInfo(
+            RewardGrant grant,
+            WeaponCatalogDefinition weapons,
+            ArmorCatalogDefinition armors,
+            ShieldCatalogDefinition shields,
+            UsableItemCatalogDefinition usables,
+            IEnumerable<RewardPoolDefinition> rewardPools)
+        {
             var rewardDefinition = FindRewardDefinition(grant.RewardId, rewardPools);
             var displayName = !string.IsNullOrWhiteSpace(rewardDefinition?.DisplayName) ? rewardDefinition.DisplayName : grant.DisplayName;
             var rarity = rewardDefinition != null ? rewardDefinition.Rarity : DefaultRarityFor(grant.RewardKind);
@@ -55,6 +80,13 @@ namespace Hollow.Rewards
                 displayName = armor.DisplayName;
                 rarity = ArmorRarityToRewardRarity(armor.Rarity);
                 return new RewardPresentationInfo(displayName, "Armor", "A", rarity, ArmorEffectText(armor));
+            }
+
+            if (grant.RewardKind == RewardKind.Shield && shields != null && shields.TryGetShield(grant.RewardId, out var shield))
+            {
+                displayName = shield.DisplayName;
+                rarity = ArmorRarityToRewardRarity(shield.Rarity);
+                return new RewardPresentationInfo(displayName, "Shield", "S", rarity, ShieldEffectText(shield));
             }
 
             if ((grant.RewardKind == RewardKind.ActiveItem || grant.RewardKind == RewardKind.ConsumableCard) &&
@@ -81,6 +113,18 @@ namespace Hollow.Rewards
             UsableItemCatalogDefinition usables,
             IEnumerable<RewardPoolDefinition> rewardPools)
         {
+            return ResolveName(kind, id, weapons, armors, null, usables, rewardPools);
+        }
+
+        public static string ResolveName(
+            RewardKind kind,
+            string id,
+            WeaponCatalogDefinition weapons,
+            ArmorCatalogDefinition armors,
+            ShieldCatalogDefinition shields,
+            UsableItemCatalogDefinition usables,
+            IEnumerable<RewardPoolDefinition> rewardPools)
+        {
             if (string.IsNullOrWhiteSpace(id))
             {
                 return "None";
@@ -94,6 +138,11 @@ namespace Hollow.Rewards
             if (kind == RewardKind.Armor && armors != null && armors.TryGetArmor(id, out var armor))
             {
                 return armor.DisplayName;
+            }
+
+            if (kind == RewardKind.Shield && shields != null && shields.TryGetShield(id, out var shield))
+            {
+                return shield.DisplayName;
             }
 
             if ((kind == RewardKind.ActiveItem || kind == RewardKind.ConsumableCard) && usables != null && usables.TryGet(id, out var usable))
@@ -149,6 +198,7 @@ namespace Hollow.Rewards
                 RewardKind.ConsumableCard => "Consumable Card",
                 RewardKind.Weapon => "Weapon",
                 RewardKind.Armor => "Armor",
+                RewardKind.Shield => "Shield",
                 RewardKind.Currency => "Currency",
                 RewardKind.Heal => "Heal",
                 _ => "Reward"
@@ -166,6 +216,7 @@ namespace Hollow.Rewards
                 RewardKind.ConsumableCard => "K",
                 RewardKind.Weapon => "W",
                 RewardKind.Armor => "A",
+                RewardKind.Shield => "S",
                 RewardKind.Currency => "$",
                 RewardKind.Heal => "+",
                 _ => "*"
@@ -208,6 +259,7 @@ namespace Hollow.Rewards
                 RewardKind.Heal => "Restores health",
                 RewardKind.Weapon => "Replaces weapon slot",
                 RewardKind.Armor => "Replaces armor",
+                RewardKind.Shield => "Replaces shield",
                 RewardKind.ActiveItem => "Replaces active item",
                 RewardKind.ConsumableCard => "Replaces card",
                 RewardKind.PassiveItem => "Passive bonus",
@@ -231,6 +283,7 @@ namespace Hollow.Rewards
                 RewardEffectKind.MaxStaminaBonus => $"+{effect.FloatValue:0} stamina",
                 RewardEffectKind.StaminaRegenBonus => $"+{effect.FloatValue:0.#} stamina regen",
                 RewardEffectKind.DefenseBonus => $"+{effect.IntValue} defense",
+                RewardEffectKind.StabilityBonus => $"+{effect.IntValue} stability",
                 RewardEffectKind.MeleeDamageBonus => $"+{effect.IntValue} melee damage",
                 RewardEffectKind.RangedDamageBonus => $"+{effect.IntValue} ranged damage",
                 RewardEffectKind.AttackCooldownMultiplier => $"Cooldown x{effect.FloatValue:0.##}",
@@ -271,7 +324,19 @@ namespace Hollow.Rewards
             if (modifier.MaxHealth != 0) lines.Add($"+{modifier.MaxHealth} max HP");
             if (modifier.MeleeDamage != 0) lines.Add($"+{modifier.MeleeDamage} melee");
             if (modifier.RangedDamage != 0) lines.Add($"+{modifier.RangedDamage} ranged");
+            if (modifier.Stability != 0) lines.Add($"+{modifier.Stability} stability");
             return lines.Count == 0 ? "Armor" : string.Join(", ", lines);
+        }
+
+        private static string ShieldEffectText(ShieldDefinition shield)
+        {
+            if (shield == null)
+            {
+                return "Shield";
+            }
+
+            var load = shield.LoadClass == EquipmentLoadClass.Light ? "Small" : shield.LoadClass.ToString();
+            return $"{load} shield, +{EquipmentLoadResolver.Score(shield.LoadClass)} load";
         }
 
         private static string CurrencyText(RewardGrant grant, RunEconomy economy)

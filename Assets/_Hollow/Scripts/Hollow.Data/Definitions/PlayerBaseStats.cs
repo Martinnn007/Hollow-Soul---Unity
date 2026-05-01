@@ -14,6 +14,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private int defense;
         [SerializeField] private int meleeDamageBonus;
         [SerializeField] private int rangedDamageBonus;
+        [SerializeField] private int stability;
         [SerializeField] private float attackCooldownMultiplier;
         [SerializeField] private float meleeRangeBonusMeters;
         [SerializeField] private float rangedRangeBonusMeters;
@@ -29,7 +30,8 @@ namespace Hollow.Data.Definitions
             int rangedDamageBonus,
             float attackCooldownMultiplier,
             float meleeRangeBonusMeters = 0f,
-            float rangedRangeBonusMeters = 0f)
+            float rangedRangeBonusMeters = 0f,
+            int stability = 1)
         {
             this.maxHealth = Mathf.Max(1, maxHealth);
             this.speedMetersPerSecond = Mathf.Max(0.1f, speedMetersPerSecond);
@@ -39,6 +41,7 @@ namespace Hollow.Data.Definitions
             this.defense = Mathf.Max(0, defense);
             this.meleeDamageBonus = Mathf.Max(0, meleeDamageBonus);
             this.rangedDamageBonus = Mathf.Max(0, rangedDamageBonus);
+            this.stability = Mathf.Max(0, stability);
             this.attackCooldownMultiplier = attackCooldownMultiplier <= 0f ? 1f : attackCooldownMultiplier;
             this.meleeRangeBonusMeters = Mathf.Max(0f, meleeRangeBonusMeters);
             this.rangedRangeBonusMeters = Mathf.Max(0f, rangedRangeBonusMeters);
@@ -60,6 +63,8 @@ namespace Hollow.Data.Definitions
 
         public int RangedDamageBonus => Mathf.Max(0, rangedDamageBonus);
 
+        public int Stability => stability <= 0 ? 1 : stability;
+
         public float AttackCooldownMultiplier => attackCooldownMultiplier <= 0f ? 1f : attackCooldownMultiplier;
 
         public float MeleeRangeBonusMeters => Mathf.Max(0f, meleeRangeBonusMeters);
@@ -77,6 +82,7 @@ namespace Hollow.Data.Definitions
             defense: 0,
             meleeDamageBonus: 0,
             rangedDamageBonus: 0,
+            stability: 1,
             attackCooldownMultiplier: 1f,
             meleeRangeBonusMeters: 0f,
             rangedRangeBonusMeters: 0f);

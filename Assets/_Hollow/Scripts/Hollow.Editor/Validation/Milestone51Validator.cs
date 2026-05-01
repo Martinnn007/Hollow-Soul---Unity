@@ -222,12 +222,12 @@ namespace Hollow.Editor.Validation
 
         private static bool IsBuildChangingReward(RewardDefinition reward)
         {
-            return reward != null && reward.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor;
+            return reward != null && reward.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor or RewardKind.Shield;
         }
 
         private static bool IsBuildChangingGrant(RewardGrant grant)
         {
-            return grant.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor;
+            return grant.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor or RewardKind.Shield;
         }
     }
 }

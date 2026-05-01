@@ -16,10 +16,7 @@ MonoBehaviour:
   identityId: broken_meridian
   displayName: The Broken Meridian
   subtitle: A mixed threshold where timelines scrape against the same door.
-  biomeTags:
-  - 0
-  - 1
-  - 11
+  biomeTags: 00000000010000000b000000
   paletteHint: cold slate, bruised green, dead-gold seams
   lightingHint: thin dawn light cutting through black dust
   materialNotes: fractured stone, mismatched eras, memory-glass edges

@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 397e39664dc524fb2a94999af50ed3cb, type: 3}
+  m_Name: Boss_gravel_maw
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.BossDefinition
+  bossId: gravel_maw
+  displayName: Gravel Maw
+  worldBand: 1
+  behaviorId: 2
+  maxHealth: 28
+  speedMetersPerSecond: 1.75
+  contactDamage: 1
+  contactCooldownSeconds: 1
+  radiusMeters: 0.52
+  projectileSpeedMetersPerSecond: 4.8
+  visualScale: 2.25
+  debugColor: {r: 0.78, g: 0.64, b: 0.36, a: 1}
+  arena:
+    arenaId: boss_arena_sandy_pit_ring
+    displayName: Sandy Pit-Ring
+  phases:
+  - healthThreshold01: 1
+    displayName: Phase 1
+    statusText: Testing the remnant
+  - healthThreshold01: 0.5
+    displayName: Phase 2
+    statusText: Roused
+  attacks:
+  - kind: 7
+    cooldownSeconds: 6
+    windupSeconds: 0.5
+    damage: 1
+    projectileCount: 3
+  - kind: 1
+    cooldownSeconds: 2.4
+    windupSeconds: 0.25
+    damage: 1
+    projectileCount: 1

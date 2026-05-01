@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 397e39664dc524fb2a94999af50ed3cb, type: 3}
+  m_Name: Boss_mirror_husk
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.BossDefinition
+  bossId: mirror_husk
+  displayName: Mirror Husk
+  worldBand: 2
+  behaviorId: 5
+  maxHealth: 34
+  speedMetersPerSecond: 1.15
+  contactDamage: 1
+  contactCooldownSeconds: 1
+  radiusMeters: 0.62
+  projectileSpeedMetersPerSecond: 4.8
+  visualScale: 2.1
+  debugColor: {r: 0.62, g: 0.74, b: 0.9, a: 1}
+  arena:
+    arenaId: boss_arena_symmetric_mirror
+    displayName: Symmetric Mirror
+  phases:
+  - healthThreshold01: 1
+    displayName: Phase 1
+    statusText: Testing the remnant
+  - healthThreshold01: 0.5
+    displayName: Phase 2
+    statusText: Roused
+  attacks:
+  - kind: 6
+    cooldownSeconds: 0.1
+    windupSeconds: 0
+    damage: 1
+    projectileCount: 1
+  - kind: 0
+    cooldownSeconds: 1
+    windupSeconds: 0
+    damage: 1
+    projectileCount: 1

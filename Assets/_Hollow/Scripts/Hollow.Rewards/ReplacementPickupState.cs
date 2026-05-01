@@ -115,6 +115,18 @@ namespace Hollow.Rewards
             UsableItemCatalogDefinition usableCatalog,
             Vector3 localPosition)
         {
+            return CaptureBeforeApply(incomingGrant, build, weaponCatalog, armorCatalog, null, usableCatalog, localPosition);
+        }
+
+        public static ReplacementPickupState CaptureBeforeApply(
+            RewardGrant incomingGrant,
+            PlayerRunBuild build,
+            WeaponCatalogDefinition weaponCatalog,
+            ArmorCatalogDefinition armorCatalog,
+            ShieldCatalogDefinition shieldCatalog,
+            UsableItemCatalogDefinition usableCatalog,
+            Vector3 localPosition)
+        {
             if (build == null || incomingGrant.IsEmpty)
             {
                 return null;
@@ -126,6 +138,8 @@ namespace Hollow.Rewards
                     return CaptureWeapon(incomingGrant, build, weaponCatalog, localPosition);
                 case RewardKind.Armor:
                     return CaptureArmor(incomingGrant, build, armorCatalog, localPosition);
+                case RewardKind.Shield:
+                    return CaptureShield(incomingGrant, build, shieldCatalog, localPosition);
                 case RewardKind.ActiveItem:
                     return CaptureActiveItem(incomingGrant, build, usableCatalog, localPosition);
                 case RewardKind.ConsumableCard:
@@ -167,6 +181,18 @@ namespace Hollow.Rewards
 
             var oldName = catalog != null && catalog.TryGetArmor(oldId, out var oldArmor) ? oldArmor.DisplayName : oldId;
             return new ReplacementPickupState(string.Empty, incomingGrant.RoomId, RewardKind.Armor, oldId, oldName, 0, localPosition);
+        }
+
+        private static ReplacementPickupState CaptureShield(RewardGrant incomingGrant, PlayerRunBuild build, ShieldCatalogDefinition catalog, Vector3 localPosition)
+        {
+            var oldId = build.Equipment.ShieldId;
+            if (string.IsNullOrWhiteSpace(oldId) || oldId == incomingGrant.RewardId)
+            {
+                return null;
+            }
+
+            var oldName = catalog != null && catalog.TryGetShield(oldId, out var oldShield) ? oldShield.DisplayName : oldId;
+            return new ReplacementPickupState(string.Empty, incomingGrant.RoomId, RewardKind.Shield, oldId, oldName, 0, localPosition);
         }
 
         private static ReplacementPickupState CaptureActiveItem(RewardGrant incomingGrant, PlayerRunBuild build, UsableItemCatalogDefinition catalog, Vector3 localPosition)

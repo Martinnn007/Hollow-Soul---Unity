@@ -1,0 +1,659 @@
+{
+    "schemaVersion": 1,
+    "projectId": "curated_boss_arena_cover_maze",
+    "displayName": "Cover Maze",
+    "footprintPreset": 0,
+    "widthTiles": 13,
+    "heightTiles": 7,
+    "createdAtUtcTicks": 0,
+    "updatedAtUtcTicks": 0,
+    "cells": [
+        {
+            "x": -6,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": -3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": -2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": -1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 0,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 1,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 2,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -6,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -5,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -4,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -2,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -1,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 0,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 1,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 2,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 3,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 4,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 5,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": 6,
+            "z": 3,
+            "layer": 0,
+            "kind": "tileGround"
+        },
+        {
+            "x": -3,
+            "z": -2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": 3,
+            "z": -2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": -3,
+            "z": 2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": 3,
+            "z": 2,
+            "layer": 0,
+            "kind": "rockTile"
+        },
+        {
+            "x": -5,
+            "z": 1,
+            "layer": 0,
+            "kind": "hazardSpike"
+        },
+        {
+            "x": 5,
+            "z": -1,
+            "layer": 0,
+            "kind": "hazardSpike"
+        }
+    ],
+    "markers": [
+        {
+            "id": "spawn_safeStart",
+            "kind": "spawn_point_safeStart",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 2.0
+        },
+        {
+            "id": "spawn_boss_anchor_0",
+            "kind": "spawnEnemyHeavy",
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.5
+        },
+        {
+            "id": "spawn_reward_0",
+            "kind": "spawn_point_roomReward",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 2.5
+        }
+    ],
+    "doorPorts": [
+        {
+            "id": "north_0",
+            "direction": "north",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": 0.0,
+            "z": -3.5,
+            "state": "door"
+        },
+        {
+            "id": "south_0",
+            "direction": "south",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": 0.0,
+            "z": 3.5,
+            "state": "door"
+        },
+        {
+            "id": "east_0",
+            "direction": "east",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": 6.5,
+            "z": 0.0,
+            "state": "door"
+        },
+        {
+            "id": "west_0",
+            "direction": "west",
+            "laneIndex": 0,
+            "hostCellX": 0,
+            "hostCellZ": 0,
+            "x": -6.5,
+            "z": 0.0,
+            "state": "door"
+        }
+    ]
+}

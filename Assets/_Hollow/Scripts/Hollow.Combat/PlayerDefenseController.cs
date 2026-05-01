@@ -19,6 +19,9 @@ namespace Hollow.Combat
         public const float ParryStaminaCost = 16f;
 
         [SerializeField] private int defense;
+        [SerializeField] private int baseStability = 1;
+        [SerializeField] private int activeGuardShieldStabilityBonus = 1;
+        [SerializeField] private float guardStaminaCostMultiplier = 1f;
         [SerializeField] private bool isGuarding;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlayerWeaponController weaponController;
@@ -31,6 +34,10 @@ namespace Hollow.Combat
         private bool parryConsumed;
 
         public int Defense => defense;
+
+        public int BaseStability => Mathf.Max(0, baseStability);
+
+        public int ActiveStability => BaseStability + (isGuarding ? Mathf.Max(0, activeGuardShieldStabilityBonus) : 0);
 
         public bool IsGuarding => isGuarding;
 
@@ -49,6 +56,14 @@ namespace Hollow.Combat
         public void Configure(int nextDefense)
         {
             defense = Mathf.Max(0, nextDefense);
+            ResolveReferences();
+        }
+
+        public void ConfigureStability(int nextBaseStability, int nextActiveGuardShieldStabilityBonus, float nextGuardStaminaCostMultiplier)
+        {
+            baseStability = Mathf.Max(0, nextBaseStability);
+            activeGuardShieldStabilityBonus = Mathf.Max(0, nextActiveGuardShieldStabilityBonus);
+            guardStaminaCostMultiplier = Mathf.Max(0.01f, nextGuardStaminaCostMultiplier);
             ResolveReferences();
         }
 
@@ -115,7 +130,7 @@ namespace Hollow.Combat
             }
 
             lastGuardHeld = true;
-            var drainCost = profile.GuardDrainStaminaPerSecond * Mathf.Max(0f, deltaTime);
+            var drainCost = AdjustGuardStaminaCost(profile.GuardDrainStaminaPerSecond * Mathf.Max(0f, deltaTime));
             isGuarding = SpendStamina(drainCost);
             if (!isGuarding)
             {
@@ -168,7 +183,7 @@ namespace Hollow.Combat
             var parryable = request.ThreatKind == DamageThreatKind.Light;
             if (parryable && IsInParryWindow && !parryConsumed)
             {
-                if (SpendStamina(profile.ParryStaminaCost))
+                if (SpendStamina(AdjustGuardStaminaCost(profile.ParryStaminaCost)))
                 {
                     parryConsumed = true;
                     LastHitWasGuarded = true;
@@ -182,7 +197,7 @@ namespace Hollow.Combat
                 LastGuardResult = ShieldGuardResult.FailedNoStamina;
             }
 
-            if (SpendStamina(profile.GuardHitStaminaCost))
+            if (SpendStamina(AdjustGuardStaminaCost(profile.GuardHitStaminaCost)))
             {
                 var beforeGuard = reducedAmount;
                 reducedAmount = Mathf.Max(0, reducedAmount - profile.GuardDamageReduction);
@@ -207,6 +222,11 @@ namespace Hollow.Combat
         private bool SpendStamina(float amount)
         {
             return weaponController == null || weaponController.SpendStaminaForDefense(amount);
+        }
+
+        private float AdjustGuardStaminaCost(float amount)
+        {
+            return Mathf.Max(0f, amount) * Mathf.Max(0.01f, guardStaminaCostMultiplier);
         }
 
         private void ApplyParryCounter(DamageRequest request, Vector3 sourceDirection, ShieldGuardProfileDefinition profile)

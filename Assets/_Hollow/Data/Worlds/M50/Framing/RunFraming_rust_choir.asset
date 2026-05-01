@@ -16,9 +16,7 @@ MonoBehaviour:
   identityId: rust_choir
   displayName: The Rust Choir
   subtitle: A fallen future still singing through broken machines.
-  biomeTags:
-  - 5
-  - 8
+  biomeTags: 0500000008000000
   paletteHint: rust orange, oil black, warning yellow, dead cyan
   lightingHint: failing neon under dust-heavy industrial haze
   materialNotes: corroded alloy, cracked screens, cable nests, coolant stains

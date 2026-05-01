@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Practice Bolt
   slot: 1
   category: 2
+  loadClass: 0
   tags: 020000000a000000
   lightAttack:
     attackKind: 0

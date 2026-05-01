@@ -19,6 +19,8 @@ namespace Hollow.Rewards
 
         public string ArmorId { get; private set; } = string.Empty;
 
+        public string ShieldId { get; private set; } = ShieldDefinition.StarterShieldId;
+
         public void EquipMeleeWeapon(string weaponId)
         {
             MeleeWeaponId = string.IsNullOrWhiteSpace(weaponId) ? "starter_blade" : weaponId;
@@ -75,6 +77,11 @@ namespace Hollow.Rewards
             ArmorId = armorId ?? string.Empty;
         }
 
+        public void EquipShield(string shieldId)
+        {
+            ShieldId = string.IsNullOrWhiteSpace(shieldId) ? ShieldDefinition.StarterShieldId : shieldId;
+        }
+
         public RunEquipmentSlotsSaveState ToSaveState()
         {
             return new RunEquipmentSlotsSaveState
@@ -85,7 +92,8 @@ namespace Hollow.Rewards
                 activeItemId = ActiveItemId,
                 activeItemCharges = ActiveItemCharges,
                 consumableCardId = ConsumableCardId,
-                armorId = ArmorId
+                armorId = ArmorId,
+                shieldId = ShieldId
             };
         }
 
@@ -108,6 +116,7 @@ namespace Hollow.Rewards
             slots.SetActiveItemCharges(saveState.activeItemCharges);
             slots.EquipConsumableCard(saveState.consumableCardId);
             slots.EquipArmor(saveState.armorId);
+            slots.EquipShield(saveState.shieldId);
             return slots;
         }
     }

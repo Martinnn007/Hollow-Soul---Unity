@@ -65,7 +65,8 @@ namespace Hollow.Data.Definitions
                     defense: nextStatBonus.Defense,
                     meleeDamage: nextStatBonus.MeleeDamageBonus,
                     rangedDamage: nextStatBonus.RangedDamageBonus,
-                    attackCooldownMultiplier: nextStatBonus.AttackCooldownMultiplier));
+                    attackCooldownMultiplier: nextStatBonus.AttackCooldownMultiplier,
+                    stability: nextStatBonus.Stability));
         }
 
         public void Configure(

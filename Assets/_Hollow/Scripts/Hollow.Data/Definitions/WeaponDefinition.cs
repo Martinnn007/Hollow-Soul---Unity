@@ -11,6 +11,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private string displayName;
         [SerializeField] private WeaponSlot slot;
         [SerializeField] private WeaponCategory category;
+        [SerializeField] private EquipmentLoadClass loadClass = EquipmentLoadClass.Light;
         [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
         [SerializeField] private WeaponAttackDefinition lightAttack;
         [SerializeField] private WeaponAttackDefinition heavyAttack;
@@ -22,6 +23,8 @@ namespace Hollow.Data.Definitions
         public WeaponSlot Slot => slot;
 
         public WeaponCategory Category => category;
+
+        public EquipmentLoadClass LoadClass => loadClass;
 
         public IReadOnlyList<BuildTag> Tags => tags;
 
@@ -36,12 +39,14 @@ namespace Hollow.Data.Definitions
             WeaponCategory nextCategory,
             IEnumerable<BuildTag> nextTags = null,
             WeaponAttackDefinition? nextLightAttack = null,
-            WeaponAttackDefinition? nextHeavyAttack = null)
+            WeaponAttackDefinition? nextHeavyAttack = null,
+            EquipmentLoadClass nextLoadClass = EquipmentLoadClass.Light)
         {
             weaponId = nextWeaponId ?? string.Empty;
             displayName = nextDisplayName ?? string.Empty;
             slot = nextSlot;
             category = nextCategory;
+            loadClass = nextLoadClass;
             tags = (nextTags ?? Enumerable.Empty<BuildTag>())
                 .Where(tag => tag != BuildTag.None)
                 .Distinct()

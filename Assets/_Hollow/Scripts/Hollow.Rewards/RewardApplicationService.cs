@@ -12,6 +12,18 @@ namespace Hollow.Rewards
             WeaponCatalogDefinition weaponCatalog,
             UsableItemCatalogDefinition usableCatalog)
         {
+            return Apply(grant, economy, stats, build, weaponCatalog, null, usableCatalog);
+        }
+
+        public static RewardApplicationResult Apply(
+            RewardGrant grant,
+            RunEconomy economy,
+            PlayerRunStats stats,
+            PlayerRunBuild build,
+            WeaponCatalogDefinition weaponCatalog,
+            ShieldCatalogDefinition shieldCatalog,
+            UsableItemCatalogDefinition usableCatalog)
+        {
             if (grant.IsEmpty || economy == null || build == null)
             {
                 return new RewardApplicationResult(false, 0, "No reward");
@@ -44,6 +56,9 @@ namespace Hollow.Rewards
                     break;
                 case RewardKind.Armor:
                     build.Equipment.EquipArmor(grant.RewardId);
+                    break;
+                case RewardKind.Shield:
+                    ApplyShield(grant.RewardId, build, shieldCatalog);
                     break;
                 case RewardKind.Heal:
                     healAmount += grant.Effects != null && grant.Effects.Count > 0
@@ -105,6 +120,23 @@ namespace Hollow.Rewards
                 build.Equipment.EquipRangedWeapon(weaponId);
                 build.Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
             }
+        }
+
+        private static void ApplyShield(string shieldId, PlayerRunBuild build, ShieldCatalogDefinition shieldCatalog)
+        {
+            if (string.IsNullOrWhiteSpace(shieldId))
+            {
+                build.Equipment.EquipShield(ShieldDefinition.StarterShieldId);
+                return;
+            }
+
+            if (shieldCatalog != null && shieldCatalog.TryGetShield(shieldId, out var shield))
+            {
+                build.Equipment.EquipShield(shield.ShieldId);
+                return;
+            }
+
+            build.Equipment.EquipShield(shieldId);
         }
 
         private static string MessageFor(RewardGrant grant)

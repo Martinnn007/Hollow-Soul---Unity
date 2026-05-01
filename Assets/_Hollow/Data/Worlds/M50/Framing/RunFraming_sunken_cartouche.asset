@@ -16,10 +16,7 @@ MonoBehaviour:
   identityId: sunken_cartouche
   displayName: The Sunken Cartouche
   subtitle: A drowned royal afterlife, rewritten by impossible tides.
-  biomeTags:
-  - 3
-  - 10
-  - 11
+  biomeTags: 030000000a0000000b000000
   paletteHint: lapis, sand-gold, oxidized teal, black river silt
   lightingHint: sun shafts through dust and water that should not be there
   materialNotes: carved stone, wet papyrus, cracked gold leaf, ritual ink

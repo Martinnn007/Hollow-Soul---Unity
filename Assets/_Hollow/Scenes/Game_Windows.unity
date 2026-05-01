@@ -216,7 +216,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36904706026ee485490efedcf3408abd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.BranchMiniMapController
 --- !u!114 &600839879
 MonoBehaviour:
@@ -228,7 +228,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6eb86b907c9e4e198ca3925a56f4262, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.CombatHudController
 --- !u!114 &600839880
 MonoBehaviour:
@@ -349,7 +349,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6745a6bcb22b482ba792196ddd5eb9c7, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.PickupRevealController
 --- !u!114 &600839887
 MonoBehaviour:
@@ -361,7 +361,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 246807d0848d4bb7a81e456d8360be7d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.PlayerBuildHudController
 --- !u!1001 &901488121
 PrefabInstance:
@@ -523,20 +523,23 @@ MonoBehaviour:
   nextBranchPortalPrefab: {fileID: 3059470880080516638, guid: 9333826f7001e4f89a6b06d650e93c55, type: 3}
   branchRoomTemplateCatalog: {fileID: 11400000, guid: 3665e4cabb1ef49f89996f4d1cfb3802, type: 2}
   branchGenerationSettings: {fileID: 11400000, guid: 56b03ad05db574d0994715aad73f94c6, type: 2}
-  standardRewardPool: {fileID: 11400000, guid: fb5338c6772c48d0b26729fe2e3e4a13, type: 2}
-  treasureRewardPool: {fileID: 11400000, guid: 59cf432c81f74982b29e5f25c8d29e74, type: 2}
-  bossRewardPool: {fileID: 11400000, guid: 872e6e3966a74a2fa7c17450ebf6ca76, type: 2}
+  standardRewardPool: {fileID: 11400000, guid: 8a25c91c636ab4600ab0e6e820759834, type: 2}
+  treasureRewardPool: {fileID: 11400000, guid: c0abe4dbb2ba341e3ab9d7b7285f7781, type: 2}
+  bossRewardPool: {fileID: 11400000, guid: b1b1ec73dc6c241188273cb26f111118, type: 2}
   weaponRewardPool: {fileID: 11400000, guid: c0c32fb79be434a3cbc8f64556f117c4, type: 2}
   weaponCatalog: {fileID: 11400000, guid: a5098120641cf48dd912cff2f2e13ef0, type: 2}
   usableItemCatalog: {fileID: 11400000, guid: b9618a81bc14d4b608b57deb48372281, type: 2}
   characterCatalog: {fileID: 11400000, guid: bc46fdb5feb794c3eb2e322098bcbf5c, type: 2}
   armorCatalog: {fileID: 11400000, guid: 6590f520455a74fcd86b74ee1c43c3d7, type: 2}
+  shieldCatalog: {fileID: 11400000, guid: f808c853ac4cb4f4484c83a039903393, type: 2}
   synergyCatalog: {fileID: 11400000, guid: 95e28de385c2b46efa874abb7d04e27d, type: 2}
   challengeCatalog: {fileID: 11400000, guid: af4608588ace94abd911b55114d1a17d, type: 2}
   encounterCatalog: {fileID: 11400000, guid: 578ef8ee4bdaa45c887f6863a8c9bef3, type: 2}
+  bossCatalog: {fileID: 11400000, guid: 67ade33a5fcd542808b8338e6ca3d41f, type: 2}
   encounterDirectorProfile: {fileID: 11400000, guid: 2302e95f4b74746ae84752fee5b230cc, type: 2}
   runFramingCatalog: {fileID: 11400000, guid: 50f00000000000000000000000000050, type: 2}
-  macroBranchSeed: 15001
+  developerLabContentDefinition: {fileID: 0}
+  macroBranchSeed: 14001
 --- !u!114 &1248658197
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -552,6 +555,7 @@ MonoBehaviour:
   enemyPrefab: {fileID: 8157212348299699757, guid: 2cb4108a7b7524d95804c7d150581c99, type: 3}
   projectilePrefab: {fileID: 1309853788480598750, guid: 949463d2054eb4012bf7bd23f4c50677, type: 3}
   enemyCatalog: {fileID: 11400000, guid: e3e74f0c26aa946deb1460904202a6bf, type: 2}
+  bossCatalog: {fileID: 11400000, guid: 67ade33a5fcd542808b8338e6ca3d41f, type: 2}
   difficultyTier: {fileID: 11400000, guid: 51292530132df448695690c7d07f6118, type: 2}
   combatFeelProfile: {fileID: 0}
   hazardTuningProfile: {fileID: 0}

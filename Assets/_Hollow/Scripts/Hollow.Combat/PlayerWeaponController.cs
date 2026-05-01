@@ -18,6 +18,7 @@ namespace Hollow.Combat
         [SerializeField] private int temporaryDamageBonus;
         [SerializeField] private float meleeRangeBonusMeters;
         [SerializeField] private float rangedRangeBonusMeters;
+        [SerializeField] private float attackStaminaCostMultiplier = 1f;
         private ProjectilePassiveState projectilePassiveState = ProjectilePassiveState.Default;
         [SerializeField] private float maxStamina = 100f;
         [SerializeField] private float currentStamina = 100f;
@@ -113,7 +114,8 @@ namespace Hollow.Combat
             float nextCurrentStamina,
             WeaponCatalogDefinition nextWeaponCatalog = null,
             float nextMeleeRangeBonusMeters = 0f,
-            float nextRangedRangeBonusMeters = 0f)
+            float nextRangedRangeBonusMeters = 0f,
+            float nextAttackStaminaCostMultiplier = 1f)
         {
             ConfigureStats(nextCooldownMultiplier, nextRangedDamageBonus);
             if (nextWeaponCatalog != null)
@@ -124,6 +126,7 @@ namespace Hollow.Combat
             meleeDamageBonus = Mathf.Max(0, nextMeleeDamageBonus);
             meleeRangeBonusMeters = Mathf.Max(0f, nextMeleeRangeBonusMeters);
             rangedRangeBonusMeters = Mathf.Max(0f, nextRangedRangeBonusMeters);
+            attackStaminaCostMultiplier = Mathf.Max(0.01f, nextAttackStaminaCostMultiplier);
             maxStamina = Mathf.Max(1f, nextMaxStamina);
             staminaRegenPerSecond = Mathf.Max(0f, nextStaminaRegenPerSecond);
             currentStamina = Mathf.Clamp(nextCurrentStamina <= 0f ? maxStamina : nextCurrentStamina, 0f, maxStamina);
@@ -220,7 +223,7 @@ namespace Hollow.Combat
                 timeSeconds < nextAllowedShotTime ||
                 projectilePrefab == null ||
                 combatController == null ||
-                !TrySpendStamina(attack.StaminaCost))
+                !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost)))
             {
                 return false;
             }
@@ -347,7 +350,7 @@ namespace Hollow.Combat
             var weapon = ResolveWeapon(WeaponSlot.Melee);
             var attack = ResolveAttack(weapon, WeaponSlot.Melee, attackKind);
             var cooldown = attack.CooldownSeconds * cooldownMultiplier;
-            if (timeSeconds < nextAllowedMeleeTime || combatController == null || !TrySpendStamina(attack.StaminaCost))
+            if (timeSeconds < nextAllowedMeleeTime || combatController == null || !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost)))
             {
                 return false;
             }
@@ -406,6 +409,11 @@ namespace Hollow.Combat
         public bool SpendStaminaForDefense(float amount)
         {
             return TrySpendStamina(amount);
+        }
+
+        private float AdjustedAttackStaminaCost(float amount)
+        {
+            return Mathf.Max(0f, amount) * Mathf.Max(0.01f, attackStaminaCostMultiplier);
         }
 
         private void RegenerateStamina(float deltaTime)

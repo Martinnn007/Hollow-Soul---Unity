@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Dragon Bow
   slot: 1
   category: 1
+  loadClass: 1
   tags: 02000000090000000e000000
   lightAttack:
     attackKind: 0

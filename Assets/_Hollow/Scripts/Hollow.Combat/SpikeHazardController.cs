@@ -77,7 +77,8 @@ namespace Hollow.Combat
                     Tuning.SpikeDamage,
                     gameObject,
                     DamageFeedbackContext.Knockback(direction, 0.22f, 0.08f),
-                    DamageThreatKind.Environmental));
+                    DamageThreatKind.Environmental,
+                    DamageClassification.Environmental(ImpactForceClass.Light)));
             if (!applied)
             {
                 return false;

@@ -114,7 +114,7 @@ namespace Hollow.Editor.Generation
 
         private static bool IsBuildChangingReward(RewardDefinition reward)
         {
-            return reward != null && reward.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor;
+            return reward != null && reward.RewardKind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Weapon or RewardKind.Armor or RewardKind.Shield;
         }
 
         private static void AssignToGameScenes(RewardPoolDefinition standardPool, RewardPoolDefinition treasurePool, RewardPoolDefinition bossPool)

@@ -43,6 +43,7 @@ namespace Hollow.Rewards
                 var defense = BaseStats.Defense;
                 var meleeDamage = BaseStats.MeleeDamageBonus;
                 var rangedDamage = BaseStats.RangedDamageBonus;
+                var stability = BaseStats.Stability;
                 var meleeRange = BaseStats.MeleeRangeBonusMeters;
                 var rangedRange = BaseStats.RangedRangeBonusMeters;
 
@@ -56,6 +57,7 @@ namespace Hollow.Rewards
                     defense += modifier.defense;
                     meleeDamage += modifier.meleeDamage;
                     rangedDamage += modifier.rangedDamage;
+                    stability += modifier.stability;
                     meleeRange += modifier.meleeRangeBonusMeters;
                     rangedRange += modifier.rangedRangeBonusMeters;
                     if (modifier.attackCooldownMultiplier > 0f)
@@ -75,7 +77,8 @@ namespace Hollow.Rewards
                     rangedDamage,
                     cooldownMultiplier,
                     meleeRange,
-                    rangedRange);
+                    rangedRange,
+                    stability);
             }
         }
 
@@ -166,6 +169,7 @@ namespace Hollow.Rewards
                 baseDefense = BaseStats.Defense,
                 baseMeleeDamageBonus = BaseStats.MeleeDamageBonus,
                 baseRangedDamageBonus = BaseStats.RangedDamageBonus,
+                baseStability = BaseStats.Stability,
                 baseAttackCooldownMultiplier = BaseStats.AttackCooldownMultiplier,
                 baseMeleeRangeBonusMeters = BaseStats.MeleeRangeBonusMeters,
                 baseRangedRangeBonusMeters = BaseStats.RangedRangeBonusMeters,
@@ -196,7 +200,8 @@ namespace Hollow.Rewards
                 saveState.baseRangedDamageBonus,
                 saveState.baseAttackCooldownMultiplier <= 0f ? 1f : saveState.baseAttackCooldownMultiplier,
                 saveState.baseMeleeRangeBonusMeters,
-                saveState.baseRangedRangeBonusMeters);
+                saveState.baseRangedRangeBonusMeters,
+                saveState.baseStability <= 0 ? PlayerBaseStats.Default.Stability : saveState.baseStability);
             build.Wallet = RunCurrencyWallet.FromSaveState(saveState.wallet);
             build.Equipment = RunEquipmentSlots.FromSaveState(saveState.equipment);
             build.Inventory = RunInventoryState.FromSaveState(saveState.inventory);

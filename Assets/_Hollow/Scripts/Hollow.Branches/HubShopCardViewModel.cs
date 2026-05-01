@@ -89,6 +89,8 @@ namespace Hollow.Branches
                 RewardKind.ConsumableCard => "Consumable card",
                 RewardKind.PassiveItem => "Passive item",
                 RewardKind.Weapon => "Weapon replacement",
+                RewardKind.Armor => "Armor replacement",
+                RewardKind.Shield => "Shield replacement",
                 RewardKind.Heal => "Heal",
                 RewardKind.Currency => "Currency",
                 _ => "Reward"

@@ -20,11 +20,22 @@ namespace Hollow.Combat
         }
 
         public DamageRequest(int amount, GameObject source, DamageFeedbackContext feedback, DamageThreatKind threatKind)
+            : this(amount, source, feedback, threatKind, DamageClassification.FromThreat(threatKind))
+        {
+        }
+
+        public DamageRequest(int amount, GameObject source, DamageFeedbackContext feedback, DamageClassification classification)
+            : this(amount, source, feedback, DamageThreatKind.Light, classification)
+        {
+        }
+
+        public DamageRequest(int amount, GameObject source, DamageFeedbackContext feedback, DamageThreatKind threatKind, DamageClassification classification)
         {
             Amount = amount;
             Source = source;
             Feedback = feedback;
             ThreatKind = threatKind;
+            Classification = classification;
         }
 
         public int Amount { get; }
@@ -34,5 +45,7 @@ namespace Hollow.Combat
         public DamageFeedbackContext Feedback { get; }
 
         public DamageThreatKind ThreatKind { get; }
+
+        public DamageClassification Classification { get; }
     }
 }

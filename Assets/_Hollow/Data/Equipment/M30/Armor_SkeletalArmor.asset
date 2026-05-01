@@ -15,6 +15,7 @@ MonoBehaviour:
   armorId: skeletal_armor
   displayName: Skeletal Armor
   rarity: 1
+  loadClass: 1
   statModifier:
     maxHealth: 0
     speed: -0.08
@@ -24,5 +25,8 @@ MonoBehaviour:
     defense: 2
     meleeDamage: 0
     rangedDamage: 0
+    stability: 0
     attackCooldownMultiplier: 0
+    meleeRangeBonusMeters: 0
+    rangedRangeBonusMeters: 0
   tags: 0c000000060000000d000000

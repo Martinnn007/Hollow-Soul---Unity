@@ -114,7 +114,7 @@ namespace Hollow.Branches
 
         private static bool IsShopRewardKind(RewardKind kind)
         {
-            return kind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Armor;
+            return kind is RewardKind.PassiveItem or RewardKind.Card or RewardKind.PassiveCard or RewardKind.ActiveItem or RewardKind.ConsumableCard or RewardKind.Armor or RewardKind.Shield;
         }
 
         private static RewardGrant FallbackReward(string roomId, int branchSeed, int branchDepth, int index)

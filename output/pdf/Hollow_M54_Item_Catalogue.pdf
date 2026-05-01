@@ -1,93 +1,207 @@
 %PDF-1.4
-%“Œ‹ž ReportLab Generated PDF document (opensource)
 1 0 obj
-<<
-/F1 2 0 R /F2 3 0 R
->>
+<< /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<<
-/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
->>
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
 endobj
 3 0 obj
-<<
-/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
->>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<<
-/Contents 9 0 R /MediaBox [ 0 0 612 792 ] /Parent 8 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
-
->> 
-  /Type /Page
->>
+<< /Length 3071 >>
+stream
+BT
+/F1 10 Tf
+46 748 Td
+14 TL
+(Hollow M54 Item Catalogue) Tj
+T*
+(Generated: 2026-05-01 20:41:10 UTC) Tj
+T*
+(Total visible pickups/catalog entries: 34) Tj
+T*
+(Rewards: 10; Weapons: 8; Armor: 2; Usables: 7; System pickups: 7) Tj
+T*
+() Tj
+T*
+(Spawn / Eligibility Notes) Tj
+T*
+(- Standard combat/reward rooms: 2% Golden Chest, 12% Normal Chest, 38% loose coins, 24% HP) Tj
+T*
+(refill, 24% no reward.) Tj
+T*
+(- M54 projectile passives appear only in treasure rooms, boss rewards, and hub shops.) Tj
+T*
+(- Pool odds are deterministic equal-pool rolls unless a row states an exact percentage.) Tj
+T*
+(- Golden chests keep the M52 rule: card/sustain/economy only, no M54 passive item drops.) Tj
+T*
+() Tj
+T*
+(M54 Projectile Passive Items) Tj
+T*
+() Tj
+T*
+(Reward Pools) Tj
+T*
+(- Golden Chest | Currency | Rare | stack 1 | See runtime/catalog behavior | Standard rooms) Tj
+T*
+(- Loose Coins | Currency | Common | stack 1 | See runtime/catalog behavior | Standard rooms) Tj
+T*
+(- Normal Chest | Currency | Common | stack 1 | See runtime/catalog behavior | Standard rooms) Tj
+T*
+(- Bone Bow | Weapon | Rare | stack 1 | See runtime/catalog behavior | Weapon rolls / shops) Tj
+T*
+(- Dragon Bow | Weapon | Epic | stack 1 | See runtime/catalog behavior | Weapon rolls / shops) Tj
+T*
+(- Dragon Fang | Weapon | Epic | stack 1 | See runtime/catalog behavior | Weapon rolls / shops) Tj
+T*
+(- Ember Bolt | Weapon | Rare | stack 1 | See runtime/catalog behavior | Weapon rolls / shops) Tj
+T*
+(- Iron Cleaver | Weapon | Rare | stack 1 | See runtime/catalog behavior | Weapon rolls / shops) Tj
+T*
+(- Skeletal Sword | Weapon | Rare | stack 1 | See runtime/catalog behavior | Weapon rolls / shops) Tj
+T*
+(- HP Refill | Heal | Common | stack 1 | Heal 99 | Standard rooms) Tj
+T*
+() Tj
+T*
+(Weapons) Tj
+T*
+(- Dragon Fang | Melee | Blade | stack 1 | Light 2 dmg/0.82s; Heavy 4 dmg/3s | Starter, weapon) Tj
+T*
+(pool, boss/shop weapon rolls) Tj
+T*
+(- Iron Cleaver | Melee | Blade | stack 1 | Light 2 dmg/0.85s; Heavy 4 dmg/3.15s | Starter,) Tj
+T*
+(weapon pool, boss/shop weapon rolls) Tj
+T*
+(- Practice Blade | Melee | Blade | stack 1 | Light 1 dmg/0.67s; Heavy 2 dmg/3.5s | Starter,) Tj
+T*
+(weapon pool, boss/shop weapon rolls) Tj
+T*
+(- Skeletal Sword | Melee | Blade | stack 1 | Light 2 dmg/0.78s; Heavy 4 dmg/3s | Starter, weapon) Tj
+T*
+(pool, boss/shop weapon rolls) Tj
+T*
+(- Bone Bow | Ranged | Bow | stack 1 | Light 1 dmg/0.95s; Heavy 3 dmg/8.5s | Starter, weapon) Tj
+T*
+(pool, boss/shop weapon rolls) Tj
+T*
+(- Dragon Bow | Ranged | Bow | stack 1 | Light 2 dmg/0.85s; Heavy 4 dmg/8s | Starter, weapon) Tj
+T*
+(pool, boss/shop weapon rolls) Tj
+T*
+(- Ember Bolt | Ranged | Wand | stack 1 | Light 2 dmg/0.85s; Heavy 4 dmg/8s | Starter, weapon) Tj
+T*
+(pool, boss/shop weapon rolls) Tj
+T*
+(- Practice Bolt | Ranged | Wand | stack 1 | Light 1 dmg/1s; Heavy 2 dmg/10s | Starter, weapon) Tj
+T*
+(pool, boss/shop weapon rolls) Tj
+T*
+() Tj
+T*
+(Armor) Tj
+T*
+(- Dragon Scale Armor | Armor | Rare | stack 1 | +2 defense, -0.12 speed, +5 stamina | Treasure,) Tj
+T*
+(boss, shop pools when reward is eligible) Tj
+T*
+ET
+endstream
 endobj
 5 0 obj
-<<
-/Contents 10 0 R /MediaBox [ 0 0 612 792 ] /Parent 8 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
-
->> 
-  /Type /Page
->>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
 endobj
 6 0 obj
-<<
-/PageMode /UseNone /Pages 8 0 R /Type /Catalog
->>
+<< /Length 2126 >>
+stream
+BT
+/F1 10 Tf
+46 748 Td
+14 TL
+(- Skeletal Armor | Armor | Uncommon | stack 1 | +2 defense, -0.08 speed | Treasure, boss, shop) Tj
+T*
+(pools when reward is eligible) Tj
+T*
+() Tj
+T*
+(Active Items / Consumable Cards) Tj
+T*
+(- Bone Totem | ActiveItem | Uncommon | stack 1 | +1 melee damage | Treasure, boss, shop,) Tj
+T*
+(selected golden chest card outcomes) Tj
+T*
+(- Dragon Tooth | ActiveItem | Rare | stack 1 | +1 ranged damage | Treasure, boss, shop, selected) Tj
+T*
+(golden chest card outcomes) Tj
+T*
+(- Echo Burst | ActiveItem | Uncommon | stack 1 | See runtime/catalog behavior | Treasure, boss,) Tj
+T*
+(shop, selected golden chest card outcomes) Tj
+T*
+(- Mending Charm | ActiveItem | Uncommon | stack 1 | Heal 2 | Treasure, boss, shop, selected) Tj
+T*
+(golden chest card outcomes) Tj
+T*
+(- Ember Card | ConsumableCard | Common | stack 1 | +1 ranged damage, +1 melee damage | Treasure,) Tj
+T*
+(boss, shop, selected golden chest card outcomes) Tj
+T*
+(- Mend Card | ConsumableCard | Common | stack 1 | Heal 2 | Treasure, boss, shop, selected golden) Tj
+T*
+(chest card outcomes) Tj
+T*
+(- Swift Card | ConsumableCard | Common | stack 1 | +0.75 speed | Treasure, boss, shop, selected) Tj
+T*
+(golden chest card outcomes) Tj
+T*
+() Tj
+T*
+(Chests, Coins, Heals, And Key-Like Pickups) Tj
+T*
+(- Normal Chest | Chest | Common | stack 1 | Interact to open; 75% coins worth 8-14, 25% HP) Tj
+T*
+(refill | 12% standard-room outcome) Tj
+T*
+(- Golden Chest | Chest | Rare | stack 1 | Interact to open; better coins, HP+coins, or) Tj
+T*
+(passive/consumable card+coins | 2% standard-room outcome) Tj
+T*
+(- Copper Coin | Coin | Common | stack 12 | Worth 1 coin | Loose coins, chests, barrels) Tj
+T*
+(- Silver Coin | Coin | Rare | stack 12 | Worth 5 coins | Loose coins, chests, barrels) Tj
+T*
+(- Gold Coin | Coin | Very Rare | stack 12 | Worth 10 coins | Loose coins, chests, barrels) Tj
+T*
+(- HP Refill | Heal | Common | stack 1 | Restores up to max HP | 24% standard-room outcome, chest) Tj
+T*
+(contents, shop heal) Tj
+T*
+(- Boss Key | Key-Like | Boss | stack 1 | Unlocks the boss path in a branch | Branch feature) Tj
+T*
+(progression) Tj
+T*
+ET
+endstream
 endobj
 7 0 obj
-<<
-/Author (\(anonymous\)) /CreationDate (D:20260430184203+01'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260430184203+01'00') /Producer (ReportLab PDF Library - \(opensource\)) 
-  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
->>
-endobj
-8 0 obj
-<<
-/Count 2 /Kids [ 4 0 R 5 0 R ] /Type /Pages
->>
-endobj
-9 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 1825
->>
-stream
-Gau0DD0)1+&H88.Z!T8MCBI&c4oL[QgY>MMP:#].O?p<h!HAb%btNTaXi-^b)V8tLj%05bdCqiW$NUK^`;EC<JEo5>h@h"Gk"?hgmD8]F]UPPlHU^%g07o:#@U-5G-%6DX9`c]$4Kp9UeJXrEL1Bb(!fs.-n)0>X*(XaRq_%<^;n0=LGqM#EanO_sRMYIZeLVN;LAq;GY:tG0ei#P2nelqhni4S]>DX?+qQg`N.g1D?l*Oo!?U)EH#@;GmC7\b*Ho/&IcZ8Q@nB.M-NXK4VDgNZ$nI8rB7tG:Mo0s:5)qmb9)C\)/i+ddDf;GlDVIZJf>U*]c"MAZ1K#rd>.F;bB+5(PX/<2iZTHiGEU99R/=F3Ln.lG#8(&&^ZD/*r7LZPQWUD`M^Xc\)&I0e57G1OrMBrYR/IHR7QSn'C-MCGBo,qE%Z[2)K&ViY<q-t$Tn%$jVJ<*AdoW?CHC_O`SRLoMI.O8)nKr=[u=aHFXZ&lC2^4d18gT;3#HNT:8d8sGf:`A(?;iIf3M?GbGS=7ml2EXr*T=eJOGMAr*R/qi5/?<4(!%/b1V\a;i#OF3JXH+R;gBXo/3N.r^7\2Ja]`E/Y\=jDA`UP5b+1C9f"*rpGa-"j6oGVC%C_Eo[$M1naZ*U@;<C+UoXciL&@@;F+UgJ5RDc7>jF*$G@QUrh$D$&UH9NN1A81S0D#'G!\*95Qhe@M_ZuHm"[f@fD@:?dEPZ,VGs''KU[W@?rlmKLp1Xi=#a*Z^!"o8XB'6LO6AfFK<^4MR,\#mf33.cc;&'!`6P<:n[V^^LJ8VmmSH'YF!0H`LruRZtJn(=,c]uC@?d'T*G"I+I"e`m203>SKB\QX$a,Q,&ED%:b*A[.l[jCLj*$-r[F:)cE1k/--tOi7lbt0@joGD?rSK1n=W:]?OMDc9FYrD.4a&.D^D"WQ)38>4BVH;o^a^"B%NDe1OQeqOBR=-$uU-S<N$-XW/oQIS^ISgOd@ql;!![gf/$\f;neD7'mpu4mRb!D#Q8^7[Ef:T-PUo_Q"-FqhR$bb7NfBTfkOg-TR,J:T">^V/hJW(^N\G'WM8-LheDk<)Z6aYp4,n*#Y,gb&4?m/H[Od?SPJn2qb2$'2dPoaO'5m_'W_l-TULd_Y=[=j5]/]ZFb!(7UME0LhJ2=7Yib<L!u>1D-t6*bW\n@nDGN5Il^gp%JuqWW**"G>M+S@BWDX:GGgRI5&8*OuUF9PH)NL&":ZtPS&$,oBlg6,C/s_QAj14hm:[P[0RX_Pb:tHSq+"eV>doHsk5.PK_oYd>:Vf#bV(AtVCe-K6W^]p\(6G4-bNdZt9A%Ec#+b:6+C;<*cM9Tc<h%DWu:S-DF:WbdB9r:a_dP<"$<28j"X")F,!(CVk6r%/bdH#GI8`g!#bjJkoO\hb%OP\'g>bWoe(FmdFL.XC_0Aj9gdct!f*,UsdcB<>)`gR42[E\=>dC<!1f_I,5$maTcdOcMo/3u6<R^mit5*Sskp7jcA6K4ruGV5/lqiRj=.p$]Ac>NBNOi_#S$,_o"DjjMN\"Mg$a6(:Ag\+lq"_L<69JP"r%MRR7R!4B51<28rLSR3m.ML%c=Z^+HV'lc#0RW'\n@@XImog$u9_)7e8IsoWE%4=`D[i(8gZ,/>ff!1N9"ioG:Aa9<7;PN[@?iEeMji]dj?<g+%f,7aT89[mgQ@+R!:%/TPU#oH.s46,]jbTgZTC[%b-Z`-[:^H(.dVGfk,@+e4KEGn/c/\AW?!('kIj!X%GsL`R+qFuEH;Nda,AbL*kS%4KH.aB9S2^HROg492<9PtMsP;aa>:kUItU7?)]"Kf^l[1\D%R?)rWCFKG)6~>endstream
-endobj
-10 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 1216
->>
-stream
-GatU1gN)%,&:N/3m#,N)e7JuJ'ZolDio\\=c,_Z0GDLnu`$E/#TJ%=6Hl!nS9"(S+W\b>B$Xdu"@eVDS+2>bmk7tdf%,QCV5U^/%5XI,Wlk2KoPJ8K@h\daPdf_V)bp+Y`;%+M:iWmLHU1m.`/LTb<CjZJL<TobN$(TnPp%mf[`O4*kE$7Z0_\^Tj*8]9Nr4sK$0#]DtRE0=$7fNPC&'3U2+BS=Y_*fG760^m%S2:NS&d"("%3ce@W?3K':2RHf'R*#q#\VsmEO^9UnXZinZK(@7N:\"Z(e@&M]=(Lp6qN'tN[k,<b;ljQdetLm`Cb*N@6KXVWaq*QheU+Eb7,9pZJkI:`6enP2E5Y/Q!$Cn7`&)sB`0\Rn2I'mnJn5MTFIq0VM[/UAMlmANGM<A/&!rg8;P4)'Da9'K%J<Sbo+Oo,ruEOd*seekFVY+c_Q/IBeAcJ]3NpuXk9B/O<^<6#<JV-)cAasiTCp(KD^=Lj=Xul+BY,&mZI@>J#i%>CcOOY_kiTd&"N2SUDHTQ?LCVD(ea(3h"Tg>(?O@.>^a[T<7167,6'&b2A)N'qTdXO/hAQSUN+\RAEdE2==<^6:9;0G^Yp/NQ\oQl)k3T;Ha%(hL?h%>^a@\6'/<u\f+tMqaTbf0lqegc6Mj&`D7'm?C_UgtcFSbFl;HcR)U+)V_O;BtP(:A\YY_FH=*A@<Bp;jH0eHr7!lhG=q_@WB<!Fc(8aJr=Jm.E:#tj7Uo)qM^IS2@F-^if'KPS'VpJudaipZ7!et8NTmdX30.4C3^bHU`hBXg$\a,Ac$\;$(s87WZ;3o$!\TVeKRl*cptY_Jp4NfNA^pZfl<@df5,^l(SW]MB@A\6o$gI?>CJasGW_2ei''jqmln8&JDN^N@s&d\D+qHsBErI'>bA=0th,F0$[r`8\*9_-41^8h=d:c]lY!d4/2Bq)t=b.[<d!rer75<(--pW4VPlJ/rB:RGpoLMP%K>3X*IV<Osk(gItId:^`:8X:hqf7c_oe=e\TSV*5.PLup4h5e@Ie*ZdV@5q@,eDQ=QQn;ZU*8$`[dI<dN%a;s*8Z^&lkqs>'TYiI[MAV7h5_7j,m/XEesFS-^CKGFqm$M/KP931S[A<3*+'sgWE:e7@9KsfQgEK$t=11Z1/CUac+aJuA%W44'a)02Q\,56C@9#h!-?_^'Sb>OT(-RFY*A+AbH(gmJn<?h&;02+ElJB>Pe0'E9~>endstream
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
 endobj
 xref
-0 11
+0 8
 0000000000 65535 f 
-0000000061 00000 n 
-0000000102 00000 n 
-0000000209 00000 n 
-0000000321 00000 n 
-0000000514 00000 n 
-0000000708 00000 n 
-0000000776 00000 n 
-0000001056 00000 n 
-0000001121 00000 n 
-0000003037 00000 n 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000003314 00000 n 
+0000003440 00000 n 
+0000005618 00000 n 
 trailer
-<<
-/ID 
-[<f07067cd34c558b6f237400e93fce021><f07067cd34c558b6f237400e93fce021>]
-% ReportLab generated PDF document -- digest (opensource)
-
-/Info 7 0 R
-/Root 6 0 R
-/Size 11
->>
+<< /Size 8 /Root 1 0 R >>
 startxref
-4345
+5744
 %%EOF

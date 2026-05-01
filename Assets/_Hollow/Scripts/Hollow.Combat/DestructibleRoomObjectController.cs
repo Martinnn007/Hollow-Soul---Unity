@@ -126,7 +126,8 @@ namespace Hollow.Combat
                     tuning.ExplosiveBarrelPlayerDamage,
                     gameObject,
                     DamageFeedbackContext.Knockback(player.transform.localPosition - transform.localPosition, 0.45f, 0.1f),
-                    DamageThreatKind.Environmental));
+                    DamageThreatKind.Environmental,
+                    DamageClassification.Explosion(ImpactForceClass.Heavy)));
         }
 
         private void DamageEnemiesInRadius()
@@ -155,7 +156,8 @@ namespace Hollow.Combat
                         damage,
                         gameObject,
                         DamageFeedbackContext.Knockback(enemy.transform.localPosition - transform.localPosition, 0.45f, 0.1f),
-                        DamageThreatKind.Environmental));
+                        DamageThreatKind.Environmental,
+                        DamageClassification.Explosion(ImpactForceClass.Heavy)));
             }
         }
 

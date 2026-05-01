@@ -29,6 +29,8 @@ namespace Hollow.Rewards
 
         public float RangedRangeBonusMeters { get; private set; }
 
+        public int StabilityBonus { get; private set; }
+
         public int ApplyReward(RewardGrant grant)
         {
             var effects = grant.Effects != null && grant.Effects.Count > 0
@@ -82,6 +84,9 @@ namespace Hollow.Rewards
                     case RewardEffectKind.RangedRangeBonusMeters:
                         RangedRangeBonusMeters += Mathf.Max(0f, effect.FloatValue);
                         break;
+                    case RewardEffectKind.StabilityBonus:
+                        StabilityBonus += Mathf.Max(0, effect.IntValue);
+                        break;
                 }
             }
 
@@ -111,7 +116,8 @@ namespace Hollow.Rewards
                 meleeDamageBonus = MeleeDamageBonus,
                 rangedDamageBonus = RangedDamageBonus,
                 meleeRangeBonusMeters = MeleeRangeBonusMeters,
-                rangedRangeBonusMeters = RangedRangeBonusMeters
+                rangedRangeBonusMeters = RangedRangeBonusMeters,
+                stabilityBonus = StabilityBonus
             };
         }
 
@@ -135,6 +141,7 @@ namespace Hollow.Rewards
             stats.RangedDamageBonus = Mathf.Max(0, saveState.rangedDamageBonus);
             stats.MeleeRangeBonusMeters = Mathf.Max(0f, saveState.meleeRangeBonusMeters);
             stats.RangedRangeBonusMeters = Mathf.Max(0f, saveState.rangedRangeBonusMeters);
+            stats.StabilityBonus = Mathf.Max(0, saveState.stabilityBonus);
             return stats;
         }
 
@@ -153,7 +160,8 @@ namespace Hollow.Rewards
                 rangedDamage = ProjectileDamageBonus + RangedDamageBonus,
                 attackCooldownMultiplier = ShotCooldownMultiplier,
                 meleeRangeBonusMeters = MeleeRangeBonusMeters,
-                rangedRangeBonusMeters = RangedRangeBonusMeters
+                rangedRangeBonusMeters = RangedRangeBonusMeters,
+                stability = StabilityBonus
             };
         }
 

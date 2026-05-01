@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Skeletal Sword
   slot: 0
   category: 0
+  loadClass: 1
   tags: 01000000030000000d000000
   lightAttack:
     attackKind: 0

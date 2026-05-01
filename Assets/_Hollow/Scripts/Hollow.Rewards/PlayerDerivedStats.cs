@@ -16,7 +16,8 @@ namespace Hollow.Rewards
             int rangedDamageBonus,
             float attackCooldownMultiplier,
             float meleeRangeBonusMeters = 0f,
-            float rangedRangeBonusMeters = 0f)
+            float rangedRangeBonusMeters = 0f,
+            int stability = 1)
         {
             MaxHealth = Mathf.Max(1, maxHealth);
             SpeedMetersPerSecond = Mathf.Max(0.1f, speedMetersPerSecond);
@@ -29,6 +30,7 @@ namespace Hollow.Rewards
             AttackCooldownMultiplier = attackCooldownMultiplier <= 0f ? 1f : attackCooldownMultiplier;
             MeleeRangeBonusMeters = Mathf.Max(0f, meleeRangeBonusMeters);
             RangedRangeBonusMeters = Mathf.Max(0f, rangedRangeBonusMeters);
+            Stability = Mathf.Max(0, stability);
         }
 
         public int MaxHealth { get; }
@@ -46,6 +48,8 @@ namespace Hollow.Rewards
         public int MeleeDamageBonus { get; }
 
         public int RangedDamageBonus { get; }
+
+        public int Stability { get; }
 
         public float AttackCooldownMultiplier { get; }
 
@@ -66,7 +70,8 @@ namespace Hollow.Rewards
                 baseStats.RangedDamageBonus,
                 baseStats.AttackCooldownMultiplier,
                 baseStats.MeleeRangeBonusMeters,
-                baseStats.RangedRangeBonusMeters);
+                baseStats.RangedRangeBonusMeters,
+                baseStats.Stability);
         }
     }
 }

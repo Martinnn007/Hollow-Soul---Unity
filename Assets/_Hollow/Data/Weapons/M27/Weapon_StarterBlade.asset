@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Practice Blade
   slot: 0
   category: 0
+  loadClass: 0
   tags: 0100000004000000
   lightAttack:
     attackKind: 0

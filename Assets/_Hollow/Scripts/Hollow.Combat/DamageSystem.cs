@@ -15,7 +15,8 @@ namespace Hollow.Combat
                 knockback?.ApplyKnockback(
                     request.Feedback.Direction,
                     request.Feedback.KnockbackMeters,
-                    request.Feedback.KnockbackSeconds);
+                    request.Feedback.KnockbackSeconds,
+                    request.Classification);
             }
 
             return true;

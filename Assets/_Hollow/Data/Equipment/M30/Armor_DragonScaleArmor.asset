@@ -15,6 +15,7 @@ MonoBehaviour:
   armorId: dragon_scale_armor
   displayName: Dragon Scale Armor
   rarity: 2
+  loadClass: 2
   statModifier:
     maxHealth: 0
     speed: -0.12
@@ -24,5 +25,8 @@ MonoBehaviour:
     defense: 2
     meleeDamage: 0
     rangedDamage: 0
+    stability: 0
     attackCooldownMultiplier: 0
+    meleeRangeBonusMeters: 0
+    rangedRangeBonusMeters: 0
   tags: 0c000000060000000e000000

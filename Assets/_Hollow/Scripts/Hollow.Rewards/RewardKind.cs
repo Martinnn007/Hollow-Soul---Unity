@@ -10,6 +10,7 @@ namespace Hollow.Rewards
         ConsumableCard = 5,
         Weapon = 6,
         Heal = 7,
-        Armor = 8
+        Armor = 8,
+        Shield = 9
     }
 }
