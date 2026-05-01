@@ -212,7 +212,7 @@ namespace Hollow.Branches
         {
             var kind = entity.Contains("golden", StringComparison.OrdinalIgnoreCase) ? ChestKind.Golden : ChestKind.Normal;
             var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
-            var chest = CreateArtPassHost($"DebugChest.{kind}", position + Vector3.up * 0.18f, role);
+            var chest = CreateArtPassHost($"DebugChest.{kind}", position, role);
             chest.AddComponent<RoomChestController>().Configure("debug_spawn", Guid.NewGuid().ToString("N"), kind, ChestState.Unopened);
             AddLabel(chest.transform, $"{kind} chest");
         }

@@ -1,3 +1,4 @@
+using System;
 using Hollow.Input;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
@@ -52,6 +53,8 @@ namespace Hollow.Combat
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
+        public Vector2 LastAimDirection => lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+
         public float MeleeRangeBonusMeters => meleeRangeBonusMeters;
 
         public float RangedRangeBonusMeters => rangedRangeBonusMeters;
@@ -63,6 +66,10 @@ namespace Hollow.Combat
         public float EffectiveRangedLightRangeMeters => EffectiveRange(
             ResolveAttack(ResolveWeapon(WeaponSlot.Ranged), WeaponSlot.Ranged, AttackKind.Light),
             WeaponSlot.Ranged);
+
+        public event Action<WeaponSlot> ActiveWeaponSlotChanged;
+
+        public event Action<WeaponSlot, AttackKind, Vector2> WeaponAttackVisualRequested;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, GameObject prefab)
         {
@@ -122,7 +129,7 @@ namespace Hollow.Combat
             currentStamina = Mathf.Clamp(nextCurrentStamina <= 0f ? maxStamina : nextCurrentStamina, 0f, maxStamina);
             meleeWeaponId = string.IsNullOrWhiteSpace(nextMeleeWeaponId) ? "starter_blade" : nextMeleeWeaponId;
             rangedWeaponId = string.IsNullOrWhiteSpace(nextRangedWeaponId) ? "starter_bolt" : nextRangedWeaponId;
-            activeWeaponSlot = nextActiveWeaponSlot;
+            SetActiveWeaponSlot(nextActiveWeaponSlot);
         }
 
         private void Update()
@@ -162,12 +169,19 @@ namespace Hollow.Combat
 
         public void ToggleWeaponSlot()
         {
-            activeWeaponSlot = activeWeaponSlot == WeaponSlot.Ranged ? WeaponSlot.Melee : WeaponSlot.Ranged;
+            SetActiveWeaponSlot(activeWeaponSlot == WeaponSlot.Ranged ? WeaponSlot.Melee : WeaponSlot.Ranged);
         }
 
         public void SetActiveWeaponSlot(WeaponSlot slot)
         {
+            if (activeWeaponSlot == slot)
+            {
+                ActiveWeaponSlotChanged?.Invoke(activeWeaponSlot);
+                return;
+            }
+
             activeWeaponSlot = slot;
+            ActiveWeaponSlotChanged?.Invoke(activeWeaponSlot);
         }
 
         public bool TryAttack(AttackKind attackKind, Vector2 attackDirection, float timeSeconds)
@@ -222,6 +236,7 @@ namespace Hollow.Combat
                 SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, attackKind);
             }
 
+            WeaponAttackVisualRequested?.Invoke(WeaponSlot.Ranged, attackKind, cardinal);
             AudioPresenter.Play(AudioCueId.ProjectileFire, transform.position);
             return true;
         }
@@ -340,6 +355,7 @@ namespace Hollow.Combat
             nextAllowedMeleeTime = timeSeconds + Mathf.Max(0.05f, cooldown);
             var direction = new Vector3(cardinal.x, 0f, cardinal.y);
             var effectiveRange = EffectiveRange(attack, WeaponSlot.Melee);
+            WeaponAttackVisualRequested?.Invoke(WeaponSlot.Melee, attackKind, cardinal);
             MeleeSwipePresenter.Spawn(transform.parent, transform.localPosition, direction, effectiveRange, attackKind);
             var radius = Mathf.Max(0.25f, effectiveRange * 0.48f);
             var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, effectiveRange * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);

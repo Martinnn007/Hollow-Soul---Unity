@@ -46,6 +46,7 @@ namespace Hollow.Branches
             {
                 transform.localScale = Vector3.one;
                 NormalizeArtPassVisual(artPassVisual);
+
                 return;
             }
 
@@ -86,81 +87,8 @@ namespace Hollow.Branches
             visualRoot.localRotation = Quaternion.identity;
             visualRoot.localScale = Vector3.one;
 
-            if (!TryGetRendererBounds(visualRoot, out var bounds))
-            {
-                visualRoot.localScale = State == ChestState.Opened
-                    ? new Vector3(1f, 0.72f, 1f)
-                    : Vector3.one;
-                return;
-            }
-
-            var size = bounds.size;
-            var scale = new Vector3(
-                SafeScale(targetSize.x, size.x),
-                SafeScale(targetSize.y, size.y) * (State == ChestState.Opened ? 0.72f : 1f),
-                SafeScale(targetSize.z, size.z));
-
-            if (!IsValidScale(scale))
-            {
-                scale = Vector3.one;
-            }
-
-            visualRoot.localScale = scale;
-
-            if (!TryGetRendererBounds(visualRoot, out bounds) || visualRoot.parent == null)
-            {
-                return;
-            }
-
-            var localCenter = visualRoot.parent.InverseTransformPoint(bounds.center);
-            var localMin = visualRoot.parent.InverseTransformPoint(bounds.min);
-            var targetBottomLocalY = -visualRoot.parent.localPosition.y;
-            visualRoot.localPosition += new Vector3(
-                -localCenter.x,
-                targetBottomLocalY - localMin.y,
-                -localCenter.z);
-        }
-
-        private static bool TryGetRendererBounds(Transform root, out Bounds bounds)
-        {
-            bounds = default;
-            var hasBounds = false;
-            foreach (var renderer in root.GetComponentsInChildren<Renderer>(includeInactive: true))
-            {
-                if (renderer == null)
-                {
-                    continue;
-                }
-
-                if (!hasBounds)
-                {
-                    bounds = renderer.bounds;
-                    hasBounds = true;
-                }
-                else
-                {
-                    bounds.Encapsulate(renderer.bounds);
-                }
-            }
-
-            return hasBounds && bounds.size.sqrMagnitude > 0.0001f;
-        }
-
-        private static float SafeScale(float target, float current)
-        {
-            return Mathf.Abs(current) > 0.0001f ? target / current : float.PositiveInfinity;
-        }
-
-        private static bool IsValidScale(Vector3 value)
-        {
-            return IsValidScaleComponent(value.x) &&
-                IsValidScaleComponent(value.y) &&
-                IsValidScaleComponent(value.z);
-        }
-
-        private static bool IsValidScaleComponent(float value)
-        {
-            return !float.IsNaN(value) && !float.IsInfinity(value) && value > 0f;
+            var targetBottomLocalY = visualRoot.parent != null ? -visualRoot.parent.localPosition.y : 0f;
+            PresentationVisualBoundsFitter.FitToTargetBounds(visualRoot, targetSize, targetBottomLocalY);
         }
     }
 }

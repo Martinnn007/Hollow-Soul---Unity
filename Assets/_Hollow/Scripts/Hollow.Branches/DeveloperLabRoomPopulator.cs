@@ -53,7 +53,8 @@ namespace Hollow.Branches
             RoomCombatController combat,
             EnemyCatalog enemyCatalog,
             BossCatalogDefinition bossCatalog,
-            DifficultyTierDefinition difficultyTier)
+            DifficultyTierDefinition difficultyTier,
+            DeveloperLabContentDefinition contentDefinition = null)
         {
             if (room == null)
             {
@@ -63,6 +64,11 @@ namespace Hollow.Branches
             var root = CreateRoot(room);
             var index = RoomIndex(roomId);
             AddTitle(root, TitleFor(index), room.LocalBounds);
+            if (TryPopulateFromContent(root, index, room, player, combat, enemyCatalog, bossCatalog, difficultyTier, contentDefinition))
+            {
+                return;
+            }
+
             switch (index)
             {
                 case 1:
@@ -98,6 +104,91 @@ namespace Hollow.Branches
             }
         }
 
+        private static bool TryPopulateFromContent(
+            Transform root,
+            int index,
+            RoomRuntimeRoot room,
+            PlaceholderPlayerController player,
+            RoomCombatController combat,
+            EnemyCatalog enemyCatalog,
+            BossCatalogDefinition bossCatalog,
+            DifficultyTierDefinition difficultyTier,
+            DeveloperLabContentDefinition contentDefinition)
+        {
+            if (contentDefinition == null)
+            {
+                return false;
+            }
+
+            var roomId = index >= 1 && index <= DeveloperLabDefinition.RoomAssetIds.Length
+                ? DeveloperLabDefinition.RoomAssetIds[index - 1]
+                : string.Empty;
+            if (!contentDefinition.TryGetRoom(roomId, index, out var contentRoom) || contentRoom == null)
+            {
+                return false;
+            }
+
+            var entries = contentRoom.Entries.Where(entry => entry != null && entry.IncludeInGallery).ToArray();
+            if (entries.Length == 0)
+            {
+                return false;
+            }
+
+            foreach (var entry in entries)
+            {
+                PopulateContentEntry(root, room, player, combat, enemyCatalog, bossCatalog, difficultyTier, entry);
+            }
+
+            if (index == 3)
+            {
+                AddHeldWeaponInspectionPrompt(root);
+            }
+
+            return true;
+        }
+
+        private static void PopulateContentEntry(
+            Transform root,
+            RoomRuntimeRoot room,
+            PlaceholderPlayerController player,
+            RoomCombatController combat,
+            EnemyCatalog enemyCatalog,
+            BossCatalogDefinition bossCatalog,
+            DifficultyTierDefinition difficultyTier,
+            DeveloperLabContentEntry entry)
+        {
+            switch (entry.Category)
+            {
+                case DeveloperLabContentCategory.Label:
+                    AddLabel(root, entry.Label, entry.LocalPosition, entry.LabelColor, entry.LabelScale);
+                    break;
+                case DeveloperLabContentCategory.ArtPassDisplay:
+                    AddArtPassDisplay(root, entry.Label, entry.LocalPosition, entry.PresentationRole, entry.IncludeLabel, entry.LabelOffset, entry.LabelScale, entry.LabelColor);
+                    break;
+                case DeveloperLabContentCategory.PrimitiveDisplay:
+                    AddDisplay(root, entry.Label, entry.LocalPosition, entry.LocalScale, entry.MaterialRole, entry.PrimitiveType, entry.IncludeLabel, entry.LabelOffset, entry.LabelScale, entry.LabelColor);
+                    break;
+                case DeveloperLabContentCategory.Coin:
+                    AddCoin(root, ParseCoin(entry.CoinDenomination), entry.LocalPosition);
+                    break;
+                case DeveloperLabContentCategory.Chest:
+                    AddChest(root, ParseChest(entry.ChestKind), entry.LocalPosition);
+                    break;
+                case DeveloperLabContentCategory.Enemy:
+                    SpawnEnemy(root, room, player, combat, enemyCatalog, difficultyTier, string.IsNullOrWhiteSpace(entry.EnemyKind) ? "spawnEnemyNormal" : entry.EnemyKind, entry.LocalPosition, entry.SpawnMode);
+                    break;
+                case DeveloperLabContentCategory.Boss:
+                    var catalog = bossCatalog != null ? bossCatalog : BossCatalogDefinition.CreateRuntimeDefault();
+                    if (!catalog.TryGetBoss(entry.BossId, out var boss))
+                    {
+                        boss = catalog.FallbackBoss;
+                    }
+
+                    SpawnBoss(root, room, player, combat, difficultyTier, boss, entry.LocalPosition, entry.SpawnMode);
+                    break;
+            }
+        }
+
         private static void PopulateEnvironment(Transform root)
         {
             AddArtPassDisplay(root, "Rock obstacle", new Vector3(-8f, 0.5f, 1.6f), PresentationPrefabRole.RoomObstacleRock);
@@ -115,19 +206,30 @@ namespace Hollow.Branches
             AddCoin(root, CoinDenomination.Silver, new Vector3(-6.8f, 0.24f, 1.4f));
             AddCoin(root, CoinDenomination.Gold, new Vector3(-5.6f, 0.24f, 1.4f));
             AddArtPassDisplay(root, "HP refill", new Vector3(-3.4f, 0.32f, 1.4f), PresentationPrefabRole.RewardPickup);
-            AddChest(root, ChestKind.Normal, new Vector3(-0.8f, 0.34f, 1.4f));
-            AddChest(root, ChestKind.Golden, new Vector3(1.8f, 0.34f, 1.4f));
+            AddChest(root, ChestKind.Normal, new Vector3(-0.8f, 0f, 1.4f));
+            AddChest(root, ChestKind.Golden, new Vector3(1.8f, 0f, 1.4f));
             AddArtPassDisplay(root, "Room reward pickup", new Vector3(4.6f, 0.32f, 1.4f), PresentationPrefabRole.RewardPickup);
         }
 
         private static void PopulateBuildPickups(Transform root)
         {
+            AddHeldWeaponInspectionPrompt(root);
             for (var index = 0; index < BuildPickupLabels.Length; index++)
             {
                 var x = -10f + (index % 6) * 4f;
                 var z = index < 6 ? 1.9f : index < 12 ? 0f : -1.9f;
                 AddArtPassDisplay(root, BuildPickupLabels[index], new Vector3(x, 0.32f, z), RoleForBuildPickup(BuildPickupLabels[index]));
             }
+        }
+
+        private static void AddHeldWeaponInspectionPrompt(Transform root)
+        {
+            AddLabel(
+                root,
+                "Held weapon test: Tab swaps active weapon. Aim with arrows/right stick, then J/K or R1/R2 to preview slash/recoil.",
+                new Vector3(0f, 0.36f, -2.45f),
+                new Color(0.74f, 1f, 0.82f),
+                0.075f);
         }
 
         private static void PopulateEnemies(Transform root, RoomRuntimeRoot room, PlaceholderPlayerController player, RoomCombatController combat, EnemyCatalog enemyCatalog, DifficultyTierDefinition difficultyTier)
@@ -294,23 +396,59 @@ namespace Hollow.Branches
 
         private static GameObject AddDisplay(Transform root, string label, Vector3 localPosition, Vector3 localScale, MaterialRole role, PrimitiveType primitive)
         {
+            return AddDisplay(root, label, localPosition, localScale, role, primitive, true, new Vector3(0f, Mathf.Max(0.45f, localScale.y) + 0.28f, 0f), 0.065f, Color.white);
+        }
+
+        private static GameObject AddDisplay(
+            Transform root,
+            string label,
+            Vector3 localPosition,
+            Vector3 localScale,
+            MaterialRole role,
+            PrimitiveType primitive,
+            bool includeLabel,
+            Vector3 labelOffset,
+            float labelScale,
+            Color labelColor)
+        {
             var display = GameObject.CreatePrimitive(primitive);
             display.name = $"LabDisplay.{label}";
             display.transform.SetParent(root, false);
             display.transform.localPosition = localPosition;
             display.transform.localScale = localScale;
             MaterialResolver.ApplyTo(display, role);
-            AddLabel(display.transform, label, new Vector3(0f, Mathf.Max(0.45f, localScale.y) + 0.28f, 0f), Color.white, 0.065f);
+            if (includeLabel)
+            {
+                AddLabel(display.transform, label, labelOffset, labelColor, labelScale);
+            }
+
             return display;
         }
 
         private static GameObject AddArtPassDisplay(Transform root, string label, Vector3 localPosition, PresentationPrefabRole role)
         {
+            return AddArtPassDisplay(root, label, localPosition, role, true, new Vector3(0f, 0.92f, 0f), 0.065f, Color.white);
+        }
+
+        private static GameObject AddArtPassDisplay(
+            Transform root,
+            string label,
+            Vector3 localPosition,
+            PresentationPrefabRole role,
+            bool includeLabel,
+            Vector3 labelOffset,
+            float labelScale,
+            Color labelColor)
+        {
             var display = new GameObject($"LabDisplay.{label}");
             display.transform.SetParent(root, false);
             display.transform.localPosition = localPosition;
             PresentationPrefabResolver.InstantiateVisual(role, display.transform, Vector3.zero, Vector3.one);
-            AddLabel(display.transform, label, new Vector3(0f, 0.92f, 0f), Color.white, 0.065f);
+            if (includeLabel)
+            {
+                AddLabel(display.transform, label, labelOffset, labelColor, labelScale);
+            }
+
             return display;
         }
 
@@ -330,9 +468,24 @@ namespace Hollow.Branches
         private static void AddChest(Transform root, ChestKind kind, Vector3 localPosition)
         {
             var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            localPosition.y = 0f;
             var chest = AddArtPassDisplay(root, $"{kind} chest", localPosition, role);
             var controller = chest.AddComponent<RoomChestController>();
             controller.Configure("developer_lab", $"lab_{kind}", kind, ChestState.Unopened);
+        }
+
+        private static CoinDenomination ParseCoin(string value)
+        {
+            return Enum.TryParse<CoinDenomination>(value, ignoreCase: true, out var denomination)
+                ? denomination
+                : CoinDenomination.Copper;
+        }
+
+        private static ChestKind ParseChest(string value)
+        {
+            return Enum.TryParse<ChestKind>(value, ignoreCase: true, out var kind)
+                ? kind
+                : ChestKind.Normal;
         }
 
         private static PresentationPrefabRole RoleForBuildPickup(string pickupId)

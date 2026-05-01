@@ -71,6 +71,13 @@ MonoBehaviour:
     - hollow.artpass
     - hollow.artpass.prefabs
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6da935014d74c8646bdd6f0adf2502d0
+    m_Address: hollow.artpass.prefab.ChestNormal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - hollow.artpass
+    - hollow.artpass.prefabs
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14ea7cd5bace843858947cb952e4c7e6
     m_Address: hollow.artpass.material.DesignerDoorAvailable
     m_ReadOnly: 0

@@ -73,6 +73,7 @@ Milestone 0 has started under `Assets/_Hollow`.
 - `Docs/Milestone63BetaContentSelectionLock.md` describes the beta content whitelist and catalogue/report outputs.
 - `Docs/Milestone64VerticalSliceBetaLockGate.md` describes the beta lock validation gate and report model.
 - `Docs/Milestone65BetaHandoffBuildQaPack.md` describes the QA handoff pack, tester routes, and build/readiness checklist.
+- `Docs/Milestone66DeveloperLabSceneAuthoringPipeline.md` describes the editable Unity scene pipeline for Developer Lab rooms and exported inspection-gallery content.
 - `Docs/CuratedRoomDesignerRuntimeRooms.md` describes the curated runtime-room Room Designer library and safe edit-copy workflow.
 
 ## Required Setup

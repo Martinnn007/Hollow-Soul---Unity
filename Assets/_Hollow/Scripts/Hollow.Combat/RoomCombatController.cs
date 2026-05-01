@@ -160,6 +160,8 @@ namespace Hollow.Combat
             var weapon = playerController.GetComponent<PlayerWeaponController>() ?? playerController.gameObject.AddComponent<PlayerWeaponController>();
             weapon.Configure(roomRuntimeRoot, this, projectilePrefab);
             weapon.ConfigureCombatFeel(CombatFeelProfile);
+            var heldWeaponVisual = playerController.GetComponent<PlayerHeldWeaponVisualController>() ?? playerController.gameObject.AddComponent<PlayerHeldWeaponVisualController>();
+            heldWeaponVisual.Bind(weapon);
 
             var defense = playerController.GetComponent<PlayerDefenseController>() ?? playerController.gameObject.AddComponent<PlayerDefenseController>();
             defense.Bind(roomRuntimeRoot);

@@ -51,6 +51,7 @@ namespace Hollow.Branches
         [SerializeField] private BossCatalogDefinition bossCatalog;
         [SerializeField] private EncounterDirectorProfileDefinition encounterDirectorProfile;
         [SerializeField] private RunFramingCatalogDefinition runFramingCatalog;
+        [SerializeField] private DeveloperLabContentDefinition developerLabContentDefinition;
         [SerializeField] private int macroBranchSeed = BranchGenerator.DefaultMacroFixtureSeed;
 
         private ImportedRoomRuntimeAsset roomAsset;
@@ -322,6 +323,11 @@ namespace Hollow.Branches
         public void ConfigureRunFramingCatalog(RunFramingCatalogDefinition nextRunFramingCatalog)
         {
             runFramingCatalog = nextRunFramingCatalog;
+        }
+
+        public void ConfigureDeveloperLabContent(DeveloperLabContentDefinition nextDeveloperLabContentDefinition)
+        {
+            developerLabContentDefinition = nextDeveloperLabContentDefinition;
         }
 
         public void Initialize(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState)
@@ -754,7 +760,8 @@ namespace Hollow.Branches
                 roomCombatController,
                 enemyCatalog: roomCombatController != null ? roomCombatController.EnemyCatalog : null,
                 bossCatalog: bossCatalog,
-                difficultyTier: roomCombatController != null ? roomCombatController.DifficultyTier : null);
+                difficultyTier: roomCombatController != null ? roomCombatController.DifficultyTier : null,
+                contentDefinition: developerLabContentDefinition);
         }
 
         private void EnsureDebugSpawnMenu()
@@ -1368,10 +1375,9 @@ namespace Hollow.Branches
             var kind = Enum.TryParse(state.kind, out ChestKind parsedKind) ? parsedKind : ChestKind.Normal;
             var chestState = Enum.TryParse(state.state, out ChestState parsedState) ? parsedState : ChestState.Unopened;
             var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
-            var materialRole = kind == ChestKind.Golden ? MaterialRole.ChestGolden : MaterialRole.ChestNormal;
-            var chestObject = InstantiateOrCreate(rewardPickupPrefab, $"Chest_{kind}_{state.chestId}", PrimitiveType.Cube, materialRole);
+            var chestObject = new GameObject($"Chest_{kind}_{state.chestId}");
             chestObject.transform.SetParent(playerController.transform.parent, false);
-            chestObject.transform.localPosition = new Vector3(state.localX, state.localY <= 0f ? 0.35f : state.localY, state.localZ);
+            chestObject.transform.localPosition = new Vector3(state.localX, 0f, state.localZ);
             PresentationPrefabResolver.InstantiateVisual(role, chestObject.transform, Vector3.zero, Vector3.one);
             var chest = chestObject.GetComponent<RoomChestController>() ?? chestObject.AddComponent<RoomChestController>();
             chest.Configure(state.roomId, state.chestId, kind, chestState);
