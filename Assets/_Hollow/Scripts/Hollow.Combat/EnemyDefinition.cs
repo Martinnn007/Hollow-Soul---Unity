@@ -22,6 +22,7 @@ namespace Hollow.Combat
         [SerializeField] private float chargeCooldownSeconds = 2.25f;
         [SerializeField] private string splitSpawnKind = "spawnEnemyNormal";
         [SerializeField] private int splitCount;
+        [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Medium;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -60,6 +61,8 @@ namespace Hollow.Combat
 
         public int SplitCount => splitCount;
 
+        public EnemyBodyClass BodyClass => bodyClass;
+
         public Color Color => color;
 
         public void Configure(
@@ -93,6 +96,7 @@ namespace Hollow.Combat
                 nextChargeCooldownSeconds: 2.25f,
                 nextSplitSpawnKind: "spawnEnemyNormal",
                 nextSplitCount: 0,
+                nextBodyClass: DefaultBodyClassFor(nextArchetypeId, DefaultBehaviorFor(nextArchetypeId, nextMovementMode), nextMovementMode),
                 nextColor);
         }
 
@@ -117,6 +121,51 @@ namespace Hollow.Combat
             int nextSplitCount,
             Color nextColor)
         {
+            Configure(
+                nextSpawnKind,
+                nextDisplayName,
+                nextArchetypeId,
+                nextBehaviorId,
+                nextMovementMode,
+                nextMaxHealth,
+                nextSpeedMetersPerSecond,
+                nextContactDamage,
+                nextContactCooldownSeconds,
+                nextRadiusMeters,
+                nextAttackRangeMeters,
+                nextAttackCooldownSeconds,
+                nextProjectileDamage,
+                nextProjectileSpeedMetersPerSecond,
+                nextChargeSpeedMetersPerSecond,
+                nextChargeCooldownSeconds,
+                nextSplitSpawnKind,
+                nextSplitCount,
+                DefaultBodyClassFor(nextArchetypeId, nextBehaviorId, nextMovementMode),
+                nextColor);
+        }
+
+        public void Configure(
+            string nextSpawnKind,
+            string nextDisplayName,
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode,
+            int nextMaxHealth,
+            float nextSpeedMetersPerSecond,
+            int nextContactDamage,
+            float nextContactCooldownSeconds,
+            float nextRadiusMeters,
+            float nextAttackRangeMeters,
+            float nextAttackCooldownSeconds,
+            int nextProjectileDamage,
+            float nextProjectileSpeedMetersPerSecond,
+            float nextChargeSpeedMetersPerSecond,
+            float nextChargeCooldownSeconds,
+            string nextSplitSpawnKind,
+            int nextSplitCount,
+            EnemyBodyClass nextBodyClass,
+            Color nextColor)
+        {
             spawnKind = nextSpawnKind;
             displayName = nextDisplayName;
             archetypeId = nextArchetypeId;
@@ -135,6 +184,7 @@ namespace Hollow.Combat
             chargeCooldownSeconds = Mathf.Max(0.05f, nextChargeCooldownSeconds);
             splitSpawnKind = string.IsNullOrWhiteSpace(nextSplitSpawnKind) ? "spawnEnemyNormal" : nextSplitSpawnKind;
             splitCount = Mathf.Max(0, nextSplitCount);
+            bodyClass = nextBodyClass;
             color = nextColor;
         }
 
@@ -180,8 +230,37 @@ namespace Hollow.Combat
                 2.4f,
                 "spawnEnemyNormal",
                 0,
+                EnemyBodyClass.Massive,
                 new Color(0.42f, 0.34f, 0.28f, 1f));
             return definition;
+        }
+
+        public static EnemyBodyClass DefaultBodyClassFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return EnemyBodyClass.Massive;
+            }
+
+            if (nextArchetypeId == EnemyArchetypeId.Heavy || nextBehaviorId == EnemyBehaviorId.TurretShooter)
+            {
+                return EnemyBodyClass.Heavy;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.Charger || nextBehaviorId == EnemyBehaviorId.Splitter)
+            {
+                return EnemyBodyClass.Medium;
+            }
+
+            if (nextArchetypeId == EnemyArchetypeId.Fast || nextMovementMode == EnemyMovementMode.Flying)
+            {
+                return EnemyBodyClass.Light;
+            }
+
+            return EnemyBodyClass.Medium;
         }
 
         private static EnemyBehaviorId DefaultBehaviorFor(EnemyArchetypeId nextArchetypeId, EnemyMovementMode nextMovementMode)

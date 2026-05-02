@@ -23,6 +23,8 @@ namespace Hollow.Combat
         private Vector3 localDirection = Vector3.forward;
         private float ageSeconds;
         private bool heavyAttackProjectile;
+        private ImpactForceClass impactForceClass = ImpactForceClass.Light;
+        private float knockbackMeters;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
@@ -49,8 +51,23 @@ namespace Hollow.Combat
 
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile, bool isHeavyAttackProjectile)
         {
+            ConfigureCombatFeel(
+                profile,
+                isHeavyAttackProjectile,
+                isHeavyAttackProjectile ? ImpactForceClass.Medium : ImpactForceClass.Light,
+                0f);
+        }
+
+        public void ConfigureCombatFeel(
+            CombatFeelProfileDefinition profile,
+            bool isHeavyAttackProjectile,
+            ImpactForceClass nextImpactForceClass,
+            float nextKnockbackMeters)
+        {
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
             heavyAttackProjectile = isHeavyAttackProjectile;
+            impactForceClass = nextImpactForceClass;
+            knockbackMeters = Mathf.Max(0f, nextKnockbackMeters);
         }
 
         private void Update()
@@ -93,15 +110,16 @@ namespace Hollow.Combat
             if (enemy != null)
             {
                 var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
-                var knockback = profile.EnemyProjectileKnockbackMeters *
-                                (heavyAttackProjectile ? profile.HeavyAttackKnockbackMultiplier : 1f);
+                var knockback = knockbackMeters > 0f
+                    ? knockbackMeters
+                    : profile.EnemyProjectileKnockbackMeters * (heavyAttackProjectile ? profile.HeavyAttackKnockbackMultiplier : 1f);
                 DamageSystem.ApplyDamage(
                     enemy.Health,
                     new DamageRequest(
                         damage,
                         gameObject,
                         DamageFeedbackContext.Knockback(localDirection, knockback, profile.KnockbackSeconds),
-                        DamageClassification.PhysicalProjectile(heavyAttackProjectile ? ImpactForceClass.Medium : ImpactForceClass.Light)));
+                        DamageClassification.PhysicalProjectile(impactForceClass)));
                 DestroyProjectile(ProjectileDespawnReason.EnemyHit);
                 return true;
             }

@@ -1,6 +1,6 @@
 # M50 Story, World Identity, And Run Framing V2
 
-- Generated: 2026-05-01T20:41:04.5049300Z
+- Generated: 2026-05-02T00:16:46.9171620Z
 - Catalog: `Assets/_Hollow/Data/Worlds/M50/RunFramingCatalog_M50.asset`
 - Catastrophe: `The Hollow Star` has eaten worlds and spat out mixed timelines.
 - Scope: seeded three-world itinerary, cryptic world text, biome metadata, entry toasts, and hub branch echo labels.

@@ -21,6 +21,7 @@ namespace Hollow.Combat
         [SerializeField] private EnemyArchetypeId archetypeId = EnemyArchetypeId.Normal;
         [SerializeField] private EnemyBehaviorId behaviorId = EnemyBehaviorId.Chaser;
         [SerializeField] private EnemyMovementMode movementMode = EnemyMovementMode.Grounded;
+        [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Medium;
 
         private RoomRuntimeRoot roomRuntimeRoot;
         private PlaceholderPlayerController playerController;
@@ -56,6 +57,8 @@ namespace Hollow.Combat
         public EnemyBehaviorId BehaviorId => behaviorId;
 
         public EnemyMovementMode MovementMode => movementMode;
+
+        public EnemyBodyClass BodyClass => bodyClass;
 
         public float SpeedMetersPerSecond => speedMetersPerSecond;
 
@@ -124,6 +127,7 @@ namespace Hollow.Combat
             archetypeId = Definition.ArchetypeId;
             behaviorId = Definition.BehaviorId;
             movementMode = Definition.MovementMode;
+            bodyClass = Definition.BodyClass;
             speedMetersPerSecond = tuning.ApplySpeed(Definition.SpeedMetersPerSecond);
             contactDamage = tuning.ApplyContactDamage(Definition.ContactDamage);
             contactCooldownSeconds = Definition.ContactCooldownSeconds;
@@ -149,6 +153,7 @@ namespace Hollow.Combat
             archetypeId = EnemyArchetypeId.Boss;
             behaviorId = EnemyBehaviorId.BossWarden;
             movementMode = EnemyMovementMode.Grounded;
+            bodyClass = bossDefinition.BodyClass;
             speedMetersPerSecond = bossDefinition.SpeedMetersPerSecond;
             contactDamage = bossDefinition.ContactDamage;
             contactCooldownSeconds = bossDefinition.ContactCooldownSeconds;
@@ -165,15 +170,9 @@ namespace Hollow.Combat
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
         {
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
-            var resistance = 1f;
-            if (behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
-            {
-                resistance = combatFeelProfile.BossEnemyKnockbackMultiplier;
-            }
-            else if (archetypeId == EnemyArchetypeId.Heavy)
-            {
-                resistance = combatFeelProfile.HeavyEnemyKnockbackMultiplier;
-            }
+            var resistance = EnemyKnockbackResolver.ResolveBodyMultiplier(
+                archetypeId == EnemyArchetypeId.Boss ? EnemyBodyClass.Massive : bodyClass,
+                combatFeelProfile);
 
             var knockback = GetComponent<CombatKnockbackReceiver>() ?? gameObject.AddComponent<CombatKnockbackReceiver>();
             knockback.Configure(roomRuntimeRoot, radiusMeters, movementMode == EnemyMovementMode.Flying, resistance);

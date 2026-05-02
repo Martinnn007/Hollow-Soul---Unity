@@ -16,6 +16,10 @@ namespace Hollow.Data.Definitions
         [SerializeField] private float heavyAttackKnockbackMultiplier = 1.35f;
         [SerializeField] private float heavyEnemyKnockbackMultiplier = 0.55f;
         [SerializeField] private float bossEnemyKnockbackMultiplier = 0.25f;
+        [SerializeField] private float lightBodyKnockbackMultiplier = 1.2f;
+        [SerializeField] private float mediumBodyKnockbackMultiplier = 1f;
+        [SerializeField] private float heavyBodyKnockbackMultiplier = 0.55f;
+        [SerializeField] private float massiveBodyKnockbackMultiplier = 0.18f;
         [SerializeField] private float enemyHitFlashSeconds = 0.1f;
         [SerializeField] private float windupPulseStrength = 0.08f;
         [SerializeField] private bool showWindupLabels;
@@ -30,6 +34,10 @@ namespace Hollow.Data.Definitions
         public float HeavyAttackKnockbackMultiplier => Mathf.Max(0f, heavyAttackKnockbackMultiplier);
         public float HeavyEnemyKnockbackMultiplier => Mathf.Clamp01(heavyEnemyKnockbackMultiplier);
         public float BossEnemyKnockbackMultiplier => Mathf.Clamp01(bossEnemyKnockbackMultiplier);
+        public float LightBodyKnockbackMultiplier => Mathf.Max(0f, lightBodyKnockbackMultiplier);
+        public float MediumBodyKnockbackMultiplier => Mathf.Max(0f, mediumBodyKnockbackMultiplier);
+        public float HeavyBodyKnockbackMultiplier => Mathf.Max(0f, heavyBodyKnockbackMultiplier);
+        public float MassiveBodyKnockbackMultiplier => Mathf.Max(0f, massiveBodyKnockbackMultiplier);
         public float EnemyHitFlashSeconds => Mathf.Max(0f, enemyHitFlashSeconds);
         public float WindupPulseStrength => Mathf.Max(0f, windupPulseStrength);
         public bool ShowWindupLabels => showWindupLabels;
@@ -46,6 +54,10 @@ namespace Hollow.Data.Definitions
             heavyAttackKnockbackMultiplier = 1.35f;
             heavyEnemyKnockbackMultiplier = 0.55f;
             bossEnemyKnockbackMultiplier = 0.25f;
+            lightBodyKnockbackMultiplier = 1.2f;
+            mediumBodyKnockbackMultiplier = 1f;
+            heavyBodyKnockbackMultiplier = 0.55f;
+            massiveBodyKnockbackMultiplier = 0.18f;
             enemyHitFlashSeconds = 0.1f;
             windupPulseStrength = 0.08f;
             showWindupLabels = false;

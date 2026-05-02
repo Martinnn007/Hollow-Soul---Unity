@@ -114,6 +114,7 @@ namespace Hollow.Combat
         [SerializeField] private float radiusMeters = 0.65f;
         [SerializeField] private float projectileSpeedMetersPerSecond = 4.8f;
         [SerializeField] private float visualScale = 2f;
+        [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Massive;
         [SerializeField] private Color debugColor = new(0.42f, 0.34f, 0.28f, 1f);
         [SerializeField] private BossArenaDefinition arena = new("boss_arena_broken_gateyard", "Broken Gateyard");
         [SerializeField] private List<BossPhaseDefinition> phases = new();
@@ -141,6 +142,8 @@ namespace Hollow.Combat
 
         public float VisualScale => Mathf.Clamp(visualScale, 1f, 3.5f);
 
+        public EnemyBodyClass BodyClass => bodyClass;
+
         public Color DebugColor => debugColor;
 
         public BossArenaDefinition Arena => arena ?? new BossArenaDefinition("boss_arena_broken_gateyard", "Broken Gateyard");
@@ -164,7 +167,8 @@ namespace Hollow.Combat
             Color nextDebugColor,
             BossArenaDefinition nextArena,
             IEnumerable<BossPhaseDefinition> nextPhases,
-            IEnumerable<BossAttackDefinition> nextAttacks)
+            IEnumerable<BossAttackDefinition> nextAttacks,
+            EnemyBodyClass nextBodyClass = EnemyBodyClass.Massive)
         {
             bossId = string.IsNullOrWhiteSpace(nextBossId) ? "boss" : nextBossId;
             displayName = string.IsNullOrWhiteSpace(nextDisplayName) ? bossId : nextDisplayName;
@@ -177,6 +181,7 @@ namespace Hollow.Combat
             radiusMeters = Mathf.Max(0.25f, nextRadiusMeters);
             projectileSpeedMetersPerSecond = Mathf.Max(0.1f, nextProjectileSpeedMetersPerSecond);
             visualScale = Mathf.Clamp(nextVisualScale, 1f, 3.5f);
+            bodyClass = nextBodyClass;
             debugColor = nextDebugColor;
             arena = nextArena ?? new BossArenaDefinition("boss_arena_broken_gateyard", "Broken Gateyard");
             phases = nextPhases?.Where(phase => phase != null).OrderByDescending(phase => phase.healthThreshold01).ToList() ?? new List<BossPhaseDefinition>();

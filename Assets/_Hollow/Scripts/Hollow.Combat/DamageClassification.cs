@@ -1,3 +1,5 @@
+using Hollow.Data.Definitions;
+
 namespace Hollow.Combat
 {
     public enum DamageChannel
@@ -15,14 +17,6 @@ namespace Hollow.Combat
         Projectile = 1,
         Area = 2,
         Contact = 3
-    }
-
-    public enum ImpactForceClass
-    {
-        Light = 0,
-        Medium = 1,
-        Heavy = 2,
-        Massive = 3
     }
 
     public enum DamageElement

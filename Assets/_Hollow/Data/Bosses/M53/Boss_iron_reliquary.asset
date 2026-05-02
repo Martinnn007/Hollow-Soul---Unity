@@ -23,6 +23,7 @@ MonoBehaviour:
   radiusMeters: 0.72
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.4
+  bodyClass: 3
   debugColor: {r: 0.44, g: 0.52, b: 0.58, a: 1}
   arena:
     arenaId: boss_arena_cover_maze

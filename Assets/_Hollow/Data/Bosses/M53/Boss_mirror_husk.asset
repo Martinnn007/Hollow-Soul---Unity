@@ -23,6 +23,7 @@ MonoBehaviour:
   radiusMeters: 0.62
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.1
+  bodyClass: 3
   debugColor: {r: 0.62, g: 0.74, b: 0.9, a: 1}
   arena:
     arenaId: boss_arena_symmetric_mirror

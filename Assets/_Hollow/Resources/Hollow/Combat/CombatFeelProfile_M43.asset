@@ -24,6 +24,10 @@ MonoBehaviour:
   heavyAttackKnockbackMultiplier: 1.35
   heavyEnemyKnockbackMultiplier: 0.55
   bossEnemyKnockbackMultiplier: 0.25
+  lightBodyKnockbackMultiplier: 1.2
+  mediumBodyKnockbackMultiplier: 1
+  heavyBodyKnockbackMultiplier: 0.55
+  massiveBodyKnockbackMultiplier: 0.18
   enemyHitFlashSeconds: 0.1
   windupPulseStrength: 0.08
   showWindupLabels: 0

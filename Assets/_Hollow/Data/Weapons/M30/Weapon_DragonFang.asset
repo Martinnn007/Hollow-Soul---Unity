@@ -24,9 +24,13 @@ MonoBehaviour:
     cooldownSeconds: 0.82
     staminaCost: 9
     rangeMeters: 1.05
+    impactForceClass: 2
+    knockbackMeters: 0.75
   heavyAttack:
     attackKind: 1
     damage: 4
     cooldownSeconds: 3
     staminaCost: 42
     rangeMeters: 1.3
+    impactForceClass: 2
+    knockbackMeters: 1

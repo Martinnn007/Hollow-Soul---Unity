@@ -236,7 +236,7 @@ namespace Hollow.Combat
             nextAllowedShotTime = timeSeconds + attackCooldown;
             foreach (var shot in BuildProjectileShots(cardinal))
             {
-                SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, attackKind);
+                SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, attack);
             }
 
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Ranged, attackKind, cardinal);
@@ -244,7 +244,7 @@ namespace Hollow.Combat
             return true;
         }
 
-        private void SpawnProjectile(ProjectileShotSpec shot, int attackDamage, float projectileSpeed, float lifetimeSeconds, AttackKind attackKind)
+        private void SpawnProjectile(ProjectileShotSpec shot, int attackDamage, float projectileSpeed, float lifetimeSeconds, WeaponAttackDefinition attack)
         {
             var direction = shot.Direction.sqrMagnitude > 0.001f ? shot.Direction.normalized : Vector2.up;
             var side = new Vector2(-direction.y, direction.x);
@@ -270,7 +270,9 @@ namespace Hollow.Combat
                 lifetimeSeconds);
             projectile.ConfigureCombatFeel(
                 CombatFeelProfileDefinition.Resolve(combatFeelProfile),
-                attackKind == AttackKind.Heavy);
+                attack.AttackKind == AttackKind.Heavy,
+                attack.ImpactForceClass,
+                attack.KnockbackMeters);
             VfxPresenter.Play(VfxCueId.ProjectileFire, projectileObject.transform.position, projectileObject.transform.parent);
         }
 
@@ -367,14 +369,13 @@ namespace Hollow.Combat
             {
                 var damage = Mathf.Max(1, attack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus);
                 var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
-                var knockback = profile.EnemyMeleeKnockbackMeters *
-                                (attackKind == AttackKind.Heavy ? profile.HeavyAttackKnockbackMultiplier : 1f);
                 DamageSystem.ApplyDamage(
                     target.Health,
                     new DamageRequest(
                         damage,
                         gameObject,
-                        DamageFeedbackContext.Knockback(direction, knockback, profile.KnockbackSeconds)));
+                        DamageFeedbackContext.Knockback(direction, attack.KnockbackMeters, profile.KnockbackSeconds),
+                        DamageClassification.PhysicalMelee(attack.ImpactForceClass)));
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
             }

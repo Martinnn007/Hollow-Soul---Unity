@@ -30,4 +30,5 @@ MonoBehaviour:
   chargeCooldownSeconds: 2
   splitSpawnKind: spawnEnemyNormal
   splitCount: 0
+  bodyClass: 1
   color: {r: 0.85, g: 0.16, b: 0.14, a: 1}

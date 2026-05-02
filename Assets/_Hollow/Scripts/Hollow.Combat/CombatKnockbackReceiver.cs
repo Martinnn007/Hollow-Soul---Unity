@@ -40,6 +40,12 @@ namespace Hollow.Combat
 
         public void ApplyKnockback(Vector3 direction, float meters, float seconds, DamageClassification classification)
         {
+            var enemy = GetComponent<EnemyRuntimeController>();
+            if (enemy != null && enemy.IsInspectionFrozen)
+            {
+                return;
+            }
+
             var flatDirection = new Vector3(direction.x, 0f, direction.z);
             var distance = Mathf.Max(0f, meters) * resistanceMultiplier * StabilityKnockbackMultiplier(classification);
             if (flatDirection.sqrMagnitude < 0.001f || distance <= 0f)
