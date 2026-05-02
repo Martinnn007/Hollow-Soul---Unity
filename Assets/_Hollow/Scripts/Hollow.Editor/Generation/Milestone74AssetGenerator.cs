@@ -102,7 +102,7 @@ M74 adds authored preferred range bands and a lightweight local steering pass fo
 - Preferred range steering applies only during ordinary chase, wander, and hold movement.
 - Windups, active charges, stun, death, entry grace, ranged attacks, contact damage, and boss behavior remain unchanged.
 - Intelligence controls precision: Instinctive enemies use bands mainly for prey retreat and anti-shove smoothing, Simple enemies are loose, and Basic or higher enemies respect bands more cleanly.
-- Separation is a soft nudge away from nearby living non-boss enemies.
+- separation is a soft nudge away from nearby living non-boss enemies.
 - Player contact smoothing uses a small contact buffer so enemies stop constantly shoving into the player while still allowing hits and brief overlaps.
 - Retreat behavior uses short readable bursts of about 0.75 seconds, then reassesses.
 

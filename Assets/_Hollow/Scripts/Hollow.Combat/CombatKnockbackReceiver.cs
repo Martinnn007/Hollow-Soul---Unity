@@ -24,7 +24,7 @@ namespace Hollow.Combat
             roomRuntimeRoot = room;
             radiusMeters = Mathf.Max(CombatFeelTuning.MinimumCollisionRadiusMeters, radius);
             ignoreObstacles = nextIgnoreObstacles;
-            resistanceMultiplier = Mathf.Clamp01(nextResistanceMultiplier);
+            resistanceMultiplier = Mathf.Max(0f, nextResistanceMultiplier);
         }
 
         public void ConfigureStability(int nextStability)

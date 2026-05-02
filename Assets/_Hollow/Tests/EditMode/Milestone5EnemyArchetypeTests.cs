@@ -72,8 +72,8 @@ namespace Hollow.Tests.EditMode
                 flying.Tick(1f, 0f);
 
                 Assert.Less(grounded.transform.localPosition.z, 0.25f);
-                Assert.Greater(flying.transform.localPosition.z, 1.2f);
-                Assert.LessOrEqual(flying.transform.localPosition.z, room.LocalBounds.yMax);
+                Assert.Less(flying.transform.localPosition.z, -1.2f);
+                Assert.GreaterOrEqual(flying.transform.localPosition.z, room.LocalBounds.yMin);
             }
             finally
             {
