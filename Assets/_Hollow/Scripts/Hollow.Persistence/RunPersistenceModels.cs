@@ -136,6 +136,8 @@ namespace Hollow.Persistence
         public string roomId = string.Empty;
         public string encounterId = string.Empty;
         public List<string> enemySpawnKinds = new();
+        public List<int> enemyIntelligenceLevels = new();
+        public List<string> enemyDispositions = new();
         public int worldIndex;
         public int difficultyBand;
         public int directorPressure;

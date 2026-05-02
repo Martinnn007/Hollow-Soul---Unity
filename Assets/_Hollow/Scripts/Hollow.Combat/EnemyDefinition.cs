@@ -15,6 +15,8 @@ namespace Hollow.Combat
         [SerializeField] private float contactCooldownSeconds = 1f;
         [SerializeField] private float radiusMeters = 0.32f;
         [SerializeField] private float attackRangeMeters = 5f;
+        [SerializeField] private float preferredRangeMinMeters = 1.05f;
+        [SerializeField] private float preferredRangeMaxMeters = 1.75f;
         [SerializeField] private float attackCooldownSeconds = 1.4f;
         [SerializeField] private int projectileDamage = 1;
         [SerializeField] private float projectileSpeedMetersPerSecond = 5f;
@@ -23,6 +25,8 @@ namespace Hollow.Combat
         [SerializeField] private string splitSpawnKind = "spawnEnemyNormal";
         [SerializeField] private int splitCount;
         [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Medium;
+        [SerializeField] private EnemyIntelligenceLevel intelligence = EnemyIntelligenceLevel.Simple;
+        [SerializeField] private EnemyInstinctDisposition disposition = EnemyInstinctDisposition.Predator;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -47,6 +51,10 @@ namespace Hollow.Combat
 
         public float AttackRangeMeters => attackRangeMeters;
 
+        public float PreferredRangeMinMeters => Mathf.Max(0f, preferredRangeMinMeters);
+
+        public float PreferredRangeMaxMeters => Mathf.Max(PreferredRangeMinMeters + 0.05f, preferredRangeMaxMeters);
+
         public float AttackCooldownSeconds => attackCooldownSeconds;
 
         public int ProjectileDamage => projectileDamage;
@@ -62,6 +70,10 @@ namespace Hollow.Combat
         public int SplitCount => splitCount;
 
         public EnemyBodyClass BodyClass => bodyClass;
+
+        public EnemyIntelligenceLevel Intelligence => EnemyIntelligenceLevelExtensions.Clamp((int)intelligence);
+
+        public EnemyInstinctDisposition Disposition => EnemyInstinctDispositionExtensions.Clamp((int)disposition);
 
         public Color Color => color;
 
@@ -97,6 +109,8 @@ namespace Hollow.Combat
                 nextSplitSpawnKind: "spawnEnemyNormal",
                 nextSplitCount: 0,
                 nextBodyClass: DefaultBodyClassFor(nextArchetypeId, DefaultBehaviorFor(nextArchetypeId, nextMovementMode), nextMovementMode),
+                nextIntelligence: DefaultIntelligenceFor(nextArchetypeId, DefaultBehaviorFor(nextArchetypeId, nextMovementMode), nextMovementMode),
+                nextDisposition: DefaultDispositionFor(nextArchetypeId, DefaultBehaviorFor(nextArchetypeId, nextMovementMode), nextMovementMode),
                 nextColor);
         }
 
@@ -141,6 +155,8 @@ namespace Hollow.Combat
                 nextSplitSpawnKind,
                 nextSplitCount,
                 DefaultBodyClassFor(nextArchetypeId, nextBehaviorId, nextMovementMode),
+                DefaultIntelligenceFor(nextArchetypeId, nextBehaviorId, nextMovementMode),
+                DefaultDispositionFor(nextArchetypeId, nextBehaviorId, nextMovementMode),
                 nextColor);
         }
 
@@ -166,6 +182,55 @@ namespace Hollow.Combat
             EnemyBodyClass nextBodyClass,
             Color nextColor)
         {
+            Configure(
+                nextSpawnKind,
+                nextDisplayName,
+                nextArchetypeId,
+                nextBehaviorId,
+                nextMovementMode,
+                nextMaxHealth,
+                nextSpeedMetersPerSecond,
+                nextContactDamage,
+                nextContactCooldownSeconds,
+                nextRadiusMeters,
+                nextAttackRangeMeters,
+                nextAttackCooldownSeconds,
+                nextProjectileDamage,
+                nextProjectileSpeedMetersPerSecond,
+                nextChargeSpeedMetersPerSecond,
+                nextChargeCooldownSeconds,
+                nextSplitSpawnKind,
+                nextSplitCount,
+                nextBodyClass,
+                DefaultIntelligenceFor(nextArchetypeId, nextBehaviorId, nextMovementMode),
+                DefaultDispositionFor(nextArchetypeId, nextBehaviorId, nextMovementMode),
+                nextColor);
+        }
+
+        public void Configure(
+            string nextSpawnKind,
+            string nextDisplayName,
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode,
+            int nextMaxHealth,
+            float nextSpeedMetersPerSecond,
+            int nextContactDamage,
+            float nextContactCooldownSeconds,
+            float nextRadiusMeters,
+            float nextAttackRangeMeters,
+            float nextAttackCooldownSeconds,
+            int nextProjectileDamage,
+            float nextProjectileSpeedMetersPerSecond,
+            float nextChargeSpeedMetersPerSecond,
+            float nextChargeCooldownSeconds,
+            string nextSplitSpawnKind,
+            int nextSplitCount,
+            EnemyBodyClass nextBodyClass,
+            EnemyIntelligenceLevel nextIntelligence,
+            EnemyInstinctDisposition nextDisposition,
+            Color nextColor)
+        {
             spawnKind = nextSpawnKind;
             displayName = nextDisplayName;
             archetypeId = nextArchetypeId;
@@ -185,7 +250,67 @@ namespace Hollow.Combat
             splitSpawnKind = string.IsNullOrWhiteSpace(nextSplitSpawnKind) ? "spawnEnemyNormal" : nextSplitSpawnKind;
             splitCount = Mathf.Max(0, nextSplitCount);
             bodyClass = nextBodyClass;
+            intelligence = EnemyIntelligenceLevelExtensions.Clamp((int)nextIntelligence);
+            disposition = EnemyInstinctDispositionExtensions.Clamp((int)nextDisposition);
+            var preferredRange = DefaultPreferredRangeFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
+            preferredRangeMinMeters = preferredRange.x;
+            preferredRangeMaxMeters = preferredRange.y;
             color = nextColor;
+        }
+
+        public void Configure(
+            string nextSpawnKind,
+            string nextDisplayName,
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode,
+            int nextMaxHealth,
+            float nextSpeedMetersPerSecond,
+            int nextContactDamage,
+            float nextContactCooldownSeconds,
+            float nextRadiusMeters,
+            float nextAttackRangeMeters,
+            float nextAttackCooldownSeconds,
+            int nextProjectileDamage,
+            float nextProjectileSpeedMetersPerSecond,
+            float nextChargeSpeedMetersPerSecond,
+            float nextChargeCooldownSeconds,
+            string nextSplitSpawnKind,
+            int nextSplitCount,
+            EnemyBodyClass nextBodyClass,
+            EnemyIntelligenceLevel nextIntelligence,
+            EnemyInstinctDisposition nextDisposition,
+            float nextPreferredRangeMinMeters,
+            float nextPreferredRangeMaxMeters,
+            Color nextColor)
+        {
+            Configure(
+                nextSpawnKind,
+                nextDisplayName,
+                nextArchetypeId,
+                nextBehaviorId,
+                nextMovementMode,
+                nextMaxHealth,
+                nextSpeedMetersPerSecond,
+                nextContactDamage,
+                nextContactCooldownSeconds,
+                nextRadiusMeters,
+                nextAttackRangeMeters,
+                nextAttackCooldownSeconds,
+                nextProjectileDamage,
+                nextProjectileSpeedMetersPerSecond,
+                nextChargeSpeedMetersPerSecond,
+                nextChargeCooldownSeconds,
+                nextSplitSpawnKind,
+                nextSplitCount,
+                nextBodyClass,
+                nextIntelligence,
+                nextDisposition,
+                nextColor);
+
+            var preferredRange = SanitizePreferredRange(nextPreferredRangeMinMeters, nextPreferredRangeMaxMeters);
+            preferredRangeMinMeters = preferredRange.x;
+            preferredRangeMaxMeters = preferredRange.y;
         }
 
         public static EnemyDefinition CreateRuntime(
@@ -198,8 +323,55 @@ namespace Hollow.Combat
             int contactDamage,
             Color color)
         {
+            return CreateRuntime(
+                spawnKind,
+                displayName,
+                archetypeId,
+                movementMode,
+                maxHealth,
+                speedMetersPerSecond,
+                contactDamage,
+                DefaultIntelligenceFor(archetypeId, DefaultBehaviorFor(archetypeId, movementMode), movementMode),
+                DefaultDispositionFor(archetypeId, DefaultBehaviorFor(archetypeId, movementMode), movementMode),
+                color);
+        }
+
+        public static EnemyDefinition CreateRuntime(
+            string spawnKind,
+            string displayName,
+            EnemyArchetypeId archetypeId,
+            EnemyMovementMode movementMode,
+            int maxHealth,
+            float speedMetersPerSecond,
+            int contactDamage,
+            EnemyIntelligenceLevel intelligence,
+            EnemyInstinctDisposition disposition,
+            Color color)
+        {
             var definition = CreateInstance<EnemyDefinition>();
-            definition.Configure(spawnKind, displayName, archetypeId, movementMode, maxHealth, speedMetersPerSecond, contactDamage, 1f, 0.32f, color);
+            definition.Configure(
+                spawnKind,
+                displayName,
+                archetypeId,
+                DefaultBehaviorFor(archetypeId, movementMode),
+                movementMode,
+                maxHealth,
+                speedMetersPerSecond,
+                contactDamage,
+                1f,
+                0.32f,
+                5f,
+                1.4f,
+                1,
+                5f,
+                5f,
+                2.25f,
+                "spawnEnemyNormal",
+                0,
+                DefaultBodyClassFor(archetypeId, DefaultBehaviorFor(archetypeId, movementMode), movementMode),
+                intelligence,
+                disposition,
+                color);
             return definition;
         }
 
@@ -231,6 +403,8 @@ namespace Hollow.Combat
                 "spawnEnemyNormal",
                 0,
                 EnemyBodyClass.Massive,
+                EnemyIntelligenceLevel.Basic,
+                EnemyInstinctDisposition.Sentinel,
                 new Color(0.42f, 0.34f, 0.28f, 1f));
             return definition;
         }
@@ -261,6 +435,83 @@ namespace Hollow.Combat
             }
 
             return EnemyBodyClass.Medium;
+        }
+
+        public static EnemyIntelligenceLevel DefaultIntelligenceFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return EnemyIntelligenceLevel.Basic;
+            }
+
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.FlyingChaser => EnemyIntelligenceLevel.Instinctive,
+                EnemyBehaviorId.Charger => EnemyIntelligenceLevel.Instinctive,
+                EnemyBehaviorId.Splitter => EnemyIntelligenceLevel.Basic,
+                EnemyBehaviorId.TurretShooter => EnemyIntelligenceLevel.Trained,
+                _ => EnemyIntelligenceLevel.Simple
+            };
+        }
+
+        public static EnemyInstinctDisposition DefaultDispositionFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.FlyingChaser)
+            {
+                return EnemyInstinctDisposition.Prey;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.TurretShooter)
+            {
+                return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextArchetypeId == EnemyArchetypeId.Heavy && nextBehaviorId == EnemyBehaviorId.Chaser)
+            {
+                return EnemyInstinctDisposition.Mindless;
+            }
+
+            return EnemyInstinctDisposition.Predator;
+        }
+
+        public static Vector2 DefaultPreferredRangeFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return new Vector2(4.5f, 6.5f);
+            }
+
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.FlyingChaser => new Vector2(2.75f, 4.25f),
+                EnemyBehaviorId.Charger => new Vector2(0.8f, 1.35f),
+                EnemyBehaviorId.Splitter => new Vector2(1.25f, 2f),
+                EnemyBehaviorId.TurretShooter => new Vector2(5.25f, 7.5f),
+                _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector2(0.9f, 1.45f),
+                _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector2(1.35f, 2.15f),
+                _ => new Vector2(1.05f, 1.75f)
+            };
+        }
+
+        private static Vector2 SanitizePreferredRange(float minMeters, float maxMeters)
+        {
+            var safeMin = Mathf.Max(0f, minMeters);
+            var safeMax = Mathf.Max(safeMin + 0.05f, maxMeters);
+            return new Vector2(safeMin, safeMax);
         }
 
         private static EnemyBehaviorId DefaultBehaviorFor(EnemyArchetypeId nextArchetypeId, EnemyMovementMode nextMovementMode)

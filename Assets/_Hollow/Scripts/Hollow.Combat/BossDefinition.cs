@@ -115,6 +115,7 @@ namespace Hollow.Combat
         [SerializeField] private float projectileSpeedMetersPerSecond = 4.8f;
         [SerializeField] private float visualScale = 2f;
         [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Massive;
+        [SerializeField] private EnemyIntelligenceLevel intelligence = EnemyIntelligenceLevel.Basic;
         [SerializeField] private Color debugColor = new(0.42f, 0.34f, 0.28f, 1f);
         [SerializeField] private BossArenaDefinition arena = new("boss_arena_broken_gateyard", "Broken Gateyard");
         [SerializeField] private List<BossPhaseDefinition> phases = new();
@@ -144,6 +145,8 @@ namespace Hollow.Combat
 
         public EnemyBodyClass BodyClass => bodyClass;
 
+        public EnemyIntelligenceLevel Intelligence => EnemyIntelligenceLevelExtensions.Clamp((int)intelligence);
+
         public Color DebugColor => debugColor;
 
         public BossArenaDefinition Arena => arena ?? new BossArenaDefinition("boss_arena_broken_gateyard", "Broken Gateyard");
@@ -170,6 +173,45 @@ namespace Hollow.Combat
             IEnumerable<BossAttackDefinition> nextAttacks,
             EnemyBodyClass nextBodyClass = EnemyBodyClass.Massive)
         {
+            Configure(
+                nextBossId,
+                nextDisplayName,
+                nextWorldBand,
+                nextBehaviorId,
+                nextMaxHealth,
+                nextSpeedMetersPerSecond,
+                nextContactDamage,
+                nextContactCooldownSeconds,
+                nextRadiusMeters,
+                nextProjectileSpeedMetersPerSecond,
+                nextVisualScale,
+                nextDebugColor,
+                nextArena,
+                nextPhases,
+                nextAttacks,
+                nextBodyClass,
+                SignatureIntelligenceFor(nextBehaviorId));
+        }
+
+        public void Configure(
+            string nextBossId,
+            string nextDisplayName,
+            BossWorldBand nextWorldBand,
+            BossBehaviorId nextBehaviorId,
+            int nextMaxHealth,
+            float nextSpeedMetersPerSecond,
+            int nextContactDamage,
+            float nextContactCooldownSeconds,
+            float nextRadiusMeters,
+            float nextProjectileSpeedMetersPerSecond,
+            float nextVisualScale,
+            Color nextDebugColor,
+            BossArenaDefinition nextArena,
+            IEnumerable<BossPhaseDefinition> nextPhases,
+            IEnumerable<BossAttackDefinition> nextAttacks,
+            EnemyBodyClass nextBodyClass,
+            EnemyIntelligenceLevel nextIntelligence)
+        {
             bossId = string.IsNullOrWhiteSpace(nextBossId) ? "boss" : nextBossId;
             displayName = string.IsNullOrWhiteSpace(nextDisplayName) ? bossId : nextDisplayName;
             worldBand = nextWorldBand;
@@ -182,6 +224,7 @@ namespace Hollow.Combat
             projectileSpeedMetersPerSecond = Mathf.Max(0.1f, nextProjectileSpeedMetersPerSecond);
             visualScale = Mathf.Clamp(nextVisualScale, 1f, 3.5f);
             bodyClass = nextBodyClass;
+            intelligence = EnemyIntelligenceLevelExtensions.Clamp((int)nextIntelligence);
             debugColor = nextDebugColor;
             arena = nextArena ?? new BossArenaDefinition("boss_arena_broken_gateyard", "Broken Gateyard");
             phases = nextPhases?.Where(phase => phase != null).OrderByDescending(phase => phase.healthThreshold01).ToList() ?? new List<BossPhaseDefinition>();
@@ -223,6 +266,24 @@ namespace Hollow.Combat
                 },
                 DefaultAttacksFor(behavior));
             return definition;
+        }
+
+        public static EnemyIntelligenceLevel SignatureIntelligenceFor(BossBehaviorId behavior)
+        {
+            return behavior switch
+            {
+                BossBehaviorId.StoneWarden => EnemyIntelligenceLevel.Basic,
+                BossBehaviorId.SplinterSaint => EnemyIntelligenceLevel.Trained,
+                BossBehaviorId.GravelMaw => EnemyIntelligenceLevel.Basic,
+                BossBehaviorId.CartoucheWidow => EnemyIntelligenceLevel.Cunning,
+                BossBehaviorId.IronReliquary => EnemyIntelligenceLevel.Tactical,
+                BossBehaviorId.MirrorHusk => EnemyIntelligenceLevel.Cunning,
+                BossBehaviorId.AshComet => EnemyIntelligenceLevel.Trained,
+                BossBehaviorId.ChoirOfTeeth => EnemyIntelligenceLevel.Tactical,
+                BossBehaviorId.RustBishop => EnemyIntelligenceLevel.Cunning,
+                BossBehaviorId.HollowStarLarva => EnemyIntelligenceLevel.Cunning,
+                _ => EnemyIntelligenceLevel.Basic
+            };
         }
 
         private static IEnumerable<BossAttackDefinition> DefaultAttacksFor(BossBehaviorId behavior)

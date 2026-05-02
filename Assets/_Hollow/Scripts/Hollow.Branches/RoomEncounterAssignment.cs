@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Hollow.Branches
 {
@@ -26,6 +26,35 @@ namespace Hollow.Branches
             string bossArenaId,
             int bossWorldBand,
             string bossPhaseState)
+            : this(
+                roomId,
+                encounterId,
+                enemySpawnKinds,
+                worldIndex,
+                difficultyBand,
+                directorPressure,
+                bossId,
+                bossArenaId,
+                bossWorldBand,
+                bossPhaseState,
+                null,
+                null)
+        {
+        }
+
+        public RoomEncounterAssignment(
+            string roomId,
+            string encounterId,
+            IEnumerable<string> enemySpawnKinds,
+            int worldIndex,
+            int difficultyBand,
+            int directorPressure,
+            string bossId,
+            string bossArenaId,
+            int bossWorldBand,
+            string bossPhaseState,
+            IEnumerable<int> enemyIntelligenceLevels,
+            IEnumerable<string> enemyDispositions)
         {
             RoomId = string.IsNullOrWhiteSpace(roomId) ? string.Empty : roomId;
             EncounterId = string.IsNullOrWhiteSpace(encounterId) ? string.Empty : encounterId;
@@ -39,6 +68,10 @@ namespace Hollow.Branches
             BossArenaId = string.IsNullOrWhiteSpace(bossArenaId) ? string.Empty : bossArenaId;
             BossWorldBand = bossWorldBand;
             BossPhaseState = string.IsNullOrWhiteSpace(bossPhaseState) ? string.Empty : bossPhaseState;
+            EnemyIntelligenceLevels = enemyIntelligenceLevels?.ToArray() ?? System.Array.Empty<int>();
+            EnemyDispositions = enemyDispositions?
+                .Select(disposition => string.IsNullOrWhiteSpace(disposition) ? string.Empty : disposition)
+                .ToArray() ?? System.Array.Empty<string>();
         }
 
         public string RoomId { get; }
@@ -46,6 +79,10 @@ namespace Hollow.Branches
         public string EncounterId { get; }
 
         public IReadOnlyList<string> EnemySpawnKinds { get; }
+
+        public IReadOnlyList<int> EnemyIntelligenceLevels { get; }
+
+        public IReadOnlyList<string> EnemyDispositions { get; }
 
         public int WorldIndex { get; }
 

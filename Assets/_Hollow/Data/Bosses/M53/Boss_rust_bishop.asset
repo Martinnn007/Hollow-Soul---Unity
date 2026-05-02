@@ -24,6 +24,7 @@ MonoBehaviour:
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.85
   bodyClass: 3
+  intelligence: 5
   debugColor: {r: 0.72, g: 0.28, b: 0.14, a: 1}
   arena:
     arenaId: boss_arena_industrial_cover_grid

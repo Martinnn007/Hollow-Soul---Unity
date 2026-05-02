@@ -2379,7 +2379,9 @@ namespace Hollow.Branches
                 assignment.BossId,
                 assignment.BossArenaId,
                 assignment.BossWorldBand,
-                assignment.BossPhaseState);
+                assignment.BossPhaseState,
+                assignment.EnemyIntelligenceLevels,
+                assignment.EnemyDispositions);
         }
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()
@@ -2859,6 +2861,21 @@ namespace Hollow.Branches
 
         public RunSaveSnapshot CreateSnapshot()
         {
+            var liveRoomId = State?.CurrentRoomId.Value ?? string.Empty;
+            IReadOnlyList<int> liveEnemyIntelligenceLevels = null;
+            IReadOnlyList<string> liveEnemyDispositions = null;
+            if (!string.IsNullOrWhiteSpace(liveRoomId) &&
+                roomCombatController != null &&
+                encounterPlan.TryResolve(liveRoomId, out var liveAssignment) &&
+                roomCombatController.TryGetEnemyIntelligenceSnapshot(
+                    liveAssignment.EnemySpawnKinds.Count,
+                    out var runtimeIntelligence,
+                    out var runtimeDispositions))
+            {
+                liveEnemyIntelligenceLevels = runtimeIntelligence;
+                liveEnemyDispositions = runtimeDispositions;
+            }
+
             var snapshot = new RunSaveSnapshot
             {
                 runId = $"{State?.Graph?.BranchId ?? BranchGenerator.LegacyFiveRoomBranchId}-{gameSessionState?.ProfileId ?? "transient"}",
@@ -2880,7 +2897,11 @@ namespace Hollow.Branches
                 secretRoomId = branchFeaturePlan.SecretRoomId,
                 bossDoorUnlocked = bossDoorUnlocked,
                 proceduralRewardPlan = proceduralRewardPlan.ToSaveState(),
-                encounterPlan = encounterPlan.ToSaveState(),
+                encounterPlan = encounterPlan.ToSaveState(
+                    roomCombatController != null ? roomCombatController.EnemyCatalog : null,
+                    liveRoomId,
+                    liveEnemyIntelligenceLevels,
+                    liveEnemyDispositions),
                 interBranchHub = interBranchHubState.ToSaveState(),
                 economy = runEconomy.ToSaveState(),
                 playerStats = playerRunStats.ToSaveState(),

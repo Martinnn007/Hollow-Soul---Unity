@@ -13,6 +13,7 @@ namespace Hollow.Combat
     {
         public const int PlayerMaxHealth = 6;
         public const float EntryGraceSeconds = 1f;
+        public const float EnemyAttackBudgetWindowSeconds = 0.45f;
 
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject projectilePrefab;
@@ -35,6 +36,7 @@ namespace Hollow.Combat
         private InspectionEntityMode inspectionMode = InspectionEntityMode.LiveRuntime;
         private bool ignoreEnemiesForRoomClear;
         private readonly CombatDiagnosticsModel diagnostics = new();
+        private float nextEnemyAttackBudgetTime;
 
         public event Action<RoomCombatController> RoomCleared;
 
@@ -147,6 +149,7 @@ namespace Hollow.Combat
             }
 
             CleanupRoomCombatObjects();
+            nextEnemyAttackBudgetTime = 0f;
             ConfigureRoomHazards();
             playerHealth = playerController.GetComponent<CombatantHealth>() ?? playerController.gameObject.AddComponent<CombatantHealth>();
             if (playerHealth.MaxHealth < PlayerMaxHealth)
@@ -303,6 +306,65 @@ namespace Hollow.Combat
             return enemies.Count(enemy => enemy != null && enemy.IsAlive);
         }
 
+        public bool TryReserveEnemyAttack(EnemyRuntimeController enemy, float timeSeconds)
+        {
+            if (enemy == null || enemy.BossDefinition != null)
+            {
+                return true;
+            }
+
+            if (timeSeconds < nextEnemyAttackBudgetTime)
+            {
+                return false;
+            }
+
+            var highestPriorityReadyEnemy = enemies
+                .Where(candidate => candidate != null && candidate.CanStartBudgetedAttack(timeSeconds))
+                .OrderByDescending(candidate => candidate.AttackPriorityScore(timeSeconds))
+                .FirstOrDefault();
+            if (highestPriorityReadyEnemy != null && highestPriorityReadyEnemy != enemy)
+            {
+                return false;
+            }
+
+            nextEnemyAttackBudgetTime = timeSeconds + EnemyAttackBudgetWindowSeconds;
+            return true;
+        }
+
+        public bool TryGetEnemyIntelligenceSnapshot(
+            int expectedSpawnCount,
+            out IReadOnlyList<int> intelligenceLevels,
+            out IReadOnlyList<string> dispositions)
+        {
+            intelligenceLevels = System.Array.Empty<int>();
+            dispositions = System.Array.Empty<string>();
+            if (expectedSpawnCount <= 0)
+            {
+                return false;
+            }
+
+            var orderedEnemies = enemies
+                .Where(enemy => enemy != null && enemy.SpawnIndex >= 0)
+                .GroupBy(enemy => enemy.SpawnIndex)
+                .OrderBy(group => group.Key)
+                .Select(group => group.First())
+                .ToArray();
+            if (orderedEnemies.Length != expectedSpawnCount ||
+                orderedEnemies[0].SpawnIndex != 0 ||
+                orderedEnemies[orderedEnemies.Length - 1].SpawnIndex != expectedSpawnCount - 1)
+            {
+                return false;
+            }
+
+            intelligenceLevels = orderedEnemies
+                .Select(enemy => (int)enemy.Intelligence)
+                .ToArray();
+            dispositions = orderedEnemies
+                .Select(enemy => enemy.Disposition.ToSaveString())
+                .ToArray();
+            return true;
+        }
+
         private void RegisterEnemy(EnemyRuntimeController enemy)
         {
             if (enemy == null || enemies.Contains(enemy))
@@ -312,6 +374,7 @@ namespace Hollow.Combat
 
             enemy.SpawnedChild -= OnEnemySpawnedChild;
             enemy.SpawnedChild += OnEnemySpawnedChild;
+            enemy.BindRoomCombatController(this);
             enemy.ConfigureCombatFeel(CombatFeelProfile);
             enemy.SetInspectionMode(inspectionMode);
             enemy.BeginEntryGrace(EntryGraceSeconds, Time.time);

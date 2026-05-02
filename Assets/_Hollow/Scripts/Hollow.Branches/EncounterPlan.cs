@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Combat;
 using Hollow.Persistence;
 
 namespace Hollow.Branches
@@ -27,20 +28,51 @@ namespace Hollow.Branches
 
         public List<RoomEncounterSaveState> ToSaveState()
         {
+            return ToSaveState(null);
+        }
+
+        public List<RoomEncounterSaveState> ToSaveState(EnemyCatalog enemyCatalog)
+        {
+            return ToSaveState(enemyCatalog, string.Empty, null, null);
+        }
+
+        public List<RoomEncounterSaveState> ToSaveState(
+            EnemyCatalog enemyCatalog,
+            string liveRoomId,
+            IReadOnlyList<int> liveEnemyIntelligenceLevels,
+            IReadOnlyList<string> liveEnemyDispositions)
+        {
             return assignments.Values
                 .OrderBy(assignment => assignment.RoomId)
-                .Select(assignment => new RoomEncounterSaveState
+                .Select(assignment =>
                 {
-                    roomId = assignment.RoomId,
-                    encounterId = assignment.EncounterId,
-                    enemySpawnKinds = assignment.EnemySpawnKinds.ToList(),
-                    worldIndex = assignment.WorldIndex,
-                    difficultyBand = assignment.DifficultyBand,
-                    directorPressure = assignment.DirectorPressure,
-                    bossId = assignment.BossId,
-                    bossArenaId = assignment.BossArenaId,
-                    bossWorldBand = assignment.BossWorldBand,
-                    bossPhaseState = assignment.BossPhaseState
+                    var hasLiveSnapshot = !string.IsNullOrWhiteSpace(liveRoomId) &&
+                        assignment.RoomId == liveRoomId &&
+                        liveEnemyIntelligenceLevels != null &&
+                        liveEnemyDispositions != null &&
+                        liveEnemyIntelligenceLevels.Count == assignment.EnemySpawnKinds.Count &&
+                        liveEnemyDispositions.Count == assignment.EnemySpawnKinds.Count;
+                    var intelligence = hasLiveSnapshot
+                        ? liveEnemyIntelligenceLevels.Select(level => (int)EnemyIntelligenceLevelExtensions.Clamp(level)).ToList()
+                        : ResolveIntelligenceSnapshot(assignment, enemyCatalog);
+                    var dispositions = hasLiveSnapshot
+                        ? liveEnemyDispositions.Select(disposition => EnemyInstinctDispositionExtensions.FromSaveString(disposition, EnemyInstinctDisposition.Predator).ToSaveString()).ToList()
+                        : ResolveDispositionSnapshot(assignment, enemyCatalog);
+                    return new RoomEncounterSaveState
+                    {
+                        roomId = assignment.RoomId,
+                        encounterId = assignment.EncounterId,
+                        enemySpawnKinds = assignment.EnemySpawnKinds.ToList(),
+                        enemyIntelligenceLevels = intelligence,
+                        enemyDispositions = dispositions,
+                        worldIndex = assignment.WorldIndex,
+                        difficultyBand = assignment.DifficultyBand,
+                        directorPressure = assignment.DirectorPressure,
+                        bossId = assignment.BossId,
+                        bossArenaId = assignment.BossArenaId,
+                        bossWorldBand = assignment.BossWorldBand,
+                        bossPhaseState = assignment.BossPhaseState
+                    };
                 })
                 .ToList();
         }
@@ -58,7 +90,39 @@ namespace Hollow.Branches
                     state.bossId,
                     state.bossArenaId,
                     state.bossWorldBand,
-                    state.bossPhaseState)));
+                    state.bossPhaseState,
+                    state.enemyIntelligenceLevels,
+                    state.enemyDispositions)));
+        }
+
+        private static List<int> ResolveIntelligenceSnapshot(RoomEncounterAssignment assignment, EnemyCatalog enemyCatalog)
+        {
+            if (assignment.EnemyIntelligenceLevels.Count == assignment.EnemySpawnKinds.Count)
+            {
+                return assignment.EnemyIntelligenceLevels
+                    .Select(level => (int)EnemyIntelligenceLevelExtensions.Clamp(level))
+                    .ToList();
+            }
+
+            var catalog = enemyCatalog != null ? enemyCatalog : EnemyCatalog.CreateRuntimeDefault();
+            return assignment.EnemySpawnKinds
+                .Select(spawnKind => (int)(catalog.Resolve(spawnKind)?.Intelligence ?? EnemyIntelligenceLevel.Simple))
+                .ToList();
+        }
+
+        private static List<string> ResolveDispositionSnapshot(RoomEncounterAssignment assignment, EnemyCatalog enemyCatalog)
+        {
+            if (assignment.EnemyDispositions.Count == assignment.EnemySpawnKinds.Count)
+            {
+                return assignment.EnemyDispositions
+                    .Select(disposition => EnemyInstinctDispositionExtensions.FromSaveString(disposition, EnemyInstinctDisposition.Predator).ToSaveString())
+                    .ToList();
+            }
+
+            var catalog = enemyCatalog != null ? enemyCatalog : EnemyCatalog.CreateRuntimeDefault();
+            return assignment.EnemySpawnKinds
+                .Select(spawnKind => (catalog.Resolve(spawnKind)?.Disposition ?? EnemyInstinctDisposition.Predator).ToSaveString())
+                .ToList();
         }
     }
 }

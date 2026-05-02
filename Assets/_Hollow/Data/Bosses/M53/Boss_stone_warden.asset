@@ -24,6 +24,7 @@ MonoBehaviour:
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2
   bodyClass: 3
+  intelligence: 2
   debugColor: {r: 0.42, g: 0.34, b: 0.28, a: 1}
   arena:
     arenaId: boss_arena_broken_gateyard

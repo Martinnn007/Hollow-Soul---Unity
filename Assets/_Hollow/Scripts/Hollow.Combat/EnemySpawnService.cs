@@ -42,7 +42,13 @@ namespace Hollow.Combat
 
                 var enemy = enemyObject.GetComponent<EnemyRuntimeController>() ?? enemyObject.AddComponent<EnemyRuntimeController>();
                 enemy.Configure(request.Room, request.Player, definition, difficulty);
-                enemy.ConfigureSpawnContext(request.EnemyPrefab, request.EnemyProjectilePrefab, catalog, difficulty, request.Diagnostics);
+                if (request.EncounterContext != null &&
+                    request.EncounterContext.TryGetEnemyIntelligenceOverride(index, definition.Intelligence, definition.Disposition, out var intelligence, out var disposition))
+                {
+                    enemy.ApplyIntelligenceDisposition(intelligence, disposition);
+                }
+
+                enemy.ConfigureSpawnContext(request.EnemyPrefab, request.EnemyProjectilePrefab, catalog, difficulty, request.Diagnostics, index);
                 enemies.Add(enemy);
             }
 

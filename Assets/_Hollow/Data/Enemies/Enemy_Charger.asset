@@ -23,6 +23,8 @@ MonoBehaviour:
   contactCooldownSeconds: 0.9
   radiusMeters: 0.34
   attackRangeMeters: 5.5
+  preferredRangeMinMeters: 0.8
+  preferredRangeMaxMeters: 1.35
   attackCooldownSeconds: 1.2
   projectileDamage: 1
   projectileSpeedMetersPerSecond: 5
@@ -31,4 +33,6 @@ MonoBehaviour:
   splitSpawnKind: spawnEnemyNormal
   splitCount: 0
   bodyClass: 1
+  intelligence: 0
+  disposition: 0
   color: {r: 1, g: 0.34, b: 0.12, a: 1}

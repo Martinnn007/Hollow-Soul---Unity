@@ -24,6 +24,7 @@ MonoBehaviour:
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.45
   bodyClass: 3
+  intelligence: 3
   debugColor: {r: 0.95, g: 0.32, b: 0.12, a: 1}
   arena:
     arenaId: boss_arena_charred_crossing

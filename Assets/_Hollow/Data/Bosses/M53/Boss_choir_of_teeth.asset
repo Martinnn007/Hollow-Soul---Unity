@@ -24,6 +24,7 @@ MonoBehaviour:
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.7
   bodyClass: 3
+  intelligence: 4
   debugColor: {r: 0.92, g: 0.86, b: 0.72, a: 1}
   arena:
     arenaId: boss_arena_hell_heaven_dais
