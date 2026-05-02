@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Entities;
@@ -116,6 +117,83 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void ReadabilityPresenterShowsEnemyDisplayNameInsteadOfArchetypeHp()
+        {
+            var root = CreateHarness(out var room, out var player);
+            try
+            {
+                var enemy = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyFlying"));
+
+                var nameLabel = enemy.transform.Find("EnemyNameLabel");
+                var legacyHpLabel = enemy.transform.Find("EnemyHpLabel");
+                var text = nameLabel != null ? nameLabel.GetComponent<TextMesh>() : null;
+
+                Assert.NotNull(nameLabel);
+                Assert.IsNull(legacyHpLabel);
+                Assert.NotNull(text);
+                Assert.AreEqual("Flying Chaser", text.text);
+                Assert.IsFalse(text.text.Contains("/"));
+                Assert.IsFalse(text.text.Contains(enemy.ArchetypeId.ToString()));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void DamageHealthBarAppearsShrinksAndExpiresAfterDamage()
+        {
+            var root = CreateHarness(out var room, out var player);
+            try
+            {
+                var enemy = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyNormal"));
+                var presenter = enemy.GetComponent<CombatReadabilityPresenter>();
+                var bar = enemy.transform.Find("EnemyDamageHealthBar");
+                var fill = enemy.transform.Find("EnemyDamageHealthBar/EnemyDamageHealthBarFill");
+
+                Assert.NotNull(presenter);
+                Assert.NotNull(bar);
+                Assert.NotNull(fill);
+                Assert.IsFalse(bar.gameObject.activeSelf);
+
+                DamageSystem.ApplyDamage(enemy.Health, new DamageRequest(1, root));
+
+                Assert.IsTrue(bar.gameObject.activeSelf);
+                Assert.AreEqual(0.48f, fill.localScale.x, 0.01f);
+
+                TickHealthBarReveal(presenter, 2.6f);
+
+                Assert.IsFalse(bar.gameObject.activeSelf);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void BossesDoNotCreateOverheadNameOrDamageHealthBar()
+        {
+            var root = CreateHarness(out var room, out var player);
+            try
+            {
+                var boss = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyBoss"));
+                DamageSystem.ApplyDamage(boss.Health, new DamageRequest(1, root));
+
+                Assert.IsNull(boss.transform.Find("EnemyNameLabel"));
+                Assert.IsNull(boss.transform.Find("EnemyDamageHealthBar"));
+                Assert.NotNull(boss.transform.Find("EnemyReadabilityTelegraphRing"));
+                Assert.NotNull(boss.transform.Find("EnemyReadabilityAimLine"));
+                Assert.NotNull(boss.transform.Find("EnemyReadabilityStateLabel"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void TelegraphMaterialRolesResolve()
         {
             Assert.NotNull(MaterialResolver.Resolve(MaterialRole.CombatTelegraphSafe));
@@ -147,6 +225,13 @@ namespace Hollow.Tests.EditMode
             var enemy = enemyObject.AddComponent<EnemyRuntimeController>();
             enemy.Configure(room, player, definition, DifficultyTierDefinition.CreateRuntimeDeveloperSample());
             return enemy;
+        }
+
+        private static void TickHealthBarReveal(CombatReadabilityPresenter presenter, float deltaTime)
+        {
+            var method = typeof(CombatReadabilityPresenter).GetMethod("TickHealthBarReveal", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+            method.Invoke(presenter, new object[] { deltaTime });
         }
     }
 }

@@ -6,16 +6,23 @@ namespace Hollow.Combat
 {
     public sealed class CombatReadabilityPresenter : MonoBehaviour
     {
+        private const float DamageHealthBarRevealSeconds = 2.5f;
+        private const float HealthBarWidth = 0.72f;
+        private const float HealthBarHeight = 0.045f;
+
         private EnemyRuntimeController enemy;
         private CombatantHealth health;
         private CombatFeelProfileDefinition combatFeelProfile;
-        private TextMesh hpLabel;
+        private TextMesh nameLabel;
         private TextMesh stateLabel;
+        private GameObject healthBarRoot;
+        private Renderer healthBarFillRenderer;
         private Renderer targetRenderer;
         private Renderer ringRenderer;
         private Renderer aimRenderer;
         private Material baseMaterial;
         private float hitFlashRemaining;
+        private float healthBarRevealRemaining;
 
         public void Bind(EnemyRuntimeController nextEnemy)
         {
@@ -27,11 +34,13 @@ namespace Hollow.Combat
             if (health != null)
             {
                 health.Damaged -= OnDamaged;
+                health.Died -= OnDied;
             }
 
             enemy = nextEnemy;
             health = enemy != null ? enemy.Health : null;
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
+            healthBarRevealRemaining = 0f;
             targetRenderer = GetComponentInChildren<Renderer>();
             if (targetRenderer != null)
             {
@@ -41,17 +50,20 @@ namespace Hollow.Combat
             if (health != null)
             {
                 health.Damaged += OnDamaged;
+                health.Died += OnDied;
             }
 
-            BuildLabelIfNeeded();
+            BuildOverheadIdentityIfNeeded();
             BuildTelegraphsIfNeeded();
-            RefreshLabel();
+            RefreshOverheadIdentity();
+            RefreshHealthBar();
             RefreshTelegraphs();
         }
 
         private void Update()
         {
-            RefreshLabel();
+            RefreshOverheadIdentity();
+            TickHealthBarReveal(Time.deltaTime);
             RefreshTelegraphs();
             TickHitFlash(Time.deltaTime);
         }
@@ -61,11 +73,18 @@ namespace Hollow.Combat
             if (health != null)
             {
                 health.Damaged -= OnDamaged;
+                health.Died -= OnDied;
             }
         }
 
         private void OnDamaged(CombatantHealth _)
         {
+            if (ShouldShowOverheadIdentity())
+            {
+                healthBarRevealRemaining = DamageHealthBarRevealSeconds;
+                RefreshHealthBar();
+            }
+
             hitFlashRemaining = CombatFeelProfileDefinition.Resolve(combatFeelProfile).EnemyHitFlashSeconds;
             if (targetRenderer != null)
             {
@@ -74,6 +93,12 @@ namespace Hollow.Combat
 
             VfxPresenter.Play(VfxCueId.EnemyHit, transform.position, transform.parent);
             AudioPresenter.Play(AudioCueId.EnemyHit, transform.position);
+        }
+
+        private void OnDied(CombatantHealth _)
+        {
+            healthBarRevealRemaining = 0f;
+            SetHealthBarVisible(false);
         }
 
         private void TickHitFlash(float deltaTime)
@@ -90,32 +115,141 @@ namespace Hollow.Combat
             }
         }
 
-        private void BuildLabelIfNeeded()
+        private void BuildOverheadIdentityIfNeeded()
         {
-            if (hpLabel != null)
+            if (!ShouldShowOverheadIdentity())
+            {
+                SetOverheadIdentityVisible(false);
+                return;
+            }
+
+            if (nameLabel == null)
+            {
+                var labelObject = new GameObject("EnemyNameLabel", typeof(TextMesh));
+                labelObject.transform.SetParent(transform, false);
+                labelObject.transform.localPosition = new Vector3(0f, 1.13f, 0f);
+                labelObject.transform.localScale = Vector3.one * 0.082f;
+                nameLabel = labelObject.GetComponent<TextMesh>();
+                nameLabel.anchor = TextAnchor.MiddleCenter;
+                nameLabel.alignment = TextAlignment.Center;
+                nameLabel.fontSize = 26;
+                nameLabel.color = Color.white;
+            }
+
+            if (healthBarRoot != null)
             {
                 return;
             }
 
-            var labelObject = new GameObject("EnemyHpLabel", typeof(TextMesh));
-            labelObject.transform.SetParent(transform, false);
-            labelObject.transform.localPosition = new Vector3(0f, 1.1f, 0f);
-            labelObject.transform.localScale = Vector3.one * 0.095f;
-            hpLabel = labelObject.GetComponent<TextMesh>();
-            hpLabel.anchor = TextAnchor.MiddleCenter;
-            hpLabel.alignment = TextAlignment.Center;
-            hpLabel.fontSize = 28;
-            hpLabel.color = Color.white;
+            healthBarRoot = new GameObject("EnemyDamageHealthBar");
+            healthBarRoot.transform.SetParent(transform, false);
+            healthBarRoot.transform.localPosition = new Vector3(0f, 1.01f, 0f);
+
+            var backObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            backObject.name = "EnemyDamageHealthBarBack";
+            backObject.transform.SetParent(healthBarRoot.transform, false);
+            backObject.transform.localPosition = Vector3.zero;
+            backObject.transform.localScale = new Vector3(HealthBarWidth, HealthBarHeight, 0.055f);
+            DisableCollider(backObject);
+            var backRenderer = backObject.GetComponent<Renderer>();
+            backRenderer.sharedMaterial = MaterialResolver.CreateRuntimeMaterial(new Color(0.09f, 0.02f, 0.02f, 0.92f));
+
+            var fillObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fillObject.name = "EnemyDamageHealthBarFill";
+            fillObject.transform.SetParent(healthBarRoot.transform, false);
+            fillObject.transform.localPosition = Vector3.zero;
+            fillObject.transform.localScale = new Vector3(HealthBarWidth, HealthBarHeight * 1.1f, 0.065f);
+            DisableCollider(fillObject);
+            healthBarFillRenderer = fillObject.GetComponent<Renderer>();
+            MaterialResolver.ApplyTo(healthBarFillRenderer, MaterialRole.CombatTelegraphDanger);
+
+            SetHealthBarVisible(false);
         }
 
-        private void RefreshLabel()
+        private void RefreshOverheadIdentity()
         {
-            if (hpLabel == null || health == null)
+            if (!ShouldShowOverheadIdentity())
+            {
+                SetOverheadIdentityVisible(false);
+                return;
+            }
+
+            BuildOverheadIdentityIfNeeded();
+            SetOverheadIdentityVisible(true);
+            if (nameLabel == null)
             {
                 return;
             }
 
-            hpLabel.text = $"{enemy.ArchetypeId} {health.CurrentHealth}/{health.MaxHealth}";
+            nameLabel.text = enemy.Definition != null && !string.IsNullOrWhiteSpace(enemy.Definition.DisplayName)
+                ? enemy.Definition.DisplayName
+                : enemy.name;
+        }
+
+        private void TickHealthBarReveal(float deltaTime)
+        {
+            if (!ShouldShowOverheadIdentity())
+            {
+                healthBarRevealRemaining = 0f;
+                SetHealthBarVisible(false);
+                return;
+            }
+
+            if (healthBarRevealRemaining > 0f)
+            {
+                healthBarRevealRemaining = Mathf.Max(0f, healthBarRevealRemaining - Mathf.Max(0f, deltaTime));
+            }
+
+            RefreshHealthBar();
+        }
+
+        private void RefreshHealthBar()
+        {
+            if (healthBarRoot == null || health == null)
+            {
+                return;
+            }
+
+            var visible = ShouldShowOverheadIdentity() && health.IsAlive && healthBarRevealRemaining > 0f;
+            SetHealthBarVisible(visible);
+            if (!visible || healthBarFillRenderer == null)
+            {
+                return;
+            }
+
+            var ratio = health.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)health.CurrentHealth / health.MaxHealth);
+            var fillWidth = HealthBarWidth * ratio;
+            healthBarFillRenderer.transform.localScale = new Vector3(fillWidth, HealthBarHeight * 1.1f, 0.065f);
+            healthBarFillRenderer.transform.localPosition = new Vector3((fillWidth - HealthBarWidth) * 0.5f, 0f, 0f);
+        }
+
+        private void SetOverheadIdentityVisible(bool visible)
+        {
+            if (nameLabel != null)
+            {
+                nameLabel.gameObject.SetActive(visible);
+            }
+
+            if (!visible)
+            {
+                SetHealthBarVisible(false);
+            }
+        }
+
+        private void SetHealthBarVisible(bool visible)
+        {
+            if (healthBarRoot != null)
+            {
+                healthBarRoot.SetActive(visible);
+            }
+        }
+
+        private bool ShouldShowOverheadIdentity()
+        {
+            return enemy != null &&
+                   health != null &&
+                   enemy.BossDefinition == null &&
+                   enemy.ArchetypeId != EnemyArchetypeId.Boss;
         }
 
         private void BuildTelegraphsIfNeeded()
