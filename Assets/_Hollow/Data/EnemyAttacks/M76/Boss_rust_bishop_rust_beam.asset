@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Boss_rust_bishop_rust_beam
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: rust_beam
+  displayName: Rust Beam
+  runtimeKind: 5
+  damage: 2
+  cooldownSeconds: 2.8
+  windupSeconds: 0.4
+  activeSeconds: 0.1
+  rangeMeters: 6
+  projectileCount: 3
+  projectileSpeedMetersPerSecond: 4.8
+  damageChannel: 0
+  damageDelivery: 1
+  damageElement: 0
+  forceClass: 2
+  threatKind: 3
+  knockbackMeters: 0.65
+  guardKnockbackMultiplier: 0.35
+  notes: Narrow heavy fan used as beam V1.

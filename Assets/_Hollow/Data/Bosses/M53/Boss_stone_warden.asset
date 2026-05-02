@@ -28,6 +28,10 @@ MonoBehaviour:
   sightRadiusMeters: 8
   sightAngleDegrees: 140
   hearingRadiusMeters: 5
+  attackProfiles:
+  - {fileID: 11400000, guid: bb9f6cf816e7d3187713257ea1de881a, type: 2}
+  - {fileID: 11400000, guid: 62d74443f3e76fcf162a072dd92f151a, type: 2}
+  - {fileID: 11400000, guid: d0ad590bded9756bfdef963b6f5f299d, type: 2}
   debugColor: {r: 0.42, g: 0.34, b: 0.28, a: 1}
   arena:
     arenaId: boss_arena_broken_gateyard

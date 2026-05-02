@@ -28,6 +28,8 @@ MonoBehaviour:
   sightRadiusMeters: 8
   sightAngleDegrees: 180
   hearingRadiusMeters: 5.5
+  attackProfiles:
+  - {fileID: 11400000, guid: 299414d90db75e50d930b668cd0a66ad, type: 2}
   debugColor: {r: 0.64, g: 0.42, b: 0.22, a: 1}
   arena:
     arenaId: boss_arena_narrow_shrine

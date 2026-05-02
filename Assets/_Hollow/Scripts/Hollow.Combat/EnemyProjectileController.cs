@@ -19,11 +19,18 @@ namespace Hollow.Combat
         private int damage = 1;
         private float hitRadiusMeters = 0.24f;
         private DamageThreatKind threatKind = DamageThreatKind.Light;
+        private DamageClassification damageClassification = DamageClassification.PhysicalProjectile(ImpactForceClass.Light);
+        private float knockbackMeters;
+        private float guardKnockbackMultiplier;
         private bool destroyed;
 
         public int Damage => damage;
 
         public float SpeedMetersPerSecond => speedMetersPerSecond;
+
+        public DamageClassification DamageClassification => damageClassification;
+
+        public float KnockbackMeters => Mathf.Max(0f, knockbackMeters);
 
         public void Configure(
             RoomRuntimeRoot room,
@@ -41,6 +48,10 @@ namespace Hollow.Combat
             speedMetersPerSecond = Mathf.Max(0.1f, nextSpeedMetersPerSecond);
             lifetimeSeconds = Mathf.Max(0.1f, nextLifetimeSeconds);
             ageSeconds = 0f;
+            threatKind = DamageThreatKind.Light;
+            damageClassification = DamageClassification.PhysicalProjectile(ImpactForceClass.Light);
+            knockbackMeters = 0f;
+            guardKnockbackMultiplier = 0f;
             MaterialResolver.ApplyTo(gameObject, MaterialRole.EnemyProjectile);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyProjectile, transform, Vector3.zero, Vector3.one);
         }
@@ -53,6 +64,25 @@ namespace Hollow.Combat
         public void ConfigureThreat(DamageThreatKind nextThreatKind)
         {
             threatKind = nextThreatKind;
+            damageClassification = DamageClassification.PhysicalProjectile(ForceClassForThreat(threatKind));
+        }
+
+        public void ConfigureAttackProfile(EnemyAttackProfileDefinition profile)
+        {
+            if (profile == null)
+            {
+                return;
+            }
+
+            damage = profile.Damage;
+            threatKind = profile.ThreatKind;
+            damageClassification = profile.Classification;
+            knockbackMeters = profile.KnockbackMeters;
+            guardKnockbackMultiplier = profile.GuardKnockbackMultiplier;
+            if (profile.ProjectileSpeedMetersPerSecond > 0f)
+            {
+                speedMetersPerSecond = profile.ProjectileSpeedMetersPerSecond;
+            }
         }
 
         public void Neutralize()
@@ -110,14 +140,16 @@ namespace Hollow.Combat
                 if (Vector3.Distance(playerPosition, transform.localPosition) <= hitRadiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.08f)
                 {
                     var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+                    var resolvedKnockback = KnockbackMeters > 0f ? KnockbackMeters : profile.PlayerKnockbackMeters;
                     if (DamageSystem.ApplyDamage(
                             playerHealth,
                             new DamageRequest(
                                 damage,
                                 gameObject,
-                                DamageFeedbackContext.Knockback(localDirection, profile.PlayerKnockbackMeters, profile.KnockbackSeconds),
+                                DamageFeedbackContext.Knockback(localDirection, resolvedKnockback, profile.KnockbackSeconds),
                                 threatKind,
-                                DamageClassification.PhysicalProjectile(ForceClassForThreat(threatKind)))))
+                                damageClassification,
+                                guardKnockbackMultiplier)))
                     {
                         VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
                         AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);

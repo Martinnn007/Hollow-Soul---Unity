@@ -28,6 +28,9 @@ MonoBehaviour:
   sightRadiusMeters: 8.5
   sightAngleDegrees: 120
   hearingRadiusMeters: 4
+  attackProfiles:
+  - {fileID: 11400000, guid: e6596cf9ef2ee5b36033b7eeb4997afe, type: 2}
+  - {fileID: 11400000, guid: 545c27ee13c0b46f84ff511bc07ddfa8, type: 2}
   debugColor: {r: 0.44, g: 0.52, b: 0.58, a: 1}
   arena:
     arenaId: boss_arena_cover_maze

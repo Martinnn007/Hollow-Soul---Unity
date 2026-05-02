@@ -44,4 +44,7 @@ MonoBehaviour:
   bodyClass: 1
   intelligence: 0
   disposition: 0
+  attackProfiles:
+  - {fileID: 11400000, guid: 471e5a712d36150e28c6695a4366584b, type: 2}
+  - {fileID: 11400000, guid: b9b3da06c74ec6f999cbcc65f85db201, type: 2}
   color: {r: 1, g: 0.34, b: 0.12, a: 1}

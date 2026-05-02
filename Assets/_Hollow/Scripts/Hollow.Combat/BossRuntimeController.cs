@@ -118,21 +118,21 @@ namespace Hollow.Combat
             {
                 statusText = "Stone charge";
                 DashAtPlayer(1.35f);
-                nextPrimaryTime = timeSeconds + 3.2f;
+                nextPrimaryTime = timeSeconds + Profile("stone_charge").CooldownSeconds;
             }
 
             if (timeSeconds >= nextSecondaryTime)
             {
                 statusText = "Stomp burst";
-                FireRadial(8, DamageThreatKind.Boss, 2, 0f);
-                nextSecondaryTime = timeSeconds + 4.6f;
+                FireRadial(8, Profile("stone_stomp_burst"), 0f);
+                nextSecondaryTime = timeSeconds + Profile("stone_stomp_burst").CooldownSeconds;
             }
 
             if (HealthPercent() <= 0.5f && timeSeconds >= nextSpecialTime)
             {
                 statusText = "Four-way burst";
-                FireCardinal(DamageThreatKind.StrongProjectile, 1);
-                nextSpecialTime = timeSeconds + 3.8f;
+                FireCardinal(Profile("stone_four_way_burst"));
+                nextSpecialTime = timeSeconds + Profile("stone_four_way_burst").CooldownSeconds;
             }
         }
 
@@ -143,8 +143,8 @@ namespace Hollow.Combat
                 statusText = "Side hop";
                 var direction = ((StableHash($"{definition.BossId}{Mathf.FloorToInt(timeSeconds)}") & 1) == 0 ? Vector3.left : Vector3.right);
                 Move(direction, definition.SpeedMetersPerSecond * 3.2f, 0.28f);
-                FireRadial(6, DamageThreatKind.Light, 1, 30f);
-                nextHopTime = timeSeconds + 1.75f;
+                FireRadial(6, Profile("splinter_side_hop_radial"), 30f);
+                nextHopTime = timeSeconds + Profile("splinter_side_hop_radial").CooldownSeconds;
             }
             else
             {
@@ -159,8 +159,8 @@ namespace Hollow.Combat
             {
                 statusText = "Burrow summon";
                 SpawnMinions(new[] { "spawnEnemyNormal", "spawnEnemyFast", "spawnEnemyNormal" });
-                FireRadial(5, DamageThreatKind.Light, 1, 18f);
-                nextSpecialTime = timeSeconds + 7f;
+                FireRadial(5, Profile("gravel_rubble_spray"), 18f);
+                nextSpecialTime = timeSeconds + Profile("gravel_burrow_summon").CooldownSeconds;
             }
         }
 
@@ -170,8 +170,8 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Falling marks";
-                FireFanAtPlayer(5, 42f, DamageThreatKind.Light, 1);
-                nextPrimaryTime = timeSeconds + 1.65f;
+                FireFanAtPlayer(5, 42f, Profile("cartouche_falling_marks"));
+                nextPrimaryTime = timeSeconds + Profile("cartouche_falling_marks").CooldownSeconds;
             }
         }
 
@@ -181,17 +181,18 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Peek shot";
-                FireAtPlayer(DamageThreatKind.Light, 1);
-                FireAtPlayer(DamageThreatKind.Light, 1, 10f);
-                FireAtPlayer(DamageThreatKind.Light, 1, -10f);
-                nextPrimaryTime = timeSeconds + 1.9f;
+                var profile = Profile("iron_peek_shot");
+                FireAtPlayer(profile);
+                FireAtPlayer(profile, 10f);
+                FireAtPlayer(profile, -10f);
+                nextPrimaryTime = timeSeconds + profile.CooldownSeconds;
             }
 
             if (timeSeconds >= nextSecondaryTime)
             {
                 statusText = "Relocate";
                 DashAtPlayer(-1.1f);
-                nextSecondaryTime = timeSeconds + 4.2f;
+                nextSecondaryTime = timeSeconds + Profile("iron_relocate_bash").CooldownSeconds;
             }
         }
 
@@ -220,8 +221,8 @@ namespace Hollow.Combat
             {
                 statusText = "Comet dash";
                 DashAtPlayer(2.2f);
-                FireRadial(8, DamageThreatKind.Boss, 2, rotationAngle);
-                nextPrimaryTime = timeSeconds + 2.6f;
+                FireRadial(8, Profile("ash_fire_radial"), rotationAngle);
+                nextPrimaryTime = timeSeconds + Profile("ash_comet_dash").CooldownSeconds;
                 rotationAngle += 24f;
             }
             else
@@ -236,16 +237,16 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Rotating hymn";
-                FireRadial(12, DamageThreatKind.Light, 1, rotationAngle);
+                FireRadial(12, Profile("choir_rotating_hymn"), rotationAngle);
                 rotationAngle += 17f;
-                nextPrimaryTime = timeSeconds + 2.2f;
+                nextPrimaryTime = timeSeconds + Profile("choir_rotating_hymn").CooldownSeconds;
             }
 
             if (HealthPercent() <= 0.35f && timeSeconds >= nextSpecialTime)
             {
                 statusText = "Tooth storm";
-                FireRadial(16, DamageThreatKind.StrongProjectile, 2, rotationAngle * 0.5f);
-                nextSpecialTime = timeSeconds + 4.2f;
+                FireRadial(16, Profile("choir_tooth_storm"), rotationAngle * 0.5f);
+                nextSpecialTime = timeSeconds + Profile("choir_tooth_storm").CooldownSeconds;
             }
         }
 
@@ -255,16 +256,16 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Beam windup";
-                FireFanAtPlayer(3, 14f, DamageThreatKind.StrongProjectile, 2);
-                nextPrimaryTime = timeSeconds + 2.8f;
+                FireFanAtPlayer(3, 14f, Profile("rust_beam"));
+                nextPrimaryTime = timeSeconds + Profile("rust_beam").CooldownSeconds;
             }
 
             if (timeSeconds >= nextSecondaryTime)
             {
                 statusText = "Mine pattern";
-                FireRadial(6, DamageThreatKind.Light, 1, rotationAngle);
+                FireRadial(6, Profile("rust_mine_pattern"), rotationAngle);
                 rotationAngle += 31f;
-                nextSecondaryTime = timeSeconds + 3.6f;
+                nextSecondaryTime = timeSeconds + Profile("rust_mine_pattern").CooldownSeconds;
             }
         }
 
@@ -281,16 +282,16 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Starfall";
-                FireFanAtPlayer(7, 65f, DamageThreatKind.Light, 1);
-                nextPrimaryTime = timeSeconds + 2.1f;
+                FireFanAtPlayer(7, 65f, Profile("larva_starfall"));
+                nextPrimaryTime = timeSeconds + Profile("larva_starfall").CooldownSeconds;
             }
 
             if (HealthPercent() <= 0.25f && timeSeconds >= nextSpecialTime)
             {
                 statusText = "Desperation";
-                FireRadial(18, DamageThreatKind.StrongProjectile, 2, rotationAngle);
+                FireRadial(18, Profile("larva_desperation"), rotationAngle);
                 rotationAngle += 13f;
-                nextSpecialTime = timeSeconds + 3.1f;
+                nextSpecialTime = timeSeconds + Profile("larva_desperation").CooldownSeconds;
             }
         }
 
@@ -340,44 +341,44 @@ namespace Hollow.Combat
             owner.transform.localPosition = RoomLocalCollision.ResolveMove(room, owner.transform.localPosition, desired, owner.RadiusMeters);
         }
 
-        private void FireAtPlayer(DamageThreatKind threatKind, int damage, float angleOffsetDegrees = 0f)
+        private void FireAtPlayer(EnemyAttackProfileDefinition profile, float angleOffsetDegrees = 0f)
         {
             var delta = player.transform.localPosition - owner.transform.localPosition;
             delta.y = 0f;
             var direction = delta.sqrMagnitude > 0.01f ? delta.normalized : Vector3.forward;
-            FireProjectile(Quaternion.Euler(0f, angleOffsetDegrees, 0f) * direction, threatKind, damage);
+            FireProjectile(Quaternion.Euler(0f, angleOffsetDegrees, 0f) * direction, profile);
         }
 
-        private void FireFanAtPlayer(int count, float spreadDegrees, DamageThreatKind threatKind, int damage)
+        private void FireFanAtPlayer(int count, float spreadDegrees, EnemyAttackProfileDefinition profile)
         {
             var safeCount = Mathf.Max(1, count);
             var start = safeCount == 1 ? 0f : -spreadDegrees * 0.5f;
             var step = safeCount == 1 ? 0f : spreadDegrees / (safeCount - 1);
             for (var index = 0; index < safeCount; index++)
             {
-                FireAtPlayer(threatKind, damage, start + step * index);
+                FireAtPlayer(profile, start + step * index);
             }
         }
 
-        private void FireCardinal(DamageThreatKind threatKind, int damage)
+        private void FireCardinal(EnemyAttackProfileDefinition profile)
         {
-            FireProjectile(Vector3.forward, threatKind, damage);
-            FireProjectile(Vector3.back, threatKind, damage);
-            FireProjectile(Vector3.left, threatKind, damage);
-            FireProjectile(Vector3.right, threatKind, damage);
+            FireProjectile(Vector3.forward, profile);
+            FireProjectile(Vector3.back, profile);
+            FireProjectile(Vector3.left, profile);
+            FireProjectile(Vector3.right, profile);
         }
 
-        private void FireRadial(int count, DamageThreatKind threatKind, int damage, float offsetDegrees)
+        private void FireRadial(int count, EnemyAttackProfileDefinition profile, float offsetDegrees)
         {
             var safeCount = Mathf.Max(1, count);
             for (var index = 0; index < safeCount; index++)
             {
                 var angle = offsetDegrees + 360f * index / safeCount;
-                FireProjectile(Quaternion.Euler(0f, angle, 0f) * Vector3.forward, threatKind, damage);
+                FireProjectile(Quaternion.Euler(0f, angle, 0f) * Vector3.forward, profile);
             }
         }
 
-        private void FireProjectile(Vector3 direction, DamageThreatKind threatKind, int damage)
+        private void FireProjectile(Vector3 direction, EnemyAttackProfileDefinition profile)
         {
             CleanupProjectiles();
             if (activeProjectiles.Count >= MaxActiveBossProjectiles)
@@ -405,10 +406,49 @@ namespace Hollow.Combat
             }
 
             var projectile = projectileObject.GetComponent<EnemyProjectileController>() ?? projectileObject.AddComponent<EnemyProjectileController>();
-            projectile.Configure(room, player, direction, Mathf.Clamp(damage, 1, 2), definition.ProjectileSpeedMetersPerSecond, 2.8f);
+            projectile.Configure(
+                room,
+                player,
+                direction,
+                profile != null ? profile.Damage : 1,
+                profile != null ? profile.ProjectileSpeedMetersPerSecond : definition.ProjectileSpeedMetersPerSecond,
+                2.8f);
             projectile.ConfigureCombatFeel(combatFeelProfile);
-            projectile.ConfigureThreat(threatKind);
+            if (profile != null)
+            {
+                projectile.ConfigureAttackProfile(profile);
+            }
+            else
+            {
+                projectile.ConfigureThreat(DamageThreatKind.Light);
+            }
             activeProjectiles.Add(projectile);
+        }
+
+        private EnemyAttackProfileDefinition Profile(string attackId)
+        {
+            var profile = definition != null ? definition.ResolveAttackProfile(attackId) : null;
+            return profile ?? EnemyAttackProfileDefinition.CreateRuntime(new EnemyAttackProfileSpec(
+                definition != null ? definition.BossId : "boss",
+                true,
+                attackId,
+                attackId,
+                EnemyAttackRuntimeKind.Projectile,
+                1,
+                1f,
+                0.1f,
+                0.1f,
+                5f,
+                1,
+                definition != null ? definition.ProjectileSpeedMetersPerSecond : 4.8f,
+                DamageChannel.Physical,
+                DamageDelivery.Projectile,
+                DamageElement.None,
+                ImpactForceClass.Light,
+                DamageThreatKind.Light,
+                0.35f,
+                0.35f,
+                "Runtime fallback profile."));
         }
 
         private void SpawnMinions(IEnumerable<string> spawnKinds)

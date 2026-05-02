@@ -28,6 +28,9 @@ MonoBehaviour:
   sightRadiusMeters: 9.5
   sightAngleDegrees: 180
   hearingRadiusMeters: 5.5
+  attackProfiles:
+  - {fileID: 11400000, guid: 961cd4c0c8448aa28dbbb4358c6efa48, type: 2}
+  - {fileID: 11400000, guid: e0ff9738f3ca2a8cc0be153bd037f63e, type: 2}
   debugColor: {r: 0.72, g: 0.28, b: 0.14, a: 1}
   arena:
     arenaId: boss_arena_industrial_cover_grid

@@ -29,13 +29,20 @@ namespace Hollow.Combat
         {
         }
 
-        public DamageRequest(int amount, GameObject source, DamageFeedbackContext feedback, DamageThreatKind threatKind, DamageClassification classification)
+        public DamageRequest(
+            int amount,
+            GameObject source,
+            DamageFeedbackContext feedback,
+            DamageThreatKind threatKind,
+            DamageClassification classification,
+            float guardKnockbackMultiplier = 0f)
         {
             Amount = amount;
             Source = source;
             Feedback = feedback;
             ThreatKind = threatKind;
             Classification = classification;
+            GuardKnockbackMultiplier = Mathf.Clamp01(guardKnockbackMultiplier);
         }
 
         public int Amount { get; }
@@ -47,5 +54,7 @@ namespace Hollow.Combat
         public DamageThreatKind ThreatKind { get; }
 
         public DamageClassification Classification { get; }
+
+        public float GuardKnockbackMultiplier { get; }
     }
 }

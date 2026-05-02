@@ -123,6 +123,7 @@ namespace Hollow.Combat
         [SerializeField] private BossArenaDefinition arena = new("boss_arena_broken_gateyard", "Broken Gateyard");
         [SerializeField] private List<BossPhaseDefinition> phases = new();
         [SerializeField] private List<BossAttackDefinition> attacks = new();
+        [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
 
         public string BossId => string.IsNullOrWhiteSpace(bossId) ? "stone_warden" : bossId;
 
@@ -163,6 +164,15 @@ namespace Hollow.Combat
         public IReadOnlyList<BossPhaseDefinition> Phases => phases;
 
         public IReadOnlyList<BossAttackDefinition> Attacks => attacks;
+
+        public IReadOnlyList<EnemyAttackProfileDefinition> AttackProfiles
+        {
+            get
+            {
+                var authored = attackProfiles?.Where(profile => profile != null).ToArray() ?? Array.Empty<EnemyAttackProfileDefinition>();
+                return authored.Length > 0 ? authored : EnemyAttackProfileDefaults.CreateBossProfiles(BossId);
+            }
+        }
 
         public void Configure(
             string nextBossId,
@@ -247,6 +257,27 @@ namespace Hollow.Combat
             sightRadiusMeters = Mathf.Max(0f, nextSightRadiusMeters);
             sightAngleDegrees = sightRadiusMeters <= 0f ? 0f : Mathf.Clamp(nextSightAngleDegrees, 0f, 360f);
             hearingRadiusMeters = Mathf.Max(0f, nextHearingRadiusMeters);
+        }
+
+        public void ConfigureAttackProfiles(IEnumerable<EnemyAttackProfileDefinition> nextAttackProfiles)
+        {
+            attackProfiles = nextAttackProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyAttackProfileDefinition>();
+        }
+
+        public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
+        {
+            if (attackProfiles != null)
+            {
+                var authored = attackProfiles.FirstOrDefault(profile =>
+                    profile != null &&
+                    string.Equals(profile.AttackId, attackId, StringComparison.Ordinal));
+                if (authored != null)
+                {
+                    return authored;
+                }
+            }
+
+            return EnemyAttackProfileDefaults.ResolveBossProfile(BossId, attackId) ?? AttackProfiles.FirstOrDefault();
         }
 
         public static BossDefinition CreateRuntime(

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -36,6 +38,7 @@ namespace Hollow.Combat
         [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Medium;
         [SerializeField] private EnemyIntelligenceLevel intelligence = EnemyIntelligenceLevel.Simple;
         [SerializeField] private EnemyInstinctDisposition disposition = EnemyInstinctDisposition.Predator;
+        [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -101,6 +104,15 @@ namespace Hollow.Combat
         public EnemyIntelligenceLevel Intelligence => EnemyIntelligenceLevelExtensions.Clamp((int)intelligence);
 
         public EnemyInstinctDisposition Disposition => EnemyInstinctDispositionExtensions.Clamp((int)disposition);
+
+        public IReadOnlyList<EnemyAttackProfileDefinition> AttackProfiles
+        {
+            get
+            {
+                var authored = attackProfiles?.Where(profile => profile != null).ToArray() ?? System.Array.Empty<EnemyAttackProfileDefinition>();
+                return authored.Length > 0 ? authored : EnemyAttackProfileDefaults.CreateEnemyProfiles(SpawnKind);
+            }
+        }
 
         public Color Color => color;
 
@@ -372,6 +384,27 @@ namespace Hollow.Combat
             lungeActiveSeconds = Mathf.Max(0.01f, nextLungeActiveSeconds);
             lungeDistanceMeters = Mathf.Max(0f, nextLungeDistanceMeters);
             lungeCooldownSeconds = Mathf.Max(0.05f, nextLungeCooldownSeconds);
+        }
+
+        public void ConfigureAttackProfiles(IEnumerable<EnemyAttackProfileDefinition> nextAttackProfiles)
+        {
+            attackProfiles = nextAttackProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyAttackProfileDefinition>();
+        }
+
+        public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
+        {
+            if (attackProfiles != null)
+            {
+                var authored = attackProfiles.FirstOrDefault(profile =>
+                    profile != null &&
+                    string.Equals(profile.AttackId, attackId, System.StringComparison.Ordinal));
+                if (authored != null)
+                {
+                    return authored;
+                }
+            }
+
+            return EnemyAttackProfileDefaults.ResolveEnemyProfile(SpawnKind, attackId) ?? AttackProfiles.FirstOrDefault();
         }
 
         public static EnemyDefinition CreateRuntime(

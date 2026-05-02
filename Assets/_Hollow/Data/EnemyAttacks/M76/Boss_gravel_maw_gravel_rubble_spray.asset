@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Boss_gravel_maw_gravel_rubble_spray
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: gravel_rubble_spray
+  displayName: Rubble Spray
+  runtimeKind: 4
+  damage: 1
+  cooldownSeconds: 7
+  windupSeconds: 0.3
+  activeSeconds: 0.1
+  rangeMeters: 5
+  projectileCount: 5
+  projectileSpeedMetersPerSecond: 4.8
+  damageChannel: 0
+  damageDelivery: 1
+  damageElement: 0
+  forceClass: 0
+  threatKind: 0
+  knockbackMeters: 0.35
+  guardKnockbackMultiplier: 0.35
+  notes: Rubble spray after summon.

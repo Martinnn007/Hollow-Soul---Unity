@@ -28,6 +28,9 @@ MonoBehaviour:
   sightRadiusMeters: 6.5
   sightAngleDegrees: 110
   hearingRadiusMeters: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: 71eda5feeafc24dc9bca9eeed337e7ab, type: 2}
+  - {fileID: 11400000, guid: 4b26c10d80883711d2db49d9aeff65e3, type: 2}
   debugColor: {r: 0.78, g: 0.64, b: 0.36, a: 1}
   arena:
     arenaId: boss_arena_sandy_pit_ring

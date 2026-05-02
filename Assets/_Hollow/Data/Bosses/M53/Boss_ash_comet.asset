@@ -28,6 +28,9 @@ MonoBehaviour:
   sightRadiusMeters: 9
   sightAngleDegrees: 160
   hearingRadiusMeters: 7
+  attackProfiles:
+  - {fileID: 11400000, guid: 1bcf00669744859fb65f54af280e984f, type: 2}
+  - {fileID: 11400000, guid: 59c35ccc0e6b1f5b6e412336f0914abf, type: 2}
   debugColor: {r: 0.95, g: 0.32, b: 0.12, a: 1}
   arena:
     arenaId: boss_arena_charred_crossing

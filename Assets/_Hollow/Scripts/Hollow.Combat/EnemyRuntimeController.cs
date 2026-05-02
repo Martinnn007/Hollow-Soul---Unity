@@ -78,6 +78,9 @@ namespace Hollow.Combat
         private bool lungeContactAttempted;
         private Vector3 activeLungeDirection = Vector3.forward;
         private Vector3 facingDirection = Vector3.forward;
+        private EnemyAttackProfileDefinition activeChargeProfile;
+        private EnemyAttackProfileDefinition activeRangedProfile;
+        private EnemyAttackProfileDefinition activeMeleeProfile;
         private int spawnIndex = -1;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
@@ -224,6 +227,9 @@ namespace Hollow.Combat
             lungeEndTime = 0f;
             lungeContactAttempted = false;
             activeLungeDirection = Vector3.forward;
+            activeChargeProfile = null;
+            activeRangedProfile = null;
+            activeMeleeProfile = null;
             lastDamagedTime = float.NegativeInfinity;
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
@@ -516,6 +522,7 @@ namespace Hollow.Combat
             {
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
+                activeChargeProfile = null;
             }
 
             if (timeSeconds < nextAllowedChargeTime || playerController == null)
@@ -535,7 +542,12 @@ namespace Hollow.Combat
                 return false;
             }
 
-            StartReadabilityState(EnemyReadabilityState.ChargeWindup, ChargeWindupSeconds, timeSeconds, delta.normalized);
+            activeChargeProfile = ResolveChargeAttackProfile();
+            StartReadabilityState(
+                EnemyReadabilityState.ChargeWindup,
+                activeChargeProfile != null ? activeChargeProfile.WindupSeconds : ChargeWindupSeconds,
+                timeSeconds,
+                delta.normalized);
             return true;
         }
 
@@ -565,7 +577,12 @@ namespace Hollow.Combat
 
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
-            StartReadabilityState(EnemyReadabilityState.RangedWindup, RangedWindupSeconds, timeSeconds, delta.normalized);
+            activeRangedProfile = ResolveRangedAttackProfile(timeSeconds);
+            StartReadabilityState(
+                EnemyReadabilityState.RangedWindup,
+                activeRangedProfile != null ? activeRangedProfile.WindupSeconds : RangedWindupSeconds,
+                timeSeconds,
+                delta.normalized);
             return true;
         }
 
@@ -583,7 +600,12 @@ namespace Hollow.Combat
 
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
-            StartReadabilityState(EnemyReadabilityState.MeleeWindup, LungeWindupSeconds, timeSeconds, delta.normalized);
+            activeMeleeProfile = ResolveLungeAttackProfile(timeSeconds);
+            StartReadabilityState(
+                EnemyReadabilityState.MeleeWindup,
+                activeMeleeProfile != null ? activeMeleeProfile.WindupSeconds : LungeWindupSeconds,
+                timeSeconds,
+                delta.normalized);
             return true;
         }
 
@@ -716,8 +738,8 @@ namespace Hollow.Combat
                 }
 
                 activeChargeDirection = TelegraphDirection;
-                chargeEndTime = timeSeconds + ChargeActiveSeconds;
-                nextAllowedChargeTime = timeSeconds + Definition.ChargeCooldownSeconds;
+                chargeEndTime = timeSeconds + (activeChargeProfile != null ? activeChargeProfile.ActiveSeconds : ChargeActiveSeconds);
+                nextAllowedChargeTime = timeSeconds + (activeChargeProfile != null ? activeChargeProfile.CooldownSeconds : Definition.ChargeCooldownSeconds);
                 readabilityState = EnemyReadabilityState.Charging;
                 readabilityStateEndTime = chargeEndTime;
                 return true;
@@ -730,10 +752,10 @@ namespace Hollow.Combat
                     return true;
                 }
 
-                nextAllowedAttackTime = timeSeconds + Definition.AttackCooldownSeconds;
-                FireProjectile(
-                    TelegraphDirection,
-                    behaviorId == EnemyBehaviorId.BossWarden ? DamageThreatKind.StrongProjectile : DamageThreatKind.Light);
+                var profile = activeRangedProfile ?? ResolveRangedAttackProfile(timeSeconds);
+                nextAllowedAttackTime = timeSeconds + (profile != null ? profile.CooldownSeconds : Definition.AttackCooldownSeconds);
+                FireProjectile(TelegraphDirection, profile);
+                activeRangedProfile = null;
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
                 return true;
@@ -747,8 +769,9 @@ namespace Hollow.Combat
                 }
 
                 activeLungeDirection = TelegraphDirection;
-                lungeEndTime = timeSeconds + LungeActiveSeconds;
-                nextAllowedLungeTime = lungeEndTime + LungeCooldownSeconds;
+                var profile = activeMeleeProfile ?? ResolveLungeAttackProfile(timeSeconds);
+                lungeEndTime = timeSeconds + (profile != null ? profile.ActiveSeconds : LungeActiveSeconds);
+                nextAllowedLungeTime = lungeEndTime + (profile != null ? profile.CooldownSeconds : LungeCooldownSeconds);
                 lungeContactAttempted = false;
                 readabilityState = EnemyReadabilityState.MeleeLunge;
                 readabilityStateEndTime = lungeEndTime;
@@ -766,6 +789,7 @@ namespace Hollow.Combat
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
                 lungeEndTime = 0f;
+                activeMeleeProfile = null;
                 return false;
             }
 
@@ -777,10 +801,11 @@ namespace Hollow.Combat
                 }
 
                 firedLowHealthBossBurst = true;
-                FireProjectile(Vector3.forward, DamageThreatKind.StrongProjectile);
-                FireProjectile(Vector3.back, DamageThreatKind.StrongProjectile);
-                FireProjectile(Vector3.left, DamageThreatKind.StrongProjectile);
-                FireProjectile(Vector3.right, DamageThreatKind.StrongProjectile);
+                var profile = ResolveBossBurstProfile();
+                FireProjectile(Vector3.forward, profile);
+                FireProjectile(Vector3.back, profile);
+                FireProjectile(Vector3.left, profile);
+                FireProjectile(Vector3.right, profile);
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
                 return true;
@@ -1267,20 +1292,29 @@ namespace Hollow.Combat
             }
 
             var distance = Vector3.Distance(Flat(transform.localPosition), Flat(playerController.transform.localPosition));
-            if (distance > radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f)
+            var contactReach = radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f;
+            if (readabilityState == EnemyReadabilityState.MeleeLunge)
+            {
+                contactReach = Mathf.Max(contactReach, activeMeleeProfile != null ? activeMeleeProfile.RangeMeters : LungeTriggerRangeMeters);
+            }
+
+            if (distance > contactReach)
             {
                 return false;
             }
 
             nextAllowedContactTime = timeSeconds + contactCooldownSeconds;
-            var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+            var feelProfile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+            var attackProfile = ResolveContactAttackProfile();
             var direction = playerController.transform.localPosition - transform.localPosition;
             var damaged = DamageSystem.ApplyDamage(
                 playerHealth,
-                new DamageRequest(
+                attackProfile != null
+                    ? attackProfile.CreateDamageRequest(gameObject, direction, feelProfile.KnockbackSeconds)
+                    : new DamageRequest(
                     contactDamage,
                     gameObject,
-                    DamageFeedbackContext.Knockback(direction, profile.PlayerKnockbackMeters, profile.KnockbackSeconds),
+                    DamageFeedbackContext.Knockback(direction, feelProfile.PlayerKnockbackMeters, feelProfile.KnockbackSeconds),
                     ContactThreatKind(),
                     DamageClassification.PhysicalContact(ForceClassForThreat(ContactThreatKind()))));
             if (damaged)
@@ -1331,7 +1365,7 @@ namespace Hollow.Combat
             ForceEngaged();
         }
 
-        private void FireProjectile(Vector3 direction, DamageThreatKind threatKind)
+        private void FireProjectile(Vector3 direction, EnemyAttackProfileDefinition profile)
         {
             var projectileObject = enemyProjectilePrefab != null
                 ? Instantiate(enemyProjectilePrefab, transform.parent)
@@ -1364,10 +1398,137 @@ namespace Hollow.Combat
                 roomRuntimeRoot,
                 playerController,
                 direction,
-                Definition.ProjectileDamage,
-                Definition.ProjectileSpeedMetersPerSecond);
+                profile != null ? profile.Damage : Definition.ProjectileDamage,
+                profile != null ? profile.ProjectileSpeedMetersPerSecond : Definition.ProjectileSpeedMetersPerSecond);
             projectile.ConfigureCombatFeel(combatFeelProfile);
-            projectile.ConfigureThreat(threatKind);
+            if (profile != null)
+            {
+                projectile.ConfigureAttackProfile(profile);
+            }
+            else
+            {
+                projectile.ConfigureThreat(behaviorId == EnemyBehaviorId.BossWarden ? DamageThreatKind.StrongProjectile : DamageThreatKind.Light);
+            }
+        }
+
+        private EnemyAttackProfileDefinition ResolveContactAttackProfile()
+        {
+            if (bossDefinition != null)
+            {
+                return bossDefinition.ResolveAttackProfile(BossContactAttackId());
+            }
+
+            if (readabilityState == EnemyReadabilityState.MeleeLunge && activeMeleeProfile != null)
+            {
+                return activeMeleeProfile;
+            }
+
+            if (readabilityState == EnemyReadabilityState.Charging && activeChargeProfile != null)
+            {
+                return activeChargeProfile;
+            }
+
+            return Definition.ResolveAttackProfile(ContactAttackId());
+        }
+
+        private EnemyAttackProfileDefinition ResolveLungeAttackProfile(float timeSeconds)
+        {
+            if (behaviorId == EnemyBehaviorId.FlyingChaser)
+            {
+                return Definition.ResolveAttackProfile(awarenessState == EnemyAwarenessState.Engaged || IsEndangered(timeSeconds)
+                    ? "dive_scratch"
+                    : "panic_peck");
+            }
+
+            return behaviorId switch
+            {
+                EnemyBehaviorId.Splitter => Definition.ResolveAttackProfile("splinter_lunge"),
+                _ when archetypeId == EnemyArchetypeId.Fast => Definition.ResolveAttackProfile("quick_pounce"),
+                _ when archetypeId == EnemyArchetypeId.Heavy => Definition.ResolveAttackProfile("maul_lunge"),
+                _ => Definition.ResolveAttackProfile("claw_lunge")
+            };
+        }
+
+        private EnemyAttackProfileDefinition ResolveChargeAttackProfile()
+        {
+            return Definition.ResolveAttackProfile(behaviorId == EnemyBehaviorId.Charger ? "ash_charge" : ContactAttackId());
+        }
+
+        private EnemyAttackProfileDefinition ResolveRangedAttackProfile(float timeSeconds)
+        {
+            if (behaviorId != EnemyBehaviorId.TurretShooter)
+            {
+                return Definition.ResolveAttackProfile("bone_dart");
+            }
+
+            var safeSpawnIndex = Mathf.Max(0, spawnIndex);
+            var slot = Mathf.Abs(Mathf.FloorToInt(timeSeconds * 0.7f) + safeSpawnIndex) % 5;
+            if (slot == 0)
+            {
+                return Definition.ResolveAttackProfile("braced_spike");
+            }
+
+            if (slot == 2)
+            {
+                return Definition.ResolveAttackProfile("rattle_volley");
+            }
+
+            return Definition.ResolveAttackProfile("bone_dart");
+        }
+
+        private EnemyAttackProfileDefinition ResolveBossBurstProfile()
+        {
+            return bossDefinition != null
+                ? bossDefinition.ResolveAttackProfile("stone_four_way_burst")
+                : Definition.ResolveAttackProfile("stone_four_way_burst");
+        }
+
+        private string ContactAttackId()
+        {
+            if (behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
+            {
+                return "stone_charge";
+            }
+
+            if (behaviorId == EnemyBehaviorId.Charger)
+            {
+                return readabilityState == EnemyReadabilityState.Charging ? "ash_charge" : "ember_clash";
+            }
+
+            if (behaviorId == EnemyBehaviorId.FlyingChaser)
+            {
+                return "panic_peck";
+            }
+
+            if (behaviorId == EnemyBehaviorId.Splitter)
+            {
+                return "husk_cleave";
+            }
+
+            if (archetypeId == EnemyArchetypeId.Fast)
+            {
+                return "needle_rush";
+            }
+
+            if (archetypeId == EnemyArchetypeId.Heavy)
+            {
+                return "body_slam";
+            }
+
+            return "desperate_bite";
+        }
+
+        private string BossContactAttackId()
+        {
+            return bossDefinition != null
+                ? bossDefinition.BehaviorId switch
+                {
+                    BossBehaviorId.AshComet => "ash_comet_dash",
+                    BossBehaviorId.MirrorHusk => "mirror_chase_contact",
+                    BossBehaviorId.IronReliquary => "iron_relocate_bash",
+                    _ => "stone_charge"
+                }
+                : "stone_charge";
         }
 
         private DamageThreatKind ContactThreatKind()

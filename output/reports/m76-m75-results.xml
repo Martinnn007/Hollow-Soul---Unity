@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="9" result="Passed" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.4318878">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="363" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.431888" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1425" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="362" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.419771" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="59521" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1426" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="362" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.411230" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1427" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="362" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.403159" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1428" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="362" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.394535" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1379" name="Milestone75EnemyAttacksAndSensesTests" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.379352" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1385" name="BlindAndDeafZeroValuesDisableLocalSenses" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.BlindAndDeafZeroValuesDisableLocalSenses" methodname="BlindAndDeafZeroValuesDisableLocalSenses" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="1269496371" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.126872" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1386" name="BoneTurretAndAshChargerKeepExistingAttackRoles" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.BoneTurretAndAshChargerKeepExistingAttackRoles" methodname="BoneTurretAndAshChargerKeepExistingAttackRoles" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="1282875077" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.006845" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1388" name="CatalogueFilesExistPdfExtractsAndValidatorPasses" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.CatalogueFilesExistPdfExtractsAndValidatorPasses" methodname="CatalogueFilesExistPdfExtractsAndValidatorPasses" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="1361546947" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.210997" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[ok pages=2 chars=1891
+
+Milestone 75 validation passed.
+]]></output>
+              </test-case>
+              <test-case id="1382" name="ContactEnemiesCanStartLungeFromTheirBandEdges" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.ContactEnemiesCanStartLungeFromTheirBandEdges" methodname="ContactEnemiesCanStartLungeFromTheirBandEdges" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="868764933" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.007284" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1383" name="FlyingChaserStartsUnawareAndPanicLungesOnlyWhenEndangered" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.FlyingChaserStartsUnawareAndPanicLungesOnlyWhenEndangered" methodname="FlyingChaserStartsUnawareAndPanicLungesOnlyWhenEndangered" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="1918372328" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.004088" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1387" name="MeleeLungeBudgetLimitsConcurrentStarts" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.MeleeLungeBudgetLimitsConcurrentStarts" methodname="MeleeLungeBudgetLimitsConcurrentStarts" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="1422177407" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.005448" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1381" name="NormalChaserLungesFromPreferredBandEdgeAndDamagesPlayer" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.NormalChaserLungesFromPreferredBandEdgeAndDamagesPlayer" methodname="NormalChaserLungesFromPreferredBandEdgeAndDamagesPlayer" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="958693592" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.004228" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1380" name="RuntimeCatalogCarriesM75SenseAndLungeDefaults" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.RuntimeCatalogCarriesM75SenseAndLungeDefaults" methodname="RuntimeCatalogCarriesM75SenseAndLungeDefaults" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="472375536" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.002808" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1384" name="SightHearingStimuliAndEngagedPersistenceWork" fullname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests.SightHearingStimuliAndEngagedPersistenceWork" methodname="SightHearingStimuliAndEngagedPersistenceWork" classname="Hollow.Tests.EditMode.Milestone75EnemyAttacksAndSensesTests" runstate="Runnable" seed="179560928" result="Passed" start-time="2026-05-02 21:56:04Z" end-time="2026-05-02 21:56:04Z" duration="0.002656" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

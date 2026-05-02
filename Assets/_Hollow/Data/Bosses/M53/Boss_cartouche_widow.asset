@@ -28,6 +28,8 @@ MonoBehaviour:
   sightRadiusMeters: 10
   sightAngleDegrees: 220
   hearingRadiusMeters: 6.5
+  attackProfiles:
+  - {fileID: 11400000, guid: 4274fb0d8c0f26ee9ce2854380b2da2d, type: 2}
   debugColor: {r: 0.86, g: 0.66, b: 0.18, a: 1}
   arena:
     arenaId: boss_arena_open_tomb
