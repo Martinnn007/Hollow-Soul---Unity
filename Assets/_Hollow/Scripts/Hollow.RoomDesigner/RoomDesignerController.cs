@@ -705,6 +705,15 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.EnemySplitter:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySplitter, "spawn_enemy_splitter");
                     break;
+                case RoomDesignerTool.EnemySpittingPod:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySpittingPod, "spawn_enemy_spitting_pod");
+                    break;
+                case RoomDesignerTool.EnemyRat:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyRat, "spawn_enemy_rat");
+                    break;
+                case RoomDesignerTool.EnemySpider:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySpider, "spawn_enemy_spider");
+                    break;
                 case RoomDesignerTool.StandardBarrel:
                     AddOrReplaceInteractiveObject(RoomDesignerMarkerKinds.StandardBarrel, "barrel_standard");
                     break;
@@ -844,6 +853,9 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyCharger => RoomDesignerTool.EnemyCharger,
                 RoomDesignerMarkerKinds.EnemyTurret => RoomDesignerTool.EnemyTurret,
                 RoomDesignerMarkerKinds.EnemySplitter => RoomDesignerTool.EnemySplitter,
+                RoomDesignerMarkerKinds.EnemySpittingPod => RoomDesignerTool.EnemySpittingPod,
+                RoomDesignerMarkerKinds.EnemyRat => RoomDesignerTool.EnemyRat,
+                RoomDesignerMarkerKinds.EnemySpider => RoomDesignerTool.EnemySpider,
                 RoomDesignerMarkerKinds.EnemyNormal => RoomDesignerTool.EnemyNormal,
                 _ => RoomDesignerTool.EnemySpawn
             };

@@ -1,0 +1,28 @@
+{
+  "hollowRuntime": {
+    "schemaVersion": 2,
+    "sourceProjectId": "m77_spitting_pod_showcase",
+    "canonicalRoomId": "m77_spitting_pod_showcase",
+    "displayName": "M77 Spitting Pod Showcase",
+    "roomType": "combat",
+    "rewardType": "m77-critter-showcase",
+    "prototypeStatus": "m77-curated",
+    "tileSizeMeters": 1.0,
+    "dimensions": { "widthTiles": 13, "heightTiles": 7, "bounds": { "minX": -6.5, "maxX": 6.5, "minZ": -3.5, "maxZ": 3.5 } },
+    "footprint": { "primaryCell": { "x": 0, "z": 0 }, "occupiedBranchCells": [{ "x": 0, "z": 0 }], "chunkBasisTiles": { "width": 13, "height": 7 } },
+    "walkableTiles": [],
+    "holeTiles": [],
+    "floorRegions": [{ "id": "main", "center": { "x": 0, "y": 0, "z": 0 }, "halfSize": { "x": 6.5, "z": 3.5 } }],
+    "doorPorts": [],
+    "playerSafeStart": { "x": -4, "y": 0, "z": 0 },
+    "enemySpawns": [
+      { "id": "spawn_enemy_00", "kind": "spawnEnemySpittingPod", "position": { "x": 2, "y": 0, "z": 0 } },
+      { "id": "spawn_enemy_01", "kind": "spawnEnemyNormal", "position": { "x": 4, "y": 0, "z": -2 } }
+    ],
+    "itemSpawns": [{ "id": "spawn_reward_0", "kind": "spawn_point_roomReward", "position": { "x": 5, "y": 0, "z": 2 } }],
+    "obstacles": [],
+    "hazards": [],
+    "interactiveObjects": [],
+    "decor": []
+  }
+}

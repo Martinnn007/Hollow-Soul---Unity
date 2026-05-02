@@ -15,7 +15,7 @@ namespace Hollow.Branches
 
         private static readonly DebugSpawnGroup[] Groups =
         {
-            new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter" }),
+            new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter", "spawnEnemySpittingPod", "spawnEnemyRat", "spawnEnemySpider" }),
             new("Bosses", new[] { "stone_warden", "splinter_saint", "gravel_maw", "cartouche_widow", "iron_reliquary", "mirror_husk", "ash_comet", "choir_of_teeth", "rust_bishop", "hollow_star_larva" }),
             new("Weapons", new[] { "starter_blade", "starter_bolt", "skeletal_sword", "bone_bow", "dragon_fang", "dragon_bow" }),
             new("Armor", new[] { "skeletal_armor", "dragon_scale_armor" }),

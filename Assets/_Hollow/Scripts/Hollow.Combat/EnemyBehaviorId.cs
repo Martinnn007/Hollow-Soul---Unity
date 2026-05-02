@@ -7,6 +7,9 @@ namespace Hollow.Combat
         Charger = 2,
         TurretShooter = 3,
         Splitter = 4,
-        BossWarden = 5
+        BossWarden = 5,
+        SpittingPod = 6,
+        Rat = 7,
+        Spider = 8
     }
 }

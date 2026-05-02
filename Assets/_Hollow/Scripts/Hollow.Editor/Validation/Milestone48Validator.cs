@@ -44,6 +44,9 @@ namespace Hollow.Editor.Validation
             "spawnEnemyCharger",
             "spawnEnemyTurret",
             "spawnEnemySplitter",
+            "spawnEnemySpittingPod",
+            "spawnEnemyRat",
+            "spawnEnemySpider",
             "spawnEnemyBoss"
         };
 

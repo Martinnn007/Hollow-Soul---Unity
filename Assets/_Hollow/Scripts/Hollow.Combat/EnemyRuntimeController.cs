@@ -18,6 +18,10 @@ namespace Hollow.Combat
         public const float CloseThreatSeconds = 0.65f;
         public const float RetreatBurstSeconds = 0.75f;
         public const float RetreatReassessSeconds = 0.35f;
+        public const float RatTerritorialWarningSeconds = 0.45f;
+        public const float CritterDecisionSeconds = 0.55f;
+        public const float PodBallisticArcHeightMeters = 1.35f;
+        public const float PodBallisticSplashRadiusMeters = 0.55f;
 
         [SerializeField] private float speedMetersPerSecond = ChaserEnemyController.DefaultSpeedMetersPerSecond;
         [SerializeField] private int contactDamage = ChaserEnemyController.DefaultContactDamage;
@@ -81,6 +85,9 @@ namespace Hollow.Combat
         private EnemyAttackProfileDefinition activeChargeProfile;
         private EnemyAttackProfileDefinition activeRangedProfile;
         private EnemyAttackProfileDefinition activeMeleeProfile;
+        private float engagedStartTime = float.NegativeInfinity;
+        private float nextCritterDecisionTime;
+        private bool critterFightDecision;
         private int spawnIndex = -1;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
@@ -230,6 +237,9 @@ namespace Hollow.Combat
             activeChargeProfile = null;
             activeRangedProfile = null;
             activeMeleeProfile = null;
+            engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? 0f : float.NegativeInfinity;
+            nextCritterDecisionTime = 0f;
+            critterFightDecision = false;
             lastDamagedTime = float.NegativeInfinity;
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
@@ -313,6 +323,7 @@ namespace Hollow.Combat
             intelligence = EnemyIntelligenceLevelExtensions.Clamp((int)nextIntelligence);
             disposition = EnemyInstinctDispositionExtensions.Clamp((int)nextDisposition);
             awarenessState = InitialAwarenessFor(disposition);
+            engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? Time.time : float.NegativeInfinity;
         }
 
         public void BindRoomCombatController(RoomCombatController controller)
@@ -362,6 +373,17 @@ namespace Hollow.Combat
             var distanceToPlayer = DistanceToPlayer();
             UpdateInstinctThreat(deltaTime, distanceToPlayer);
             UpdateAwareness(timeSeconds, distanceToPlayer);
+            if (behaviorId == EnemyBehaviorId.SpittingPod)
+            {
+                if (ShouldSentinelEngage(distanceToPlayer, timeSeconds))
+                {
+                    TryRangedAttack(timeSeconds);
+                }
+
+                TryApplyContactDamage(timeSeconds);
+                return;
+            }
+
             if (behaviorId == EnemyBehaviorId.TurretShooter)
             {
                 if (!ShouldSentinelEngage(distanceToPlayer, timeSeconds))
@@ -379,6 +401,13 @@ namespace Hollow.Combat
             if (behaviorId == EnemyBehaviorId.BossWarden)
             {
                 TickBoss(deltaTime, timeSeconds);
+                TryApplyContactDamage(timeSeconds);
+                return;
+            }
+
+            if (IsCritterBehavior())
+            {
+                TickCritter(deltaTime, timeSeconds, distanceToPlayer);
                 TryApplyContactDamage(timeSeconds);
                 return;
             }
@@ -405,7 +434,7 @@ namespace Hollow.Combat
                 return false;
             }
 
-            if (behaviorId == EnemyBehaviorId.TurretShooter)
+            if (behaviorId == EnemyBehaviorId.TurretShooter || behaviorId == EnemyBehaviorId.SpittingPod)
             {
                 return CanStartRangedAttack(timeSeconds);
             }
@@ -422,7 +451,12 @@ namespace Hollow.Combat
         {
             var distance = DistanceToPlayer();
             var distanceScore = Mathf.Clamp(8f - distance, 0f, 8f);
-            var behaviorScore = behaviorId == EnemyBehaviorId.Charger ? 1.25f : 1f;
+            var behaviorScore = behaviorId switch
+            {
+                EnemyBehaviorId.Charger => 1.25f,
+                EnemyBehaviorId.SpittingPod => 0.95f,
+                _ => 1f
+            };
             var intelligenceBonus = Intelligence switch
             {
                 EnemyIntelligenceLevel.Cunning => 0.65f,
@@ -486,6 +520,87 @@ namespace Hollow.Combat
             var rangeDirection = ResolvePreferredRangeDirection(delta.normalized, distanceToPlayer);
             var speedMultiplier = RangeIntentSpeedMultiplier(rangeDirection, delta.normalized, distanceToPlayer);
             MoveInDirection(rangeDirection, deltaTime, speedMultiplier);
+        }
+
+        private void TickCritter(float deltaTime, float timeSeconds, float distanceToPlayer)
+        {
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            var toPlayer = delta.normalized;
+            var endangered = IsEndangered(timeSeconds);
+            if (behaviorId == EnemyBehaviorId.Rat)
+            {
+                if (endangered && timeSeconds >= nextRetreatBurstAllowedTime)
+                {
+                    retreatBurstEndTime = timeSeconds + RetreatBurstSeconds;
+                    nextRetreatBurstAllowedTime = retreatBurstEndTime + RetreatReassessSeconds;
+                }
+
+                if (timeSeconds < retreatBurstEndTime)
+                {
+                    MoveInDirection(-toPlayer, deltaTime, 1.15f);
+                    return;
+                }
+
+                if (awarenessState == EnemyAwarenessState.Alerted && distanceToPlayer <= PreferredRangeMaxMeters + 0.4f)
+                {
+                    ForceEngaged();
+                }
+
+                if (TryMeleeLunge(timeSeconds))
+                {
+                    return;
+                }
+
+                if (awarenessState == EnemyAwarenessState.Engaged && distanceToPlayer > LungeTriggerRangeMeters)
+                {
+                    var flank = ResolveCritterWanderDirection(timeSeconds);
+                    var pressure = (toPlayer * 0.75f + flank * 0.45f).normalized;
+                    MoveInDirection(pressure, deltaTime, 0.95f);
+                    return;
+                }
+
+                MoveInDirection(ResolveCritterWanderDirection(timeSeconds), deltaTime, 0.9f);
+                return;
+            }
+
+            if (behaviorId == EnemyBehaviorId.Spider)
+            {
+                if (timeSeconds >= nextCritterDecisionTime)
+                {
+                    var seed = Mathf.Abs((spawnIndex + 1) * 31 + Mathf.FloorToInt(timeSeconds * 10f) * 17);
+                    var fightThreshold = awarenessState == EnemyAwarenessState.Engaged || endangered ? 6 : 3;
+                    critterFightDecision = seed % 10 < fightThreshold;
+                    nextCritterDecisionTime = timeSeconds + CritterDecisionSeconds;
+                    if (!critterFightDecision && timeSeconds >= nextRetreatBurstAllowedTime)
+                    {
+                        retreatBurstEndTime = timeSeconds + RetreatBurstSeconds;
+                        nextRetreatBurstAllowedTime = retreatBurstEndTime + RetreatReassessSeconds;
+                    }
+                }
+
+                if (timeSeconds < retreatBurstEndTime)
+                {
+                    var jitter = ResolveCritterWanderDirection(timeSeconds);
+                    MoveInDirection((-toPlayer + jitter * 0.35f).normalized, deltaTime, 1.1f);
+                    return;
+                }
+
+                if ((critterFightDecision || endangered) && TryMeleeLunge(timeSeconds))
+                {
+                    return;
+                }
+
+                var direction = critterFightDecision && awarenessState == EnemyAwarenessState.Engaged
+                    ? (toPlayer + ResolveCritterWanderDirection(timeSeconds) * 0.35f).normalized
+                    : ResolveCritterWanderDirection(timeSeconds);
+                MoveInDirection(direction, deltaTime, 1f);
+            }
         }
 
         private void TickBoss(float deltaTime, float timeSeconds)
@@ -650,6 +765,12 @@ namespace Hollow.Combat
             if (Disposition == EnemyInstinctDisposition.Mindless)
             {
                 return awarenessState is EnemyAwarenessState.Alerted or EnemyAwarenessState.Engaged;
+            }
+
+            if (Disposition == EnemyInstinctDisposition.Territorial)
+            {
+                return awarenessState == EnemyAwarenessState.Engaged &&
+                       (IsEndangered(timeSeconds) || timeSeconds - engagedStartTime >= RatTerritorialWarningSeconds);
             }
 
             return awarenessState == EnemyAwarenessState.Engaged;
@@ -858,6 +979,12 @@ namespace Hollow.Combat
 
             if (kind == EnemyStimulusKind.Footstep)
             {
+                if (behaviorId == EnemyBehaviorId.SpittingPod)
+                {
+                    ForceEngaged();
+                    return;
+                }
+
                 if (awarenessState == EnemyAwarenessState.Unaware)
                 {
                     awarenessState = EnemyAwarenessState.Suspicious;
@@ -865,6 +992,10 @@ namespace Hollow.Combat
                 else if (awarenessState == EnemyAwarenessState.Suspicious)
                 {
                     awarenessState = EnemyAwarenessState.Alerted;
+                }
+                else if (Disposition == EnemyInstinctDisposition.Territorial && awarenessState == EnemyAwarenessState.Alerted)
+                {
+                    ForceEngaged();
                 }
 
                 return;
@@ -899,6 +1030,15 @@ namespace Hollow.Combat
                 if (Disposition == EnemyInstinctDisposition.Sentinel &&
                     !IsEndangered(timeSeconds) &&
                     !IsWithinSentinelApproachRange(distanceToPlayer))
+                {
+                    awarenessState = MaxAwareness(awarenessState, EnemyAwarenessState.Alerted);
+                    FacePlayer();
+                    return;
+                }
+
+                if (Disposition == EnemyInstinctDisposition.Territorial &&
+                    !IsEndangered(timeSeconds) &&
+                    distanceToPlayer > PreferredRangeMaxMeters + 0.4f)
                 {
                     awarenessState = MaxAwareness(awarenessState, EnemyAwarenessState.Alerted);
                     FacePlayer();
@@ -956,6 +1096,11 @@ namespace Hollow.Combat
 
         private void ForceEngaged()
         {
+            if (awarenessState != EnemyAwarenessState.Engaged)
+            {
+                engagedStartTime = lastTickTime > 0f ? lastTickTime : Time.time;
+            }
+
             awarenessState = EnemyAwarenessState.Engaged;
         }
 
@@ -971,6 +1116,7 @@ namespace Hollow.Combat
                 EnemyInstinctDisposition.Prey => EnemyAwarenessState.Unaware,
                 EnemyInstinctDisposition.Sentinel => EnemyAwarenessState.Alerted,
                 EnemyInstinctDisposition.Mindless => EnemyAwarenessState.Alerted,
+                EnemyInstinctDisposition.Territorial => EnemyAwarenessState.Suspicious,
                 _ => EnemyAwarenessState.Engaged
             };
         }
@@ -1060,6 +1206,20 @@ namespace Hollow.Combat
             return instinctMoveDirection.normalized;
         }
 
+        private Vector3 ResolveCritterWanderDirection(float timeSeconds)
+        {
+            if (timeSeconds >= nextInstinctDecisionTime || instinctMoveDirection.sqrMagnitude <= 0.01f)
+            {
+                var step = Mathf.FloorToInt(timeSeconds * 2.8f);
+                var spawnSeed = Mathf.Max(1, spawnIndex + 3);
+                var angle = Mathf.Abs(spawnSeed * 73 + step * 137 + (behaviorId == EnemyBehaviorId.Spider ? 41 : 0)) % 360;
+                instinctMoveDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+                nextInstinctDecisionTime = timeSeconds + (behaviorId == EnemyBehaviorId.Spider ? 0.28f : 0.36f);
+            }
+
+            return instinctMoveDirection.normalized;
+        }
+
         private Vector3 ResolvePreyMovementDirection(Vector3 toPlayerDirection, float distanceToPlayer, float timeSeconds)
         {
             if (timeSeconds < retreatBurstEndTime)
@@ -1081,6 +1241,11 @@ namespace Hollow.Combat
         {
             return Intelligence == EnemyIntelligenceLevel.Instinctive ||
                    Disposition == EnemyInstinctDisposition.Mindless;
+        }
+
+        private bool IsCritterBehavior()
+        {
+            return behaviorId == EnemyBehaviorId.Rat || behaviorId == EnemyBehaviorId.Spider;
         }
 
         private Vector3 ResolvePreferredRangeDirection(Vector3 toPlayerDirection, float distanceToPlayer)
@@ -1404,6 +1569,15 @@ namespace Hollow.Combat
             if (profile != null)
             {
                 projectile.ConfigureAttackProfile(profile);
+                if (behaviorId == EnemyBehaviorId.SpittingPod && string.Equals(profile.AttackId, "spit_lob", StringComparison.Ordinal))
+                {
+                    var target = playerController != null ? playerController.transform.localPosition : transform.localPosition + direction.normalized * Definition.AttackRangeMeters;
+                    projectile.ConfigureBallisticLanding(
+                        target,
+                        profile.ActiveSeconds,
+                        PodBallisticArcHeightMeters,
+                        PodBallisticSplashRadiusMeters);
+                }
             }
             else
             {
@@ -1440,6 +1614,16 @@ namespace Hollow.Combat
                     : "panic_peck");
             }
 
+            if (behaviorId == EnemyBehaviorId.Rat)
+            {
+                return Definition.ResolveAttackProfile("rat_bite");
+            }
+
+            if (behaviorId == EnemyBehaviorId.Spider)
+            {
+                return Definition.ResolveAttackProfile(DistanceToPlayer() <= 0.82f ? "close_bite" : "startle_hop");
+            }
+
             return behaviorId switch
             {
                 EnemyBehaviorId.Splitter => Definition.ResolveAttackProfile("splinter_lunge"),
@@ -1456,6 +1640,11 @@ namespace Hollow.Combat
 
         private EnemyAttackProfileDefinition ResolveRangedAttackProfile(float timeSeconds)
         {
+            if (behaviorId == EnemyBehaviorId.SpittingPod)
+            {
+                return Definition.ResolveAttackProfile("spit_lob");
+            }
+
             if (behaviorId != EnemyBehaviorId.TurretShooter)
             {
                 return Definition.ResolveAttackProfile("bone_dart");
@@ -1503,6 +1692,16 @@ namespace Hollow.Combat
             if (behaviorId == EnemyBehaviorId.Splitter)
             {
                 return "husk_cleave";
+            }
+
+            if (behaviorId == EnemyBehaviorId.Rat)
+            {
+                return "rat_bite";
+            }
+
+            if (behaviorId == EnemyBehaviorId.Spider)
+            {
+                return "close_bite";
             }
 
             if (archetypeId == EnemyArchetypeId.Fast)
@@ -1606,6 +1805,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Charger => MaterialRole.EnemyCharger,
                 EnemyBehaviorId.TurretShooter => MaterialRole.EnemyTurret,
                 EnemyBehaviorId.Splitter => MaterialRole.EnemySplitter,
+                EnemyBehaviorId.SpittingPod => MaterialRole.EnemySpittingPod,
+                EnemyBehaviorId.Rat => MaterialRole.EnemyRat,
+                EnemyBehaviorId.Spider => MaterialRole.EnemySpider,
                 EnemyBehaviorId.BossWarden => MaterialRole.EnemyBoss,
                 EnemyBehaviorId.FlyingChaser => MaterialRole.EnemyFlying,
                 _ => definition.ArchetypeId switch
@@ -1630,6 +1832,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Charger => PresentationPrefabRole.EnemyCharger,
                 EnemyBehaviorId.TurretShooter => PresentationPrefabRole.EnemyTurret,
                 EnemyBehaviorId.Splitter => PresentationPrefabRole.EnemySplitter,
+                EnemyBehaviorId.SpittingPod => PresentationPrefabRole.EnemySpittingPod,
+                EnemyBehaviorId.Rat => PresentationPrefabRole.EnemyRat,
+                EnemyBehaviorId.Spider => PresentationPrefabRole.EnemySpider,
                 EnemyBehaviorId.BossWarden => PresentationPrefabRole.EnemyBoss,
                 EnemyBehaviorId.FlyingChaser => PresentationPrefabRole.EnemyFlying,
                 _ => definition.ArchetypeId switch

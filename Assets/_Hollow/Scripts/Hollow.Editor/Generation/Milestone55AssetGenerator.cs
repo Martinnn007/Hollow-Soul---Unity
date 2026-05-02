@@ -116,7 +116,10 @@ namespace Hollow.Editor.Generation
                 RoomDesignerMarkerKinds.EnemyHeavy,
                 RoomDesignerMarkerKinds.EnemyCharger,
                 RoomDesignerMarkerKinds.EnemyTurret,
-                RoomDesignerMarkerKinds.EnemySplitter
+                RoomDesignerMarkerKinds.EnemySplitter,
+                RoomDesignerMarkerKinds.EnemySpittingPod,
+                RoomDesignerMarkerKinds.EnemyRat,
+                RoomDesignerMarkerKinds.EnemySpider
             };
             for (var index = 0; index < kinds.Length; index++)
             {

@@ -23,6 +23,9 @@ namespace Hollow.RoomDesigner
         Spike = 18,
         StandardBarrel = 19,
         ExplosiveBarrel = 20,
-        ChestSpawn = 21
+        ChestSpawn = 21,
+        EnemySpittingPod = 22,
+        EnemyRat = 23,
+        EnemySpider = 24
     }
 }

@@ -56,6 +56,9 @@ namespace Hollow.Editor.Generation
                 ["spawnEnemyCharger"] = "Assets/_Hollow/Data/Enemies/Enemy_Charger.asset",
                 ["spawnEnemyTurret"] = "Assets/_Hollow/Data/Enemies/Enemy_Turret.asset",
                 ["spawnEnemySplitter"] = "Assets/_Hollow/Data/Enemies/Enemy_Splitter.asset",
+                ["spawnEnemySpittingPod"] = "Assets/_Hollow/Data/Enemies/Enemy_SpittingPod.asset",
+                ["spawnEnemyRat"] = "Assets/_Hollow/Data/Enemies/Enemy_Rat.asset",
+                ["spawnEnemySpider"] = "Assets/_Hollow/Data/Enemies/Enemy_Spider.asset",
                 ["spawnEnemyBoss"] = "Assets/_Hollow/Data/Enemies/Enemy_Boss.asset"
             };
         }
@@ -196,6 +199,9 @@ namespace Hollow.Editor.Generation
                 "spawnEnemyCharger" => "Ash Charger",
                 "spawnEnemyTurret" => "Bone Turret",
                 "spawnEnemySplitter" => "Husk Splitter",
+                "spawnEnemySpittingPod" => "Spitting Pod",
+                "spawnEnemyRat" => "Rat",
+                "spawnEnemySpider" => "Spider",
                 "spawnEnemyBoss" => "Stone Warden Spawn",
                 "stone_warden" => "Stone Warden",
                 "splinter_saint" => "Splinter Saint",

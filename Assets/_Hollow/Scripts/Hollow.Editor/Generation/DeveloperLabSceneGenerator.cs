@@ -444,6 +444,9 @@ namespace Hollow.Editor.Generation
                 "spawnEnemyCharger" => PresentationPrefabRole.EnemyCharger,
                 "spawnEnemyTurret" => PresentationPrefabRole.EnemyTurret,
                 "spawnEnemySplitter" => PresentationPrefabRole.EnemySplitter,
+                "spawnEnemySpittingPod" => PresentationPrefabRole.EnemySpittingPod,
+                "spawnEnemyRat" => PresentationPrefabRole.EnemyRat,
+                "spawnEnemySpider" => PresentationPrefabRole.EnemySpider,
                 _ => PresentationPrefabRole.EnemyNormal
             };
         }
@@ -463,7 +466,10 @@ namespace Hollow.Editor.Generation
             RoomDesignerMarkerKinds.EnemyHeavy,
             RoomDesignerMarkerKinds.EnemyCharger,
             RoomDesignerMarkerKinds.EnemyTurret,
-            RoomDesignerMarkerKinds.EnemySplitter
+            RoomDesignerMarkerKinds.EnemySplitter,
+            RoomDesignerMarkerKinds.EnemySpittingPod,
+            RoomDesignerMarkerKinds.EnemyRat,
+            RoomDesignerMarkerKinds.EnemySpider
         };
 
         private static readonly string[] BuildPickupLabels =

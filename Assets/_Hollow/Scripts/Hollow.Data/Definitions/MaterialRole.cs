@@ -63,6 +63,9 @@ namespace Hollow.Data.Definitions
         CoinSilver,
         CoinGold,
         DesignerChest,
-        ProjectilePower
+        ProjectilePower,
+        EnemySpittingPod,
+        EnemyRat,
+        EnemySpider
     }
 }

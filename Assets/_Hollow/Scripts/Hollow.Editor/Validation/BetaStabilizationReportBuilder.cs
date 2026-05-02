@@ -331,7 +331,8 @@ namespace Hollow.Editor.Validation
                 PresentationPrefabRole.Player => "Player",
                 PresentationPrefabRole.EnemyNormal or PresentationPrefabRole.EnemyFlying or PresentationPrefabRole.EnemyFast or
                     PresentationPrefabRole.EnemyHeavy or PresentationPrefabRole.EnemyCharger or PresentationPrefabRole.EnemyTurret or
-                    PresentationPrefabRole.EnemySplitter => "Enemies",
+                    PresentationPrefabRole.EnemySplitter or PresentationPrefabRole.EnemySpittingPod or
+                    PresentationPrefabRole.EnemyRat or PresentationPrefabRole.EnemySpider => "Enemies",
                 PresentationPrefabRole.EnemyBoss => "Bosses",
                 PresentationPrefabRole.RoomFloor or PresentationPrefabRole.RoomObstacleRock or PresentationPrefabRole.RoomHazardSpike => "Rooms",
                 PresentationPrefabRole.StandardBarrel or PresentationPrefabRole.ExplosiveBarrel => "Hazards",

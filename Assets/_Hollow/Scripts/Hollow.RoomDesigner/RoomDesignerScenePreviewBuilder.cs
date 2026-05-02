@@ -70,6 +70,9 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyCharger => PresentationPrefabRole.EnemyCharger,
                 RoomDesignerMarkerKinds.EnemyTurret => PresentationPrefabRole.EnemyTurret,
                 RoomDesignerMarkerKinds.EnemySplitter => PresentationPrefabRole.EnemySplitter,
+                RoomDesignerMarkerKinds.EnemySpittingPod => PresentationPrefabRole.EnemySpittingPod,
+                RoomDesignerMarkerKinds.EnemyRat => PresentationPrefabRole.EnemyRat,
+                RoomDesignerMarkerKinds.EnemySpider => PresentationPrefabRole.EnemySpider,
                 _ => PresentationPrefabRole.EnemyNormal
             };
         }

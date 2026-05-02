@@ -38,9 +38,18 @@ namespace Hollow.Combat
             turret.Configure("spawnEnemyTurret", "Bone Turret", EnemyArchetypeId.Heavy, EnemyBehaviorId.TurretShooter, EnemyMovementMode.Grounded, 4, 0f, 1, 1f, 0.34f, 8f, 1.35f, 1, 4.8f, 0f, 2f, "spawnEnemyNormal", 0, EnemyBodyClass.Heavy, EnemyIntelligenceLevel.Trained, EnemyInstinctDisposition.Sentinel, new Color(0.72f, 0.86f, 0.94f, 1f));
             var splitter = EnemyDefinition.CreateRuntime("spawnEnemySplitter", "Husk Splitter", EnemyArchetypeId.Normal, EnemyMovementMode.Grounded, 5, 1.1f, 1, new Color(0.55f, 0.95f, 0.35f, 1f));
             splitter.Configure("spawnEnemySplitter", "Husk Splitter", EnemyArchetypeId.Normal, EnemyBehaviorId.Splitter, EnemyMovementMode.Grounded, 5, 1.1f, 1, 1f, 0.36f, 4f, 1.4f, 1, 4f, 4f, 2f, "spawnEnemyNormal", 2, EnemyBodyClass.Medium, EnemyIntelligenceLevel.Basic, EnemyInstinctDisposition.Predator, new Color(0.55f, 0.95f, 0.35f, 1f));
+            var pod = EnemyDefinition.CreateRuntime("spawnEnemySpittingPod", "Spitting Pod", EnemyArchetypeId.Heavy, EnemyMovementMode.Grounded, 10, 0f, 0, new Color(0.38f, 0.78f, 0.42f, 1f));
+            pod.Configure("spawnEnemySpittingPod", "Spitting Pod", EnemyArchetypeId.Heavy, EnemyBehaviorId.SpittingPod, EnemyMovementMode.Grounded, 10, 0f, 0, 1f, 0.44f, 8f, 1f, 1, 5f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Heavy, EnemyIntelligenceLevel.Simple, EnemyInstinctDisposition.Sentinel, 5.5f, 8f, new Color(0.38f, 0.78f, 0.42f, 1f));
+            pod.ConfigureSenseAndLunge(0f, 0f, 9f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
+            var rat = EnemyDefinition.CreateRuntime("spawnEnemyRat", "Rat", EnemyArchetypeId.Fast, EnemyMovementMode.Grounded, 3, 2.65f, 1, new Color(0.58f, 0.5f, 0.42f, 1f));
+            rat.Configure("spawnEnemyRat", "Rat", EnemyArchetypeId.Fast, EnemyBehaviorId.Rat, EnemyMovementMode.Grounded, 3, 2.65f, 1, 0.85f, 0.2f, 2.2f, 1f, 0, 5f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Light, EnemyIntelligenceLevel.Basic, EnemyInstinctDisposition.Territorial, 1.2f, 2.2f, new Color(0.58f, 0.5f, 0.42f, 1f));
+            rat.ConfigureSenseAndLunge(8f, 260f, 7.5f, true, 0.95f, 0.14f, 0.14f, 0.55f, 0.9f);
+            var spider = EnemyDefinition.CreateRuntime("spawnEnemySpider", "Spider", EnemyArchetypeId.Fast, EnemyMovementMode.Grounded, 2, 2.9f, 1, new Color(0.16f, 0.12f, 0.2f, 1f));
+            spider.Configure("spawnEnemySpider", "Spider", EnemyArchetypeId.Fast, EnemyBehaviorId.Spider, EnemyMovementMode.Grounded, 2, 2.9f, 1, 0.8f, 0.22f, 2.1f, 1f, 0, 5f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Light, EnemyIntelligenceLevel.Simple, EnemyInstinctDisposition.Prey, 1f, 1.9f, new Color(0.16f, 0.12f, 0.2f, 1f));
+            spider.ConfigureSenseAndLunge(8.5f, 300f, 8f, true, 1.15f, 0.12f, 0.16f, 0.7f, 0.85f);
 
             var catalog = CreateInstance<EnemyCatalog>();
-            catalog.Configure(new[] { normal, flying, fast, heavy, boss, charger, turret, splitter }, normal);
+            catalog.Configure(new[] { normal, flying, fast, heavy, boss, charger, turret, splitter, pod, rat, spider }, normal);
             return catalog;
         }
     }

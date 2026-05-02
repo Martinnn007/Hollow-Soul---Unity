@@ -5,7 +5,8 @@ namespace Hollow.Combat
         Predator = 0,
         Prey = 1,
         Sentinel = 2,
-        Mindless = 3
+        Mindless = 3,
+        Territorial = 4
     }
 
     public static class EnemyInstinctDispositionExtensions
@@ -17,9 +18,9 @@ namespace Hollow.Combat
                 return EnemyInstinctDisposition.Predator;
             }
 
-            if (value >= (int)EnemyInstinctDisposition.Mindless)
+            if (value >= (int)EnemyInstinctDisposition.Territorial)
             {
-                return EnemyInstinctDisposition.Mindless;
+                return EnemyInstinctDisposition.Territorial;
             }
 
             return (EnemyInstinctDisposition)value;
@@ -42,6 +43,7 @@ namespace Hollow.Combat
                 "prey" => EnemyInstinctDisposition.Prey,
                 "sentinel" => EnemyInstinctDisposition.Sentinel,
                 "mindless" => EnemyInstinctDisposition.Mindless,
+                "territorial" => EnemyInstinctDisposition.Territorial,
                 "predator" => EnemyInstinctDisposition.Predator,
                 _ => fallback
             };

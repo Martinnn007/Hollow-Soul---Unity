@@ -23,6 +23,13 @@ namespace Hollow.Combat
         private float knockbackMeters;
         private float guardKnockbackMultiplier;
         private bool destroyed;
+        private bool ballistic;
+        private Vector3 ballisticStartLocalPosition;
+        private Vector3 ballisticTargetLocalPosition;
+        private float ballisticTravelSeconds = 0.85f;
+        private float ballisticArcHeightMeters = 1.35f;
+        private float ballisticSplashRadiusMeters = 0.55f;
+        private GameObject ballisticShadow;
 
         public int Damage => damage;
 
@@ -31,6 +38,10 @@ namespace Hollow.Combat
         public DamageClassification DamageClassification => damageClassification;
 
         public float KnockbackMeters => Mathf.Max(0f, knockbackMeters);
+
+        public bool IsBallistic => ballistic;
+
+        public Vector3 BallisticTargetLocalPosition => ballisticTargetLocalPosition;
 
         public void Configure(
             RoomRuntimeRoot room,
@@ -54,6 +65,22 @@ namespace Hollow.Combat
             guardKnockbackMultiplier = 0f;
             MaterialResolver.ApplyTo(gameObject, MaterialRole.EnemyProjectile);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyProjectile, transform, Vector3.zero, Vector3.one);
+        }
+
+        public void ConfigureBallisticLanding(Vector3 targetLocalPosition, float travelSeconds, float arcHeightMeters, float splashRadiusMeters)
+        {
+            ballistic = true;
+            ballisticStartLocalPosition = transform.localPosition;
+            ballisticTargetLocalPosition = targetLocalPosition;
+            ballisticTargetLocalPosition.y = ballisticStartLocalPosition.y;
+            ballisticTravelSeconds = Mathf.Max(0.15f, travelSeconds);
+            ballisticArcHeightMeters = Mathf.Max(0.1f, arcHeightMeters);
+            ballisticSplashRadiusMeters = Mathf.Max(0.1f, splashRadiusMeters);
+            lifetimeSeconds = ballisticTravelSeconds + 0.1f;
+            localDirection = ballisticTargetLocalPosition - ballisticStartLocalPosition;
+            localDirection.y = 0f;
+            localDirection = localDirection.sqrMagnitude <= 0.001f ? Vector3.forward : localDirection.normalized;
+            EnsureBallisticShadow();
         }
 
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile)
@@ -98,6 +125,11 @@ namespace Hollow.Combat
         public bool Tick(float deltaTime)
         {
             ageSeconds += Mathf.Max(0f, deltaTime);
+            if (ballistic)
+            {
+                return TickBallistic();
+            }
+
             if (CheckImpact())
             {
                 return false;
@@ -122,6 +154,103 @@ namespace Hollow.Combat
             }
 
             return true;
+        }
+
+        private bool TickBallistic()
+        {
+            var progress = Mathf.Clamp01(ageSeconds / ballisticTravelSeconds);
+            var flatPosition = Vector3.Lerp(ballisticStartLocalPosition, ballisticTargetLocalPosition, progress);
+            var height = Mathf.Sin(progress * Mathf.PI) * ballisticArcHeightMeters;
+            flatPosition.y = ballisticStartLocalPosition.y + height;
+            transform.localPosition = flatPosition;
+            if (ballisticShadow != null)
+            {
+                ballisticShadow.transform.localPosition = new Vector3(0f, -height + 0.015f, 0f);
+                var scale = Mathf.Lerp(0.34f, 0.2f, height / ballisticArcHeightMeters);
+                ballisticShadow.transform.localScale = new Vector3(scale, 0.02f, scale);
+            }
+
+            if (progress < 1f)
+            {
+                return true;
+            }
+
+            ApplyBallisticLanding();
+            DestroyProjectile();
+            return false;
+        }
+
+        private void ApplyBallisticLanding()
+        {
+            if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, ballisticTargetLocalPosition, ballisticSplashRadiusMeters) ||
+                RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, ballisticTargetLocalPosition, 0.08f))
+            {
+                return;
+            }
+
+            if (playerHealth == null || !playerHealth.IsAlive || playerController == null)
+            {
+                return;
+            }
+
+            var playerPosition = playerController.transform.localPosition;
+            playerPosition.y = ballisticTargetLocalPosition.y;
+            if (Vector3.Distance(playerPosition, ballisticTargetLocalPosition) > ballisticSplashRadiusMeters + PlaceholderPlayerController.DefaultRadiusMeters)
+            {
+                return;
+            }
+
+            var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+            var direction = playerController.transform.localPosition - ballisticTargetLocalPosition;
+            var resolvedKnockback = KnockbackMeters > 0f ? KnockbackMeters : profile.PlayerKnockbackMeters;
+            if (DamageSystem.ApplyDamage(
+                    playerHealth,
+                    new DamageRequest(
+                        damage,
+                        gameObject,
+                        DamageFeedbackContext.Knockback(direction, resolvedKnockback, profile.KnockbackSeconds),
+                        threatKind,
+                        damageClassification,
+                        guardKnockbackMultiplier)))
+            {
+                VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
+                AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);
+            }
+        }
+
+        private void EnsureBallisticShadow()
+        {
+            if (ballisticShadow != null)
+            {
+                return;
+            }
+
+            ballisticShadow = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ballisticShadow.name = "BallisticShadow";
+            ballisticShadow.transform.SetParent(transform, worldPositionStays: false);
+            ballisticShadow.transform.localPosition = Vector3.zero;
+            ballisticShadow.transform.localScale = new Vector3(0.34f, 0.02f, 0.34f);
+            var collider = ballisticShadow.GetComponent<Collider>();
+            if (collider != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(collider);
+                }
+                else
+                {
+                    DestroyImmediate(collider);
+                }
+            }
+
+            var renderer = ballisticShadow.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = new Material(Shader.Find("Standard"))
+                {
+                    color = new Color(0f, 0f, 0f, 0.35f)
+                };
+            }
         }
 
         private bool CheckImpact()

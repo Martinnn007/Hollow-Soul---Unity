@@ -36,4 +36,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e6b25d6f34a254004b36b8b156138c2a, type: 2}
   - {fileID: 11400000, guid: 4bfedd5f8942e4343a069aed4770776d, type: 2}
   - {fileID: 11400000, guid: 6ab63f1babbcb45fcb02fbb479e7dbc1, type: 2}
+  - {fileID: 11400000, guid: 717857459fb6453fbfc58361e1fccdd7, type: 2}
+  - {fileID: 11400000, guid: 101d69798bbd4ddf83e9d5facab72112, type: 2}
+  - {fileID: 11400000, guid: fed1f0ebb3d840febaca29fc36f5999d, type: 2}
+  - {fileID: 11400000, guid: 34827fee051640fe86efef699790d5c7, type: 2}
   bossEncounter: {fileID: 11400000, guid: efaade93ac6f04ba8843ecb429c134cb, type: 2}

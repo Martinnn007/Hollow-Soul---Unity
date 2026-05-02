@@ -513,7 +513,9 @@ namespace Hollow.Combat
                 return EnemyBodyClass.Massive;
             }
 
-            if (nextArchetypeId == EnemyArchetypeId.Heavy || nextBehaviorId == EnemyBehaviorId.TurretShooter)
+            if (nextArchetypeId == EnemyArchetypeId.Heavy ||
+                nextBehaviorId == EnemyBehaviorId.TurretShooter ||
+                nextBehaviorId == EnemyBehaviorId.SpittingPod)
             {
                 return EnemyBodyClass.Heavy;
             }
@@ -523,7 +525,10 @@ namespace Hollow.Combat
                 return EnemyBodyClass.Medium;
             }
 
-            if (nextArchetypeId == EnemyArchetypeId.Fast || nextMovementMode == EnemyMovementMode.Flying)
+            if (nextBehaviorId == EnemyBehaviorId.Rat ||
+                nextBehaviorId == EnemyBehaviorId.Spider ||
+                nextArchetypeId == EnemyArchetypeId.Fast ||
+                nextMovementMode == EnemyMovementMode.Flying)
             {
                 return EnemyBodyClass.Light;
             }
@@ -547,6 +552,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Charger => EnemyIntelligenceLevel.Instinctive,
                 EnemyBehaviorId.Splitter => EnemyIntelligenceLevel.Basic,
                 EnemyBehaviorId.TurretShooter => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.SpittingPod => EnemyIntelligenceLevel.Simple,
+                EnemyBehaviorId.Rat => EnemyIntelligenceLevel.Basic,
+                EnemyBehaviorId.Spider => EnemyIntelligenceLevel.Simple,
                 _ => EnemyIntelligenceLevel.Simple
             };
         }
@@ -569,6 +577,21 @@ namespace Hollow.Combat
             if (nextBehaviorId == EnemyBehaviorId.TurretShooter)
             {
                 return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.SpittingPod)
+            {
+                return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.Rat)
+            {
+                return EnemyInstinctDisposition.Territorial;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.Spider)
+            {
+                return EnemyInstinctDisposition.Prey;
             }
 
             if (nextArchetypeId == EnemyArchetypeId.Heavy && nextBehaviorId == EnemyBehaviorId.Chaser)
@@ -595,6 +618,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Charger => new Vector2(0.8f, 1.35f),
                 EnemyBehaviorId.Splitter => new Vector2(1.25f, 2f),
                 EnemyBehaviorId.TurretShooter => new Vector2(5.25f, 7.5f),
+                EnemyBehaviorId.SpittingPod => new Vector2(5.5f, 8f),
+                EnemyBehaviorId.Rat => new Vector2(1.2f, 2.2f),
+                EnemyBehaviorId.Spider => new Vector2(1f, 1.9f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector2(0.9f, 1.45f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector2(1.35f, 2.15f),
                 _ => new Vector2(1.05f, 1.75f)
@@ -617,6 +643,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Charger => new Vector3(7f, 120f, 5f),
                 EnemyBehaviorId.Splitter => new Vector3(6.5f, 160f, 5f),
                 EnemyBehaviorId.TurretShooter => new Vector3(9.5f, 70f, 2.5f),
+                EnemyBehaviorId.SpittingPod => new Vector3(0f, 0f, 9f),
+                EnemyBehaviorId.Rat => new Vector3(8f, 260f, 7.5f),
+                EnemyBehaviorId.Spider => new Vector3(8.5f, 300f, 8f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(7f, 170f, 5f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(5f, 110f, 3.5f),
                 _ => new Vector3(6.5f, 150f, 4.5f)
@@ -631,7 +660,8 @@ namespace Hollow.Combat
             if (nextArchetypeId == EnemyArchetypeId.Boss ||
                 nextBehaviorId == EnemyBehaviorId.BossWarden ||
                 nextBehaviorId == EnemyBehaviorId.Charger ||
-                nextBehaviorId == EnemyBehaviorId.TurretShooter)
+                nextBehaviorId == EnemyBehaviorId.TurretShooter ||
+                nextBehaviorId == EnemyBehaviorId.SpittingPod)
             {
                 return new LungeDefaults(false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
             }
@@ -640,11 +670,18 @@ namespace Hollow.Combat
             {
                 EnemyBehaviorId.FlyingChaser => 1.35f,
                 EnemyBehaviorId.Splitter => 1.6f,
+                EnemyBehaviorId.Rat => 0.95f,
+                EnemyBehaviorId.Spider => 1.15f,
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => 1.25f,
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => 1.7f,
                 _ => 1.4f
             };
-            return new LungeDefaults(true, triggerRange, 0.22f, 0.18f, 0.75f, 1.15f);
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.Rat => new LungeDefaults(true, triggerRange, 0.14f, 0.14f, 0.55f, 0.9f),
+                EnemyBehaviorId.Spider => new LungeDefaults(true, triggerRange, 0.12f, 0.16f, 0.7f, 0.85f),
+                _ => new LungeDefaults(true, triggerRange, 0.22f, 0.18f, 0.75f, 1.15f)
+            };
         }
 
         private static Vector2 SanitizePreferredRange(float minMeters, float maxMeters)

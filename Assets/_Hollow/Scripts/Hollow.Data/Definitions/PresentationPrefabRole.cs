@@ -49,6 +49,9 @@ namespace Hollow.Data.Definitions
         CoinSilver,
         CoinGold,
         VfxChestOpen,
-        VfxCoinPickup
+        VfxCoinPickup,
+        EnemySpittingPod,
+        EnemyRat,
+        EnemySpider
     }
 }
