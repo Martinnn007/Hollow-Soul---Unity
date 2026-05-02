@@ -25,6 +25,9 @@ MonoBehaviour:
   visualScale: 2.45
   bodyClass: 3
   intelligence: 3
+  sightRadiusMeters: 9
+  sightAngleDegrees: 160
+  hearingRadiusMeters: 7
   debugColor: {r: 0.95, g: 0.32, b: 0.12, a: 1}
   arena:
     arenaId: boss_arena_charred_crossing

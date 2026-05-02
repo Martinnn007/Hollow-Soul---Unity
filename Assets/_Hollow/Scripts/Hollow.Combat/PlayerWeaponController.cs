@@ -239,6 +239,7 @@ namespace Hollow.Combat
                 SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, attack);
             }
 
+            combatController.EmitPlayerStimulus(EnemyStimulusKind.RangedAttack, transform.localPosition, timeSeconds);
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Ranged, attackKind, cardinal);
             AudioPresenter.Play(AudioCueId.ProjectileFire, transform.position);
             return true;
@@ -362,6 +363,7 @@ namespace Hollow.Combat
             var effectiveRange = EffectiveRange(attack, WeaponSlot.Melee);
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Melee, attackKind, cardinal);
             MeleeSwipePresenter.Spawn(transform.parent, transform.localPosition, direction, effectiveRange, attackKind);
+            combatController.EmitPlayerStimulus(EnemyStimulusKind.MeleeAttack, transform.localPosition, timeSeconds);
             var radius = Mathf.Max(0.25f, effectiveRange * 0.48f);
             var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, effectiveRange * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);
             var target = combatController.FindEnemyHit(hitCenter, radius);

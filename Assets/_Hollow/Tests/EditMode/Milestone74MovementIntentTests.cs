@@ -153,7 +153,7 @@ namespace Hollow.Tests.EditMode
             {
                 var splitter = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemySplitter"));
 
-                player.transform.localPosition = new Vector3(1.5f, 0f, -3f);
+                player.transform.localPosition = new Vector3(1.8f, 0f, -3f);
                 splitter.transform.localPosition = new Vector3(0f, 0f, -3f);
                 splitter.Tick(0.2f, 7f);
                 Assert.AreEqual(0f, splitter.transform.localPosition.x, 0.001f);

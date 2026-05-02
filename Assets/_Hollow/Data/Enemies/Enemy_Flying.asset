@@ -25,6 +25,15 @@ MonoBehaviour:
   attackRangeMeters: 4
   preferredRangeMinMeters: 2.75
   preferredRangeMaxMeters: 4.25
+  sightRadiusMeters: 7.5
+  sightAngleDegrees: 240
+  hearingRadiusMeters: 6.5
+  lungeAttackEnabled: 1
+  lungeTriggerRangeMeters: 1.35
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
   attackCooldownSeconds: 1.4
   projectileDamage: 1
   projectileSpeedMetersPerSecond: 4

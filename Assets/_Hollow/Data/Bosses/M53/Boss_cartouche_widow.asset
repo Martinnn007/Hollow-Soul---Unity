@@ -25,6 +25,9 @@ MonoBehaviour:
   visualScale: 2.25
   bodyClass: 3
   intelligence: 5
+  sightRadiusMeters: 10
+  sightAngleDegrees: 220
+  hearingRadiusMeters: 6.5
   debugColor: {r: 0.86, g: 0.66, b: 0.18, a: 1}
   arena:
     arenaId: boss_arena_open_tomb

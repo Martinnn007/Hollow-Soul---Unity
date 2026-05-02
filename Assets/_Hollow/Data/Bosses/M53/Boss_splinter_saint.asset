@@ -25,6 +25,9 @@ MonoBehaviour:
   visualScale: 1.8
   bodyClass: 3
   intelligence: 3
+  sightRadiusMeters: 8
+  sightAngleDegrees: 180
+  hearingRadiusMeters: 5.5
   debugColor: {r: 0.64, g: 0.42, b: 0.22, a: 1}
   arena:
     arenaId: boss_arena_narrow_shrine

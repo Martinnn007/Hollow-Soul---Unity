@@ -25,6 +25,9 @@ MonoBehaviour:
   visualScale: 3
   bodyClass: 3
   intelligence: 5
+  sightRadiusMeters: 0
+  sightAngleDegrees: 0
+  hearingRadiusMeters: 9.5
   debugColor: {r: 0.18, g: 0.12, b: 0.34, a: 1}
   arena:
     arenaId: boss_arena_blind_deep

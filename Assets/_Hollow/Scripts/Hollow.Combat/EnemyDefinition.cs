@@ -17,6 +17,15 @@ namespace Hollow.Combat
         [SerializeField] private float attackRangeMeters = 5f;
         [SerializeField] private float preferredRangeMinMeters = 1.05f;
         [SerializeField] private float preferredRangeMaxMeters = 1.75f;
+        [SerializeField] private float sightRadiusMeters = 6.5f;
+        [SerializeField] private float sightAngleDegrees = 150f;
+        [SerializeField] private float hearingRadiusMeters = 4.5f;
+        [SerializeField] private bool lungeAttackEnabled = true;
+        [SerializeField] private float lungeTriggerRangeMeters = 1.4f;
+        [SerializeField] private float lungeWindupSeconds = 0.22f;
+        [SerializeField] private float lungeActiveSeconds = 0.18f;
+        [SerializeField] private float lungeDistanceMeters = 0.75f;
+        [SerializeField] private float lungeCooldownSeconds = 1.15f;
         [SerializeField] private float attackCooldownSeconds = 1.4f;
         [SerializeField] private int projectileDamage = 1;
         [SerializeField] private float projectileSpeedMetersPerSecond = 5f;
@@ -54,6 +63,24 @@ namespace Hollow.Combat
         public float PreferredRangeMinMeters => Mathf.Max(0f, preferredRangeMinMeters);
 
         public float PreferredRangeMaxMeters => Mathf.Max(PreferredRangeMinMeters + 0.05f, preferredRangeMaxMeters);
+
+        public float SightRadiusMeters => Mathf.Max(0f, sightRadiusMeters);
+
+        public float SightAngleDegrees => SightRadiusMeters <= 0f ? 0f : Mathf.Clamp(sightAngleDegrees, 0f, 360f);
+
+        public float HearingRadiusMeters => Mathf.Max(0f, hearingRadiusMeters);
+
+        public bool LungeAttackEnabled => lungeAttackEnabled;
+
+        public float LungeTriggerRangeMeters => Mathf.Max(0.05f, lungeTriggerRangeMeters);
+
+        public float LungeWindupSeconds => Mathf.Max(0f, lungeWindupSeconds);
+
+        public float LungeActiveSeconds => Mathf.Max(0.01f, lungeActiveSeconds);
+
+        public float LungeDistanceMeters => Mathf.Max(0f, lungeDistanceMeters);
+
+        public float LungeCooldownSeconds => Mathf.Max(0.05f, lungeCooldownSeconds);
 
         public float AttackCooldownSeconds => attackCooldownSeconds;
 
@@ -255,6 +282,18 @@ namespace Hollow.Combat
             var preferredRange = DefaultPreferredRangeFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             preferredRangeMinMeters = preferredRange.x;
             preferredRangeMaxMeters = preferredRange.y;
+            var senses = DefaultSensesFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
+            var lunge = DefaultLungeFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
+            ConfigureSenseAndLunge(
+                senses.x,
+                senses.y,
+                senses.z,
+                lunge.enabled,
+                lunge.triggerRange,
+                lunge.windup,
+                lunge.active,
+                lunge.distance,
+                lunge.cooldown);
             color = nextColor;
         }
 
@@ -311,6 +350,28 @@ namespace Hollow.Combat
             var preferredRange = SanitizePreferredRange(nextPreferredRangeMinMeters, nextPreferredRangeMaxMeters);
             preferredRangeMinMeters = preferredRange.x;
             preferredRangeMaxMeters = preferredRange.y;
+        }
+
+        public void ConfigureSenseAndLunge(
+            float nextSightRadiusMeters,
+            float nextSightAngleDegrees,
+            float nextHearingRadiusMeters,
+            bool nextLungeAttackEnabled,
+            float nextLungeTriggerRangeMeters,
+            float nextLungeWindupSeconds,
+            float nextLungeActiveSeconds,
+            float nextLungeDistanceMeters,
+            float nextLungeCooldownSeconds)
+        {
+            sightRadiusMeters = Mathf.Max(0f, nextSightRadiusMeters);
+            sightAngleDegrees = sightRadiusMeters <= 0f ? 0f : Mathf.Clamp(nextSightAngleDegrees, 0f, 360f);
+            hearingRadiusMeters = Mathf.Max(0f, nextHearingRadiusMeters);
+            lungeAttackEnabled = nextLungeAttackEnabled;
+            lungeTriggerRangeMeters = Mathf.Max(0.05f, nextLungeTriggerRangeMeters);
+            lungeWindupSeconds = Mathf.Max(0f, nextLungeWindupSeconds);
+            lungeActiveSeconds = Mathf.Max(0.01f, nextLungeActiveSeconds);
+            lungeDistanceMeters = Mathf.Max(0f, nextLungeDistanceMeters);
+            lungeCooldownSeconds = Mathf.Max(0.05f, nextLungeCooldownSeconds);
         }
 
         public static EnemyDefinition CreateRuntime(
@@ -507,11 +568,88 @@ namespace Hollow.Combat
             };
         }
 
+        public static Vector3 DefaultSensesFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return new Vector3(8f, 160f, 4.5f);
+            }
+
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.FlyingChaser => new Vector3(7.5f, 240f, 6.5f),
+                EnemyBehaviorId.Charger => new Vector3(7f, 120f, 5f),
+                EnemyBehaviorId.Splitter => new Vector3(6.5f, 160f, 5f),
+                EnemyBehaviorId.TurretShooter => new Vector3(9.5f, 70f, 2.5f),
+                _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(7f, 170f, 5f),
+                _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(5f, 110f, 3.5f),
+                _ => new Vector3(6.5f, 150f, 4.5f)
+            };
+        }
+
+        public static LungeDefaults DefaultLungeFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss ||
+                nextBehaviorId == EnemyBehaviorId.BossWarden ||
+                nextBehaviorId == EnemyBehaviorId.Charger ||
+                nextBehaviorId == EnemyBehaviorId.TurretShooter)
+            {
+                return new LungeDefaults(false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
+            }
+
+            var triggerRange = nextBehaviorId switch
+            {
+                EnemyBehaviorId.FlyingChaser => 1.35f,
+                EnemyBehaviorId.Splitter => 1.6f,
+                _ when nextArchetypeId == EnemyArchetypeId.Fast => 1.25f,
+                _ when nextArchetypeId == EnemyArchetypeId.Heavy => 1.7f,
+                _ => 1.4f
+            };
+            return new LungeDefaults(true, triggerRange, 0.22f, 0.18f, 0.75f, 1.15f);
+        }
+
         private static Vector2 SanitizePreferredRange(float minMeters, float maxMeters)
         {
             var safeMin = Mathf.Max(0f, minMeters);
             var safeMax = Mathf.Max(safeMin + 0.05f, maxMeters);
             return new Vector2(safeMin, safeMax);
+        }
+
+        public readonly struct LungeDefaults
+        {
+            public LungeDefaults(
+                bool enabled,
+                float triggerRange,
+                float windup,
+                float active,
+                float distance,
+                float cooldown)
+            {
+                this.enabled = enabled;
+                this.triggerRange = triggerRange;
+                this.windup = windup;
+                this.active = active;
+                this.distance = distance;
+                this.cooldown = cooldown;
+            }
+
+            public bool enabled { get; }
+
+            public float triggerRange { get; }
+
+            public float windup { get; }
+
+            public float active { get; }
+
+            public float distance { get; }
+
+            public float cooldown { get; }
         }
 
         private static EnemyBehaviorId DefaultBehaviorFor(EnemyArchetypeId nextArchetypeId, EnemyMovementMode nextMovementMode)

@@ -25,6 +25,9 @@ MonoBehaviour:
   visualScale: 2.25
   bodyClass: 3
   intelligence: 2
+  sightRadiusMeters: 6.5
+  sightAngleDegrees: 110
+  hearingRadiusMeters: 6
   debugColor: {r: 0.78, g: 0.64, b: 0.36, a: 1}
   arena:
     arenaId: boss_arena_sandy_pit_ring

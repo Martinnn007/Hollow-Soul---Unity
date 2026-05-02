@@ -14,6 +14,9 @@ namespace Hollow.Combat
         public const int PlayerMaxHealth = 6;
         public const float EntryGraceSeconds = 1f;
         public const float EnemyAttackBudgetWindowSeconds = 0.45f;
+        public const float EnemyMeleeAttackBudgetWindowSeconds = 0.3f;
+        public const float PlayerFootstepStimulusIntervalSeconds = 0.45f;
+        public const float PlayerFootstepMinimumDistanceMeters = 0.08f;
 
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject projectilePrefab;
@@ -37,6 +40,10 @@ namespace Hollow.Combat
         private bool ignoreEnemiesForRoomClear;
         private readonly CombatDiagnosticsModel diagnostics = new();
         private float nextEnemyAttackBudgetTime;
+        private float nextEnemyMeleeAttackBudgetTime;
+        private float nextPlayerFootstepStimulusTime;
+        private Vector3 lastPlayerFootstepStimulusLocalPosition;
+        private bool hasLastPlayerFootstepStimulusLocalPosition;
 
         public event Action<RoomCombatController> RoomCleared;
 
@@ -104,6 +111,7 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            TickPlayerFootstepStimuli(Time.time);
             EvaluateRoomState();
         }
 
@@ -150,6 +158,9 @@ namespace Hollow.Combat
 
             CleanupRoomCombatObjects();
             nextEnemyAttackBudgetTime = 0f;
+            nextEnemyMeleeAttackBudgetTime = 0f;
+            nextPlayerFootstepStimulusTime = 0f;
+            hasLastPlayerFootstepStimulusLocalPosition = false;
             ConfigureRoomHazards();
             playerHealth = playerController.GetComponent<CombatantHealth>() ?? playerController.gameObject.AddComponent<CombatantHealth>();
             if (playerHealth.MaxHealth < PlayerMaxHealth)
@@ -172,6 +183,8 @@ namespace Hollow.Combat
             var playerFeedback = playerController.GetComponent<PlayerDamageFeedbackController>() ?? playerController.gameObject.AddComponent<PlayerDamageFeedbackController>();
             playerFeedback.Configure(roomRuntimeRoot, CombatFeelProfile);
             PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
+            lastPlayerFootstepStimulusLocalPosition = playerController.transform.localPosition;
+            hasLastPlayerFootstepStimulusLocalPosition = true;
 
             enemies.Clear();
             initialized = true;
@@ -329,6 +342,71 @@ namespace Hollow.Combat
 
             nextEnemyAttackBudgetTime = timeSeconds + EnemyAttackBudgetWindowSeconds;
             return true;
+        }
+
+        public bool TryReserveEnemyMeleeAttack(EnemyRuntimeController enemy, float timeSeconds)
+        {
+            if (enemy == null || enemy.BossDefinition != null)
+            {
+                return true;
+            }
+
+            if (timeSeconds < nextEnemyMeleeAttackBudgetTime)
+            {
+                return false;
+            }
+
+            var highestPriorityReadyEnemy = enemies
+                .Where(candidate => candidate != null && candidate.CanStartBudgetedMeleeAttack(timeSeconds))
+                .OrderByDescending(candidate => candidate.MeleeAttackPriorityScore(timeSeconds))
+                .FirstOrDefault();
+            if (highestPriorityReadyEnemy != null && highestPriorityReadyEnemy != enemy)
+            {
+                return false;
+            }
+
+            nextEnemyMeleeAttackBudgetTime = timeSeconds + EnemyMeleeAttackBudgetWindowSeconds;
+            return true;
+        }
+
+        public void EmitPlayerStimulus(EnemyStimulusKind kind, Vector3 localPosition, float timeSeconds)
+        {
+            foreach (var enemy in enemies)
+            {
+                if (enemy == null || !enemy.IsAlive || enemy.BossDefinition != null)
+                {
+                    continue;
+                }
+
+                enemy.ReceiveStimulus(kind, localPosition, timeSeconds);
+            }
+        }
+
+        private void TickPlayerFootstepStimuli(float timeSeconds)
+        {
+            if (!initialized || ObjectiveState != RoomObjectiveState.InCombat || playerController == null)
+            {
+                return;
+            }
+
+            var currentPosition = playerController.transform.localPosition;
+            if (!hasLastPlayerFootstepStimulusLocalPosition)
+            {
+                lastPlayerFootstepStimulusLocalPosition = currentPosition;
+                hasLastPlayerFootstepStimulusLocalPosition = true;
+                return;
+            }
+
+            var delta = currentPosition - lastPlayerFootstepStimulusLocalPosition;
+            delta.y = 0f;
+            if (delta.magnitude < PlayerFootstepMinimumDistanceMeters || timeSeconds < nextPlayerFootstepStimulusTime)
+            {
+                return;
+            }
+
+            EmitPlayerStimulus(EnemyStimulusKind.Footstep, currentPosition, timeSeconds);
+            lastPlayerFootstepStimulusLocalPosition = currentPosition;
+            nextPlayerFootstepStimulusTime = timeSeconds + PlayerFootstepStimulusIntervalSeconds;
         }
 
         public bool TryGetEnemyIntelligenceSnapshot(

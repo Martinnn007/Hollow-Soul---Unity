@@ -25,6 +25,9 @@ MonoBehaviour:
   visualScale: 2.1
   bodyClass: 3
   intelligence: 5
+  sightRadiusMeters: 9
+  sightAngleDegrees: 220
+  hearingRadiusMeters: 6
   debugColor: {r: 0.62, g: 0.74, b: 0.9, a: 1}
   arena:
     arenaId: boss_arena_symmetric_mirror

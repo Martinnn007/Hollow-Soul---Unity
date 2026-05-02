@@ -116,6 +116,9 @@ namespace Hollow.Combat
         [SerializeField] private float visualScale = 2f;
         [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Massive;
         [SerializeField] private EnemyIntelligenceLevel intelligence = EnemyIntelligenceLevel.Basic;
+        [SerializeField] private float sightRadiusMeters = 8f;
+        [SerializeField] private float sightAngleDegrees = 140f;
+        [SerializeField] private float hearingRadiusMeters = 5f;
         [SerializeField] private Color debugColor = new(0.42f, 0.34f, 0.28f, 1f);
         [SerializeField] private BossArenaDefinition arena = new("boss_arena_broken_gateyard", "Broken Gateyard");
         [SerializeField] private List<BossPhaseDefinition> phases = new();
@@ -146,6 +149,12 @@ namespace Hollow.Combat
         public EnemyBodyClass BodyClass => bodyClass;
 
         public EnemyIntelligenceLevel Intelligence => EnemyIntelligenceLevelExtensions.Clamp((int)intelligence);
+
+        public float SightRadiusMeters => Mathf.Max(0f, sightRadiusMeters);
+
+        public float SightAngleDegrees => SightRadiusMeters <= 0f ? 0f : Mathf.Clamp(sightAngleDegrees, 0f, 360f);
+
+        public float HearingRadiusMeters => Mathf.Max(0f, hearingRadiusMeters);
 
         public Color DebugColor => debugColor;
 
@@ -225,10 +234,19 @@ namespace Hollow.Combat
             visualScale = Mathf.Clamp(nextVisualScale, 1f, 3.5f);
             bodyClass = nextBodyClass;
             intelligence = EnemyIntelligenceLevelExtensions.Clamp((int)nextIntelligence);
+            var senses = SignatureSensesFor(nextBehaviorId);
+            ConfigureSenseMetadata(senses.x, senses.y, senses.z);
             debugColor = nextDebugColor;
             arena = nextArena ?? new BossArenaDefinition("boss_arena_broken_gateyard", "Broken Gateyard");
             phases = nextPhases?.Where(phase => phase != null).OrderByDescending(phase => phase.healthThreshold01).ToList() ?? new List<BossPhaseDefinition>();
             attacks = nextAttacks?.Where(attack => attack != null).ToList() ?? new List<BossAttackDefinition>();
+        }
+
+        public void ConfigureSenseMetadata(float nextSightRadiusMeters, float nextSightAngleDegrees, float nextHearingRadiusMeters)
+        {
+            sightRadiusMeters = Mathf.Max(0f, nextSightRadiusMeters);
+            sightAngleDegrees = sightRadiusMeters <= 0f ? 0f : Mathf.Clamp(nextSightAngleDegrees, 0f, 360f);
+            hearingRadiusMeters = Mathf.Max(0f, nextHearingRadiusMeters);
         }
 
         public static BossDefinition CreateRuntime(
@@ -283,6 +301,24 @@ namespace Hollow.Combat
                 BossBehaviorId.RustBishop => EnemyIntelligenceLevel.Cunning,
                 BossBehaviorId.HollowStarLarva => EnemyIntelligenceLevel.Cunning,
                 _ => EnemyIntelligenceLevel.Basic
+            };
+        }
+
+        public static Vector3 SignatureSensesFor(BossBehaviorId behavior)
+        {
+            return behavior switch
+            {
+                BossBehaviorId.StoneWarden => new Vector3(8f, 140f, 5f),
+                BossBehaviorId.SplinterSaint => new Vector3(8f, 180f, 5.5f),
+                BossBehaviorId.GravelMaw => new Vector3(6.5f, 110f, 6f),
+                BossBehaviorId.CartoucheWidow => new Vector3(10f, 220f, 6.5f),
+                BossBehaviorId.IronReliquary => new Vector3(8.5f, 120f, 4f),
+                BossBehaviorId.MirrorHusk => new Vector3(9f, 220f, 6f),
+                BossBehaviorId.AshComet => new Vector3(9f, 160f, 7f),
+                BossBehaviorId.ChoirOfTeeth => new Vector3(10f, 300f, 7f),
+                BossBehaviorId.RustBishop => new Vector3(9.5f, 180f, 5.5f),
+                BossBehaviorId.HollowStarLarva => new Vector3(0f, 0f, 9.5f),
+                _ => new Vector3(8f, 160f, 5f)
             };
         }
 

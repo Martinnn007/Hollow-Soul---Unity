@@ -7,6 +7,8 @@ namespace Hollow.Combat
         ChargeWindup = 2,
         Charging = 3,
         RangedWindup = 4,
-        BossBurstWindup = 5
+        BossBurstWindup = 5,
+        MeleeWindup = 6,
+        MeleeLunge = 7
     }
 }
