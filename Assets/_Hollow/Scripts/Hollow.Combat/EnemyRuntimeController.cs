@@ -44,6 +44,8 @@ namespace Hollow.Combat
         [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Medium;
         [SerializeField] private EnemyIntelligenceLevel intelligence = EnemyIntelligenceLevel.Simple;
         [SerializeField] private EnemyInstinctDisposition disposition = EnemyInstinctDisposition.Predator;
+        [SerializeField] private EnemyContactDamagePolicy contactDamagePolicy = EnemyContactDamagePolicy.ActiveOnly;
+        [SerializeField] private EnemyPassiveContactHazardType passiveContactHazardType = EnemyPassiveContactHazardType.None;
         [SerializeField] private EnemyAwarenessState awarenessState = EnemyAwarenessState.Engaged;
 
         private RoomRuntimeRoot roomRuntimeRoot;
@@ -80,11 +82,15 @@ namespace Hollow.Combat
         private float nextAllowedLungeTime;
         private float lungeEndTime;
         private bool lungeContactAttempted;
+        private bool chargeContactAttempted;
         private Vector3 activeLungeDirection = Vector3.forward;
         private Vector3 facingDirection = Vector3.forward;
         private EnemyAttackProfileDefinition activeChargeProfile;
         private EnemyAttackProfileDefinition activeRangedProfile;
         private EnemyAttackProfileDefinition activeMeleeProfile;
+        private EnemyAttackProfileDefinition activeBossContactProfile;
+        private float bossActiveContactEndTime;
+        private bool bossActiveContactAttempted;
         private float engagedStartTime = float.NegativeInfinity;
         private float nextCritterDecisionTime;
         private bool critterFightDecision;
@@ -107,6 +113,10 @@ namespace Hollow.Combat
         public EnemyIntelligenceLevel Intelligence => EnemyIntelligenceLevelExtensions.Clamp((int)intelligence);
 
         public EnemyInstinctDisposition Disposition => EnemyInstinctDispositionExtensions.Clamp((int)disposition);
+
+        public EnemyContactDamagePolicy ContactDamagePolicy => contactDamagePolicy;
+
+        public EnemyPassiveContactHazardType PassiveContactHazardType => passiveContactHazardType;
 
         public int SpawnIndex => spawnIndex;
 
@@ -207,6 +217,8 @@ namespace Hollow.Combat
             bodyClass = Definition.BodyClass;
             intelligence = Definition.Intelligence;
             disposition = Definition.Disposition;
+            contactDamagePolicy = Definition.ContactDamagePolicy;
+            passiveContactHazardType = Definition.PassiveContactHazardType;
             speedMetersPerSecond = tuning.ApplySpeed(Definition.SpeedMetersPerSecond);
             contactDamage = tuning.ApplyContactDamage(Definition.ContactDamage);
             contactCooldownSeconds = Definition.ContactCooldownSeconds;
@@ -233,10 +245,14 @@ namespace Hollow.Combat
             nextAllowedLungeTime = 0f;
             lungeEndTime = 0f;
             lungeContactAttempted = false;
+            chargeContactAttempted = false;
             activeLungeDirection = Vector3.forward;
             activeChargeProfile = null;
             activeRangedProfile = null;
             activeMeleeProfile = null;
+            activeBossContactProfile = null;
+            bossActiveContactEndTime = 0f;
+            bossActiveContactAttempted = false;
             engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? 0f : float.NegativeInfinity;
             nextCritterDecisionTime = 0f;
             critterFightDecision = false;
@@ -267,6 +283,8 @@ namespace Hollow.Combat
             bodyClass = bossDefinition.BodyClass;
             intelligence = bossDefinition.Intelligence;
             disposition = EnemyInstinctDisposition.Sentinel;
+            contactDamagePolicy = bossDefinition.ContactDamagePolicy;
+            passiveContactHazardType = bossDefinition.PassiveContactHazardType;
             speedMetersPerSecond = bossDefinition.SpeedMetersPerSecond;
             contactDamage = bossDefinition.ContactDamage;
             contactCooldownSeconds = bossDefinition.ContactCooldownSeconds;
@@ -278,6 +296,11 @@ namespace Hollow.Combat
             sightAngleDegrees = bossDefinition.SightAngleDegrees;
             hearingRadiusMeters = bossDefinition.HearingRadiusMeters;
             lungeAttackEnabled = false;
+            lungeContactAttempted = false;
+            chargeContactAttempted = false;
+            activeBossContactProfile = null;
+            bossActiveContactEndTime = 0f;
+            bossActiveContactAttempted = false;
             awarenessState = EnemyAwarenessState.Engaged;
             facingDirection = Vector3.forward;
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
@@ -324,6 +347,18 @@ namespace Hollow.Combat
             disposition = EnemyInstinctDispositionExtensions.Clamp((int)nextDisposition);
             awarenessState = InitialAwarenessFor(disposition);
             engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? Time.time : float.NegativeInfinity;
+        }
+
+        public void ArmBossActiveContactWindow(EnemyAttackProfileDefinition profile, float timeSeconds)
+        {
+            if (bossDefinition == null)
+            {
+                return;
+            }
+
+            activeBossContactProfile = profile;
+            bossActiveContactEndTime = timeSeconds + Mathf.Max(0.01f, profile != null ? profile.ActiveSeconds : 0.22f);
+            bossActiveContactAttempted = false;
         }
 
         public void BindRoomCombatController(RoomCombatController controller)
@@ -638,6 +673,7 @@ namespace Hollow.Combat
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
                 activeChargeProfile = null;
+                chargeContactAttempted = false;
             }
 
             if (timeSeconds < nextAllowedChargeTime || playerController == null)
@@ -861,6 +897,7 @@ namespace Hollow.Combat
                 activeChargeDirection = TelegraphDirection;
                 chargeEndTime = timeSeconds + (activeChargeProfile != null ? activeChargeProfile.ActiveSeconds : ChargeActiveSeconds);
                 nextAllowedChargeTime = timeSeconds + (activeChargeProfile != null ? activeChargeProfile.CooldownSeconds : Definition.ChargeCooldownSeconds);
+                chargeContactAttempted = false;
                 readabilityState = EnemyReadabilityState.Charging;
                 readabilityStateEndTime = chargeEndTime;
                 return true;
@@ -1443,21 +1480,13 @@ namespace Hollow.Combat
 
         public bool TryApplyContactDamage(float timeSeconds)
         {
-            if (!IsAlive || IsInspectionFrozen || playerHealth == null || !playerHealth.IsAlive || IsInEntryGrace(timeSeconds) || timeSeconds < nextAllowedContactTime)
-            {
-                return false;
-            }
-
-            if (Intelligence == EnemyIntelligenceLevel.Instinctive &&
-                Disposition == EnemyInstinctDisposition.Prey &&
-                !IsEndangered(timeSeconds) &&
-                awarenessState != EnemyAwarenessState.Engaged)
+            if (!IsAlive || IsInspectionFrozen || playerHealth == null || !playerHealth.IsAlive || IsInEntryGrace(timeSeconds))
             {
                 return false;
             }
 
             var distance = Vector3.Distance(Flat(transform.localPosition), Flat(playerController.transform.localPosition));
-            var contactReach = radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f;
+            var contactReach = BodyContactReachMeters();
             if (readabilityState == EnemyReadabilityState.MeleeLunge)
             {
                 contactReach = Mathf.Max(contactReach, activeMeleeProfile != null ? activeMeleeProfile.RangeMeters : LungeTriggerRangeMeters);
@@ -1468,7 +1497,19 @@ namespace Hollow.Combat
                 return false;
             }
 
+            if (!CanApplyBodyDamageNow(timeSeconds))
+            {
+                TryApplyBumpDisturbance(timeSeconds);
+                return false;
+            }
+
+            if (timeSeconds < nextAllowedContactTime)
+            {
+                return false;
+            }
+
             nextAllowedContactTime = timeSeconds + contactCooldownSeconds;
+            MarkBodyContactDamageAttempted();
             var feelProfile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
             var attackProfile = ResolveContactAttackProfile();
             var direction = playerController.transform.localPosition - transform.localPosition;
@@ -1589,7 +1630,9 @@ namespace Hollow.Combat
         {
             if (bossDefinition != null)
             {
-                return bossDefinition.ResolveAttackProfile(BossContactAttackId());
+                return activeBossContactProfile != null
+                    ? activeBossContactProfile
+                    : bossDefinition.ResolveAttackProfile(BossContactAttackId());
             }
 
             if (readabilityState == EnemyReadabilityState.MeleeLunge && activeMeleeProfile != null)
@@ -1603,6 +1646,84 @@ namespace Hollow.Combat
             }
 
             return Definition.ResolveAttackProfile(ContactAttackId());
+        }
+
+        private float BodyContactReachMeters()
+        {
+            return radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f;
+        }
+
+        private bool CanApplyBodyDamageNow(float timeSeconds)
+        {
+            if (IsPassiveHazardBody())
+            {
+                return true;
+            }
+
+            if (contactDamagePolicy != EnemyContactDamagePolicy.ActiveOnly)
+            {
+                return false;
+            }
+
+            if (readabilityState == EnemyReadabilityState.MeleeLunge)
+            {
+                return !lungeContactAttempted;
+            }
+
+            if (readabilityState == EnemyReadabilityState.Charging)
+            {
+                return !chargeContactAttempted;
+            }
+
+            if (bossDefinition != null)
+            {
+                if (timeSeconds > bossActiveContactEndTime)
+                {
+                    activeBossContactProfile = null;
+                    return false;
+                }
+
+                return activeBossContactProfile != null && !bossActiveContactAttempted;
+            }
+
+            return false;
+        }
+
+        private bool IsPassiveHazardBody()
+        {
+            return contactDamagePolicy == EnemyContactDamagePolicy.PassiveHazard &&
+                   passiveContactHazardType != EnemyPassiveContactHazardType.None;
+        }
+
+        private void TryApplyBumpDisturbance(float timeSeconds)
+        {
+            if (bossRuntime != null || IsPassiveHazardBody() || playerController == null)
+            {
+                return;
+            }
+
+            ReceiveStimulus(EnemyStimulusKind.Proximity, playerController.transform.localPosition, timeSeconds);
+        }
+
+        private void MarkBodyContactDamageAttempted()
+        {
+            if (IsPassiveHazardBody())
+            {
+                return;
+            }
+
+            if (readabilityState == EnemyReadabilityState.MeleeLunge)
+            {
+                lungeContactAttempted = true;
+            }
+            else if (readabilityState == EnemyReadabilityState.Charging)
+            {
+                chargeContactAttempted = true;
+            }
+            else if (bossDefinition != null && activeBossContactProfile != null)
+            {
+                bossActiveContactAttempted = true;
+            }
         }
 
         private EnemyAttackProfileDefinition ResolveLungeAttackProfile(float timeSeconds)

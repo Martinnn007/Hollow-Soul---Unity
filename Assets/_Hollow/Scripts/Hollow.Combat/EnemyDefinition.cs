@@ -15,6 +15,8 @@ namespace Hollow.Combat
         [SerializeField] private float speedMetersPerSecond = 1.5f;
         [SerializeField] private int contactDamage = 1;
         [SerializeField] private float contactCooldownSeconds = 1f;
+        [SerializeField] private EnemyContactDamagePolicy contactDamagePolicy = EnemyContactDamagePolicy.ActiveOnly;
+        [SerializeField] private EnemyPassiveContactHazardType passiveContactHazardType = EnemyPassiveContactHazardType.None;
         [SerializeField] private float radiusMeters = 0.32f;
         [SerializeField] private float attackRangeMeters = 5f;
         [SerializeField] private float preferredRangeMinMeters = 1.05f;
@@ -58,6 +60,10 @@ namespace Hollow.Combat
         public int ContactDamage => contactDamage;
 
         public float ContactCooldownSeconds => contactCooldownSeconds;
+
+        public EnemyContactDamagePolicy ContactDamagePolicy => contactDamagePolicy;
+
+        public EnemyPassiveContactHazardType PassiveContactHazardType => passiveContactHazardType;
 
         public float RadiusMeters => radiusMeters;
 
@@ -279,6 +285,8 @@ namespace Hollow.Combat
             speedMetersPerSecond = Mathf.Max(0f, nextSpeedMetersPerSecond);
             contactDamage = Mathf.Max(0, nextContactDamage);
             contactCooldownSeconds = Mathf.Max(0.01f, nextContactCooldownSeconds);
+            contactDamagePolicy = EnemyContactDamagePolicy.ActiveOnly;
+            passiveContactHazardType = EnemyPassiveContactHazardType.None;
             radiusMeters = Mathf.Max(0.01f, nextRadiusMeters);
             attackRangeMeters = Mathf.Max(0.1f, nextAttackRangeMeters);
             attackCooldownSeconds = Mathf.Max(0.05f, nextAttackCooldownSeconds);
@@ -384,6 +392,16 @@ namespace Hollow.Combat
             lungeActiveSeconds = Mathf.Max(0.01f, nextLungeActiveSeconds);
             lungeDistanceMeters = Mathf.Max(0f, nextLungeDistanceMeters);
             lungeCooldownSeconds = Mathf.Max(0.05f, nextLungeCooldownSeconds);
+        }
+
+        public void ConfigureContactPolicy(
+            EnemyContactDamagePolicy nextContactDamagePolicy,
+            EnemyPassiveContactHazardType nextPassiveContactHazardType)
+        {
+            contactDamagePolicy = nextContactDamagePolicy;
+            passiveContactHazardType = contactDamagePolicy == EnemyContactDamagePolicy.PassiveHazard
+                ? nextPassiveContactHazardType
+                : EnemyPassiveContactHazardType.None;
         }
 
         public void ConfigureAttackProfiles(IEnumerable<EnemyAttackProfileDefinition> nextAttackProfiles)

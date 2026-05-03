@@ -117,8 +117,9 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Stone charge";
-                DashAtPlayer(1.35f);
-                nextPrimaryTime = timeSeconds + Profile("stone_charge").CooldownSeconds;
+                var profile = Profile("stone_charge");
+                DashAtPlayer(1.35f, profile, timeSeconds);
+                nextPrimaryTime = timeSeconds + profile.CooldownSeconds;
             }
 
             if (timeSeconds >= nextSecondaryTime)
@@ -191,8 +192,9 @@ namespace Hollow.Combat
             if (timeSeconds >= nextSecondaryTime)
             {
                 statusText = "Relocate";
-                DashAtPlayer(-1.1f);
-                nextSecondaryTime = timeSeconds + Profile("iron_relocate_bash").CooldownSeconds;
+                var profile = Profile("iron_relocate_bash");
+                DashAtPlayer(-1.1f, profile, timeSeconds);
+                nextSecondaryTime = timeSeconds + profile.CooldownSeconds;
             }
         }
 
@@ -220,9 +222,10 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Comet dash";
-                DashAtPlayer(2.2f);
+                var dashProfile = Profile("ash_comet_dash");
+                DashAtPlayer(2.2f, dashProfile, timeSeconds);
                 FireRadial(8, Profile("ash_fire_radial"), rotationAngle);
-                nextPrimaryTime = timeSeconds + Profile("ash_comet_dash").CooldownSeconds;
+                nextPrimaryTime = timeSeconds + dashProfile.CooldownSeconds;
                 rotationAngle += 24f;
             }
             else
@@ -315,7 +318,7 @@ namespace Hollow.Combat
             Move(side, definition.SpeedMetersPerSecond * speedMultiplier, deltaTime);
         }
 
-        private void DashAtPlayer(float strength)
+        private void DashAtPlayer(float strength, EnemyAttackProfileDefinition profile, float timeSeconds)
         {
             var delta = player.transform.localPosition - owner.transform.localPosition;
             delta.y = 0f;
@@ -326,6 +329,7 @@ namespace Hollow.Combat
             }
 
             Move(direction, definition.SpeedMetersPerSecond * Mathf.Abs(strength) * 2.2f, 0.22f);
+            owner.ArmBossActiveContactWindow(profile, timeSeconds);
             VfxPresenter.Play(VfxCueId.EnemyWindup, owner.transform.position, owner.transform.parent);
             AudioPresenter.Play(AudioCueId.EnemyWindup, owner.transform.position);
         }

@@ -111,6 +111,8 @@ namespace Hollow.Combat
         [SerializeField] private float speedMetersPerSecond = 0.85f;
         [SerializeField] private int contactDamage = 1;
         [SerializeField] private float contactCooldownSeconds = 1f;
+        [SerializeField] private EnemyContactDamagePolicy contactDamagePolicy = EnemyContactDamagePolicy.ActiveOnly;
+        [SerializeField] private EnemyPassiveContactHazardType passiveContactHazardType = EnemyPassiveContactHazardType.None;
         [SerializeField] private float radiusMeters = 0.65f;
         [SerializeField] private float projectileSpeedMetersPerSecond = 4.8f;
         [SerializeField] private float visualScale = 2f;
@@ -140,6 +142,10 @@ namespace Hollow.Combat
         public int ContactDamage => Mathf.Clamp(contactDamage, 1, 2);
 
         public float ContactCooldownSeconds => Mathf.Max(0.2f, contactCooldownSeconds);
+
+        public EnemyContactDamagePolicy ContactDamagePolicy => contactDamagePolicy;
+
+        public EnemyPassiveContactHazardType PassiveContactHazardType => passiveContactHazardType;
 
         public float RadiusMeters => Mathf.Max(0.25f, radiusMeters);
 
@@ -239,6 +245,8 @@ namespace Hollow.Combat
             speedMetersPerSecond = Mathf.Max(0.05f, nextSpeedMetersPerSecond);
             contactDamage = Mathf.Clamp(nextContactDamage, 1, 2);
             contactCooldownSeconds = Mathf.Max(0.2f, nextContactCooldownSeconds);
+            contactDamagePolicy = EnemyContactDamagePolicy.ActiveOnly;
+            passiveContactHazardType = EnemyPassiveContactHazardType.None;
             radiusMeters = Mathf.Max(0.25f, nextRadiusMeters);
             projectileSpeedMetersPerSecond = Mathf.Max(0.1f, nextProjectileSpeedMetersPerSecond);
             visualScale = Mathf.Clamp(nextVisualScale, 1f, 3.5f);
@@ -257,6 +265,16 @@ namespace Hollow.Combat
             sightRadiusMeters = Mathf.Max(0f, nextSightRadiusMeters);
             sightAngleDegrees = sightRadiusMeters <= 0f ? 0f : Mathf.Clamp(nextSightAngleDegrees, 0f, 360f);
             hearingRadiusMeters = Mathf.Max(0f, nextHearingRadiusMeters);
+        }
+
+        public void ConfigureContactPolicy(
+            EnemyContactDamagePolicy nextContactDamagePolicy,
+            EnemyPassiveContactHazardType nextPassiveContactHazardType)
+        {
+            contactDamagePolicy = nextContactDamagePolicy;
+            passiveContactHazardType = contactDamagePolicy == EnemyContactDamagePolicy.PassiveHazard
+                ? nextPassiveContactHazardType
+                : EnemyPassiveContactHazardType.None;
         }
 
         public void ConfigureAttackProfiles(IEnumerable<EnemyAttackProfileDefinition> nextAttackProfiles)

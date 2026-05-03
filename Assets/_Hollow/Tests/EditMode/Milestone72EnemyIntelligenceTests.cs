@@ -164,7 +164,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void InstinctivePreyContactDamageRequiresEndangered()
+        public void InstinctivePreyPassiveContactDisturbsWithoutDamage()
         {
             var root = CreateHarness(out var room, out var player, out _);
             try
@@ -176,12 +176,13 @@ namespace Hollow.Tests.EditMode
 
                 Assert.IsFalse(prey.TryApplyContactDamage(12f));
                 Assert.AreEqual(RoomCombatController.PlayerMaxHealth, playerHealth.CurrentHealth);
+                Assert.AreEqual(EnemyAwarenessState.Engaged, prey.AwarenessState);
 
                 prey.Tick(0.01f, 12.1f);
                 DamageSystem.ApplyDamage(prey.Health, new DamageRequest(1, root));
 
-                Assert.IsTrue(prey.TryApplyContactDamage(12.2f));
-                Assert.Less(playerHealth.CurrentHealth, RoomCombatController.PlayerMaxHealth);
+                Assert.IsFalse(prey.TryApplyContactDamage(12.2f));
+                Assert.AreEqual(RoomCombatController.PlayerMaxHealth, playerHealth.CurrentHealth);
             }
             finally
             {

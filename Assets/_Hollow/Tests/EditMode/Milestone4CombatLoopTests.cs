@@ -63,7 +63,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void ChaserContactDamageUsesCooldown()
+        public void ChaserPassiveContactDisturbsWithoutDamage()
         {
             var root = CreateCombatHarness(out var room, out var player, out var enemyPrefab, out _);
             try
@@ -76,10 +76,11 @@ namespace Hollow.Tests.EditMode
                 var enemy = enemyObject.GetComponent<ChaserEnemyController>();
                 enemy.Configure(room, player);
 
-                Assert.IsTrue(enemy.TryApplyContactDamage(0f));
-                Assert.AreEqual(5, playerHealth.CurrentHealth);
-                Assert.IsFalse(enemy.TryApplyContactDamage(0.5f));
-                Assert.AreEqual(5, playerHealth.CurrentHealth);
+                player.transform.localPosition = new Vector3(0f, 0f, 0.2f);
+
+                Assert.IsFalse(enemy.TryApplyContactDamage(0f));
+                Assert.AreEqual(RoomCombatController.PlayerMaxHealth, playerHealth.CurrentHealth);
+                Assert.AreEqual(EnemyAwarenessState.Engaged, enemy.AwarenessState);
             }
             finally
             {
