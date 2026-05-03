@@ -47,6 +47,7 @@ namespace Hollow.Combat
         [SerializeField] private float hitArcDegreesBonus;
         [SerializeField] private int poiseBreakThresholdOffset;
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
+        [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -135,6 +136,15 @@ namespace Hollow.Combat
             {
                 var authored = attackProfiles?.Where(profile => profile != null).ToArray() ?? System.Array.Empty<EnemyAttackProfileDefinition>();
                 return authored.Length > 0 ? authored : EnemyAttackProfileDefaults.CreateEnemyProfiles(SpawnKind);
+            }
+        }
+
+        public IReadOnlyList<EnemyActionProfileDefinition> ActionProfiles
+        {
+            get
+            {
+                var authored = actionProfiles?.Where(profile => profile != null).ToArray() ?? System.Array.Empty<EnemyActionProfileDefinition>();
+                return authored.Length > 0 ? authored : EnemyActionProfileDefaults.CreateEnemyActions(SpawnKind);
             }
         }
 
@@ -448,6 +458,11 @@ namespace Hollow.Combat
             attackProfiles = nextAttackProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyAttackProfileDefinition>();
         }
 
+        public void ConfigureActionProfiles(IEnumerable<EnemyActionProfileDefinition> nextActionProfiles)
+        {
+            actionProfiles = nextActionProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyActionProfileDefinition>();
+        }
+
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
         {
             if (attackProfiles != null)
@@ -462,6 +477,22 @@ namespace Hollow.Combat
             }
 
             return EnemyAttackProfileDefaults.ResolveEnemyProfile(SpawnKind, attackId) ?? AttackProfiles.FirstOrDefault();
+        }
+
+        public EnemyActionProfileDefinition ResolveActionProfile(string actionId)
+        {
+            if (actionProfiles != null)
+            {
+                var authored = actionProfiles.FirstOrDefault(profile =>
+                    profile != null &&
+                    string.Equals(profile.ActionId, actionId, System.StringComparison.Ordinal));
+                if (authored != null)
+                {
+                    return authored;
+                }
+            }
+
+            return EnemyActionProfileDefaults.ResolveEnemyAction(SpawnKind, actionId) ?? ActionProfiles.FirstOrDefault();
         }
 
         public static EnemyDefinition CreateRuntime(

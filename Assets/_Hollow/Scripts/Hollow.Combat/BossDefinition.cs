@@ -126,6 +126,7 @@ namespace Hollow.Combat
         [SerializeField] private List<BossPhaseDefinition> phases = new();
         [SerializeField] private List<BossAttackDefinition> attacks = new();
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
+        [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
 
         public string BossId => string.IsNullOrWhiteSpace(bossId) ? "stone_warden" : bossId;
 
@@ -177,6 +178,15 @@ namespace Hollow.Combat
             {
                 var authored = attackProfiles?.Where(profile => profile != null).ToArray() ?? Array.Empty<EnemyAttackProfileDefinition>();
                 return authored.Length > 0 ? authored : EnemyAttackProfileDefaults.CreateBossProfiles(BossId);
+            }
+        }
+
+        public IReadOnlyList<EnemyActionProfileDefinition> ActionProfiles
+        {
+            get
+            {
+                var authored = actionProfiles?.Where(profile => profile != null).ToArray() ?? Array.Empty<EnemyActionProfileDefinition>();
+                return authored.Length > 0 ? authored : EnemyActionProfileDefaults.CreateBossActions(BossId);
             }
         }
 
@@ -282,6 +292,11 @@ namespace Hollow.Combat
             attackProfiles = nextAttackProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyAttackProfileDefinition>();
         }
 
+        public void ConfigureActionProfiles(IEnumerable<EnemyActionProfileDefinition> nextActionProfiles)
+        {
+            actionProfiles = nextActionProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyActionProfileDefinition>();
+        }
+
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
         {
             if (attackProfiles != null)
@@ -296,6 +311,22 @@ namespace Hollow.Combat
             }
 
             return EnemyAttackProfileDefaults.ResolveBossProfile(BossId, attackId) ?? AttackProfiles.FirstOrDefault();
+        }
+
+        public EnemyActionProfileDefinition ResolveActionProfile(string actionId)
+        {
+            if (actionProfiles != null)
+            {
+                var authored = actionProfiles.FirstOrDefault(profile =>
+                    profile != null &&
+                    string.Equals(profile.ActionId, actionId, StringComparison.Ordinal));
+                if (authored != null)
+                {
+                    return authored;
+                }
+            }
+
+            return EnemyActionProfileDefaults.ResolveBossAction(BossId, actionId) ?? ActionProfiles.FirstOrDefault();
         }
 
         public static BossDefinition CreateRuntime(
