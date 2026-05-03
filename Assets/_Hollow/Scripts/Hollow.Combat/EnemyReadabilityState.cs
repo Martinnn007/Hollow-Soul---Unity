@@ -13,6 +13,10 @@ namespace Hollow.Combat
         RangedActive = 8,
         RangedRecovery = 9,
         MeleeRecovery = 10,
-        ChargeRecovery = 11
+        ChargeRecovery = 11,
+        AreaWindup = 12,
+        AreaActive = 13,
+        AreaRecovery = 14,
+        FeintWarning = 15
     }
 }

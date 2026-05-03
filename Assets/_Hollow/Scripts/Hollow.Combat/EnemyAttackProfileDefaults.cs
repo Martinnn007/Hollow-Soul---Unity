@@ -17,9 +17,11 @@ namespace Hollow.Combat
             Enemy("spawnEnemyFlying", "dive_scratch", "Dive Scratch", EnemyAttackRuntimeKind.MeleeLunge, 1, 1.25f, 0.22f, 0.18f, 1.35f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.45f, "Sharper engaged dive; no new pathfinding."),
             Enemy("spawnEnemyFlying", "wing_buffet", "Wing Buffet", EnemyAttackRuntimeKind.Area, 1, 1.8f, 0.28f, 0.18f, 1.05f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.5f, "Catalogue pressure profile for close-range shove."),
             Enemy("spawnEnemyFast", "quick_pounce", "Quick Pounce", EnemyAttackRuntimeKind.MeleeLunge, 1, 1.05f, 0.18f, 0.16f, 1.25f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.3f, "Fast primary lunge."),
+            Enemy("spawnEnemyFast", "side_pounce", "Side Pounce", EnemyAttackRuntimeKind.MeleeLunge, 1, 1.2f, 0.2f, 0.17f, 1.45f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.38f, "M82 committed lateral pounce prototype.", recoverySeconds: 0.2f, hitArcDegrees: 120f, poiseBreakThreshold: ImpactForceClass.Medium),
             Enemy("spawnEnemyFast", "needle_rush", "Needle Rush", EnemyAttackRuntimeKind.Contact, 1, 0.85f, 0f, 0.12f, 0.65f, 0, 0f, DamageChannel.Physical, DamageDelivery.Contact, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.45f, "Contact pressure while weaving through the player."),
             Enemy("spawnEnemyFast", "snap_followup", "Snap Followup", EnemyAttackRuntimeKind.MeleeLunge, 1, 1.35f, 0.16f, 0.12f, 1.05f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.25f, "Short fallback bite profile."),
             Enemy("spawnEnemyHeavy", "body_slam", "Body Slam", EnemyAttackRuntimeKind.Contact, 2, 1.1f, 0f, 0.14f, 0.8f, 0, 0f, DamageChannel.Physical, DamageDelivery.Contact, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 0.75f, "High-stability contact threat."),
+            Enemy("spawnEnemyHeavy", "stomp", "Stomp", EnemyAttackRuntimeKind.Area, 2, 2.2f, 0.42f, 0.18f, 1.25f, 0, 0f, DamageChannel.Physical, DamageDelivery.Area, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 0.85f, "M82 heavy circular stomp prototype with high guard pressure.", recoverySeconds: 0.38f, hitArcDegrees: 360f, poiseBreakThreshold: ImpactForceClass.Heavy),
             Enemy("spawnEnemyHeavy", "maul_lunge", "Maul Lunge", EnemyAttackRuntimeKind.MeleeLunge, 2, 1.35f, 0.28f, 0.2f, 1.7f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 0.7f, "Slow readable heavy lunge."),
             Enemy("spawnEnemyHeavy", "heavy_shove", "Heavy Shove", EnemyAttackRuntimeKind.MeleeLunge, 1, 1.45f, 0.24f, 0.16f, 1.25f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.6f, "Lower-damage control hit."),
             Enemy("spawnEnemyCharger", "ash_charge", "Ash Charge", EnemyAttackRuntimeKind.Charge, 1, 2f, 0.42f, 0.38f, 5.5f, 0, 0f, DamageChannel.Elemental, DamageDelivery.Contact, DamageElement.Fire, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 0.8f, "Existing charge with explicit fire identity."),
@@ -31,9 +33,11 @@ namespace Hollow.Combat
             Enemy("spawnEnemySplitter", "splinter_lunge", "Splinter Lunge", EnemyAttackRuntimeKind.MeleeLunge, 1, 1.15f, 0.22f, 0.18f, 1.6f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.45f, "Primary M75 splitter lunge."),
             Enemy("spawnEnemySplitter", "death_split", "Death Split", EnemyAttackRuntimeKind.Split, 0, 0.1f, 0f, 0.1f, 1.2f, 0, 0f, DamageChannel.Physical, DamageDelivery.Area, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.35f, "Metadata/runtime event profile for split children."),
             Enemy("spawnEnemySpittingPod", "spit_lob", "Spit Lob", EnemyAttackRuntimeKind.Projectile, 1, 1f, 0.24f, 0.85f, 8f, 1, 5f, DamageChannel.Physical, DamageDelivery.Projectile, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.35f, "Visible ballistic lob that lands as a small splash where the player was targeted."),
+            Enemy("spawnEnemyRat", "warning_squeal", "Warning Squeal", EnemyAttackRuntimeKind.Movement, 0, 0.9f, 0.25f, 0.1f, 2.5f, 0, 0f, DamageChannel.Physical, DamageDelivery.Area, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0f, "M82 non-damaging territorial warning before bite commitment.", recoverySeconds: 0.1f, hitArcDegrees: 220f, poiseBreakThreshold: ImpactForceClass.Light),
             Enemy("spawnEnemyRat", "rat_bite", "Rat Bite", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.9f, 0.14f, 0.14f, 0.95f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.22f, "Territorial close bite after warning or disturbance."),
             Enemy("spawnEnemySpider", "startle_hop", "Startle Hop", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.85f, 0.12f, 0.16f, 1.15f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.3f, "Chaotic hop-forward attack chosen after startle."),
             Enemy("spawnEnemySpider", "close_bite", "Close Bite", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.75f, 0.1f, 0.12f, 0.75f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.22f, "Very close panic bite."),
+            Enemy("spawnEnemySpider", "side_hop_bite", "Side Hop Bite", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.9f, 0.12f, 0.14f, 1.1f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.26f, "M82 quick side-hop bite prototype.", recoverySeconds: 0.14f, hitArcDegrees: 125f, poiseBreakThreshold: ImpactForceClass.Light),
             Enemy("spawnEnemyBoss", "stone_charge", "Stone Warden Contact", EnemyAttackRuntimeKind.Contact, 2, 3.2f, 0.5f, 0.22f, 2.2f, 0, 0f, DamageChannel.Physical, DamageDelivery.Contact, DamageElement.None, ImpactForceClass.Massive, DamageThreatKind.Boss, 0.9f, "Legacy generic boss spawn fallback contact profile."),
             Enemy("spawnEnemyBoss", "stone_four_way_burst", "Stone Warden Burst Shards", EnemyAttackRuntimeKind.RadialProjectile, 1, 3.8f, 0.45f, 0.1f, 6f, 4, 4.5f, DamageChannel.Physical, DamageDelivery.Projectile, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.StrongProjectile, 0.55f, "Legacy generic boss spawn fallback low-health burst.")
         };
@@ -112,9 +116,12 @@ namespace Hollow.Combat
             ImpactForceClass forceClass,
             DamageThreatKind threatKind,
             float knockbackMeters,
-            string notes)
+            string notes,
+            float recoverySeconds = -1f,
+            float hitArcDegrees = -1f,
+            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium)
         {
-            return new EnemyAttackProfileSpec(ownerId, false, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes);
+            return new EnemyAttackProfileSpec(ownerId, false, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes, recoverySeconds, hitArcDegrees, poiseBreakThreshold);
         }
 
         private static EnemyAttackProfileSpec Boss(
@@ -135,9 +142,12 @@ namespace Hollow.Combat
             ImpactForceClass forceClass,
             DamageThreatKind threatKind,
             float knockbackMeters,
-            string notes)
+            string notes,
+            float recoverySeconds = -1f,
+            float hitArcDegrees = -1f,
+            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium)
         {
-            return new EnemyAttackProfileSpec(ownerId, true, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes);
+            return new EnemyAttackProfileSpec(ownerId, true, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes, recoverySeconds, hitArcDegrees, poiseBreakThreshold);
         }
     }
 }

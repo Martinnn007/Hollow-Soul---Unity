@@ -48,6 +48,7 @@ namespace Hollow.Combat
         [SerializeField] private int poiseBreakThresholdOffset;
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
+        [SerializeField] private EnemyBehaviorTreeDefinition behaviorTree;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -135,7 +136,10 @@ namespace Hollow.Combat
             get
             {
                 var authored = attackProfiles?.Where(profile => profile != null).ToArray() ?? System.Array.Empty<EnemyAttackProfileDefinition>();
-                return authored.Length > 0 ? authored : EnemyAttackProfileDefaults.CreateEnemyProfiles(SpawnKind);
+                var fallback = EnemyAttackProfileDefaults.CreateEnemyProfiles(SpawnKind);
+                return authored
+                    .Concat(fallback.Where(profile => authored.All(existing => existing.AttackId != profile.AttackId)))
+                    .ToArray();
             }
         }
 
@@ -144,9 +148,16 @@ namespace Hollow.Combat
             get
             {
                 var authored = actionProfiles?.Where(profile => profile != null).ToArray() ?? System.Array.Empty<EnemyActionProfileDefinition>();
-                return authored.Length > 0 ? authored : EnemyActionProfileDefaults.CreateEnemyActions(SpawnKind);
+                var fallback = EnemyActionProfileDefaults.CreateEnemyActions(SpawnKind);
+                return authored
+                    .Concat(fallback.Where(profile => authored.All(existing => existing.ActionId != profile.ActionId)))
+                    .ToArray();
             }
         }
+
+        public EnemyBehaviorTreeDefinition BehaviorTree => behaviorTree != null
+            ? behaviorTree
+            : EnemyBehaviorTreeDefaults.ResolveEnemyTree(SpawnKind);
 
         public Color Color => color;
 
@@ -461,6 +472,11 @@ namespace Hollow.Combat
         public void ConfigureActionProfiles(IEnumerable<EnemyActionProfileDefinition> nextActionProfiles)
         {
             actionProfiles = nextActionProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyActionProfileDefinition>();
+        }
+
+        public void ConfigureBehaviorTree(EnemyBehaviorTreeDefinition nextBehaviorTree)
+        {
+            behaviorTree = nextBehaviorTree;
         }
 
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)

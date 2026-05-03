@@ -52,6 +52,7 @@ namespace Hollow.Combat
         [SerializeField] private float attackRecoveryScale = 1f;
         [SerializeField] private float hitArcDegreesBonus;
         [SerializeField] private int poiseBreakThresholdOffset;
+        [SerializeField] private EnemyBehaviorTreeDefinition behaviorTreeDefinition;
 
         private RoomRuntimeRoot roomRuntimeRoot;
         private PlaceholderPlayerController playerController;
@@ -98,13 +99,22 @@ namespace Hollow.Combat
         private EnemyAttackProfileDefinition activeChargeProfile;
         private EnemyAttackProfileDefinition activeRangedProfile;
         private EnemyAttackProfileDefinition activeMeleeProfile;
+        private EnemyAttackProfileDefinition activeAreaProfile;
+        private EnemyAttackProfileDefinition activeWarningProfile;
         private EnemyAttackProfileDefinition activeBossContactProfile;
         private float bossActiveContactEndTime;
         private bool bossActiveContactAttempted;
+        private float areaActiveEndTime;
+        private float areaRecoveryEndTime;
+        private bool areaDamageAttempted;
+        private float warningEndTime;
         private float engagedStartTime = float.NegativeInfinity;
         private float nextCritterDecisionTime;
         private bool critterFightDecision;
         private int spawnIndex = -1;
+        private string lastBehaviorTreeNodeId = string.Empty;
+        private string lastBehaviorCommand = string.Empty;
+        private string lastBehaviorReason = string.Empty;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
 
@@ -180,6 +190,16 @@ namespace Hollow.Combat
 
         public BossDefinition BossDefinition => bossDefinition;
 
+        public EnemyBehaviorTreeDefinition BehaviorTreeDefinition => behaviorTreeDefinition;
+
+        public string LastBehaviorTreeNodeId => lastBehaviorTreeNodeId;
+
+        public string LastBehaviorCommand => lastBehaviorCommand;
+
+        public string LastBehaviorReason => lastBehaviorReason;
+
+        public float ActiveAreaRangeMeters => activeAreaProfile != null ? activeAreaProfile.RangeMeters : Mathf.Max(1.2f, RadiusMeters * 4f);
+
         public string BossStatusText => bossRuntime != null ? bossRuntime.StatusText : "Engaging";
 
         public float ReadabilityStateEndTime => readabilityStateEndTime;
@@ -244,6 +264,7 @@ namespace Hollow.Combat
             attackRecoveryScale = Definition.AttackRecoveryScale;
             hitArcDegreesBonus = Definition.HitArcDegreesBonus;
             poiseBreakThresholdOffset = Definition.PoiseBreakThresholdOffset;
+            behaviorTreeDefinition = Definition.BehaviorTree;
             speedMetersPerSecond = tuning.ApplySpeed(Definition.SpeedMetersPerSecond);
             contactDamage = tuning.ApplyContactDamage(Definition.ContactDamage);
             contactCooldownSeconds = Definition.ContactCooldownSeconds;
@@ -281,13 +302,22 @@ namespace Hollow.Combat
             activeChargeProfile = null;
             activeRangedProfile = null;
             activeMeleeProfile = null;
+            activeAreaProfile = null;
+            activeWarningProfile = null;
             activeBossContactProfile = null;
             bossActiveContactEndTime = 0f;
             bossActiveContactAttempted = false;
+            areaActiveEndTime = 0f;
+            areaRecoveryEndTime = 0f;
+            areaDamageAttempted = false;
+            warningEndTime = 0f;
             engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? 0f : float.NegativeInfinity;
             nextCritterDecisionTime = 0f;
             critterFightDecision = false;
             lastDamagedTime = float.NegativeInfinity;
+            lastBehaviorTreeNodeId = string.Empty;
+            lastBehaviorCommand = string.Empty;
+            lastBehaviorReason = string.Empty;
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
@@ -322,6 +352,7 @@ namespace Hollow.Combat
             attackRecoveryScale = execution.recoveryScale;
             hitArcDegreesBonus = execution.hitArcDegreesBonus;
             poiseBreakThresholdOffset = execution.poiseBreakThresholdOffset;
+            behaviorTreeDefinition = bossDefinition.BehaviorTreeMetadata;
             speedMetersPerSecond = bossDefinition.SpeedMetersPerSecond;
             contactDamage = bossDefinition.ContactDamage;
             contactCooldownSeconds = bossDefinition.ContactCooldownSeconds;
@@ -342,9 +373,18 @@ namespace Hollow.Combat
             lungeRecoveryEndTime = 0f;
             rangedActiveEndTime = 0f;
             rangedRecoveryEndTime = 0f;
+            activeChargeProfile = null;
+            activeRangedProfile = null;
+            activeMeleeProfile = null;
+            activeAreaProfile = null;
+            activeWarningProfile = null;
             activeBossContactProfile = null;
             bossActiveContactEndTime = 0f;
             bossActiveContactAttempted = false;
+            areaActiveEndTime = 0f;
+            areaRecoveryEndTime = 0f;
+            areaDamageAttempted = false;
+            warningEndTime = 0f;
             awarenessState = EnemyAwarenessState.Engaged;
             facingDirection = Vector3.forward;
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
@@ -449,61 +489,185 @@ namespace Hollow.Combat
                 return;
             }
 
-            var distanceToPlayer = DistanceToPlayer();
-            UpdateInstinctThreat(deltaTime, distanceToPlayer);
-            UpdateAwareness(timeSeconds, distanceToPlayer);
-            if (behaviorId == EnemyBehaviorId.SpittingPod)
-            {
-                if (ShouldSentinelEngage(distanceToPlayer, timeSeconds))
-                {
-                    TryRangedAttack(timeSeconds);
-                }
-
-                TryApplyContactDamage(timeSeconds);
-                return;
-            }
-
-            if (behaviorId == EnemyBehaviorId.TurretShooter)
-            {
-                if (!ShouldSentinelEngage(distanceToPlayer, timeSeconds))
-                {
-                    TickSentinelHold(deltaTime);
-                    TryApplyContactDamage(timeSeconds);
-                    return;
-                }
-
-                TryRangedAttack(timeSeconds);
-                TryApplyContactDamage(timeSeconds);
-                return;
-            }
-
-            if (behaviorId == EnemyBehaviorId.BossWarden)
+            if (behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
             {
                 TickBoss(deltaTime, timeSeconds);
                 TryApplyContactDamage(timeSeconds);
                 return;
             }
 
-            if (IsCritterBehavior())
+            var distanceToPlayer = DistanceToPlayer();
+            UpdateInstinctThreat(deltaTime, distanceToPlayer);
+            UpdateAwareness(timeSeconds, distanceToPlayer);
+            if (!TryTickBehaviorTree(deltaTime, timeSeconds, distanceToPlayer))
             {
-                TickCritter(deltaTime, timeSeconds, distanceToPlayer);
-                TryApplyContactDamage(timeSeconds);
-                return;
+                TickIntelligenceMovement(deltaTime, timeSeconds, distanceToPlayer);
             }
 
-            if (behaviorId == EnemyBehaviorId.Charger && TickCharge(deltaTime, timeSeconds))
-            {
-                TryApplyContactDamage(timeSeconds);
-                return;
-            }
-
-            if (TryMeleeLunge(timeSeconds))
-            {
-                return;
-            }
-
-            TickIntelligenceMovement(deltaTime, timeSeconds, distanceToPlayer);
             TryApplyContactDamage(timeSeconds);
+        }
+
+        private bool TryTickBehaviorTree(float deltaTime, float timeSeconds, float distanceToPlayer)
+        {
+            if (bossRuntime != null || behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
+            {
+                return false;
+            }
+
+            var tree = behaviorTreeDefinition != null ? behaviorTreeDefinition : Definition != null ? Definition.BehaviorTree : null;
+            if (tree == null || tree.BossMetadataOnly)
+            {
+                return false;
+            }
+
+            var context = new EnemyBehaviorTreeContext(
+                this,
+                deltaTime,
+                timeSeconds,
+                distanceToPlayer,
+                readabilityState == EnemyReadabilityState.Idle,
+                IsEndangered(timeSeconds),
+                ShouldSentinelEngage(distanceToPlayer, timeSeconds),
+                CanStartRangedAttack(timeSeconds),
+                CanStartChargeAttack(timeSeconds));
+
+            if (!tree.TryEvaluate(context, out var command))
+            {
+                lastBehaviorTreeNodeId = tree.RootNode != null ? tree.RootNode.NodeId : string.Empty;
+                lastBehaviorCommand = EnemyBehaviorCommandKind.None.ToString();
+                lastBehaviorReason = "tree_failed";
+                return false;
+            }
+
+            lastBehaviorTreeNodeId = command.Reason;
+            lastBehaviorCommand = command.Kind.ToString();
+            lastBehaviorReason = command.ActionId;
+
+            if (ExecuteBehaviorCommand(command, deltaTime, timeSeconds, distanceToPlayer))
+            {
+                return true;
+            }
+
+            if (command.StartsCommittedAction)
+            {
+                ExecuteBehaviorCommand(new EnemyBehaviorCommand(EnemyBehaviorCommandKind.MovePreferredRange, string.Empty, 0.8f, "budget_fallback"), deltaTime, timeSeconds, distanceToPlayer);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool ExecuteBehaviorCommand(EnemyBehaviorCommand command, float deltaTime, float timeSeconds, float distanceToPlayer)
+        {
+            switch (command.Kind)
+            {
+                case EnemyBehaviorCommandKind.None:
+                    return true;
+                case EnemyBehaviorCommandKind.Hold:
+                    if (Disposition == EnemyInstinctDisposition.Sentinel)
+                    {
+                        TickSentinelHold(deltaTime);
+                    }
+
+                    return true;
+                case EnemyBehaviorCommandKind.FacePlayer:
+                    FacePlayer();
+                    return true;
+                case EnemyBehaviorCommandKind.MoveToPlayer:
+                    TickChase(deltaTime);
+                    return true;
+                case EnemyBehaviorCommandKind.MovePreferredRange:
+                    MovePreferredRange(deltaTime, distanceToPlayer, command.SpeedMultiplier);
+                    return true;
+                case EnemyBehaviorCommandKind.Flee:
+                    MoveFleeIntent(deltaTime, timeSeconds, distanceToPlayer, Mathf.Max(0.1f, command.SpeedMultiplier));
+                    return true;
+                case EnemyBehaviorCommandKind.Wander:
+                    MoveInDirection(IsCritterBehavior() ? ResolveCritterWanderDirection(timeSeconds) : ResolveInstinctWanderDirection(timeSeconds), deltaTime, Mathf.Max(0.1f, command.SpeedMultiplier));
+                    return true;
+                case EnemyBehaviorCommandKind.StartMeleeAction:
+                    return TryMeleeLunge(timeSeconds, command.ActionId);
+                case EnemyBehaviorCommandKind.StartRangedAction:
+                    return TryRangedAttack(timeSeconds, command.ActionId);
+                case EnemyBehaviorCommandKind.StartChargeAction:
+                    return TryChargeAttack(timeSeconds, command.ActionId);
+                case EnemyBehaviorCommandKind.StartAreaAction:
+                    return TryAreaAttack(timeSeconds, command.ActionId);
+                case EnemyBehaviorCommandKind.StartFeintWarning:
+                    return TryStartFeintWarning(timeSeconds, command.ActionId);
+                default:
+                    return false;
+            }
+        }
+
+        private void MovePreferredRange(float deltaTime, float distanceToPlayer, float speedMultiplier)
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            var direction = ResolvePreferredRangeDirection(delta.normalized, distanceToPlayer);
+            if (direction.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            MoveInDirection(direction, deltaTime, RangeIntentSpeedMultiplier(direction, delta.normalized, distanceToPlayer) * Mathf.Max(0.1f, speedMultiplier));
+        }
+
+        private void MoveFleeIntent(float deltaTime, float timeSeconds, float distanceToPlayer, float speedMultiplier)
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            if (Intelligence == EnemyIntelligenceLevel.Instinctive && Disposition == EnemyInstinctDisposition.Prey && !IsEndangered(timeSeconds))
+            {
+                MoveInDirection(ResolvePreyMovementDirection(delta.normalized, distanceToPlayer, timeSeconds), deltaTime, speedMultiplier);
+                return;
+            }
+
+            var before = transform.localPosition;
+            MoveAwayFromPlayer(deltaTime, speedMultiplier);
+            if (IsCritterBehavior() && (transform.localPosition - before).sqrMagnitude <= 0.0001f)
+            {
+                var direction = -delta.normalized;
+                facingDirection = delta.normalized;
+                transform.localPosition = before + direction * speedMetersPerSecond * speedMultiplier * Mathf.Max(0f, deltaTime);
+            }
+        }
+
+        private void MoveAwayFromPlayer(float deltaTime, float speedMultiplier)
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            MoveInDirection(-delta.normalized, deltaTime, speedMultiplier);
         }
 
         public bool CanStartBudgetedAttack(float timeSeconds)
@@ -524,6 +688,16 @@ namespace Hollow.Combat
         public bool CanStartBudgetedMeleeAttack(float timeSeconds)
         {
             return CanStartMeleeLunge(timeSeconds);
+        }
+
+        public bool CanStartBehaviorMeleeAction(string actionId, float timeSeconds)
+        {
+            return CanStartMeleeAction(actionId, timeSeconds);
+        }
+
+        public bool CanStartBehaviorAreaAction(string actionId, float timeSeconds)
+        {
+            return CanStartAreaAction(actionId, timeSeconds);
         }
 
         public float AttackPriorityScore(float timeSeconds)
@@ -703,6 +877,11 @@ namespace Hollow.Combat
 
         private bool TickCharge(float deltaTime, float timeSeconds)
         {
+            return TryChargeAttack(timeSeconds, behaviorId == EnemyBehaviorId.Charger ? "ash_charge" : ContactAttackId());
+        }
+
+        private bool TryChargeAttack(float timeSeconds, string actionId)
+        {
             if (timeSeconds < nextAllowedChargeTime || playerController == null)
             {
                 return false;
@@ -720,7 +899,9 @@ namespace Hollow.Combat
                 return false;
             }
 
-            activeChargeProfile = ResolveChargeAttackProfile();
+            activeChargeProfile = !string.IsNullOrWhiteSpace(actionId)
+                ? Definition.ResolveAttackProfile(actionId)
+                : ResolveChargeAttackProfile();
             StartReadabilityState(
                 EnemyReadabilityState.ChargeWindup,
                 ResolvedWindupSeconds(activeChargeProfile, ChargeWindupSeconds),
@@ -743,6 +924,11 @@ namespace Hollow.Combat
 
         private bool TryRangedAttack(float timeSeconds)
         {
+            return TryRangedAttack(timeSeconds, string.Empty);
+        }
+
+        private bool TryRangedAttack(float timeSeconds, string actionId)
+        {
             if (!CanStartRangedAttack(timeSeconds))
             {
                 return false;
@@ -755,7 +941,9 @@ namespace Hollow.Combat
 
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
-            activeRangedProfile = ResolveRangedAttackProfile(timeSeconds);
+            activeRangedProfile = !string.IsNullOrWhiteSpace(actionId)
+                ? Definition.ResolveAttackProfile(actionId)
+                : ResolveRangedAttackProfile(timeSeconds);
             StartReadabilityState(
                 EnemyReadabilityState.RangedWindup,
                 ResolvedWindupSeconds(activeRangedProfile, RangedWindupSeconds),
@@ -766,7 +954,12 @@ namespace Hollow.Combat
 
         private bool TryMeleeLunge(float timeSeconds)
         {
-            if (!CanStartMeleeLunge(timeSeconds))
+            return TryMeleeLunge(timeSeconds, string.Empty);
+        }
+
+        private bool TryMeleeLunge(float timeSeconds, string actionId)
+        {
+            if (!CanStartMeleeAction(actionId, timeSeconds))
             {
                 return false;
             }
@@ -778,7 +971,9 @@ namespace Hollow.Combat
 
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
-            activeMeleeProfile = ResolveLungeAttackProfile(timeSeconds);
+            activeMeleeProfile = !string.IsNullOrWhiteSpace(actionId)
+                ? Definition.ResolveAttackProfile(actionId)
+                : ResolveLungeAttackProfile(timeSeconds);
             StartReadabilityState(
                 EnemyReadabilityState.MeleeWindup,
                 ResolvedWindupSeconds(activeMeleeProfile, LungeWindupSeconds),
@@ -787,7 +982,75 @@ namespace Hollow.Combat
             return true;
         }
 
+        private bool TryAreaAttack(float timeSeconds, string actionId)
+        {
+            if (!CanStartAreaAction(actionId, timeSeconds))
+            {
+                return false;
+            }
+
+            if (RequiresAttackBudget() && !TryReserveMeleeAttackBudget(timeSeconds))
+            {
+                return false;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            activeAreaProfile = Definition.ResolveAttackProfile(actionId);
+            areaDamageAttempted = false;
+            StartReadabilityState(
+                EnemyReadabilityState.AreaWindup,
+                ResolvedWindupSeconds(activeAreaProfile, LungeWindupSeconds),
+                timeSeconds,
+                delta.sqrMagnitude > 0.01f ? delta.normalized : FacingDirection);
+            return true;
+        }
+
+        private bool TryStartFeintWarning(float timeSeconds, string actionId)
+        {
+            if (playerController == null ||
+                Definition == null ||
+                readabilityState != EnemyReadabilityState.Idle ||
+                timeSeconds < nextAllowedAttackTime ||
+                IsInEntryGrace(timeSeconds))
+            {
+                return false;
+            }
+
+            var profile = Definition.ResolveAttackProfile(actionId);
+            if (profile == null || profile.RuntimeKind != EnemyAttackRuntimeKind.Movement)
+            {
+                return false;
+            }
+
+            if (DistanceToPlayer() > Mathf.Max(0.1f, profile.RangeMeters))
+            {
+                return false;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            activeWarningProfile = profile;
+            nextAllowedAttackTime = timeSeconds + profile.CooldownSeconds;
+            warningEndTime = timeSeconds +
+                ResolvedWindupSeconds(profile, 0.2f) +
+                ResolvedActiveSeconds(profile, 0.1f) +
+                ResolvedRecoverySeconds(profile);
+            ForceEngaged();
+            StartReadabilityState(
+                EnemyReadabilityState.FeintWarning,
+                warningEndTime - timeSeconds,
+                timeSeconds,
+                delta.sqrMagnitude > 0.01f ? delta.normalized : FacingDirection);
+            return true;
+        }
+
         private bool CanStartMeleeLunge(float timeSeconds)
+        {
+            return CanStartMeleeAction(string.Empty, timeSeconds);
+        }
+
+        private bool CanStartMeleeAction(string actionId, float timeSeconds)
         {
             if (!IsAlive ||
                 playerController == null ||
@@ -813,9 +1076,39 @@ namespace Hollow.Combat
             delta.y = 0f;
             var distance = delta.magnitude;
             var minimumReadableRange = radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.22f;
+            var profile = !string.IsNullOrWhiteSpace(actionId) ? Definition.ResolveAttackProfile(actionId) : null;
+            var triggerRange = Mathf.Max(LungeTriggerRangeMeters, profile != null ? profile.RangeMeters : 0f);
             return delta.sqrMagnitude >= 0.01f &&
                    distance >= minimumReadableRange &&
-                   distance <= LungeTriggerRangeMeters;
+                   distance <= triggerRange;
+        }
+
+        private bool CanStartAreaAction(string actionId, float timeSeconds)
+        {
+            if (!IsAlive ||
+                playerController == null ||
+                Definition == null ||
+                IsInspectionFrozen ||
+                IsInEntryGrace(timeSeconds) ||
+                bossRuntime != null ||
+                behaviorId == EnemyBehaviorId.BossWarden ||
+                readabilityState != EnemyReadabilityState.Idle ||
+                timeSeconds < nextAllowedLungeTime ||
+                !CanUseMeleeLungeForAwareness(timeSeconds))
+            {
+                return false;
+            }
+
+            var profile = Definition.ResolveAttackProfile(actionId);
+            if (profile == null || profile.RuntimeKind != EnemyAttackRuntimeKind.Area)
+            {
+                return false;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            return delta.sqrMagnitude >= 0.01f &&
+                   delta.magnitude <= Mathf.Max(0.1f, profile.RangeMeters);
         }
 
         private bool CanUseMeleeLungeForAwareness(float timeSeconds)
@@ -1060,6 +1353,66 @@ namespace Hollow.Combat
                 lungeRecoveryEndTime = 0f;
                 activeMeleeProfile = null;
                 lungeContactAttempted = false;
+                return false;
+            }
+
+            if (readabilityState == EnemyReadabilityState.AreaWindup)
+            {
+                if (timeSeconds < readabilityStateEndTime)
+                {
+                    return true;
+                }
+
+                var profile = activeAreaProfile;
+                areaActiveEndTime = timeSeconds + ResolvedActiveSeconds(profile, 0.18f);
+                nextAllowedLungeTime = areaActiveEndTime + (profile != null ? profile.CooldownSeconds : LungeCooldownSeconds);
+                areaDamageAttempted = false;
+                readabilityState = EnemyReadabilityState.AreaActive;
+                readabilityStateEndTime = areaActiveEndTime;
+                return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.AreaActive)
+            {
+                if (timeSeconds < areaActiveEndTime)
+                {
+                    TryApplyAreaDamage(timeSeconds);
+                    return true;
+                }
+
+                areaRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeAreaProfile);
+                readabilityState = EnemyReadabilityState.AreaRecovery;
+                readabilityStateEndTime = areaRecoveryEndTime;
+                areaActiveEndTime = 0f;
+                return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.AreaRecovery)
+            {
+                if (timeSeconds < areaRecoveryEndTime)
+                {
+                    return true;
+                }
+
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
+                areaRecoveryEndTime = 0f;
+                activeAreaProfile = null;
+                areaDamageAttempted = false;
+                return false;
+            }
+
+            if (readabilityState == EnemyReadabilityState.FeintWarning)
+            {
+                if (timeSeconds < warningEndTime)
+                {
+                    return true;
+                }
+
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
+                warningEndTime = 0f;
+                activeWarningProfile = null;
                 return false;
             }
 
@@ -1637,6 +1990,40 @@ namespace Hollow.Combat
             return Vector3.Distance(Flat(transform.localPosition), Flat(playerController.transform.localPosition));
         }
 
+        private bool TryApplyAreaDamage(float timeSeconds)
+        {
+            if (areaDamageAttempted ||
+                readabilityState != EnemyReadabilityState.AreaActive ||
+                activeAreaProfile == null ||
+                playerHealth == null ||
+                playerController == null ||
+                !playerHealth.IsAlive ||
+                IsInEntryGrace(timeSeconds))
+            {
+                return false;
+            }
+
+            var distance = Vector3.Distance(Flat(transform.localPosition), Flat(playerController.transform.localPosition));
+            if (distance > activeAreaProfile.RangeMeters + PlaceholderPlayerController.DefaultRadiusMeters)
+            {
+                return false;
+            }
+
+            areaDamageAttempted = true;
+            var direction = playerController.transform.localPosition - transform.localPosition;
+            var feelProfile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+            var damaged = DamageSystem.ApplyDamage(
+                playerHealth,
+                activeAreaProfile.CreateDamageRequest(gameObject, direction, feelProfile.KnockbackSeconds));
+            if (damaged)
+            {
+                VfxPresenter.Play(VfxCueId.PlayerHit, playerController.transform.position, playerController.transform.parent);
+                AudioPresenter.Play(AudioCueId.PlayerHit, playerController.transform.position);
+            }
+
+            return damaged;
+        }
+
         public bool TryApplyContactDamage(float timeSeconds)
         {
             if (!IsAlive || IsInspectionFrozen || playerHealth == null || !playerHealth.IsAlive || IsInEntryGrace(timeSeconds))
@@ -1732,7 +2119,45 @@ namespace Hollow.Combat
         private void OnDamaged(CombatantHealth _)
         {
             lastDamagedTime = lastTickTime > 0f ? lastTickTime : Time.time;
+            if (IsCritterBehavior())
+            {
+                retreatBurstEndTime = lastDamagedTime + RetreatBurstSeconds;
+                nextRetreatBurstAllowedTime = retreatBurstEndTime + RetreatReassessSeconds;
+                CancelReadableActionForStartle();
+            }
+
             ForceEngaged();
+        }
+
+        private void CancelReadableActionForStartle()
+        {
+            if (readabilityState == EnemyReadabilityState.Idle ||
+                readabilityState == EnemyReadabilityState.EntryGrace ||
+                readabilityState == EnemyReadabilityState.BossBurstWindup)
+            {
+                return;
+            }
+
+            readabilityState = EnemyReadabilityState.Idle;
+            readabilityStateEndTime = 0f;
+            chargeEndTime = 0f;
+            chargeRecoveryEndTime = 0f;
+            lungeEndTime = 0f;
+            lungeRecoveryEndTime = 0f;
+            rangedActiveEndTime = 0f;
+            rangedRecoveryEndTime = 0f;
+            areaActiveEndTime = 0f;
+            areaRecoveryEndTime = 0f;
+            warningEndTime = 0f;
+            lungeContactAttempted = false;
+            chargeContactAttempted = false;
+            rangedProjectileFired = false;
+            areaDamageAttempted = false;
+            activeChargeProfile = null;
+            activeRangedProfile = null;
+            activeMeleeProfile = null;
+            activeAreaProfile = null;
+            activeWarningProfile = null;
         }
 
         public int ModifyIncomingDamage(DamageRequest request, int currentAmount)
@@ -1761,7 +2186,8 @@ namespace Hollow.Combat
         {
             return readabilityState is EnemyReadabilityState.MeleeWindup
                 or EnemyReadabilityState.ChargeWindup
-                or EnemyReadabilityState.RangedWindup;
+                or EnemyReadabilityState.RangedWindup
+                or EnemyReadabilityState.AreaWindup;
         }
 
         private EnemyAttackProfileDefinition ActiveWindupProfile()
@@ -1771,6 +2197,7 @@ namespace Hollow.Combat
                 EnemyReadabilityState.MeleeWindup => activeMeleeProfile,
                 EnemyReadabilityState.ChargeWindup => activeChargeProfile,
                 EnemyReadabilityState.RangedWindup => activeRangedProfile,
+                EnemyReadabilityState.AreaWindup => activeAreaProfile,
                 _ => null
             };
         }
@@ -1799,6 +2226,13 @@ namespace Hollow.Combat
                 rangedRecoveryEndTime = recoveryEnd;
                 rangedActiveEndTime = 0f;
                 rangedProjectileFired = false;
+            }
+            else if (readabilityState == EnemyReadabilityState.AreaWindup)
+            {
+                readabilityState = EnemyReadabilityState.AreaRecovery;
+                areaRecoveryEndTime = recoveryEnd;
+                areaActiveEndTime = 0f;
+                areaDamageAttempted = false;
             }
 
             readabilityStateEndTime = recoveryEnd;

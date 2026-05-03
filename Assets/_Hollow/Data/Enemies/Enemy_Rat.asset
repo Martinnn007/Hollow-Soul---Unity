@@ -21,6 +21,8 @@ MonoBehaviour:
   speedMetersPerSecond: 2.65
   contactDamage: 1
   contactCooldownSeconds: 0.85
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.2
   attackRangeMeters: 2.2
   preferredRangeMinMeters: 1.2
@@ -44,6 +46,13 @@ MonoBehaviour:
   bodyClass: 0
   intelligence: 2
   disposition: 4
+  attackWindupScale: 0
+  attackActiveScale: 0
+  attackRecoveryScale: 0
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 0
   attackProfiles:
   - {fileID: 11400000, guid: 01a5cb9ec7984720a2c271f9f25d79b3, type: 2}
+  actionProfiles: []
+  behaviorTree: {fileID: 11400000, guid: 2270fd8270409449abebfbdab70c84e4, type: 2}
   color: {r: 0.58, g: 0.5, b: 0.42, a: 1}

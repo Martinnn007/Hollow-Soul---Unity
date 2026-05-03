@@ -148,11 +148,9 @@ namespace Hollow.Combat
             yield return FutureEnemy("spawnEnemyFlying", "dive_feint", "Dive Feint", EnemyActionCategory.Body, EnemyActionIntent.Feint, EnemyActionShape.ForwardArc, 1f, 1.8f, 3f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Alerted, 120f, "False dive with no active damage.", "flying creature", "Future readable panic tell.");
             yield return FutureEnemy("spawnEnemyFlying", "panic_retreat", "Panic Retreat", EnemyActionCategory.Movement, EnemyActionIntent.Escape, EnemyActionShape.Self, 0.4f, 1.3f, 2.5f, EnemyIntelligenceLevel.Instinctive, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Alerted, 360f, "Short retreat burst after being threatened.", "flying creature", "Keeps Flying Chaser as the authored prey example.");
 
-            yield return FutureEnemy("spawnEnemyFast", "side_pounce", "Side Pounce", EnemyActionCategory.Body, EnemyActionIntent.Damage, EnemyActionShape.ForwardArc, 0.6f, 1f, 1.5f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Predator }, EnemyAwarenessState.Engaged, 115f, "Fast sidestep into a committed pounce.", "body-only", "Needs explicit active window before becoming damaging.");
             yield return FutureEnemy("spawnEnemyFast", "snap_combo", "Snap Combo", EnemyActionCategory.Body, EnemyActionIntent.Pressure, EnemyActionShape.ForwardArc, 0.4f, 0.9f, 1.4f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Predator }, EnemyAwarenessState.Engaged, 130f, "Two light snaps with low guard pressure.", "body-only", "Future combo candidate for M82+.");
             yield return FutureEnemy("spawnEnemyFast", "evasive_skitter", "Evasive Skitter", EnemyActionCategory.Movement, EnemyActionIntent.Reposition, EnemyActionShape.Self, 0.6f, 1.1f, 2.2f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Predator }, EnemyAwarenessState.Alerted, 360f, "Brief diagonal reposition with no damage.", "body-only", "Lets fast enemies feel less magnetic.");
 
-            yield return FutureEnemy("spawnEnemyHeavy", "stomp", "Stomp", EnemyActionCategory.Body, EnemyActionIntent.Pressure, EnemyActionShape.CircleArea, 0.3f, 0.8f, 1.35f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Mindless }, EnemyAwarenessState.Engaged, 360f, "Slow foot lift, circular active window, long recovery.", "beast", "Heavy body-only area pressure candidate.");
             yield return FutureEnemy("spawnEnemyHeavy", "guarded_shove", "Guarded Shove", EnemyActionCategory.Body, EnemyActionIntent.Interrupt, EnemyActionShape.ForwardArc, 0.5f, 1f, 1.55f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Mindless }, EnemyAwarenessState.Engaged, 110f, "Braced shove that checks greedy approaches.", "beast", "Future control action with medium guard pressure.");
             yield return FutureEnemy("spawnEnemyHeavy", "slow_overhead_slam", "Slow Overhead Slam", EnemyActionCategory.Body, EnemyActionIntent.Damage, EnemyActionShape.ForwardArc, 0.7f, 1.25f, 1.85f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Mindless }, EnemyAwarenessState.Engaged, 95f, "Long windup, high poise, large recovery.", "beast", "Dark Souls-style commitment candidate for heavy creatures.");
 
@@ -172,13 +170,11 @@ namespace Hollow.Combat
             yield return FutureEnemy("spawnEnemySpittingPod", "hazard_seed_lob", "Hazard Seed Lob", EnemyActionCategory.Hazard, EnemyActionIntent.HazardSetup, EnemyActionShape.TargetPoint, 4f, 6f, 8f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Alerted, 360f, "Higher lob with clear landing marker.", "ranged", "Future hazard setup without adding puddles in M81.");
             yield return FutureEnemy("spawnEnemySpittingPod", "rooted_warning", "Rooted Warning", EnemyActionCategory.Defense, EnemyActionIntent.Feint, EnemyActionShape.Self, 2f, 5f, 8f, EnemyIntelligenceLevel.Instinctive, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Suspicious, 360f, "Stem coils before the pod decides to fire.", "ranged", "Non-damaging awareness transition tell.");
 
-            yield return FutureEnemy("spawnEnemyRat", "warning_squeal", "Warning Squeal", EnemyActionCategory.Body, EnemyActionIntent.Feint, EnemyActionShape.Cone, 0.8f, 1.6f, 2.5f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Territorial }, EnemyAwarenessState.Suspicious, 220f, "Territorial warning before actual bite commitment.", "body-only", "Rat should not open as a pure predator.");
             yield return FutureEnemy("spawnEnemyRat", "skitter_retreat", "Skitter Retreat", EnemyActionCategory.Movement, EnemyActionIntent.Escape, EnemyActionShape.Self, 0.3f, 1f, 2.2f, EnemyIntelligenceLevel.Instinctive, new[] { EnemyInstinctDisposition.Territorial, EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Alerted, 360f, "Fast retreat burst after damage.", "body-only", "Supports the authored 'retreats easily when damaged' rule.");
             yield return FutureEnemy("spawnEnemyRat", "panic_pounce", "Panic Pounce", EnemyActionCategory.Body, EnemyActionIntent.Damage, EnemyActionShape.ForwardArc, 0.4f, 0.8f, 1.2f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Territorial }, EnemyAwarenessState.Engaged, 120f, "Short committed leap after warning fails.", "body-only", "Needs explicit attack profile before runtime use.");
 
             yield return FutureEnemy("spawnEnemySpider", "web_feint", "Web Feint", EnemyActionCategory.Body, EnemyActionIntent.Feint, EnemyActionShape.Cone, 0.6f, 1.2f, 2f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Suspicious, 180f, "Brief rear-up tell, then flee or hop.", "body-only", "Keeps spider fight/flight readable.");
             yield return FutureEnemy("spawnEnemySpider", "panic_flee", "Panic Flee", EnemyActionCategory.Movement, EnemyActionIntent.Escape, EnemyActionShape.Self, 0.2f, 0.9f, 2f, EnemyIntelligenceLevel.Instinctive, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Alerted, 360f, "Erratic burst away from the player.", "body-only", "Chaotic but capped flee action.");
-            yield return FutureEnemy("spawnEnemySpider", "side_hop_bite", "Side Hop Bite", EnemyActionCategory.Body, EnemyActionIntent.Damage, EnemyActionShape.ForwardArc, 0.4f, 0.85f, 1.35f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Engaged, 125f, "Side hop into a tiny bite window.", "body-only", "Future explicit attack option.");
 
             yield return FutureEnemy("spawnEnemyBoss", "boss_stomp", "Boss Stomp", EnemyActionCategory.BossScale, EnemyActionIntent.Pressure, EnemyActionShape.CircleArea, 0.5f, 1.3f, 2.3f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Engaged, 360f, "Large foot lift, clear shockwave edge.", "boss-scale", "Generic fallback boss action wrapper for future planner work.");
             yield return FutureEnemy("spawnEnemyBoss", "boss_shockwave", "Boss Shockwave", EnemyActionCategory.BossScale, EnemyActionIntent.Pressure, EnemyActionShape.Radial, 0.8f, 2f, 5f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Engaged, 360f, "Radial ring with visible travel time.", "boss-scale", "Fallback boss-scale pressure template.");
@@ -402,6 +398,11 @@ namespace Hollow.Combat
                 return EnemyActionCategory.BossScale;
             }
 
+            if (attack.AttackId is "stomp" or "warning_squeal")
+            {
+                return EnemyActionCategory.Body;
+            }
+
             return attack.RuntimeKind switch
             {
                 EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => EnemyActionCategory.Projectile,
@@ -414,6 +415,16 @@ namespace Hollow.Combat
 
         private static EnemyActionIntent IntentFor(EnemyAttackProfileSpec attack)
         {
+            if (attack.AttackId == "warning_squeal")
+            {
+                return EnemyActionIntent.Feint;
+            }
+
+            if (attack.AttackId == "stomp")
+            {
+                return EnemyActionIntent.Damage;
+            }
+
             if (attack.RuntimeKind == EnemyAttackRuntimeKind.Summon || attack.RuntimeKind == EnemyAttackRuntimeKind.Split)
             {
                 return EnemyActionIntent.Summon;
@@ -429,6 +440,16 @@ namespace Hollow.Combat
 
         private static EnemyActionShape ShapeFor(EnemyAttackProfileSpec attack)
         {
+            if (attack.AttackId == "warning_squeal")
+            {
+                return EnemyActionShape.Cone;
+            }
+
+            if (attack.AttackId == "stomp")
+            {
+                return EnemyActionShape.CircleArea;
+            }
+
             return attack.RuntimeKind switch
             {
                 EnemyAttackRuntimeKind.Projectile => EnemyActionShape.Projectile,

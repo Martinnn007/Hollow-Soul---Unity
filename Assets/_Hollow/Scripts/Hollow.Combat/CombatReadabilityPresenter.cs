@@ -297,23 +297,37 @@ namespace Hollow.Combat
 
             var state = enemy.ReadabilityStateAt(Time.time);
             var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
-            var showRing = state is EnemyReadabilityState.EntryGrace or EnemyReadabilityState.BossBurstWindup;
+            var showRing = state is EnemyReadabilityState.EntryGrace
+                or EnemyReadabilityState.BossBurstWindup
+                or EnemyReadabilityState.AreaWindup
+                or EnemyReadabilityState.AreaActive;
             var showAim = state is EnemyReadabilityState.ChargeWindup
                 or EnemyReadabilityState.Charging
                 or EnemyReadabilityState.RangedWindup
                 or EnemyReadabilityState.RangedActive
                 or EnemyReadabilityState.MeleeWindup
-                or EnemyReadabilityState.MeleeLunge;
+                or EnemyReadabilityState.MeleeLunge
+                or EnemyReadabilityState.FeintWarning;
             ringRenderer.gameObject.SetActive(showRing);
             aimRenderer.gameObject.SetActive(showAim);
             stateLabel.gameObject.SetActive(profile.ShowWindupLabels && state != EnemyReadabilityState.Idle);
 
             if (showRing)
             {
-                var role = state == EnemyReadabilityState.EntryGrace ? MaterialRole.CombatTelegraphSafe : MaterialRole.CombatTelegraphDanger;
+                var role = state switch
+                {
+                    EnemyReadabilityState.EntryGrace => MaterialRole.CombatTelegraphSafe,
+                    EnemyReadabilityState.AreaWindup => MaterialRole.CombatTelegraphWarning,
+                    _ => MaterialRole.CombatTelegraphDanger
+                };
                 MaterialResolver.ApplyTo(ringRenderer, role);
                 var pulse = 1f + Mathf.Sin(Time.time * 10f) * profile.WindupPulseStrength;
-                var radius = (state == EnemyReadabilityState.BossBurstWindup ? 3.4f : Mathf.Max(1.2f, enemy.RadiusMeters * 4f)) * pulse;
+                var radius = (state switch
+                {
+                    EnemyReadabilityState.BossBurstWindup => 3.4f,
+                    EnemyReadabilityState.AreaWindup or EnemyReadabilityState.AreaActive => enemy.ActiveAreaRangeMeters,
+                    _ => Mathf.Max(1.2f, enemy.RadiusMeters * 4f)
+                }) * pulse;
                 ringRenderer.transform.localScale = new Vector3(radius, 0.012f, radius);
             }
 
@@ -333,6 +347,7 @@ namespace Hollow.Combat
                 {
                     EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive => Mathf.Max(2.5f, enemy.Definition != null ? enemy.Definition.AttackRangeMeters : 4f),
                     EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge => Mathf.Max(1.0f, enemy.Definition != null ? enemy.Definition.LungeTriggerRangeMeters + enemy.Definition.LungeDistanceMeters : 1.2f),
+                    EnemyReadabilityState.FeintWarning => Mathf.Max(0.8f, enemy.RadiusMeters * 2.5f),
                     _ => Mathf.Max(1.8f, enemy.Definition != null ? enemy.Definition.ChargeSpeedMetersPerSecond * EnemyRuntimeController.ChargeActiveSeconds : 2f)
                 };
                 aimRenderer.transform.localPosition = direction.normalized * (length * 0.5f);
@@ -341,6 +356,7 @@ namespace Hollow.Combat
                 {
                     EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive => 0.065f,
                     EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge => 0.22f,
+                    EnemyReadabilityState.FeintWarning => 0.28f,
                     _ => 0.16f
                 };
                 aimRenderer.transform.localScale = new Vector3(width, 0.035f, length);
@@ -350,7 +366,7 @@ namespace Hollow.Combat
             stateLabel.color = state switch
             {
                 EnemyReadabilityState.EntryGrace => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphSafe),
-                EnemyReadabilityState.Charging or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.RangedActive or EnemyReadabilityState.BossBurstWindup => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphDanger),
+                EnemyReadabilityState.Charging or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.RangedActive or EnemyReadabilityState.AreaActive or EnemyReadabilityState.BossBurstWindup => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphDanger),
                 _ => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphWarning)
             };
         }
@@ -370,6 +386,10 @@ namespace Hollow.Combat
                 EnemyReadabilityState.MeleeLunge => "Lunge!",
                 EnemyReadabilityState.MeleeRecovery => "Recover",
                 EnemyReadabilityState.ChargeRecovery => "Recover",
+                EnemyReadabilityState.AreaWindup => "Stomp",
+                EnemyReadabilityState.AreaActive => "Stomp!",
+                EnemyReadabilityState.AreaRecovery => "Recover",
+                EnemyReadabilityState.FeintWarning => "Warn",
                 _ => string.Empty
             };
         }

@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 0.95
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.72
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.4
@@ -28,9 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 8.5
   sightAngleDegrees: 120
   hearingRadiusMeters: 4
-  attackProfiles:
-  - {fileID: 11400000, guid: e6596cf9ef2ee5b36033b7eeb4997afe, type: 2}
-  - {fileID: 11400000, guid: 545c27ee13c0b46f84ff511bc07ddfa8, type: 2}
   debugColor: {r: 0.44, g: 0.52, b: 0.58, a: 1}
   arena:
     arenaId: boss_arena_cover_maze
@@ -53,3 +52,8 @@ MonoBehaviour:
     windupSeconds: 0.45
     damage: 1
     projectileCount: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: e6596cf9ef2ee5b36033b7eeb4997afe, type: 2}
+  - {fileID: 11400000, guid: 545c27ee13c0b46f84ff511bc07ddfa8, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: 7e03ad0e78cd84d429056841bad452b8, type: 2}

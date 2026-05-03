@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 1.35
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.7
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.45
@@ -28,9 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 9
   sightAngleDegrees: 160
   hearingRadiusMeters: 7
-  attackProfiles:
-  - {fileID: 11400000, guid: 1bcf00669744859fb65f54af280e984f, type: 2}
-  - {fileID: 11400000, guid: 59c35ccc0e6b1f5b6e412336f0914abf, type: 2}
   debugColor: {r: 0.95, g: 0.32, b: 0.12, a: 1}
   arena:
     arenaId: boss_arena_charred_crossing
@@ -53,3 +52,8 @@ MonoBehaviour:
     windupSeconds: 0.45
     damage: 1
     projectileCount: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: 1bcf00669744859fb65f54af280e984f, type: 2}
+  - {fileID: 11400000, guid: 59c35ccc0e6b1f5b6e412336f0914abf, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: d7966a566b0354972b3cab18cbef0600, type: 2}

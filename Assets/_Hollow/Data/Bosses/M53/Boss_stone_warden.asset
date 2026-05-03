@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 0.82
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.68
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2
@@ -28,10 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 8
   sightAngleDegrees: 140
   hearingRadiusMeters: 5
-  attackProfiles:
-  - {fileID: 11400000, guid: bb9f6cf816e7d3187713257ea1de881a, type: 2}
-  - {fileID: 11400000, guid: 62d74443f3e76fcf162a072dd92f151a, type: 2}
-  - {fileID: 11400000, guid: d0ad590bded9756bfdef963b6f5f299d, type: 2}
   debugColor: {r: 0.42, g: 0.34, b: 0.28, a: 1}
   arena:
     arenaId: boss_arena_broken_gateyard
@@ -59,3 +57,9 @@ MonoBehaviour:
     windupSeconds: 0.65
     damage: 1
     projectileCount: 4
+  attackProfiles:
+  - {fileID: 11400000, guid: bb9f6cf816e7d3187713257ea1de881a, type: 2}
+  - {fileID: 11400000, guid: 62d74443f3e76fcf162a072dd92f151a, type: 2}
+  - {fileID: 11400000, guid: d0ad590bded9756bfdef963b6f5f299d, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: b16d89a739d404cf6839d6b4219608b3, type: 2}

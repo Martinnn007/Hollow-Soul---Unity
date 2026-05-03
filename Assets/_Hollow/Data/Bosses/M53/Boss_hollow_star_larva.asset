@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 1.15
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.86
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 3
@@ -28,10 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 0
   sightAngleDegrees: 0
   hearingRadiusMeters: 9.5
-  attackProfiles:
-  - {fileID: 11400000, guid: e8d1d0e9aa2b223fd1a4a815bd4cf25f, type: 2}
-  - {fileID: 11400000, guid: 8a5c3ec53c0fa6ee0299b4f0d0293816, type: 2}
-  - {fileID: 11400000, guid: 11472cc5f3a31e5c5c7919095c4843f5, type: 2}
   debugColor: {r: 0.18, g: 0.12, b: 0.34, a: 1}
   arena:
     arenaId: boss_arena_blind_deep
@@ -54,3 +52,9 @@ MonoBehaviour:
     windupSeconds: 0.45
     damage: 1
     projectileCount: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: e8d1d0e9aa2b223fd1a4a815bd4cf25f, type: 2}
+  - {fileID: 11400000, guid: 8a5c3ec53c0fa6ee0299b4f0d0293816, type: 2}
+  - {fileID: 11400000, guid: 11472cc5f3a31e5c5c7919095c4843f5, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: 93e6d327b798e45989671b7dff262ee7, type: 2}

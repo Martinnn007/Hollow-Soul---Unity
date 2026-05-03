@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 1.2
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.58
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 1.8
@@ -28,8 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 8
   sightAngleDegrees: 180
   hearingRadiusMeters: 5.5
-  attackProfiles:
-  - {fileID: 11400000, guid: 299414d90db75e50d930b668cd0a66ad, type: 2}
   debugColor: {r: 0.64, g: 0.42, b: 0.22, a: 1}
   arena:
     arenaId: boss_arena_narrow_shrine
@@ -52,3 +52,7 @@ MonoBehaviour:
     windupSeconds: 0.45
     damage: 1
     projectileCount: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: 299414d90db75e50d930b668cd0a66ad, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: a332fc99905d841508e887b57d5364ce, type: 2}

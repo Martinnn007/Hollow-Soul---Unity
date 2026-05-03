@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 1
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.66
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.25
@@ -28,8 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 10
   sightAngleDegrees: 220
   hearingRadiusMeters: 6.5
-  attackProfiles:
-  - {fileID: 11400000, guid: 4274fb0d8c0f26ee9ce2854380b2da2d, type: 2}
   debugColor: {r: 0.86, g: 0.66, b: 0.18, a: 1}
   arena:
     arenaId: boss_arena_open_tomb
@@ -52,3 +52,7 @@ MonoBehaviour:
     windupSeconds: 0.45
     damage: 1
     projectileCount: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: 4274fb0d8c0f26ee9ce2854380b2da2d, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: d6f0e125742984e8eb1be532e91bc934, type: 2}

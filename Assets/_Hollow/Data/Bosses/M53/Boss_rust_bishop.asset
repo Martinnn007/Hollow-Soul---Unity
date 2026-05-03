@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 0.95
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.8
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.85
@@ -28,9 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 9.5
   sightAngleDegrees: 180
   hearingRadiusMeters: 5.5
-  attackProfiles:
-  - {fileID: 11400000, guid: 961cd4c0c8448aa28dbbb4358c6efa48, type: 2}
-  - {fileID: 11400000, guid: e0ff9738f3ca2a8cc0be153bd037f63e, type: 2}
   debugColor: {r: 0.72, g: 0.28, b: 0.14, a: 1}
   arena:
     arenaId: boss_arena_industrial_cover_grid
@@ -53,3 +52,8 @@ MonoBehaviour:
     windupSeconds: 0.45
     damage: 1
     projectileCount: 6
+  attackProfiles:
+  - {fileID: 11400000, guid: 961cd4c0c8448aa28dbbb4358c6efa48, type: 2}
+  - {fileID: 11400000, guid: e0ff9738f3ca2a8cc0be153bd037f63e, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: 214843e65e84445e393454ff0b55d2eb, type: 2}

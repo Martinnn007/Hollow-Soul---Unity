@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 0.8
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.82
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.7
@@ -28,9 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 10
   sightAngleDegrees: 300
   hearingRadiusMeters: 7
-  attackProfiles:
-  - {fileID: 11400000, guid: c249ec61f1657b66ac4e9f50f0f116f0, type: 2}
-  - {fileID: 11400000, guid: f87cb9859c329e0c10fea34c1789fea5, type: 2}
   debugColor: {r: 0.92, g: 0.86, b: 0.72, a: 1}
   arena:
     arenaId: boss_arena_hell_heaven_dais
@@ -53,3 +52,8 @@ MonoBehaviour:
     windupSeconds: 0.65
     damage: 2
     projectileCount: 16
+  attackProfiles:
+  - {fileID: 11400000, guid: c249ec61f1657b66ac4e9f50f0f116f0, type: 2}
+  - {fileID: 11400000, guid: f87cb9859c329e0c10fea34c1789fea5, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: 193483e3e338945f1a30a8b0752b10e4, type: 2}

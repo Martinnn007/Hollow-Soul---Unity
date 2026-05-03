@@ -20,6 +20,8 @@ MonoBehaviour:
   speedMetersPerSecond: 1.15
   contactDamage: 1
   contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
   radiusMeters: 0.62
   projectileSpeedMetersPerSecond: 4.8
   visualScale: 2.1
@@ -28,9 +30,6 @@ MonoBehaviour:
   sightRadiusMeters: 9
   sightAngleDegrees: 220
   hearingRadiusMeters: 6
-  attackProfiles:
-  - {fileID: 11400000, guid: b3318ab0bcf22672ca0a1eb03df76846, type: 2}
-  - {fileID: 11400000, guid: 01a1359927747bc1a0d25dec79dcb2e9, type: 2}
   debugColor: {r: 0.62, g: 0.74, b: 0.9, a: 1}
   arena:
     arenaId: boss_arena_symmetric_mirror
@@ -53,3 +52,8 @@ MonoBehaviour:
     windupSeconds: 0
     damage: 1
     projectileCount: 1
+  attackProfiles:
+  - {fileID: 11400000, guid: b3318ab0bcf22672ca0a1eb03df76846, type: 2}
+  - {fileID: 11400000, guid: 01a1359927747bc1a0d25dec79dcb2e9, type: 2}
+  actionProfiles: []
+  behaviorTreeMetadata: {fileID: 11400000, guid: f3f667c7c80fb4e7d853d4e13fa00be0, type: 2}

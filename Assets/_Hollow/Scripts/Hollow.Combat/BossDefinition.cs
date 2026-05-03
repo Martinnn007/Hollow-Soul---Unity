@@ -127,6 +127,7 @@ namespace Hollow.Combat
         [SerializeField] private List<BossAttackDefinition> attacks = new();
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
+        [SerializeField] private EnemyBehaviorTreeDefinition behaviorTreeMetadata;
 
         public string BossId => string.IsNullOrWhiteSpace(bossId) ? "stone_warden" : bossId;
 
@@ -177,7 +178,10 @@ namespace Hollow.Combat
             get
             {
                 var authored = attackProfiles?.Where(profile => profile != null).ToArray() ?? Array.Empty<EnemyAttackProfileDefinition>();
-                return authored.Length > 0 ? authored : EnemyAttackProfileDefaults.CreateBossProfiles(BossId);
+                var fallback = EnemyAttackProfileDefaults.CreateBossProfiles(BossId);
+                return authored
+                    .Concat(fallback.Where(profile => authored.All(existing => existing.AttackId != profile.AttackId)))
+                    .ToArray();
             }
         }
 
@@ -186,9 +190,16 @@ namespace Hollow.Combat
             get
             {
                 var authored = actionProfiles?.Where(profile => profile != null).ToArray() ?? Array.Empty<EnemyActionProfileDefinition>();
-                return authored.Length > 0 ? authored : EnemyActionProfileDefaults.CreateBossActions(BossId);
+                var fallback = EnemyActionProfileDefaults.CreateBossActions(BossId);
+                return authored
+                    .Concat(fallback.Where(profile => authored.All(existing => existing.ActionId != profile.ActionId)))
+                    .ToArray();
             }
         }
+
+        public EnemyBehaviorTreeDefinition BehaviorTreeMetadata => behaviorTreeMetadata != null
+            ? behaviorTreeMetadata
+            : EnemyBehaviorTreeDefaults.ResolveBossTree(BossId);
 
         public void Configure(
             string nextBossId,
@@ -295,6 +306,11 @@ namespace Hollow.Combat
         public void ConfigureActionProfiles(IEnumerable<EnemyActionProfileDefinition> nextActionProfiles)
         {
             actionProfiles = nextActionProfiles?.Where(profile => profile != null).ToList() ?? new List<EnemyActionProfileDefinition>();
+        }
+
+        public void ConfigureBehaviorTreeMetadata(EnemyBehaviorTreeDefinition nextBehaviorTreeMetadata)
+        {
+            behaviorTreeMetadata = nextBehaviorTreeMetadata;
         }
 
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
