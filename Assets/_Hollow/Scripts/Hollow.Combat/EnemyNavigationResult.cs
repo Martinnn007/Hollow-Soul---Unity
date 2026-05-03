@@ -13,7 +13,14 @@ namespace Hollow.Combat
             Vector3 steeringDirection,
             bool reachedRequestedPosition,
             bool usedFallbackSteering,
-            bool blocked)
+            bool blocked,
+            EnemyPathStatus pathStatus = EnemyPathStatus.NotRequested,
+            Vector3 finalGoalLocalPosition = default,
+            Vector3 nextWaypointLocalPosition = default,
+            float pathAgeSeconds = 0f,
+            int pathWaypointCount = 0,
+            string fallbackReason = "",
+            Vector3[] pathWaypointsLocalPositions = null)
         {
             Backend = backend;
             Mode = mode;
@@ -24,6 +31,13 @@ namespace Hollow.Combat
             ReachedRequestedPosition = reachedRequestedPosition;
             UsedFallbackSteering = usedFallbackSteering;
             Blocked = blocked;
+            PathStatus = pathStatus;
+            FinalGoalLocalPosition = finalGoalLocalPosition;
+            NextWaypointLocalPosition = nextWaypointLocalPosition;
+            PathAgeSeconds = Mathf.Max(0f, pathAgeSeconds);
+            PathWaypointCount = Mathf.Max(0, pathWaypointCount);
+            FallbackReason = fallbackReason ?? string.Empty;
+            PathWaypointsLocalPositions = pathWaypointsLocalPositions ?? System.Array.Empty<Vector3>();
         }
 
         public EnemyNavigationBackend Backend { get; }
@@ -43,5 +57,19 @@ namespace Hollow.Combat
         public bool UsedFallbackSteering { get; }
 
         public bool Blocked { get; }
+
+        public EnemyPathStatus PathStatus { get; }
+
+        public Vector3 FinalGoalLocalPosition { get; }
+
+        public Vector3 NextWaypointLocalPosition { get; }
+
+        public float PathAgeSeconds { get; }
+
+        public int PathWaypointCount { get; }
+
+        public string FallbackReason { get; }
+
+        public Vector3[] PathWaypointsLocalPositions { get; }
     }
 }

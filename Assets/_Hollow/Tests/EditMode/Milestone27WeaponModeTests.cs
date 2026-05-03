@@ -252,6 +252,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void DebugSpawnMenuAppliesCurrentRunLightAttackSpeedToggle()
         {
+            EnemyNavigationDebugOverlay.ResetDiagnostics();
             var branchObject = new GameObject("BranchSession");
             var playerObject = new GameObject("Player");
             try
@@ -266,14 +267,37 @@ namespace Hollow.Tests.EditMode
 
                 Assert.IsFalse(menu.DebugLightAttackSpeedDoubled);
                 Assert.IsFalse(weapon.DebugLightAttackSpeedDoubled);
+                Assert.IsFalse(menu.DebugEnemyPathTracingEnabled);
+                Assert.IsFalse(EnemyNavigationDebugOverlay.PathTracingEnabled);
+                Assert.IsFalse(menu.DebugEnemyAiBlackboardEnabled);
+                Assert.IsFalse(EnemyAiDebugOverlay.BlackboardEnabled);
+                StringAssert.Contains("req/s", EnemyNavigationDebugOverlay.DiagnosticsSummary);
+                StringAssert.Contains("AI blackboard", EnemyAiDebugOverlay.DiagnosticsSummary);
 
                 menu.SetDebugLightAttackSpeedDoubled(true);
 
                 Assert.IsTrue(menu.DebugLightAttackSpeedDoubled);
                 Assert.IsTrue(weapon.DebugLightAttackSpeedDoubled);
 
+                menu.SetDebugEnemyPathTracingEnabled(true);
+                Assert.IsTrue(menu.DebugEnemyPathTracingEnabled);
+                Assert.IsTrue(EnemyNavigationDebugOverlay.PathTracingEnabled);
+
+                menu.SetDebugEnemyPathTracingEnabled(false);
+                Assert.IsFalse(menu.DebugEnemyPathTracingEnabled);
+                Assert.IsFalse(EnemyNavigationDebugOverlay.PathTracingEnabled);
+                menu.SetDebugEnemyAiBlackboardEnabled(true);
+                Assert.IsTrue(menu.DebugEnemyAiBlackboardEnabled);
+                Assert.IsTrue(EnemyAiDebugOverlay.BlackboardEnabled);
+
+                menu.SetDebugEnemyAiBlackboardEnabled(false);
+                Assert.IsFalse(menu.DebugEnemyAiBlackboardEnabled);
+                Assert.IsFalse(EnemyAiDebugOverlay.BlackboardEnabled);
+
                 var nextMenu = new GameObject("NextDebugSpawnMenu").AddComponent<DebugSpawnMenuController>();
                 Assert.IsFalse(nextMenu.DebugLightAttackSpeedDoubled);
+                Assert.IsFalse(nextMenu.DebugEnemyPathTracingEnabled);
+                Assert.IsFalse(nextMenu.DebugEnemyAiBlackboardEnabled);
                 Object.DestroyImmediate(nextMenu.gameObject);
             }
             finally

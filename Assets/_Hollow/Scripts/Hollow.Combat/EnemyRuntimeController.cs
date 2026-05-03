@@ -144,7 +144,19 @@ namespace Hollow.Combat
         private string lastAwarenessReason = string.Empty;
         private float currentDisturbanceScore;
         private float investigationEndTime = float.NegativeInfinity;
+        private readonly EnemyAiBrain aiBrain = new();
         private EnemyNavigationResult lastNavigationResult;
+        private Vector3 cachedPathGoalLocalPosition;
+        private Vector3 cachedPathNextWaypointLocalPosition;
+        private EnemyNavigationIntent cachedPathIntent = EnemyNavigationIntent.None;
+        private EnemyPathStatus cachedPathStatus = EnemyPathStatus.NotRequested;
+        private float cachedPathCreatedTime = float.NegativeInfinity;
+        private float nextPathRefreshTime;
+        private int cachedPathWaypointCount;
+        private string cachedPathFallbackReason = string.Empty;
+        private Vector3[] cachedPathWaypointsLocalPositions = Array.Empty<Vector3>();
+        private LineRenderer navigationDebugLine;
+        private TextMesh aiDebugText;
         private float nextAllowedAllyAlertTime;
         private float lastAllyAlertSharedTime = float.NegativeInfinity;
         private int lastAllyAlertRecipientCount;
@@ -287,6 +299,96 @@ namespace Hollow.Combat
         public EnemyNavigationIntent LastNavigationIntent => lastNavigationResult.Intent;
 
         public bool LastNavigationUsedFallbackSteering => lastNavigationResult.UsedFallbackSteering;
+
+        public EnemyPathStatus LastNavigationPathStatus => lastNavigationResult.PathStatus;
+
+        public Vector3 LastNavigationFinalGoal => lastNavigationResult.FinalGoalLocalPosition;
+
+        public Vector3 LastNavigationNextWaypoint => lastNavigationResult.NextWaypointLocalPosition;
+
+        public float LastNavigationPathAgeSeconds => lastNavigationResult.PathAgeSeconds;
+
+        public int LastNavigationWaypointCount => lastNavigationResult.PathWaypointCount;
+
+        public string LastNavigationFallbackReason => lastNavigationResult.FallbackReason;
+
+        public EnemyAiLodTier CurrentAiLodTier => aiBrain.LodTier;
+
+        public EnemyAiBlackboard AiBlackboard => aiBrain.Blackboard;
+
+        public float DistanceToPlayerMeters => DistanceToPlayer();
+
+        public Vector3 DirectionToPlayer
+        {
+            get
+            {
+                if (playerController == null)
+                {
+                    return Vector3.zero;
+                }
+
+                var delta = playerController.transform.localPosition - transform.localPosition;
+                delta.y = 0f;
+                return delta.sqrMagnitude > 0.001f ? delta.normalized : Vector3.zero;
+            }
+        }
+
+        public bool IsEndangeredNow => IsEndangered(lastTickTime > 0f ? lastTickTime : Time.time);
+
+        public ThreatLane CurrentThreatLane => RoomThreatDirector.ResolveLane(FindActionProfile(CurrentThreatActionId), CurrentThreatAttackProfile);
+
+        public float CurrentThreatPressureCost
+        {
+            get
+            {
+                var profile = CurrentThreatAttackProfile;
+                if (profile == null)
+                {
+                    return 0f;
+                }
+
+                var baseCost = profile.ForceClass switch
+                {
+                    Hollow.Data.Definitions.ImpactForceClass.Massive => 2.2f,
+                    Hollow.Data.Definitions.ImpactForceClass.Heavy => 1.7f,
+                    Hollow.Data.Definitions.ImpactForceClass.Medium => 1.15f,
+                    _ => 0.75f
+                };
+                return readabilityState is EnemyReadabilityState.MeleeWindup
+                    or EnemyReadabilityState.MeleeLunge
+                    or EnemyReadabilityState.ChargeWindup
+                    or EnemyReadabilityState.Charging
+                    or EnemyReadabilityState.RangedWindup
+                    or EnemyReadabilityState.RangedActive
+                    or EnemyReadabilityState.AreaWindup
+                    or EnemyReadabilityState.AreaActive
+                    ? baseCost
+                    : 0f;
+            }
+        }
+
+        private string CurrentThreatActionId => CurrentThreatAttackProfile != null
+            ? CurrentThreatAttackProfile.AttackId
+            : string.Empty;
+
+        private EnemyAttackProfileDefinition CurrentThreatAttackProfile
+        {
+            get
+            {
+                return readabilityState switch
+                {
+                    EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.MeleeRecovery => activeMeleeProfile,
+                    EnemyReadabilityState.ChargeWindup or EnemyReadabilityState.Charging or EnemyReadabilityState.ChargeRecovery => activeChargeProfile,
+                    EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive or EnemyReadabilityState.RangedRecovery => activeRangedProfile,
+                    EnemyReadabilityState.AreaWindup or EnemyReadabilityState.AreaActive or EnemyReadabilityState.AreaRecovery => activeAreaProfile,
+                    EnemyReadabilityState.FeintWarning => activeWarningProfile,
+                    EnemyReadabilityState.GuardWindup or EnemyReadabilityState.GuardActive or EnemyReadabilityState.GuardRecovery => activeGuardActionProfile,
+                    EnemyReadabilityState.CreatureMoveWindup or EnemyReadabilityState.CreatureMoveActive or EnemyReadabilityState.CreatureMoveRecovery => activeCreatureMoveProfile,
+                    EnemyReadabilityState.CreatureSignalWindup or EnemyReadabilityState.CreatureSignalActive or EnemyReadabilityState.CreatureSignalRecovery => activeCreatureSignalProfile,
+                    _ => null
+                };
+            }
+        }
 
         public float LastAllyAlertSharedTime => lastAllyAlertSharedTime;
 
@@ -469,6 +571,8 @@ namespace Hollow.Combat
             recoveryMovementRemainingMeters = 0f;
             recoveryMovementActionId = string.Empty;
             recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
+            ResetPathCache();
+            aiBrain.Reset();
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
@@ -576,6 +680,8 @@ namespace Hollow.Combat
             recoveryMovementRemainingMeters = 0f;
             recoveryMovementActionId = string.Empty;
             recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
+            ResetPathCache();
+            aiBrain.Reset();
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
             transform.localScale = Vector3.one * bossDefinition.VisualScale;
             Health.Configure(bossDefinition.MaxHealth);
@@ -653,6 +759,18 @@ namespace Hollow.Combat
             Tick(Time.deltaTime, Time.time);
         }
 
+        private void LateUpdate()
+        {
+            UpdateNavigationDebugOverlay();
+            UpdateAiDebugOverlay();
+        }
+
+        private void OnDisable()
+        {
+            SetNavigationDebugLineVisible(false);
+            SetAiDebugTextVisible(false);
+        }
+
         public void Tick(float deltaTime, float timeSeconds)
         {
             lastTickTime = timeSeconds;
@@ -709,6 +827,15 @@ namespace Hollow.Combat
                 return false;
             }
 
+            if (aiBrain.TryReuseCommand(this, timeSeconds, distanceToPlayer, out var cachedCommand) &&
+                ExecuteBehaviorCommand(cachedCommand, deltaTime, timeSeconds, distanceToPlayer))
+            {
+                lastBehaviorTreeNodeId = cachedCommand.Reason;
+                lastBehaviorCommand = cachedCommand.Kind.ToString();
+                lastBehaviorReason = cachedCommand.ActionId;
+                return true;
+            }
+
             var context = new EnemyBehaviorTreeContext(
                 this,
                 deltaTime,
@@ -729,6 +856,14 @@ namespace Hollow.Combat
             }
 
             lastBehaviorTreeNodeId = command.Reason;
+            lastBehaviorCommand = command.Kind.ToString();
+            lastBehaviorReason = command.ActionId;
+            command = aiBrain.ChooseCommand(
+                this,
+                command,
+                timeSeconds,
+                distanceToPlayer,
+                roomCombatController != null ? roomCombatController.ThreatDirector : null);
             lastBehaviorCommand = command.Kind.ToString();
             lastBehaviorReason = command.ActionId;
 
@@ -1031,6 +1166,31 @@ namespace Hollow.Combat
         public bool CanStartBehaviorRangedAction(string actionId, float timeSeconds)
         {
             return CanStartRangedAction(actionId, timeSeconds);
+        }
+
+        public bool CanStartBehaviorCommand(EnemyBehaviorCommandKind commandKind, string actionId, float timeSeconds)
+        {
+            return commandKind switch
+            {
+                EnemyBehaviorCommandKind.StartMeleeAction => CanStartMeleeAction(actionId, timeSeconds),
+                EnemyBehaviorCommandKind.StartRangedAction => CanStartRangedAction(actionId, timeSeconds),
+                EnemyBehaviorCommandKind.StartChargeAction => CanStartChargeAttack(timeSeconds),
+                EnemyBehaviorCommandKind.StartAreaAction => CanStartAreaAction(actionId, timeSeconds),
+                EnemyBehaviorCommandKind.StartGuardAction => CanStartGuardAction(actionId, timeSeconds),
+                EnemyBehaviorCommandKind.StartCreatureMoveAction => CanStartCreatureMoveAction(actionId, timeSeconds),
+                EnemyBehaviorCommandKind.StartCreatureSignalAction => CanStartCreatureSignalAction(actionId, timeSeconds),
+                _ => false
+            };
+        }
+
+        public EnemyAttackProfileDefinition ResolveAttackProfileForAi(string attackId)
+        {
+            if (Definition == null || string.IsNullOrWhiteSpace(attackId))
+            {
+                return null;
+            }
+
+            return Definition.ResolveAttackProfile(attackId);
         }
 
         public float AttackPriorityScore(float timeSeconds)
@@ -3363,7 +3523,8 @@ namespace Hollow.Combat
             float deltaTime,
             float speedMultiplier,
             bool allowSteering = true,
-            EnemyNavigationIntent intent = EnemyNavigationIntent.None)
+            EnemyNavigationIntent intent = EnemyNavigationIntent.None,
+            Vector3? finalGoalLocalPosition = null)
         {
             direction.y = 0f;
             var movementDirection = allowSteering ? ResolveLocalSteeringDirection(direction) : direction.normalized;
@@ -3381,27 +3542,331 @@ namespace Hollow.Combat
                 facingDirection = movementDirection.normalized;
             }
             var desired = transform.localPosition + movementDirection.normalized * speedMetersPerSecond * Mathf.Max(0f, speedMultiplier) * deltaTime;
-            transform.localPosition = ResolveNavigationMove(desired, intent, allowLocalDetour: allowSteering);
+            transform.localPosition = ResolveNavigationMove(desired, intent, allowLocalDetour: allowSteering, finalGoalLocalPosition: finalGoalLocalPosition);
         }
 
         private Vector3 ResolveNavigationMove(
             Vector3 desiredLocalPosition,
             EnemyNavigationIntent intent,
             EnemyNavigationMode? overrideMode = null,
-            bool allowLocalDetour = true)
+            bool allowLocalDetour = true,
+            Vector3? finalGoalLocalPosition = null)
         {
             var mode = overrideMode ?? EnemyNavigationAdapter.DefaultModeFor(movementMode);
+            var current = transform.localPosition;
+            var movementDelta = desiredLocalPosition - current;
+            movementDelta.y = 0f;
+            var actionEnvelopeAnchor = Vector3.zero;
+            var actionEnvelopeDesired = 0f;
+            var actionEnvelopeMin = 0f;
+            var actionEnvelopeMax = 0f;
+            var actionEnvelopeFallbackGoal = Vector3.zero;
+            var hasActionEnvelope = finalGoalLocalPosition == null &&
+                TryResolveActionEnvelopeForIntent(
+                    intent,
+                    current,
+                    out actionEnvelopeAnchor,
+                    out actionEnvelopeDesired,
+                    out actionEnvelopeMin,
+                    out actionEnvelopeMax,
+                    out actionEnvelopeFallbackGoal);
+            var finalGoal = finalGoalLocalPosition ??
+                (hasActionEnvelope
+                    ? actionEnvelopeFallbackGoal
+                    : ResolveNavigationGoalForIntent(
+                    intent,
+                    movementDelta.sqrMagnitude > 0.0001f ? movementDelta.normalized : Vector3.zero,
+                    desiredLocalPosition));
+            var maxStep = movementDelta.magnitude;
+            var allowPathfinding = CanUsePathfindingForRuntimeMove(mode, intent, allowLocalDetour);
+            if (allowPathfinding && TryUseCachedPathStep(desiredLocalPosition, finalGoal, intent, mode, maxStep, out var cachedPosition))
+            {
+                return cachedPosition;
+            }
+
+            var pathAgeSeconds = ResolvePathAgeForRequest(finalGoal, intent, allowPathfinding);
             var request = new EnemyNavigationRequest(
                 roomRuntimeRoot,
-                transform.localPosition,
+                current,
                 desiredLocalPosition,
                 radiusMeters,
                 mode,
                 intent,
                 Intelligence,
-                allowLocalDetour);
+                allowLocalDetour,
+                allowPathfinding,
+                finalGoal,
+                lastTickTime,
+                spawnIndex,
+                maxStep,
+                pathAgeSeconds,
+                hasActionEnvelope,
+                actionEnvelopeAnchor,
+                actionEnvelopeDesired,
+                actionEnvelopeMin,
+                actionEnvelopeMax);
             lastNavigationResult = EnemyNavigationAdapter.Resolve(request);
+            UpdatePathCacheAfterResult(lastNavigationResult, finalGoal, intent, allowPathfinding);
             return lastNavigationResult.ResolvedLocalPosition;
+        }
+
+        private bool TryResolveActionEnvelopeForIntent(
+            EnemyNavigationIntent intent,
+            Vector3 current,
+            out Vector3 anchor,
+            out float desiredDistance,
+            out float minDistance,
+            out float maxDistance,
+            out Vector3 fallbackGoal)
+        {
+            anchor = Vector3.zero;
+            desiredDistance = 0f;
+            minDistance = 0f;
+            maxDistance = 0f;
+            fallbackGoal = Vector3.zero;
+            if (intent is not (EnemyNavigationIntent.MoveToPlayer or EnemyNavigationIntent.PreferredRange) ||
+                playerController == null)
+            {
+                return false;
+            }
+
+            anchor = playerController.transform.localPosition;
+            var delta = anchor - current;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return false;
+            }
+
+            var spacing = ResolveCurrentActionSpacing(delta.magnitude);
+            desiredDistance = Mathf.Max(
+                radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f,
+                spacing.DesiredStartDistanceMeters);
+            fallbackGoal = anchor - delta.normalized * desiredDistance;
+            minDistance = Mathf.Max(
+                radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f,
+                spacing.CommitRangeMinMeters - spacing.CloseToleranceMeters);
+            maxDistance = Mathf.Max(
+                minDistance + 0.1f,
+                spacing.CommitRangeMaxMeters + spacing.LongToleranceMeters);
+            return true;
+        }
+
+        private Vector3 ResolveNavigationGoalForIntent(EnemyNavigationIntent intent, Vector3 movementDirection, Vector3 desiredLocalPosition)
+        {
+            var current = transform.localPosition;
+            movementDirection.y = 0f;
+            switch (intent)
+            {
+                case EnemyNavigationIntent.MoveToPlayer:
+                case EnemyNavigationIntent.PreferredRange:
+                    if (playerController == null)
+                    {
+                        return desiredLocalPosition;
+                    }
+
+                    var delta = playerController.transform.localPosition - current;
+                    delta.y = 0f;
+                    if (delta.sqrMagnitude <= 0.01f)
+                    {
+                        return desiredLocalPosition;
+                    }
+
+                    var spacing = ResolveCurrentActionSpacing(delta.magnitude);
+                    var desiredStart = Mathf.Max(
+                        radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.12f,
+                        spacing.DesiredStartDistanceMeters);
+                    return playerController.transform.localPosition - delta.normalized * desiredStart;
+                case EnemyNavigationIntent.Flee:
+                    return movementDirection.sqrMagnitude > 0.01f
+                        ? current + movementDirection.normalized * Mathf.Max(2.2f, speedMetersPerSecond * 1.35f)
+                        : desiredLocalPosition;
+                case EnemyNavigationIntent.Wander:
+                    return movementDirection.sqrMagnitude > 0.01f
+                        ? current + movementDirection.normalized * Mathf.Max(1.4f, speedMetersPerSecond * 0.9f)
+                        : desiredLocalPosition;
+                case EnemyNavigationIntent.Investigate:
+                    return lastStimulusTime > float.NegativeInfinity ? lastStimulusLocalPosition : desiredLocalPosition;
+                case EnemyNavigationIntent.ReturnHome:
+                    return homeLocalPosition;
+                default:
+                    return desiredLocalPosition;
+            }
+        }
+
+        private bool CanUsePathfindingForRuntimeMove(EnemyNavigationMode mode, EnemyNavigationIntent intent, bool allowLocalDetour)
+        {
+            if (!allowLocalDetour ||
+                mode != EnemyNavigationMode.GroundedLocal ||
+                roomRuntimeRoot == null ||
+                movementMode != EnemyMovementMode.Grounded ||
+                speedMetersPerSecond <= 0f ||
+                bossRuntime != null ||
+                bossDefinition != null ||
+                archetypeId == EnemyArchetypeId.Boss ||
+                IsInspectionFrozen ||
+                readabilityState != EnemyReadabilityState.Idle)
+            {
+                return false;
+            }
+
+            return intent is EnemyNavigationIntent.MoveToPlayer
+                or EnemyNavigationIntent.PreferredRange
+                or EnemyNavigationIntent.Flee
+                or EnemyNavigationIntent.Wander
+                or EnemyNavigationIntent.Investigate
+                or EnemyNavigationIntent.ReturnHome;
+        }
+
+        private bool TryUseCachedPathStep(
+            Vector3 requestedLocalPosition,
+            Vector3 finalGoalLocalPosition,
+            EnemyNavigationIntent intent,
+            EnemyNavigationMode mode,
+            float maxStepDistanceMeters,
+            out Vector3 resolvedLocalPosition)
+        {
+            resolvedLocalPosition = transform.localPosition;
+            if (cachedPathStatus is not (EnemyPathStatus.Ready or EnemyPathStatus.Partial) ||
+                cachedPathWaypointCount <= 0 ||
+                cachedPathIntent != intent ||
+                lastTickTime >= nextPathRefreshTime ||
+                FlatDistance(cachedPathGoalLocalPosition, finalGoalLocalPosition) > PathGoalRefreshToleranceFor(Intelligence))
+            {
+                return false;
+            }
+
+            var current = transform.localPosition;
+            var toWaypoint = cachedPathNextWaypointLocalPosition - current;
+            toWaypoint.y = 0f;
+            if (toWaypoint.sqrMagnitude <= 0.04f)
+            {
+                return false;
+            }
+
+            var maxStep = maxStepDistanceMeters > 0f ? maxStepDistanceMeters : FlatDistance(current, requestedLocalPosition);
+            if (maxStep <= 0.001f)
+            {
+                return false;
+            }
+
+            var desired = current + toWaypoint.normalized * Mathf.Min(maxStep, toWaypoint.magnitude);
+            var resolved = RoomLocalCollision.ResolveMove(roomRuntimeRoot, current, desired, radiusMeters);
+            var moved = resolved - current;
+            moved.y = 0f;
+            if (moved.sqrMagnitude <= 0.0001f)
+            {
+                ResetPathCache();
+                return false;
+            }
+
+            var steering = moved.normalized;
+            var reached = FlatDistance(resolved, requestedLocalPosition) <= EnemyNavigationAdapter.DefaultReachedToleranceMeters;
+            lastNavigationResult = new EnemyNavigationResult(
+                EnemyNavigationBackend.RoomGridAStar,
+                mode,
+                intent,
+                requestedLocalPosition,
+                resolved,
+                steering,
+                reached,
+                usedFallbackSteering: false,
+                blocked: false,
+                cachedPathStatus,
+                finalGoalLocalPosition,
+                cachedPathNextWaypointLocalPosition,
+                Mathf.Max(0f, lastTickTime - cachedPathCreatedTime),
+                cachedPathWaypointCount,
+                cachedPathFallbackReason,
+                cachedPathWaypointsLocalPositions);
+            resolvedLocalPosition = resolved;
+            return true;
+        }
+
+        private float ResolvePathAgeForRequest(Vector3 finalGoalLocalPosition, EnemyNavigationIntent intent, bool allowPathfinding)
+        {
+            if (!allowPathfinding ||
+                cachedPathIntent != intent ||
+                cachedPathStatus is not (EnemyPathStatus.Ready or EnemyPathStatus.Partial) ||
+                FlatDistance(cachedPathGoalLocalPosition, finalGoalLocalPosition) > PathGoalRefreshToleranceFor(Intelligence) ||
+                cachedPathCreatedTime <= float.NegativeInfinity)
+            {
+                cachedPathCreatedTime = Mathf.Max(0f, lastTickTime);
+                return 0f;
+            }
+
+            return Mathf.Max(0f, lastTickTime - cachedPathCreatedTime);
+        }
+
+        private void UpdatePathCacheAfterResult(EnemyNavigationResult result, Vector3 finalGoalLocalPosition, EnemyNavigationIntent intent, bool allowPathfinding)
+        {
+            if (!allowPathfinding ||
+                result.Backend != EnemyNavigationBackend.RoomGridAStar ||
+                result.PathStatus is not (EnemyPathStatus.Ready or EnemyPathStatus.Partial) ||
+                result.PathWaypointCount <= 0)
+            {
+                if (result.Blocked || result.PathStatus is EnemyPathStatus.Unreachable or EnemyPathStatus.InvalidRequest)
+                {
+                    ResetPathCache();
+                }
+
+                return;
+            }
+
+            cachedPathGoalLocalPosition = finalGoalLocalPosition;
+            cachedPathNextWaypointLocalPosition = result.NextWaypointLocalPosition;
+            cachedPathIntent = intent;
+            cachedPathStatus = result.PathStatus;
+            cachedPathCreatedTime = Mathf.Max(0f, lastTickTime);
+            cachedPathWaypointCount = result.PathWaypointCount;
+            cachedPathFallbackReason = result.FallbackReason;
+            cachedPathWaypointsLocalPositions = result.PathWaypointsLocalPositions;
+            nextPathRefreshTime = cachedPathCreatedTime + PathRefreshIntervalFor(Intelligence) + PathRefreshJitterSeconds();
+        }
+
+        private void ResetPathCache()
+        {
+            cachedPathGoalLocalPosition = Vector3.zero;
+            cachedPathNextWaypointLocalPosition = Vector3.zero;
+            cachedPathIntent = EnemyNavigationIntent.None;
+            cachedPathStatus = EnemyPathStatus.NotRequested;
+            cachedPathCreatedTime = float.NegativeInfinity;
+            nextPathRefreshTime = 0f;
+            cachedPathWaypointCount = 0;
+            cachedPathFallbackReason = string.Empty;
+            cachedPathWaypointsLocalPositions = Array.Empty<Vector3>();
+        }
+
+        private float PathRefreshIntervalFor(EnemyIntelligenceLevel level)
+        {
+            return level switch
+            {
+                EnemyIntelligenceLevel.Cunning => 0.25f,
+                EnemyIntelligenceLevel.Tactical => 0.32f,
+                EnemyIntelligenceLevel.Trained => 0.48f,
+                EnemyIntelligenceLevel.Basic => 0.62f,
+                EnemyIntelligenceLevel.Simple => 0.82f,
+                _ => 0.95f
+            };
+        }
+
+        private float PathRefreshJitterSeconds()
+        {
+            var seed = Mathf.Abs(spawnIndex >= 0 ? spawnIndex : GetInstanceID());
+            return (seed % 11) * 0.035f;
+        }
+
+        private static float PathGoalRefreshToleranceFor(EnemyIntelligenceLevel level)
+        {
+            return level switch
+            {
+                EnemyIntelligenceLevel.Cunning => 0.34f,
+                EnemyIntelligenceLevel.Tactical => 0.38f,
+                EnemyIntelligenceLevel.Trained => 0.46f,
+                EnemyIntelligenceLevel.Basic => 0.55f,
+                EnemyIntelligenceLevel.Simple => 0.68f,
+                _ => 0.8f
+            };
         }
 
         private Vector3 ResolveLocalSteeringDirection(Vector3 intentDirection)
@@ -4513,9 +4978,200 @@ namespace Hollow.Combat
             };
         }
 
+        private void OnDrawGizmosSelected()
+        {
+            if (lastNavigationResult.Backend != EnemyNavigationBackend.RoomGridAStar ||
+                lastNavigationResult.PathStatus is not (EnemyPathStatus.Ready or EnemyPathStatus.Partial))
+            {
+                return;
+            }
+
+            var origin = transform.position + Vector3.up * 0.08f;
+            var waypoint = NavigationLocalToWorld(lastNavigationResult.NextWaypointLocalPosition) + Vector3.up * 0.08f;
+            var goal = NavigationLocalToWorld(lastNavigationResult.FinalGoalLocalPosition) + Vector3.up * 0.08f;
+            Gizmos.color = lastNavigationResult.PathStatus == EnemyPathStatus.Ready
+                ? new Color(0.15f, 0.85f, 1f, 0.85f)
+                : new Color(1f, 0.75f, 0.15f, 0.85f);
+            Gizmos.DrawLine(origin, waypoint);
+            Gizmos.DrawWireSphere(waypoint, 0.12f);
+            Gizmos.color = new Color(0.25f, 1f, 0.35f, 0.75f);
+            Gizmos.DrawWireSphere(goal, 0.18f);
+        }
+
+        private void UpdateNavigationDebugOverlay()
+        {
+            if (lastNavigationResult.Backend == EnemyNavigationBackend.RoomGridAStar &&
+                lastNavigationResult.PathStatus is EnemyPathStatus.Ready or EnemyPathStatus.Partial)
+            {
+                EnemyNavigationDebugOverlay.ReportActivePathUser(GetInstanceID());
+            }
+
+            if (!EnemyNavigationDebugOverlay.PathTracingEnabled ||
+                lastNavigationResult.Backend != EnemyNavigationBackend.RoomGridAStar ||
+                lastNavigationResult.PathStatus is not (EnemyPathStatus.Ready or EnemyPathStatus.Partial) ||
+                !isActiveAndEnabled)
+            {
+                SetNavigationDebugLineVisible(false);
+                return;
+            }
+
+            var line = EnsureNavigationDebugLine();
+            if (line == null)
+            {
+                return;
+            }
+
+            var path = lastNavigationResult.PathWaypointsLocalPositions;
+            var pathStartIndex = ResolveDebugPathStartIndex(path, lastNavigationResult.NextWaypointLocalPosition);
+            var pointCount = path != null && path.Length > 0
+                ? path.Length - pathStartIndex + 1
+                : 3;
+            line.positionCount = pointCount;
+            line.SetPosition(0, transform.position + Vector3.up * 0.1f);
+            if (path != null && path.Length > 0)
+            {
+                var lineIndex = 1;
+                for (var index = pathStartIndex; index < path.Length; index++)
+                {
+                    line.SetPosition(lineIndex, NavigationLocalToWorld(path[index]) + Vector3.up * 0.1f);
+                    lineIndex++;
+                }
+            }
+            else
+            {
+                line.SetPosition(1, NavigationLocalToWorld(lastNavigationResult.NextWaypointLocalPosition) + Vector3.up * 0.1f);
+                line.SetPosition(2, NavigationLocalToWorld(lastNavigationResult.FinalGoalLocalPosition) + Vector3.up * 0.1f);
+            }
+
+            var color = lastNavigationResult.PathStatus == EnemyPathStatus.Ready
+                ? new Color(0.1f, 0.85f, 1f, 0.92f)
+                : new Color(1f, 0.72f, 0.12f, 0.92f);
+            line.startColor = color;
+            line.endColor = new Color(0.25f, 1f, 0.35f, 0.92f);
+            line.enabled = true;
+        }
+
+        private static int ResolveDebugPathStartIndex(Vector3[] path, Vector3 nextWaypointLocalPosition)
+        {
+            if (path == null || path.Length == 0)
+            {
+                return 0;
+            }
+
+            var bestIndex = 0;
+            var bestDistance = float.MaxValue;
+            for (var index = 0; index < path.Length; index++)
+            {
+                var distance = (Flat(path[index]) - Flat(nextWaypointLocalPosition)).sqrMagnitude;
+                if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                bestIndex = index;
+            }
+
+            return bestIndex;
+        }
+
+        private LineRenderer EnsureNavigationDebugLine()
+        {
+            if (navigationDebugLine != null)
+            {
+                return navigationDebugLine;
+            }
+
+            var lineObject = new GameObject("Debug.NavigationPathTrace");
+            lineObject.transform.SetParent(transform, false);
+            navigationDebugLine = lineObject.AddComponent<LineRenderer>();
+            navigationDebugLine.useWorldSpace = true;
+            navigationDebugLine.loop = false;
+            navigationDebugLine.widthMultiplier = 0.055f;
+            navigationDebugLine.numCapVertices = 3;
+            navigationDebugLine.numCornerVertices = 2;
+            navigationDebugLine.sharedMaterial = MaterialResolver.Resolve(MaterialRole.VfxDebug);
+            navigationDebugLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            navigationDebugLine.receiveShadows = false;
+            return navigationDebugLine;
+        }
+
+        private void SetNavigationDebugLineVisible(bool visible)
+        {
+            if (navigationDebugLine != null)
+            {
+                navigationDebugLine.enabled = visible;
+            }
+        }
+
+        private void UpdateAiDebugOverlay()
+        {
+            if (bossRuntime != null || bossDefinition != null || archetypeId == EnemyArchetypeId.Boss)
+            {
+                SetAiDebugTextVisible(false);
+                return;
+            }
+
+            EnemyAiDebugOverlay.ReportBlackboard(GetInstanceID(), aiBrain.Blackboard);
+            if (!EnemyAiDebugOverlay.BlackboardEnabled || !isActiveAndEnabled)
+            {
+                SetAiDebugTextVisible(false);
+                return;
+            }
+
+            var text = EnsureAiDebugText();
+            if (text == null)
+            {
+                return;
+            }
+
+            text.text = aiBrain.Blackboard.Summary;
+            text.transform.localPosition = new Vector3(0f, 1.45f, 0f);
+            text.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
+            text.gameObject.SetActive(true);
+        }
+
+        private TextMesh EnsureAiDebugText()
+        {
+            if (aiDebugText != null)
+            {
+                return aiDebugText;
+            }
+
+            var textObject = new GameObject("Debug.AiBlackboard");
+            textObject.transform.SetParent(transform, false);
+            aiDebugText = textObject.AddComponent<TextMesh>();
+            aiDebugText.anchor = TextAnchor.MiddleCenter;
+            aiDebugText.alignment = TextAlignment.Center;
+            aiDebugText.characterSize = 0.08f;
+            aiDebugText.fontSize = 28;
+            aiDebugText.color = new Color(0.75f, 1f, 0.78f, 0.95f);
+            return aiDebugText;
+        }
+
+        private void SetAiDebugTextVisible(bool visible)
+        {
+            if (aiDebugText != null)
+            {
+                aiDebugText.gameObject.SetActive(visible);
+            }
+        }
+
+        private Vector3 NavigationLocalToWorld(Vector3 localPosition)
+        {
+            return roomRuntimeRoot != null
+                ? roomRuntimeRoot.transform.TransformPoint(localPosition)
+                : localPosition;
+        }
+
         private static Vector3 Flat(Vector3 value)
         {
             return new Vector3(value.x, 0f, value.z);
+        }
+
+        private static float FlatDistance(Vector3 left, Vector3 right)
+        {
+            return Vector3.Distance(Flat(left), Flat(right));
         }
     }
 }

@@ -30,6 +30,17 @@ namespace Hollow.Combat
             var desired = request.DesiredLocalPosition;
             var direct = ResolveByMode(request.Mode, request.Room, current, desired, request.RadiusMeters);
             var directResult = BuildResult(request, direct, usedFallback: false);
+            if (RoomGridAStarPathfinder.CanUsePathfinding(request))
+            {
+                var pathResult = RoomGridAStarPathfinder.Resolve(request, directResult);
+                if (pathResult.Backend == EnemyNavigationBackend.RoomGridAStar)
+                {
+                    return pathResult;
+                }
+
+                directResult = pathResult;
+            }
+
             if (!ShouldTryFallback(request, directResult))
             {
                 return directResult;
@@ -154,6 +165,7 @@ namespace Hollow.Combat
                 : 0f;
             var blocked = (!reached && moved.sqrMagnitude <= 0.0001f && requestedDelta.sqrMagnitude > 0.0001f) ||
                 progress < -0.01f;
+            var pathRequested = RoomGridAStarPathfinder.CanUsePathfinding(request);
             return new EnemyNavigationResult(
                 CurrentBackend,
                 request.Mode,
@@ -163,7 +175,13 @@ namespace Hollow.Combat
                 steering,
                 reached,
                 usedFallback,
-                blocked);
+                blocked,
+                pathRequested ? EnemyPathStatus.FallbackLocal : EnemyPathStatus.NotRequested,
+                request.FinalGoalLocalPosition,
+                Vector3.zero,
+                request.PathAgeSeconds,
+                0,
+                pathRequested ? "local_backend" : string.Empty);
         }
 
         private static Vector3 ResolveByMode(EnemyNavigationMode mode, Hollow.Rooms.RoomRuntimeRoot room, Vector3 current, Vector3 desired, float radius)

@@ -106,10 +106,10 @@ namespace Hollow.Tests.EditMode
 
                 enemy.Tick(0.5f, 2f);
 
-                Assert.AreEqual(EnemyNavigationBackend.LocalSteering, enemy.LastNavigationBackend);
+                Assert.That(enemy.LastNavigationBackend, Is.EqualTo(EnemyNavigationBackend.LocalSteering).Or.EqualTo(EnemyNavigationBackend.RoomGridAStar));
                 Assert.AreEqual(EnemyNavigationMode.GroundedLocal, enemy.LastNavigationMode);
                 Assert.AreEqual(EnemyNavigationIntent.PreferredRange, enemy.LastNavigationIntent);
-                Assert.IsTrue(enemy.LastNavigationUsedFallbackSteering);
+                Assert.IsTrue(enemy.LastNavigationUsedFallbackSteering || enemy.LastNavigationBackend == EnemyNavigationBackend.RoomGridAStar);
                 Assert.IsFalse(RoomLocalCollision.IntersectsObstacle(room, enemy.transform.localPosition, enemy.RadiusMeters));
             }
             finally

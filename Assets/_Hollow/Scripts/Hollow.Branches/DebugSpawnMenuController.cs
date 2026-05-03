@@ -34,22 +34,42 @@ namespace Hollow.Branches
         private bool visible;
         private bool spawnFrozen;
         private bool debugLightAttackSpeedDoubled;
+        private bool debugEnemyPathTracingEnabled;
+        private bool debugEnemyAiBlackboardEnabled;
         private int groupIndex;
         private int entityIndex;
         private Rect windowRect = new(24f, 100f, 420f, 260f);
 
         public bool DebugLightAttackSpeedDoubled => debugLightAttackSpeedDoubled;
 
+        public bool DebugEnemyPathTracingEnabled => debugEnemyPathTracingEnabled;
+
+        public bool DebugEnemyAiBlackboardEnabled => debugEnemyAiBlackboardEnabled;
+
         public void Bind(BranchSessionController controller)
         {
             session = controller;
             ApplyDebugLightAttackSpeedToPlayer();
+            EnemyNavigationDebugOverlay.SetPathTracingEnabled(debugEnemyPathTracingEnabled);
+            EnemyAiDebugOverlay.SetBlackboardEnabled(debugEnemyAiBlackboardEnabled);
         }
 
         public void SetDebugLightAttackSpeedDoubled(bool enabled)
         {
             debugLightAttackSpeedDoubled = enabled;
             ApplyDebugLightAttackSpeedToPlayer();
+        }
+
+        public void SetDebugEnemyPathTracingEnabled(bool enabled)
+        {
+            debugEnemyPathTracingEnabled = enabled;
+            EnemyNavigationDebugOverlay.SetPathTracingEnabled(enabled);
+        }
+
+        public void SetDebugEnemyAiBlackboardEnabled(bool enabled)
+        {
+            debugEnemyAiBlackboardEnabled = enabled;
+            EnemyAiDebugOverlay.SetBlackboardEnabled(enabled);
         }
 
         private void Update()
@@ -66,6 +86,8 @@ namespace Hollow.Branches
         private void OnDestroy()
         {
             ApplyDebugLightAttackSpeedToPlayer(false);
+            SetDebugEnemyPathTracingEnabled(false);
+            SetDebugEnemyAiBlackboardEnabled(false);
         }
 
         private void OnGUI()
@@ -145,6 +167,19 @@ namespace Hollow.Branches
             {
                 SetDebugLightAttackSpeedDoubled(!debugLightAttackSpeedDoubled);
             }
+
+            var pathTracingLabel = $"Enemy Path Tracing: {(debugEnemyPathTracingEnabled ? "ON" : "OFF")}";
+            if (GUILayout.Button(pathTracingLabel))
+            {
+                SetDebugEnemyPathTracingEnabled(!debugEnemyPathTracingEnabled);
+            }
+            GUILayout.Label(EnemyNavigationDebugOverlay.DiagnosticsSummary);
+            var aiBlackboardLabel = $"Enemy AI Blackboard: {(debugEnemyAiBlackboardEnabled ? "ON" : "OFF")}";
+            if (GUILayout.Button(aiBlackboardLabel))
+            {
+                SetDebugEnemyAiBlackboardEnabled(!debugEnemyAiBlackboardEnabled);
+            }
+            GUILayout.Label(EnemyAiDebugOverlay.DiagnosticsSummary);
 
             if (GUILayout.Button("Spawn In Front Of Player"))
             {

@@ -3,7 +3,19 @@ namespace Hollow.Combat
     public enum EnemyNavigationBackend
     {
         LocalSteering = 0,
-        FuturePathfinding = 1
+        FuturePathfinding = 1,
+        RoomGridAStar = 2
+    }
+
+    public enum EnemyPathStatus
+    {
+        None = 0,
+        NotRequested = 1,
+        Ready = 2,
+        Partial = 3,
+        FallbackLocal = 4,
+        Unreachable = 5,
+        InvalidRequest = 6
     }
 
     public enum EnemyNavigationMode
