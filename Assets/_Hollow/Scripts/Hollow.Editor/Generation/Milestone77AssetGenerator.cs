@@ -6,6 +6,7 @@ using DiagnosticsProcess = System.Diagnostics.Process;
 using DiagnosticsProcessStartInfo = System.Diagnostics.ProcessStartInfo;
 using Hollow.Branches;
 using Hollow.Combat;
+using Hollow.Data.Definitions;
 using Hollow.RoomDesigner;
 using UnityEditor;
 using UnityEngine;
@@ -36,6 +37,8 @@ namespace Hollow.Editor.Generation
             RefreshEnemyCatalog(enemies);
             GenerateEncounterRotation();
             GenerateShowcaseRooms();
+            AssetDatabase.Refresh();
+            RefreshBranchTemplateCatalog();
             WriteDocs();
             WriteReport();
             GeneratePdfWithReportLab();
@@ -68,6 +71,92 @@ namespace Hollow.Editor.Generation
             "m77_spitting_pod_showcase",
             "m77_rat_showcase",
             "m77_spider_showcase"
+        };
+
+        public static IReadOnlyList<string> CuratedEncounterRoomIds { get; } = new[]
+        {
+            "m77_spider_brood_den_wide",
+            "m77_rat_warren_single",
+            "m77_rocky_spider_pod_wide",
+            "m77_rocky_rat_pod_wide"
+        };
+
+        private static readonly CritterRoomSpec[] CuratedEncounterRooms =
+        {
+            new(
+                RoomDesignerFootprintPreset.Wide2x1,
+                "m77_spider_brood_den_wide",
+                "M77 Spider Brood Den Wide",
+                "m77-critter-pack",
+                "m77-curated-critter-room",
+                V(-11, 0),
+                V(11, 0),
+                System.Array.Empty<Vector2Int>(),
+                new[]
+                {
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, -7, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, -6, -1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, -7, 1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 0, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 1, -1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 0, 1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 7, -1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 8, 1)
+                }),
+            new(
+                RoomDesignerFootprintPreset.Single1x1,
+                "m77_rat_warren_single",
+                "M77 Rat Warren Single",
+                "m77-critter-pack",
+                "m77-curated-critter-room",
+                V(-5, 0),
+                V(5, 2),
+                System.Array.Empty<Vector2Int>(),
+                new[]
+                {
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, -2, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, -1, -1),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, 2, 1),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, 3, 2),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, 2, -1)
+                }),
+            new(
+                RoomDesignerFootprintPreset.Wide2x1,
+                "m77_rocky_spider_pod_wide",
+                "M77 Rocky Spider Pod Wide",
+                "m77-critter-pod-cover",
+                "m77-curated-critter-room",
+                V(-11, 0),
+                V(11, 2),
+                new[] { V(-9, -2), V(-7, 1), V(-5, -1), V(-2, 2), V(2, -2), V(5, 1), V(7, -1), V(9, 2), V(-1, -2), V(1, 2) },
+                new[]
+                {
+                    Spawn(RoomDesignerMarkerKinds.EnemySpittingPod, 0, 0),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, -10, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, -8, 2),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, -4, 1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 4, -1),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 8, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemySpider, 10, 1)
+                }),
+            new(
+                RoomDesignerFootprintPreset.Wide2x1,
+                "m77_rocky_rat_pod_wide",
+                "M77 Rocky Rat Pod Wide",
+                "m77-critter-pod-cover",
+                "m77-curated-critter-room",
+                V(-11, 0),
+                V(11, -2),
+                new[] { V(-10, 2), V(-8, -1), V(-6, 1), V(-3, -2), V(-1, 2), V(2, -2), V(4, 1), V(6, -1), V(8, 2), V(10, -2) },
+                new[]
+                {
+                    Spawn(RoomDesignerMarkerKinds.EnemySpittingPod, 0, 0),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, -9, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, -7, 2),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, -4, 0),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, 5, -2),
+                    Spawn(RoomDesignerMarkerKinds.EnemyRat, 8, 1)
+                })
         };
 
         private static Dictionary<string, EnemyDefinition> GenerateEnemyAssets()
@@ -213,6 +302,10 @@ namespace Hollow.Editor.Generation
             WriteShowcaseRoom("m77_spitting_pod_showcase", "M77 Spitting Pod Showcase", RoomDesignerMarkerKinds.EnemySpittingPod);
             WriteShowcaseRoom("m77_rat_showcase", "M77 Rat Showcase", RoomDesignerMarkerKinds.EnemyRat);
             WriteShowcaseRoom("m77_spider_showcase", "M77 Spider Showcase", RoomDesignerMarkerKinds.EnemySpider);
+            foreach (var spec in CuratedEncounterRooms)
+            {
+                WriteCritterEncounterRoom(spec);
+            }
         }
 
         private static void WriteShowcaseRoom(string roomId, string displayName, string enemyKind)
@@ -220,11 +313,20 @@ namespace Hollow.Editor.Generation
             var project = RoomDesignerProject.CreateDefault(RoomDesignerFootprintPreset.Single1x1, displayName);
             project.projectId = roomId;
             project.displayName = displayName;
+            project.cells.RemoveAll(cell =>
+                cell.kind == RoomDesignerCellKinds.Rock ||
+                cell.kind == RoomDesignerCellKinds.Hole ||
+                cell.kind == RoomDesignerCellKinds.Spike);
             project.markers.Clear();
             project.markers.Add(new RoomDesignerMarker("spawn_safeStart", RoomDesignerMarkerKinds.SafeStart, -4f, 0f, 0f));
             project.markers.Add(new RoomDesignerMarker("spawn_enemy_00", enemyKind, 2f, 0f, 0f));
             project.markers.Add(new RoomDesignerMarker("spawn_enemy_01", RoomDesignerMarkerKinds.EnemyNormal, 4f, 0f, -2f));
             project.markers.Add(new RoomDesignerMarker("spawn_reward_0", RoomDesignerMarkerKinds.RoomReward, 5f, 0f, 2f));
+            foreach (var door in project.doorPorts)
+            {
+                door.state = RoomDesignerDoorKinds.Door;
+            }
+
             var manifest = RoomDesignerCompiler.BuildManifest(project);
             manifest.hollowRuntime.canonicalRoomId = roomId;
             manifest.hollowRuntime.roomType = "combat";
@@ -233,6 +335,71 @@ namespace Hollow.Editor.Generation
             var path = $"{ShowcaseRoomDirectory}/{roomId}.hollowruntime.json";
             File.WriteAllText(path, JsonUtility.ToJson(manifest, prettyPrint: true));
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        private static void WriteCritterEncounterRoom(CritterRoomSpec spec)
+        {
+            var project = RoomDesignerProject.CreateDefault(spec.Preset, spec.DisplayName);
+            project.projectId = spec.RoomId;
+            project.displayName = spec.DisplayName;
+            project.cells.RemoveAll(cell =>
+                cell.kind == RoomDesignerCellKinds.Rock ||
+                cell.kind == RoomDesignerCellKinds.Hole ||
+                cell.kind == RoomDesignerCellKinds.Spike);
+            project.markers.Clear();
+
+            foreach (var rock in spec.Rocks)
+            {
+                project.cells.Add(new RoomDesignerCell(rock.x, rock.y, 0, RoomDesignerCellKinds.Rock));
+            }
+
+            project.markers.Add(new RoomDesignerMarker("spawn_safeStart", RoomDesignerMarkerKinds.SafeStart, spec.SafeStart.x, 0f, spec.SafeStart.y));
+            for (var index = 0; index < spec.Enemies.Length; index++)
+            {
+                var spawn = spec.Enemies[index];
+                project.markers.Add(new RoomDesignerMarker($"spawn_enemy_{index:00}", spawn.Kind, spawn.X, 0f, spawn.Z));
+            }
+
+            project.markers.Add(new RoomDesignerMarker("spawn_reward_0", RoomDesignerMarkerKinds.RoomReward, spec.Reward.x, 0f, spec.Reward.y));
+            foreach (var door in project.doorPorts)
+            {
+                door.state = RoomDesignerDoorKinds.Door;
+            }
+
+            var validation = RoomDesignerDraftValidator.Validate(project);
+            if (!validation.IsValid)
+            {
+                throw new InvalidDataException($"M77 curated room '{spec.RoomId}' is not branch-ready: {string.Join("; ", validation.Errors)}");
+            }
+
+            var manifest = RoomDesignerCompiler.BuildManifest(project);
+            manifest.hollowRuntime.canonicalRoomId = spec.RoomId;
+            manifest.hollowRuntime.roomType = "combat";
+            manifest.hollowRuntime.rewardType = spec.RewardType;
+            manifest.hollowRuntime.prototypeStatus = spec.PrototypeStatus;
+            var path = $"{ShowcaseRoomDirectory}/{spec.RoomId}.hollowruntime.json";
+            File.WriteAllText(path, JsonUtility.ToJson(manifest, prettyPrint: true));
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        private static BranchRoomTemplateCatalogDefinition RefreshBranchTemplateCatalog()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<BranchRoomTemplateCatalogDefinition>(Milestone14AssetGenerator.CatalogPath);
+            if (catalog == null)
+            {
+                throw new FileNotFoundException($"Missing branch room template catalog at {Milestone14AssetGenerator.CatalogPath}.");
+            }
+
+            catalog.Configure(
+                catalog.Single1x1,
+                catalog.Wide2x1,
+                catalog.Tall1x2,
+                catalog.Block2x2,
+                catalog.L3Cell,
+                catalog.DefaultSeed,
+                Milestone16AssetGenerator.LoadApprovedTemplates());
+            EditorUtility.SetDirty(catalog);
+            return catalog;
         }
 
         private static void WriteDocs()
@@ -264,6 +431,7 @@ namespace Hollow.Editor.Generation
             builder.AppendLine();
             builder.AppendLine("- Early mixed encounter rotation adds `m77_pod_warning`, `m77_rat_scramble`, `m77_spider_scuttle`, and `m77_critter_mix`.");
             builder.AppendLine("- Curated showcase rooms are generated under `Assets/_Hollow/Data/Rooms/DesignerApproved/M77/`.");
+            builder.AppendLine($"- Bespoke critter encounter rooms: {string.Join(", ", CuratedEncounterRoomIds.Select(id => $"`{id}`"))}.");
             builder.AppendLine("- Presentation roles and material roles are added for art-pass-ready placeholder replacement.");
 
             File.WriteAllText(DocsPath, builder.ToString());
@@ -277,6 +445,7 @@ namespace Hollow.Editor.Generation
 - Added disposition: `{EnemyInstinctDisposition.Territorial.ToSaveString()}`.
 - Added early encounter ids: {string.Join(", ", EncounterIds)}.
 - Added showcase room ids: {string.Join(", ", ShowcaseRoomIds)}.
+- Added bespoke critter room ids: {string.Join(", ", CuratedEncounterRoomIds)}.
 - Catalogue Markdown: `{DocsPath}`.
 - Catalogue PDF target: `{PdfPath}`.
 ");
@@ -415,6 +584,65 @@ namespace Hollow.Editor.Generation
             public bool LungeEnabled { get; }
             public float LungeTriggerRangeMeters { get; }
             public Color Color { get; }
+        }
+
+        private static Vector2Int V(int x, int z)
+        {
+            return new Vector2Int(x, z);
+        }
+
+        private static RoomEnemySpawnSpec Spawn(string kind, int x, int z)
+        {
+            return new RoomEnemySpawnSpec(kind, x, z);
+        }
+
+        private readonly struct CritterRoomSpec
+        {
+            public CritterRoomSpec(
+                RoomDesignerFootprintPreset preset,
+                string roomId,
+                string displayName,
+                string rewardType,
+                string prototypeStatus,
+                Vector2Int safeStart,
+                Vector2Int reward,
+                IReadOnlyList<Vector2Int> rocks,
+                IReadOnlyList<RoomEnemySpawnSpec> enemies)
+            {
+                Preset = preset;
+                RoomId = roomId;
+                DisplayName = displayName;
+                RewardType = rewardType;
+                PrototypeStatus = prototypeStatus;
+                SafeStart = safeStart;
+                Reward = reward;
+                Rocks = rocks?.ToArray() ?? System.Array.Empty<Vector2Int>();
+                Enemies = enemies?.ToArray() ?? System.Array.Empty<RoomEnemySpawnSpec>();
+            }
+
+            public RoomDesignerFootprintPreset Preset { get; }
+            public string RoomId { get; }
+            public string DisplayName { get; }
+            public string RewardType { get; }
+            public string PrototypeStatus { get; }
+            public Vector2Int SafeStart { get; }
+            public Vector2Int Reward { get; }
+            public Vector2Int[] Rocks { get; }
+            public RoomEnemySpawnSpec[] Enemies { get; }
+        }
+
+        private readonly struct RoomEnemySpawnSpec
+        {
+            public RoomEnemySpawnSpec(string kind, int x, int z)
+            {
+                Kind = kind;
+                X = x;
+                Z = z;
+            }
+
+            public string Kind { get; }
+            public int X { get; }
+            public int Z { get; }
         }
     }
 }

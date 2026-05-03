@@ -18,22 +18,24 @@ namespace Hollow.Tests.EditMode
     public sealed class Milestone47ChallengeModeV2CuratedSeedsTests
     {
         [Test]
-        public void ChallengeCatalogContainsSixCuratedSeedsAndRules()
+        public void ChallengeCatalogContainsSevenCuratedSeedsAndRules()
         {
             var catalog = LoadChallengeCatalog();
 
             Assert.AreEqual(Milestone47AssetGenerator.CatalogId, catalog.CatalogId);
-            Assert.AreEqual(6, catalog.Challenges.Count);
+            Assert.AreEqual(7, catalog.Challenges.Count);
             AssertChallenge(catalog, "blade_trial", 47001, "balanced");
             AssertChallenge(catalog, "glass_runner", 47002, "balanced");
             AssertChallenge(catalog, "stone_oath", 47003, "heavy");
             AssertChallenge(catalog, "macro_maze", 47004, "balanced");
             AssertChallenge(catalog, "splitter_swarm", 47005, "balanced");
             AssertChallenge(catalog, "merchants_debt", 47006, "balanced");
+            AssertChallenge(catalog, "small_monsters", 47007, "balanced");
 
             Assert.IsTrue(catalog.Resolve("blade_trial").HasRule(ChallengeRuleKind.BlockShops));
             Assert.IsTrue(catalog.Resolve("glass_runner").HasRule(ChallengeRuleKind.BlockHealingRewards));
             Assert.AreEqual(2, catalog.Resolve("splitter_swarm").RuleIntValue(ChallengeRuleKind.EncounterPressureBonus));
+            Assert.IsTrue(catalog.Resolve("small_monsters").HasRule(ChallengeRuleKind.SmallMonstersOnly));
         }
 
         [Test]
@@ -120,6 +122,43 @@ namespace Hollow.Tests.EditMode
                 Assert.IsTrue(normal.TryResolve("combat_01", out var normalCombat));
                 Assert.IsTrue(pressured.TryResolve("combat_01", out var pressuredCombat));
                 Assert.AreEqual(normalCombat.DifficultyBand + 2, pressuredCombat.DifficultyBand);
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+                foreach (var encounter in catalog.Encounters.Distinct())
+                {
+                    Object.DestroyImmediate(encounter);
+                }
+
+                Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void SmallMonstersRuleRemapsNonBossSpawnsAndLeavesBossAssignment()
+        {
+            var profile = EncounterDirectorProfileDefinition.CreateRuntimeDefault();
+            var catalog = CreateEncounterCatalog();
+            try
+            {
+                var graph = CreateGraph();
+                var plan = EncounterResolver.CreateDirectedSeededPlan(
+                    graph,
+                    catalog,
+                    47007,
+                    1,
+                    profile,
+                    0,
+                    null,
+                    new[] { "spawnEnemyRat", "spawnEnemySpider" });
+
+                Assert.IsTrue(plan.TryResolve("combat_01", out var combat));
+                Assert.Greater(combat.EnemySpawnKinds.Count, 0);
+                Assert.IsTrue(combat.EnemySpawnKinds.All(kind => kind == "spawnEnemyRat" || kind == "spawnEnemySpider"));
+
+                Assert.IsTrue(plan.TryResolve("boss_01", out var boss));
+                CollectionAssert.Contains(boss.EnemySpawnKinds.ToArray(), "spawnEnemyBoss");
             }
             finally
             {

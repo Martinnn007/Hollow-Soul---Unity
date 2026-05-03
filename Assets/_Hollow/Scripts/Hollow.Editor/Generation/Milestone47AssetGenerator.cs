@@ -118,7 +118,19 @@ namespace Hollow.Editor.Generation
                     2,
                     22,
                     Array.Empty<ChallengeRuleDefinition>(),
-                    new[] { "Fixed seed 47006.", "Start with 2 coins.", "Start with 22 souls.", "Shop economy showcase." })
+                    new[] { "Fixed seed 47006.", "Start with 2 coins.", "Start with 22 souls.", "Shop economy showcase." }),
+                SaveChallenge(
+                    "Challenge_SmallMonsters.asset",
+                    "small_monsters",
+                    "Small Monsters",
+                    47007,
+                    "balanced",
+                    new CharacterStatModifier(speed: 0.15f),
+                    ChallengeRunLoadout.Create(meleeWeaponId: "starter_blade", rangedWeaponId: "starter_bolt", consumableCardId: "swift_card"),
+                    8,
+                    0,
+                    new[] { new ChallengeRuleDefinition(ChallengeRuleKind.SmallMonstersOnly, displayText: "Non-boss rooms spawn only Rats and Spiders.") },
+                    new[] { "Fixed seed 47007.", "Non-boss rooms spawn only Rats and Spiders.", "Boss rooms remain unchanged.", "+0.15 speed for critter footwork." })
             };
         }
 
@@ -204,7 +216,8 @@ namespace Hollow.Editor.Generation
                 $"- Catalog: `{catalog.CatalogId}`.\n" +
                 "- Challenge runs remain transient and do not mutate active-run saves or bank souls.\n" +
                 "- Profile challenge records track attempts, completions, best clear time, last result, and last played seed.\n" +
-                "- Curated seeds: `47001` through `47006`.\n" +
+                "- Curated seeds: `47001` through `47007`.\n" +
+                "- `small_monsters` remaps non-boss encounter spawns to Rats and Spiders while preserving boss rooms.\n" +
                 "- Runtime path: M46 encounter director branch identity with world lengths `8/10/12` and final extraction completion.\n");
         }
     }

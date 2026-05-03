@@ -113,7 +113,18 @@ namespace Hollow.Data.Definitions
                         2,
                         22,
                         null,
-                        new[] { "Fixed seed 47006.", "Start poor in coins.", "Start with 22 souls.", "Shop economy showcase." })
+                        new[] { "Fixed seed 47006.", "Start poor in coins.", "Start with 22 souls.", "Shop economy showcase." }),
+                    CreateRuntimeChallenge(
+                        "small_monsters",
+                        "Small Monsters",
+                        47007,
+                        "balanced",
+                        new CharacterStatModifier(speed: 0.15f),
+                        ChallengeRunLoadout.Create(meleeWeaponId: "starter_blade", rangedWeaponId: "starter_bolt", consumableCardId: "swift_card"),
+                        8,
+                        0,
+                        new[] { new ChallengeRuleDefinition(ChallengeRuleKind.SmallMonstersOnly, displayText: "Non-boss rooms spawn only Rats and Spiders.") },
+                        new[] { "Fixed seed 47007.", "Non-boss rooms spawn only Rats and Spiders.", "Boss rooms remain unchanged.", "+0.15 speed." })
                 });
             return catalog;
         }

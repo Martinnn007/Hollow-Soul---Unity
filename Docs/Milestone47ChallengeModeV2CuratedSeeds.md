@@ -1,6 +1,6 @@
 # Milestone 47: Challenge Mode V2 + Curated Seeds
 
-M47 upgrades Challenge Mode from a small transient test list into six curated full-run fixed-seed challenges. Challenge runs still never write active-run snapshots, clear profile runs, bank souls, or grant meta rewards. They do record lightweight profile results so later milestones can add unlocks or rewards safely.
+M47 upgrades Challenge Mode from a small transient test list into seven curated full-run fixed-seed challenges. Challenge runs still never write active-run snapshots, clear profile runs, bank souls, or grant meta rewards. They do record lightweight profile results so later milestones can add unlocks or rewards safely.
 
 ## Challenge Catalog
 
@@ -14,6 +14,7 @@ The generated catalog id is `m47_challenge_catalog_v2`.
 | Macro Maze | `47004` | Balanced | Macro-room traversal and positioning showcase. |
 | Splitter Swarm | `47005` | Balanced | Harder M46 encounter bands and Echo Burst starter. |
 | Merchant's Debt | `47006` | Balanced | Shop/economy showcase with low coins and starter souls. |
+| Small Monsters | `47007` | Balanced | Non-boss rooms spawn only Rats and Spiders; boss rooms remain unchanged. |
 
 ## Runtime Rules
 
@@ -22,7 +23,8 @@ The generated catalog id is `m47_challenge_catalog_v2`.
 - The branch runtime uses `m46_encounter_director_curve_v1`, including world lengths `8/10/12`.
 - Completion is only through the existing final extraction portal after World 3.
 - Death ends the attempt without completion.
-- Rule entries are narrow run modifiers: block shops, block healing rewards, or increase encounter pressure.
+- Rule entries are narrow run modifiers: block shops, block healing rewards, increase encounter pressure, or remap non-boss encounter spawns to small monsters.
+- `Small Monsters` preserves boss encounters and remaps non-boss enemy spawn kinds to `spawnEnemyRat` and `spawnEnemySpider`.
 
 ## Result Records
 
@@ -45,4 +47,4 @@ Run:
 /Applications/Unity/Hub/Editor/6000.4.1f1/Unity.app/Contents/MacOS/Unity -batchmode -quit -projectPath "<project>" -executeMethod Hollow.Editor.Validation.Milestone47Validator.Validate
 ```
 
-The validator checks catalog identity, all six fixed seeds, V2 rules/loadouts, scene wiring, menu wiring, and challenge-record persistence without active-run mutation.
+The validator checks catalog identity, all seven fixed seeds, V2 rules/loadouts, scene wiring, menu wiring, and challenge-record persistence without active-run mutation.

@@ -35,6 +35,13 @@ ENCOUNTERS = [
     ["m77_critter_mix", "Pod + Rat + Spider + Fast Chaser", "Mixed M77 roster sampler."],
 ]
 
+ROOMS = [
+    ["m77_spider_brood_den_wide", "Wide 2x1", "8 Spiders", "Three spatial brood groups: 3, 3, and 2."],
+    ["m77_rat_warren_single", "Single 1x1", "5 Rats", "Two warren groups: 2 and 3 rats."],
+    ["m77_rocky_spider_pod_wide", "Wide 2x1", "1 Pod + 6 Spiders", "Rocky cover field with a central ballistic pod."],
+    ["m77_rocky_rat_pod_wide", "Wide 2x1", "1 Pod + 5 Rats", "Rocky cover field with territorial rats and a central pod."],
+]
+
 
 def para(text, style):
     return Paragraph(text, style)
@@ -92,6 +99,11 @@ def build_pdf():
         styled_table(
             [["Encounter", "Composition", "Purpose"]] + ENCOUNTERS,
             [1.45 * inch, 2.0 * inch, 4.0 * inch],
+        ),
+        para("Bespoke Room Templates", h2),
+        styled_table(
+            [["Room", "Footprint", "Composition", "Design Note"]] + ROOMS,
+            [1.7 * inch, 0.85 * inch, 1.4 * inch, 3.5 * inch],
         ),
         para("Compatibility", h2),
         para("No poison, acid, elemental resistance, pathfinding, obstacle line of sight, squad tactics, stealth UI, save schema changes, or boss behavior changes are added in M77.", body),

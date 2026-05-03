@@ -30,6 +30,7 @@ M77 adds Spitting Pod, Rat, and Spider as early mixed enemies. They use the exis
 
 - Early mixed encounter rotation adds `m77_pod_warning`, `m77_rat_scramble`, `m77_spider_scuttle`, and `m77_critter_mix`.
 - Curated showcase rooms are generated under `Assets/_Hollow/Data/Rooms/DesignerApproved/M77/`.
+- Bespoke critter encounter rooms: `m77_spider_brood_den_wide`, `m77_rat_warren_single`, `m77_rocky_spider_pod_wide`, and `m77_rocky_rat_pod_wide`.
 - Presentation roles and material roles are added for art-pass-ready placeholder replacement.
 
 ## Compatibility

@@ -2348,12 +2348,20 @@ namespace Hollow.Branches
                     worldIndex,
                     encounterDirectorProfile,
                     ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus),
-                    bossCatalog);
+                    bossCatalog,
+                    ChallengeAllowedNonBossSpawnKinds());
             }
 
             return graph.BranchId == BranchGenerator.EnemyEncounterBranchId || graph.BranchId == BranchGenerator.BranchFeaturesId
-                ? EncounterResolver.CreateSeededPlan(graph, encounterCatalog, graph.Seed)
+                ? EncounterResolver.CreateSeededPlan(graph, encounterCatalog, graph.Seed, ChallengeAllowedNonBossSpawnKinds())
                 : EncounterPlan.Empty;
+        }
+
+        private IReadOnlyList<string> ChallengeAllowedNonBossSpawnKinds()
+        {
+            return ChallengeHasRule(ChallengeRuleKind.SmallMonstersOnly)
+                ? new[] { "spawnEnemyRat", "spawnEnemySpider" }
+                : System.Array.Empty<string>();
         }
 
         private bool IsM20Branch()

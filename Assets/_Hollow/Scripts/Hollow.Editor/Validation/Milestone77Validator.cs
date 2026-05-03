@@ -21,6 +21,7 @@ namespace Hollow.Editor.Validation
             ValidateFiles(failures);
             ValidateEnemies(failures);
             ValidateEncounters(failures);
+            ValidateCuratedRooms(failures);
             ValidatePresentationRoles(failures);
 
             if (failures.Count == 0)
@@ -45,6 +46,11 @@ namespace Hollow.Editor.Validation
             ExpectFile("tools/generate_m77_critter_roster_pdf.py", failures);
             ExpectFile("tools/verify_m77_critter_roster_pdf.py", failures);
             foreach (var roomId in Milestone77AssetGenerator.ShowcaseRoomIds)
+            {
+                ExpectFile($"{Milestone77AssetGenerator.ShowcaseRoomDirectory}/{roomId}.hollowruntime.json", failures);
+            }
+
+            foreach (var roomId in Milestone77AssetGenerator.CuratedEncounterRoomIds)
             {
                 ExpectFile($"{Milestone77AssetGenerator.ShowcaseRoomDirectory}/{roomId}.hollowruntime.json", failures);
             }
@@ -112,6 +118,37 @@ namespace Hollow.Editor.Validation
                 if (!catalog.Encounters.Any(encounter => encounter != null && encounter.EncounterId == encounterId))
                 {
                     failures.Add($"M77 encounter `{encounterId}` is not in the active encounter catalog.");
+                }
+            }
+        }
+
+        private static void ValidateCuratedRooms(List<string> failures)
+        {
+            var roomCatalog = AssetDatabase.LoadAssetAtPath<BranchRoomTemplateCatalogDefinition>(Milestone14AssetGenerator.CatalogPath);
+            if (roomCatalog == null)
+            {
+                failures.Add("Missing active branch room template catalog for M77 curated rooms.");
+                return;
+            }
+
+            var importReport = ApprovedDesignerRoomImporter.ImportApprovedRooms(roomCatalog.AdditionalTemplates);
+            foreach (var error in importReport.Errors)
+            {
+                failures.Add($"M77 curated room import failed: {error}");
+            }
+
+            foreach (var roomId in Milestone77AssetGenerator.CuratedEncounterRoomIds)
+            {
+                var room = importReport.ValidRooms.FirstOrDefault(candidate => candidate.Id == roomId);
+                if (room == null)
+                {
+                    failures.Add($"M77 curated room `{roomId}` is not registered in the active branch template catalog.");
+                    continue;
+                }
+
+                if (room.Layout.WalkableTiles.Count == 0 || room.DoorPorts.Count == 0)
+                {
+                    failures.Add($"M77 curated room `{roomId}` must have walkable tiles and door ports.");
                 }
             }
         }

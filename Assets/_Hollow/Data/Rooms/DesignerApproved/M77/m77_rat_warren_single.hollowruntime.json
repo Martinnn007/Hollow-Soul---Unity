@@ -1,12 +1,12 @@
 {
   "hollowRuntime": {
     "schemaVersion": 2,
-    "sourceProjectId": "m77_spider_showcase",
-    "canonicalRoomId": "m77_spider_showcase",
-    "displayName": "M77 Spider Showcase",
+    "sourceProjectId": "m77_rat_warren_single",
+    "canonicalRoomId": "m77_rat_warren_single",
+    "displayName": "M77 Rat Warren Single",
     "roomType": "combat",
-    "rewardType": "m77-critter-showcase",
-    "prototypeStatus": "m77-curated",
+    "rewardType": "m77-critter-pack",
+    "prototypeStatus": "m77-curated-critter-room",
     "tileSizeMeters": 1.0,
     "dimensions": {
       "widthTiles": 13,
@@ -494,27 +494,54 @@
       }
     ],
     "playerSafeStart": {
-      "x": -4.0,
+      "x": -5.0,
       "y": 0.0,
       "z": 0.0
     },
     "enemySpawns": [
       {
         "id": "spawn_enemy_00",
-        "kind": "spawnEnemySpider",
+        "kind": "spawnEnemyRat",
         "position": {
-          "x": 2.0,
+          "x": -2.0,
           "y": 0.0,
-          "z": 0.0
+          "z": -2.0
         }
       },
       {
         "id": "spawn_enemy_01",
-        "kind": "spawnEnemyNormal",
+        "kind": "spawnEnemyRat",
         "position": {
-          "x": 4.0,
+          "x": -1.0,
           "y": 0.0,
-          "z": -2.0
+          "z": -1.0
+        }
+      },
+      {
+        "id": "spawn_enemy_02",
+        "kind": "spawnEnemyRat",
+        "position": {
+          "x": 2.0,
+          "y": 0.0,
+          "z": 1.0
+        }
+      },
+      {
+        "id": "spawn_enemy_03",
+        "kind": "spawnEnemyRat",
+        "position": {
+          "x": 3.0,
+          "y": 0.0,
+          "z": 2.0
+        }
+      },
+      {
+        "id": "spawn_enemy_04",
+        "kind": "spawnEnemyRat",
+        "position": {
+          "x": 2.0,
+          "y": 0.0,
+          "z": -1.0
         }
       }
     ],

@@ -36,6 +36,7 @@ namespace Hollow.Combat
         private float nextAllowedShotTime;
         private float nextAllowedMeleeTime;
         private float temporaryDamageEndTime;
+        private bool debugLightAttackSpeedDoubled;
         private Vector2 lastAimDirection = Vector2.up;
 
         public float CooldownSeconds => cooldownSeconds * cooldownMultiplier;
@@ -51,6 +52,8 @@ namespace Hollow.Combat
         public string RangedWeaponId => rangedWeaponId;
 
         public string ActiveWeaponDisplayName => ResolveWeapon(activeWeaponSlot)?.DisplayName ?? activeWeaponSlot.ToString();
+
+        public bool DebugLightAttackSpeedDoubled => debugLightAttackSpeedDoubled;
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
@@ -100,6 +103,11 @@ namespace Hollow.Combat
             projectilePassiveState = nextProjectilePassiveState.PatternKind == 0
                 ? ProjectilePassiveState.Default
                 : nextProjectilePassiveState;
+        }
+
+        public void SetDebugLightAttackSpeedDoubled(bool enabled)
+        {
+            debugLightAttackSpeedDoubled = enabled;
         }
 
         public void ConfigureBuildStats(
@@ -306,14 +314,17 @@ namespace Hollow.Combat
 
         private float EffectiveRangedCooldown(WeaponAttackDefinition attack, AttackKind attackKind)
         {
+            float cooldown;
             if (attackKind != AttackKind.Light || projectilePassiveState.RangedLightFireRateBonusPerSecond <= 0f)
             {
-                return Mathf.Max(0.05f, attack.CooldownSeconds * cooldownMultiplier);
+                cooldown = Mathf.Max(0.05f, attack.CooldownSeconds * cooldownMultiplier);
+                return ApplyDebugLightAttackSpeedCooldown(attackKind, cooldown);
             }
 
             var baseShotsPerSecond = 1f / Mathf.Max(0.05f, attack.CooldownSeconds);
             var effectiveShotsPerSecond = baseShotsPerSecond + projectilePassiveState.RangedLightFireRateBonusPerSecond;
-            return Mathf.Max(0.05f, (1f / effectiveShotsPerSecond) * cooldownMultiplier);
+            cooldown = Mathf.Max(0.05f, (1f / effectiveShotsPerSecond) * cooldownMultiplier);
+            return ApplyDebugLightAttackSpeedCooldown(attackKind, cooldown);
         }
 
         private static Vector2 Rotate(Vector2 value, float degrees)
@@ -352,13 +363,13 @@ namespace Hollow.Combat
 
             var weapon = ResolveWeapon(WeaponSlot.Melee);
             var attack = ResolveAttack(weapon, WeaponSlot.Melee, attackKind);
-            var cooldown = attack.CooldownSeconds * cooldownMultiplier;
+            var cooldown = EffectiveMeleeCooldown(attack, attackKind);
             if (timeSeconds < nextAllowedMeleeTime || combatController == null || !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost)))
             {
                 return false;
             }
 
-            nextAllowedMeleeTime = timeSeconds + Mathf.Max(0.05f, cooldown);
+            nextAllowedMeleeTime = timeSeconds + cooldown;
             var direction = new Vector3(cardinal.x, 0f, cardinal.y);
             var effectiveRange = EffectiveRange(attack, WeaponSlot.Melee);
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Melee, attackKind, cardinal);
@@ -391,6 +402,22 @@ namespace Hollow.Combat
             }
 
             return true;
+        }
+
+        private float EffectiveMeleeCooldown(WeaponAttackDefinition attack, AttackKind attackKind)
+        {
+            var cooldown = Mathf.Max(0.05f, attack.CooldownSeconds * cooldownMultiplier);
+            return ApplyDebugLightAttackSpeedCooldown(attackKind, cooldown);
+        }
+
+        private float ApplyDebugLightAttackSpeedCooldown(AttackKind attackKind, float cooldown)
+        {
+            if (!debugLightAttackSpeedDoubled || attackKind != AttackKind.Light)
+            {
+                return Mathf.Max(0.05f, cooldown);
+            }
+
+            return Mathf.Max(0.05f, cooldown * 0.5f);
         }
 
         private bool TrySpendStamina(float amount)

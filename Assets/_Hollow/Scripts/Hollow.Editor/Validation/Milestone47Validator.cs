@@ -23,7 +23,8 @@ namespace Hollow.Editor.Validation
             ["stone_oath"] = 47003,
             ["macro_maze"] = 47004,
             ["splitter_swarm"] = 47005,
-            ["merchants_debt"] = 47006
+            ["merchants_debt"] = 47006,
+            ["small_monsters"] = 47007
         };
 
         private static readonly string[] RequiredFiles =
@@ -37,6 +38,7 @@ namespace Hollow.Editor.Validation
             "Assets/_Hollow/Scripts/Hollow.Editor/Validation/Milestone47Validator.cs",
             "Assets/_Hollow/Tests/EditMode/Milestone47ChallengeModeV2CuratedSeedsTests.cs",
             "Docs/Milestone47ChallengeModeV2CuratedSeeds.md",
+            Milestone47AssetGenerator.ChallengeDirectory + "/Challenge_SmallMonsters.asset",
             Milestone47AssetGenerator.ChallengeCatalogPath,
             Milestone47AssetGenerator.ReportPath
         };
@@ -124,6 +126,7 @@ namespace Hollow.Editor.Validation
             ValidateRule(catalog, "blade_trial", ChallengeRuleKind.BlockShops, failures);
             ValidateRule(catalog, "glass_runner", ChallengeRuleKind.BlockHealingRewards, failures);
             ValidateRule(catalog, "splitter_swarm", ChallengeRuleKind.EncounterPressureBonus, failures);
+            ValidateRule(catalog, "small_monsters", ChallengeRuleKind.SmallMonstersOnly, failures);
         }
 
         private static void ValidateRule(ChallengeCatalogDefinition catalog, string challengeId, ChallengeRuleKind expectedRule, List<string> failures)

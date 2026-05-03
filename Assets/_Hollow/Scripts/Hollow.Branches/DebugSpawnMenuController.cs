@@ -33,13 +33,23 @@ namespace Hollow.Branches
         private BranchSessionController session;
         private bool visible;
         private bool spawnFrozen;
+        private bool debugLightAttackSpeedDoubled;
         private int groupIndex;
         private int entityIndex;
         private Rect windowRect = new(24f, 100f, 420f, 260f);
 
+        public bool DebugLightAttackSpeedDoubled => debugLightAttackSpeedDoubled;
+
         public void Bind(BranchSessionController controller)
         {
             session = controller;
+            ApplyDebugLightAttackSpeedToPlayer();
+        }
+
+        public void SetDebugLightAttackSpeedDoubled(bool enabled)
+        {
+            debugLightAttackSpeedDoubled = enabled;
+            ApplyDebugLightAttackSpeedToPlayer();
         }
 
         private void Update()
@@ -47,7 +57,15 @@ namespace Hollow.Branches
             if (!IsAvailable())
             {
                 visible = false;
+                return;
             }
+
+            ApplyDebugLightAttackSpeedToPlayer();
+        }
+
+        private void OnDestroy()
+        {
+            ApplyDebugLightAttackSpeedToPlayer(false);
         }
 
         private void OnGUI()
@@ -122,6 +140,12 @@ namespace Hollow.Branches
             }
             GUILayout.EndHorizontal();
             spawnFrozen = GUILayout.Toggle(spawnFrozen, "Spawn frozen");
+            var attackSpeedLabel = $"2x Light Attack Speed: {(debugLightAttackSpeedDoubled ? "ON" : "OFF")}";
+            if (GUILayout.Button(attackSpeedLabel))
+            {
+                SetDebugLightAttackSpeedDoubled(!debugLightAttackSpeedDoubled);
+            }
+
             if (GUILayout.Button("Spawn In Front Of Player"))
             {
                 SpawnSelected();
@@ -352,6 +376,22 @@ namespace Hollow.Branches
         private bool IsAvailable()
         {
             return (Application.isEditor || Debug.isDebugBuild) && session != null;
+        }
+
+        private void ApplyDebugLightAttackSpeedToPlayer()
+        {
+            ApplyDebugLightAttackSpeedToPlayer(debugLightAttackSpeedDoubled);
+        }
+
+        private void ApplyDebugLightAttackSpeedToPlayer(bool enabled)
+        {
+            var weapon = session != null && session.PlayerController != null
+                ? session.PlayerController.GetComponent<PlayerWeaponController>()
+                : null;
+            if (weapon != null)
+            {
+                weapon.SetDebugLightAttackSpeedDoubled(enabled);
+            }
         }
 
         private DebugSpawnGroup CurrentGroup()

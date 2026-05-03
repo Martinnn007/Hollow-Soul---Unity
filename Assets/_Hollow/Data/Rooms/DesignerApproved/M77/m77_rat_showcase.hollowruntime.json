@@ -8,18 +8,527 @@
     "rewardType": "m77-critter-showcase",
     "prototypeStatus": "m77-curated",
     "tileSizeMeters": 1.0,
-    "dimensions": { "widthTiles": 13, "heightTiles": 7, "bounds": { "minX": -6.5, "maxX": 6.5, "minZ": -3.5, "maxZ": 3.5 } },
-    "footprint": { "primaryCell": { "x": 0, "z": 0 }, "occupiedBranchCells": [{ "x": 0, "z": 0 }], "chunkBasisTiles": { "width": 13, "height": 7 } },
-    "walkableTiles": [],
-    "holeTiles": [],
-    "floorRegions": [{ "id": "main", "center": { "x": 0, "y": 0, "z": 0 }, "halfSize": { "x": 6.5, "z": 3.5 } }],
-    "doorPorts": [],
-    "playerSafeStart": { "x": -4, "y": 0, "z": 0 },
-    "enemySpawns": [
-      { "id": "spawn_enemy_00", "kind": "spawnEnemyRat", "position": { "x": 2, "y": 0, "z": 0 } },
-      { "id": "spawn_enemy_01", "kind": "spawnEnemyNormal", "position": { "x": 4, "y": 0, "z": -2 } }
+    "dimensions": {
+      "widthTiles": 13,
+      "heightTiles": 7,
+      "bounds": {
+        "minX": -6.5,
+        "maxX": 6.5,
+        "minZ": -3.5,
+        "maxZ": 3.5
+      }
+    },
+    "footprint": {
+      "primaryCell": {
+        "x": 0,
+        "z": 0
+      },
+      "occupiedBranchCells": [
+        {
+          "x": 0,
+          "z": 0
+        }
+      ],
+      "chunkBasisTiles": {
+        "width": 13,
+        "height": 7
+      }
+    },
+    "walkableTiles": [
+      {
+        "x": -7,
+        "z": -4
+      },
+      {
+        "x": -6,
+        "z": -4
+      },
+      {
+        "x": -5,
+        "z": -4
+      },
+      {
+        "x": -4,
+        "z": -4
+      },
+      {
+        "x": -3,
+        "z": -4
+      },
+      {
+        "x": -2,
+        "z": -4
+      },
+      {
+        "x": -1,
+        "z": -4
+      },
+      {
+        "x": 0,
+        "z": -4
+      },
+      {
+        "x": 1,
+        "z": -4
+      },
+      {
+        "x": 2,
+        "z": -4
+      },
+      {
+        "x": 3,
+        "z": -4
+      },
+      {
+        "x": 4,
+        "z": -4
+      },
+      {
+        "x": 5,
+        "z": -4
+      },
+      {
+        "x": -7,
+        "z": -3
+      },
+      {
+        "x": -6,
+        "z": -3
+      },
+      {
+        "x": -5,
+        "z": -3
+      },
+      {
+        "x": -4,
+        "z": -3
+      },
+      {
+        "x": -3,
+        "z": -3
+      },
+      {
+        "x": -2,
+        "z": -3
+      },
+      {
+        "x": -1,
+        "z": -3
+      },
+      {
+        "x": 0,
+        "z": -3
+      },
+      {
+        "x": 1,
+        "z": -3
+      },
+      {
+        "x": 2,
+        "z": -3
+      },
+      {
+        "x": 3,
+        "z": -3
+      },
+      {
+        "x": 4,
+        "z": -3
+      },
+      {
+        "x": 5,
+        "z": -3
+      },
+      {
+        "x": -7,
+        "z": -2
+      },
+      {
+        "x": -6,
+        "z": -2
+      },
+      {
+        "x": -5,
+        "z": -2
+      },
+      {
+        "x": -4,
+        "z": -2
+      },
+      {
+        "x": -3,
+        "z": -2
+      },
+      {
+        "x": -2,
+        "z": -2
+      },
+      {
+        "x": -1,
+        "z": -2
+      },
+      {
+        "x": 0,
+        "z": -2
+      },
+      {
+        "x": 1,
+        "z": -2
+      },
+      {
+        "x": 2,
+        "z": -2
+      },
+      {
+        "x": 3,
+        "z": -2
+      },
+      {
+        "x": 4,
+        "z": -2
+      },
+      {
+        "x": 5,
+        "z": -2
+      },
+      {
+        "x": -7,
+        "z": -1
+      },
+      {
+        "x": -6,
+        "z": -1
+      },
+      {
+        "x": -5,
+        "z": -1
+      },
+      {
+        "x": -4,
+        "z": -1
+      },
+      {
+        "x": -3,
+        "z": -1
+      },
+      {
+        "x": -2,
+        "z": -1
+      },
+      {
+        "x": -1,
+        "z": -1
+      },
+      {
+        "x": 0,
+        "z": -1
+      },
+      {
+        "x": 1,
+        "z": -1
+      },
+      {
+        "x": 2,
+        "z": -1
+      },
+      {
+        "x": 3,
+        "z": -1
+      },
+      {
+        "x": 4,
+        "z": -1
+      },
+      {
+        "x": 5,
+        "z": -1
+      },
+      {
+        "x": -7,
+        "z": 0
+      },
+      {
+        "x": -6,
+        "z": 0
+      },
+      {
+        "x": -5,
+        "z": 0
+      },
+      {
+        "x": -4,
+        "z": 0
+      },
+      {
+        "x": -3,
+        "z": 0
+      },
+      {
+        "x": -2,
+        "z": 0
+      },
+      {
+        "x": -1,
+        "z": 0
+      },
+      {
+        "x": 0,
+        "z": 0
+      },
+      {
+        "x": 1,
+        "z": 0
+      },
+      {
+        "x": 2,
+        "z": 0
+      },
+      {
+        "x": 3,
+        "z": 0
+      },
+      {
+        "x": 4,
+        "z": 0
+      },
+      {
+        "x": 5,
+        "z": 0
+      },
+      {
+        "x": -7,
+        "z": 1
+      },
+      {
+        "x": -6,
+        "z": 1
+      },
+      {
+        "x": -5,
+        "z": 1
+      },
+      {
+        "x": -4,
+        "z": 1
+      },
+      {
+        "x": -3,
+        "z": 1
+      },
+      {
+        "x": -2,
+        "z": 1
+      },
+      {
+        "x": -1,
+        "z": 1
+      },
+      {
+        "x": 0,
+        "z": 1
+      },
+      {
+        "x": 1,
+        "z": 1
+      },
+      {
+        "x": 2,
+        "z": 1
+      },
+      {
+        "x": 3,
+        "z": 1
+      },
+      {
+        "x": 4,
+        "z": 1
+      },
+      {
+        "x": 5,
+        "z": 1
+      },
+      {
+        "x": -7,
+        "z": 2
+      },
+      {
+        "x": -6,
+        "z": 2
+      },
+      {
+        "x": -5,
+        "z": 2
+      },
+      {
+        "x": -4,
+        "z": 2
+      },
+      {
+        "x": -3,
+        "z": 2
+      },
+      {
+        "x": -2,
+        "z": 2
+      },
+      {
+        "x": -1,
+        "z": 2
+      },
+      {
+        "x": 0,
+        "z": 2
+      },
+      {
+        "x": 1,
+        "z": 2
+      },
+      {
+        "x": 2,
+        "z": 2
+      },
+      {
+        "x": 3,
+        "z": 2
+      },
+      {
+        "x": 4,
+        "z": 2
+      },
+      {
+        "x": 5,
+        "z": 2
+      }
     ],
-    "itemSpawns": [{ "id": "spawn_reward_0", "kind": "spawn_point_roomReward", "position": { "x": 5, "y": 0, "z": 2 } }],
+    "holeTiles": [],
+    "floorRegions": [
+      {
+        "id": "designer_floor_cell_0_0",
+        "center": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "halfSize": {
+          "x": 6.5,
+          "z": 3.5
+        }
+      }
+    ],
+    "doorPorts": [
+      {
+        "id": "north_0",
+        "direction": "north",
+        "laneIndex": 0,
+        "hostCell": {
+          "x": 0,
+          "z": 0
+        },
+        "gridEdgeCenter": {
+          "x": 0.0,
+          "z": -3.5
+        },
+        "positionMeters": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": -3.5
+        },
+        "kind": "door"
+      },
+      {
+        "id": "south_0",
+        "direction": "south",
+        "laneIndex": 0,
+        "hostCell": {
+          "x": 0,
+          "z": 0
+        },
+        "gridEdgeCenter": {
+          "x": 0.0,
+          "z": 3.5
+        },
+        "positionMeters": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 3.5
+        },
+        "kind": "door"
+      },
+      {
+        "id": "east_0",
+        "direction": "east",
+        "laneIndex": 0,
+        "hostCell": {
+          "x": 0,
+          "z": 0
+        },
+        "gridEdgeCenter": {
+          "x": 6.5,
+          "z": 0.0
+        },
+        "positionMeters": {
+          "x": 6.5,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "kind": "door"
+      },
+      {
+        "id": "west_0",
+        "direction": "west",
+        "laneIndex": 0,
+        "hostCell": {
+          "x": 0,
+          "z": 0
+        },
+        "gridEdgeCenter": {
+          "x": -6.5,
+          "z": 0.0
+        },
+        "positionMeters": {
+          "x": -6.5,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "kind": "door"
+      }
+    ],
+    "playerSafeStart": {
+      "x": -4.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "enemySpawns": [
+      {
+        "id": "spawn_enemy_00",
+        "kind": "spawnEnemyRat",
+        "position": {
+          "x": 2.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      {
+        "id": "spawn_enemy_01",
+        "kind": "spawnEnemyNormal",
+        "position": {
+          "x": 4.0,
+          "y": 0.0,
+          "z": -2.0
+        }
+      }
+    ],
+    "itemSpawns": [
+      {
+        "id": "spawn_reward_0",
+        "kind": "spawn_point_roomReward",
+        "position": {
+          "x": 5.0,
+          "y": 0.0,
+          "z": 2.0
+        }
+      }
+    ],
     "obstacles": [],
     "hazards": [],
     "interactiveObjects": [],

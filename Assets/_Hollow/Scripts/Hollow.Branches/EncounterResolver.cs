@@ -9,14 +9,25 @@ namespace Hollow.Branches
     public static class EncounterResolver
     {
         private const int DefaultMaxDirectedSpawns = 6;
+        private static readonly string[] EmptyAllowedNonBossSpawnKinds = Array.Empty<string>();
 
         public static EncounterPlan CreateSeededPlan(BranchFloorGraph graph, EncounterCatalogDefinition catalog, int seed)
+        {
+            return CreateSeededPlan(graph, catalog, seed, null);
+        }
+
+        public static EncounterPlan CreateSeededPlan(
+            BranchFloorGraph graph,
+            EncounterCatalogDefinition catalog,
+            int seed,
+            IEnumerable<string> allowedNonBossSpawnKinds)
         {
             if (graph == null || catalog == null)
             {
                 return EncounterPlan.Empty;
             }
 
+            var allowedSpawns = NormalizeAllowedNonBossSpawnKinds(allowedNonBossSpawnKinds);
             var distances = DistancesFromOrigin(graph);
             var assignments = new List<RoomEncounterAssignment>();
             foreach (var room in graph.Rooms.OrderBy(room => room.Id.Value, StringComparer.Ordinal))
@@ -36,7 +47,9 @@ namespace Hollow.Branches
                     continue;
                 }
 
-                assignments.Add(new RoomEncounterAssignment(room.Id.Value, encounter.EncounterId, encounter.ExpandSpawnKinds()));
+                var spawns = encounter.ExpandSpawnKinds();
+                spawns = ApplyAllowedNonBossSpawnKinds(spawns, room, seed, allowedSpawns);
+                assignments.Add(new RoomEncounterAssignment(room.Id.Value, encounter.EncounterId, spawns));
             }
 
             return new EncounterPlan(assignments);
@@ -61,12 +74,26 @@ namespace Hollow.Branches
             int difficultyBandBonus,
             BossCatalogDefinition bossCatalog)
         {
+            return CreateDirectedSeededPlan(graph, catalog, seed, worldIndex, profile, difficultyBandBonus, bossCatalog, null);
+        }
+
+        public static EncounterPlan CreateDirectedSeededPlan(
+            BranchFloorGraph graph,
+            EncounterCatalogDefinition catalog,
+            int seed,
+            int worldIndex,
+            EncounterDirectorProfileDefinition profile,
+            int difficultyBandBonus,
+            BossCatalogDefinition bossCatalog,
+            IEnumerable<string> allowedNonBossSpawnKinds)
+        {
             if (graph == null || catalog == null)
             {
                 return EncounterPlan.Empty;
             }
 
             var context = new EncounterDirectorContext(graph, seed, worldIndex, profile);
+            var allowedSpawns = NormalizeAllowedNonBossSpawnKinds(allowedNonBossSpawnKinds);
             var distances = DistancesFromOrigin(graph);
             var assignments = new List<RoomEncounterAssignment>();
             foreach (var room in graph.Rooms.OrderBy(room => room.Id.Value, StringComparer.Ordinal))
@@ -91,6 +118,7 @@ namespace Hollow.Branches
                 if (room.Role != BranchRoomRole.Boss)
                 {
                     spawns = spawns.Take(Math.Max(1, context.Profile?.MaxNonBossEnemySpawns ?? DefaultMaxDirectedSpawns)).ToArray();
+                    spawns = ApplyAllowedNonBossSpawnKinds(spawns, room, seed, allowedSpawns);
                 }
 
                 var boss = room.Role == BranchRoomRole.Boss
@@ -110,6 +138,40 @@ namespace Hollow.Branches
             }
 
             return new EncounterPlan(assignments);
+        }
+
+        private static string[] NormalizeAllowedNonBossSpawnKinds(IEnumerable<string> allowedNonBossSpawnKinds)
+        {
+            return allowedNonBossSpawnKinds?
+                .Where(kind => !string.IsNullOrWhiteSpace(kind))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(kind => kind, StringComparer.Ordinal)
+                .ToArray() ?? EmptyAllowedNonBossSpawnKinds;
+        }
+
+        private static IReadOnlyList<string> ApplyAllowedNonBossSpawnKinds(
+            IReadOnlyList<string> originalSpawns,
+            BranchRoomState room,
+            int seed,
+            IReadOnlyList<string> allowedNonBossSpawnKinds)
+        {
+            if (allowedNonBossSpawnKinds == null ||
+                allowedNonBossSpawnKinds.Count == 0 ||
+                room == null ||
+                room.Role == BranchRoomRole.Boss)
+            {
+                return originalSpawns;
+            }
+
+            var count = Math.Max(1, originalSpawns?.Count ?? 0);
+            var result = new string[count];
+            for (var index = 0; index < count; index++)
+            {
+                var roll = StableHash($"{room.Id.Value}|{seed}|small-monsters|{index}");
+                result[index] = allowedNonBossSpawnKinds[roll % allowedNonBossSpawnKinds.Count];
+            }
+
+            return result;
         }
 
         private static EncounterDefinition ChooseEncounter(

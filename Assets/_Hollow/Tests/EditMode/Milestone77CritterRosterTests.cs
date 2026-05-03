@@ -5,9 +5,11 @@ using System.Linq;
 using System.Reflection;
 using Hollow.Branches;
 using Hollow.Combat;
+using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
 using Hollow.Entities;
+using Hollow.RoomDesigner;
 using Hollow.Rooms;
 using NUnit.Framework;
 using UnityEngine;
@@ -143,6 +145,24 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void BespokeCritterRoomsHaveRequestedCompositionsAndAreCataloged()
+        {
+            AssertRoomComposition("m77_spider_brood_den_wide", RoomDesignerMarkerKinds.EnemySpider, 8, RoomDesignerMarkerKinds.EnemySpittingPod, 0, 0);
+            AssertRoomComposition("m77_rat_warren_single", RoomDesignerMarkerKinds.EnemyRat, 5, RoomDesignerMarkerKinds.EnemySpittingPod, 0, 0);
+            AssertRoomComposition("m77_rocky_spider_pod_wide", RoomDesignerMarkerKinds.EnemySpider, 6, RoomDesignerMarkerKinds.EnemySpittingPod, 1, 10);
+            AssertRoomComposition("m77_rocky_rat_pod_wide", RoomDesignerMarkerKinds.EnemyRat, 5, RoomDesignerMarkerKinds.EnemySpittingPod, 1, 10);
+
+            var roomCatalog = UnityEditor.AssetDatabase.LoadAssetAtPath<BranchRoomTemplateCatalogDefinition>(Milestone14AssetGenerator.CatalogPath);
+            Assert.NotNull(roomCatalog);
+            var importReport = ApprovedDesignerRoomImporter.ImportApprovedRooms(roomCatalog.AdditionalTemplates);
+            Assert.IsFalse(importReport.HasErrors, string.Join("; ", importReport.Errors));
+            foreach (var roomId in Milestone77AssetGenerator.CuratedEncounterRoomIds)
+            {
+                Assert.IsTrue(importReport.ValidRooms.Any(room => room.Id == roomId), roomId);
+            }
+        }
+
+        [Test]
         public void CatalogueFilesExistPdfExtractsAndValidatorPasses()
         {
             Assert.IsTrue(File.Exists(Milestone77AssetGenerator.DocsPath));
@@ -182,6 +202,31 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(hearing, enemy.HearingRadiusMeters, 0.001f);
             Assert.AreEqual(preferredMin, enemy.PreferredRangeMinMeters, 0.001f);
             Assert.AreEqual(preferredMax, enemy.PreferredRangeMaxMeters, 0.001f);
+        }
+
+        private static void AssertRoomComposition(
+            string roomId,
+            string primaryEnemyKind,
+            int expectedPrimaryCount,
+            string secondaryEnemyKind,
+            int expectedSecondaryCount,
+            int expectedMinimumRockCount)
+        {
+            var asset = LoadM77Room(roomId);
+            Assert.AreEqual(expectedPrimaryCount, asset.EnemySpawns.Count(spawn => spawn.kind == primaryEnemyKind), roomId);
+            Assert.AreEqual(expectedSecondaryCount, asset.EnemySpawns.Count(spawn => spawn.kind == secondaryEnemyKind), roomId);
+            Assert.GreaterOrEqual(asset.Layout.Obstacles.Count, expectedMinimumRockCount, roomId);
+            Assert.Greater(asset.Layout.WalkableTiles.Count, 0, roomId);
+            Assert.Greater(asset.DoorPorts.Count, 0, roomId);
+            Assert.NotNull(asset.SafeStart?.position, roomId);
+            Assert.IsTrue(asset.ItemSpawns.Any(spawn => spawn.kind == RoomDesignerMarkerKinds.RoomReward), roomId);
+        }
+
+        private static ImportedRoomRuntimeAsset LoadM77Room(string roomId)
+        {
+            var path = $"{Milestone77AssetGenerator.ShowcaseRoomDirectory}/{roomId}.hollowruntime.json";
+            Assert.IsTrue(File.Exists(path), path);
+            return HollowRuntimeV2Importer.Import(File.ReadAllText(path));
         }
 
         private static void AssertPdfExtractsRequiredText()

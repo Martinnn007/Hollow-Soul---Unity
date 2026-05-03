@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Reflection;
 using Hollow.Branches;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
@@ -137,6 +138,152 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void DebugLightAttackSpeedDoublesRangedLightCadenceOnly()
+        {
+            var parent = new GameObject("DebugAttackSpeedRangedParent");
+            var player = new GameObject("Player");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            player.transform.SetParent(parent.transform, false);
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+
+                Assert.IsFalse(weapon.DebugLightAttackSpeedDoubled);
+                Assert.IsTrue(weapon.TryFire(Vector2.up, 0f));
+                Assert.IsFalse(weapon.TryFire(Vector2.up, 0.49f));
+                Assert.IsTrue(weapon.TryFire(Vector2.up, 1f));
+
+                var fastPlayer = new GameObject("FastPlayer");
+                fastPlayer.transform.SetParent(parent.transform, false);
+                var fastWeapon = fastPlayer.AddComponent<PlayerWeaponController>();
+                fastWeapon.Configure(null, combat, projectilePrefab);
+                fastWeapon.SetDebugLightAttackSpeedDoubled(true);
+
+                Assert.IsTrue(fastWeapon.DebugLightAttackSpeedDoubled);
+                Assert.IsTrue(fastWeapon.TryFire(Vector2.up, 0f));
+                Assert.IsFalse(fastWeapon.TryFire(Vector2.up, 0.49f));
+                Assert.IsTrue(fastWeapon.TryFire(Vector2.up, 0.5f));
+
+                Assert.IsTrue(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 10f));
+                Assert.IsFalse(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 19.9f));
+                Assert.IsTrue(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 20f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+                Object.DestroyImmediate(combat.gameObject);
+                Object.DestroyImmediate(projectilePrefab);
+            }
+        }
+
+        [Test]
+        public void DebugLightAttackSpeedHalvesFinalPassiveAdjustedRangedCooldown()
+        {
+            var parent = new GameObject("DebugAttackSpeedPassiveParent");
+            var player = new GameObject("Player");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            player.transform.SetParent(parent.transform, false);
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.ConfigureBuildStats(
+                    2f,
+                    0,
+                    0,
+                    100f,
+                    18f,
+                    "starter_blade",
+                    "starter_bolt",
+                    WeaponSlot.Ranged,
+                    100f);
+                weapon.ConfigureProjectilePassives(new ProjectilePassiveState(ProjectilePatternKind.Single, 1f, 1f, ProjectileVisualStyle.Default));
+                weapon.SetDebugLightAttackSpeedDoubled(true);
+
+                Assert.IsTrue(weapon.TryFire(Vector2.up, 0f));
+                Assert.IsFalse(weapon.TryFire(Vector2.up, 0.49f));
+                Assert.IsTrue(weapon.TryFire(Vector2.up, 0.5f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+                Object.DestroyImmediate(combat.gameObject);
+                Object.DestroyImmediate(projectilePrefab);
+            }
+        }
+
+        [Test]
+        public void DebugLightAttackSpeedDoublesMeleeLightCadenceOnlyAndKeepsStaminaCost()
+        {
+            var parent = new GameObject("DebugAttackSpeedMeleeParent");
+            var player = new GameObject("Player");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            player.transform.SetParent(parent.transform, false);
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, null);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
+                weapon.SetDebugLightAttackSpeedDoubled(true);
+
+                Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                Assert.AreEqual(94f, weapon.CurrentStamina, 0.001f);
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.32f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.335f));
+                Assert.AreEqual(88f, weapon.CurrentStamina, 0.001f);
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 5f));
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 8.49f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 8.5f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+                Object.DestroyImmediate(combat.gameObject);
+            }
+        }
+
+        [Test]
+        public void DebugSpawnMenuAppliesCurrentRunLightAttackSpeedToggle()
+        {
+            var branchObject = new GameObject("BranchSession");
+            var playerObject = new GameObject("Player");
+            try
+            {
+                var branch = branchObject.AddComponent<BranchSessionController>();
+                playerObject.AddComponent<Hollow.Entities.PlaceholderPlayerController>();
+                var weapon = playerObject.AddComponent<PlayerWeaponController>();
+                SetBranchPlayer(branch, playerObject.GetComponent<Hollow.Entities.PlaceholderPlayerController>());
+
+                var menu = branchObject.AddComponent<DebugSpawnMenuController>();
+                menu.Bind(branch);
+
+                Assert.IsFalse(menu.DebugLightAttackSpeedDoubled);
+                Assert.IsFalse(weapon.DebugLightAttackSpeedDoubled);
+
+                menu.SetDebugLightAttackSpeedDoubled(true);
+
+                Assert.IsTrue(menu.DebugLightAttackSpeedDoubled);
+                Assert.IsTrue(weapon.DebugLightAttackSpeedDoubled);
+
+                var nextMenu = new GameObject("NextDebugSpawnMenu").AddComponent<DebugSpawnMenuController>();
+                Assert.IsFalse(nextMenu.DebugLightAttackSpeedDoubled);
+                Object.DestroyImmediate(nextMenu.gameObject);
+            }
+            finally
+            {
+                Object.DestroyImmediate(branchObject);
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
         public void ActiveWeaponSlotPersistsInRunBuildSaveState()
         {
             var build = new PlayerRunBuild();
@@ -188,6 +335,13 @@ namespace Hollow.Tests.EditMode
             var catalog = AssetDatabase.LoadAssetAtPath<WeaponCatalogDefinition>(Milestone27AssetGenerator.WeaponCatalogPath);
             Assert.IsNotNull(catalog, "Run M27 generation before validating weapon catalog.");
             return catalog;
+        }
+
+        private static void SetBranchPlayer(BranchSessionController branch, Hollow.Entities.PlaceholderPlayerController player)
+        {
+            var field = typeof(BranchSessionController).GetField("playerController", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field);
+            field.SetValue(branch, player);
         }
     }
 }
