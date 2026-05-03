@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_RepeaterTurret
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyRepeaterTurret
+  displayName: Repeater Turret
+  archetypeId: 3
+  behaviorId: 18
+  movementMode: 0
+  maxHealth: 6
+  speedMetersPerSecond: 0
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.42
+  attackRangeMeters: 9.25
+  preferredRangeMinMeters: 6
+  preferredRangeMaxMeters: 9.25
+  sightRadiusMeters: 10
+  sightAngleDegrees: 95
+  hearingRadiusMeters: 3.2
+  hearingSensitivityMultiplier: 1.25
+  disturbanceEscalationThreshold: 1.1
+  investigationDurationSeconds: 1.8
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 2
+  intelligence: 3
+  disposition: 2
+  attackWindupScale: 1
+  attackActiveScale: 1
+  attackRecoveryScale: 0.95
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 1
+  attackProfiles:
+  - {fileID: 11400000, guid: b49232fa9b35c4621901f29089d72be7, type: 2}
+  - {fileID: 11400000, guid: 8f08c56b3cae947e48b7035b9222aea4, type: 2}
+  - {fileID: 11400000, guid: 699a283e3ab69406e8fb8a04ec142c7d, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: 2941f9307dc56412e9c25d854f481552, type: 2}
+  - {fileID: 11400000, guid: 3a68bc54dfbfb46928b47daa214815d8, type: 2}
+  - {fileID: 11400000, guid: 7196a19183a144b2182b193e89326c72, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: e34c3a2fbe3b244798d2b2235c3ea22c, type: 2}
+  color: {r: 0.46, g: 0.6, b: 0.64, a: 1}

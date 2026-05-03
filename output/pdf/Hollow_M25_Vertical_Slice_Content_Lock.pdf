@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Length 2330 >>
+<< /Length 3683 >>
 stream
 BT
 /F1 11 Tf
@@ -18,21 +18,21 @@ BT
 0 -14 Td
 () Tj
 0 -14 Td
-(Result: Passed) Tj
+(Result: Failed) Tj
 0 -14 Td
-(Generated: 2026-04-28T08:04:25.4508250Z) Tj
+(Generated: 2026-05-03T14:19:55.0897540Z) Tj
 0 -14 Td
 (Unity: 6000.4.1f1) Tj
 0 -14 Td
-(Git: main @ 2c3f556) Tj
+(Git: main @ bd21a1f) Tj
 0 -14 Td
 (Branch: m20_branch_features_v1) Tj
 0 -14 Td
 (Seed: 15001) Tj
 0 -14 Td
-(Rooms: 8; Connections: 16) Tj
+(Rooms: 8; Connections: 20) Tj
 0 -14 Td
-(Fixtures: 5; Approved rooms: 5) Tj
+(Fixtures: 5; Approved rooms: 46) Tj
 0 -14 Td
 (Shop offers: 3; Next portals: 3) Tj
 0 -14 Td
@@ -46,19 +46,108 @@ BT
 0 -14 Td
 (- branch-content: Passed) Tj
 0 -14 Td
-(  Locked branch generated with 8 rooms, 16 directional connections, 5 fixtures, and 5) Tj
+(  Locked branch generated with 8 rooms, 20 directional connections, 5 fixtures, and 46) Tj
 0 -14 Td
 (approved rooms.) Tj
 0 -14 Td
-(  Boss key source: room_04; secret: room_06; boss: boss_01.) Tj
+(  Boss key source: room_05; secret: room_06; boss: boss_01.) Tj
 0 -14 Td
 (- hub-shop-portals: Passed) Tj
 0 -14 Td
 (  Inter-branch hub exposes three shop offers and three seeded next-branch portal choices.) Tj
 0 -14 Td
-(- artpass-lock: Passed) Tj
+(- artpass-lock: Failed) Tj
 0 -14 Td
-(  Required ArtPass roles/cues resolved without prototype fallback. Warnings: 0.) Tj
+(  ArtPass palette does not resolve material role DesignerSpawnReward.; ArtPass palette does) Tj
+0 -14 Td
+(not resolve material role VfxDebug.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(CombatTelegraphSafe.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(CombatTelegraphWarning.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(CombatTelegraphDanger.; ArtPass palette does not resolve material role RoomHazardSpike.;) Tj
+0 -14 Td
+(ArtPass palette does not resolve material role RoomBarrel.; ArtPass palette does not resolve) Tj
+0 -14 Td
+(material role RoomExplosiveBarrel.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(DesignerSpike.; ArtPass palette does not resolve material role DesignerBarrel.; ArtPass) Tj
+0 -14 Td
+(palette does not resolve material role DesignerExplosiveBarrel.; ArtPass palette does not) Tj
+0 -14 Td
+(resolve material role HazardCoinDrop.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(ChestNormal.; ArtPass palette does not resolve material role ChestGolden.; ArtPass palette) Tj
+0 -14 Td
+(does not resolve material role CoinCopper.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(CoinSilver.; ArtPass palette does not resolve material role CoinGold.; ArtPass palette does) Tj
+0 -14 Td
+(not resolve material role DesignerChest.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(ProjectilePower.; ArtPass palette does not resolve material role EnemySpittingPod.; ArtPass) Tj
+0 -14 Td
+(palette does not resolve material role EnemyRat.; ArtPass palette does not resolve material) Tj
+0 -14 Td
+(role EnemySpider.; ArtPass palette does not resolve material role EnemyHollowBird.; ArtPass) Tj
+0 -14 Td
+(palette does not resolve material role EnemyHollowBeast.; ArtPass palette does not resolve) Tj
+0 -14 Td
+(material role EnemySkeletonSword.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(EnemySkeletonSpear.; ArtPass palette does not resolve material role EnemyKnight.; ArtPass) Tj
+0 -14 Td
+(palette does not resolve material role EnemyGiant.; ArtPass palette does not resolve) Tj
+0 -14 Td
+(material role EnemyHollowArcher.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(EnemyPowderGunner.; ArtPass palette does not resolve material role EnemyKnifeThrower.;) Tj
+0 -14 Td
+(ArtPass palette does not resolve material role EnemyRepeaterTurret.; ArtPass palette does) Tj
+0 -14 Td
+(not resolve material role EnemyClockworkSentry.; ArtPass palette does not resolve material) Tj
+0 -14 Td
+(role EnemyHollowAcolyte.; ArtPass palette does not resolve material role EnemyWraith.;) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2793 >>
+stream
+BT
+/F1 11 Tf
+50 742 Td
+(ArtPass palette does not resolve material role EnemySoulEater.; ArtPass palette does not) Tj
+0 -14 Td
+(resolve material role EnemyCurseBinder.; ArtPass palette does not resolve material role) Tj
+0 -14 Td
+(EnemyGraveLantern.; ArtPass audio cue PlayerInvulnerable must have a placeholder clip.;) Tj
+0 -14 Td
+(ArtPass audio cue KnockbackImpact must have a placeholder clip.; ArtPass audio cue) Tj
+0 -14 Td
+(EnemyWindup must have a placeholder clip.; ArtPass audio cue EnemyCorpseGhost must have a) Tj
+0 -14 Td
+(placeholder clip.; ArtPass audio cue DamageBlocked must have a placeholder clip.; ArtPass) Tj
+0 -14 Td
+(audio cue ShieldGuardStart must have a placeholder clip.; ArtPass audio cue ShieldBlock must) Tj
+0 -14 Td
+(have a placeholder clip.; ArtPass audio cue ShieldParryCounter must have a placeholder) Tj
+0 -14 Td
+(clip.; ArtPass audio cue ShieldUnavailable must have a placeholder clip.; ArtPass audio cue) Tj
+0 -14 Td
+(HazardHit must have a placeholder clip.; ArtPass audio cue BarrelBreak must have a) Tj
+0 -14 Td
+(placeholder clip.; ArtPass audio cue BarrelExplode must have a placeholder clip.; ArtPass) Tj
+0 -14 Td
+(audio cue HazardCoinDrop must have a placeholder clip.; ArtPass audio cue ChestOpen must) Tj
+0 -14 Td
+(have a placeholder clip.; ArtPass audio cue CoinPickup must have a placeholder clip.) Tj
+0 -14 Td
+(  Remediation: Regenerate M23 ArtPass assets and repair catalog bindings.) Tj
 0 -14 Td
 (- platform-checklist: Passed) Tj
 0 -14 Td
@@ -66,9 +155,13 @@ BT
 0 -14 Td
 (coverage.) Tj
 0 -14 Td
-(- m0-m24-audit: Passed) Tj
+(- m0-m24-audit: Failed) Tj
 0 -14 Td
-(  M0-M24 validators passed: 25/25.) Tj
+(  M0-M24 validators failed: 6/25.) Tj
+0 -14 Td
+(  Remediation: Milestone9Validator; Milestone11Validator; Milestone12Validator;) Tj
+0 -14 Td
+(Milestone15Validator; Milestone17Validator; Milestone23Validator) Tj
 0 -14 Td
 () Tj
 0 -14 Td
@@ -98,19 +191,21 @@ BT
 ET
 endstream
 endobj
-5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
 endobj
 xref
-0 6
+0 8
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000115 00000 n 
-0000000185 00000 n 
-0000002567 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000003926 00000 n 
+0000004052 00000 n 
+0000006897 00000 n 
 trailer
-<< /Size 6 /Root 1 0 R >>
+<< /Size 8 /Root 1 0 R >>
 startxref
-2693
+7023
 %%EOF

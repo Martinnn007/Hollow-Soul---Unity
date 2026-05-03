@@ -1,0 +1,351 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7717924987199381352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_move_eater_phase_step
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_move_eater_phase_step
+  condition: 19
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: eater_phase_step
+  threshold: 0
+--- !u!114 &-7684896838623508771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_soul_burst
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_soul_burst
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: soul_burst
+  threshold: 0
+--- !u!114 &-7360373319575174091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_move_eater_phase_step
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_move_eater_phase_step
+  condition: 19
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: eater_phase_step
+  threshold: 0
+--- !u!114 &-7212824598124074105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_root
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  nodeId: soul_eater_root
+  children:
+  - {fileID: -7060307019185299664}
+  - {fileID: 3691714826926781618}
+  - {fileID: 2321524245683804893}
+--- !u!114 &-7060307019185299664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_phase_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: soul_eater_phase_close
+  children:
+  - {fileID: 6205311219694557044}
+  - {fileID: -7360373319575174091}
+  - {fileID: 6447139324510157774}
+--- !u!114 &-5511624037940564233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_soul_burst
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_soul_burst
+  commandKind: 8
+  actionId: soul_burst
+  speedMultiplier: 1
+  reason: Start ranged action soul_burst.
+--- !u!114 &-4887804758305736474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_soul_drain
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_soul_drain
+  commandKind: 8
+  actionId: soul_drain
+  speedMultiplier: 1
+  reason: Start ranged action soul_drain.
+--- !u!114 &-4790217646136544211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_burst
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: soul_eater_burst
+  children:
+  - {fileID: 5684678389911049134}
+  - {fileID: -7684896838623508771}
+  - {fileID: -5511624037940564233}
+--- !u!114 &-4753747092877014127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_soul_drain
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_soul_drain
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: soul_drain
+  threshold: 0
+--- !u!114 &-4652211376957172526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_phase
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: soul_eater_phase
+  children:
+  - {fileID: -7717924987199381352}
+  - {fileID: 6044746194585906407}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
+  m_Name: EnemyTree_spawnEnemySoulEater
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
+  treeId: enemy_spawnEnemySoulEater_m82_tree
+  displayName: Soul Eater M82 Behavior Tree
+  ownerId: spawnEnemySoulEater
+  bossMetadataOnly: 0
+  rootNode: {fileID: -7212824598124074105}
+  nodes:
+  - {fileID: 6205311219694557044}
+  - {fileID: -7360373319575174091}
+  - {fileID: 6447139324510157774}
+  - {fileID: -7060307019185299664}
+  - {fileID: -4753747092877014127}
+  - {fileID: -4887804758305736474}
+  - {fileID: 5958072478760673938}
+  - {fileID: 5684678389911049134}
+  - {fileID: -7684896838623508771}
+  - {fileID: -5511624037940564233}
+  - {fileID: -4790217646136544211}
+  - {fileID: -7717924987199381352}
+  - {fileID: 6044746194585906407}
+  - {fileID: -4652211376957172526}
+  - {fileID: 3691714826926781618}
+  - {fileID: 2321524245683804893}
+  - {fileID: -7212824598124074105}
+--- !u!114 &2321524245683804893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_pressure
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: soul_eater_pressure
+  commandKind: 3
+  actionId: 
+  speedMultiplier: 0.82
+  reason: Soul Eater hunts for drain lanes without passive contact damage.
+--- !u!114 &3691714826926781618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_choice
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorWeightedSelectorNodeDefinition
+  nodeId: soul_eater_choice
+  children:
+  - child: {fileID: 5958072478760673938}
+    weight: 1.8
+  - child: {fileID: -4790217646136544211}
+    weight: 1.15
+  - child: {fileID: -4652211376957172526}
+    weight: 0.65
+--- !u!114 &5684678389911049134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_burst_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: soul_eater_burst_close
+  condition: 4
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 5.2
+--- !u!114 &5958072478760673938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_drain
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: soul_eater_drain
+  children:
+  - {fileID: -4753747092877014127}
+  - {fileID: -4887804758305736474}
+--- !u!114 &6044746194585906407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_move_eater_phase_step
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_move_eater_phase_step
+  commandKind: 13
+  actionId: eater_phase_step
+  speedMultiplier: 1
+  reason: Start creature move action eater_phase_step.
+--- !u!114 &6205311219694557044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: soul_eater_too_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: soul_eater_too_close
+  condition: 6
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0
+--- !u!114 &6447139324510157774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_move_eater_phase_step
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_move_eater_phase_step
+  commandKind: 13
+  actionId: eater_phase_step
+  speedMultiplier: 1
+  reason: Start creature move action eater_phase_step.

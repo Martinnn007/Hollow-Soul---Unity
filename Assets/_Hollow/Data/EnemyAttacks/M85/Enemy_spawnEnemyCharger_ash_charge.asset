@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyCharger_ash_charge
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: ash_charge
+  displayName: Ash Charge
+  runtimeKind: 2
+  damage: 1
+  cooldownSeconds: 2
+  windupSeconds: 0.42
+  activeSeconds: 0.38
+  rangeMeters: 5.5
+  projectileCount: 0
+  projectileSpeedMetersPerSecond: 0.1
+  damageChannel: 2
+  damageDelivery: 3
+  damageElement: 1
+  forceClass: 2
+  threatKind: 1
+  knockbackMeters: 0.8
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.24
+  hitArcDegrees: 90
+  poiseBreakThreshold: 1
+  activeMovementDistanceMeters: -1
+  comboFollowUpAttackId: 
+  notes: Existing charge with explicit fire identity.

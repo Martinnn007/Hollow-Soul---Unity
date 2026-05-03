@@ -22,7 +22,9 @@ namespace Hollow.Combat
             or EnemyBehaviorCommandKind.StartRangedAction
             or EnemyBehaviorCommandKind.StartChargeAction
             or EnemyBehaviorCommandKind.StartAreaAction
-            or EnemyBehaviorCommandKind.StartFeintWarning;
+            or EnemyBehaviorCommandKind.StartFeintWarning
+            or EnemyBehaviorCommandKind.StartCreatureMoveAction
+            or EnemyBehaviorCommandKind.StartCreatureSignalAction;
 
         public static EnemyBehaviorCommand None(string reason = "")
         {

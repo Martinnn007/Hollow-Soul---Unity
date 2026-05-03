@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="6" result="Passed" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.5723481">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="440" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.572348" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1513" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="439" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.565793" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="92335" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1514" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="439" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.562604" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1515" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="439" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.559459" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1516" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="439" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.556429" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1486" name="Milestone87MagicGhostSoulEnemiesTests" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.550490" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1489" name="BeamDealsDamageOnlyAtActivePoint" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests.BeamDealsDamageOnlyAtActivePoint" methodname="BeamDealsDamageOnlyAtActivePoint" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" seed="1469817599" result="Passed" start-time="2026-05-03 14:18:16Z" end-time="2026-05-03 14:18:17Z" duration="0.260512" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1491" name="MagicPatternsUseExpectedProjectileCounts" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests.MagicPatternsUseExpectedProjectileCounts" methodname="MagicPatternsUseExpectedProjectileCounts" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" seed="269749611" result="Passed" start-time="2026-05-03 14:18:17Z" end-time="2026-05-03 14:18:17Z" duration="0.016375" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1488" name="MagicProfilesCarrySoulOrCurseElements" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests.MagicProfilesCarrySoulOrCurseElements" methodname="MagicProfilesCarrySoulOrCurseElements" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" seed="2009188969" result="Passed" start-time="2026-05-03 14:18:17Z" end-time="2026-05-03 14:18:17Z" duration="0.002309" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1492" name="MagicRoomsDocsPdfExtractAndValidatorPass" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests.MagicRoomsDocsPdfExtractAndValidatorPass" methodname="MagicRoomsDocsPdfExtractAndValidatorPass" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" seed="1035413118" result="Passed" start-time="2026-05-03 14:18:17Z" end-time="2026-05-03 14:18:17Z" duration="0.242053" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[ok pages=2 chars=2283
+
+Milestone 87 validation passed.
+]]></output>
+              </test-case>
+              <test-case id="1487" name="MagicRosterDefinitionsProfilesTreesAndSpawnKindsResolve" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests.MagicRosterDefinitionsProfilesTreesAndSpawnKindsResolve" methodname="MagicRosterDefinitionsProfilesTreesAndSpawnKindsResolve" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" seed="482469308" result="Passed" start-time="2026-05-03 14:18:17Z" end-time="2026-05-03 14:18:17Z" duration="0.014567" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1490" name="PhaseMoveIsNonDamagingLocalReposition" fullname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests.PhaseMoveIsNonDamagingLocalReposition" methodname="PhaseMoveIsNonDamagingLocalReposition" classname="Hollow.Tests.EditMode.Milestone87MagicGhostSoulEnemiesTests" runstate="Runnable" seed="477468920" result="Passed" start-time="2026-05-03 14:18:17Z" end-time="2026-05-03 14:18:17Z" duration="0.007640" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

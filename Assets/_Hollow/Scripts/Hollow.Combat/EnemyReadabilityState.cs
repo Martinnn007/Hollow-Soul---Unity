@@ -20,6 +20,12 @@ namespace Hollow.Combat
         FeintWarning = 15,
         GuardWindup = 16,
         GuardActive = 17,
-        GuardRecovery = 18
+        GuardRecovery = 18,
+        CreatureMoveWindup = 19,
+        CreatureMoveActive = 20,
+        CreatureMoveRecovery = 21,
+        CreatureSignalWindup = 22,
+        CreatureSignalActive = 23,
+        CreatureSignalRecovery = 24
     }
 }

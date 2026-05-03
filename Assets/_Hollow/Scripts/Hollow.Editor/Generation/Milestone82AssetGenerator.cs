@@ -245,10 +245,22 @@ namespace Hollow.Editor.Generation
                 "spawnEnemySpittingPod" => "stationary hearing-driven ballistic lob",
                 "spawnEnemyRat" => "warning squeal, bite, retreat when endangered",
                 "spawnEnemySpider" => "deterministic fight/flee, side-hop bite, hop, bite",
+                "spawnEnemyHollowBird" => "swoop, retreat, caw signal local-burst harasser",
+                "spawnEnemyHollowBeast" => "leap bite, body check, leap-back punish beast",
                 "spawnEnemySkeletonSword" => "rusty slash opener, one backhand follow-up, range pressure",
                 "spawnEnemySkeletonSpear" => "long thrust or sweep while holding spear distance",
                 "spawnEnemyKnight" => "medium shield guard, slash/thrust/bash commitment",
                 "spawnEnemyGiant" => "slow club sweep, slam, stomp commitment",
+                "spawnEnemyHollowArcher" => "bow draw, retreating shot, and narrow volley spacing",
+                "spawnEnemyPowderGunner" => "long firearm aim, scatter pressure, and reload spacing",
+                "spawnEnemyKnifeThrower" => "quick knives, fan throw, and territorial skirmish spacing",
+                "spawnEnemyRepeaterTurret" => "stationary burst, suppressing fan, and lock-on dart pressure",
+                "spawnEnemyClockworkSentry" => "machine projectile patterns with radial/fan pressure",
+                "spawnEnemyHollowAcolyte" => "slow caster orbs, rune burst pressure, and veil-step retreat",
+                "spawnEnemyWraith" => "phase movement, soul bolt pressure, and active-window curse touch",
+                "spawnEnemySoulEater" => "committed soul-drain beam, burst pressure, and phase setup",
+                "spawnEnemyCurseBinder" => "territorial curse bolts, sigil fan lanes, and close curse field",
+                "spawnEnemyGraveLantern" => "stationary soul ring, curse fan, and grave orb pattern pressure",
                 _ => "fallback preferred-range pressure"
             };
         }

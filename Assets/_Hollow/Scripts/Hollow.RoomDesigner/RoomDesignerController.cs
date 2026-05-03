@@ -714,6 +714,12 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.EnemySpider:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySpider, "spawn_enemy_spider");
                     break;
+                case RoomDesignerTool.EnemyHollowBird:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyHollowBird, "spawn_enemy_hollow_bird");
+                    break;
+                case RoomDesignerTool.EnemyHollowBeast:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyHollowBeast, "spawn_enemy_hollow_beast");
+                    break;
                 case RoomDesignerTool.EnemySkeletonSword:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySkeletonSword, "spawn_enemy_skeleton_sword");
                     break;
@@ -725,6 +731,36 @@ namespace Hollow.RoomDesigner
                     break;
                 case RoomDesignerTool.EnemyGiant:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyGiant, "spawn_enemy_giant");
+                    break;
+                case RoomDesignerTool.EnemyHollowArcher:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyHollowArcher, "spawn_enemy_hollow_archer");
+                    break;
+                case RoomDesignerTool.EnemyPowderGunner:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyPowderGunner, "spawn_enemy_powder_gunner");
+                    break;
+                case RoomDesignerTool.EnemyKnifeThrower:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyKnifeThrower, "spawn_enemy_knife_thrower");
+                    break;
+                case RoomDesignerTool.EnemyRepeaterTurret:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyRepeaterTurret, "spawn_enemy_repeater_turret");
+                    break;
+                case RoomDesignerTool.EnemyClockworkSentry:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyClockworkSentry, "spawn_enemy_clockwork_sentry");
+                    break;
+                case RoomDesignerTool.EnemyHollowAcolyte:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyHollowAcolyte, "spawn_enemy_hollow_acolyte");
+                    break;
+                case RoomDesignerTool.EnemyWraith:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyWraith, "spawn_enemy_wraith");
+                    break;
+                case RoomDesignerTool.EnemySoulEater:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySoulEater, "spawn_enemy_soul_eater");
+                    break;
+                case RoomDesignerTool.EnemyCurseBinder:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyCurseBinder, "spawn_enemy_curse_binder");
+                    break;
+                case RoomDesignerTool.EnemyGraveLantern:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyGraveLantern, "spawn_enemy_grave_lantern");
                     break;
                 case RoomDesignerTool.StandardBarrel:
                     AddOrReplaceInteractiveObject(RoomDesignerMarkerKinds.StandardBarrel, "barrel_standard");
@@ -868,10 +904,22 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemySpittingPod => RoomDesignerTool.EnemySpittingPod,
                 RoomDesignerMarkerKinds.EnemyRat => RoomDesignerTool.EnemyRat,
                 RoomDesignerMarkerKinds.EnemySpider => RoomDesignerTool.EnemySpider,
+                RoomDesignerMarkerKinds.EnemyHollowBird => RoomDesignerTool.EnemyHollowBird,
+                RoomDesignerMarkerKinds.EnemyHollowBeast => RoomDesignerTool.EnemyHollowBeast,
                 RoomDesignerMarkerKinds.EnemySkeletonSword => RoomDesignerTool.EnemySkeletonSword,
                 RoomDesignerMarkerKinds.EnemySkeletonSpear => RoomDesignerTool.EnemySkeletonSpear,
                 RoomDesignerMarkerKinds.EnemyKnight => RoomDesignerTool.EnemyKnight,
                 RoomDesignerMarkerKinds.EnemyGiant => RoomDesignerTool.EnemyGiant,
+                RoomDesignerMarkerKinds.EnemyHollowArcher => RoomDesignerTool.EnemyHollowArcher,
+                RoomDesignerMarkerKinds.EnemyPowderGunner => RoomDesignerTool.EnemyPowderGunner,
+                RoomDesignerMarkerKinds.EnemyKnifeThrower => RoomDesignerTool.EnemyKnifeThrower,
+                RoomDesignerMarkerKinds.EnemyRepeaterTurret => RoomDesignerTool.EnemyRepeaterTurret,
+                RoomDesignerMarkerKinds.EnemyClockworkSentry => RoomDesignerTool.EnemyClockworkSentry,
+                RoomDesignerMarkerKinds.EnemyHollowAcolyte => RoomDesignerTool.EnemyHollowAcolyte,
+                RoomDesignerMarkerKinds.EnemyWraith => RoomDesignerTool.EnemyWraith,
+                RoomDesignerMarkerKinds.EnemySoulEater => RoomDesignerTool.EnemySoulEater,
+                RoomDesignerMarkerKinds.EnemyCurseBinder => RoomDesignerTool.EnemyCurseBinder,
+                RoomDesignerMarkerKinds.EnemyGraveLantern => RoomDesignerTool.EnemyGraveLantern,
                 RoomDesignerMarkerKinds.EnemyNormal => RoomDesignerTool.EnemyNormal,
                 _ => RoomDesignerTool.EnemySpawn
             };

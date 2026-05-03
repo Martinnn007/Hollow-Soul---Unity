@@ -447,10 +447,22 @@ namespace Hollow.Editor.Generation
                 "spawnEnemySpittingPod" => PresentationPrefabRole.EnemySpittingPod,
                 "spawnEnemyRat" => PresentationPrefabRole.EnemyRat,
                 "spawnEnemySpider" => PresentationPrefabRole.EnemySpider,
+                "spawnEnemyHollowBird" => PresentationPrefabRole.EnemyHollowBird,
+                "spawnEnemyHollowBeast" => PresentationPrefabRole.EnemyHollowBeast,
                 "spawnEnemySkeletonSword" => PresentationPrefabRole.EnemySkeletonSword,
                 "spawnEnemySkeletonSpear" => PresentationPrefabRole.EnemySkeletonSpear,
                 "spawnEnemyKnight" => PresentationPrefabRole.EnemyKnight,
                 "spawnEnemyGiant" => PresentationPrefabRole.EnemyGiant,
+                "spawnEnemyHollowArcher" => PresentationPrefabRole.EnemyHollowArcher,
+                "spawnEnemyPowderGunner" => PresentationPrefabRole.EnemyPowderGunner,
+                "spawnEnemyKnifeThrower" => PresentationPrefabRole.EnemyKnifeThrower,
+                "spawnEnemyRepeaterTurret" => PresentationPrefabRole.EnemyRepeaterTurret,
+                "spawnEnemyClockworkSentry" => PresentationPrefabRole.EnemyClockworkSentry,
+                "spawnEnemyHollowAcolyte" => PresentationPrefabRole.EnemyHollowAcolyte,
+                "spawnEnemyWraith" => PresentationPrefabRole.EnemyWraith,
+                "spawnEnemySoulEater" => PresentationPrefabRole.EnemySoulEater,
+                "spawnEnemyCurseBinder" => PresentationPrefabRole.EnemyCurseBinder,
+                "spawnEnemyGraveLantern" => PresentationPrefabRole.EnemyGraveLantern,
                 _ => PresentationPrefabRole.EnemyNormal
             };
         }
@@ -474,10 +486,22 @@ namespace Hollow.Editor.Generation
             RoomDesignerMarkerKinds.EnemySpittingPod,
             RoomDesignerMarkerKinds.EnemyRat,
             RoomDesignerMarkerKinds.EnemySpider,
+            RoomDesignerMarkerKinds.EnemyHollowBird,
+            RoomDesignerMarkerKinds.EnemyHollowBeast,
             RoomDesignerMarkerKinds.EnemySkeletonSword,
             RoomDesignerMarkerKinds.EnemySkeletonSpear,
             RoomDesignerMarkerKinds.EnemyKnight,
-            RoomDesignerMarkerKinds.EnemyGiant
+            RoomDesignerMarkerKinds.EnemyGiant,
+            RoomDesignerMarkerKinds.EnemyHollowArcher,
+            RoomDesignerMarkerKinds.EnemyPowderGunner,
+            RoomDesignerMarkerKinds.EnemyKnifeThrower,
+            RoomDesignerMarkerKinds.EnemyRepeaterTurret,
+            RoomDesignerMarkerKinds.EnemyClockworkSentry,
+            RoomDesignerMarkerKinds.EnemyHollowAcolyte,
+            RoomDesignerMarkerKinds.EnemyWraith,
+            RoomDesignerMarkerKinds.EnemySoulEater,
+            RoomDesignerMarkerKinds.EnemyCurseBinder,
+            RoomDesignerMarkerKinds.EnemyGraveLantern
         };
 
         private static readonly string[] BuildPickupLabels =

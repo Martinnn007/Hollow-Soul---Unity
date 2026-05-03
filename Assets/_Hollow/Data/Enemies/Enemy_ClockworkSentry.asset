@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_ClockworkSentry
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyClockworkSentry
+  displayName: Clockwork Sentry
+  archetypeId: 3
+  behaviorId: 19
+  movementMode: 0
+  maxHealth: 8
+  speedMetersPerSecond: 0.65
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.44
+  attackRangeMeters: 7.8
+  preferredRangeMinMeters: 4.8
+  preferredRangeMaxMeters: 7.8
+  sightRadiusMeters: 9
+  sightAngleDegrees: 220
+  hearingRadiusMeters: 6.5
+  hearingSensitivityMultiplier: 1.1
+  disturbanceEscalationThreshold: 1.25
+  investigationDurationSeconds: 1.5
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 2
+  intelligence: 4
+  disposition: 2
+  attackWindupScale: 1.05
+  attackActiveScale: 1
+  attackRecoveryScale: 1.05
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 1
+  attackProfiles:
+  - {fileID: 11400000, guid: 52690765fc9f948f7bdbfb5079257e5c, type: 2}
+  - {fileID: 11400000, guid: 11d8a0a4b65444718ba04858d4a3cc70, type: 2}
+  - {fileID: 11400000, guid: 6b4f6fa3dca79461f89a4f7db9b271e6, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: d6d6c14c992724d01b7cf5e27f620ae2, type: 2}
+  - {fileID: 11400000, guid: 306077f338204481d939b4ebe3a41eca, type: 2}
+  - {fileID: 11400000, guid: f5e9c2805c71b448390da6635bad01a3, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: 8cfde985780e74358be33aa8e37a8ea8, type: 2}
+  color: {r: 0.62, g: 0.56, b: 0.42, a: 1}

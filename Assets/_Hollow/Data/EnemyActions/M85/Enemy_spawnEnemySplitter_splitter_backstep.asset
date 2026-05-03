@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2ce0b8d8bbf43c78a8de47e08eea293, type: 3}
+  m_Name: Enemy_spawnEnemySplitter_splitter_backstep
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyActionProfileDefinition
+  actionId: splitter_backstep
+  displayName: Splitter Backstep
+  category: 5
+  intent: 2
+  shape: 1
+  usageState: 1
+  linkedAttackProfile: {fileID: 0}
+  linkedAttackId: 
+  explicitlyNonDamaging: 1
+  minRangeMeters: 0.5
+  idealRangeMeters: 1.2
+  maxRangeMeters: 2
+  baseWeight: 0.75
+  pressureCost: 0
+  cooldownGroup: future_movement
+  minimumIntelligence: 2
+  allowedDispositions: 00000000
+  minimumAwareness: 2
+  requiresFacing: 0
+  facingArcDegrees: 360
+  telegraphNote: Short step back before committing to cleave.
+  punishabilityRating: 3
+  guardPressureRating: 1
+  poiseBreakNote: Future action has no runtime poise break until linked to an attack
+    profile.
+  parryable: 0
+  blockable: 0
+  dodgeable: 1
+  recoveryPunishNote: Future recovery should be authored before enabling runtime
+    selection.
+  bestUserTags:
+  - body-only
+  notes: Keeps splitter from constant body pressure.

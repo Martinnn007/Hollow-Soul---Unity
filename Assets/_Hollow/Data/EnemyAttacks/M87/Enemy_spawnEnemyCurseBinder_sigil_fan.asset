@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyCurseBinder_sigil_fan
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: sigil_fan
+  displayName: Sigil Fan
+  runtimeKind: 5
+  damage: 1
+  cooldownSeconds: 2.45
+  windupSeconds: 0.58
+  activeSeconds: 0.08
+  rangeMeters: 6.8
+  projectileCount: 5
+  projectileSpeedMetersPerSecond: 4.4
+  damageChannel: 2
+  damageDelivery: 1
+  damageElement: 3
+  forceClass: 1
+  threatKind: 1
+  knockbackMeters: 0.4
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.56
+  hitArcDegrees: 82
+  poiseBreakThreshold: 1
+  activeMovementDistanceMeters: -1
+  comboFollowUpAttackId: 
+  notes: M87 fan of curse marks with visible lanes between shots.

@@ -75,6 +75,21 @@ namespace Hollow.Combat
             return Enemy != null && Enemy.CanStartBehaviorGuardAction(actionId, TimeSeconds);
         }
 
+        public bool CanStartCreatureMoveAction(string actionId)
+        {
+            return Enemy != null && Enemy.CanStartBehaviorCreatureMoveAction(actionId, TimeSeconds);
+        }
+
+        public bool CanStartCreatureSignalAction(string actionId)
+        {
+            return Enemy != null && Enemy.CanStartBehaviorCreatureSignalAction(actionId, TimeSeconds);
+        }
+
+        public bool CanStartRangedAction(string actionId)
+        {
+            return Enemy != null && Enemy.CanStartBehaviorRangedAction(actionId, TimeSeconds);
+        }
+
         public float Deterministic01(string salt)
         {
             var hash = 17;

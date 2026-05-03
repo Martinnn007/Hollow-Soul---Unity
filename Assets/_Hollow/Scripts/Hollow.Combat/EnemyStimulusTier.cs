@@ -17,6 +17,7 @@ namespace Hollow.Combat
                 EnemyStimulusKind.Footstep => EnemyStimulusTier.Quiet,
                 EnemyStimulusKind.Damage => EnemyStimulusTier.Violent,
                 EnemyStimulusKind.GuardImpact => EnemyStimulusTier.Loud,
+                EnemyStimulusKind.AllyAlert => EnemyStimulusTier.Normal,
                 _ => EnemyStimulusTier.Normal
             };
         }

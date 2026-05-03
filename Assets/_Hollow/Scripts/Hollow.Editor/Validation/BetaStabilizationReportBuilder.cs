@@ -333,8 +333,14 @@ namespace Hollow.Editor.Validation
                     PresentationPrefabRole.EnemyHeavy or PresentationPrefabRole.EnemyCharger or PresentationPrefabRole.EnemyTurret or
                     PresentationPrefabRole.EnemySplitter or PresentationPrefabRole.EnemySpittingPod or
                     PresentationPrefabRole.EnemyRat or PresentationPrefabRole.EnemySpider or
+                    PresentationPrefabRole.EnemyHollowBird or PresentationPrefabRole.EnemyHollowBeast or
                     PresentationPrefabRole.EnemySkeletonSword or PresentationPrefabRole.EnemySkeletonSpear or
-                    PresentationPrefabRole.EnemyKnight or PresentationPrefabRole.EnemyGiant => "Enemies",
+                    PresentationPrefabRole.EnemyKnight or PresentationPrefabRole.EnemyGiant or
+                    PresentationPrefabRole.EnemyHollowArcher or PresentationPrefabRole.EnemyPowderGunner or
+                    PresentationPrefabRole.EnemyKnifeThrower or PresentationPrefabRole.EnemyRepeaterTurret or
+                    PresentationPrefabRole.EnemyClockworkSentry or PresentationPrefabRole.EnemyHollowAcolyte or
+                    PresentationPrefabRole.EnemyWraith or PresentationPrefabRole.EnemySoulEater or
+                    PresentationPrefabRole.EnemyCurseBinder or PresentationPrefabRole.EnemyGraveLantern => "Enemies",
                 PresentationPrefabRole.EnemyBoss => "Bosses",
                 PresentationPrefabRole.RoomFloor or PresentationPrefabRole.RoomObstacleRock or PresentationPrefabRole.RoomHazardSpike => "Rooms",
                 PresentationPrefabRole.StandardBarrel or PresentationPrefabRole.ExplosiveBarrel => "Hazards",

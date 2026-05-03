@@ -29,7 +29,10 @@ namespace Hollow.Combat
         BehaviorMatches = 15,
         DispositionMatches = 16,
         IntelligenceAtLeast = 17,
-        CanStartGuardAction = 18
+        CanStartGuardAction = 18,
+        CanStartCreatureMoveAction = 19,
+        CanStartCreatureSignalAction = 20,
+        CanStartRangedAction = 21
     }
 
     public enum EnemyBehaviorCommandKind
@@ -46,6 +49,8 @@ namespace Hollow.Combat
         StartChargeAction = 9,
         StartAreaAction = 10,
         StartFeintWarning = 11,
-        StartGuardAction = 12
+        StartGuardAction = 12,
+        StartCreatureMoveAction = 13,
+        StartCreatureSignalAction = 14
     }
 }

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyWraith_curse_touch
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: curse_touch
+  displayName: Curse Touch
+  runtimeKind: 1
+  damage: 1
+  cooldownSeconds: 1.2
+  windupSeconds: 0.2
+  activeSeconds: 0.14
+  rangeMeters: 1.25
+  projectileCount: 0
+  projectileSpeedMetersPerSecond: 0.1
+  damageChannel: 2
+  damageDelivery: 0
+  damageElement: 3
+  forceClass: 0
+  threatKind: 0
+  knockbackMeters: 0.28
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.24
+  hitArcDegrees: 130
+  poiseBreakThreshold: 0
+  activeMovementDistanceMeters: 0.42
+  comboFollowUpAttackId: 
+  notes: M87 short active-window ghost touch; ordinary overlap remains harmless.

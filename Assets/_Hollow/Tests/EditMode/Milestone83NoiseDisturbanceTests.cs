@@ -38,6 +38,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(EnemyStimulusTier.Normal, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.Roll));
             Assert.AreEqual(EnemyStimulusTier.Normal, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.Bump));
             Assert.AreEqual(EnemyStimulusTier.Normal, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.Proximity));
+            Assert.AreEqual(EnemyStimulusTier.Normal, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.AllyAlert));
             Assert.AreEqual(EnemyStimulusTier.Loud, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.GuardImpact));
             Assert.AreEqual(EnemyStimulusTier.Violent, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.Damage));
             Assert.AreEqual(EnemyStimulusTier.Normal, RoomCombatController.StimulusTierForPlayerAttack(AttackKind.Light));
@@ -59,9 +60,16 @@ namespace Hollow.Tests.EditMode
                 prey.ReceiveStimulus(EnemyStimulusKind.Footstep, player.transform.localPosition, 2.4f, EnemyStimulusTier.Quiet);
                 Assert.AreEqual(EnemyAwarenessState.Alerted, prey.AwarenessState);
 
-                prey.Tick(0.2f, 2.5f);
+                var start = prey.transform.localPosition;
+                prey.Tick(0.05f, 2.5f);
                 Assert.AreNotEqual(EnemyAwarenessState.Engaged, prey.AwarenessState);
-                Assert.Greater(prey.transform.localPosition.z, 0f);
+                Assert.AreEqual(EnemyReadabilityState.CreatureMoveWindup, prey.ReadabilityState);
+
+                prey.Tick(0.05f, 2.58f);
+                Assert.AreEqual(EnemyReadabilityState.CreatureMoveActive, prey.ReadabilityState);
+                prey.Tick(0.05f, 2.62f);
+                Assert.Greater(Vector3.Distance(start, prey.transform.localPosition), 0.01f);
+                Assert.AreEqual(EnemyNavigationMode.FlyingLocal, prey.LastNavigationMode);
 
                 prey.ReceiveStimulus(EnemyStimulusKind.RangedAttack, player.transform.localPosition, 3f, EnemyStimulusTier.Normal);
                 Assert.AreEqual(EnemyAwarenessState.Engaged, prey.AwarenessState);
@@ -81,7 +89,7 @@ namespace Hollow.Tests.EditMode
             {
                 var turret = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyTurret"));
                 turret.transform.localPosition = Vector3.zero;
-                player.transform.localPosition = new Vector3(0f, 0f, 6.2f);
+                player.transform.localPosition = new Vector3(0f, 0f, 10.5f);
 
                 turret.ReceiveStimulus(EnemyStimulusKind.Footstep, new Vector3(0f, 0f, 2f), 2f, EnemyStimulusTier.Quiet);
                 turret.Tick(0.05f, 2.1f);
@@ -89,6 +97,7 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(EnemyReadabilityState.Idle, turret.ReadabilityState);
                 Assert.AreEqual(Vector3.zero, turret.transform.localPosition);
 
+                player.transform.localPosition = new Vector3(0f, 0f, 6.2f);
                 turret.ReceiveStimulus(EnemyStimulusKind.GuardImpact, new Vector3(0f, 0f, 2f), 2.3f, EnemyStimulusTier.Loud);
                 turret.Tick(0.05f, 2.35f);
                 Assert.AreEqual(EnemyAwarenessState.Engaged, turret.AwarenessState);
@@ -132,7 +141,7 @@ namespace Hollow.Tests.EditMode
             {
                 var heavy = CreateEnemy(root.transform, room, player, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyHeavy"));
                 heavy.transform.localPosition = Vector3.zero;
-                player.transform.localPosition = new Vector3(0f, 0f, 3f);
+                player.transform.localPosition = new Vector3(0f, 0f, 2.2f);
 
                 Assert.AreEqual(EnemyAwarenessState.Alerted, heavy.AwarenessState);
                 heavy.ReceiveStimulus(EnemyStimulusKind.Roll, player.transform.localPosition, 1f, EnemyStimulusTier.Normal);

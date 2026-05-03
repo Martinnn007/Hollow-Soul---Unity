@@ -1,0 +1,269 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8234916138751834968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_root
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  nodeId: curse_binder_root
+  children:
+  - {fileID: 7517047365170825854}
+  - {fileID: 3395893529248839209}
+  - {fileID: 3010255156465101352}
+--- !u!114 &-5893937974050034178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_binding_bolt
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_binding_bolt
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: binding_bolt
+  threshold: 0
+--- !u!114 &-3504428977261847269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_binding_bolt
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_binding_bolt
+  commandKind: 8
+  actionId: binding_bolt
+  speedMultiplier: 1
+  reason: Start ranged action binding_bolt.
+--- !u!114 &-2856224453126552272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_area_curse_field
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_area_curse_field
+  commandKind: 10
+  actionId: curse_field
+  speedMultiplier: 1
+  reason: Start area action curse_field.
+--- !u!114 &-2310695476908259494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_bolt
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: curse_binder_bolt
+  children:
+  - {fileID: -5893937974050034178}
+  - {fileID: -3504428977261847269}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
+  m_Name: EnemyTree_spawnEnemyCurseBinder
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
+  treeId: enemy_spawnEnemyCurseBinder_m82_tree
+  displayName: Curse Binder M82 Behavior Tree
+  ownerId: spawnEnemyCurseBinder
+  bossMetadataOnly: 0
+  rootNode: {fileID: -8234916138751834968}
+  nodes:
+  - {fileID: 219000000900440729}
+  - {fileID: 6820341102763387948}
+  - {fileID: -2856224453126552272}
+  - {fileID: 7517047365170825854}
+  - {fileID: 2605592001060224504}
+  - {fileID: 8248316840099783895}
+  - {fileID: 8783525801172825570}
+  - {fileID: -5893937974050034178}
+  - {fileID: -3504428977261847269}
+  - {fileID: -2310695476908259494}
+  - {fileID: 3395893529248839209}
+  - {fileID: 3010255156465101352}
+  - {fileID: -8234916138751834968}
+--- !u!114 &219000000900440729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_close_field
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: curse_binder_close_field
+  condition: 4
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 2.55
+--- !u!114 &2605592001060224504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_sigil_fan
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_sigil_fan
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: sigil_fan
+  threshold: 0
+--- !u!114 &3010255156465101352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_range
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: curse_binder_range
+  commandKind: 3
+  actionId: 
+  speedMultiplier: 0.68
+  reason: Curse Binder claims territory with dodgeable sigils and projectiles.
+--- !u!114 &3395893529248839209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_choice
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorWeightedSelectorNodeDefinition
+  nodeId: curse_binder_choice
+  children:
+  - child: {fileID: 8783525801172825570}
+    weight: 1.15
+  - child: {fileID: -2310695476908259494}
+    weight: 1.65
+--- !u!114 &6820341102763387948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_area_curse_field
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_area_curse_field
+  condition: 12
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: curse_field
+  threshold: 0
+--- !u!114 &7517047365170825854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_field
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: curse_binder_field
+  children:
+  - {fileID: 219000000900440729}
+  - {fileID: 6820341102763387948}
+  - {fileID: -2856224453126552272}
+--- !u!114 &8248316840099783895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_sigil_fan
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_sigil_fan
+  commandKind: 8
+  actionId: sigil_fan
+  speedMultiplier: 1
+  reason: Start ranged action sigil_fan.
+--- !u!114 &8783525801172825570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: curse_binder_fan
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: curse_binder_fan
+  children:
+  - {fileID: 2605592001060224504}
+  - {fileID: 8248316840099783895}

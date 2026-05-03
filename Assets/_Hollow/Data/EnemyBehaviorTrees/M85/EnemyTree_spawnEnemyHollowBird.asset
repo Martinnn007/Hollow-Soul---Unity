@@ -1,0 +1,350 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8280625477734568713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_range
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: hollow_bird_range
+  commandKind: 3
+  actionId: 
+  speedMultiplier: 0.95
+  reason: Hollow Bird harasses with local flying bursts only.
+--- !u!114 &-7042049177477777756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_alerted
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: hollow_bird_alerted
+  condition: 2
+  invert: 0
+  awareness: 2
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0
+--- !u!114 &-6403590338641520128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_caw
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_bird_caw
+  children:
+  - {fileID: -7042049177477777756}
+  - {fileID: 5268254430650571338}
+  - {fileID: 5900040656556118195}
+--- !u!114 &-4482395696853826567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_melee_swoop_peck
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_melee_swoop_peck
+  condition: 9
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: swoop_peck
+  threshold: 0
+--- !u!114 &-4289888479704764685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_root
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  nodeId: hollow_bird_root
+  children:
+  - {fileID: -6403590338641520128}
+  - {fileID: -2546417052629316313}
+  - {fileID: 2238392852023601696}
+  - {fileID: -8280625477734568713}
+--- !u!114 &-2546417052629316313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_retreat_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_bird_retreat_close
+  children:
+  - {fileID: 3794128213009803934}
+  - {fileID: 2430785988477562417}
+  - {fileID: 2004981761225995249}
+--- !u!114 &-1041109444828417280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_swoop_peck
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_bird_swoop_peck
+  children:
+  - {fileID: -4482395696853826567}
+  - {fileID: 6162388482614378824}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
+  m_Name: EnemyTree_spawnEnemyHollowBird
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
+  treeId: enemy_spawnEnemyHollowBird_m82_tree
+  displayName: Hollow Bird M82 Behavior Tree
+  ownerId: spawnEnemyHollowBird
+  bossMetadataOnly: 0
+  rootNode: {fileID: -4289888479704764685}
+  nodes:
+  - {fileID: -7042049177477777756}
+  - {fileID: 5268254430650571338}
+  - {fileID: 5900040656556118195}
+  - {fileID: -6403590338641520128}
+  - {fileID: 3794128213009803934}
+  - {fileID: 2430785988477562417}
+  - {fileID: 2004981761225995249}
+  - {fileID: -2546417052629316313}
+  - {fileID: 8106328806934328864}
+  - {fileID: 6197467946302553050}
+  - {fileID: 6478808370028766323}
+  - {fileID: -4482395696853826567}
+  - {fileID: 6162388482614378824}
+  - {fileID: -1041109444828417280}
+  - {fileID: 2238392852023601696}
+  - {fileID: -8280625477734568713}
+  - {fileID: -4289888479704764685}
+--- !u!114 &2004981761225995249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_move_wing_retreat
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_move_wing_retreat
+  commandKind: 13
+  actionId: wing_retreat
+  speedMultiplier: 1
+  reason: Start creature move action wing_retreat.
+--- !u!114 &2238392852023601696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_attack_choice
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorWeightedSelectorNodeDefinition
+  nodeId: hollow_bird_attack_choice
+  children:
+  - child: {fileID: 6478808370028766323}
+    weight: 1.4
+  - child: {fileID: -1041109444828417280}
+    weight: 1.1
+--- !u!114 &2430785988477562417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_move_wing_retreat
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_move_wing_retreat
+  condition: 19
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: wing_retreat
+  threshold: 0
+--- !u!114 &3794128213009803934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_too_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: hollow_bird_too_close
+  condition: 6
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0
+--- !u!114 &5268254430650571338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_signal_caw_signal
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_signal_caw_signal
+  condition: 20
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: caw_signal
+  threshold: 0
+--- !u!114 &5900040656556118195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_signal_caw_signal
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_signal_caw_signal
+  commandKind: 14
+  actionId: caw_signal
+  speedMultiplier: 1
+  reason: Start creature signal action caw_signal.
+--- !u!114 &6162388482614378824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_melee_swoop_peck
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_melee_swoop_peck
+  commandKind: 7
+  actionId: swoop_peck
+  speedMultiplier: 1
+  reason: Start melee action swoop_peck.
+--- !u!114 &6197467946302553050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_melee_claw_dive
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_melee_claw_dive
+  commandKind: 7
+  actionId: claw_dive
+  speedMultiplier: 1
+  reason: Start melee action claw_dive.
+--- !u!114 &6478808370028766323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_bird_claw_dive
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_bird_claw_dive
+  children:
+  - {fileID: 8106328806934328864}
+  - {fileID: 6197467946302553050}
+--- !u!114 &8106328806934328864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_melee_claw_dive
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_melee_claw_dive
+  condition: 9
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: claw_dive
+  threshold: 0

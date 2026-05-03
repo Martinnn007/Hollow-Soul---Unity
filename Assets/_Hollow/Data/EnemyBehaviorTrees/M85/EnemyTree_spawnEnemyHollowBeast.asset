@@ -1,0 +1,332 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8839204942076841783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_move_leap_back
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_move_leap_back
+  commandKind: 13
+  actionId: leap_back
+  speedMultiplier: 1
+  reason: Start creature move action leap_back.
+--- !u!114 &-6597897764807959561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_engaged
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: hollow_beast_engaged
+  condition: 2
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0
+--- !u!114 &-4917120909774767104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_root
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  nodeId: hollow_beast_root
+  children:
+  - {fileID: 6937974659089715440}
+  - {fileID: 2049033447215893071}
+  - {fileID: 3851720534701791995}
+  - {fileID: 7116497531064085479}
+  - {fileID: 5981551205121592387}
+--- !u!114 &-4773829448069265816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_move_leap_back
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_move_leap_back
+  condition: 19
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: leap_back
+  threshold: 0
+--- !u!114 &-2640266833477753804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_melee_leap_bite
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_melee_leap_bite
+  condition: 9
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: leap_bite
+  threshold: 0
+--- !u!114 &-469533053074935523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_signal_howl_signal
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_signal_howl_signal
+  commandKind: 14
+  actionId: howl_signal
+  speedMultiplier: 1
+  reason: Start creature signal action howl_signal.
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
+  m_Name: EnemyTree_spawnEnemyHollowBeast
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
+  treeId: enemy_spawnEnemyHollowBeast_m82_tree
+  displayName: Hollow Beast M82 Behavior Tree
+  ownerId: spawnEnemyHollowBeast
+  bossMetadataOnly: 0
+  rootNode: {fileID: -4917120909774767104}
+  nodes:
+  - {fileID: -6597897764807959561}
+  - {fileID: 6949891804899465497}
+  - {fileID: -469533053074935523}
+  - {fileID: 6937974659089715440}
+  - {fileID: 3946985930204596048}
+  - {fileID: -4773829448069265816}
+  - {fileID: -8839204942076841783}
+  - {fileID: 2049033447215893071}
+  - {fileID: 4684601502526664276}
+  - {fileID: 4851941925161295198}
+  - {fileID: 3851720534701791995}
+  - {fileID: -2640266833477753804}
+  - {fileID: 1279508828349275117}
+  - {fileID: 7116497531064085479}
+  - {fileID: 5981551205121592387}
+  - {fileID: -4917120909774767104}
+--- !u!114 &1279508828349275117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_melee_leap_bite
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_melee_leap_bite
+  commandKind: 7
+  actionId: leap_bite
+  speedMultiplier: 1
+  reason: Start melee action leap_bite.
+--- !u!114 &2049033447215893071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_leap_back
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_beast_leap_back
+  children:
+  - {fileID: 3946985930204596048}
+  - {fileID: -4773829448069265816}
+  - {fileID: -8839204942076841783}
+--- !u!114 &3851720534701791995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_body_check
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_beast_body_check
+  children:
+  - {fileID: 4684601502526664276}
+  - {fileID: 4851941925161295198}
+--- !u!114 &3946985930204596048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_too_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: hollow_beast_too_close
+  condition: 6
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0
+--- !u!114 &4684601502526664276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_melee_body_check
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_melee_body_check
+  condition: 9
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: body_check
+  threshold: 0
+--- !u!114 &4851941925161295198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_melee_body_check
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_melee_body_check
+  commandKind: 7
+  actionId: body_check
+  speedMultiplier: 1
+  reason: Start melee action body_check.
+--- !u!114 &5981551205121592387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_pressure
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: hollow_beast_pressure
+  commandKind: 3
+  actionId: 
+  speedMultiplier: 0.92
+  reason: Hollow Beast punishes overcommitment with committed leaps.
+--- !u!114 &6937974659089715440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_howl
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_beast_howl
+  children:
+  - {fileID: -6597897764807959561}
+  - {fileID: 6949891804899465497}
+  - {fileID: -469533053074935523}
+--- !u!114 &6949891804899465497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_signal_howl_signal
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_signal_howl_signal
+  condition: 20
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: howl_signal
+  threshold: 0
+--- !u!114 &7116497531064085479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_beast_leap_bite
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_beast_leap_bite
+  children:
+  - {fileID: -2640266833477753804}
+  - {fileID: 1279508828349275117}

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyHollowAcolyte_veil_step
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: veil_step
+  displayName: Veil Step
+  runtimeKind: 15
+  damage: 0
+  cooldownSeconds: 1.65
+  windupSeconds: 0.12
+  activeSeconds: 0.24
+  rangeMeters: 3.2
+  projectileCount: 0
+  projectileSpeedMetersPerSecond: 0.1
+  damageChannel: 2
+  damageDelivery: 2
+  damageElement: 5
+  forceClass: 0
+  threatKind: 0
+  knockbackMeters: 0
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.24
+  hitArcDegrees: 360
+  poiseBreakThreshold: 0
+  activeMovementDistanceMeters: 1.05
+  comboFollowUpAttackId: 
+  notes: M87 non-damaging phase retreat that repositions locally without pathfinding.

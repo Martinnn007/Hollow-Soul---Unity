@@ -136,8 +136,12 @@ namespace Hollow.Combat
                 EnemyAttackRuntimeKind.Contact => 0.14f,
                 EnemyAttackRuntimeKind.Area => 0.2f,
                 EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => 0.18f,
+                EnemyAttackRuntimeKind.Beam => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.55f : 0.38f,
                 EnemyAttackRuntimeKind.Movement => 0.18f,
                 EnemyAttackRuntimeKind.Defense => 0.28f,
+                EnemyAttackRuntimeKind.CreatureMove => 0.16f,
+                EnemyAttackRuntimeKind.PhaseMove => 0.22f,
+                EnemyAttackRuntimeKind.CreatureSignal => 0.24f,
                 _ => 0.12f
             };
         }
@@ -156,6 +160,8 @@ namespace Hollow.Combat
                 EnemyAttackRuntimeKind.MeleeLunge => 125f,
                 EnemyAttackRuntimeKind.Contact => 110f,
                 EnemyAttackRuntimeKind.Area => 360f,
+                EnemyAttackRuntimeKind.Beam => 55f,
+                EnemyAttackRuntimeKind.CreatureMove or EnemyAttackRuntimeKind.CreatureSignal or EnemyAttackRuntimeKind.PhaseMove => 360f,
                 _ => 120f
             };
         }

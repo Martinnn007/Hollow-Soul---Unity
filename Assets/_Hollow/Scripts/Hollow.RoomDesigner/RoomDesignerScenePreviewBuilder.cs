@@ -73,10 +73,22 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemySpittingPod => PresentationPrefabRole.EnemySpittingPod,
                 RoomDesignerMarkerKinds.EnemyRat => PresentationPrefabRole.EnemyRat,
                 RoomDesignerMarkerKinds.EnemySpider => PresentationPrefabRole.EnemySpider,
+                RoomDesignerMarkerKinds.EnemyHollowBird => PresentationPrefabRole.EnemyHollowBird,
+                RoomDesignerMarkerKinds.EnemyHollowBeast => PresentationPrefabRole.EnemyHollowBeast,
                 RoomDesignerMarkerKinds.EnemySkeletonSword => PresentationPrefabRole.EnemySkeletonSword,
                 RoomDesignerMarkerKinds.EnemySkeletonSpear => PresentationPrefabRole.EnemySkeletonSpear,
                 RoomDesignerMarkerKinds.EnemyKnight => PresentationPrefabRole.EnemyKnight,
                 RoomDesignerMarkerKinds.EnemyGiant => PresentationPrefabRole.EnemyGiant,
+                RoomDesignerMarkerKinds.EnemyHollowArcher => PresentationPrefabRole.EnemyHollowArcher,
+                RoomDesignerMarkerKinds.EnemyPowderGunner => PresentationPrefabRole.EnemyPowderGunner,
+                RoomDesignerMarkerKinds.EnemyKnifeThrower => PresentationPrefabRole.EnemyKnifeThrower,
+                RoomDesignerMarkerKinds.EnemyRepeaterTurret => PresentationPrefabRole.EnemyRepeaterTurret,
+                RoomDesignerMarkerKinds.EnemyClockworkSentry => PresentationPrefabRole.EnemyClockworkSentry,
+                RoomDesignerMarkerKinds.EnemyHollowAcolyte => PresentationPrefabRole.EnemyHollowAcolyte,
+                RoomDesignerMarkerKinds.EnemyWraith => PresentationPrefabRole.EnemyWraith,
+                RoomDesignerMarkerKinds.EnemySoulEater => PresentationPrefabRole.EnemySoulEater,
+                RoomDesignerMarkerKinds.EnemyCurseBinder => PresentationPrefabRole.EnemyCurseBinder,
+                RoomDesignerMarkerKinds.EnemyGraveLantern => PresentationPrefabRole.EnemyGraveLantern,
                 _ => PresentationPrefabRole.EnemyNormal
             };
         }

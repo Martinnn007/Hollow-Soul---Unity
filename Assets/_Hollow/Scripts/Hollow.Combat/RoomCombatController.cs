@@ -397,6 +397,62 @@ namespace Hollow.Combat
             }
         }
 
+        public int EmitEnemyAllyAlert(
+            EnemyRuntimeController source,
+            Vector3 sourceLocalPosition,
+            float radiusMeters,
+            float timeSeconds,
+            EnemyStimulusTier tier,
+            string context = "")
+        {
+            if (source == null || source.BossDefinition != null || radiusMeters <= 0f)
+            {
+                return 0;
+            }
+
+            var recipients = 0;
+            var safeRadius = Mathf.Max(0.1f, radiusMeters);
+            var sourceFlat = sourceLocalPosition;
+            sourceFlat.y = 0f;
+            foreach (var enemy in enemies)
+            {
+                if (enemy == null ||
+                    enemy == source ||
+                    !enemy.IsAlive ||
+                    enemy.ArchetypeId == EnemyArchetypeId.Boss ||
+                    enemy.BossDefinition != null ||
+                    enemy.AwarenessState == EnemyAwarenessState.Engaged)
+                {
+                    continue;
+                }
+
+                var targetFlat = enemy.transform.localPosition;
+                targetFlat.y = 0f;
+                if (Vector3.Distance(sourceFlat, targetFlat) > safeRadius)
+                {
+                    continue;
+                }
+
+                if (!enemy.CanReceiveStimulus(EnemyStimulusKind.AllyAlert, sourceLocalPosition, tier))
+                {
+                    continue;
+                }
+
+                var reason = string.IsNullOrWhiteSpace(context)
+                    ? (source.Definition != null ? source.Definition.SpawnKind : source.BehaviorId.ToString())
+                    : context;
+                enemy.ReceiveStimulus(
+                    EnemyStimulusKind.AllyAlert,
+                    sourceLocalPosition,
+                    timeSeconds,
+                    tier,
+                    $"ally_alert:{reason}");
+                recipients++;
+            }
+
+            return recipients;
+        }
+
         private void TickPlayerFootstepStimuli(float timeSeconds)
         {
             if (!initialized || ObjectiveState != RoomObjectiveState.InCombat || playerController == null)

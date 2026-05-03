@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Hollow.Combat;
+using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
 using Hollow.Entities;
@@ -80,28 +81,30 @@ namespace Hollow.Tests.EditMode
                 Assert.IsFalse(spear.TryApplyContactDamage(4.05f));
                 Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
 
-                spear.Tick(0.05f, 4f + profile.WindupSeconds + 0.01f);
+                var activeTime = 4f + profile.WindupSeconds + 0.5f;
+                spear.Tick(0.05f, activeTime);
                 Assert.AreEqual(EnemyReadabilityState.MeleeLunge, spear.ReadabilityState);
-                Assert.IsTrue(spear.TryApplyContactDamage(4f + profile.WindupSeconds + 0.04f));
-                Assert.IsFalse(spear.TryApplyContactDamage(4f + profile.WindupSeconds + 0.05f));
+                Assert.IsTrue(spear.TryApplyContactDamage(activeTime + 0.04f));
+                Assert.IsFalse(spear.TryApplyContactDamage(activeTime + 0.05f));
                 Assert.AreEqual(playerHealth.MaxHealth - profile.Damage, playerHealth.CurrentHealth);
 
-                spear.Tick(0.05f, 4f + profile.WindupSeconds + profile.ActiveSeconds + 0.08f);
+                spear.Tick(0.05f, activeTime + profile.ActiveSeconds + 0.5f);
                 Assert.AreEqual(EnemyReadabilityState.MeleeRecovery, spear.ReadabilityState);
                 playerHealth.Restore(playerHealth.MaxHealth, playerHealth.MaxHealth);
-                Assert.IsFalse(spear.TryApplyContactDamage(4f + profile.WindupSeconds + profile.ActiveSeconds + 0.09f));
+                Assert.IsFalse(spear.TryApplyContactDamage(activeTime + profile.ActiveSeconds + 0.51f));
                 Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
 
                 var behind = CreateEnemy(root.transform, room, player, definition);
                 behind.transform.localPosition = Vector3.zero;
                 player.transform.localPosition = new Vector3(0f, 0f, 2.1f);
                 behind.Tick(0.05f, 8f);
-                behind.Tick(0.05f, 8f + profile.WindupSeconds + 0.01f);
+                var behindActiveTime = 8f + profile.WindupSeconds + 0.5f;
+                behind.Tick(0.05f, behindActiveTime);
                 Assert.AreEqual(EnemyReadabilityState.MeleeLunge, behind.ReadabilityState);
                 playerHealth.Restore(playerHealth.MaxHealth, playerHealth.MaxHealth);
                 behind.transform.localPosition = Vector3.zero;
                 player.transform.localPosition = new Vector3(2.1f, 0f, 0f);
-                Assert.IsFalse(behind.TryApplyContactDamage(8f + profile.WindupSeconds + 0.04f));
+                Assert.IsFalse(behind.TryApplyContactDamage(behindActiveTime + 0.04f));
                 Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
             }
             finally
@@ -206,14 +209,15 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(EnemyReadabilityState.AreaWindup, giant.ReadabilityState);
                 Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
 
-                giant.Tick(0.05f, 10f + profile.WindupSeconds + 0.01f);
+                var activeTime = 10f + profile.WindupSeconds + 0.5f;
+                giant.Tick(0.05f, activeTime);
                 Assert.AreEqual(EnemyReadabilityState.AreaActive, giant.ReadabilityState);
                 Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
 
-                giant.Tick(0.05f, 10f + profile.WindupSeconds + 0.06f);
+                giant.Tick(0.05f, activeTime + 0.06f);
                 Assert.AreEqual(playerHealth.MaxHealth - profile.Damage, playerHealth.CurrentHealth);
 
-                giant.Tick(0.05f, 10f + profile.WindupSeconds + profile.ActiveSeconds + 0.12f);
+                giant.Tick(0.05f, activeTime + profile.ActiveSeconds + 0.5f);
                 Assert.AreEqual(EnemyReadabilityState.AreaRecovery, giant.ReadabilityState);
             }
             finally

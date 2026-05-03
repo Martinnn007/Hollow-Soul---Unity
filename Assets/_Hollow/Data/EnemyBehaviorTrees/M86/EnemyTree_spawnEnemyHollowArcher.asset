@@ -1,0 +1,328 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8282065732663637335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_retreating
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_archer_retreating
+  children:
+  - {fileID: -2364708925120906522}
+  - {fileID: 3112344149550005916}
+--- !u!114 &-7113046364344908918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_shot_choice
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorWeightedSelectorNodeDefinition
+  nodeId: hollow_archer_shot_choice
+  children:
+  - child: {fileID: 9064262129060473747}
+    weight: 0.9
+  - child: {fileID: -8282065732663637335}
+    weight: 1
+  - child: {fileID: -2860086346234563974}
+    weight: 1.8
+--- !u!114 &-5160725871824558158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_backstep
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_archer_backstep
+  children:
+  - {fileID: 9108355405432370033}
+  - {fileID: 2675629530559680281}
+  - {fileID: 1202165610883307921}
+--- !u!114 &-2916245145777476012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_root
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  nodeId: hollow_archer_root
+  children:
+  - {fileID: -5160725871824558158}
+  - {fileID: -7113046364344908918}
+  - {fileID: -1223482755493911252}
+--- !u!114 &-2860086346234563974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_arrow
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_archer_arrow
+  children:
+  - {fileID: 1191369175809184533}
+  - {fileID: 5609599935566996810}
+--- !u!114 &-2364708925120906522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_retreating_arrow
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_retreating_arrow
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: retreating_arrow
+  threshold: 0
+--- !u!114 &-1223482755493911252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_range
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: hollow_archer_range
+  commandKind: 3
+  actionId: 
+  speedMultiplier: 0.82
+  reason: Hollow Archer keeps bow range and commits from idle.
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
+  m_Name: EnemyTree_spawnEnemyHollowArcher
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
+  treeId: enemy_spawnEnemyHollowArcher_m82_tree
+  displayName: Hollow Archer M82 Behavior Tree
+  ownerId: spawnEnemyHollowArcher
+  bossMetadataOnly: 0
+  rootNode: {fileID: -2916245145777476012}
+  nodes:
+  - {fileID: 9108355405432370033}
+  - {fileID: 2675629530559680281}
+  - {fileID: 1202165610883307921}
+  - {fileID: -5160725871824558158}
+  - {fileID: 7810365315563728454}
+  - {fileID: 7328107552751467283}
+  - {fileID: 9064262129060473747}
+  - {fileID: -2364708925120906522}
+  - {fileID: 3112344149550005916}
+  - {fileID: -8282065732663637335}
+  - {fileID: 1191369175809184533}
+  - {fileID: 5609599935566996810}
+  - {fileID: -2860086346234563974}
+  - {fileID: -7113046364344908918}
+  - {fileID: -1223482755493911252}
+  - {fileID: -2916245145777476012}
+--- !u!114 &1191369175809184533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_arrow_shot
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_arrow_shot
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: arrow_shot
+  threshold: 0
+--- !u!114 &1202165610883307921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_creature_move_archer_backstep
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_creature_move_archer_backstep
+  commandKind: 13
+  actionId: archer_backstep
+  speedMultiplier: 1
+  reason: Start creature move action archer_backstep.
+--- !u!114 &2675629530559680281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_creature_move_archer_backstep
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_creature_move_archer_backstep
+  condition: 19
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: archer_backstep
+  threshold: 0
+--- !u!114 &3112344149550005916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_retreating_arrow
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_retreating_arrow
+  commandKind: 8
+  actionId: retreating_arrow
+  speedMultiplier: 1
+  reason: Start ranged action retreating_arrow.
+--- !u!114 &5609599935566996810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_arrow_shot
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_arrow_shot
+  commandKind: 8
+  actionId: arrow_shot
+  speedMultiplier: 1
+  reason: Start ranged action arrow_shot.
+--- !u!114 &7328107552751467283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: start_ranged_arrow_volley
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_arrow_volley
+  commandKind: 8
+  actionId: arrow_volley
+  speedMultiplier: 1
+  reason: Start ranged action arrow_volley.
+--- !u!114 &7810365315563728454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: can_ranged_arrow_volley
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: can_ranged_arrow_volley
+  condition: 21
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: arrow_volley
+  threshold: 0
+--- !u!114 &9064262129060473747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_volley
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  nodeId: hollow_archer_volley
+  children:
+  - {fileID: 7810365315563728454}
+  - {fileID: 7328107552751467283}
+--- !u!114 &9108355405432370033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: hollow_archer_too_close
+  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  nodeId: hollow_archer_too_close
+  condition: 6
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0

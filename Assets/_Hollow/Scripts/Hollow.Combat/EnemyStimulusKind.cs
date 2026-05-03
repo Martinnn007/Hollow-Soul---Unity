@@ -9,6 +9,8 @@ namespace Hollow.Combat
         Proximity = 4,
         Bump = 5,
         Roll = 6,
-        GuardImpact = 7
+        GuardImpact = 7,
+        CreatureSignal = 8,
+        AllyAlert = 9
     }
 }

@@ -174,10 +174,22 @@ namespace Hollow.RoomDesigner
         public const string EnemySpittingPod = "spawnEnemySpittingPod";
         public const string EnemyRat = "spawnEnemyRat";
         public const string EnemySpider = "spawnEnemySpider";
+        public const string EnemyHollowBird = "spawnEnemyHollowBird";
+        public const string EnemyHollowBeast = "spawnEnemyHollowBeast";
         public const string EnemySkeletonSword = "spawnEnemySkeletonSword";
         public const string EnemySkeletonSpear = "spawnEnemySkeletonSpear";
         public const string EnemyKnight = "spawnEnemyKnight";
         public const string EnemyGiant = "spawnEnemyGiant";
+        public const string EnemyHollowArcher = "spawnEnemyHollowArcher";
+        public const string EnemyPowderGunner = "spawnEnemyPowderGunner";
+        public const string EnemyKnifeThrower = "spawnEnemyKnifeThrower";
+        public const string EnemyRepeaterTurret = "spawnEnemyRepeaterTurret";
+        public const string EnemyClockworkSentry = "spawnEnemyClockworkSentry";
+        public const string EnemyHollowAcolyte = "spawnEnemyHollowAcolyte";
+        public const string EnemyWraith = "spawnEnemyWraith";
+        public const string EnemySoulEater = "spawnEnemySoulEater";
+        public const string EnemyCurseBinder = "spawnEnemyCurseBinder";
+        public const string EnemyGraveLantern = "spawnEnemyGraveLantern";
         public const string RoomReward = "spawn_point_roomReward";
         public const string ChestSpawn = "spawn_point_chest";
         public const string StandardBarrel = "barrelStandard";
@@ -196,10 +208,22 @@ namespace Hollow.RoomDesigner
             EnemySpittingPod,
             EnemyRat,
             EnemySpider,
+            EnemyHollowBird,
+            EnemyHollowBeast,
             EnemySkeletonSword,
             EnemySkeletonSpear,
             EnemyKnight,
-            EnemyGiant
+            EnemyGiant,
+            EnemyHollowArcher,
+            EnemyPowderGunner,
+            EnemyKnifeThrower,
+            EnemyRepeaterTurret,
+            EnemyClockworkSentry,
+            EnemyHollowAcolyte,
+            EnemyWraith,
+            EnemySoulEater,
+            EnemyCurseBinder,
+            EnemyGraveLantern
         };
 
         public static bool IsEnemy(string kind)

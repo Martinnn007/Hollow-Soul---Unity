@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyHollowBeast_howl_signal
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: howl_signal
+  displayName: Howl Signal
+  runtimeKind: 13
+  damage: 0
+  cooldownSeconds: 2.2
+  windupSeconds: 0.28
+  activeSeconds: 0.14
+  rangeMeters: 5.5
+  projectileCount: 0
+  projectileSpeedMetersPerSecond: 0.1
+  damageChannel: 0
+  damageDelivery: 2
+  damageElement: 0
+  forceClass: 0
+  threatKind: 0
+  knockbackMeters: 0
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.35
+  hitArcDegrees: 360
+  poiseBreakThreshold: 0
+  activeMovementDistanceMeters: -1
+  comboFollowUpAttackId: 
+  notes: M85 same-family signal affecting nearby living Hollow Beasts only.

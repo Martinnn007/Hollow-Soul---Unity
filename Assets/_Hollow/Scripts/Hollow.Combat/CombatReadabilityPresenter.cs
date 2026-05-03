@@ -308,6 +308,10 @@ namespace Hollow.Combat
                 or EnemyReadabilityState.MeleeWindup
                 or EnemyReadabilityState.MeleeLunge
                 or EnemyReadabilityState.FeintWarning
+                or EnemyReadabilityState.CreatureMoveWindup
+                or EnemyReadabilityState.CreatureMoveActive
+                or EnemyReadabilityState.CreatureSignalWindup
+                or EnemyReadabilityState.CreatureSignalActive
                 or EnemyReadabilityState.GuardWindup
                 or EnemyReadabilityState.GuardActive;
             ringRenderer.gameObject.SetActive(showRing);
@@ -353,6 +357,8 @@ namespace Hollow.Combat
                     EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive => Mathf.Max(2.5f, enemy.Definition != null ? enemy.Definition.AttackRangeMeters : 4f),
                     EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge => Mathf.Max(1.0f, enemy.Definition != null ? enemy.Definition.LungeTriggerRangeMeters + enemy.Definition.LungeDistanceMeters : 1.2f),
                     EnemyReadabilityState.FeintWarning => Mathf.Max(0.8f, enemy.RadiusMeters * 2.5f),
+                    EnemyReadabilityState.CreatureMoveWindup or EnemyReadabilityState.CreatureMoveActive => Mathf.Max(0.9f, enemy.RadiusMeters * 3f),
+                    EnemyReadabilityState.CreatureSignalWindup or EnemyReadabilityState.CreatureSignalActive => Mathf.Max(1.1f, enemy.RadiusMeters * 3.5f),
                     EnemyReadabilityState.GuardWindup or EnemyReadabilityState.GuardActive => Mathf.Max(1.0f, enemy.RadiusMeters * 3.2f),
                     _ => Mathf.Max(1.8f, enemy.Definition != null ? enemy.Definition.ChargeSpeedMetersPerSecond * EnemyRuntimeController.ChargeActiveSeconds : 2f)
                 };
@@ -363,6 +369,8 @@ namespace Hollow.Combat
                     EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive => 0.065f,
                     EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge => 0.22f,
                     EnemyReadabilityState.FeintWarning => 0.28f,
+                    EnemyReadabilityState.CreatureMoveWindup or EnemyReadabilityState.CreatureMoveActive => 0.18f,
+                    EnemyReadabilityState.CreatureSignalWindup or EnemyReadabilityState.CreatureSignalActive => 0.3f,
                     EnemyReadabilityState.GuardWindup or EnemyReadabilityState.GuardActive => 0.42f,
                     _ => 0.16f
                 };
@@ -398,6 +406,12 @@ namespace Hollow.Combat
                 EnemyReadabilityState.AreaActive => "Stomp!",
                 EnemyReadabilityState.AreaRecovery => "Recover",
                 EnemyReadabilityState.FeintWarning => "Warn",
+                EnemyReadabilityState.CreatureMoveWindup => "Move",
+                EnemyReadabilityState.CreatureMoveActive => "Move!",
+                EnemyReadabilityState.CreatureMoveRecovery => "Recover",
+                EnemyReadabilityState.CreatureSignalWindup => "Signal",
+                EnemyReadabilityState.CreatureSignalActive => "Signal!",
+                EnemyReadabilityState.CreatureSignalRecovery => "Recover",
                 EnemyReadabilityState.GuardWindup => "Guard",
                 EnemyReadabilityState.GuardActive => "Guard!",
                 EnemyReadabilityState.GuardRecovery => "Recover",

@@ -1,0 +1,31 @@
+namespace Hollow.Combat
+{
+    public enum EnemyNavigationBackend
+    {
+        LocalSteering = 0,
+        FuturePathfinding = 1
+    }
+
+    public enum EnemyNavigationMode
+    {
+        GroundedLocal = 0,
+        FlyingLocal = 1,
+        IgnoreObstaclesPhase = 2
+    }
+
+    public enum EnemyNavigationIntent
+    {
+        None = 0,
+        MoveToPlayer = 1,
+        PreferredRange = 2,
+        Flee = 3,
+        Wander = 4,
+        Investigate = 5,
+        ReturnHome = 6,
+        ActiveCharge = 7,
+        ActiveLunge = 8,
+        CreatureBurst = 9,
+        PhaseMove = 10,
+        BumpSeparation = 11
+    }
+}

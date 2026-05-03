@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2ce0b8d8bbf43c78a8de47e08eea293, type: 3}
+  m_Name: Enemy_spawnEnemyGraveLantern_lantern_soul_ring
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyActionProfileDefinition
+  actionId: lantern_soul_ring
+  displayName: Lantern Soul Ring
+  category: 4
+  intent: 0
+  shape: 8
+  usageState: 0
+  linkedAttackProfile: {fileID: 11400000, guid: bedb5cb28bd6647ada9cd4b3941847c4, type: 2}
+  linkedAttackId: lantern_soul_ring
+  explicitlyNonDamaging: 0
+  minRangeMeters: 2
+  idealRangeMeters: 4.48
+  maxRangeMeters: 6.4
+  baseWeight: 1.5
+  pressureCost: 2
+  cooldownGroup: current_radialprojectile
+  minimumIntelligence: 2
+  allowedDispositions: 02000000
+  minimumAwareness: 3
+  requiresFacing: 0
+  facingArcDegrees: 360
+  telegraphNote: Readable projectile tell before the active window; M80 timing remains
+    the runtime source.
+  punishabilityRating: 2
+  guardPressureRating: 3
+  poiseBreakNote: Windup poise uses the linked M76/M80 threshold `Medium`.
+  parryable: 0
+  blockable: 1
+  dodgeable: 1
+  recoveryPunishNote: Recovery should leave a short punish window when the player
+    dodges, blocks, or spaces the action.
+  bestUserTags:
+  - magic
+  - stationary
+  - projectile-pattern
+  notes: M81 action wrapper around an existing M76 attack profile; runtime behavior
+    is unchanged.

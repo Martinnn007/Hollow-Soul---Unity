@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_CurseBinder
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyCurseBinder
+  displayName: Curse Binder
+  archetypeId: 0
+  behaviorId: 23
+  movementMode: 0
+  maxHealth: 5
+  speedMetersPerSecond: 0.85
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.34
+  attackRangeMeters: 7.4
+  preferredRangeMinMeters: 4
+  preferredRangeMaxMeters: 7
+  sightRadiusMeters: 8.2
+  sightAngleDegrees: 150
+  hearingRadiusMeters: 5.8
+  hearingSensitivityMultiplier: 1.1
+  disturbanceEscalationThreshold: 1.15
+  investigationDurationSeconds: 1.55
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 1
+  intelligence: 4
+  disposition: 4
+  attackWindupScale: 1.15
+  attackActiveScale: 1
+  attackRecoveryScale: 1.12
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 1
+  attackProfiles:
+  - {fileID: 11400000, guid: c11614efc744a4385a0385f889f49847, type: 2}
+  - {fileID: 11400000, guid: 34aba10d9ff9e4a6ab9c5f1a4cbcd666, type: 2}
+  - {fileID: 11400000, guid: f7f0885e036df4b65a275200e0fea5ef, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: 6f7b98de099d5453eb46bbd4589cddda, type: 2}
+  - {fileID: 11400000, guid: 7ab366b0bf6cb48fda8c0839c324ca6f, type: 2}
+  - {fileID: 11400000, guid: 1b94005989853406e895ba953c41243f, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: 2b3d331e909f745efa65752e77dc585e, type: 2}
+  color: {r: 0.56, g: 0.34, b: 0.64, a: 1}

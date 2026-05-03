@@ -28,6 +28,10 @@ namespace Hollow.Combat
         [SerializeField] private float hearingSensitivityMultiplier;
         [SerializeField] private float disturbanceEscalationThreshold;
         [SerializeField] private float investigationDurationSeconds;
+        [SerializeField] private bool allyAlertSharingEnabled;
+        [SerializeField] private float allyAlertRadiusMeters;
+        [SerializeField] private float allyAlertCooldownSeconds;
+        [SerializeField] private EnemyAwarenessState allyAlertMinimumAwareness = EnemyAwarenessState.Engaged;
         [SerializeField] private bool lungeAttackEnabled = true;
         [SerializeField] private float lungeTriggerRangeMeters = 1.4f;
         [SerializeField] private float lungeWindupSeconds = 0.22f;
@@ -97,6 +101,14 @@ namespace Hollow.Combat
 
         public float InvestigationDurationSeconds => Mathf.Clamp(investigationDurationSeconds <= 0f ? DefaultDisturbanceTuning.z : investigationDurationSeconds, 0.05f, 8f);
 
+        public bool AllyAlertSharingEnabled => allyAlertSharingEnabled;
+
+        public float AllyAlertRadiusMeters => Mathf.Max(0f, allyAlertRadiusMeters);
+
+        public float AllyAlertCooldownSeconds => Mathf.Clamp(allyAlertCooldownSeconds <= 0f ? DefaultAllyAlertSharing.cooldownSeconds : allyAlertCooldownSeconds, 0.25f, 12f);
+
+        public EnemyAwarenessState AllyAlertMinimumAwareness => allyAlertMinimumAwareness;
+
         public bool LungeAttackEnabled => lungeAttackEnabled;
 
         public float LungeTriggerRangeMeters => Mathf.Max(0.05f, lungeTriggerRangeMeters);
@@ -142,6 +154,8 @@ namespace Hollow.Combat
         private AttackExecutionDefaults DefaultExecution => DefaultAttackExecutionFor(archetypeId, behaviorId, movementMode);
 
         private Vector3 DefaultDisturbanceTuning => DefaultDisturbanceTuningFor(archetypeId, behaviorId, movementMode);
+
+        private AllyAlertDefaults DefaultAllyAlertSharing => DefaultAllyAlertFor(archetypeId, behaviorId, movementMode);
 
         public IReadOnlyList<EnemyAttackProfileDefinition> AttackProfiles
         {
@@ -361,6 +375,7 @@ namespace Hollow.Combat
             var lunge = DefaultLungeFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             var execution = DefaultAttackExecutionFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             var disturbance = DefaultDisturbanceTuningFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
+            var allyAlert = DefaultAllyAlertFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             ConfigureSenseAndLunge(
                 senses.x,
                 senses.y,
@@ -378,6 +393,7 @@ namespace Hollow.Combat
                 execution.hitArcDegreesBonus,
                 execution.poiseBreakThresholdOffset);
             ConfigureDisturbance(disturbance.x, disturbance.y, disturbance.z);
+            ConfigureAllyAlertSharing(allyAlert.enabled, allyAlert.radiusMeters, allyAlert.cooldownSeconds, allyAlert.minimumAwareness);
             color = nextColor;
         }
 
@@ -476,6 +492,18 @@ namespace Hollow.Combat
             hearingSensitivityMultiplier = Mathf.Clamp(nextHearingSensitivityMultiplier <= 0f ? 1f : nextHearingSensitivityMultiplier, 0.1f, 3f);
             disturbanceEscalationThreshold = Mathf.Clamp(nextDisturbanceEscalationThreshold <= 0f ? 1f : nextDisturbanceEscalationThreshold, 0.05f, 8f);
             investigationDurationSeconds = Mathf.Clamp(nextInvestigationDurationSeconds <= 0f ? 1f : nextInvestigationDurationSeconds, 0.05f, 8f);
+        }
+
+        public void ConfigureAllyAlertSharing(
+            bool enabled,
+            float radiusMeters,
+            float cooldownSeconds,
+            EnemyAwarenessState minimumAwareness)
+        {
+            allyAlertSharingEnabled = enabled;
+            allyAlertRadiusMeters = enabled ? Mathf.Clamp(radiusMeters, 0.1f, 12f) : 0f;
+            allyAlertCooldownSeconds = Mathf.Clamp(cooldownSeconds <= 0f ? 2f : cooldownSeconds, 0.25f, 12f);
+            allyAlertMinimumAwareness = minimumAwareness;
         }
 
         public void ConfigureAttackExecutionModifiers(
@@ -655,6 +683,11 @@ namespace Hollow.Combat
                 return EnemyBodyClass.Massive;
             }
 
+            if (nextBehaviorId is EnemyBehaviorId.PowderGunner or EnemyBehaviorId.RepeaterTurret or EnemyBehaviorId.ClockworkSentry or EnemyBehaviorId.SoulEater or EnemyBehaviorId.GraveLantern)
+            {
+                return EnemyBodyClass.Heavy;
+            }
+
             if (nextArchetypeId == EnemyArchetypeId.Heavy ||
                 nextBehaviorId == EnemyBehaviorId.TurretShooter ||
                 nextBehaviorId == EnemyBehaviorId.SpittingPod ||
@@ -668,8 +701,20 @@ namespace Hollow.Combat
                 return EnemyBodyClass.Medium;
             }
 
+            if (nextBehaviorId == EnemyBehaviorId.HollowBeast)
+            {
+                return EnemyBodyClass.Medium;
+            }
+
+            if (nextBehaviorId is EnemyBehaviorId.HollowArcher or EnemyBehaviorId.KnifeThrower or EnemyBehaviorId.HollowAcolyte or EnemyBehaviorId.CurseBinder)
+            {
+                return EnemyBodyClass.Medium;
+            }
+
             if (nextBehaviorId == EnemyBehaviorId.Rat ||
                 nextBehaviorId == EnemyBehaviorId.Spider ||
+                nextBehaviorId == EnemyBehaviorId.HollowBird ||
+                nextBehaviorId == EnemyBehaviorId.Wraith ||
                 nextArchetypeId == EnemyArchetypeId.Fast ||
                 nextMovementMode == EnemyMovementMode.Flying)
             {
@@ -698,9 +743,21 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => EnemyIntelligenceLevel.Simple,
                 EnemyBehaviorId.Rat => EnemyIntelligenceLevel.Basic,
                 EnemyBehaviorId.Spider => EnemyIntelligenceLevel.Simple,
+                EnemyBehaviorId.HollowBird => EnemyIntelligenceLevel.Simple,
+                EnemyBehaviorId.HollowBeast => EnemyIntelligenceLevel.Basic,
                 EnemyBehaviorId.SkeletonSword or EnemyBehaviorId.SkeletonSpear => EnemyIntelligenceLevel.Basic,
                 EnemyBehaviorId.Knight => EnemyIntelligenceLevel.Trained,
                 EnemyBehaviorId.Giant => EnemyIntelligenceLevel.Basic,
+                EnemyBehaviorId.HollowArcher => EnemyIntelligenceLevel.Basic,
+                EnemyBehaviorId.PowderGunner => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.KnifeThrower => EnemyIntelligenceLevel.Basic,
+                EnemyBehaviorId.RepeaterTurret => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.ClockworkSentry => EnemyIntelligenceLevel.Tactical,
+                EnemyBehaviorId.HollowAcolyte => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.Wraith => EnemyIntelligenceLevel.Tactical,
+                EnemyBehaviorId.SoulEater => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.CurseBinder => EnemyIntelligenceLevel.Tactical,
+                EnemyBehaviorId.GraveLantern => EnemyIntelligenceLevel.Basic,
                 _ => EnemyIntelligenceLevel.Simple
             };
         }
@@ -740,9 +797,29 @@ namespace Hollow.Combat
                 return EnemyInstinctDisposition.Prey;
             }
 
+            if (nextBehaviorId == EnemyBehaviorId.HollowBird || nextBehaviorId == EnemyBehaviorId.HollowBeast)
+            {
+                return EnemyInstinctDisposition.Predator;
+            }
+
             if (nextBehaviorId == EnemyBehaviorId.SkeletonSpear || nextBehaviorId == EnemyBehaviorId.Knight)
             {
                 return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextBehaviorId is EnemyBehaviorId.HollowArcher or EnemyBehaviorId.PowderGunner or EnemyBehaviorId.RepeaterTurret or EnemyBehaviorId.ClockworkSentry or EnemyBehaviorId.HollowAcolyte or EnemyBehaviorId.GraveLantern)
+            {
+                return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.KnifeThrower || nextBehaviorId == EnemyBehaviorId.CurseBinder)
+            {
+                return EnemyInstinctDisposition.Territorial;
+            }
+
+            if (nextBehaviorId is EnemyBehaviorId.Wraith or EnemyBehaviorId.SoulEater)
+            {
+                return EnemyInstinctDisposition.Predator;
             }
 
             if (nextBehaviorId == EnemyBehaviorId.Giant)
@@ -777,10 +854,22 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new Vector2(5.5f, 8f),
                 EnemyBehaviorId.Rat => new Vector2(1.2f, 2.2f),
                 EnemyBehaviorId.Spider => new Vector2(1f, 1.9f),
+                EnemyBehaviorId.HollowBird => new Vector2(1.8f, 3.6f),
+                EnemyBehaviorId.HollowBeast => new Vector2(1.15f, 2.1f),
                 EnemyBehaviorId.SkeletonSword => new Vector2(1.15f, 1.85f),
                 EnemyBehaviorId.SkeletonSpear => new Vector2(1.75f, 2.75f),
                 EnemyBehaviorId.Knight => new Vector2(1.35f, 2.35f),
                 EnemyBehaviorId.Giant => new Vector2(1.85f, 3.1f),
+                EnemyBehaviorId.HollowArcher => new Vector2(4.0f, 7.25f),
+                EnemyBehaviorId.PowderGunner => new Vector2(4.75f, 8.5f),
+                EnemyBehaviorId.KnifeThrower => new Vector2(2.7f, 5.25f),
+                EnemyBehaviorId.RepeaterTurret => new Vector2(6.0f, 9.25f),
+                EnemyBehaviorId.ClockworkSentry => new Vector2(4.8f, 7.8f),
+                EnemyBehaviorId.HollowAcolyte => new Vector2(3.8f, 6.8f),
+                EnemyBehaviorId.Wraith => new Vector2(2.2f, 5.2f),
+                EnemyBehaviorId.SoulEater => new Vector2(2.4f, 4.8f),
+                EnemyBehaviorId.CurseBinder => new Vector2(4f, 7f),
+                EnemyBehaviorId.GraveLantern => new Vector2(5.5f, 8.5f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector2(0.9f, 1.45f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector2(1.35f, 2.15f),
                 _ => new Vector2(1.05f, 1.75f)
@@ -806,10 +895,22 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new Vector3(0f, 0f, 9f),
                 EnemyBehaviorId.Rat => new Vector3(8f, 260f, 7.5f),
                 EnemyBehaviorId.Spider => new Vector3(8.5f, 300f, 8f),
+                EnemyBehaviorId.HollowBird => new Vector3(8.2f, 235f, 6.4f),
+                EnemyBehaviorId.HollowBeast => new Vector3(7.2f, 165f, 6.2f),
                 EnemyBehaviorId.SkeletonSword => new Vector3(6.5f, 160f, 5f),
                 EnemyBehaviorId.SkeletonSpear => new Vector3(7f, 150f, 5.2f),
                 EnemyBehaviorId.Knight => new Vector3(7f, 140f, 5f),
                 EnemyBehaviorId.Giant => new Vector3(6f, 115f, 4.5f),
+                EnemyBehaviorId.HollowArcher => new Vector3(8.5f, 135f, 5.4f),
+                EnemyBehaviorId.PowderGunner => new Vector3(9f, 115f, 6f),
+                EnemyBehaviorId.KnifeThrower => new Vector3(8f, 190f, 6.4f),
+                EnemyBehaviorId.RepeaterTurret => new Vector3(10f, 95f, 3.2f),
+                EnemyBehaviorId.ClockworkSentry => new Vector3(9f, 220f, 6.5f),
+                EnemyBehaviorId.HollowAcolyte => new Vector3(8.4f, 180f, 6.2f),
+                EnemyBehaviorId.Wraith => new Vector3(8.8f, 300f, 7f),
+                EnemyBehaviorId.SoulEater => new Vector3(7.6f, 170f, 6f),
+                EnemyBehaviorId.CurseBinder => new Vector3(8.2f, 150f, 5.8f),
+                EnemyBehaviorId.GraveLantern => new Vector3(9.2f, 240f, 7.2f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(7f, 170f, 5f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(5f, 110f, 3.5f),
                 _ => new Vector3(6.5f, 150f, 4.5f)
@@ -825,7 +926,17 @@ namespace Hollow.Combat
                 nextBehaviorId == EnemyBehaviorId.BossWarden ||
                 nextBehaviorId == EnemyBehaviorId.Charger ||
                 nextBehaviorId == EnemyBehaviorId.TurretShooter ||
-                nextBehaviorId == EnemyBehaviorId.SpittingPod)
+                nextBehaviorId == EnemyBehaviorId.SpittingPod ||
+                nextBehaviorId == EnemyBehaviorId.HollowArcher ||
+                nextBehaviorId == EnemyBehaviorId.PowderGunner ||
+                nextBehaviorId == EnemyBehaviorId.KnifeThrower ||
+                nextBehaviorId == EnemyBehaviorId.RepeaterTurret ||
+                nextBehaviorId == EnemyBehaviorId.ClockworkSentry ||
+                nextBehaviorId == EnemyBehaviorId.HollowAcolyte ||
+                nextBehaviorId == EnemyBehaviorId.Wraith ||
+                nextBehaviorId == EnemyBehaviorId.SoulEater ||
+                nextBehaviorId == EnemyBehaviorId.CurseBinder ||
+                nextBehaviorId == EnemyBehaviorId.GraveLantern)
             {
                 return new LungeDefaults(false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
             }
@@ -836,10 +947,13 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Splitter => 1.6f,
                 EnemyBehaviorId.Rat => 0.95f,
                 EnemyBehaviorId.Spider => 1.15f,
+                EnemyBehaviorId.HollowBird => 1.55f,
+                EnemyBehaviorId.HollowBeast => 1.65f,
                 EnemyBehaviorId.SkeletonSword => 1.45f,
                 EnemyBehaviorId.SkeletonSpear => 2.4f,
                 EnemyBehaviorId.Knight => 2.15f,
                 EnemyBehaviorId.Giant => 2.25f,
+                EnemyBehaviorId.KnifeThrower => 1.05f,
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => 1.25f,
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => 1.7f,
                 _ => 1.4f
@@ -848,6 +962,10 @@ namespace Hollow.Combat
             {
                 EnemyBehaviorId.Rat => new LungeDefaults(true, triggerRange, 0.14f, 0.14f, 0.55f, 0.9f),
                 EnemyBehaviorId.Spider => new LungeDefaults(true, triggerRange, 0.12f, 0.16f, 0.7f, 0.85f),
+                EnemyBehaviorId.HollowBird => new LungeDefaults(true, triggerRange, 0.18f, 0.15f, 0.95f, 1.1f),
+                EnemyBehaviorId.HollowBeast => new LungeDefaults(true, triggerRange, 0.22f, 0.16f, 0.8f, 1.15f),
+                EnemyBehaviorId.HollowArcher or EnemyBehaviorId.PowderGunner or EnemyBehaviorId.RepeaterTurret or EnemyBehaviorId.ClockworkSentry => new LungeDefaults(false, triggerRange, 0.22f, 0.18f, 0.75f, 1.15f),
+                EnemyBehaviorId.KnifeThrower => new LungeDefaults(false, triggerRange, 0.18f, 0.14f, 0.45f, 1.1f),
                 _ => new LungeDefaults(true, triggerRange, 0.22f, 0.18f, 0.75f, 1.15f)
             };
         }
@@ -871,13 +989,55 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new Vector3(1.6f, 0.45f, 1.6f),
                 EnemyBehaviorId.Rat => new Vector3(1.35f, 1.1f, 0.85f),
                 EnemyBehaviorId.Spider => new Vector3(1.45f, 0.9f, 0.7f),
+                EnemyBehaviorId.HollowBird => new Vector3(1.2f, 1.25f, 0.95f),
+                EnemyBehaviorId.HollowBeast => new Vector3(1.05f, 1.35f, 1.1f),
                 EnemyBehaviorId.SkeletonSword => new Vector3(1f, 1.45f, 1.2f),
                 EnemyBehaviorId.SkeletonSpear => new Vector3(1.05f, 1.35f, 1.3f),
                 EnemyBehaviorId.Knight => new Vector3(0.95f, 1.25f, 1.5f),
                 EnemyBehaviorId.Giant => new Vector3(0.75f, 1.9f, 1.5f),
+                EnemyBehaviorId.HollowArcher => new Vector3(1.05f, 1.35f, 1.4f),
+                EnemyBehaviorId.PowderGunner => new Vector3(1f, 1.45f, 1.55f),
+                EnemyBehaviorId.KnifeThrower => new Vector3(1.15f, 1.25f, 1.1f),
+                EnemyBehaviorId.RepeaterTurret => new Vector3(1.25f, 1.1f, 1.8f),
+                EnemyBehaviorId.ClockworkSentry => new Vector3(1.1f, 1.25f, 1.5f),
+                EnemyBehaviorId.HollowAcolyte => new Vector3(1.15f, 1.25f, 1.45f),
+                EnemyBehaviorId.Wraith => new Vector3(1.3f, 1.05f, 1f),
+                EnemyBehaviorId.SoulEater => new Vector3(1.2f, 1.2f, 1.25f),
+                EnemyBehaviorId.CurseBinder => new Vector3(1.1f, 1.15f, 1.55f),
+                EnemyBehaviorId.GraveLantern => new Vector3(1.4f, 1.05f, 1.7f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(1.05f, 1.45f, 1.2f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(0.8f, 1.8f, 1.2f),
                 _ => new Vector3(1f, 1.5f, 1.4f)
+            };
+        }
+
+        public static AllyAlertDefaults DefaultAllyAlertFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return AllyAlertDefaults.Disabled;
+            }
+
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.TurretShooter => new AllyAlertDefaults(true, 4f, 2.25f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.SpittingPod => new AllyAlertDefaults(true, 4.75f, 2.25f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.SkeletonSword => new AllyAlertDefaults(true, 3.5f, 2f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.SkeletonSpear => new AllyAlertDefaults(true, 4.25f, 2f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.Knight => new AllyAlertDefaults(true, 5f, 2.4f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.HollowArcher => new AllyAlertDefaults(true, 5.25f, 2.25f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.PowderGunner => new AllyAlertDefaults(true, 5.5f, 2.5f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.KnifeThrower => new AllyAlertDefaults(true, 4.25f, 2.1f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.RepeaterTurret => new AllyAlertDefaults(true, 4.5f, 2.25f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.ClockworkSentry => new AllyAlertDefaults(true, 6f, 2.75f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.HollowAcolyte => new AllyAlertDefaults(true, 5f, 2.25f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.SoulEater => new AllyAlertDefaults(true, 4.5f, 2.4f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.CurseBinder => new AllyAlertDefaults(true, 5.75f, 2.6f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.GraveLantern => new AllyAlertDefaults(true, 6f, 2.5f, EnemyAwarenessState.Engaged),
+                _ => AllyAlertDefaults.Disabled
             };
         }
 
@@ -900,10 +1060,22 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new AttackExecutionDefaults(0.9f, 1f, 0.9f, 0f, 0),
                 EnemyBehaviorId.Rat => new AttackExecutionDefaults(0.75f, 0.85f, 0.65f, 30f, -1),
                 EnemyBehaviorId.Spider => new AttackExecutionDefaults(0.7f, 0.8f, 0.6f, 45f, -1),
+                EnemyBehaviorId.HollowBird => new AttackExecutionDefaults(0.85f, 0.9f, 0.75f, 25f, -1),
+                EnemyBehaviorId.HollowBeast => new AttackExecutionDefaults(0.95f, 1f, 0.9f, 10f, 0),
                 EnemyBehaviorId.SkeletonSword => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 0),
                 EnemyBehaviorId.SkeletonSpear => new AttackExecutionDefaults(1.05f, 1f, 1f, 0f, 0),
                 EnemyBehaviorId.Knight => new AttackExecutionDefaults(1.08f, 1f, 1.1f, 0f, 1),
                 EnemyBehaviorId.Giant => new AttackExecutionDefaults(1.2f, 1f, 1.15f, 0f, 1),
+                EnemyBehaviorId.HollowArcher => new AttackExecutionDefaults(1f, 1f, 1.05f, 0f, 0),
+                EnemyBehaviorId.PowderGunner => new AttackExecutionDefaults(1.08f, 1f, 1.18f, 0f, 1),
+                EnemyBehaviorId.KnifeThrower => new AttackExecutionDefaults(0.88f, 0.95f, 0.88f, 0f, -1),
+                EnemyBehaviorId.RepeaterTurret => new AttackExecutionDefaults(1f, 1f, 0.95f, 0f, 1),
+                EnemyBehaviorId.ClockworkSentry => new AttackExecutionDefaults(1.05f, 1f, 1.05f, 0f, 1),
+                EnemyBehaviorId.HollowAcolyte => new AttackExecutionDefaults(1.08f, 1f, 1.08f, 0f, 0),
+                EnemyBehaviorId.Wraith => new AttackExecutionDefaults(0.92f, 0.95f, 0.85f, 18f, -1),
+                EnemyBehaviorId.SoulEater => new AttackExecutionDefaults(1.05f, 1f, 1.05f, 6f, 0),
+                EnemyBehaviorId.CurseBinder => new AttackExecutionDefaults(1.15f, 1f, 1.12f, 0f, 1),
+                EnemyBehaviorId.GraveLantern => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 0),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new AttackExecutionDefaults(0.8f, 0.9f, 0.8f, -5f, -1),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new AttackExecutionDefaults(1.25f, 1.05f, 1.15f, 10f, 1),
                 _ => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 0)
@@ -946,6 +1118,24 @@ namespace Hollow.Combat
             public float distance { get; }
 
             public float cooldown { get; }
+        }
+
+        public readonly struct AllyAlertDefaults
+        {
+            public static AllyAlertDefaults Disabled { get; } = new(false, 0f, 2f, EnemyAwarenessState.Engaged);
+
+            public AllyAlertDefaults(bool enabled, float radiusMeters, float cooldownSeconds, EnemyAwarenessState minimumAwareness)
+            {
+                this.enabled = enabled;
+                this.radiusMeters = radiusMeters;
+                this.cooldownSeconds = cooldownSeconds;
+                this.minimumAwareness = minimumAwareness;
+            }
+
+            public readonly bool enabled;
+            public readonly float radiusMeters;
+            public readonly float cooldownSeconds;
+            public readonly EnemyAwarenessState minimumAwareness;
         }
 
         public readonly struct AttackExecutionDefaults

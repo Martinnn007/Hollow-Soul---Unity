@@ -13,15 +13,27 @@ MonoBehaviour:
   m_Name: EnemyCatalog
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyCatalog
   definitions:
-  - {fileID: 11400000, guid: 762911164358f45e9a10662b9405ede9, type: 2}
-  - {fileID: 11400000, guid: e2d11d204c6704a6888be728834fb9ab, type: 2}
-  - {fileID: 11400000, guid: 2f928323a26074fba8e9133eaab67331, type: 2}
-  - {fileID: 11400000, guid: ca724ecb923374a11b71cdd40e26ec88, type: 2}
-  - {fileID: 11400000, guid: 93698f0af63564b498f8512849895251, type: 2}
-  - {fileID: 11400000, guid: 7807ad2eef8d6489fb3021367c1ee96f, type: 2}
-  - {fileID: 11400000, guid: f13057ee51e1241c797ff035e1293b6f, type: 2}
   - {fileID: 11400000, guid: c4b8679acac234a1eb28c8de657694b3, type: 2}
-  - {fileID: 11400000, guid: 195565d8bfaa4ae29e8a04a159f1d013, type: 2}
+  - {fileID: 11400000, guid: 93698f0af63564b498f8512849895251, type: 2}
+  - {fileID: 11400000, guid: 652b81066e1854c5f87239e08ca1e0cf, type: 2}
+  - {fileID: 11400000, guid: 44b62cc753fb847e994c0ff7dfa112ac, type: 2}
+  - {fileID: 11400000, guid: 2f928323a26074fba8e9133eaab67331, type: 2}
+  - {fileID: 11400000, guid: e2d11d204c6704a6888be728834fb9ab, type: 2}
+  - {fileID: 11400000, guid: b9e2ebfc835dd4d3391870c429ad3ba4, type: 2}
+  - {fileID: 11400000, guid: ca724ecb923374a11b71cdd40e26ec88, type: 2}
+  - {fileID: 11400000, guid: 5355a8eec64bf4ac483473f00098ed17, type: 2}
+  - {fileID: 11400000, guid: 810c3991cfd7140959e5fa3c7fcd198f, type: 2}
+  - {fileID: 11400000, guid: dca6a9aedf5124ba5adcbe1f76bd6e6e, type: 2}
+  - {fileID: 11400000, guid: 351241811225545859c5e2f881bfb13e, type: 2}
+  - {fileID: 11400000, guid: 532258313790142cd80d6fae128829ed, type: 2}
+  - {fileID: 11400000, guid: 762911164358f45e9a10662b9405ede9, type: 2}
+  - {fileID: 11400000, guid: e6c05e7dfdbba407ea7129009df95c9d, type: 2}
   - {fileID: 11400000, guid: 38b59338e20744178d1e6cbec08e0792, type: 2}
+  - {fileID: 11400000, guid: 49c7e78dd79b0454fb2353adef77c431, type: 2}
+  - {fileID: 11400000, guid: 2c04fc57e5e164a4f8128d1906381813, type: 2}
   - {fileID: 11400000, guid: 3ba2e59dc42e4dbfb84151fa17a2be34, type: 2}
+  - {fileID: 11400000, guid: 195565d8bfaa4ae29e8a04a159f1d013, type: 2}
+  - {fileID: 11400000, guid: f13057ee51e1241c797ff035e1293b6f, type: 2}
+  - {fileID: 11400000, guid: 7807ad2eef8d6489fb3021367c1ee96f, type: 2}
+  - {fileID: 11400000, guid: b45de80e627a54a6a89e4b072e461749, type: 2}
   fallbackDefinition: {fileID: 11400000, guid: 762911164358f45e9a10662b9405ede9, type: 2}

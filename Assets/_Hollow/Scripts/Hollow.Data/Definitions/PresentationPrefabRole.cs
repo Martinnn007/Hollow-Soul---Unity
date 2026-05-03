@@ -53,9 +53,21 @@ namespace Hollow.Data.Definitions
         EnemySpittingPod,
         EnemyRat,
         EnemySpider,
+        EnemyHollowBird,
+        EnemyHollowBeast,
         EnemySkeletonSword,
         EnemySkeletonSpear,
         EnemyKnight,
-        EnemyGiant
+        EnemyGiant,
+        EnemyHollowArcher,
+        EnemyPowderGunner,
+        EnemyKnifeThrower,
+        EnemyRepeaterTurret,
+        EnemyClockworkSentry,
+        EnemyHollowAcolyte,
+        EnemyWraith,
+        EnemySoulEater,
+        EnemyCurseBinder,
+        EnemyGraveLantern
     }
 }

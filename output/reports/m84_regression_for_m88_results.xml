@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="6" result="Passed" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.4503379">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="446" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.450338" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1520" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="445" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.442922" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="5205" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1521" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="445" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.439211" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1522" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="445" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.435905" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1523" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="445" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.432854" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1466" name="Milestone84WeaponUserEnemiesTests" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.426740" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1472" name="BattlefieldRoomsAndCatalogueFilesExistPdfExtractsAndValidatorPasses" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests.BattlefieldRoomsAndCatalogueFilesExistPdfExtractsAndValidatorPasses" methodname="BattlefieldRoomsAndCatalogueFilesExistPdfExtractsAndValidatorPasses" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" seed="325558442" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:30Z" duration="0.249146" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[ok pages=2 chars=2287
+
+Milestone 84 validation passed.
+]]></output>
+              </test-case>
+              <test-case id="1471" name="GiantAreaAttackDamagesOnlyDuringActiveWindow" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests.GiantAreaAttackDamagesOnlyDuringActiveWindow" methodname="GiantAreaAttackDamagesOnlyDuringActiveWindow" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" seed="1206801478" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:30Z" duration="0.132560" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1470" name="KnightMediumGuardReducesFrontalHitsBreaksOnHeavyAndFlanksBypass" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests.KnightMediumGuardReducesFrontalHitsBreaksOnHeavyAndFlanksBypass" methodname="KnightMediumGuardReducesFrontalHitsBreaksOnHeavyAndFlanksBypass" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" seed="1624138928" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:30Z" duration="0.011568" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1469" name="SwordSkeletonCanStartOneFollowUpButNotAThreeHitChain" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests.SwordSkeletonCanStartOneFollowUpButNotAThreeHitChain" methodname="SwordSkeletonCanStartOneFollowUpButNotAThreeHitChain" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" seed="1367268163" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:30Z" duration="0.004634" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1468" name="WeaponMeleeDamagesOnlyDuringActiveArcAndRecoveryIsHarmless" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests.WeaponMeleeDamagesOnlyDuringActiveArcAndRecoveryIsHarmless" methodname="WeaponMeleeDamagesOnlyDuringActiveArcAndRecoveryIsHarmless" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" seed="1297760693" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:30Z" duration="0.008598" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1467" name="WeaponUserRosterResolvesDefinitionsProfilesTreesAndGuardData" fullname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests.WeaponUserRosterResolvesDefinitionsProfilesTreesAndGuardData" methodname="WeaponUserRosterResolvesDefinitionsProfilesTreesAndGuardData" classname="Hollow.Tests.EditMode.Milestone84WeaponUserEnemiesTests" runstate="Runnable" seed="2098329673" result="Passed" start-time="2026-05-03 14:30:30Z" end-time="2026-05-03 14:30:31Z" duration="0.012602" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

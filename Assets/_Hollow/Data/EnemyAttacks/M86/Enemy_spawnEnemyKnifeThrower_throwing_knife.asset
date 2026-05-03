@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyKnifeThrower_throwing_knife
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: throwing_knife
+  displayName: Throwing Knife
+  runtimeKind: 3
+  damage: 1
+  cooldownSeconds: 1.1
+  windupSeconds: 0.22
+  activeSeconds: 0.06
+  rangeMeters: 5.8
+  projectileCount: 1
+  projectileSpeedMetersPerSecond: 7
+  damageChannel: 0
+  damageDelivery: 1
+  damageElement: 0
+  forceClass: 0
+  threatKind: 0
+  knockbackMeters: 0.24
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.24
+  hitArcDegrees: 80
+  poiseBreakThreshold: 0
+  activeMovementDistanceMeters: -1
+  comboFollowUpAttackId: 
+  notes: M86 quick mid-range knife throw.

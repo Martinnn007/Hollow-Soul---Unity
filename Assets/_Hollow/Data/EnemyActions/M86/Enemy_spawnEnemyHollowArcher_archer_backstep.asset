@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2ce0b8d8bbf43c78a8de47e08eea293, type: 3}
+  m_Name: Enemy_spawnEnemyHollowArcher_archer_backstep
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyActionProfileDefinition
+  actionId: archer_backstep
+  displayName: Archer Backstep
+  category: 5
+  intent: 6
+  shape: 1
+  usageState: 0
+  linkedAttackProfile: {fileID: 11400000, guid: 50da10bc0769f4e50859115b18eb665d, type: 2}
+  linkedAttackId: archer_backstep
+  explicitlyNonDamaging: 1
+  minRangeMeters: 0
+  idealRangeMeters: 1.875
+  maxRangeMeters: 2.5
+  baseWeight: 1.15
+  pressureCost: 0
+  cooldownGroup: current_creaturemove
+  minimumIntelligence: 2
+  allowedDispositions: 02000000
+  minimumAwareness: 2
+  requiresFacing: 0
+  facingArcDegrees: 360
+  telegraphNote: Readable area tell before the active window; M80 timing remains
+    the runtime source.
+  punishabilityRating: 3
+  guardPressureRating: 2
+  poiseBreakNote: Windup poise uses the linked M76/M80 threshold `Light`.
+  parryable: 0
+  blockable: 0
+  dodgeable: 1
+  recoveryPunishNote: Recovery should leave a short punish window when the player
+    dodges, blocks, or spaces the action.
+  bestUserTags:
+  - ranged
+  - archer
+  - humanoid
+  notes: M81 action wrapper around an existing M76 attack profile; runtime behavior
+    is unchanged.

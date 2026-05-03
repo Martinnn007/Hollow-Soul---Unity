@@ -30,6 +30,18 @@ namespace Hollow.RoomDesigner
         EnemySkeletonSword = 25,
         EnemySkeletonSpear = 26,
         EnemyKnight = 27,
-        EnemyGiant = 28
+        EnemyGiant = 28,
+        EnemyHollowBird = 29,
+        EnemyHollowBeast = 30,
+        EnemyHollowArcher = 31,
+        EnemyPowderGunner = 32,
+        EnemyKnifeThrower = 33,
+        EnemyRepeaterTurret = 34,
+        EnemyClockworkSentry = 35,
+        EnemyHollowAcolyte = 36,
+        EnemyWraith = 37,
+        EnemySoulEater = 38,
+        EnemyCurseBinder = 39,
+        EnemyGraveLantern = 40
     }
 }

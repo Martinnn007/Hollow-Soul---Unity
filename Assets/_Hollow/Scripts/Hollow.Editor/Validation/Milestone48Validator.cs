@@ -47,6 +47,22 @@ namespace Hollow.Editor.Validation
             "spawnEnemySpittingPod",
             "spawnEnemyRat",
             "spawnEnemySpider",
+            "spawnEnemyHollowBird",
+            "spawnEnemyHollowBeast",
+            "spawnEnemySkeletonSword",
+            "spawnEnemySkeletonSpear",
+            "spawnEnemyKnight",
+            "spawnEnemyGiant",
+            "spawnEnemyHollowArcher",
+            "spawnEnemyPowderGunner",
+            "spawnEnemyKnifeThrower",
+            "spawnEnemyRepeaterTurret",
+            "spawnEnemyClockworkSentry",
+            "spawnEnemyHollowAcolyte",
+            "spawnEnemyWraith",
+            "spawnEnemySoulEater",
+            "spawnEnemyCurseBinder",
+            "spawnEnemyGraveLantern",
             "spawnEnemyBoss"
         };
 

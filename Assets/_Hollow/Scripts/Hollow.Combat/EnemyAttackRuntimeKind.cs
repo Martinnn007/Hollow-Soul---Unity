@@ -13,6 +13,10 @@ namespace Hollow.Combat
         Movement = 8,
         Area = 9,
         WeaponMelee = 10,
-        Defense = 11
+        Defense = 11,
+        CreatureMove = 12,
+        CreatureSignal = 13,
+        Beam = 14,
+        PhaseMove = 15
     }
 }

@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_GraveLantern
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyGraveLantern
+  displayName: Grave Lantern
+  archetypeId: 3
+  behaviorId: 24
+  movementMode: 0
+  maxHealth: 6
+  speedMetersPerSecond: 0
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.42
+  attackRangeMeters: 8.5
+  preferredRangeMinMeters: 5.5
+  preferredRangeMaxMeters: 8.5
+  sightRadiusMeters: 9.2
+  sightAngleDegrees: 240
+  hearingRadiusMeters: 7.2
+  hearingSensitivityMultiplier: 1.4
+  disturbanceEscalationThreshold: 1.05
+  investigationDurationSeconds: 1.7
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 2
+  intelligence: 2
+  disposition: 2
+  attackWindupScale: 1
+  attackActiveScale: 1
+  attackRecoveryScale: 1
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 0
+  attackProfiles:
+  - {fileID: 11400000, guid: bedb5cb28bd6647ada9cd4b3941847c4, type: 2}
+  - {fileID: 11400000, guid: 660035b3590804c5bbb112038b376429, type: 2}
+  - {fileID: 11400000, guid: fadbd836dd97a47eeb75d2d4233a7013, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: b045f9c4195fe43708f8b1fdc2b074cf, type: 2}
+  - {fileID: 11400000, guid: 8e35a888eff19495794ef59b37cd4410, type: 2}
+  - {fileID: 11400000, guid: bf3d0d004bdb54c1fb05b8fb958803da, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: 8da6ecb1b979048c28bf873bf1176331, type: 2}
+  color: {r: 0.28, g: 0.58, b: 0.78, a: 1}

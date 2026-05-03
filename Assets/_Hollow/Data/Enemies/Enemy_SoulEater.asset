@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_SoulEater
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemySoulEater
+  displayName: Soul Eater
+  archetypeId: 3
+  behaviorId: 22
+  movementMode: 0
+  maxHealth: 7
+  speedMetersPerSecond: 1.2
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.38
+  attackRangeMeters: 5.8
+  preferredRangeMinMeters: 2.4
+  preferredRangeMaxMeters: 4.8
+  sightRadiusMeters: 7.6
+  sightAngleDegrees: 170
+  hearingRadiusMeters: 6
+  hearingSensitivityMultiplier: 1.2
+  disturbanceEscalationThreshold: 1.2
+  investigationDurationSeconds: 1.25
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 2
+  intelligence: 3
+  disposition: 0
+  attackWindupScale: 1.05
+  attackActiveScale: 1
+  attackRecoveryScale: 1.05
+  hitArcDegreesBonus: 6
+  poiseBreakThresholdOffset: 0
+  attackProfiles:
+  - {fileID: 11400000, guid: 216409a4582ea4597a64b4497ea9d6a5, type: 2}
+  - {fileID: 11400000, guid: dec6d4e5884b14374b12569bc477a851, type: 2}
+  - {fileID: 11400000, guid: 9b6756aef494e47aa9c5dee78e6ca20d, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: 5e112199563b746ad91ef85fadc0bfe4, type: 2}
+  - {fileID: 11400000, guid: 35e31c34c977d44d68f30ce17a9b20b5, type: 2}
+  - {fileID: 11400000, guid: f10e689b3423046d895b96f7e4d84a6d, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: e37df847fd6f846caa9d7f647e13761f, type: 2}
+  color: {r: 0.12, g: 0.34, b: 0.38, a: 1}

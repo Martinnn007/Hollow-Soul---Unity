@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_HollowArcher
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyHollowArcher
+  displayName: Hollow Archer
+  archetypeId: 0
+  behaviorId: 15
+  movementMode: 0
+  maxHealth: 4
+  speedMetersPerSecond: 1.35
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.31
+  attackRangeMeters: 7.5
+  preferredRangeMinMeters: 4
+  preferredRangeMaxMeters: 7.25
+  sightRadiusMeters: 8.5
+  sightAngleDegrees: 135
+  hearingRadiusMeters: 5.4
+  hearingSensitivityMultiplier: 1.05
+  disturbanceEscalationThreshold: 1.35
+  investigationDurationSeconds: 1.4
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 1
+  intelligence: 2
+  disposition: 2
+  attackWindupScale: 1
+  attackActiveScale: 1
+  attackRecoveryScale: 1.05
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 0
+  attackProfiles:
+  - {fileID: 11400000, guid: 4d78cb4ec081c412f9e8c6c0fed27f4c, type: 2}
+  - {fileID: 11400000, guid: 97dc0e59bbeba4df7a30b0bdbc183b62, type: 2}
+  - {fileID: 11400000, guid: 4a7061ca184c44dc2acee8bf5241ac75, type: 2}
+  - {fileID: 11400000, guid: 50da10bc0769f4e50859115b18eb665d, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: 05f5e8c84f1c2422eb770912ab7c575a, type: 2}
+  - {fileID: 11400000, guid: 71b7634c40eed4301a36e685a539dcff, type: 2}
+  - {fileID: 11400000, guid: ff622dccfec99437d84eeed19945a70b, type: 2}
+  - {fileID: 11400000, guid: d5f68eb186be74734bfd1321c62fd30f, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: 99620ec4dacdf4e1089d18e31a931364, type: 2}
+  color: {r: 0.45, g: 0.52, b: 0.36, a: 1}
