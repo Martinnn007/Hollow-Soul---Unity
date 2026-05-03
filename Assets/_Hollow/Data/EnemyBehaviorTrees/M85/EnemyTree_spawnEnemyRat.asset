@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: rat_warning
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_warning
   children:
   - {fileID: -4215660103015763499}
@@ -26,9 +26,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: rat_wander
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_wander
   commandKind: 5
   actionId: 
@@ -43,9 +43,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: rat_close_warning
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_close_warning
   condition: 4
   invert: 0
@@ -64,9 +64,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: rat_alerted
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_alerted
   condition: 2
   invert: 0
@@ -85,9 +85,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: rat_panic_roll
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_panic_roll
   condition: 14
   invert: 0
@@ -106,9 +106,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_melee_rat_bite
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_melee_rat_bite
   commandKind: 7
   actionId: rat_bite
@@ -123,9 +123,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: rat_endangered
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_endangered
   condition: 3
   invert: 0
@@ -144,9 +144,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_creature_signal_alarm_squeal
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_creature_signal_alarm_squeal
   condition: 20
   invert: 0
@@ -165,9 +165,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_creature_signal_alarm_squeal
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_creature_signal_alarm_squeal
   commandKind: 14
   actionId: alarm_squeal
@@ -182,9 +182,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: c4d074dd4dd94a1fa2bcb7f8577abff8, type: 3}
   m_Name: rat_root
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_root
   children:
   - {fileID: -196701898084402103}
@@ -202,9 +202,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: rat_retreat
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_retreat
   children:
   - {fileID: -3077566847684279420}
@@ -219,9 +219,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: rat_bite
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_bite
   children:
   - {fileID: 8045185897560231356}
@@ -274,9 +274,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: rat_engaged_alarm
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_engaged_alarm
   condition: 2
   invert: 0
@@ -295,9 +295,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_melee_panic_pounce
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_melee_panic_pounce
   commandKind: 7
   actionId: panic_pounce
@@ -312,9 +312,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: rat_start_warning
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_start_warning
   commandKind: 11
   actionId: warning_squeal
@@ -329,9 +329,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: rat_alarm
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_alarm
   children:
   - {fileID: 120698662790672502}
@@ -346,9 +346,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: rat_panic_pounce
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: rat_panic_pounce
   children:
   - {fileID: -4131348681902354161}
@@ -363,9 +363,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_creature_move_skitter_retreat
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_creature_move_skitter_retreat
   commandKind: 13
   actionId: skitter_retreat
@@ -380,9 +380,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_creature_move_skitter_retreat
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_creature_move_skitter_retreat
   condition: 19
   invert: 0
@@ -401,9 +401,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_melee_panic_pounce
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_melee_panic_pounce
   condition: 9
   invert: 0
@@ -422,9 +422,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_melee_rat_bite
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_melee_rat_bite
   condition: 9
   invert: 0

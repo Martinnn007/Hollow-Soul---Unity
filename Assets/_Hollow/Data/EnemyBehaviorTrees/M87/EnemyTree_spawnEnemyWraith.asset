@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_creature_move_phase_shift
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_creature_move_phase_shift
   condition: 19
   invert: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 88c5dd713c4f4692a0ee52b565d9ced8, type: 3}
   m_Name: wraith_choice
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorWeightedSelectorNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_choice
   children:
   - child: {fileID: 2371251468213144503}
@@ -50,9 +50,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_creature_move_phase_shift
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_creature_move_phase_shift
   commandKind: 13
   actionId: phase_shift
@@ -67,9 +67,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: wraith_range
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_range
   commandKind: 3
   actionId: 
@@ -84,9 +84,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_melee_curse_touch
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_melee_curse_touch
   condition: 9
   invert: 0
@@ -105,9 +105,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_melee_curse_touch
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_melee_curse_touch
   commandKind: 7
   actionId: curse_touch
@@ -122,9 +122,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: wraith_touch_range
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_touch_range
   condition: 4
   invert: 0
@@ -143,9 +143,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: wraith_phase
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_phase
   children:
   - {fileID: -468849252911578759}
@@ -159,9 +159,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: wraith_phase_close
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_phase_close
   children:
   - {fileID: 7350419129119797785}
@@ -176,9 +176,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_creature_move_phase_shift
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_creature_move_phase_shift
   condition: 19
   invert: 0
@@ -232,9 +232,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_creature_move_phase_shift
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_creature_move_phase_shift
   commandKind: 13
   actionId: phase_shift
@@ -249,9 +249,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: wraith_touch
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_touch
   children:
   - {fileID: -2002364199259695505}
@@ -266,9 +266,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_ranged_wraith_bolt
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_ranged_wraith_bolt
   condition: 21
   invert: 0
@@ -287,9 +287,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: c4d074dd4dd94a1fa2bcb7f8577abff8, type: 3}
   m_Name: wraith_root
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_root
   children:
   - {fileID: -1852609856036880605}
@@ -304,9 +304,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: wraith_bolt
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_bolt
   children:
   - {fileID: 2777319659352963597}
@@ -320,9 +320,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_ranged_wraith_bolt
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_ranged_wraith_bolt
   commandKind: 8
   actionId: wraith_bolt
@@ -337,9 +337,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: wraith_too_close
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: wraith_too_close
   condition: 6
   invert: 0

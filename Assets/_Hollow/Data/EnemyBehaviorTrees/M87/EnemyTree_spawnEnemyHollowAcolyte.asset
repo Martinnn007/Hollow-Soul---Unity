@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: c4d074dd4dd94a1fa2bcb7f8577abff8, type: 3}
   m_Name: hollow_acolyte_root
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_root
   children:
   - {fileID: -956046724525230263}
@@ -26,9 +26,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: hollow_acolyte_range
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_range
   commandKind: 3
   actionId: 
@@ -43,9 +43,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_creature_move_veil_step
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_creature_move_veil_step
   commandKind: 13
   actionId: veil_step
@@ -60,9 +60,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_ranged_rune_burst
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_ranged_rune_burst
   condition: 21
   invert: 0
@@ -81,9 +81,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: hollow_acolyte_burst
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_burst
   children:
   - {fileID: -2358034499266176237}
@@ -98,9 +98,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_creature_move_veil_step
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_creature_move_veil_step
   condition: 19
   invert: 0
@@ -119,9 +119,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: hollow_acolyte_close_burst
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_close_burst
   condition: 4
   invert: 0
@@ -140,9 +140,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_ranged_rune_burst
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_ranged_rune_burst
   commandKind: 8
   actionId: rune_burst
@@ -157,9 +157,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: hollow_acolyte_veil_close
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_veil_close
   children:
   - {fileID: 3294060075937983646}
@@ -206,9 +206,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_ranged_slow_soul_orb
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_ranged_slow_soul_orb
   condition: 21
   invert: 0
@@ -227,9 +227,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_ranged_slow_soul_orb
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_ranged_slow_soul_orb
   commandKind: 8
   actionId: slow_soul_orb
@@ -244,9 +244,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: hollow_acolyte_orb
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_orb
   children:
   - {fileID: 436515499016086585}
@@ -260,9 +260,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: hollow_acolyte_too_close
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_too_close
   condition: 6
   invert: 0
@@ -281,9 +281,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 88c5dd713c4f4692a0ee52b565d9ced8, type: 3}
   m_Name: hollow_acolyte_spell_choice
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorWeightedSelectorNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: hollow_acolyte_spell_choice
   children:
   - child: {fileID: -3307540286251078860}

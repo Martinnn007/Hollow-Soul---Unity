@@ -128,6 +128,7 @@ namespace Hollow.Combat
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTreeMetadata;
+        [SerializeField] private EnemySpacingProfileDefinition spacingProfileMetadata;
 
         public string BossId => string.IsNullOrWhiteSpace(bossId) ? "stone_warden" : bossId;
 
@@ -200,6 +201,10 @@ namespace Hollow.Combat
         public EnemyBehaviorTreeDefinition BehaviorTreeMetadata => behaviorTreeMetadata != null
             ? behaviorTreeMetadata
             : EnemyBehaviorTreeDefaults.ResolveBossTree(BossId);
+
+        public EnemySpacingProfileDefinition SpacingProfileMetadata => spacingProfileMetadata != null
+            ? spacingProfileMetadata
+            : EnemySpacingProfileDefaults.CreateBossMetadataProfile(this);
 
         public void Configure(
             string nextBossId,
@@ -311,6 +316,11 @@ namespace Hollow.Combat
         public void ConfigureBehaviorTreeMetadata(EnemyBehaviorTreeDefinition nextBehaviorTreeMetadata)
         {
             behaviorTreeMetadata = nextBehaviorTreeMetadata;
+        }
+
+        public void ConfigureSpacingProfileMetadata(EnemySpacingProfileDefinition nextSpacingProfileMetadata)
+        {
+            spacingProfileMetadata = nextSpacingProfileMetadata;
         }
 
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)

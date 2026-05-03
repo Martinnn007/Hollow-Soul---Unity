@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2751e65d5084c50b15ba83ea3c1cb3d, type: 3}
+  m_Name: spawnEnemyGraveLantern_SpacingProfile
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemySpacingProfileDefinition
+  spacingProfileId: spawnEnemyGraveLantern_m91_spacing
+  ownerSpawnKind: spawnEnemyGraveLantern
+  displayName: Grave Lantern M91 Spacing
+  defaultIdealDistanceMeters: 6.94
+  defaultCloseToleranceMeters: 0.2
+  defaultLongToleranceMeters: 0.28
+  closePressureBias: 0
+  retreatBurstSeconds: 0.55
+  retreatReassessSeconds: 0.2
+  maxResetCountBeforeCommit: 0
+  fallbackRecoveryMovementMode: 0
+  fallbackRecoveryDistanceMeters: 0
+  fallbackRecoverySpeedMultiplier: 0
+  actionOverrides:
+  - actionId: lantern_soul_ring
+    desiredStartDistanceMeters: 4.48
+    commitRangeMinMeters: 2
+    commitRangeMaxMeters: 6.4
+    closeToleranceMeters: 0.35
+    longToleranceMeters: 0.45
+    recoveryMovementMode: 0
+    recoveryMovementDistanceMeters: 0
+    recoverySpeedMultiplier: 0
+    maxResetCountBeforeCommit: 0
+  - actionId: lantern_curse_fan
+    desiredStartDistanceMeters: 5.3199997
+    commitRangeMinMeters: 2
+    commitRangeMaxMeters: 7.6
+    closeToleranceMeters: 0.35
+    longToleranceMeters: 0.45
+    recoveryMovementMode: 0
+    recoveryMovementDistanceMeters: 0
+    recoverySpeedMultiplier: 0
+    maxResetCountBeforeCommit: 0
+  - actionId: grave_orb
+    desiredStartDistanceMeters: 5.95
+    commitRangeMinMeters: 2
+    commitRangeMaxMeters: 8.5
+    closeToleranceMeters: 0.35
+    longToleranceMeters: 0.45
+    recoveryMovementMode: 0
+    recoveryMovementDistanceMeters: 0
+    recoverySpeedMultiplier: 0
+    maxResetCountBeforeCommit: 0

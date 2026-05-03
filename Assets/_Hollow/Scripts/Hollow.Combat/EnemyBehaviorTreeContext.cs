@@ -52,13 +52,11 @@ namespace Hollow.Combat
 
         public EnemyBehaviorId BehaviorId => Enemy != null ? Enemy.BehaviorId : EnemyBehaviorId.Chaser;
 
-        public bool IsTooClose => Enemy != null && DistanceToPlayer < Enemy.PreferredRangeMinMeters;
+        public bool IsTooClose => Enemy != null && Enemy.IsTooCloseForCurrentSpacing(DistanceToPlayer);
 
-        public bool IsTooFar => Enemy != null && DistanceToPlayer > Enemy.PreferredRangeMaxMeters;
+        public bool IsTooFar => Enemy != null && Enemy.IsTooFarForCurrentSpacing(DistanceToPlayer);
 
-        public bool IsInPreferredRange => Enemy != null &&
-                                          DistanceToPlayer >= Enemy.PreferredRangeMinMeters &&
-                                          DistanceToPlayer <= Enemy.PreferredRangeMaxMeters;
+        public bool IsInPreferredRange => Enemy != null && Enemy.IsInCurrentSpacingEnvelope(DistanceToPlayer);
 
         public bool CanStartMeleeAction(string actionId)
         {

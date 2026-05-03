@@ -57,6 +57,7 @@ namespace Hollow.Combat
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
         [SerializeField] private EnemyGuardProfileDefinition guardProfile;
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTree;
+        [SerializeField] private EnemySpacingProfileDefinition spacingProfile;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -184,6 +185,10 @@ namespace Hollow.Combat
         public EnemyBehaviorTreeDefinition BehaviorTree => behaviorTree != null
             ? behaviorTree
             : EnemyBehaviorTreeDefaults.ResolveEnemyTree(SpawnKind);
+
+        public EnemySpacingProfileDefinition SpacingProfile => spacingProfile != null
+            ? spacingProfile
+            : EnemySpacingProfileDefaults.CreateEnemyProfile(this);
 
         public EnemyGuardProfileDefinition GuardProfile => guardProfile != null
             ? guardProfile
@@ -533,6 +538,11 @@ namespace Hollow.Combat
         public void ConfigureBehaviorTree(EnemyBehaviorTreeDefinition nextBehaviorTree)
         {
             behaviorTree = nextBehaviorTree;
+        }
+
+        public void ConfigureSpacingProfile(EnemySpacingProfileDefinition nextSpacingProfile)
+        {
+            spacingProfile = nextSpacingProfile;
         }
 
         public void ConfigureGuardProfile(EnemyGuardProfileDefinition nextGuardProfile)

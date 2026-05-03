@@ -60,6 +60,7 @@ namespace Hollow.Combat
         [SerializeField] private float hitArcDegreesBonus;
         [SerializeField] private int poiseBreakThresholdOffset;
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTreeDefinition;
+        [SerializeField] private EnemySpacingProfileDefinition spacingProfile;
 
         private RoomRuntimeRoot roomRuntimeRoot;
         private PlaceholderPlayerController playerController;
@@ -147,6 +148,11 @@ namespace Hollow.Combat
         private float nextAllowedAllyAlertTime;
         private float lastAllyAlertSharedTime = float.NegativeInfinity;
         private int lastAllyAlertRecipientCount;
+        private string lastSpacingResetActionId = string.Empty;
+        private int spacingResetCount;
+        private float recoveryMovementRemainingMeters;
+        private string recoveryMovementActionId = string.Empty;
+        private EnemySpacingRecoveryMode recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
 
@@ -238,6 +244,18 @@ namespace Hollow.Combat
 
         public EnemyBehaviorTreeDefinition BehaviorTreeDefinition => behaviorTreeDefinition;
 
+        public EnemySpacingProfileDefinition SpacingProfile => spacingProfile != null
+            ? spacingProfile
+            : Definition != null
+                ? Definition.SpacingProfile
+                : EnemySpacingProfileDefaults.CreateEnemyProfile(
+                    "spawnEnemyNormal",
+                    "Normal Chaser",
+                    EnemyBehaviorId.Chaser,
+                    EnemyMovementMode.Grounded,
+                    PreferredRangeMinMeters,
+                    PreferredRangeMaxMeters);
+
         public EnemyGuardProfileDefinition GuardProfile => resolvedGuardProfile;
 
         public EnemyGuardProfileDefinition ActiveGuardProfile => activeGuardProfile;
@@ -306,6 +324,26 @@ namespace Hollow.Combat
             return Mathf.Max(0f, readabilityStateEndTime - timeSeconds);
         }
 
+        public bool IsTooCloseForCurrentSpacing(float distanceToPlayer)
+        {
+            return ResolveCurrentActionSpacing(distanceToPlayer).IsTooClose(distanceToPlayer);
+        }
+
+        public bool IsTooFarForCurrentSpacing(float distanceToPlayer)
+        {
+            return ResolveCurrentActionSpacing(distanceToPlayer).IsTooFar(distanceToPlayer);
+        }
+
+        public bool IsInCurrentSpacingEnvelope(float distanceToPlayer)
+        {
+            return ResolveCurrentActionSpacing(distanceToPlayer).IsInsideEnvelope(distanceToPlayer);
+        }
+
+        public EnemyResolvedActionSpacing ResolveActionSpacingForTests(string actionId)
+        {
+            return ResolveSpacingForActionId(actionId);
+        }
+
         public void BeginEntryGrace(float seconds, float currentTimeSeconds)
         {
             var graceEndTime = currentTimeSeconds + Mathf.Max(0f, seconds);
@@ -341,6 +379,7 @@ namespace Hollow.Combat
             hitArcDegreesBonus = Definition.HitArcDegreesBonus;
             poiseBreakThresholdOffset = Definition.PoiseBreakThresholdOffset;
             behaviorTreeDefinition = Definition.BehaviorTree;
+            spacingProfile = Definition.SpacingProfile;
             resolvedGuardProfile = Definition.GuardProfile;
             speedMetersPerSecond = tuning.ApplySpeed(Definition.SpeedMetersPerSecond);
             contactDamage = tuning.ApplyContactDamage(Definition.ContactDamage);
@@ -425,6 +464,11 @@ namespace Hollow.Combat
             nextAllowedAllyAlertTime = 0f;
             lastAllyAlertSharedTime = float.NegativeInfinity;
             lastAllyAlertRecipientCount = 0;
+            lastSpacingResetActionId = string.Empty;
+            spacingResetCount = 0;
+            recoveryMovementRemainingMeters = 0f;
+            recoveryMovementActionId = string.Empty;
+            recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
@@ -460,6 +504,7 @@ namespace Hollow.Combat
             hitArcDegreesBonus = execution.hitArcDegreesBonus;
             poiseBreakThresholdOffset = execution.poiseBreakThresholdOffset;
             behaviorTreeDefinition = bossDefinition.BehaviorTreeMetadata;
+            spacingProfile = bossDefinition.SpacingProfileMetadata;
             resolvedGuardProfile = null;
             speedMetersPerSecond = bossDefinition.SpeedMetersPerSecond;
             contactDamage = bossDefinition.ContactDamage;
@@ -526,6 +571,11 @@ namespace Hollow.Combat
             nextAllowedAllyAlertTime = 0f;
             lastAllyAlertSharedTime = float.NegativeInfinity;
             lastAllyAlertRecipientCount = 0;
+            lastSpacingResetActionId = string.Empty;
+            spacingResetCount = 0;
+            recoveryMovementRemainingMeters = 0f;
+            recoveryMovementActionId = string.Empty;
+            recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
             transform.localScale = Vector3.one * bossDefinition.VisualScale;
             Health.Configure(bossDefinition.MaxHealth);
@@ -689,11 +739,34 @@ namespace Hollow.Combat
 
             if (command.StartsCommittedAction)
             {
-                ExecuteBehaviorCommand(new EnemyBehaviorCommand(EnemyBehaviorCommandKind.MovePreferredRange, string.Empty, 0.8f, "budget_fallback"), deltaTime, timeSeconds, distanceToPlayer);
+                HandleBlockedCommittedAction(command, deltaTime, timeSeconds, distanceToPlayer);
                 return true;
             }
 
             return false;
+        }
+
+        private void HandleBlockedCommittedAction(EnemyBehaviorCommand command, float deltaTime, float timeSeconds, float distanceToPlayer)
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var spacing = ResolveSpacingForActionId(command.ActionId);
+            if (spacing.IsTooFar(distanceToPlayer))
+            {
+                MovePreferredRange(deltaTime, distanceToPlayer, Mathf.Max(0.65f, command.SpeedMultiplier));
+                return;
+            }
+
+            if (spacing.IsTooClose(distanceToPlayer) && TryStartSpacingReset(command.ActionId, spacing, timeSeconds))
+            {
+                MoveSpacingReset(deltaTime, Mathf.Max(0.55f, command.SpeedMultiplier), spacing);
+                return;
+            }
+
+            FacePlayer();
         }
 
         private bool ExecuteBehaviorCommand(EnemyBehaviorCommand command, float deltaTime, float timeSeconds, float distanceToPlayer)
@@ -776,6 +849,54 @@ namespace Hollow.Combat
             }
 
             MoveInDirection(direction, deltaTime, RangeIntentSpeedMultiplier(direction, delta.normalized, distanceToPlayer) * Mathf.Max(0.1f, speedMultiplier), intent: EnemyNavigationIntent.PreferredRange);
+        }
+
+        private bool TryStartSpacingReset(string actionId, EnemyResolvedActionSpacing spacing, float timeSeconds)
+        {
+            var key = string.IsNullOrWhiteSpace(actionId) ? spacing.ActionId : actionId;
+            if (!string.Equals(lastSpacingResetActionId, key, StringComparison.Ordinal))
+            {
+                lastSpacingResetActionId = key;
+                spacingResetCount = 0;
+            }
+
+            if (spacingResetCount >= spacing.MaxResetCountBeforeCommit || timeSeconds < nextRetreatBurstAllowedTime)
+            {
+                return false;
+            }
+
+            spacingResetCount++;
+            var profile = SpacingProfile;
+            retreatBurstEndTime = timeSeconds + (profile != null ? profile.RetreatBurstSeconds : RetreatBurstSeconds);
+            nextRetreatBurstAllowedTime = retreatBurstEndTime + (profile != null ? profile.RetreatReassessSeconds : RetreatReassessSeconds);
+            return true;
+        }
+
+        private void MoveSpacingReset(float deltaTime, float speedMultiplier, EnemyResolvedActionSpacing spacing)
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            var direction = -delta.normalized;
+            var intent = spacing.RecoveryMovementMode == EnemySpacingRecoveryMode.PhaseDrift
+                ? EnemyNavigationIntent.PhaseMove
+                : EnemyNavigationIntent.Flee;
+            MoveInDirection(direction, deltaTime, speedMultiplier, allowSteering: spacing.RecoveryMovementMode != EnemySpacingRecoveryMode.PhaseDrift, intent);
+        }
+
+        private void ResetSpacingResetChain()
+        {
+            lastSpacingResetActionId = string.Empty;
+            spacingResetCount = 0;
         }
 
         private void MoveFleeIntent(float deltaTime, float timeSeconds, float distanceToPlayer, float speedMultiplier)
@@ -1022,7 +1143,8 @@ namespace Hollow.Combat
                     return;
                 }
 
-                if (awarenessState == EnemyAwarenessState.Alerted && distanceToPlayer <= PreferredRangeMaxMeters + 0.4f)
+                var spacing = ResolveCurrentActionSpacing(distanceToPlayer);
+                if (awarenessState == EnemyAwarenessState.Alerted && distanceToPlayer <= spacing.CommitRangeMaxMeters + spacing.LongToleranceMeters + 0.4f)
                 {
                     ForceEngaged();
                 }
@@ -1124,6 +1246,7 @@ namespace Hollow.Combat
             activeChargeProfile = !string.IsNullOrWhiteSpace(actionId)
                 ? Definition.ResolveAttackProfile(actionId)
                 : ResolveChargeAttackProfile();
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.ChargeWindup,
                 ResolvedWindupSeconds(activeChargeProfile, ChargeWindupSeconds),
@@ -1166,6 +1289,7 @@ namespace Hollow.Combat
             activeRangedProfile = !string.IsNullOrWhiteSpace(actionId)
                 ? Definition.ResolveAttackProfile(actionId)
                 : ResolveRangedAttackProfile(timeSeconds);
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.RangedWindup,
                 ResolvedWindupSeconds(activeRangedProfile, RangedWindupSeconds),
@@ -1197,6 +1321,7 @@ namespace Hollow.Combat
                 ? Definition.ResolveAttackProfile(actionId)
                 : ResolveLungeAttackProfile(timeSeconds);
             activeMeleeComboDepth = 0;
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.MeleeWindup,
                 ResolvedWindupSeconds(activeMeleeProfile, LungeWindupSeconds),
@@ -1216,6 +1341,7 @@ namespace Hollow.Combat
             delta.y = 0f;
             activeGuardActionProfile = Definition.ResolveAttackProfile(actionId);
             activeGuardProfile = null;
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.GuardWindup,
                 ResolvedWindupSeconds(activeGuardActionProfile, 0.12f),
@@ -1234,6 +1360,7 @@ namespace Hollow.Combat
             activeCreatureMoveProfile = Definition.ResolveAttackProfile(actionId);
             activeCreatureMoveDirection = ResolveCreatureMoveDirection(actionId, timeSeconds);
             nextAllowedAttackTime = timeSeconds + (activeCreatureMoveProfile != null ? activeCreatureMoveProfile.CooldownSeconds : 0.9f);
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.CreatureMoveWindup,
                 ResolvedWindupSeconds(activeCreatureMoveProfile, 0.08f),
@@ -1252,6 +1379,7 @@ namespace Hollow.Combat
             activeCreatureSignalProfile = Definition.ResolveAttackProfile(actionId);
             creatureSignalEmitted = false;
             nextAllowedAttackTime = timeSeconds + (activeCreatureSignalProfile != null ? activeCreatureSignalProfile.CooldownSeconds : 1.5f);
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.CreatureSignalWindup,
                 ResolvedWindupSeconds(activeCreatureSignalProfile, 0.18f),
@@ -1297,6 +1425,7 @@ namespace Hollow.Combat
             activeMeleeProfile = followUp;
             lungeContactAttempted = false;
             lungeEndTime = 0f;
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.MeleeWindup,
                 ResolvedWindupSeconds(followUp, LungeWindupSeconds),
@@ -1328,6 +1457,7 @@ namespace Hollow.Combat
             delta.y = 0f;
             activeAreaProfile = Definition.ResolveAttackProfile(actionId);
             areaDamageAttempted = false;
+            ResetSpacingResetChain();
             StartReadabilityState(
                 EnemyReadabilityState.AreaWindup,
                 ResolvedWindupSeconds(activeAreaProfile, LungeWindupSeconds),
@@ -1366,6 +1496,7 @@ namespace Hollow.Combat
                 ResolvedWindupSeconds(profile, 0.2f) +
                 ResolvedActiveSeconds(profile, 0.1f) +
                 ResolvedRecoverySeconds(profile);
+            ResetSpacingResetChain();
             ForceEngaged();
             StartReadabilityState(
                 EnemyReadabilityState.FeintWarning,
@@ -1423,7 +1554,7 @@ namespace Hollow.Combat
             var requiresReadableFloor = profile == null || profile.RuntimeKind == EnemyAttackRuntimeKind.MeleeLunge;
             return delta.sqrMagnitude >= 0.01f &&
                    (!requiresReadableFloor || distance >= minimumReadableRange) &&
-                   distance <= triggerRange;
+                   CanCommitActionAtDistance(actionId, profile, distance, triggerRange);
         }
 
         private bool CanStartAreaAction(string actionId, float timeSeconds)
@@ -1450,7 +1581,7 @@ namespace Hollow.Combat
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
             return delta.sqrMagnitude >= 0.01f &&
-                   delta.magnitude <= Mathf.Max(0.1f, profile.RangeMeters);
+                   CanCommitActionAtDistance(actionId, profile, delta.magnitude, profile.RangeMeters);
         }
 
         private bool CanStartGuardAction(string actionId, float timeSeconds)
@@ -1483,7 +1614,7 @@ namespace Hollow.Combat
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
             return delta.sqrMagnitude >= 0.01f &&
-                   delta.magnitude <= Mathf.Max(0.1f, profile.RangeMeters);
+                   CanCommitActionAtDistance(actionId, profile, delta.magnitude, profile.RangeMeters);
         }
 
         private bool CanStartCreatureMoveAction(string actionId, float timeSeconds)
@@ -1511,7 +1642,7 @@ namespace Hollow.Combat
                 return false;
             }
 
-            return DistanceToPlayer() <= Mathf.Max(0.1f, profile.RangeMeters);
+            return CanCommitActionAtDistance(actionId, profile, DistanceToPlayer(), profile.RangeMeters);
         }
 
         private bool CanStartCreatureSignalAction(string actionId, float timeSeconds)
@@ -1577,7 +1708,11 @@ namespace Hollow.Combat
 
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
-            return delta.sqrMagnitude >= 0.01f && delta.magnitude <= Definition.AttackRangeMeters;
+            var profile = Definition != null
+                ? Definition.ResolveAttackProfile(behaviorId == EnemyBehaviorId.Charger ? "ash_charge" : ContactAttackId())
+                : null;
+            return delta.sqrMagnitude >= 0.01f &&
+                   CanCommitActionAtDistance(profile != null ? profile.AttackId : string.Empty, profile, delta.magnitude, Definition.AttackRangeMeters);
         }
 
         private bool CanStartRangedAttack(float timeSeconds)
@@ -1627,7 +1762,8 @@ namespace Hollow.Combat
             }
 
             var range = profile != null ? profile.RangeMeters : Definition.AttackRangeMeters;
-            return delta.sqrMagnitude >= 0.01f && delta.magnitude <= Mathf.Max(0.1f, range);
+            return delta.sqrMagnitude >= 0.01f &&
+                   CanCommitActionAtDistance(actionId, profile, delta.magnitude, range);
         }
 
         private bool RequiresAttackBudget()
@@ -1704,6 +1840,7 @@ namespace Hollow.Combat
                 chargeContactAttempted = false;
                 readabilityState = EnemyReadabilityState.ChargeRecovery;
                 readabilityStateEndTime = chargeRecoveryEndTime;
+                BeginRecoveryMovement(activeChargeProfile);
                 return true;
             }
 
@@ -1711,6 +1848,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < chargeRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeChargeProfile);
                     return true;
                 }
 
@@ -1720,6 +1858,7 @@ namespace Hollow.Combat
                 chargeRecoveryEndTime = 0f;
                 activeChargeProfile = null;
                 chargeContactAttempted = false;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -1754,6 +1893,7 @@ namespace Hollow.Combat
                 rangedRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeRangedProfile);
                 readabilityState = EnemyReadabilityState.RangedRecovery;
                 readabilityStateEndTime = rangedRecoveryEndTime;
+                BeginRecoveryMovement(activeRangedProfile);
                 return true;
             }
 
@@ -1761,6 +1901,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < rangedRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeRangedProfile);
                     return true;
                 }
 
@@ -1770,6 +1911,7 @@ namespace Hollow.Combat
                 rangedRecoveryEndTime = 0f;
                 readabilityState = EnemyReadabilityState.Idle;
                 readabilityStateEndTime = 0f;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -1807,6 +1949,7 @@ namespace Hollow.Combat
                 readabilityState = EnemyReadabilityState.MeleeRecovery;
                 readabilityStateEndTime = lungeRecoveryEndTime;
                 lungeEndTime = 0f;
+                BeginRecoveryMovement(activeMeleeProfile);
                 return true;
             }
 
@@ -1814,6 +1957,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < lungeRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeMeleeProfile);
                     return true;
                 }
 
@@ -1823,6 +1967,7 @@ namespace Hollow.Combat
                 activeMeleeProfile = null;
                 lungeContactAttempted = false;
                 activeMeleeComboDepth = 0;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -1854,6 +1999,7 @@ namespace Hollow.Combat
                 readabilityState = EnemyReadabilityState.AreaRecovery;
                 readabilityStateEndTime = areaRecoveryEndTime;
                 areaActiveEndTime = 0f;
+                BeginRecoveryMovement(activeAreaProfile);
                 return true;
             }
 
@@ -1861,6 +2007,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < areaRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeAreaProfile);
                     return true;
                 }
 
@@ -1869,6 +2016,7 @@ namespace Hollow.Combat
                 areaRecoveryEndTime = 0f;
                 activeAreaProfile = null;
                 areaDamageAttempted = false;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -1913,6 +2061,7 @@ namespace Hollow.Combat
                 guardRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeGuardActionProfile);
                 readabilityState = EnemyReadabilityState.GuardRecovery;
                 readabilityStateEndTime = guardRecoveryEndTime;
+                BeginRecoveryMovement(activeGuardActionProfile);
                 return true;
             }
 
@@ -1920,6 +2069,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < guardRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeGuardActionProfile);
                     return true;
                 }
 
@@ -1929,6 +2079,7 @@ namespace Hollow.Combat
                 guardRecoveryEndTime = 0f;
                 activeGuardActionProfile = null;
                 activeGuardProfile = null;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -1956,6 +2107,7 @@ namespace Hollow.Combat
                 creatureMoveRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeCreatureMoveProfile);
                 readabilityState = EnemyReadabilityState.CreatureMoveRecovery;
                 readabilityStateEndTime = creatureMoveRecoveryEndTime;
+                BeginRecoveryMovement(activeCreatureMoveProfile);
                 return true;
             }
 
@@ -1963,6 +2115,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < creatureMoveRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeCreatureMoveProfile);
                     return true;
                 }
 
@@ -1972,6 +2125,7 @@ namespace Hollow.Combat
                 creatureMoveRecoveryEndTime = 0f;
                 activeCreatureMoveProfile = null;
                 activeCreatureMoveDirection = Vector3.forward;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -2004,6 +2158,7 @@ namespace Hollow.Combat
                 creatureSignalRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeCreatureSignalProfile);
                 readabilityState = EnemyReadabilityState.CreatureSignalRecovery;
                 readabilityStateEndTime = creatureSignalRecoveryEndTime;
+                BeginRecoveryMovement(activeCreatureSignalProfile);
                 return true;
             }
 
@@ -2011,6 +2166,7 @@ namespace Hollow.Combat
             {
                 if (timeSeconds < creatureSignalRecoveryEndTime)
                 {
+                    TickRecoveryMovement(deltaTime, activeCreatureSignalProfile);
                     return true;
                 }
 
@@ -2020,6 +2176,7 @@ namespace Hollow.Combat
                 creatureSignalRecoveryEndTime = 0f;
                 creatureSignalEmitted = false;
                 activeCreatureSignalProfile = null;
+                ClearRecoveryMovement();
                 return false;
             }
 
@@ -2662,10 +2819,12 @@ namespace Hollow.Combat
                 return -toPlayerDirection;
             }
 
-            if (distanceToPlayer <= PreferredRangeMaxMeters && timeSeconds >= nextRetreatBurstAllowedTime)
+            var spacing = ResolveCurrentActionSpacing(distanceToPlayer);
+            if (distanceToPlayer <= spacing.DesiredStartDistanceMeters && timeSeconds >= nextRetreatBurstAllowedTime)
             {
-                retreatBurstEndTime = timeSeconds + RetreatBurstSeconds;
-                nextRetreatBurstAllowedTime = retreatBurstEndTime + RetreatReassessSeconds;
+                var profile = SpacingProfile;
+                retreatBurstEndTime = timeSeconds + (profile != null ? profile.RetreatBurstSeconds : RetreatBurstSeconds);
+                nextRetreatBurstAllowedTime = retreatBurstEndTime + (profile != null ? profile.RetreatReassessSeconds : RetreatReassessSeconds);
                 return -toPlayerDirection;
             }
 
@@ -2688,25 +2847,196 @@ namespace Hollow.Combat
 
         private Vector3 ResolvePreferredRangeDirection(Vector3 toPlayerDirection, float distanceToPlayer)
         {
-            var min = PreferredRangeMinMeters;
-            var max = PreferredRangeMaxMeters;
-            var slack = PreferredRangeSlack();
-            if (distanceToPlayer < min)
+            var spacing = ResolveCurrentActionSpacing(distanceToPlayer);
+            if (spacing.IsTooClose(distanceToPlayer))
             {
                 return -toPlayerDirection;
             }
 
-            if (distanceToPlayer > max + slack)
+            if (spacing.IsTooFar(distanceToPlayer))
             {
                 return toPlayerDirection;
             }
 
-            if (Intelligence == EnemyIntelligenceLevel.Simple && distanceToPlayer > min + slack)
+            var closePressureFloor = Mathf.Lerp(spacing.CommitRangeMinMeters, spacing.DesiredStartDistanceMeters, Mathf.Clamp01(spacing.ClosePressureBias));
+            if (spacing.ClosePressureBias > 0f && distanceToPlayer > closePressureFloor)
             {
                 return toPlayerDirection;
             }
 
             return Vector3.zero;
+        }
+
+        private EnemyResolvedActionSpacing ResolveCurrentActionSpacing(float distanceToPlayer)
+        {
+            var action = ResolvePrimarySpacingAction(distanceToPlayer);
+            if (action != null)
+            {
+                return ResolveSpacingForActionProfile(action);
+            }
+
+            return SpacingProfile.ResolveFallbackSpacing(PreferredRangeMinMeters, PreferredRangeMaxMeters);
+        }
+
+        private EnemyResolvedActionSpacing ResolveSpacingForActionId(string actionId)
+        {
+            if (!string.IsNullOrWhiteSpace(actionId))
+            {
+                var action = FindActionProfile(actionId);
+                if (action != null)
+                {
+                    return ResolveSpacingForActionProfile(action);
+                }
+
+                var attack = FindAttackProfile(actionId);
+                if (attack != null)
+                {
+                    return ResolveSpacingForAttackProfile(attack);
+                }
+            }
+
+            return ResolveCurrentActionSpacing(DistanceToPlayer());
+        }
+
+        private EnemyResolvedActionSpacing ResolveSpacingForActionProfile(EnemyActionProfileDefinition actionProfile)
+        {
+            var attackProfile = ResolveAttackProfileForAction(actionProfile);
+            return SpacingProfile.ResolveActionSpacing(actionProfile, attackProfile);
+        }
+
+        private EnemyResolvedActionSpacing ResolveSpacingForAttackProfile(EnemyAttackProfileDefinition attackProfile)
+        {
+            if (attackProfile == null)
+            {
+                return SpacingProfile.ResolveFallbackSpacing(PreferredRangeMinMeters, PreferredRangeMaxMeters);
+            }
+
+            var actionProfile = FindActionProfile(attackProfile.AttackId);
+            return SpacingProfile.ResolveActionSpacing(actionProfile, attackProfile);
+        }
+
+        private EnemyActionProfileDefinition ResolvePrimarySpacingAction(float distanceToPlayer)
+        {
+            if (Definition == null)
+            {
+                return null;
+            }
+
+            EnemyActionProfileDefinition best = null;
+            var bestScore = float.NegativeInfinity;
+            var actions = Definition.ActionProfiles;
+            for (var index = 0; index < actions.Count; index++)
+            {
+                var action = actions[index];
+                if (!IsSpacingCandidateAction(action))
+                {
+                    continue;
+                }
+
+                var spacing = ResolveSpacingForActionProfile(action);
+                var distanceFit = -Mathf.Abs(distanceToPlayer - spacing.DesiredStartDistanceMeters);
+                var envelopeBonus = spacing.IsInsideEnvelope(distanceToPlayer) ? 0.35f : 0f;
+                var pressureBonus = action.Intent is EnemyActionIntent.Damage or EnemyActionIntent.Pressure or EnemyActionIntent.Interrupt ? 0.25f : 0f;
+                var score = distanceFit + envelopeBonus + pressureBonus + action.BaseWeight * 0.08f;
+                if (score <= bestScore)
+                {
+                    continue;
+                }
+
+                bestScore = score;
+                best = action;
+            }
+
+            return best;
+        }
+
+        private bool IsSpacingCandidateAction(EnemyActionProfileDefinition action)
+        {
+            if (action == null || action.UsageState != EnemyActionUsageState.CurrentRuntime)
+            {
+                return false;
+            }
+
+            if ((int)Intelligence < (int)action.MinimumIntelligence || AwarenessState < action.MinimumAwareness)
+            {
+                return false;
+            }
+
+            var dispositions = action.AllowedDispositions;
+            for (var index = 0; index < dispositions.Count; index++)
+            {
+                if (dispositions[index] == Disposition)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool CanCommitActionAtDistance(string actionId, EnemyAttackProfileDefinition profile, float distanceToPlayer, float fallbackMaxRange)
+        {
+            var spacing = profile != null ? ResolveSpacingForAttackProfile(profile) : ResolveSpacingForActionId(actionId);
+            var maxRange = Mathf.Max(0.1f, fallbackMaxRange, spacing.CommitRangeMaxMeters + spacing.LongToleranceMeters);
+            return distanceToPlayer <= maxRange;
+        }
+
+        private EnemyActionProfileDefinition FindActionProfile(string actionId)
+        {
+            if (Definition == null || string.IsNullOrWhiteSpace(actionId))
+            {
+                return null;
+            }
+
+            var actions = Definition.ActionProfiles;
+            for (var index = 0; index < actions.Count; index++)
+            {
+                var action = actions[index];
+                if (action != null && string.Equals(action.ActionId, actionId, StringComparison.Ordinal))
+                {
+                    return action;
+                }
+            }
+
+            return null;
+        }
+
+        private EnemyAttackProfileDefinition FindAttackProfile(string attackId)
+        {
+            if (Definition == null || string.IsNullOrWhiteSpace(attackId))
+            {
+                return null;
+            }
+
+            var attacks = Definition.AttackProfiles;
+            for (var index = 0; index < attacks.Count; index++)
+            {
+                var attack = attacks[index];
+                if (attack != null && string.Equals(attack.AttackId, attackId, StringComparison.Ordinal))
+                {
+                    return attack;
+                }
+            }
+
+            return null;
+        }
+
+        private EnemyAttackProfileDefinition ResolveAttackProfileForAction(EnemyActionProfileDefinition actionProfile)
+        {
+            if (actionProfile == null)
+            {
+                return null;
+            }
+
+            if (actionProfile.LinkedAttackProfile != null)
+            {
+                return actionProfile.LinkedAttackProfile;
+            }
+
+            var linkedAttackId = !string.IsNullOrWhiteSpace(actionProfile.LinkedAttackId)
+                ? actionProfile.LinkedAttackId
+                : actionProfile.ActionId;
+            return FindAttackProfile(linkedAttackId);
         }
 
         private float RangeIntentSpeedMultiplier(Vector3 direction, Vector3 toPlayerDirection, float distanceToPlayer)
@@ -2722,7 +3052,7 @@ namespace Hollow.Combat
                 return 0.65f;
             }
 
-            if (distanceToPlayer >= PreferredRangeMinMeters && distanceToPlayer <= PreferredRangeMaxMeters)
+            if (IsInCurrentSpacingEnvelope(distanceToPlayer))
             {
                 return 0.55f;
             }
@@ -2759,6 +3089,78 @@ namespace Hollow.Combat
         {
             var baseSeconds = profile != null ? profile.RecoverySeconds : 0.12f;
             return Mathf.Max(0.01f, baseSeconds * AttackRecoveryScale);
+        }
+
+        private void BeginRecoveryMovement(EnemyAttackProfileDefinition profile)
+        {
+            if (bossRuntime != null || bossDefinition != null || archetypeId == EnemyArchetypeId.Boss)
+            {
+                recoveryMovementRemainingMeters = 0f;
+                recoveryMovementActionId = string.Empty;
+                recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
+                return;
+            }
+
+            var spacing = ResolveSpacingForAttackProfile(profile);
+            recoveryMovementRemainingMeters = spacing.RecoveryMovementDistanceMeters;
+            recoveryMovementActionId = spacing.ActionId;
+            recoveryMovementMode = spacing.RecoveryMovementMode;
+        }
+
+        private void TickRecoveryMovement(float deltaTime, EnemyAttackProfileDefinition profile)
+        {
+            if (bossRuntime != null ||
+                playerController == null ||
+                recoveryMovementRemainingMeters <= 0.001f ||
+                recoveryMovementMode == EnemySpacingRecoveryMode.Planted)
+            {
+                return;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f)
+            {
+                return;
+            }
+
+            var spacing = ResolveSpacingForAttackProfile(profile);
+            var speedMultiplier = Mathf.Max(0f, spacing.RecoverySpeedMultiplier);
+            if (speedMultiplier <= 0f || speedMetersPerSecond <= 0f)
+            {
+                return;
+            }
+
+            var maxStep = speedMetersPerSecond * speedMultiplier * Mathf.Max(0f, deltaTime);
+            if (maxStep <= 0.001f)
+            {
+                return;
+            }
+
+            var cappedMultiplier = speedMultiplier;
+            if (maxStep > recoveryMovementRemainingMeters)
+            {
+                cappedMultiplier *= recoveryMovementRemainingMeters / maxStep;
+            }
+
+            var before = transform.localPosition;
+            var intent = recoveryMovementMode switch
+            {
+                EnemySpacingRecoveryMode.PhaseDrift => EnemyNavigationIntent.PhaseMove,
+                EnemySpacingRecoveryMode.RangedReset or EnemySpacingRecoveryMode.ShortBackstep or EnemySpacingRecoveryMode.Recoil => EnemyNavigationIntent.Flee,
+                _ => EnemyNavigationIntent.PreferredRange
+            };
+            MoveInDirection(-delta.normalized, deltaTime, cappedMultiplier, allowSteering: recoveryMovementMode != EnemySpacingRecoveryMode.PhaseDrift, intent);
+            var moved = transform.localPosition - before;
+            moved.y = 0f;
+            recoveryMovementRemainingMeters = Mathf.Max(0f, recoveryMovementRemainingMeters - moved.magnitude);
+        }
+
+        private void ClearRecoveryMovement()
+        {
+            recoveryMovementRemainingMeters = 0f;
+            recoveryMovementActionId = string.Empty;
+            recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
         }
 
         private float ResolvedHitArcDegrees(EnemyAttackProfileDefinition profile)
@@ -3217,6 +3619,8 @@ namespace Hollow.Combat
 
         private void OnDied(CombatantHealth _)
         {
+            ClearRecoveryMovement();
+            ResetSpacingResetChain();
             SpawnSplitChildren();
             CorpseGhostPresenter.SpawnFrom(this, combatFeelProfile);
             VfxPresenter.Play(VfxCueId.EnemyDeath, transform.position, transform.parent);
@@ -3293,6 +3697,8 @@ namespace Hollow.Combat
             activeCreatureMoveProfile = null;
             activeCreatureSignalProfile = null;
             activeCreatureMoveDirection = Vector3.forward;
+            ClearRecoveryMovement();
+            ResetSpacingResetChain();
         }
 
         public int ModifyIncomingDamage(DamageRequest request, int currentAmount)
@@ -3425,18 +3831,21 @@ namespace Hollow.Combat
             }
 
             readabilityStateEndTime = recoveryEnd;
+            BeginRecoveryMovement(profile);
         }
 
         private void InterruptGuardIntoRecovery(EnemyGuardProfileDefinition profile)
         {
             var timeSeconds = lastTickTime > 0f ? lastTickTime : Time.time;
             var recoveryEnd = timeSeconds + (profile != null ? profile.GuardBreakRecoverySeconds : 0.35f);
+            var interruptedActionProfile = activeGuardActionProfile;
             activeGuardProfile = null;
             activeGuardActionProfile = null;
             guardActiveEndTime = 0f;
             guardRecoveryEndTime = recoveryEnd;
             readabilityState = EnemyReadabilityState.GuardRecovery;
             readabilityStateEndTime = recoveryEnd;
+            BeginRecoveryMovement(interruptedActionProfile);
         }
 
         private static bool IsPlayerAuthoredDamageSource(GameObject source)

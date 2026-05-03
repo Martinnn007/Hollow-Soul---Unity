@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: charger_start
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: charger_start
   commandKind: 9
   actionId: ash_charge
@@ -26,9 +26,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: start_melee_ember_clash
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: start_melee_ember_clash
   commandKind: 7
   actionId: ember_clash
@@ -43,9 +43,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
   m_Name: charger_pressure
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorActionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: charger_pressure
   commandKind: 2
   actionId: 
@@ -60,9 +60,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: charger_can_charge
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: charger_can_charge
   condition: 11
   invert: 0
@@ -81,9 +81,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: charger_charge
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: charger_charge
   children:
   - {fileID: -3771530594875721964}
@@ -97,9 +97,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
   m_Name: can_melee_ember_clash
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorConditionNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: can_melee_ember_clash
   condition: 9
   invert: 0
@@ -118,9 +118,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
   m_Name: charger_clash
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSequenceNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: charger_clash
   children:
   - {fileID: -1238305557836330100}
@@ -160,9 +160,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: c4d074dd4dd94a1fa2bcb7f8577abff8, type: 3}
   m_Name: charger_root
-  m_EditorClassIdentifier: Hollow.Combat:Hollow.Combat:EnemyBehaviorSelectorNodeDefinition
+  m_EditorClassIdentifier:
   nodeId: charger_root
   children:
   - {fileID: -3491409049793955746}

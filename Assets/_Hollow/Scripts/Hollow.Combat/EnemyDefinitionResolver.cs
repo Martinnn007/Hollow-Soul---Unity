@@ -4,8 +4,11 @@ namespace Hollow.Combat
     {
         public static EnemyDefinition Resolve(EnemyCatalog catalog, string spawnKind, out bool usedFallback)
         {
-            var fallback = catalog != null ? catalog.FallbackDefinition : EnemyDefinition.CreateRuntimeNormal();
-            var resolved = catalog != null ? catalog.Resolve(spawnKind) : fallback;
+            var resolvedCatalog = catalog != null ? catalog : EnemyCatalog.CreateRuntimeDefault();
+            var fallback = resolvedCatalog.FallbackDefinition != null
+                ? resolvedCatalog.FallbackDefinition
+                : EnemyDefinition.CreateRuntimeNormal();
+            var resolved = resolvedCatalog.Resolve(spawnKind);
             usedFallback = resolved == null || resolved.SpawnKind != spawnKind;
             return resolved != null ? resolved : fallback;
         }

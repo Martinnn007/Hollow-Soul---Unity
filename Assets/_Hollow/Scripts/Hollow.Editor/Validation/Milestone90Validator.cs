@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Hollow.Combat;
+using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
 using UnityEditor;
 using UnityEngine;
@@ -181,7 +182,9 @@ namespace Hollow.Editor.Validation
                     failures.Add($"{ownerId}/{profile.AttackId} has invalid hit arc.");
                 }
 
-                if (profile.Damage > 0 && !Enum.IsDefined(typeof(ImpactForceClass), profile.ForceClass))
+                if (profile.Damage > 0 &&
+                    ((int)profile.ForceClass < (int)ImpactForceClass.Light ||
+                     (int)profile.ForceClass > (int)ImpactForceClass.Massive))
                 {
                     failures.Add($"{ownerId}/{profile.AttackId} has invalid force class.");
                 }

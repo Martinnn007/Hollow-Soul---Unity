@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2751e65d5084c50b15ba83ea3c1cb3d, type: 3}
+  m_Name: spawnEnemyKnifeThrower_SpacingProfile
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemySpacingProfileDefinition
+  spacingProfileId: spawnEnemyKnifeThrower_m91_spacing
+  ownerSpawnKind: spawnEnemyKnifeThrower
+  displayName: Knife Thrower M91 Spacing
+  defaultIdealDistanceMeters: 3.924
+  defaultCloseToleranceMeters: 0.2
+  defaultLongToleranceMeters: 0.28
+  closePressureBias: 0.35
+  retreatBurstSeconds: 0.55
+  retreatReassessSeconds: 0.45
+  maxResetCountBeforeCommit: 1
+  fallbackRecoveryMovementMode: 4
+  fallbackRecoveryDistanceMeters: 0.55
+  fallbackRecoverySpeedMultiplier: 0.65
+  actionOverrides:
+  - actionId: throwing_knife
+    desiredStartDistanceMeters: 4.06
+    commitRangeMinMeters: 2
+    commitRangeMaxMeters: 5.8
+    closeToleranceMeters: 0.28
+    longToleranceMeters: 0.38
+    recoveryMovementMode: 4
+    recoveryMovementDistanceMeters: 0.55
+    recoverySpeedMultiplier: 0.65
+    maxResetCountBeforeCommit: 1
+  - actionId: knife_fan
+    desiredStartDistanceMeters: 3.3600001
+    commitRangeMinMeters: 1.6800001
+    commitRangeMaxMeters: 4.8
+    closeToleranceMeters: 0.28
+    longToleranceMeters: 0.38
+    recoveryMovementMode: 4
+    recoveryMovementDistanceMeters: 0.55
+    recoverySpeedMultiplier: 0.65
+    maxResetCountBeforeCommit: 1
+  - actionId: thrower_backstep
+    desiredStartDistanceMeters: 1.5749999
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 2.1
+    closeToleranceMeters: 0.2
+    longToleranceMeters: 0.28
+    recoveryMovementMode: 3
+    recoveryMovementDistanceMeters: 0.42
+    recoverySpeedMultiplier: 0.7
+    maxResetCountBeforeCommit: 1

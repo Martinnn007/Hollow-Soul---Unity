@@ -9,9 +9,11 @@ namespace Hollow.Combat
         [SerializeField] private List<EnemyDefinition> definitions = new();
         [SerializeField] private EnemyDefinition fallbackDefinition;
 
+        private static EnemyCatalog runtimeFallbackCatalog;
+
         public IReadOnlyList<EnemyDefinition> Definitions => definitions;
 
-        public EnemyDefinition FallbackDefinition => fallbackDefinition != null ? fallbackDefinition : definitions.FirstOrDefault();
+        public EnemyDefinition FallbackDefinition => fallbackDefinition != null ? fallbackDefinition : definitions?.FirstOrDefault();
 
         public void Configure(IEnumerable<EnemyDefinition> nextDefinitions, EnemyDefinition nextFallback)
         {
@@ -21,8 +23,33 @@ namespace Hollow.Combat
 
         public EnemyDefinition Resolve(string spawnKind)
         {
-            var definition = definitions.FirstOrDefault(candidate => candidate != null && candidate.SpawnKind == spawnKind);
-            return definition != null ? definition : FallbackDefinition;
+            var definition = FindDefinition(spawnKind);
+            if (definition != null)
+            {
+                return definition;
+            }
+
+            var runtimeDefault = RuntimeFallbackCatalog.FindDefinition(spawnKind);
+            return runtimeDefault != null ? runtimeDefault : FallbackDefinition;
+        }
+
+        private EnemyDefinition FindDefinition(string spawnKind)
+        {
+            return definitions?.FirstOrDefault(candidate => candidate != null && candidate.SpawnKind == spawnKind);
+        }
+
+        private static EnemyCatalog RuntimeFallbackCatalog
+        {
+            get
+            {
+                if (runtimeFallbackCatalog == null)
+                {
+                    runtimeFallbackCatalog = CreateRuntimeDefault();
+                    runtimeFallbackCatalog.hideFlags = HideFlags.HideAndDontSave;
+                }
+
+                return runtimeFallbackCatalog;
+            }
         }
 
         public static EnemyCatalog CreateRuntimeDefault()

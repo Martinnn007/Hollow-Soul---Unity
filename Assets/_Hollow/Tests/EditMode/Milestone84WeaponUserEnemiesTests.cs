@@ -64,6 +64,31 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void PartialSerializedCatalogStillResolvesWeaponUserSpawnKinds()
+        {
+            var partialCatalog = ScriptableObject.CreateInstance<EnemyCatalog>();
+            var normal = EnemyDefinition.CreateRuntimeNormal();
+            try
+            {
+                partialCatalog.Configure(new[] { normal }, normal);
+
+                var spear = partialCatalog.Resolve("spawnEnemySkeletonSpear");
+                Assert.NotNull(spear);
+                Assert.AreEqual("spawnEnemySkeletonSpear", spear.SpawnKind);
+                Assert.AreEqual(EnemyBehaviorId.SkeletonSpear, spear.BehaviorId);
+
+                var resolved = EnemyDefinitionResolver.Resolve(partialCatalog, "spawnEnemySkeletonSpear", out var usedFallback);
+                Assert.IsFalse(usedFallback);
+                Assert.AreEqual("Skeleton Spear", resolved.DisplayName);
+            }
+            finally
+            {
+                Object.DestroyImmediate(partialCatalog);
+                Object.DestroyImmediate(normal);
+            }
+        }
+
+        [Test]
         public void WeaponMeleeDamagesOnlyDuringActiveArcAndRecoveryIsHarmless()
         {
             var root = CreateHarness(out var room, out var player);

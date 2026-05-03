@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2751e65d5084c50b15ba83ea3c1cb3d, type: 3}
+  m_Name: spawnEnemySkeletonSword_SpacingProfile
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemySpacingProfileDefinition
+  spacingProfileId: spawnEnemySkeletonSword_m91_spacing
+  ownerSpawnKind: spawnEnemySkeletonSword
+  displayName: Skeleton Sword M91 Spacing
+  defaultIdealDistanceMeters: 1.486
+  defaultCloseToleranceMeters: 0.22
+  defaultLongToleranceMeters: 0.28
+  closePressureBias: 0.35
+  retreatBurstSeconds: 0.35
+  retreatReassessSeconds: 0.45
+  maxResetCountBeforeCommit: 0
+  fallbackRecoveryMovementMode: 1
+  fallbackRecoveryDistanceMeters: 0.1
+  fallbackRecoverySpeedMultiplier: 0.25
+  actionOverrides:
+  - actionId: rusty_slash
+    desiredStartDistanceMeters: 1.0875001
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 1.45
+    closeToleranceMeters: 0.22
+    longToleranceMeters: 0.28
+    recoveryMovementMode: 1
+    recoveryMovementDistanceMeters: 0.1
+    recoverySpeedMultiplier: 0.25
+    maxResetCountBeforeCommit: 0
+  - actionId: backhand_slash
+    desiredStartDistanceMeters: 1.0125
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 1.35
+    closeToleranceMeters: 0.22
+    longToleranceMeters: 0.28
+    recoveryMovementMode: 1
+    recoveryMovementDistanceMeters: 0.1
+    recoverySpeedMultiplier: 0.25
+    maxResetCountBeforeCommit: 0

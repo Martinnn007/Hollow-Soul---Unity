@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2751e65d5084c50b15ba83ea3c1cb3d, type: 3}
+  m_Name: spawnEnemyHollowBird_SpacingProfile
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemySpacingProfileDefinition
+  spacingProfileId: spawnEnemyHollowBird_m91_spacing
+  ownerSpawnKind: spawnEnemyHollowBird
+  displayName: Hollow Bird M91 Spacing
+  defaultIdealDistanceMeters: 2.6639998
+  defaultCloseToleranceMeters: 0.18
+  defaultLongToleranceMeters: 0.24
+  closePressureBias: 0.35
+  retreatBurstSeconds: 0.55
+  retreatReassessSeconds: 0.35
+  maxResetCountBeforeCommit: 1
+  fallbackRecoveryMovementMode: 2
+  fallbackRecoveryDistanceMeters: 0.28
+  fallbackRecoverySpeedMultiplier: 0.75
+  actionOverrides:
+  - actionId: swoop_peck
+    desiredStartDistanceMeters: 1.0125
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 1.35
+    closeToleranceMeters: 0.18
+    longToleranceMeters: 0.24
+    recoveryMovementMode: 2
+    recoveryMovementDistanceMeters: 0.28
+    recoverySpeedMultiplier: 0.75
+    maxResetCountBeforeCommit: 1
+  - actionId: claw_dive
+    desiredStartDistanceMeters: 1.1624999
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 1.55
+    closeToleranceMeters: 0.18
+    longToleranceMeters: 0.24
+    recoveryMovementMode: 2
+    recoveryMovementDistanceMeters: 0.28
+    recoverySpeedMultiplier: 0.75
+    maxResetCountBeforeCommit: 1
+  - actionId: wing_retreat
+    desiredStartDistanceMeters: 2.85
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 3.8
+    closeToleranceMeters: 0.18
+    longToleranceMeters: 0.24
+    recoveryMovementMode: 3
+    recoveryMovementDistanceMeters: 0.42
+    recoverySpeedMultiplier: 0.7
+    maxResetCountBeforeCommit: 1
+  - actionId: caw_signal
+    desiredStartDistanceMeters: 3.8999999
+    commitRangeMinMeters: 0
+    commitRangeMaxMeters: 5.2
+    closeToleranceMeters: 0.18
+    longToleranceMeters: 0.24
+    recoveryMovementMode: 2
+    recoveryMovementDistanceMeters: 0.28
+    recoverySpeedMultiplier: 0.75
+    maxResetCountBeforeCommit: 1
