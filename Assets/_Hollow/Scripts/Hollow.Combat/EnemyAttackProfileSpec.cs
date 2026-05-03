@@ -24,7 +24,10 @@ namespace Hollow.Combat
             DamageThreatKind threatKind,
             float knockbackMeters,
             float guardKnockbackMultiplier,
-            string notes)
+            string notes,
+            float recoverySeconds = -1f,
+            float hitArcDegrees = -1f,
+            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium)
         {
             OwnerId = ownerId ?? string.Empty;
             IsBoss = isBoss;
@@ -46,6 +49,13 @@ namespace Hollow.Combat
             KnockbackMeters = knockbackMeters;
             GuardKnockbackMultiplier = guardKnockbackMultiplier;
             Notes = notes ?? string.Empty;
+            RecoverySeconds = recoverySeconds >= 0f
+                ? recoverySeconds
+                : EnemyAttackProfileDefinition.DefaultRecoverySeconds(runtimeKind, forceClass);
+            HitArcDegrees = hitArcDegrees >= 0f
+                ? hitArcDegrees
+                : EnemyAttackProfileDefinition.DefaultHitArcDegrees(runtimeKind, damageDelivery);
+            PoiseBreakThreshold = poiseBreakThreshold;
         }
 
         public string OwnerId { get; }
@@ -87,6 +97,12 @@ namespace Hollow.Combat
         public float GuardKnockbackMultiplier { get; }
 
         public string Notes { get; }
+
+        public float RecoverySeconds { get; }
+
+        public float HitArcDegrees { get; }
+
+        public ImpactForceClass PoiseBreakThreshold { get; }
 
         public string AssetName => $"{(IsBoss ? "Boss" : "Enemy")}_{OwnerId}_{AttackId}.asset";
     }

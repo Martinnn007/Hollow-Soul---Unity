@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -40,6 +41,11 @@ namespace Hollow.Combat
         [SerializeField] private EnemyBodyClass bodyClass = EnemyBodyClass.Medium;
         [SerializeField] private EnemyIntelligenceLevel intelligence = EnemyIntelligenceLevel.Simple;
         [SerializeField] private EnemyInstinctDisposition disposition = EnemyInstinctDisposition.Predator;
+        [SerializeField] private float attackWindupScale;
+        [SerializeField] private float attackActiveScale;
+        [SerializeField] private float attackRecoveryScale;
+        [SerializeField] private float hitArcDegreesBonus;
+        [SerializeField] private int poiseBreakThresholdOffset;
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
@@ -110,6 +116,18 @@ namespace Hollow.Combat
         public EnemyIntelligenceLevel Intelligence => EnemyIntelligenceLevelExtensions.Clamp((int)intelligence);
 
         public EnemyInstinctDisposition Disposition => EnemyInstinctDispositionExtensions.Clamp((int)disposition);
+
+        public float AttackWindupScale => Mathf.Clamp(attackWindupScale <= 0f ? DefaultExecution.windupScale : attackWindupScale, 0.35f, 2.5f);
+
+        public float AttackActiveScale => Mathf.Clamp(attackActiveScale <= 0f ? DefaultExecution.activeScale : attackActiveScale, 0.35f, 2.5f);
+
+        public float AttackRecoveryScale => Mathf.Clamp(attackRecoveryScale <= 0f ? DefaultExecution.recoveryScale : attackRecoveryScale, 0.35f, 2.5f);
+
+        public float HitArcDegreesBonus => Mathf.Clamp(!Mathf.Approximately(hitArcDegreesBonus, 0f) ? hitArcDegreesBonus : DefaultExecution.hitArcDegreesBonus, -90f, 120f);
+
+        public int PoiseBreakThresholdOffset => Mathf.Clamp(poiseBreakThresholdOffset != 0 ? poiseBreakThresholdOffset : DefaultExecution.poiseBreakThresholdOffset, -3, 3);
+
+        private AttackExecutionDefaults DefaultExecution => DefaultAttackExecutionFor(archetypeId, behaviorId, movementMode);
 
         public IReadOnlyList<EnemyAttackProfileDefinition> AttackProfiles
         {
@@ -304,6 +322,7 @@ namespace Hollow.Combat
             preferredRangeMaxMeters = preferredRange.y;
             var senses = DefaultSensesFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             var lunge = DefaultLungeFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
+            var execution = DefaultAttackExecutionFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             ConfigureSenseAndLunge(
                 senses.x,
                 senses.y,
@@ -314,6 +333,12 @@ namespace Hollow.Combat
                 lunge.active,
                 lunge.distance,
                 lunge.cooldown);
+            ConfigureAttackExecutionModifiers(
+                execution.windupScale,
+                execution.activeScale,
+                execution.recoveryScale,
+                execution.hitArcDegreesBonus,
+                execution.poiseBreakThresholdOffset);
             color = nextColor;
         }
 
@@ -402,6 +427,20 @@ namespace Hollow.Combat
             passiveContactHazardType = contactDamagePolicy == EnemyContactDamagePolicy.PassiveHazard
                 ? nextPassiveContactHazardType
                 : EnemyPassiveContactHazardType.None;
+        }
+
+        public void ConfigureAttackExecutionModifiers(
+            float nextAttackWindupScale,
+            float nextAttackActiveScale,
+            float nextAttackRecoveryScale,
+            float nextHitArcDegreesBonus,
+            int nextPoiseBreakThresholdOffset)
+        {
+            attackWindupScale = Mathf.Clamp(nextAttackWindupScale <= 0f ? 1f : nextAttackWindupScale, 0.35f, 2.5f);
+            attackActiveScale = Mathf.Clamp(nextAttackActiveScale <= 0f ? 1f : nextAttackActiveScale, 0.35f, 2.5f);
+            attackRecoveryScale = Mathf.Clamp(nextAttackRecoveryScale <= 0f ? 1f : nextAttackRecoveryScale, 0.35f, 2.5f);
+            hitArcDegreesBonus = Mathf.Clamp(nextHitArcDegreesBonus, -90f, 120f);
+            poiseBreakThresholdOffset = Mathf.Clamp(nextPoiseBreakThresholdOffset, -3, 3);
         }
 
         public void ConfigureAttackProfiles(IEnumerable<EnemyAttackProfileDefinition> nextAttackProfiles)
@@ -702,6 +741,31 @@ namespace Hollow.Combat
             };
         }
 
+        public static AttackExecutionDefaults DefaultAttackExecutionFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return new AttackExecutionDefaults(1.2f, 1f, 1.2f, 0f, 2);
+            }
+
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.FlyingChaser => new AttackExecutionDefaults(0.9f, 0.95f, 0.85f, 20f, -1),
+                EnemyBehaviorId.Charger => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 1),
+                EnemyBehaviorId.TurretShooter => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 1),
+                EnemyBehaviorId.Splitter => new AttackExecutionDefaults(1.05f, 1f, 1f, 0f, 0),
+                EnemyBehaviorId.SpittingPod => new AttackExecutionDefaults(0.9f, 1f, 0.9f, 0f, 0),
+                EnemyBehaviorId.Rat => new AttackExecutionDefaults(0.75f, 0.85f, 0.65f, 30f, -1),
+                EnemyBehaviorId.Spider => new AttackExecutionDefaults(0.7f, 0.8f, 0.6f, 45f, -1),
+                _ when nextArchetypeId == EnemyArchetypeId.Fast => new AttackExecutionDefaults(0.8f, 0.9f, 0.8f, -5f, -1),
+                _ when nextArchetypeId == EnemyArchetypeId.Heavy => new AttackExecutionDefaults(1.25f, 1.05f, 1.15f, 10f, 1),
+                _ => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 0)
+            };
+        }
+
         private static Vector2 SanitizePreferredRange(float minMeters, float maxMeters)
         {
             var safeMin = Mathf.Max(0f, minMeters);
@@ -738,6 +802,33 @@ namespace Hollow.Combat
             public float distance { get; }
 
             public float cooldown { get; }
+        }
+
+        public readonly struct AttackExecutionDefaults
+        {
+            public AttackExecutionDefaults(
+                float windupScale,
+                float activeScale,
+                float recoveryScale,
+                float hitArcDegreesBonus,
+                int poiseBreakThresholdOffset)
+            {
+                this.windupScale = windupScale;
+                this.activeScale = activeScale;
+                this.recoveryScale = recoveryScale;
+                this.hitArcDegreesBonus = hitArcDegreesBonus;
+                this.poiseBreakThresholdOffset = poiseBreakThresholdOffset;
+            }
+
+            public float windupScale { get; }
+
+            public float activeScale { get; }
+
+            public float recoveryScale { get; }
+
+            public float hitArcDegreesBonus { get; }
+
+            public int poiseBreakThresholdOffset { get; }
         }
 
         private static EnemyBehaviorId DefaultBehaviorFor(EnemyArchetypeId nextArchetypeId, EnemyMovementMode nextMovementMode)

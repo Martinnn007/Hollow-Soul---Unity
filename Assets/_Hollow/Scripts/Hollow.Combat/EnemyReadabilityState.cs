@@ -9,6 +9,10 @@ namespace Hollow.Combat
         RangedWindup = 4,
         BossBurstWindup = 5,
         MeleeWindup = 6,
-        MeleeLunge = 7
+        MeleeLunge = 7,
+        RangedActive = 8,
+        RangedRecovery = 9,
+        MeleeRecovery = 10,
+        ChargeRecovery = 11
     }
 }

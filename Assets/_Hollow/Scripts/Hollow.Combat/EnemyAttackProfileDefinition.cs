@@ -23,6 +23,9 @@ namespace Hollow.Combat
         [SerializeField] private DamageThreatKind threatKind = DamageThreatKind.Light;
         [SerializeField] private float knockbackMeters = 0.3f;
         [SerializeField] private float guardKnockbackMultiplier = 0.35f;
+        [SerializeField] private float recoverySeconds;
+        [SerializeField] private float hitArcDegrees;
+        [SerializeField] private ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium;
         [TextArea(1, 4)]
         [SerializeField] private string notes = string.Empty;
 
@@ -60,6 +63,12 @@ namespace Hollow.Combat
 
         public float GuardKnockbackMultiplier => Mathf.Clamp01(guardKnockbackMultiplier);
 
+        public float RecoverySeconds => recoverySeconds > 0f ? recoverySeconds : DefaultRecoverySeconds(RuntimeKind, ForceClass);
+
+        public float HitArcDegrees => hitArcDegrees > 0f ? Mathf.Clamp(hitArcDegrees, 1f, 360f) : DefaultHitArcDegrees(RuntimeKind, DamageDelivery);
+
+        public ImpactForceClass PoiseBreakThreshold => poiseBreakThreshold;
+
         public string Notes => notes ?? string.Empty;
 
         public DamageClassification Classification => new(DamageChannel, DamageDelivery, ForceClass, DamageElement);
@@ -83,6 +92,9 @@ namespace Hollow.Combat
             threatKind = spec.ThreatKind;
             knockbackMeters = Mathf.Max(0f, spec.KnockbackMeters);
             guardKnockbackMultiplier = Mathf.Clamp01(spec.GuardKnockbackMultiplier);
+            recoverySeconds = Mathf.Max(0.01f, spec.RecoverySeconds);
+            hitArcDegrees = Mathf.Clamp(spec.HitArcDegrees, 1f, 360f);
+            poiseBreakThreshold = spec.PoiseBreakThreshold;
             notes = spec.Notes ?? string.Empty;
         }
 
@@ -102,6 +114,37 @@ namespace Hollow.Combat
             var profile = CreateInstance<EnemyAttackProfileDefinition>();
             profile.Configure(spec);
             return profile;
+        }
+
+        public static float DefaultRecoverySeconds(EnemyAttackRuntimeKind runtimeKind, ImpactForceClass forceClass)
+        {
+            return runtimeKind switch
+            {
+                EnemyAttackRuntimeKind.Charge => 0.24f,
+                EnemyAttackRuntimeKind.MeleeLunge => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.24f : 0.16f,
+                EnemyAttackRuntimeKind.Contact => 0.14f,
+                EnemyAttackRuntimeKind.Area => 0.2f,
+                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => 0.18f,
+                EnemyAttackRuntimeKind.Movement => 0.18f,
+                _ => 0.12f
+            };
+        }
+
+        public static float DefaultHitArcDegrees(EnemyAttackRuntimeKind runtimeKind, DamageDelivery delivery)
+        {
+            if (delivery is DamageDelivery.Projectile or DamageDelivery.Area)
+            {
+                return 360f;
+            }
+
+            return runtimeKind switch
+            {
+                EnemyAttackRuntimeKind.Charge => 90f,
+                EnemyAttackRuntimeKind.MeleeLunge => 125f,
+                EnemyAttackRuntimeKind.Contact => 110f,
+                EnemyAttackRuntimeKind.Area => 360f,
+                _ => 120f
+            };
         }
     }
 }

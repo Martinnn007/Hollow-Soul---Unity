@@ -16,6 +16,7 @@ namespace Hollow.Combat
         [SerializeField] private float radiusMeters = PlaceholderPlayerController.DefaultRadiusMeters;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlayerDefenseController defenseController;
+        [SerializeField] private PlayerWeaponController weaponController;
         private float temporarySpeedEndTime;
         private bool currentFrameGuardHeld;
 
@@ -71,13 +72,29 @@ namespace Hollow.Combat
                 defenseController = GetComponent<PlayerDefenseController>();
             }
 
-            if (moveInput.sqrMagnitude < 0.0001f || deltaTime <= 0f)
+            if (weaponController == null)
+            {
+                weaponController = GetComponent<PlayerWeaponController>();
+            }
+
+            if (deltaTime <= 0f)
             {
                 return transform.localPosition;
             }
 
-            var move = Vector2.ClampMagnitude(moveInput, 1f);
-            var step = new Vector3(move.x, 0f, move.y) * SpeedMetersPerSecond * deltaTime;
+            var isRolling = weaponController != null && weaponController.IsRolling;
+            if (!isRolling && moveInput.sqrMagnitude < 0.0001f)
+            {
+                return transform.localPosition;
+            }
+
+            var move = isRolling
+                ? weaponController.RollDirection
+                : Vector2.ClampMagnitude(moveInput, 1f);
+            var speed = isRolling
+                ? weaponController.RollSpeedMetersPerSecond
+                : SpeedMetersPerSecond * (weaponController != null && weaponController.IsAttackCommitted ? PlayerWeaponController.AttackMovementMultiplier : 1f);
+            var step = new Vector3(move.x, 0f, move.y) * speed * deltaTime;
             var stepCount = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / CombatFeelTuning.MovementSubstepMeters));
             var increment = step / stepCount;
             var resolved = transform.localPosition;

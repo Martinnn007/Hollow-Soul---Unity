@@ -22,7 +22,8 @@ namespace Hollow.Input
                     false,
                     false,
                     false,
-                    pausePressed);
+                    pausePressed,
+                    false);
             }
 
             return new GameplayInputSnapshot(
@@ -35,7 +36,8 @@ namespace Hollow.Input
                 ReadUseActiveItemPressed(),
                 ReadUseConsumableCardPressed(),
                 ReadGuardHeld(),
-                pausePressed);
+                pausePressed,
+                ReadRollPressed());
         }
 
         public static Vector2 CardinalizeShoot(Vector2 rawShoot)
@@ -209,6 +211,18 @@ namespace Hollow.Input
 
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.buttonWest.wasPressedThisFrame;
+        }
+
+        private static bool ReadRollPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.buttonEast.wasPressedThisFrame;
         }
 
         private static bool ReadGuardHeld()

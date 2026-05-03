@@ -112,6 +112,14 @@ namespace Hollow.Combat
         {
             ResolveReferences();
             UpdateGuardFacing(input);
+            if (weaponController != null && (weaponController.IsAttackCommitted || weaponController.IsRolling))
+            {
+                isGuarding = false;
+                lastGuardHeld = false;
+                visualController?.SetState(false, false, GuardFacing);
+                return;
+            }
+
             if (!input.GuardHeld)
             {
                 isGuarding = false;

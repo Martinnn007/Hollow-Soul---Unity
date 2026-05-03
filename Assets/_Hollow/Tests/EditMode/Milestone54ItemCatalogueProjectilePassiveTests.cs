@@ -80,6 +80,7 @@ namespace Hollow.Tests.EditMode
                 weapon.ConfigureProjectilePassives(new ProjectilePassiveState(ProjectilePatternKind.QuadShot, 1f, 0f, ProjectileVisualStyle.Default));
 
                 Assert.IsTrue(weapon.TryFire(Vector2.up, 0f));
+                weapon.TickAction(0f, WeaponAttackDefinition.DefaultLight(WeaponSlot.Ranged).WindupSeconds + 0.01f);
                 Assert.AreEqual(4, parent.transform.Cast<Transform>().Count(child => child.name == "PlayerProjectile"));
             }
             finally

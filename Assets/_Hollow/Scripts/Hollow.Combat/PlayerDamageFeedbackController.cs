@@ -13,6 +13,7 @@ namespace Hollow.Combat
 
         private readonly Dictionary<Renderer, Material> originalMaterials = new();
         private CombatantHealth health;
+        private PlayerWeaponController weaponController;
         private float invulnerableUntil;
         private float flashUntil;
         private float nextBlockedCueTime;
@@ -50,7 +51,12 @@ namespace Hollow.Combat
                 return 0;
             }
 
-            if (!IsInvulnerable)
+            if (weaponController == null)
+            {
+                weaponController = GetComponent<PlayerWeaponController>();
+            }
+
+            if (!IsInvulnerable && (weaponController == null || !weaponController.IsRollInvulnerable))
             {
                 return currentAmount;
             }
