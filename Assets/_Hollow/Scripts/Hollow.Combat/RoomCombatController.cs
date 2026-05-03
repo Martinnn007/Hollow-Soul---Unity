@@ -178,7 +178,7 @@ namespace Hollow.Combat
             heldWeaponVisual.Bind(weapon);
 
             var defense = playerController.GetComponent<PlayerDefenseController>() ?? playerController.gameObject.AddComponent<PlayerDefenseController>();
-            defense.Bind(roomRuntimeRoot);
+            defense.Bind(roomRuntimeRoot, this);
             defense.ConfigureShieldProfile(ShieldGuardProfileDefinition.Resolve(null));
             var playerFeedback = playerController.GetComponent<PlayerDamageFeedbackController>() ?? playerController.gameObject.AddComponent<PlayerDamageFeedbackController>();
             playerFeedback.Configure(roomRuntimeRoot, CombatFeelProfile);
@@ -369,7 +369,22 @@ namespace Hollow.Combat
             return true;
         }
 
+        public static EnemyStimulusTier StimulusTierForPlayerAttack(AttackKind attackKind)
+        {
+            return attackKind == AttackKind.Heavy ? EnemyStimulusTier.Loud : EnemyStimulusTier.Normal;
+        }
+
+        public static EnemyStimulusTier DefaultStimulusTierFor(EnemyStimulusKind kind)
+        {
+            return EnemyStimulusTierExtensions.DefaultFor(kind);
+        }
+
         public void EmitPlayerStimulus(EnemyStimulusKind kind, Vector3 localPosition, float timeSeconds)
+        {
+            EmitPlayerStimulus(kind, localPosition, timeSeconds, DefaultStimulusTierFor(kind), string.Empty);
+        }
+
+        public void EmitPlayerStimulus(EnemyStimulusKind kind, Vector3 localPosition, float timeSeconds, EnemyStimulusTier tier, string context = "")
         {
             foreach (var enemy in enemies)
             {
@@ -378,7 +393,7 @@ namespace Hollow.Combat
                     continue;
                 }
 
-                enemy.ReceiveStimulus(kind, localPosition, timeSeconds);
+                enemy.ReceiveStimulus(kind, localPosition, timeSeconds, tier, context);
             }
         }
 
@@ -404,7 +419,7 @@ namespace Hollow.Combat
                 return;
             }
 
-            EmitPlayerStimulus(EnemyStimulusKind.Footstep, currentPosition, timeSeconds);
+            EmitPlayerStimulus(EnemyStimulusKind.Footstep, currentPosition, timeSeconds, EnemyStimulusTier.Quiet, "footstep");
             lastPlayerFootstepStimulusLocalPosition = currentPosition;
             nextPlayerFootstepStimulusTime = timeSeconds + PlayerFootstepStimulusIntervalSeconds;
         }

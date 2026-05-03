@@ -32,6 +32,9 @@ namespace Hollow.Combat
         [SerializeField] private float sightRadiusMeters = 6.5f;
         [SerializeField] private float sightAngleDegrees = 150f;
         [SerializeField] private float hearingRadiusMeters = 4.5f;
+        [SerializeField] private float hearingSensitivityMultiplier = 1f;
+        [SerializeField] private float disturbanceEscalationThreshold = 1.5f;
+        [SerializeField] private float investigationDurationSeconds = 1.2f;
         [SerializeField] private bool lungeAttackEnabled = true;
         [SerializeField] private float lungeTriggerRangeMeters = 1.4f;
         [SerializeField] private float lungeWindupSeconds = 0.22f;
@@ -115,6 +118,13 @@ namespace Hollow.Combat
         private string lastBehaviorTreeNodeId = string.Empty;
         private string lastBehaviorCommand = string.Empty;
         private string lastBehaviorReason = string.Empty;
+        private EnemyStimulusKind lastStimulusKind = EnemyStimulusKind.Footstep;
+        private EnemyStimulusTier lastStimulusTier = EnemyStimulusTier.Quiet;
+        private float lastStimulusTime = float.NegativeInfinity;
+        private Vector3 lastStimulusLocalPosition;
+        private string lastAwarenessReason = string.Empty;
+        private float currentDisturbanceScore;
+        private float investigationEndTime = float.NegativeInfinity;
 
         public event Action<EnemyRuntimeController> SpawnedChild;
 
@@ -155,6 +165,12 @@ namespace Hollow.Combat
         public float SightAngleDegrees => SightRadiusMeters <= 0f ? 0f : Mathf.Clamp(sightAngleDegrees, 0f, 360f);
 
         public float HearingRadiusMeters => Mathf.Max(0f, hearingRadiusMeters);
+
+        public float HearingSensitivityMultiplier => Mathf.Clamp(hearingSensitivityMultiplier <= 0f ? 1f : hearingSensitivityMultiplier, 0.1f, 3f);
+
+        public float DisturbanceEscalationThreshold => Mathf.Clamp(disturbanceEscalationThreshold <= 0f ? 1f : disturbanceEscalationThreshold, 0.05f, 8f);
+
+        public float InvestigationDurationSeconds => Mathf.Clamp(investigationDurationSeconds <= 0f ? 1f : investigationDurationSeconds, 0.05f, 8f);
 
         public bool LungeAttackEnabled => lungeAttackEnabled;
 
@@ -197,6 +213,18 @@ namespace Hollow.Combat
         public string LastBehaviorCommand => lastBehaviorCommand;
 
         public string LastBehaviorReason => lastBehaviorReason;
+
+        public EnemyStimulusKind LastStimulusKind => lastStimulusKind;
+
+        public EnemyStimulusTier LastStimulusTier => lastStimulusTier;
+
+        public float LastStimulusTime => lastStimulusTime;
+
+        public Vector3 LastStimulusLocalPosition => lastStimulusLocalPosition;
+
+        public string LastAwarenessReason => lastAwarenessReason;
+
+        public float CurrentDisturbanceScore => currentDisturbanceScore;
 
         public float ActiveAreaRangeMeters => activeAreaProfile != null ? activeAreaProfile.RangeMeters : Mathf.Max(1.2f, RadiusMeters * 4f);
 
@@ -274,6 +302,9 @@ namespace Hollow.Combat
             sightRadiusMeters = Definition.SightRadiusMeters;
             sightAngleDegrees = Definition.SightAngleDegrees;
             hearingRadiusMeters = Definition.HearingRadiusMeters;
+            hearingSensitivityMultiplier = Definition.HearingSensitivityMultiplier;
+            disturbanceEscalationThreshold = Definition.DisturbanceEscalationThreshold;
+            investigationDurationSeconds = Definition.InvestigationDurationSeconds;
             lungeAttackEnabled = Definition.LungeAttackEnabled;
             lungeTriggerRangeMeters = Definition.LungeTriggerRangeMeters;
             lungeWindupSeconds = Definition.LungeWindupSeconds;
@@ -318,6 +349,13 @@ namespace Hollow.Combat
             lastBehaviorTreeNodeId = string.Empty;
             lastBehaviorCommand = string.Empty;
             lastBehaviorReason = string.Empty;
+            lastStimulusKind = EnemyStimulusKind.Footstep;
+            lastStimulusTier = EnemyStimulusTier.Quiet;
+            lastStimulusTime = float.NegativeInfinity;
+            lastStimulusLocalPosition = Vector3.zero;
+            lastAwarenessReason = string.Empty;
+            currentDisturbanceScore = 0f;
+            investigationEndTime = float.NegativeInfinity;
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
             Health.Configure(tuning.ApplyHealth(Definition.MaxHealth));
@@ -363,6 +401,10 @@ namespace Hollow.Combat
             sightRadiusMeters = bossDefinition.SightRadiusMeters;
             sightAngleDegrees = bossDefinition.SightAngleDegrees;
             hearingRadiusMeters = bossDefinition.HearingRadiusMeters;
+            var bossDisturbance = EnemyDefinition.DefaultDisturbanceTuningFor(EnemyArchetypeId.Boss, EnemyBehaviorId.BossWarden, EnemyMovementMode.Grounded);
+            hearingSensitivityMultiplier = bossDisturbance.x;
+            disturbanceEscalationThreshold = bossDisturbance.y;
+            investigationDurationSeconds = bossDisturbance.z;
             lungeAttackEnabled = false;
             lungeContactAttempted = false;
             chargeContactAttempted = false;
@@ -387,6 +429,13 @@ namespace Hollow.Combat
             warningEndTime = 0f;
             awarenessState = EnemyAwarenessState.Engaged;
             facingDirection = Vector3.forward;
+            lastStimulusKind = EnemyStimulusKind.Footstep;
+            lastStimulusTier = EnemyStimulusTier.Quiet;
+            lastStimulusTime = float.NegativeInfinity;
+            lastStimulusLocalPosition = Vector3.zero;
+            lastAwarenessReason = string.Empty;
+            currentDisturbanceScore = 0f;
+            investigationEndTime = float.NegativeInfinity;
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
             transform.localScale = Vector3.one * bossDefinition.VisualScale;
             Health.Configure(bossDefinition.MaxHealth);
@@ -566,6 +615,11 @@ namespace Hollow.Combat
                 case EnemyBehaviorCommandKind.Hold:
                     if (Disposition == EnemyInstinctDisposition.Sentinel)
                     {
+                        if (HasActiveInvestigation(timeSeconds))
+                        {
+                            FacePosition(lastStimulusLocalPosition);
+                        }
+
                         TickSentinelHold(deltaTime);
                     }
 
@@ -583,6 +637,11 @@ namespace Hollow.Combat
                     MoveFleeIntent(deltaTime, timeSeconds, distanceToPlayer, Mathf.Max(0.1f, command.SpeedMultiplier));
                     return true;
                 case EnemyBehaviorCommandKind.Wander:
+                    if (TryMoveInvestigationIntent(deltaTime, timeSeconds, Mathf.Max(0.1f, command.SpeedMultiplier)))
+                    {
+                        return true;
+                    }
+
                     MoveInDirection(IsCritterBehavior() ? ResolveCritterWanderDirection(timeSeconds) : ResolveInstinctWanderDirection(timeSeconds), deltaTime, Mathf.Max(0.1f, command.SpeedMultiplier));
                     return true;
                 case EnemyBehaviorCommandKind.StartMeleeAction:
@@ -651,6 +710,42 @@ namespace Hollow.Combat
                 facingDirection = delta.normalized;
                 transform.localPosition = before + direction * speedMetersPerSecond * speedMultiplier * Mathf.Max(0f, deltaTime);
             }
+        }
+
+        private bool TryMoveInvestigationIntent(float deltaTime, float timeSeconds, float speedMultiplier)
+        {
+            if (!HasActiveInvestigation(timeSeconds) || awarenessState == EnemyAwarenessState.Engaged)
+            {
+                return false;
+            }
+
+            var delta = lastStimulusLocalPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.04f)
+            {
+                FacePosition(lastStimulusLocalPosition);
+                return Disposition is EnemyInstinctDisposition.Sentinel or EnemyInstinctDisposition.Territorial;
+            }
+
+            if (Disposition == EnemyInstinctDisposition.Prey)
+            {
+                MoveInDirection(-delta.normalized, deltaTime, Mathf.Max(0.55f, speedMultiplier));
+                return true;
+            }
+
+            if (Disposition == EnemyInstinctDisposition.Sentinel)
+            {
+                FacePosition(lastStimulusLocalPosition);
+                return true;
+            }
+
+            MoveInDirection(delta.normalized, deltaTime, Mathf.Min(0.85f, speedMultiplier));
+            return true;
+        }
+
+        private bool HasActiveInvestigation(float timeSeconds)
+        {
+            return timeSeconds <= investigationEndTime && lastStimulusTime > float.NegativeInfinity;
         }
 
         private void MoveAwayFromPlayer(float deltaTime, float speedMultiplier)
@@ -1456,54 +1551,215 @@ namespace Hollow.Combat
 
         public void ReceiveStimulus(EnemyStimulusKind kind, Vector3 stimulusLocalPosition, float timeSeconds)
         {
-            if (!IsAlive || bossRuntime != null)
-            {
-                return;
-            }
+            ReceiveStimulus(kind, stimulusLocalPosition, timeSeconds, EnemyStimulusTierExtensions.DefaultFor(kind), string.Empty);
+        }
 
-            if (kind == EnemyStimulusKind.Damage || kind == EnemyStimulusKind.Proximity)
-            {
-                ForceEngaged();
-                return;
-            }
+        public void ReceiveStimulus(EnemyStimulusKind kind, Vector3 stimulusLocalPosition, float timeSeconds, EnemyStimulusTier tier)
+        {
+            ReceiveStimulus(kind, stimulusLocalPosition, timeSeconds, tier, string.Empty);
+        }
 
-            var hearingRadius = HearingRadiusMeters * HearingMultiplierFor(kind);
-            if (hearingRadius <= 0f)
+        public void ReceiveStimulus(EnemyStimulusKind kind, Vector3 stimulusLocalPosition, float timeSeconds, EnemyStimulusTier tier, string context)
+        {
+            if (!IsAlive || bossRuntime != null || bossDefinition != null || archetypeId == EnemyArchetypeId.Boss)
             {
                 return;
             }
 
             var distance = Vector3.Distance(Flat(transform.localPosition), Flat(stimulusLocalPosition));
-            if (distance > hearingRadius)
+            var bypassHearing = kind is EnemyStimulusKind.Damage or EnemyStimulusKind.Proximity or EnemyStimulusKind.Bump ||
+                                tier == EnemyStimulusTier.Violent;
+            var hearingRadius = EffectiveHearingRadius(kind, tier);
+            if (!bypassHearing && (hearingRadius <= 0f || distance > hearingRadius))
             {
                 return;
             }
 
-            if (kind == EnemyStimulusKind.Footstep)
+            RecordStimulus(kind, tier, stimulusLocalPosition, timeSeconds, distance, hearingRadius, context);
+
+            if (kind == EnemyStimulusKind.Damage || tier == EnemyStimulusTier.Violent)
             {
-                if (behaviorId == EnemyBehaviorId.SpittingPod)
-                {
-                    ForceEngaged();
+                ForceEngaged("violent_disturbance");
+                return;
+            }
+
+            if (kind is EnemyStimulusKind.Proximity or EnemyStimulusKind.Bump)
+            {
+                ApplyCloseDisturbance(kind, tier);
+                return;
+            }
+
+            if (kind == EnemyStimulusKind.Footstep && tier == EnemyStimulusTier.Quiet)
+            {
+                ApplyFootstepDisturbance();
+                return;
+            }
+
+            ApplyActionDisturbance(kind, tier);
+        }
+
+        private void RecordStimulus(
+            EnemyStimulusKind kind,
+            EnemyStimulusTier tier,
+            Vector3 stimulusLocalPosition,
+            float timeSeconds,
+            float distance,
+            float hearingRadius,
+            string context)
+        {
+            if (lastStimulusTime > float.NegativeInfinity &&
+                timeSeconds - lastStimulusTime > InvestigationDurationSeconds * 1.75f)
+            {
+                currentDisturbanceScore *= 0.35f;
+            }
+
+            var distanceWeight = kind is EnemyStimulusKind.Proximity or EnemyStimulusKind.Bump
+                ? 1.25f
+                : Mathf.Lerp(1.25f, 0.75f, Mathf.Clamp01(distance / Mathf.Max(0.1f, hearingRadius)));
+            currentDisturbanceScore = Mathf.Clamp(
+                currentDisturbanceScore + tier.Score() * distanceWeight,
+                0f,
+                DisturbanceEscalationThreshold * 3f);
+            lastStimulusKind = kind;
+            lastStimulusTier = tier;
+            lastStimulusTime = timeSeconds;
+            lastStimulusLocalPosition = stimulusLocalPosition;
+            investigationEndTime = timeSeconds + InvestigationDurationSeconds;
+            lastAwarenessReason = string.IsNullOrWhiteSpace(context)
+                ? $"{kind}:{tier}"
+                : $"{kind}:{tier}:{context}";
+            FacePosition(stimulusLocalPosition);
+        }
+
+        private void ApplyFootstepDisturbance()
+        {
+            switch (Disposition)
+            {
+                case EnemyInstinctDisposition.Prey:
+                    StepSoftAwareness("prey_footstep");
                     return;
-                }
+                case EnemyInstinctDisposition.Sentinel:
+                    SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "sentinel_heard_footstep");
+                    if (currentDisturbanceScore >= DisturbanceEscalationThreshold)
+                    {
+                        ForceEngaged("sentinel_footstep_threshold");
+                    }
 
-                if (awarenessState == EnemyAwarenessState.Unaware)
-                {
-                    awarenessState = EnemyAwarenessState.Suspicious;
-                }
-                else if (awarenessState == EnemyAwarenessState.Suspicious)
-                {
-                    awarenessState = EnemyAwarenessState.Alerted;
-                }
-                else if (Disposition == EnemyInstinctDisposition.Territorial && awarenessState == EnemyAwarenessState.Alerted)
-                {
-                    ForceEngaged();
-                }
+                    return;
+                case EnemyInstinctDisposition.Territorial:
+                    if (awarenessState == EnemyAwarenessState.Alerted &&
+                        currentDisturbanceScore >= DisturbanceEscalationThreshold)
+                    {
+                        ForceEngaged("territorial_repeated_footstep");
+                    }
+                    else
+                    {
+                        SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "territorial_warning_footstep");
+                    }
 
-                return;
+                    return;
+                case EnemyInstinctDisposition.Mindless:
+                    SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "mindless_heard_footstep");
+                    if (currentDisturbanceScore >= DisturbanceEscalationThreshold)
+                    {
+                        ForceEngaged("mindless_footstep_pressure");
+                    }
+
+                    return;
+                default:
+                    if (currentDisturbanceScore >= DisturbanceEscalationThreshold)
+                    {
+                        ForceEngaged("predator_footstep_threshold");
+                    }
+                    else
+                    {
+                        SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "predator_investigate_footstep");
+                    }
+
+                    return;
             }
+        }
 
-            ForceEngaged();
+        private void ApplyCloseDisturbance(EnemyStimulusKind kind, EnemyStimulusTier tier)
+        {
+            switch (Disposition)
+            {
+                case EnemyInstinctDisposition.Prey:
+                    ForceEngaged($"{kind}_prey_panic");
+                    return;
+                case EnemyInstinctDisposition.Sentinel:
+                    SetAwarenessAtLeast(EnemyAwarenessState.Alerted, $"{kind}_sentinel_hold");
+                    if (currentDisturbanceScore >= DisturbanceEscalationThreshold || tier >= EnemyStimulusTier.Loud)
+                    {
+                        ForceEngaged($"{kind}_sentinel_threshold");
+                    }
+
+                    return;
+                case EnemyInstinctDisposition.Territorial:
+                    if (awarenessState == EnemyAwarenessState.Alerted ||
+                        currentDisturbanceScore >= DisturbanceEscalationThreshold * 1.8f ||
+                        tier >= EnemyStimulusTier.Loud)
+                    {
+                        ForceEngaged($"{kind}_territorial_commit");
+                    }
+                    else
+                    {
+                        SetAwarenessAtLeast(EnemyAwarenessState.Alerted, $"{kind}_territorial_warning");
+                    }
+
+                    return;
+                case EnemyInstinctDisposition.Mindless:
+                    ForceEngaged($"{kind}_mindless_pressure");
+                    return;
+                default:
+                    ForceEngaged($"{kind}_predator_pressure");
+                    return;
+            }
+        }
+
+        private void ApplyActionDisturbance(EnemyStimulusKind kind, EnemyStimulusTier tier)
+        {
+            var isAttackLike = kind is EnemyStimulusKind.MeleeAttack or EnemyStimulusKind.RangedAttack or EnemyStimulusKind.GuardImpact;
+            switch (Disposition)
+            {
+                case EnemyInstinctDisposition.Prey:
+                    if (isAttackLike || currentDisturbanceScore >= DisturbanceEscalationThreshold || tier >= EnemyStimulusTier.Loud)
+                    {
+                        ForceEngaged("prey_panic_action");
+                    }
+                    else
+                    {
+                        SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "prey_startled_action");
+                    }
+
+                    return;
+                case EnemyInstinctDisposition.Sentinel:
+                    SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "sentinel_action_attention");
+                    if (tier >= EnemyStimulusTier.Loud || currentDisturbanceScore >= DisturbanceEscalationThreshold)
+                    {
+                        ForceEngaged("sentinel_action_threshold");
+                    }
+
+                    return;
+                case EnemyInstinctDisposition.Territorial:
+                    if (tier >= EnemyStimulusTier.Loud ||
+                        (awarenessState == EnemyAwarenessState.Alerted && currentDisturbanceScore >= DisturbanceEscalationThreshold))
+                    {
+                        ForceEngaged("territorial_action_commit");
+                    }
+                    else
+                    {
+                        SetAwarenessAtLeast(EnemyAwarenessState.Alerted, "territorial_action_warning");
+                    }
+
+                    return;
+                case EnemyInstinctDisposition.Mindless:
+                    ForceEngaged("mindless_action_pressure");
+                    return;
+                default:
+                    ForceEngaged("predator_action_engage");
+                    return;
+            }
         }
 
         private void UpdateAwareness(float timeSeconds, float distanceToPlayer)
@@ -1596,7 +1852,17 @@ namespace Hollow.Combat
             }
         }
 
-        private void ForceEngaged()
+        private void FacePosition(Vector3 localPosition)
+        {
+            var delta = localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude > 0.01f)
+            {
+                facingDirection = delta.normalized;
+            }
+        }
+
+        private void ForceEngaged(string reason = "engaged")
         {
             if (awarenessState != EnemyAwarenessState.Engaged)
             {
@@ -1604,6 +1870,41 @@ namespace Hollow.Combat
             }
 
             awarenessState = EnemyAwarenessState.Engaged;
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                lastAwarenessReason = reason;
+            }
+        }
+
+        private void StepSoftAwareness(string reason)
+        {
+            if (awarenessState == EnemyAwarenessState.Unaware)
+            {
+                awarenessState = EnemyAwarenessState.Suspicious;
+            }
+            else if (awarenessState == EnemyAwarenessState.Suspicious)
+            {
+                awarenessState = EnemyAwarenessState.Alerted;
+            }
+
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                lastAwarenessReason = reason;
+            }
+        }
+
+        private void SetAwarenessAtLeast(EnemyAwarenessState minimum, string reason)
+        {
+            var next = MaxAwareness(awarenessState, minimum);
+            if (next != awarenessState)
+            {
+                awarenessState = next;
+            }
+
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                lastAwarenessReason = reason;
+            }
         }
 
         private static EnemyAwarenessState MaxAwareness(EnemyAwarenessState left, EnemyAwarenessState right)
@@ -1623,6 +1924,11 @@ namespace Hollow.Combat
             };
         }
 
+        private float EffectiveHearingRadius(EnemyStimulusKind kind, EnemyStimulusTier tier)
+        {
+            return HearingRadiusMeters * HearingSensitivityMultiplier * HearingMultiplierFor(kind) * tier.HearingMultiplier();
+        }
+
         private static float HearingMultiplierFor(EnemyStimulusKind kind)
         {
             return kind switch
@@ -1630,6 +1936,8 @@ namespace Hollow.Combat
                 EnemyStimulusKind.Footstep => 0.75f,
                 EnemyStimulusKind.MeleeAttack => 1.05f,
                 EnemyStimulusKind.RangedAttack => 1.25f,
+                EnemyStimulusKind.Roll => 0.95f,
+                EnemyStimulusKind.GuardImpact => 1.15f,
                 _ => 1f
             };
         }
@@ -2119,6 +2427,19 @@ namespace Hollow.Combat
         private void OnDamaged(CombatantHealth _)
         {
             lastDamagedTime = lastTickTime > 0f ? lastTickTime : Time.time;
+            if (bossRuntime == null && bossDefinition == null && archetypeId != EnemyArchetypeId.Boss)
+            {
+                var stimulusPosition = playerController != null ? playerController.transform.localPosition : transform.localPosition;
+                RecordStimulus(
+                    EnemyStimulusKind.Damage,
+                    EnemyStimulusTier.Violent,
+                    stimulusPosition,
+                    lastDamagedTime,
+                    Vector3.Distance(Flat(transform.localPosition), Flat(stimulusPosition)),
+                    EffectiveHearingRadius(EnemyStimulusKind.Damage, EnemyStimulusTier.Violent),
+                    "health_damaged");
+            }
+
             if (IsCritterBehavior())
             {
                 retreatBurstEndTime = lastDamagedTime + RetreatBurstSeconds;
@@ -2126,7 +2447,7 @@ namespace Hollow.Combat
                 CancelReadableActionForStartle();
             }
 
-            ForceEngaged();
+            ForceEngaged("health_damaged");
         }
 
         private void CancelReadableActionForStartle()
@@ -2401,7 +2722,23 @@ namespace Hollow.Combat
                 return;
             }
 
-            ReceiveStimulus(EnemyStimulusKind.Proximity, playerController.transform.localPosition, timeSeconds);
+            SeparateFromPlayerBump();
+            ReceiveStimulus(EnemyStimulusKind.Bump, playerController.transform.localPosition, timeSeconds, EnemyStimulusTier.Normal, "body_overlap");
+        }
+
+        private void SeparateFromPlayerBump()
+        {
+            var away = transform.localPosition - playerController.transform.localPosition;
+            away.y = 0f;
+            if (away.sqrMagnitude <= 0.001f)
+            {
+                away = -FacingDirection;
+            }
+
+            var desired = transform.localPosition + away.normalized * 0.08f;
+            transform.localPosition = movementMode == EnemyMovementMode.Flying
+                ? RoomLocalCollision.ResolveFlyingMove(roomRuntimeRoot, desired, radiusMeters)
+                : RoomLocalCollision.ResolveMove(roomRuntimeRoot, transform.localPosition, desired, radiusMeters);
         }
 
         private void MarkBodyContactDamageAttempted()

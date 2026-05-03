@@ -288,6 +288,7 @@ namespace Hollow.Combat
             rollInvulnerableEndTime = timeSeconds + RollInvulnerabilitySeconds;
             lastActionEvaluationTime = timeSeconds;
             attackExecutionState = PlayerAttackExecutionState.Rolling;
+            combatController?.EmitPlayerStimulus(EnemyStimulusKind.Roll, transform.localPosition, timeSeconds, EnemyStimulusTier.Normal, "roll");
             return true;
         }
 
@@ -554,7 +555,12 @@ namespace Hollow.Combat
                 SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, pendingAttack);
             }
 
-            combatController.EmitPlayerStimulus(EnemyStimulusKind.RangedAttack, transform.localPosition, timeSeconds);
+            combatController.EmitPlayerStimulus(
+                EnemyStimulusKind.RangedAttack,
+                transform.localPosition,
+                timeSeconds,
+                RoomCombatController.StimulusTierForPlayerAttack(pendingAttackKind),
+                pendingAttackKind == AttackKind.Heavy ? "heavy_ranged" : "light_ranged");
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Ranged, pendingAttackKind, cardinal);
             AudioPresenter.Play(AudioCueId.ProjectileFire, transform.position);
         }
@@ -571,7 +577,12 @@ namespace Hollow.Combat
             var effectiveRange = EffectiveRange(pendingAttack, WeaponSlot.Melee);
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Melee, pendingAttackKind, cardinal);
             MeleeSwipePresenter.Spawn(transform.parent, transform.localPosition, direction, effectiveRange, pendingAttackKind);
-            combatController.EmitPlayerStimulus(EnemyStimulusKind.MeleeAttack, transform.localPosition, timeSeconds);
+            combatController.EmitPlayerStimulus(
+                EnemyStimulusKind.MeleeAttack,
+                transform.localPosition,
+                timeSeconds,
+                RoomCombatController.StimulusTierForPlayerAttack(pendingAttackKind),
+                pendingAttackKind == AttackKind.Heavy ? "heavy_melee" : "light_melee");
             var radius = Mathf.Max(0.25f, effectiveRange * 0.48f);
             var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, effectiveRange * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);
             var target = combatController.FindEnemyHit(hitCenter, radius);

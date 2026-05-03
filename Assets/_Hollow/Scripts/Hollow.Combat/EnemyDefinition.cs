@@ -25,6 +25,9 @@ namespace Hollow.Combat
         [SerializeField] private float sightRadiusMeters = 6.5f;
         [SerializeField] private float sightAngleDegrees = 150f;
         [SerializeField] private float hearingRadiusMeters = 4.5f;
+        [SerializeField] private float hearingSensitivityMultiplier;
+        [SerializeField] private float disturbanceEscalationThreshold;
+        [SerializeField] private float investigationDurationSeconds;
         [SerializeField] private bool lungeAttackEnabled = true;
         [SerializeField] private float lungeTriggerRangeMeters = 1.4f;
         [SerializeField] private float lungeWindupSeconds = 0.22f;
@@ -87,6 +90,12 @@ namespace Hollow.Combat
 
         public float HearingRadiusMeters => Mathf.Max(0f, hearingRadiusMeters);
 
+        public float HearingSensitivityMultiplier => Mathf.Clamp(hearingSensitivityMultiplier <= 0f ? DefaultDisturbanceTuning.x : hearingSensitivityMultiplier, 0.1f, 3f);
+
+        public float DisturbanceEscalationThreshold => Mathf.Clamp(disturbanceEscalationThreshold <= 0f ? DefaultDisturbanceTuning.y : disturbanceEscalationThreshold, 0.05f, 8f);
+
+        public float InvestigationDurationSeconds => Mathf.Clamp(investigationDurationSeconds <= 0f ? DefaultDisturbanceTuning.z : investigationDurationSeconds, 0.05f, 8f);
+
         public bool LungeAttackEnabled => lungeAttackEnabled;
 
         public float LungeTriggerRangeMeters => Mathf.Max(0.05f, lungeTriggerRangeMeters);
@@ -130,6 +139,8 @@ namespace Hollow.Combat
         public int PoiseBreakThresholdOffset => Mathf.Clamp(poiseBreakThresholdOffset != 0 ? poiseBreakThresholdOffset : DefaultExecution.poiseBreakThresholdOffset, -3, 3);
 
         private AttackExecutionDefaults DefaultExecution => DefaultAttackExecutionFor(archetypeId, behaviorId, movementMode);
+
+        private Vector3 DefaultDisturbanceTuning => DefaultDisturbanceTuningFor(archetypeId, behaviorId, movementMode);
 
         public IReadOnlyList<EnemyAttackProfileDefinition> AttackProfiles
         {
@@ -344,6 +355,7 @@ namespace Hollow.Combat
             var senses = DefaultSensesFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             var lunge = DefaultLungeFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             var execution = DefaultAttackExecutionFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
+            var disturbance = DefaultDisturbanceTuningFor(nextArchetypeId, nextBehaviorId, nextMovementMode);
             ConfigureSenseAndLunge(
                 senses.x,
                 senses.y,
@@ -360,6 +372,7 @@ namespace Hollow.Combat
                 execution.recoveryScale,
                 execution.hitArcDegreesBonus,
                 execution.poiseBreakThresholdOffset);
+            ConfigureDisturbance(disturbance.x, disturbance.y, disturbance.z);
             color = nextColor;
         }
 
@@ -448,6 +461,16 @@ namespace Hollow.Combat
             passiveContactHazardType = contactDamagePolicy == EnemyContactDamagePolicy.PassiveHazard
                 ? nextPassiveContactHazardType
                 : EnemyPassiveContactHazardType.None;
+        }
+
+        public void ConfigureDisturbance(
+            float nextHearingSensitivityMultiplier,
+            float nextDisturbanceEscalationThreshold,
+            float nextInvestigationDurationSeconds)
+        {
+            hearingSensitivityMultiplier = Mathf.Clamp(nextHearingSensitivityMultiplier <= 0f ? 1f : nextHearingSensitivityMultiplier, 0.1f, 3f);
+            disturbanceEscalationThreshold = Mathf.Clamp(nextDisturbanceEscalationThreshold <= 0f ? 1f : nextDisturbanceEscalationThreshold, 0.05f, 8f);
+            investigationDurationSeconds = Mathf.Clamp(nextInvestigationDurationSeconds <= 0f ? 1f : nextInvestigationDurationSeconds, 0.05f, 8f);
         }
 
         public void ConfigureAttackExecutionModifiers(
@@ -785,6 +808,31 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Rat => new LungeDefaults(true, triggerRange, 0.14f, 0.14f, 0.55f, 0.9f),
                 EnemyBehaviorId.Spider => new LungeDefaults(true, triggerRange, 0.12f, 0.16f, 0.7f, 0.85f),
                 _ => new LungeDefaults(true, triggerRange, 0.22f, 0.18f, 0.75f, 1.15f)
+            };
+        }
+
+        public static Vector3 DefaultDisturbanceTuningFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId,
+            EnemyMovementMode nextMovementMode)
+        {
+            if (nextArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return new Vector3(1f, 1.5f, 1.2f);
+            }
+
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.FlyingChaser => new Vector3(1.2f, 1.2f, 1f),
+                EnemyBehaviorId.Charger => new Vector3(1f, 1.4f, 1.1f),
+                EnemyBehaviorId.TurretShooter => new Vector3(1.35f, 1.2f, 1.7f),
+                EnemyBehaviorId.Splitter => new Vector3(1f, 1.45f, 1.2f),
+                EnemyBehaviorId.SpittingPod => new Vector3(1.6f, 0.45f, 1.6f),
+                EnemyBehaviorId.Rat => new Vector3(1.35f, 1.1f, 0.85f),
+                EnemyBehaviorId.Spider => new Vector3(1.45f, 0.9f, 0.7f),
+                _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(1.05f, 1.45f, 1.2f),
+                _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(0.8f, 1.8f, 1.2f),
+                _ => new Vector3(1f, 1.5f, 1.4f)
             };
         }
 

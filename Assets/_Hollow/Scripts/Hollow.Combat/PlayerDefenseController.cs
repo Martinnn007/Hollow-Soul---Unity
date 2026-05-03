@@ -24,6 +24,7 @@ namespace Hollow.Combat
         [SerializeField] private float guardStaminaCostMultiplier = 1f;
         [SerializeField] private bool isGuarding;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
+        [SerializeField] private RoomCombatController combatController;
         [SerializeField] private PlayerWeaponController weaponController;
         [SerializeField] private ShieldGuardProfileDefinition shieldProfile;
 
@@ -76,7 +77,13 @@ namespace Hollow.Combat
 
         public void Bind(RoomRuntimeRoot room)
         {
+            Bind(room, null);
+        }
+
+        public void Bind(RoomRuntimeRoot room, RoomCombatController controller)
+        {
             roomRuntimeRoot = room;
+            combatController = controller;
             ResolveReferences();
         }
 
@@ -313,6 +320,7 @@ namespace Hollow.Combat
             };
             VfxPresenter.Play(cue, transform.position, transform.parent);
             AudioPresenter.Play(audioCue, transform.position);
+            combatController?.EmitPlayerStimulus(EnemyStimulusKind.GuardImpact, transform.localPosition, Time.time, EnemyStimulusTier.Loud, result.ToString());
         }
 
         private void UpdateGuardFacing(GameplayInputSnapshot input)
@@ -374,6 +382,11 @@ namespace Hollow.Combat
             if (roomRuntimeRoot == null)
             {
                 roomRuntimeRoot = GetComponentInParent<RoomRuntimeRoot>() ?? FindAnyObjectByType<RoomRuntimeRoot>();
+            }
+
+            if (combatController == null)
+            {
+                combatController = GetComponentInParent<RoomCombatController>() ?? FindAnyObjectByType<RoomCombatController>();
             }
 
             if (shieldProfile == null)
