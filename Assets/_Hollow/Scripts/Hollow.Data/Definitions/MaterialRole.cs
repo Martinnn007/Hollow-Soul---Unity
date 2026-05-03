@@ -66,6 +66,10 @@ namespace Hollow.Data.Definitions
         ProjectilePower,
         EnemySpittingPod,
         EnemyRat,
-        EnemySpider
+        EnemySpider,
+        EnemySkeletonSword,
+        EnemySkeletonSpear,
+        EnemyKnight,
+        EnemyGiant
     }
 }

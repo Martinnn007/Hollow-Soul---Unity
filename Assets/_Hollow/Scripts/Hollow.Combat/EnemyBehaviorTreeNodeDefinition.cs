@@ -230,6 +230,7 @@ namespace Hollow.Combat
                 EnemyBehaviorConditionKind.CanStartRangedAttack => context.CanStartRangedAttack,
                 EnemyBehaviorConditionKind.CanStartChargeAttack => context.CanStartChargeAttack,
                 EnemyBehaviorConditionKind.CanStartAreaAction => context.CanStartAreaAction(actionId),
+                EnemyBehaviorConditionKind.CanStartGuardAction => context.CanStartGuardAction(actionId),
                 EnemyBehaviorConditionKind.ShouldSentinelEngage => context.ShouldSentinelEngage,
                 EnemyBehaviorConditionKind.DeterministicChance => context.Deterministic01(NodeId) <= Mathf.Clamp01(threshold),
                 EnemyBehaviorConditionKind.BehaviorMatches => context.BehaviorId == behaviorId,

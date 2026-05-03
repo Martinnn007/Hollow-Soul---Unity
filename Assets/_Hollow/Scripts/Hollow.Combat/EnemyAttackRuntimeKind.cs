@@ -11,6 +11,8 @@ namespace Hollow.Combat
         Summon = 6,
         Split = 7,
         Movement = 8,
-        Area = 9
+        Area = 9,
+        WeaponMelee = 10,
+        Defense = 11
     }
 }

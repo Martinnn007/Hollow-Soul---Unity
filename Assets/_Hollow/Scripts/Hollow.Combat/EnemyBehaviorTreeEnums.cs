@@ -28,7 +28,8 @@ namespace Hollow.Combat
         DeterministicChance = 14,
         BehaviorMatches = 15,
         DispositionMatches = 16,
-        IntelligenceAtLeast = 17
+        IntelligenceAtLeast = 17,
+        CanStartGuardAction = 18
     }
 
     public enum EnemyBehaviorCommandKind
@@ -44,6 +45,7 @@ namespace Hollow.Combat
         StartRangedAction = 8,
         StartChargeAction = 9,
         StartAreaAction = 10,
-        StartFeintWarning = 11
+        StartFeintWarning = 11,
+        StartGuardAction = 12
     }
 }

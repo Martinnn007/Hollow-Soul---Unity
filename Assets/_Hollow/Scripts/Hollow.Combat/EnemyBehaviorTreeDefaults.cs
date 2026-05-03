@@ -33,6 +33,10 @@ namespace Hollow.Combat
             "spawnEnemySpittingPod",
             "spawnEnemyRat",
             "spawnEnemySpider",
+            "spawnEnemySkeletonSword",
+            "spawnEnemySkeletonSpear",
+            "spawnEnemyKnight",
+            "spawnEnemyGiant",
             "spawnEnemyBoss"
         };
 
@@ -52,6 +56,10 @@ namespace Hollow.Combat
                 "spawnEnemySpittingPod" => BuildPod(builder),
                 "spawnEnemyRat" => BuildRat(builder),
                 "spawnEnemySpider" => BuildSpider(builder),
+                "spawnEnemySkeletonSword" => BuildSkeletonSword(builder),
+                "spawnEnemySkeletonSpear" => BuildSkeletonSpear(builder),
+                "spawnEnemyKnight" => BuildKnight(builder),
+                "spawnEnemyGiant" => BuildGiant(builder),
                 "spawnEnemyBoss" => BuildBossFallback(builder),
                 _ => BuildNormal(builder)
             };
@@ -190,6 +198,47 @@ namespace Hollow.Combat
                 b.Action("spider_wander", EnemyBehaviorCommandKind.Wander, speed: 1f, reason: "Spider skitters erratically."));
         }
 
+        private static EnemyBehaviorTreeNodeDefinition BuildSkeletonSword(TreeBuilder b)
+        {
+            return b.Selector(
+                "skeleton_sword_root",
+                b.Sequence("skeleton_sword_slash", b.CanMelee("rusty_slash"), b.StartMelee("rusty_slash")),
+                b.Sequence("skeleton_sword_backhand", b.CanMelee("backhand_slash"), b.StartMelee("backhand_slash")),
+                b.Action("skeleton_sword_pressure", EnemyBehaviorCommandKind.MovePreferredRange, speed: 0.95f, reason: "Sword skeleton pressures into committed slash range."));
+        }
+
+        private static EnemyBehaviorTreeNodeDefinition BuildSkeletonSpear(TreeBuilder b)
+        {
+            return b.Selector(
+                "skeleton_spear_root",
+                b.Sequence("skeleton_spear_thrust", b.CanMelee("spear_thrust"), b.StartMelee("spear_thrust")),
+                b.Sequence("skeleton_spear_sweep", b.CanMelee("spear_sweep"), b.StartMelee("spear_sweep")),
+                b.Action("skeleton_spear_range", EnemyBehaviorCommandKind.MovePreferredRange, speed: 0.9f, reason: "Spear skeleton holds a longer weapon range."));
+        }
+
+        private static EnemyBehaviorTreeNodeDefinition BuildKnight(TreeBuilder b)
+        {
+            return b.Selector(
+                "knight_root",
+                b.Weighted(
+                    "knight_choice",
+                    (b.Sequence("knight_guard", b.CanGuard("shield_guard"), b.StartGuard("shield_guard")), 1.15f),
+                    (b.Sequence("knight_slash", b.CanMelee("knight_slash"), b.StartMelee("knight_slash")), 1.45f),
+                    (b.Sequence("knight_thrust", b.CanMelee("knight_thrust"), b.StartMelee("knight_thrust")), 1.05f),
+                    (b.Sequence("knight_bash", b.CanMelee("shield_bash"), b.StartMelee("shield_bash")), 0.75f)),
+                b.Action("knight_guarded_range", EnemyBehaviorCommandKind.MovePreferredRange, speed: 0.8f, reason: "Knight advances carefully behind shield timing."));
+        }
+
+        private static EnemyBehaviorTreeNodeDefinition BuildGiant(TreeBuilder b)
+        {
+            return b.Selector(
+                "giant_root",
+                b.Sequence("giant_overhead_slam", b.CanArea("overhead_slam"), b.StartArea("overhead_slam")),
+                b.Sequence("giant_stomp", b.CanArea("stomp"), b.StartArea("stomp")),
+                b.Sequence("giant_sweep", b.CanMelee("club_sweep"), b.StartMelee("club_sweep")),
+                b.Action("giant_slow_pressure", EnemyBehaviorCommandKind.MovePreferredRange, speed: 0.72f, reason: "Giant slowly enters range for a punishable heavy attack."));
+        }
+
         private static EnemyBehaviorTreeNodeDefinition BuildBossFallback(TreeBuilder b)
         {
             return b.Selector(
@@ -213,6 +262,10 @@ namespace Hollow.Combat
                 "spawnEnemySpittingPod" => "Spitting Pod",
                 "spawnEnemyRat" => "Rat",
                 "spawnEnemySpider" => "Spider",
+                "spawnEnemySkeletonSword" => "Skeleton Sword",
+                "spawnEnemySkeletonSpear" => "Skeleton Spear",
+                "spawnEnemyKnight" => "Knight",
+                "spawnEnemyGiant" => "Giant",
                 "spawnEnemyBoss" => "Generic Boss Spawn",
                 _ => ownerId
             };
@@ -320,6 +373,11 @@ namespace Hollow.Combat
                 return Condition($"can_area_{actionId}", EnemyBehaviorConditionKind.CanStartAreaAction, actionId: actionId);
             }
 
+            public EnemyBehaviorConditionNodeDefinition CanGuard(string actionId)
+            {
+                return Condition($"can_guard_{actionId}", EnemyBehaviorConditionKind.CanStartGuardAction, actionId: actionId);
+            }
+
             public EnemyBehaviorActionNodeDefinition StartMelee(string actionId)
             {
                 return Action($"start_melee_{actionId}", EnemyBehaviorCommandKind.StartMeleeAction, actionId, reason: $"Start melee action {actionId}.");
@@ -328,6 +386,11 @@ namespace Hollow.Combat
             public EnemyBehaviorActionNodeDefinition StartArea(string actionId)
             {
                 return Action($"start_area_{actionId}", EnemyBehaviorCommandKind.StartAreaAction, actionId, reason: $"Start area action {actionId}.");
+            }
+
+            public EnemyBehaviorActionNodeDefinition StartGuard(string actionId)
+            {
+                return Action($"start_guard_{actionId}", EnemyBehaviorCommandKind.StartGuardAction, actionId, reason: $"Start guard action {actionId}.");
             }
         }
     }

@@ -245,6 +245,10 @@ namespace Hollow.Editor.Generation
                 "spawnEnemySpittingPod" => "stationary hearing-driven ballistic lob",
                 "spawnEnemyRat" => "warning squeal, bite, retreat when endangered",
                 "spawnEnemySpider" => "deterministic fight/flee, side-hop bite, hop, bite",
+                "spawnEnemySkeletonSword" => "rusty slash opener, one backhand follow-up, range pressure",
+                "spawnEnemySkeletonSpear" => "long thrust or sweep while holding spear distance",
+                "spawnEnemyKnight" => "medium shield guard, slash/thrust/bash commitment",
+                "spawnEnemyGiant" => "slow club sweep, slam, stomp commitment",
                 _ => "fallback preferred-range pressure"
             };
         }

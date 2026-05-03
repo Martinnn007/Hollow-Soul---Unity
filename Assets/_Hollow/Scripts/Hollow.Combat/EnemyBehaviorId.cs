@@ -10,6 +10,10 @@ namespace Hollow.Combat
         BossWarden = 5,
         SpittingPod = 6,
         Rat = 7,
-        Spider = 8
+        Spider = 8,
+        SkeletonSword = 9,
+        SkeletonSpear = 10,
+        Knight = 11,
+        Giant = 12
     }
 }

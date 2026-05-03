@@ -27,7 +27,9 @@ namespace Hollow.Combat
             string notes,
             float recoverySeconds = -1f,
             float hitArcDegrees = -1f,
-            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium)
+            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium,
+            float activeMovementDistanceMeters = -1f,
+            string comboFollowUpAttackId = "")
         {
             OwnerId = ownerId ?? string.Empty;
             IsBoss = isBoss;
@@ -56,6 +58,8 @@ namespace Hollow.Combat
                 ? hitArcDegrees
                 : EnemyAttackProfileDefinition.DefaultHitArcDegrees(runtimeKind, damageDelivery);
             PoiseBreakThreshold = poiseBreakThreshold;
+            ActiveMovementDistanceMeters = activeMovementDistanceMeters;
+            ComboFollowUpAttackId = comboFollowUpAttackId ?? string.Empty;
         }
 
         public string OwnerId { get; }
@@ -103,6 +107,10 @@ namespace Hollow.Combat
         public float HitArcDegrees { get; }
 
         public ImpactForceClass PoiseBreakThreshold { get; }
+
+        public float ActiveMovementDistanceMeters { get; }
+
+        public string ComboFollowUpAttackId { get; }
 
         public string AssetName => $"{(IsBoss ? "Boss" : "Enemy")}_{OwnerId}_{AttackId}.asset";
     }

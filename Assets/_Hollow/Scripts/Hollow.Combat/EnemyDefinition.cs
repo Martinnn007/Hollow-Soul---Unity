@@ -51,6 +51,7 @@ namespace Hollow.Combat
         [SerializeField] private int poiseBreakThresholdOffset;
         [SerializeField] private List<EnemyAttackProfileDefinition> attackProfiles = new();
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
+        [SerializeField] private EnemyGuardProfileDefinition guardProfile;
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTree;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
@@ -169,6 +170,10 @@ namespace Hollow.Combat
         public EnemyBehaviorTreeDefinition BehaviorTree => behaviorTree != null
             ? behaviorTree
             : EnemyBehaviorTreeDefaults.ResolveEnemyTree(SpawnKind);
+
+        public EnemyGuardProfileDefinition GuardProfile => guardProfile != null
+            ? guardProfile
+            : EnemyGuardProfileDefinition.DefaultForBehavior(BehaviorId);
 
         public Color Color => color;
 
@@ -502,6 +507,11 @@ namespace Hollow.Combat
             behaviorTree = nextBehaviorTree;
         }
 
+        public void ConfigureGuardProfile(EnemyGuardProfileDefinition nextGuardProfile)
+        {
+            guardProfile = nextGuardProfile;
+        }
+
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
         {
             if (attackProfiles != null)
@@ -640,9 +650,15 @@ namespace Hollow.Combat
                 return EnemyBodyClass.Massive;
             }
 
+            if (nextBehaviorId == EnemyBehaviorId.Giant)
+            {
+                return EnemyBodyClass.Massive;
+            }
+
             if (nextArchetypeId == EnemyArchetypeId.Heavy ||
                 nextBehaviorId == EnemyBehaviorId.TurretShooter ||
-                nextBehaviorId == EnemyBehaviorId.SpittingPod)
+                nextBehaviorId == EnemyBehaviorId.SpittingPod ||
+                nextBehaviorId == EnemyBehaviorId.Knight)
             {
                 return EnemyBodyClass.Heavy;
             }
@@ -682,6 +698,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => EnemyIntelligenceLevel.Simple,
                 EnemyBehaviorId.Rat => EnemyIntelligenceLevel.Basic,
                 EnemyBehaviorId.Spider => EnemyIntelligenceLevel.Simple,
+                EnemyBehaviorId.SkeletonSword or EnemyBehaviorId.SkeletonSpear => EnemyIntelligenceLevel.Basic,
+                EnemyBehaviorId.Knight => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.Giant => EnemyIntelligenceLevel.Basic,
                 _ => EnemyIntelligenceLevel.Simple
             };
         }
@@ -721,6 +740,16 @@ namespace Hollow.Combat
                 return EnemyInstinctDisposition.Prey;
             }
 
+            if (nextBehaviorId == EnemyBehaviorId.SkeletonSpear || nextBehaviorId == EnemyBehaviorId.Knight)
+            {
+                return EnemyInstinctDisposition.Sentinel;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.Giant)
+            {
+                return EnemyInstinctDisposition.Mindless;
+            }
+
             if (nextArchetypeId == EnemyArchetypeId.Heavy && nextBehaviorId == EnemyBehaviorId.Chaser)
             {
                 return EnemyInstinctDisposition.Mindless;
@@ -748,6 +777,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new Vector2(5.5f, 8f),
                 EnemyBehaviorId.Rat => new Vector2(1.2f, 2.2f),
                 EnemyBehaviorId.Spider => new Vector2(1f, 1.9f),
+                EnemyBehaviorId.SkeletonSword => new Vector2(1.15f, 1.85f),
+                EnemyBehaviorId.SkeletonSpear => new Vector2(1.75f, 2.75f),
+                EnemyBehaviorId.Knight => new Vector2(1.35f, 2.35f),
+                EnemyBehaviorId.Giant => new Vector2(1.85f, 3.1f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector2(0.9f, 1.45f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector2(1.35f, 2.15f),
                 _ => new Vector2(1.05f, 1.75f)
@@ -773,6 +806,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new Vector3(0f, 0f, 9f),
                 EnemyBehaviorId.Rat => new Vector3(8f, 260f, 7.5f),
                 EnemyBehaviorId.Spider => new Vector3(8.5f, 300f, 8f),
+                EnemyBehaviorId.SkeletonSword => new Vector3(6.5f, 160f, 5f),
+                EnemyBehaviorId.SkeletonSpear => new Vector3(7f, 150f, 5.2f),
+                EnemyBehaviorId.Knight => new Vector3(7f, 140f, 5f),
+                EnemyBehaviorId.Giant => new Vector3(6f, 115f, 4.5f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(7f, 170f, 5f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(5f, 110f, 3.5f),
                 _ => new Vector3(6.5f, 150f, 4.5f)
@@ -799,6 +836,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.Splitter => 1.6f,
                 EnemyBehaviorId.Rat => 0.95f,
                 EnemyBehaviorId.Spider => 1.15f,
+                EnemyBehaviorId.SkeletonSword => 1.45f,
+                EnemyBehaviorId.SkeletonSpear => 2.4f,
+                EnemyBehaviorId.Knight => 2.15f,
+                EnemyBehaviorId.Giant => 2.25f,
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => 1.25f,
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => 1.7f,
                 _ => 1.4f
@@ -830,6 +871,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new Vector3(1.6f, 0.45f, 1.6f),
                 EnemyBehaviorId.Rat => new Vector3(1.35f, 1.1f, 0.85f),
                 EnemyBehaviorId.Spider => new Vector3(1.45f, 0.9f, 0.7f),
+                EnemyBehaviorId.SkeletonSword => new Vector3(1f, 1.45f, 1.2f),
+                EnemyBehaviorId.SkeletonSpear => new Vector3(1.05f, 1.35f, 1.3f),
+                EnemyBehaviorId.Knight => new Vector3(0.95f, 1.25f, 1.5f),
+                EnemyBehaviorId.Giant => new Vector3(0.75f, 1.9f, 1.5f),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new Vector3(1.05f, 1.45f, 1.2f),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new Vector3(0.8f, 1.8f, 1.2f),
                 _ => new Vector3(1f, 1.5f, 1.4f)
@@ -855,6 +900,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => new AttackExecutionDefaults(0.9f, 1f, 0.9f, 0f, 0),
                 EnemyBehaviorId.Rat => new AttackExecutionDefaults(0.75f, 0.85f, 0.65f, 30f, -1),
                 EnemyBehaviorId.Spider => new AttackExecutionDefaults(0.7f, 0.8f, 0.6f, 45f, -1),
+                EnemyBehaviorId.SkeletonSword => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 0),
+                EnemyBehaviorId.SkeletonSpear => new AttackExecutionDefaults(1.05f, 1f, 1f, 0f, 0),
+                EnemyBehaviorId.Knight => new AttackExecutionDefaults(1.08f, 1f, 1.1f, 0f, 1),
+                EnemyBehaviorId.Giant => new AttackExecutionDefaults(1.2f, 1f, 1.15f, 0f, 1),
                 _ when nextArchetypeId == EnemyArchetypeId.Fast => new AttackExecutionDefaults(0.8f, 0.9f, 0.8f, -5f, -1),
                 _ when nextArchetypeId == EnemyArchetypeId.Heavy => new AttackExecutionDefaults(1.25f, 1.05f, 1.15f, 10f, 1),
                 _ => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 0)

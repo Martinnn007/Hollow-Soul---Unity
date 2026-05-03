@@ -104,6 +104,9 @@ namespace Hollow.Combat
         private EnemyAttackProfileDefinition activeMeleeProfile;
         private EnemyAttackProfileDefinition activeAreaProfile;
         private EnemyAttackProfileDefinition activeWarningProfile;
+        private EnemyAttackProfileDefinition activeGuardActionProfile;
+        private EnemyGuardProfileDefinition resolvedGuardProfile;
+        private EnemyGuardProfileDefinition activeGuardProfile;
         private EnemyAttackProfileDefinition activeBossContactProfile;
         private float bossActiveContactEndTime;
         private bool bossActiveContactAttempted;
@@ -111,6 +114,9 @@ namespace Hollow.Combat
         private float areaRecoveryEndTime;
         private bool areaDamageAttempted;
         private float warningEndTime;
+        private float guardActiveEndTime;
+        private float guardRecoveryEndTime;
+        private int activeMeleeComboDepth;
         private float engagedStartTime = float.NegativeInfinity;
         private float nextCritterDecisionTime;
         private bool critterFightDecision;
@@ -208,6 +214,10 @@ namespace Hollow.Combat
 
         public EnemyBehaviorTreeDefinition BehaviorTreeDefinition => behaviorTreeDefinition;
 
+        public EnemyGuardProfileDefinition GuardProfile => resolvedGuardProfile;
+
+        public EnemyGuardProfileDefinition ActiveGuardProfile => activeGuardProfile;
+
         public string LastBehaviorTreeNodeId => lastBehaviorTreeNodeId;
 
         public string LastBehaviorCommand => lastBehaviorCommand;
@@ -293,6 +303,7 @@ namespace Hollow.Combat
             hitArcDegreesBonus = Definition.HitArcDegreesBonus;
             poiseBreakThresholdOffset = Definition.PoiseBreakThresholdOffset;
             behaviorTreeDefinition = Definition.BehaviorTree;
+            resolvedGuardProfile = Definition.GuardProfile;
             speedMetersPerSecond = tuning.ApplySpeed(Definition.SpeedMetersPerSecond);
             contactDamage = tuning.ApplyContactDamage(Definition.ContactDamage);
             contactCooldownSeconds = Definition.ContactCooldownSeconds;
@@ -335,6 +346,8 @@ namespace Hollow.Combat
             activeMeleeProfile = null;
             activeAreaProfile = null;
             activeWarningProfile = null;
+            activeGuardActionProfile = null;
+            activeGuardProfile = null;
             activeBossContactProfile = null;
             bossActiveContactEndTime = 0f;
             bossActiveContactAttempted = false;
@@ -342,6 +355,9 @@ namespace Hollow.Combat
             areaRecoveryEndTime = 0f;
             areaDamageAttempted = false;
             warningEndTime = 0f;
+            guardActiveEndTime = 0f;
+            guardRecoveryEndTime = 0f;
+            activeMeleeComboDepth = 0;
             engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? 0f : float.NegativeInfinity;
             nextCritterDecisionTime = 0f;
             critterFightDecision = false;
@@ -391,6 +407,7 @@ namespace Hollow.Combat
             hitArcDegreesBonus = execution.hitArcDegreesBonus;
             poiseBreakThresholdOffset = execution.poiseBreakThresholdOffset;
             behaviorTreeDefinition = bossDefinition.BehaviorTreeMetadata;
+            resolvedGuardProfile = null;
             speedMetersPerSecond = bossDefinition.SpeedMetersPerSecond;
             contactDamage = bossDefinition.ContactDamage;
             contactCooldownSeconds = bossDefinition.ContactCooldownSeconds;
@@ -420,6 +437,8 @@ namespace Hollow.Combat
             activeMeleeProfile = null;
             activeAreaProfile = null;
             activeWarningProfile = null;
+            activeGuardActionProfile = null;
+            activeGuardProfile = null;
             activeBossContactProfile = null;
             bossActiveContactEndTime = 0f;
             bossActiveContactAttempted = false;
@@ -427,6 +446,9 @@ namespace Hollow.Combat
             areaRecoveryEndTime = 0f;
             areaDamageAttempted = false;
             warningEndTime = 0f;
+            guardActiveEndTime = 0f;
+            guardRecoveryEndTime = 0f;
+            activeMeleeComboDepth = 0;
             awarenessState = EnemyAwarenessState.Engaged;
             facingDirection = Vector3.forward;
             lastStimulusKind = EnemyStimulusKind.Footstep;
@@ -654,6 +676,8 @@ namespace Hollow.Combat
                     return TryAreaAttack(timeSeconds, command.ActionId);
                 case EnemyBehaviorCommandKind.StartFeintWarning:
                     return TryStartFeintWarning(timeSeconds, command.ActionId);
+                case EnemyBehaviorCommandKind.StartGuardAction:
+                    return TryStartGuardAction(timeSeconds, command.ActionId);
                 default:
                     return false;
             }
@@ -793,6 +817,11 @@ namespace Hollow.Combat
         public bool CanStartBehaviorAreaAction(string actionId, float timeSeconds)
         {
             return CanStartAreaAction(actionId, timeSeconds);
+        }
+
+        public bool CanStartBehaviorGuardAction(string actionId, float timeSeconds)
+        {
+            return CanStartGuardAction(actionId, timeSeconds);
         }
 
         public float AttackPriorityScore(float timeSeconds)
@@ -1069,12 +1098,84 @@ namespace Hollow.Combat
             activeMeleeProfile = !string.IsNullOrWhiteSpace(actionId)
                 ? Definition.ResolveAttackProfile(actionId)
                 : ResolveLungeAttackProfile(timeSeconds);
+            activeMeleeComboDepth = 0;
             StartReadabilityState(
                 EnemyReadabilityState.MeleeWindup,
                 ResolvedWindupSeconds(activeMeleeProfile, LungeWindupSeconds),
                 timeSeconds,
                 delta.normalized);
             return true;
+        }
+
+        private bool TryStartGuardAction(float timeSeconds, string actionId)
+        {
+            if (!CanStartGuardAction(actionId, timeSeconds))
+            {
+                return false;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            activeGuardActionProfile = Definition.ResolveAttackProfile(actionId);
+            activeGuardProfile = null;
+            StartReadabilityState(
+                EnemyReadabilityState.GuardWindup,
+                ResolvedWindupSeconds(activeGuardActionProfile, 0.12f),
+                timeSeconds,
+                delta.sqrMagnitude > 0.01f ? delta.normalized : FacingDirection);
+            return true;
+        }
+
+        private bool TryStartMeleeComboFollowUp(float timeSeconds)
+        {
+            if (activeMeleeComboDepth >= 1 ||
+                activeMeleeProfile == null ||
+                Definition == null ||
+                playerController == null ||
+                !IsAlive ||
+                IsInspectionFrozen ||
+                IsInEntryGrace(timeSeconds) ||
+                awarenessState != EnemyAwarenessState.Engaged ||
+                string.IsNullOrWhiteSpace(activeMeleeProfile.ComboFollowUpAttackId))
+            {
+                return false;
+            }
+
+            var followUp = Definition.ResolveAttackProfile(activeMeleeProfile.ComboFollowUpAttackId);
+            if (followUp == null || !IsMeleeRuntimeKind(followUp.RuntimeKind))
+            {
+                return false;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.01f || delta.magnitude > Mathf.Max(0.1f, followUp.RangeMeters))
+            {
+                return false;
+            }
+
+            if (RequiresAttackBudget() && !TryReserveMeleeAttackBudget(timeSeconds))
+            {
+                return false;
+            }
+
+            activeMeleeComboDepth++;
+            activeMeleeProfile = followUp;
+            lungeContactAttempted = false;
+            lungeEndTime = 0f;
+            StartReadabilityState(
+                EnemyReadabilityState.MeleeWindup,
+                ResolvedWindupSeconds(followUp, LungeWindupSeconds),
+                timeSeconds,
+                delta.normalized);
+            return true;
+        }
+
+        private static bool IsMeleeRuntimeKind(EnemyAttackRuntimeKind runtimeKind)
+        {
+            return runtimeKind is EnemyAttackRuntimeKind.MeleeLunge
+                or EnemyAttackRuntimeKind.Contact
+                or EnemyAttackRuntimeKind.WeaponMelee;
         }
 
         private bool TryAreaAttack(float timeSeconds, string actionId)
@@ -1147,17 +1248,31 @@ namespace Hollow.Combat
 
         private bool CanStartMeleeAction(string actionId, float timeSeconds)
         {
+            var profile = !string.IsNullOrWhiteSpace(actionId) && Definition != null ? Definition.ResolveAttackProfile(actionId) : null;
+            var hasExplicitMeleeProfile = profile != null &&
+                                          profile.RuntimeKind is EnemyAttackRuntimeKind.MeleeLunge
+                                              or EnemyAttackRuntimeKind.Contact
+                                              or EnemyAttackRuntimeKind.WeaponMelee;
             if (!IsAlive ||
                 playerController == null ||
+                Definition == null ||
                 IsInspectionFrozen ||
                 IsInEntryGrace(timeSeconds) ||
                 bossRuntime != null ||
                 behaviorId == EnemyBehaviorId.BossWarden ||
-                behaviorId == EnemyBehaviorId.Charger ||
                 behaviorId == EnemyBehaviorId.TurretShooter ||
-                !LungeAttackEnabled ||
                 readabilityState != EnemyReadabilityState.Idle ||
                 timeSeconds < nextAllowedLungeTime)
+            {
+                return false;
+            }
+
+            if (profile != null && !hasExplicitMeleeProfile)
+            {
+                return false;
+            }
+
+            if (profile == null && (behaviorId == EnemyBehaviorId.Charger || !LungeAttackEnabled))
             {
                 return false;
             }
@@ -1171,10 +1286,10 @@ namespace Hollow.Combat
             delta.y = 0f;
             var distance = delta.magnitude;
             var minimumReadableRange = radiusMeters + PlaceholderPlayerController.DefaultRadiusMeters + 0.22f;
-            var profile = !string.IsNullOrWhiteSpace(actionId) ? Definition.ResolveAttackProfile(actionId) : null;
             var triggerRange = Mathf.Max(LungeTriggerRangeMeters, profile != null ? profile.RangeMeters : 0f);
+            var requiresReadableFloor = profile == null || profile.RuntimeKind == EnemyAttackRuntimeKind.MeleeLunge;
             return delta.sqrMagnitude >= 0.01f &&
-                   distance >= minimumReadableRange &&
+                   (!requiresReadableFloor || distance >= minimumReadableRange) &&
                    distance <= triggerRange;
         }
 
@@ -1196,6 +1311,39 @@ namespace Hollow.Combat
 
             var profile = Definition.ResolveAttackProfile(actionId);
             if (profile == null || profile.RuntimeKind != EnemyAttackRuntimeKind.Area)
+            {
+                return false;
+            }
+
+            var delta = playerController.transform.localPosition - transform.localPosition;
+            delta.y = 0f;
+            return delta.sqrMagnitude >= 0.01f &&
+                   delta.magnitude <= Mathf.Max(0.1f, profile.RangeMeters);
+        }
+
+        private bool CanStartGuardAction(string actionId, float timeSeconds)
+        {
+            if (!IsAlive ||
+                playerController == null ||
+                Definition == null ||
+                GuardProfile == null ||
+                IsInspectionFrozen ||
+                IsInEntryGrace(timeSeconds) ||
+                bossRuntime != null ||
+                behaviorId == EnemyBehaviorId.BossWarden ||
+                readabilityState != EnemyReadabilityState.Idle ||
+                timeSeconds < nextAllowedAttackTime)
+            {
+                return false;
+            }
+
+            var profile = Definition.ResolveAttackProfile(actionId);
+            if (profile == null || profile.RuntimeKind != EnemyAttackRuntimeKind.Defense)
+            {
+                return false;
+            }
+
+            if (awarenessState < EnemyAwarenessState.Alerted)
             {
                 return false;
             }
@@ -1429,6 +1577,11 @@ namespace Hollow.Combat
                     return true;
                 }
 
+                if (TryStartMeleeComboFollowUp(timeSeconds))
+                {
+                    return true;
+                }
+
                 lungeRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeMeleeProfile);
                 readabilityState = EnemyReadabilityState.MeleeRecovery;
                 readabilityStateEndTime = lungeRecoveryEndTime;
@@ -1448,6 +1601,7 @@ namespace Hollow.Combat
                 lungeRecoveryEndTime = 0f;
                 activeMeleeProfile = null;
                 lungeContactAttempted = false;
+                activeMeleeComboDepth = 0;
                 return false;
             }
 
@@ -1508,6 +1662,52 @@ namespace Hollow.Combat
                 readabilityStateEndTime = 0f;
                 warningEndTime = 0f;
                 activeWarningProfile = null;
+                return false;
+            }
+
+            if (readabilityState == EnemyReadabilityState.GuardWindup)
+            {
+                if (timeSeconds < readabilityStateEndTime)
+                {
+                    return true;
+                }
+
+                activeGuardProfile = GuardProfile;
+                var profile = activeGuardActionProfile;
+                guardActiveEndTime = timeSeconds + ResolvedActiveSeconds(profile, 0.65f);
+                nextAllowedAttackTime = timeSeconds + (profile != null ? profile.CooldownSeconds : 1.25f);
+                readabilityState = EnemyReadabilityState.GuardActive;
+                readabilityStateEndTime = guardActiveEndTime;
+                return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.GuardActive)
+            {
+                if (timeSeconds < guardActiveEndTime)
+                {
+                    return true;
+                }
+
+                activeGuardProfile = null;
+                guardRecoveryEndTime = timeSeconds + ResolvedRecoverySeconds(activeGuardActionProfile);
+                readabilityState = EnemyReadabilityState.GuardRecovery;
+                readabilityStateEndTime = guardRecoveryEndTime;
+                return true;
+            }
+
+            if (readabilityState == EnemyReadabilityState.GuardRecovery)
+            {
+                if (timeSeconds < guardRecoveryEndTime)
+                {
+                    return true;
+                }
+
+                readabilityState = EnemyReadabilityState.Idle;
+                readabilityStateEndTime = 0f;
+                guardActiveEndTime = 0f;
+                guardRecoveryEndTime = 0f;
+                activeGuardActionProfile = null;
+                activeGuardProfile = null;
                 return false;
             }
 
@@ -2172,7 +2372,10 @@ namespace Hollow.Combat
             direction.y = 0f;
             facingDirection = direction.normalized;
             var activeSeconds = ResolvedActiveSeconds(activeMeleeProfile, LungeActiveSeconds);
-            var speed = LungeDistanceMeters / activeSeconds;
+            var moveDistance = activeMeleeProfile != null && activeMeleeProfile.HasAuthoredActiveMovementDistance
+                ? activeMeleeProfile.ActiveMovementDistanceMeters
+                : LungeDistanceMeters;
+            var speed = moveDistance / activeSeconds;
             var desired = transform.localPosition + direction.normalized * speed * Mathf.Max(0f, deltaTime);
             transform.localPosition = movementMode == EnemyMovementMode.Flying
                 ? RoomLocalCollision.ResolveFlyingMove(roomRuntimeRoot, desired, radiusMeters)
@@ -2362,12 +2565,16 @@ namespace Hollow.Combat
                 return false;
             }
 
-            if (timeSeconds < nextAllowedContactTime)
+            if (IsPassiveHazardBody() && timeSeconds < nextAllowedContactTime)
             {
                 return false;
             }
 
-            nextAllowedContactTime = timeSeconds + contactCooldownSeconds;
+            if (IsPassiveHazardBody())
+            {
+                nextAllowedContactTime = timeSeconds + contactCooldownSeconds;
+            }
+
             MarkBodyContactDamageAttempted();
             var feelProfile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
             var attackProfile = ResolveContactAttackProfile();
@@ -2470,15 +2677,20 @@ namespace Hollow.Combat
             areaActiveEndTime = 0f;
             areaRecoveryEndTime = 0f;
             warningEndTime = 0f;
+            guardActiveEndTime = 0f;
+            guardRecoveryEndTime = 0f;
             lungeContactAttempted = false;
             chargeContactAttempted = false;
             rangedProjectileFired = false;
             areaDamageAttempted = false;
+            activeMeleeComboDepth = 0;
             activeChargeProfile = null;
             activeRangedProfile = null;
             activeMeleeProfile = null;
             activeAreaProfile = null;
             activeWarningProfile = null;
+            activeGuardActionProfile = null;
+            activeGuardProfile = null;
         }
 
         public int ModifyIncomingDamage(DamageRequest request, int currentAmount)
@@ -2486,6 +2698,19 @@ namespace Hollow.Combat
             if (currentAmount <= 0 || bossRuntime != null || !IsAlive || !IsPlayerAuthoredDamageSource(request.Source))
             {
                 return currentAmount;
+            }
+
+            if (readabilityState == EnemyReadabilityState.GuardActive &&
+                activeGuardProfile != null &&
+                IsIncomingHitInsideGuardArc(request))
+            {
+                var reducedAmount = activeGuardProfile.ApplyReduction(request, currentAmount);
+                if (activeGuardProfile.BreaksOn(request))
+                {
+                    InterruptGuardIntoRecovery(activeGuardProfile);
+                }
+
+                return reducedAmount;
             }
 
             var profile = ActiveWindupProfile();
@@ -2501,6 +2726,30 @@ namespace Hollow.Combat
 
             InterruptWindupIntoRecovery(profile);
             return currentAmount;
+        }
+
+        private bool IsIncomingHitInsideGuardArc(DamageRequest request)
+        {
+            if (request.Source == null || activeGuardProfile == null)
+            {
+                return false;
+            }
+
+            var toSource = request.Source.transform.position - transform.position;
+            toSource.y = 0f;
+            if (toSource.sqrMagnitude <= 0.001f)
+            {
+                return true;
+            }
+
+            var forward = TelegraphDirection.sqrMagnitude > 0.001f ? TelegraphDirection : FacingDirection;
+            forward.y = 0f;
+            if (forward.sqrMagnitude <= 0.001f)
+            {
+                forward = Vector3.forward;
+            }
+
+            return Vector3.Angle(forward.normalized, toSource.normalized) <= activeGuardProfile.FrontalArcDegrees * 0.5f;
         }
 
         private bool IsInterruptibleWindup()
@@ -2556,6 +2805,18 @@ namespace Hollow.Combat
                 areaDamageAttempted = false;
             }
 
+            readabilityStateEndTime = recoveryEnd;
+        }
+
+        private void InterruptGuardIntoRecovery(EnemyGuardProfileDefinition profile)
+        {
+            var timeSeconds = lastTickTime > 0f ? lastTickTime : Time.time;
+            var recoveryEnd = timeSeconds + (profile != null ? profile.GuardBreakRecoverySeconds : 0.35f);
+            activeGuardProfile = null;
+            activeGuardActionProfile = null;
+            guardActiveEndTime = 0f;
+            guardRecoveryEndTime = recoveryEnd;
+            readabilityState = EnemyReadabilityState.GuardRecovery;
             readabilityStateEndTime = recoveryEnd;
         }
 
@@ -2965,6 +3226,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => MaterialRole.EnemySpittingPod,
                 EnemyBehaviorId.Rat => MaterialRole.EnemyRat,
                 EnemyBehaviorId.Spider => MaterialRole.EnemySpider,
+                EnemyBehaviorId.SkeletonSword => MaterialRole.EnemySkeletonSword,
+                EnemyBehaviorId.SkeletonSpear => MaterialRole.EnemySkeletonSpear,
+                EnemyBehaviorId.Knight => MaterialRole.EnemyKnight,
+                EnemyBehaviorId.Giant => MaterialRole.EnemyGiant,
                 EnemyBehaviorId.BossWarden => MaterialRole.EnemyBoss,
                 EnemyBehaviorId.FlyingChaser => MaterialRole.EnemyFlying,
                 _ => definition.ArchetypeId switch
@@ -2992,6 +3257,10 @@ namespace Hollow.Combat
                 EnemyBehaviorId.SpittingPod => PresentationPrefabRole.EnemySpittingPod,
                 EnemyBehaviorId.Rat => PresentationPrefabRole.EnemyRat,
                 EnemyBehaviorId.Spider => PresentationPrefabRole.EnemySpider,
+                EnemyBehaviorId.SkeletonSword => PresentationPrefabRole.EnemySkeletonSword,
+                EnemyBehaviorId.SkeletonSpear => PresentationPrefabRole.EnemySkeletonSpear,
+                EnemyBehaviorId.Knight => PresentationPrefabRole.EnemyKnight,
+                EnemyBehaviorId.Giant => PresentationPrefabRole.EnemyGiant,
                 EnemyBehaviorId.BossWarden => PresentationPrefabRole.EnemyBoss,
                 EnemyBehaviorId.FlyingChaser => PresentationPrefabRole.EnemyFlying,
                 _ => definition.ArchetypeId switch

@@ -307,7 +307,9 @@ namespace Hollow.Combat
                 or EnemyReadabilityState.RangedActive
                 or EnemyReadabilityState.MeleeWindup
                 or EnemyReadabilityState.MeleeLunge
-                or EnemyReadabilityState.FeintWarning;
+                or EnemyReadabilityState.FeintWarning
+                or EnemyReadabilityState.GuardWindup
+                or EnemyReadabilityState.GuardActive;
             ringRenderer.gameObject.SetActive(showRing);
             aimRenderer.gameObject.SetActive(showAim);
             stateLabel.gameObject.SetActive(profile.ShowWindupLabels && state != EnemyReadabilityState.Idle);
@@ -333,9 +335,12 @@ namespace Hollow.Combat
 
             if (showAim)
             {
-                var role = state is EnemyReadabilityState.Charging or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.RangedActive
-                    ? MaterialRole.CombatTelegraphDanger
-                    : MaterialRole.CombatTelegraphWarning;
+                var role = state switch
+                {
+                    EnemyReadabilityState.GuardActive => MaterialRole.ShieldGuard,
+                    EnemyReadabilityState.Charging or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.RangedActive => MaterialRole.CombatTelegraphDanger,
+                    _ => MaterialRole.CombatTelegraphWarning
+                };
                 MaterialResolver.ApplyTo(aimRenderer, role);
                 var direction = enemy.TelegraphDirection;
                 if (direction.sqrMagnitude > 0.001f)
@@ -348,6 +353,7 @@ namespace Hollow.Combat
                     EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive => Mathf.Max(2.5f, enemy.Definition != null ? enemy.Definition.AttackRangeMeters : 4f),
                     EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge => Mathf.Max(1.0f, enemy.Definition != null ? enemy.Definition.LungeTriggerRangeMeters + enemy.Definition.LungeDistanceMeters : 1.2f),
                     EnemyReadabilityState.FeintWarning => Mathf.Max(0.8f, enemy.RadiusMeters * 2.5f),
+                    EnemyReadabilityState.GuardWindup or EnemyReadabilityState.GuardActive => Mathf.Max(1.0f, enemy.RadiusMeters * 3.2f),
                     _ => Mathf.Max(1.8f, enemy.Definition != null ? enemy.Definition.ChargeSpeedMetersPerSecond * EnemyRuntimeController.ChargeActiveSeconds : 2f)
                 };
                 aimRenderer.transform.localPosition = direction.normalized * (length * 0.5f);
@@ -357,6 +363,7 @@ namespace Hollow.Combat
                     EnemyReadabilityState.RangedWindup or EnemyReadabilityState.RangedActive => 0.065f,
                     EnemyReadabilityState.MeleeWindup or EnemyReadabilityState.MeleeLunge => 0.22f,
                     EnemyReadabilityState.FeintWarning => 0.28f,
+                    EnemyReadabilityState.GuardWindup or EnemyReadabilityState.GuardActive => 0.42f,
                     _ => 0.16f
                 };
                 aimRenderer.transform.localScale = new Vector3(width, 0.035f, length);
@@ -367,6 +374,7 @@ namespace Hollow.Combat
             {
                 EnemyReadabilityState.EntryGrace => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphSafe),
                 EnemyReadabilityState.Charging or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.RangedActive or EnemyReadabilityState.AreaActive or EnemyReadabilityState.BossBurstWindup => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphDanger),
+                EnemyReadabilityState.GuardActive => MaterialResolver.FallbackColorFor(MaterialRole.ShieldGuard),
                 _ => MaterialResolver.FallbackColorFor(MaterialRole.CombatTelegraphWarning)
             };
         }
@@ -390,6 +398,9 @@ namespace Hollow.Combat
                 EnemyReadabilityState.AreaActive => "Stomp!",
                 EnemyReadabilityState.AreaRecovery => "Recover",
                 EnemyReadabilityState.FeintWarning => "Warn",
+                EnemyReadabilityState.GuardWindup => "Guard",
+                EnemyReadabilityState.GuardActive => "Guard!",
+                EnemyReadabilityState.GuardRecovery => "Recover",
                 _ => string.Empty
             };
         }

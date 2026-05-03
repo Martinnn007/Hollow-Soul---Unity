@@ -227,7 +227,8 @@ namespace Hollow.Editor.Validation
                 or EnemyBehaviorCommandKind.StartRangedAction
                 or EnemyBehaviorCommandKind.StartChargeAction
                 or EnemyBehaviorCommandKind.StartAreaAction
-                or EnemyBehaviorCommandKind.StartFeintWarning)
+                or EnemyBehaviorCommandKind.StartFeintWarning
+                or EnemyBehaviorCommandKind.StartGuardAction)
             {
                 ValidateAttackReference(tree, actionId, failures);
             }

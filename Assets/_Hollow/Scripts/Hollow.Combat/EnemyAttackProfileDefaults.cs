@@ -38,6 +38,17 @@ namespace Hollow.Combat
             Enemy("spawnEnemySpider", "startle_hop", "Startle Hop", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.85f, 0.12f, 0.16f, 1.15f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.3f, "Chaotic hop-forward attack chosen after startle."),
             Enemy("spawnEnemySpider", "close_bite", "Close Bite", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.75f, 0.1f, 0.12f, 0.75f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.22f, "Very close panic bite."),
             Enemy("spawnEnemySpider", "side_hop_bite", "Side Hop Bite", EnemyAttackRuntimeKind.MeleeLunge, 1, 0.9f, 0.12f, 0.14f, 1.1f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.26f, "M82 quick side-hop bite prototype.", recoverySeconds: 0.14f, hitArcDegrees: 125f, poiseBreakThreshold: ImpactForceClass.Light),
+            Enemy("spawnEnemySkeletonSword", "rusty_slash", "Rusty Slash", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.35f, 0.28f, 0.14f, 1.45f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.35f, "M84 sword skeleton opener; can chain once into backhand slash.", recoverySeconds: 0.24f, hitArcDegrees: 120f, poiseBreakThreshold: ImpactForceClass.Light, activeMovementDistanceMeters: 0f, comboFollowUpAttackId: "backhand_slash"),
+            Enemy("spawnEnemySkeletonSword", "backhand_slash", "Backhand Slash", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.15f, 0.18f, 0.14f, 1.35f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.3f, "M84 sword skeleton one-follow-up finisher.", recoverySeconds: 0.34f, hitArcDegrees: 140f, poiseBreakThreshold: ImpactForceClass.Light, activeMovementDistanceMeters: 0f),
+            Enemy("spawnEnemySkeletonSpear", "spear_thrust", "Spear Thrust", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.55f, 0.34f, 0.12f, 2.4f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.45f, "M84 spear skeleton narrow reach poke with a small forward step.", recoverySeconds: 0.34f, hitArcDegrees: 55f, poiseBreakThreshold: ImpactForceClass.Medium, activeMovementDistanceMeters: 0.28f),
+            Enemy("spawnEnemySkeletonSpear", "spear_sweep", "Spear Sweep", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.75f, 0.3f, 0.16f, 1.65f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Light, DamageThreatKind.Light, 0.35f, "M84 spear skeleton wide close-range sweep.", recoverySeconds: 0.38f, hitArcDegrees: 160f, poiseBreakThreshold: ImpactForceClass.Light, activeMovementDistanceMeters: 0f),
+            Enemy("spawnEnemyKnight", "shield_guard", "Shield Guard", EnemyAttackRuntimeKind.Defense, 0, 1.25f, 0.12f, 0.65f, 2.25f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Light, 0f, "M84 medium-shield frontal guard window.", recoverySeconds: 0.28f, hitArcDegrees: 150f, poiseBreakThreshold: ImpactForceClass.Heavy, activeMovementDistanceMeters: 0f),
+            Enemy("spawnEnemyKnight", "knight_slash", "Knight Slash", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.6f, 0.36f, 0.16f, 1.65f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.5f, "M84 knight committed slash; can chain once into shield bash.", recoverySeconds: 0.36f, hitArcDegrees: 120f, poiseBreakThreshold: ImpactForceClass.Medium, activeMovementDistanceMeters: 0.08f, comboFollowUpAttackId: "shield_bash"),
+            Enemy("spawnEnemyKnight", "knight_thrust", "Knight Thrust", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.55f, 0.34f, 0.13f, 2.15f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.45f, "M84 knight narrow forward thrust.", recoverySeconds: 0.38f, hitArcDegrees: 65f, poiseBreakThreshold: ImpactForceClass.Medium, activeMovementDistanceMeters: 0.22f),
+            Enemy("spawnEnemyKnight", "shield_bash", "Shield Bash", EnemyAttackRuntimeKind.WeaponMelee, 1, 1.85f, 0.28f, 0.14f, 1.15f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Medium, DamageThreatKind.Heavy, 0.65f, "M84 knight short control hit and combo finisher.", recoverySeconds: 0.5f, hitArcDegrees: 90f, poiseBreakThreshold: ImpactForceClass.Heavy, activeMovementDistanceMeters: 0.2f),
+            Enemy("spawnEnemyGiant", "club_sweep", "Club Sweep", EnemyAttackRuntimeKind.WeaponMelee, 2, 2.65f, 0.65f, 0.22f, 2.25f, 0, 0f, DamageChannel.Physical, DamageDelivery.Melee, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 0.9f, "M84 giant slow elite sweeping punish.", recoverySeconds: 0.75f, hitArcDegrees: 190f, poiseBreakThreshold: ImpactForceClass.Heavy, activeMovementDistanceMeters: 0.08f),
+            Enemy("spawnEnemyGiant", "overhead_slam", "Overhead Slam", EnemyAttackRuntimeKind.Area, 2, 3.15f, 0.78f, 0.2f, 1.55f, 0, 0f, DamageChannel.Physical, DamageDelivery.Area, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 1.1f, "M84 giant circular impact slam.", recoverySeconds: 0.9f, hitArcDegrees: 360f, poiseBreakThreshold: ImpactForceClass.Heavy),
+            Enemy("spawnEnemyGiant", "stomp", "Giant Stomp", EnemyAttackRuntimeKind.Area, 1, 2.35f, 0.5f, 0.18f, 1.25f, 0, 0f, DamageChannel.Physical, DamageDelivery.Area, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.Heavy, 0.8f, "M84 giant shorter area punish.", recoverySeconds: 0.6f, hitArcDegrees: 360f, poiseBreakThreshold: ImpactForceClass.Medium),
             Enemy("spawnEnemyBoss", "stone_charge", "Stone Warden Contact", EnemyAttackRuntimeKind.Contact, 2, 3.2f, 0.5f, 0.22f, 2.2f, 0, 0f, DamageChannel.Physical, DamageDelivery.Contact, DamageElement.None, ImpactForceClass.Massive, DamageThreatKind.Boss, 0.9f, "Legacy generic boss spawn fallback contact profile."),
             Enemy("spawnEnemyBoss", "stone_four_way_burst", "Stone Warden Burst Shards", EnemyAttackRuntimeKind.RadialProjectile, 1, 3.8f, 0.45f, 0.1f, 6f, 4, 4.5f, DamageChannel.Physical, DamageDelivery.Projectile, DamageElement.None, ImpactForceClass.Heavy, DamageThreatKind.StrongProjectile, 0.55f, "Legacy generic boss spawn fallback low-health burst.")
         };
@@ -119,9 +130,11 @@ namespace Hollow.Combat
             string notes,
             float recoverySeconds = -1f,
             float hitArcDegrees = -1f,
-            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium)
+            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium,
+            float activeMovementDistanceMeters = -1f,
+            string comboFollowUpAttackId = "")
         {
-            return new EnemyAttackProfileSpec(ownerId, false, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes, recoverySeconds, hitArcDegrees, poiseBreakThreshold);
+            return new EnemyAttackProfileSpec(ownerId, false, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes, recoverySeconds, hitArcDegrees, poiseBreakThreshold, activeMovementDistanceMeters, comboFollowUpAttackId);
         }
 
         private static EnemyAttackProfileSpec Boss(
@@ -145,9 +158,11 @@ namespace Hollow.Combat
             string notes,
             float recoverySeconds = -1f,
             float hitArcDegrees = -1f,
-            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium)
+            ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium,
+            float activeMovementDistanceMeters = -1f,
+            string comboFollowUpAttackId = "")
         {
-            return new EnemyAttackProfileSpec(ownerId, true, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes, recoverySeconds, hitArcDegrees, poiseBreakThreshold);
+            return new EnemyAttackProfileSpec(ownerId, true, attackId, displayName, runtimeKind, damage, cooldownSeconds, windupSeconds, activeSeconds, rangeMeters, projectileCount, projectileSpeedMetersPerSecond, channel, delivery, element, forceClass, threatKind, knockbackMeters, DefaultGuardRecoil, notes, recoverySeconds, hitArcDegrees, poiseBreakThreshold, activeMovementDistanceMeters, comboFollowUpAttackId);
         }
     }
 }

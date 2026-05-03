@@ -24,7 +24,11 @@ namespace Hollow.Branches
             "spawnEnemySplitter",
             "spawnEnemySpittingPod",
             "spawnEnemyRat",
-            "spawnEnemySpider"
+            "spawnEnemySpider",
+            "spawnEnemySkeletonSword",
+            "spawnEnemySkeletonSpear",
+            "spawnEnemyKnight",
+            "spawnEnemyGiant"
         };
 
         private static readonly string[] BuildPickupLabels =

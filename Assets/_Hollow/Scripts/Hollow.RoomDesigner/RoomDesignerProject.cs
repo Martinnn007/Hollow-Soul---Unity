@@ -174,6 +174,10 @@ namespace Hollow.RoomDesigner
         public const string EnemySpittingPod = "spawnEnemySpittingPod";
         public const string EnemyRat = "spawnEnemyRat";
         public const string EnemySpider = "spawnEnemySpider";
+        public const string EnemySkeletonSword = "spawnEnemySkeletonSword";
+        public const string EnemySkeletonSpear = "spawnEnemySkeletonSpear";
+        public const string EnemyKnight = "spawnEnemyKnight";
+        public const string EnemyGiant = "spawnEnemyGiant";
         public const string RoomReward = "spawn_point_roomReward";
         public const string ChestSpawn = "spawn_point_chest";
         public const string StandardBarrel = "barrelStandard";
@@ -191,7 +195,11 @@ namespace Hollow.RoomDesigner
             EnemySplitter,
             EnemySpittingPod,
             EnemyRat,
-            EnemySpider
+            EnemySpider,
+            EnemySkeletonSword,
+            EnemySkeletonSpear,
+            EnemyKnight,
+            EnemyGiant
         };
 
         public static bool IsEnemy(string kind)

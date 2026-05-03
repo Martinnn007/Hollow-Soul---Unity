@@ -73,6 +73,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemySpittingPod => PresentationPrefabRole.EnemySpittingPod,
                 RoomDesignerMarkerKinds.EnemyRat => PresentationPrefabRole.EnemyRat,
                 RoomDesignerMarkerKinds.EnemySpider => PresentationPrefabRole.EnemySpider,
+                RoomDesignerMarkerKinds.EnemySkeletonSword => PresentationPrefabRole.EnemySkeletonSword,
+                RoomDesignerMarkerKinds.EnemySkeletonSpear => PresentationPrefabRole.EnemySkeletonSpear,
+                RoomDesignerMarkerKinds.EnemyKnight => PresentationPrefabRole.EnemyKnight,
+                RoomDesignerMarkerKinds.EnemyGiant => PresentationPrefabRole.EnemyGiant,
                 _ => PresentationPrefabRole.EnemyNormal
             };
         }

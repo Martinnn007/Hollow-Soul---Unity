@@ -26,6 +26,10 @@ namespace Hollow.RoomDesigner
         ChestSpawn = 21,
         EnemySpittingPod = 22,
         EnemyRat = 23,
-        EnemySpider = 24
+        EnemySpider = 24,
+        EnemySkeletonSword = 25,
+        EnemySkeletonSpear = 26,
+        EnemyKnight = 27,
+        EnemyGiant = 28
     }
 }

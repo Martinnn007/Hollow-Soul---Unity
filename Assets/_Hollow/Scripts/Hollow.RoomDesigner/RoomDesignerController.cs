@@ -714,6 +714,18 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.EnemySpider:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySpider, "spawn_enemy_spider");
                     break;
+                case RoomDesignerTool.EnemySkeletonSword:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySkeletonSword, "spawn_enemy_skeleton_sword");
+                    break;
+                case RoomDesignerTool.EnemySkeletonSpear:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySkeletonSpear, "spawn_enemy_skeleton_spear");
+                    break;
+                case RoomDesignerTool.EnemyKnight:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyKnight, "spawn_enemy_knight");
+                    break;
+                case RoomDesignerTool.EnemyGiant:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyGiant, "spawn_enemy_giant");
+                    break;
                 case RoomDesignerTool.StandardBarrel:
                     AddOrReplaceInteractiveObject(RoomDesignerMarkerKinds.StandardBarrel, "barrel_standard");
                     break;
@@ -856,6 +868,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemySpittingPod => RoomDesignerTool.EnemySpittingPod,
                 RoomDesignerMarkerKinds.EnemyRat => RoomDesignerTool.EnemyRat,
                 RoomDesignerMarkerKinds.EnemySpider => RoomDesignerTool.EnemySpider,
+                RoomDesignerMarkerKinds.EnemySkeletonSword => RoomDesignerTool.EnemySkeletonSword,
+                RoomDesignerMarkerKinds.EnemySkeletonSpear => RoomDesignerTool.EnemySkeletonSpear,
+                RoomDesignerMarkerKinds.EnemyKnight => RoomDesignerTool.EnemyKnight,
+                RoomDesignerMarkerKinds.EnemyGiant => RoomDesignerTool.EnemyGiant,
                 RoomDesignerMarkerKinds.EnemyNormal => RoomDesignerTool.EnemyNormal,
                 _ => RoomDesignerTool.EnemySpawn
             };

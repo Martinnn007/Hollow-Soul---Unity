@@ -70,6 +70,11 @@ namespace Hollow.Combat
             return Enemy != null && Enemy.CanStartBehaviorAreaAction(actionId, TimeSeconds);
         }
 
+        public bool CanStartGuardAction(string actionId)
+        {
+            return Enemy != null && Enemy.CanStartBehaviorGuardAction(actionId, TimeSeconds);
+        }
+
         public float Deterministic01(string salt)
         {
             var hash = 17;

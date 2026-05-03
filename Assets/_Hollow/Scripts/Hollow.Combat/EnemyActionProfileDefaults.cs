@@ -114,7 +114,7 @@ namespace Hollow.Combat
                 shape,
                 EnemyActionUsageState.CurrentRuntime,
                 attack.AttackId,
-                explicitlyNonDamaging: false,
+                explicitlyNonDamaging: attack.Damage <= 0,
                 range.min,
                 range.ideal,
                 range.max,
@@ -175,6 +175,15 @@ namespace Hollow.Combat
 
             yield return FutureEnemy("spawnEnemySpider", "web_feint", "Web Feint", EnemyActionCategory.Body, EnemyActionIntent.Feint, EnemyActionShape.Cone, 0.6f, 1.2f, 2f, EnemyIntelligenceLevel.Simple, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Suspicious, 180f, "Brief rear-up tell, then flee or hop.", "body-only", "Keeps spider fight/flight readable.");
             yield return FutureEnemy("spawnEnemySpider", "panic_flee", "Panic Flee", EnemyActionCategory.Movement, EnemyActionIntent.Escape, EnemyActionShape.Self, 0.2f, 0.9f, 2f, EnemyIntelligenceLevel.Instinctive, new[] { EnemyInstinctDisposition.Prey }, EnemyAwarenessState.Alerted, 360f, "Erratic burst away from the player.", "body-only", "Chaotic but capped flee action.");
+
+            yield return FutureEnemy("spawnEnemySkeletonSword", "short_backstep", "Short Backstep", EnemyActionCategory.Movement, EnemyActionIntent.Reposition, EnemyActionShape.Self, 0.6f, 1.3f, 2.4f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Predator }, EnemyAwarenessState.Alerted, 360f, "Small backward hop after a blocked slash.", "weapon-user", "Future spacing reset for sword skeletons.");
+            yield return FutureEnemy("spawnEnemySkeletonSword", "overhead_chop", "Overhead Chop", EnemyActionCategory.Weapon, EnemyActionIntent.Damage, EnemyActionShape.ForwardArc, 0.8f, 1.25f, 1.75f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Predator }, EnemyAwarenessState.Engaged, 80f, "Sword rises overhead before a narrow committed chop.", "weapon-user", "Future high-punish sword option.");
+            yield return FutureEnemy("spawnEnemySkeletonSpear", "brace_poke", "Brace Poke", EnemyActionCategory.Weapon, EnemyActionIntent.Interrupt, EnemyActionShape.Lane, 1.2f, 2.1f, 2.9f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Alerted, 45f, "Spear plants before a precise poke.", "weapon-user", "Future anti-rush spear option.");
+            yield return FutureEnemy("spawnEnemySkeletonSpear", "retreating_thrust", "Retreating Thrust", EnemyActionCategory.Weapon, EnemyActionIntent.Reposition, EnemyActionShape.Lane, 0.8f, 1.9f, 2.8f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Engaged, 50f, "Steps back as the spear point stays forward.", "weapon-user", "Future spacing attack once movement actions are richer.");
+            yield return FutureEnemy("spawnEnemyKnight", "guarded_advance", "Guarded Advance", EnemyActionCategory.Defense, EnemyActionIntent.Defend, EnemyActionShape.Self, 1f, 1.8f, 2.8f, EnemyIntelligenceLevel.Trained, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Alerted, 150f, "Shield comes up before a slow advance.", "weapon-user", "Future shield movement action using the M84 guard tier.");
+            yield return FutureEnemy("spawnEnemyKnight", "riposte", "Riposte", EnemyActionCategory.Weapon, EnemyActionIntent.Interrupt, EnemyActionShape.ForwardArc, 0.5f, 1f, 1.5f, EnemyIntelligenceLevel.Trained, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Engaged, 80f, "Short stab after a successful block.", "weapon-user", "Future counter action; no enemy parry in M84.");
+            yield return FutureEnemy("spawnEnemyGiant", "ground_drag", "Ground Drag", EnemyActionCategory.Weapon, EnemyActionIntent.Pressure, EnemyActionShape.ForwardArc, 1.2f, 2f, 3.1f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Mindless }, EnemyAwarenessState.Engaged, 210f, "Club scrapes the ground before a very wide sweep.", "giant", "Future slow arena-control swing.");
+            yield return FutureEnemy("spawnEnemyGiant", "slow_turn_slam", "Slow Turn Slam", EnemyActionCategory.Weapon, EnemyActionIntent.Damage, EnemyActionShape.CircleArea, 0.8f, 1.7f, 2.6f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Mindless }, EnemyAwarenessState.Engaged, 360f, "Whole body turns before a delayed slam.", "giant", "Future punish for staying behind too long.");
 
             yield return FutureEnemy("spawnEnemyBoss", "boss_stomp", "Boss Stomp", EnemyActionCategory.BossScale, EnemyActionIntent.Pressure, EnemyActionShape.CircleArea, 0.5f, 1.3f, 2.3f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Engaged, 360f, "Large foot lift, clear shockwave edge.", "boss-scale", "Generic fallback boss action wrapper for future planner work.");
             yield return FutureEnemy("spawnEnemyBoss", "boss_shockwave", "Boss Shockwave", EnemyActionCategory.BossScale, EnemyActionIntent.Pressure, EnemyActionShape.Radial, 0.8f, 2f, 5f, EnemyIntelligenceLevel.Basic, new[] { EnemyInstinctDisposition.Sentinel }, EnemyAwarenessState.Engaged, 360f, "Radial ring with visible travel time.", "boss-scale", "Fallback boss-scale pressure template.");
@@ -405,6 +414,8 @@ namespace Hollow.Combat
 
             return attack.RuntimeKind switch
             {
+                EnemyAttackRuntimeKind.WeaponMelee => EnemyActionCategory.Weapon,
+                EnemyAttackRuntimeKind.Defense => EnemyActionCategory.Defense,
                 EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => EnemyActionCategory.Projectile,
                 EnemyAttackRuntimeKind.Summon or EnemyAttackRuntimeKind.Split => EnemyActionCategory.Summon,
                 EnemyAttackRuntimeKind.Area => EnemyActionCategory.Hazard,
@@ -418,6 +429,11 @@ namespace Hollow.Combat
             if (attack.AttackId == "warning_squeal")
             {
                 return EnemyActionIntent.Feint;
+            }
+
+            if (attack.RuntimeKind == EnemyAttackRuntimeKind.Defense)
+            {
+                return EnemyActionIntent.Defend;
             }
 
             if (attack.AttackId == "stomp")
@@ -443,6 +459,11 @@ namespace Hollow.Combat
             if (attack.AttackId == "warning_squeal")
             {
                 return EnemyActionShape.Cone;
+            }
+
+            if (attack.RuntimeKind == EnemyAttackRuntimeKind.Defense)
+            {
+                return EnemyActionShape.Self;
             }
 
             if (attack.AttackId == "stomp")
@@ -490,6 +511,8 @@ namespace Hollow.Combat
                 "spawnEnemyTurret" => EnemyIntelligenceLevel.Trained,
                 "spawnEnemyRat" => EnemyIntelligenceLevel.Basic,
                 "spawnEnemySpider" => EnemyIntelligenceLevel.Simple,
+                "spawnEnemySkeletonSword" or "spawnEnemySkeletonSpear" or "spawnEnemyGiant" => EnemyIntelligenceLevel.Basic,
+                "spawnEnemyKnight" => EnemyIntelligenceLevel.Trained,
                 _ => EnemyIntelligenceLevel.Simple
             };
         }
@@ -508,6 +531,8 @@ namespace Hollow.Combat
                 "spawnEnemyTurret" or "spawnEnemySpittingPod" or "spawnEnemyBoss" => new[] { EnemyInstinctDisposition.Sentinel },
                 "spawnEnemyRat" => new[] { EnemyInstinctDisposition.Territorial },
                 "spawnEnemySpider" => new[] { EnemyInstinctDisposition.Prey },
+                "spawnEnemySkeletonSpear" or "spawnEnemyKnight" => new[] { EnemyInstinctDisposition.Sentinel },
+                "spawnEnemyGiant" => new[] { EnemyInstinctDisposition.Mindless },
                 _ => new[] { EnemyInstinctDisposition.Predator }
             };
         }
@@ -523,6 +548,8 @@ namespace Hollow.Combat
             {
                 "spawnEnemyTurret" or "spawnEnemySpittingPod" => new[] { "ranged", "stationary" },
                 "spawnEnemyRat" or "spawnEnemySpider" => new[] { "body-only", "critter" },
+                "spawnEnemySkeletonSword" or "spawnEnemySkeletonSpear" or "spawnEnemyKnight" => new[] { "weapon-user", "humanoid" },
+                "spawnEnemyGiant" => new[] { "weapon-user", "giant" },
                 "spawnEnemyFlying" => new[] { "body-only", "flying creature" },
                 _ => new[] { "body-only" }
             };
@@ -530,7 +557,7 @@ namespace Hollow.Combat
 
         private static bool IsParryable(EnemyAttackProfileSpec attack)
         {
-            return (attack.RuntimeKind is EnemyAttackRuntimeKind.Contact or EnemyAttackRuntimeKind.MeleeLunge or EnemyAttackRuntimeKind.Charge) &&
+            return (attack.RuntimeKind is EnemyAttackRuntimeKind.Contact or EnemyAttackRuntimeKind.MeleeLunge or EnemyAttackRuntimeKind.Charge or EnemyAttackRuntimeKind.WeaponMelee) &&
                    attack.DamageDelivery != DamageDelivery.Projectile;
         }
 

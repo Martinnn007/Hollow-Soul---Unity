@@ -26,6 +26,8 @@ namespace Hollow.Combat
         [SerializeField] private float recoverySeconds;
         [SerializeField] private float hitArcDegrees;
         [SerializeField] private ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium;
+        [SerializeField] private float activeMovementDistanceMeters = -1f;
+        [SerializeField] private string comboFollowUpAttackId = string.Empty;
         [TextArea(1, 4)]
         [SerializeField] private string notes = string.Empty;
 
@@ -69,6 +71,12 @@ namespace Hollow.Combat
 
         public ImpactForceClass PoiseBreakThreshold => poiseBreakThreshold;
 
+        public bool HasAuthoredActiveMovementDistance => activeMovementDistanceMeters >= 0f;
+
+        public float ActiveMovementDistanceMeters => Mathf.Max(0f, activeMovementDistanceMeters);
+
+        public string ComboFollowUpAttackId => comboFollowUpAttackId ?? string.Empty;
+
         public string Notes => notes ?? string.Empty;
 
         public DamageClassification Classification => new(DamageChannel, DamageDelivery, ForceClass, DamageElement);
@@ -95,6 +103,8 @@ namespace Hollow.Combat
             recoverySeconds = Mathf.Max(0.01f, spec.RecoverySeconds);
             hitArcDegrees = Mathf.Clamp(spec.HitArcDegrees, 1f, 360f);
             poiseBreakThreshold = spec.PoiseBreakThreshold;
+            activeMovementDistanceMeters = spec.ActiveMovementDistanceMeters;
+            comboFollowUpAttackId = spec.ComboFollowUpAttackId ?? string.Empty;
             notes = spec.Notes ?? string.Empty;
         }
 
@@ -121,11 +131,13 @@ namespace Hollow.Combat
             return runtimeKind switch
             {
                 EnemyAttackRuntimeKind.Charge => 0.24f,
+                EnemyAttackRuntimeKind.WeaponMelee => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.45f : 0.28f,
                 EnemyAttackRuntimeKind.MeleeLunge => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.24f : 0.16f,
                 EnemyAttackRuntimeKind.Contact => 0.14f,
                 EnemyAttackRuntimeKind.Area => 0.2f,
                 EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => 0.18f,
                 EnemyAttackRuntimeKind.Movement => 0.18f,
+                EnemyAttackRuntimeKind.Defense => 0.28f,
                 _ => 0.12f
             };
         }
@@ -140,6 +152,7 @@ namespace Hollow.Combat
             return runtimeKind switch
             {
                 EnemyAttackRuntimeKind.Charge => 90f,
+                EnemyAttackRuntimeKind.WeaponMelee => 120f,
                 EnemyAttackRuntimeKind.MeleeLunge => 125f,
                 EnemyAttackRuntimeKind.Contact => 110f,
                 EnemyAttackRuntimeKind.Area => 360f,

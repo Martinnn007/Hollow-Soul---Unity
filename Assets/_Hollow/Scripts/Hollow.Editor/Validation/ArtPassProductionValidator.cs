@@ -55,7 +55,11 @@ namespace Hollow.Editor.Validation
             PresentationPrefabRole.EnemySplitter,
             PresentationPrefabRole.EnemySpittingPod,
             PresentationPrefabRole.EnemyRat,
-            PresentationPrefabRole.EnemySpider
+            PresentationPrefabRole.EnemySpider,
+            PresentationPrefabRole.EnemySkeletonSword,
+            PresentationPrefabRole.EnemySkeletonSpear,
+            PresentationPrefabRole.EnemyKnight,
+            PresentationPrefabRole.EnemyGiant
         };
 
         public static ArtPassProductionStatusReport BuildReport()
@@ -326,7 +330,9 @@ namespace Hollow.Editor.Validation
                 PresentationPrefabRole.EnemyNormal or PresentationPrefabRole.EnemyFlying or PresentationPrefabRole.EnemyFast or
                     PresentationPrefabRole.EnemyHeavy or PresentationPrefabRole.EnemyCharger or PresentationPrefabRole.EnemyTurret or
                     PresentationPrefabRole.EnemySplitter or PresentationPrefabRole.EnemySpittingPod or
-                    PresentationPrefabRole.EnemyRat or PresentationPrefabRole.EnemySpider => "Enemies",
+                    PresentationPrefabRole.EnemyRat or PresentationPrefabRole.EnemySpider or
+                    PresentationPrefabRole.EnemySkeletonSword or PresentationPrefabRole.EnemySkeletonSpear or
+                    PresentationPrefabRole.EnemyKnight or PresentationPrefabRole.EnemyGiant => "Enemies",
                 PresentationPrefabRole.EnemyBoss => "Boss",
                 PresentationPrefabRole.RoomFloor or PresentationPrefabRole.RoomObstacleRock => "Rooms",
                 PresentationPrefabRole.DoorLocked or PresentationPrefabRole.DoorActive or PresentationPrefabRole.DoorCleared or

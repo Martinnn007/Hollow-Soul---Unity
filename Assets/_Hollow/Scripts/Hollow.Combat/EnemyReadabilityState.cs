@@ -17,6 +17,9 @@ namespace Hollow.Combat
         AreaWindup = 12,
         AreaActive = 13,
         AreaRecovery = 14,
-        FeintWarning = 15
+        FeintWarning = 15,
+        GuardWindup = 16,
+        GuardActive = 17,
+        GuardRecovery = 18
     }
 }

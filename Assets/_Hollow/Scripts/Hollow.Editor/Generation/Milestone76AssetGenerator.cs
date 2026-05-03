@@ -59,6 +59,10 @@ namespace Hollow.Editor.Generation
                 ["spawnEnemySpittingPod"] = "Assets/_Hollow/Data/Enemies/Enemy_SpittingPod.asset",
                 ["spawnEnemyRat"] = "Assets/_Hollow/Data/Enemies/Enemy_Rat.asset",
                 ["spawnEnemySpider"] = "Assets/_Hollow/Data/Enemies/Enemy_Spider.asset",
+                ["spawnEnemySkeletonSword"] = "Assets/_Hollow/Data/Enemies/Enemy_SkeletonSword.asset",
+                ["spawnEnemySkeletonSpear"] = "Assets/_Hollow/Data/Enemies/Enemy_SkeletonSpear.asset",
+                ["spawnEnemyKnight"] = "Assets/_Hollow/Data/Enemies/Enemy_Knight.asset",
+                ["spawnEnemyGiant"] = "Assets/_Hollow/Data/Enemies/Enemy_Giant.asset",
                 ["spawnEnemyBoss"] = "Assets/_Hollow/Data/Enemies/Enemy_Boss.asset"
             };
         }
@@ -202,6 +206,10 @@ namespace Hollow.Editor.Generation
                 "spawnEnemySpittingPod" => "Spitting Pod",
                 "spawnEnemyRat" => "Rat",
                 "spawnEnemySpider" => "Spider",
+                "spawnEnemySkeletonSword" => "Skeleton Sword",
+                "spawnEnemySkeletonSpear" => "Skeleton Spear",
+                "spawnEnemyKnight" => "Knight",
+                "spawnEnemyGiant" => "Giant",
                 "spawnEnemyBoss" => "Stone Warden Spawn",
                 "stone_warden" => "Stone Warden",
                 "splinter_saint" => "Splinter Saint",

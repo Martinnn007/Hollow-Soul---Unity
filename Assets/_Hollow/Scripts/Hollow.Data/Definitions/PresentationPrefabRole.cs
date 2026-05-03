@@ -52,6 +52,10 @@ namespace Hollow.Data.Definitions
         VfxCoinPickup,
         EnemySpittingPod,
         EnemyRat,
-        EnemySpider
+        EnemySpider,
+        EnemySkeletonSword,
+        EnemySkeletonSpear,
+        EnemyKnight,
+        EnemyGiant
     }
 }
