@@ -27,9 +27,16 @@ MonoBehaviour:
   attackRangeMeters: 4
   preferredRangeMinMeters: 1.35
   preferredRangeMaxMeters: 2.15
-  sightRadiusMeters: 5
-  sightAngleDegrees: 110
-  hearingRadiusMeters: 3.5
+  sightRadiusMeters: 8
+  sightAngleDegrees: 10
+  hearingRadiusMeters: 3
+  hearingSensitivityMultiplier: 0
+  disturbanceEscalationThreshold: 0
+  investigationDurationSeconds: 0
+  allyAlertSharingEnabled: 0
+  allyAlertRadiusMeters: 0
+  allyAlertCooldownSeconds: 0
+  allyAlertMinimumAwareness: 3
   lungeAttackEnabled: 1
   lungeTriggerRangeMeters: 1.7
   lungeWindupSeconds: 0.22
@@ -56,5 +63,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: abe3660e05d037861def35f0c38d5d06, type: 2}
   - {fileID: 11400000, guid: 25bdf23eb11adf89d624ad3062a4423d, type: 2}
   actionProfiles: []
+  guardProfile: {fileID: 0}
   behaviorTree: {fileID: 11400000, guid: fc90d819b1d71404e9ad688473b69c28, type: 2}
+  spacingProfile: {fileID: 0}
+  presentationPrefabRoleOverrideEnabled: 0
+  presentationPrefabRoleOverride: 1
+  weaponPrefabRoleOverrideEnabled: 0
+  weaponPrefabRoleOverride: 32
+  offhandPrefabRoleOverrideEnabled: 0
+  offhandPrefabRoleOverride: 34
+  projectilePrefabRoleOverrideEnabled: 0
+  projectilePrefabRoleOverride: 10
+  vfxPrefabRoleOverrideEnabled: 0
+  vfxPrefabRoleOverride: 24
   color: {r: 0.62, g: 0.22, b: 0.82, a: 1}

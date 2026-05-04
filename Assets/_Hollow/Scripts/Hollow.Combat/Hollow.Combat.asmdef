@@ -6,6 +6,7 @@
     "Hollow.Entities",
     "Hollow.Input",
     "Hollow.Presentation",
+    "Hollow.RoomDesigner",
     "Hollow.Rooms",
     "UnityEngine.UI"
   ],

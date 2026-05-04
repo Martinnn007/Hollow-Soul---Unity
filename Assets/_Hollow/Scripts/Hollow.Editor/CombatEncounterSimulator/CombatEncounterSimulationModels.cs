@@ -213,11 +213,11 @@ namespace Hollow.Editor.CombatEncounterSimulator
 
         public float AverageFinalHealth => Runs == 0 ? 0f : results.Average(result => result.playerFinalHealth);
 
-        public float AverageEnemyDeaths => Runs == 0 ? 0f : results.Average(result => result.enemyDeaths);
+        public float AverageEnemyDeaths => Runs == 0 ? 0f : (float)results.Average(result => result.enemyDeaths);
 
         public float AverageAttacksPerSecond => Runs == 0 ? 0f : results.Average(result => result.durationSeconds <= 0f ? 0f : result.totalAttackStarts / result.durationSeconds);
 
-        public float AverageDamageTaken => Runs == 0 ? 0f : results.Average(result => result.totalDamageTaken);
+        public float AverageDamageTaken => Runs == 0 ? 0f : (float)results.Average(result => result.totalDamageTaken);
 
         public float AveragePeakPressure => Runs == 0 ? 0f : results.Average(result => result.peakPressure);
 

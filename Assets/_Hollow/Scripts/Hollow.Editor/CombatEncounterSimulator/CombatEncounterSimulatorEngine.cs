@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
+using Hollow.Editor.DesignerRooms;
 using Hollow.RoomDesigner;
 using UnityEditor;
 using UnityEngine;
