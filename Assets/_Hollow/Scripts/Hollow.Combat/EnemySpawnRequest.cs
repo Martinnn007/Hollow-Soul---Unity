@@ -1,5 +1,6 @@
 using Hollow.Entities;
 using Hollow.Rooms;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -21,6 +22,21 @@ namespace Hollow.Combat
             DifficultyTierDefinition difficultyTier,
             CombatDiagnosticsModel diagnostics,
             RoomCombatEncounterContext encounterContext)
+            : this(room, parent, enemyPrefab, enemyProjectilePrefab, player, catalog, difficultyTier, diagnostics, encounterContext, null)
+        {
+        }
+
+        public EnemySpawnRequest(
+            RoomRuntimeRoot room,
+            Transform parent,
+            GameObject enemyPrefab,
+            GameObject enemyProjectilePrefab,
+            PlaceholderPlayerController player,
+            EnemyCatalog catalog,
+            DifficultyTierDefinition difficultyTier,
+            CombatDiagnosticsModel diagnostics,
+            RoomCombatEncounterContext encounterContext,
+            IReadOnlyList<ImportedSpawnPoint> spawnAnchors)
         {
             Room = room;
             Parent = parent;
@@ -31,6 +47,7 @@ namespace Hollow.Combat
             DifficultyTier = difficultyTier;
             Diagnostics = diagnostics;
             EncounterContext = encounterContext ?? RoomCombatEncounterContext.Empty;
+            SpawnAnchors = spawnAnchors;
         }
 
         public RoomRuntimeRoot Room { get; }
@@ -50,5 +67,7 @@ namespace Hollow.Combat
         public CombatDiagnosticsModel Diagnostics { get; }
 
         public RoomCombatEncounterContext EncounterContext { get; }
+
+        public IReadOnlyList<ImportedSpawnPoint> SpawnAnchors { get; }
     }
 }

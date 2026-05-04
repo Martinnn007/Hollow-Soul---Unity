@@ -133,6 +133,16 @@ namespace Hollow.World
                 return;
             }
 
+            if (SessionState?.SessionMode == RuntimeSessionMode.TransientArena)
+            {
+                context?.SetLaunchMode(RunLaunchMode.NewRun);
+                context?.SetSelectedCharacterId(characterId);
+                context?.SetSelectedChallengeId(string.Empty);
+                context?.SetDeveloperLabRequested(false);
+                TransitionAndLoad(AppShellRoute.ArenaMode);
+                return;
+            }
+
             if (context != null && selectedProfile != null && !selectedProfile.IsEmpty)
             {
                 var slotId = new ProfileSlotId(selectedProfile.SlotIndex);
@@ -171,6 +181,8 @@ namespace Hollow.World
             var selectedProfile = context?.SelectedProfile;
             var snapshot = CreateCurrentSnapshot();
             if (SessionState?.SessionMode != RuntimeSessionMode.DeveloperLab &&
+                SessionState?.SessionMode != RuntimeSessionMode.TransientArena &&
+                SessionState?.SessionMode != RuntimeSessionMode.TransientRoomDesignerPlaytest &&
                 snapshot != null &&
                 selectedProfile != null &&
                 !selectedProfile.IsEmpty &&

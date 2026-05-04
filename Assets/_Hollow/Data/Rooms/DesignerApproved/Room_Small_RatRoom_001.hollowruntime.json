@@ -1,0 +1,962 @@
+{
+    "hollowRuntime": {
+        "schemaVersion": 2,
+        "sourceProjectId": "Room_Small_RatRoom_001",
+        "canonicalRoomId": "Room_Small_RatRoom_001",
+        "displayName": "Room_Small_RatRoom_001",
+        "roomType": "combat",
+        "rewardType": "designer",
+        "prototypeStatus": "approved-manual-authored",
+        "tileSizeMeters": 1.0,
+        "dimensions": {
+            "widthTiles": 13,
+            "heightTiles": 7,
+            "bounds": {
+                "minX": -6.5,
+                "maxX": 6.5,
+                "minZ": -3.5,
+                "maxZ": 3.5
+            }
+        },
+        "footprint": {
+            "primaryCell": {
+                "x": 0,
+                "z": 0
+            },
+            "occupiedBranchCells": [
+                {
+                    "x": 0,
+                    "z": 0
+                }
+            ],
+            "chunkBasisTiles": {
+                "width": 13,
+                "height": 7
+            }
+        },
+        "walkableTiles": [
+            {
+                "x": -6,
+                "z": -3
+            },
+            {
+                "x": -5,
+                "z": -3
+            },
+            {
+                "x": -4,
+                "z": -3
+            },
+            {
+                "x": -3,
+                "z": -3
+            },
+            {
+                "x": -2,
+                "z": -3
+            },
+            {
+                "x": -1,
+                "z": -3
+            },
+            {
+                "x": 0,
+                "z": -3
+            },
+            {
+                "x": 1,
+                "z": -3
+            },
+            {
+                "x": 2,
+                "z": -3
+            },
+            {
+                "x": 3,
+                "z": -3
+            },
+            {
+                "x": 4,
+                "z": -3
+            },
+            {
+                "x": 5,
+                "z": -3
+            },
+            {
+                "x": 6,
+                "z": -3
+            },
+            {
+                "x": -6,
+                "z": -2
+            },
+            {
+                "x": -5,
+                "z": -2
+            },
+            {
+                "x": -4,
+                "z": -2
+            },
+            {
+                "x": -3,
+                "z": -2
+            },
+            {
+                "x": -2,
+                "z": -2
+            },
+            {
+                "x": -1,
+                "z": -2
+            },
+            {
+                "x": 0,
+                "z": -2
+            },
+            {
+                "x": 1,
+                "z": -2
+            },
+            {
+                "x": 2,
+                "z": -2
+            },
+            {
+                "x": 3,
+                "z": -2
+            },
+            {
+                "x": 4,
+                "z": -2
+            },
+            {
+                "x": 5,
+                "z": -2
+            },
+            {
+                "x": 6,
+                "z": -2
+            },
+            {
+                "x": -6,
+                "z": -1
+            },
+            {
+                "x": -5,
+                "z": -1
+            },
+            {
+                "x": -4,
+                "z": -1
+            },
+            {
+                "x": -3,
+                "z": -1
+            },
+            {
+                "x": -2,
+                "z": -1
+            },
+            {
+                "x": -1,
+                "z": -1
+            },
+            {
+                "x": 0,
+                "z": -1
+            },
+            {
+                "x": 1,
+                "z": -1
+            },
+            {
+                "x": 2,
+                "z": -1
+            },
+            {
+                "x": 3,
+                "z": -1
+            },
+            {
+                "x": 4,
+                "z": -1
+            },
+            {
+                "x": 5,
+                "z": -1
+            },
+            {
+                "x": 6,
+                "z": -1
+            },
+            {
+                "x": -6,
+                "z": 0
+            },
+            {
+                "x": -5,
+                "z": 0
+            },
+            {
+                "x": -4,
+                "z": 0
+            },
+            {
+                "x": -3,
+                "z": 0
+            },
+            {
+                "x": -2,
+                "z": 0
+            },
+            {
+                "x": -1,
+                "z": 0
+            },
+            {
+                "x": 0,
+                "z": 0
+            },
+            {
+                "x": 1,
+                "z": 0
+            },
+            {
+                "x": 2,
+                "z": 0
+            },
+            {
+                "x": 3,
+                "z": 0
+            },
+            {
+                "x": 4,
+                "z": 0
+            },
+            {
+                "x": 5,
+                "z": 0
+            },
+            {
+                "x": 6,
+                "z": 0
+            },
+            {
+                "x": -6,
+                "z": 1
+            },
+            {
+                "x": -5,
+                "z": 1
+            },
+            {
+                "x": -4,
+                "z": 1
+            },
+            {
+                "x": -3,
+                "z": 1
+            },
+            {
+                "x": -2,
+                "z": 1
+            },
+            {
+                "x": -1,
+                "z": 1
+            },
+            {
+                "x": 0,
+                "z": 1
+            },
+            {
+                "x": 1,
+                "z": 1
+            },
+            {
+                "x": 2,
+                "z": 1
+            },
+            {
+                "x": 3,
+                "z": 1
+            },
+            {
+                "x": 4,
+                "z": 1
+            },
+            {
+                "x": 5,
+                "z": 1
+            },
+            {
+                "x": 6,
+                "z": 1
+            },
+            {
+                "x": -6,
+                "z": 2
+            },
+            {
+                "x": -5,
+                "z": 2
+            },
+            {
+                "x": -4,
+                "z": 2
+            },
+            {
+                "x": -3,
+                "z": 2
+            },
+            {
+                "x": -2,
+                "z": 2
+            },
+            {
+                "x": -1,
+                "z": 2
+            },
+            {
+                "x": 0,
+                "z": 2
+            },
+            {
+                "x": 1,
+                "z": 2
+            },
+            {
+                "x": 2,
+                "z": 2
+            },
+            {
+                "x": 3,
+                "z": 2
+            },
+            {
+                "x": 4,
+                "z": 2
+            },
+            {
+                "x": 5,
+                "z": 2
+            },
+            {
+                "x": 6,
+                "z": 2
+            },
+            {
+                "x": -6,
+                "z": 3
+            },
+            {
+                "x": -5,
+                "z": 3
+            },
+            {
+                "x": -4,
+                "z": 3
+            },
+            {
+                "x": -3,
+                "z": 3
+            },
+            {
+                "x": -2,
+                "z": 3
+            },
+            {
+                "x": -1,
+                "z": 3
+            },
+            {
+                "x": 0,
+                "z": 3
+            },
+            {
+                "x": 1,
+                "z": 3
+            },
+            {
+                "x": 2,
+                "z": 3
+            },
+            {
+                "x": 3,
+                "z": 3
+            },
+            {
+                "x": 4,
+                "z": 3
+            },
+            {
+                "x": 5,
+                "z": 3
+            },
+            {
+                "x": 6,
+                "z": 3
+            }
+        ],
+        "holeTiles": [],
+        "floorRegions": [
+            {
+                "id": "designer_floor_cell_0_0",
+                "center": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "halfSize": {
+                    "x": 6.5,
+                    "z": 3.5
+                }
+            }
+        ],
+        "doorPorts": [
+            {
+                "id": "east_0",
+                "direction": "east",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 6.5,
+                    "z": 0.0
+                },
+                "positionMeters": {
+                    "x": 6.5,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "kind": "door"
+            },
+            {
+                "id": "west_0",
+                "direction": "west",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": -6.5,
+                    "z": 0.0
+                },
+                "positionMeters": {
+                    "x": -6.5,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "kind": "door"
+            }
+        ],
+        "playerSafeStart": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        "enemySpawns": [
+            {
+                "id": "spawn_enemy_00",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": 6.0,
+                    "y": 0.0,
+                    "z": -3.0
+                }
+            },
+            {
+                "id": "spawn_enemy_01",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": 6.0,
+                    "y": 0.0,
+                    "z": -1.0
+                }
+            },
+            {
+                "id": "spawn_enemy_02",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": 4.0,
+                    "y": 0.0,
+                    "z": -3.0
+                }
+            },
+            {
+                "id": "spawn_enemy_03",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": 2.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            },
+            {
+                "id": "spawn_enemy_04",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": -2.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            },
+            {
+                "id": "spawn_enemy_05",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": -6.0,
+                    "y": 0.0,
+                    "z": 3.0
+                }
+            },
+            {
+                "id": "spawn_enemy_06",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": -6.0,
+                    "y": 0.0,
+                    "z": 1.0
+                }
+            },
+            {
+                "id": "spawn_enemy_07",
+                "kind": "spawnEnemyRat",
+                "position": {
+                    "x": -4.0,
+                    "y": 0.0,
+                    "z": 3.0
+                }
+            }
+        ],
+        "itemSpawns": [
+            {
+                "id": "spawn_item_00",
+                "kind": "spawn_point_chest",
+                "position": {
+                    "x": 4.0,
+                    "y": 0.0,
+                    "z": -1.0
+                }
+            },
+            {
+                "id": "spawn_item_01",
+                "kind": "spawn_point_chest",
+                "position": {
+                    "x": -4.0,
+                    "y": 0.0,
+                    "z": 1.0
+                }
+            },
+            {
+                "id": "spawn_item_02",
+                "kind": "spawn_point_roomReward",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            }
+        ],
+        "obstacles": [
+            {
+                "id": "rock_00",
+                "kind": "rockTile",
+                "center": {
+                    "x": -6.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_01",
+                "kind": "rockTile",
+                "center": {
+                    "x": -5.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_02",
+                "kind": "rockTile",
+                "center": {
+                    "x": -4.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_03",
+                "kind": "rockTile",
+                "center": {
+                    "x": -3.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_04",
+                "kind": "rockTile",
+                "center": {
+                    "x": -2.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_05",
+                "kind": "rockTile",
+                "center": {
+                    "x": -1.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_06",
+                "kind": "rockTile",
+                "center": {
+                    "x": -1.0,
+                    "y": 0.5,
+                    "z": 0.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_07",
+                "kind": "rockTile",
+                "center": {
+                    "x": -1.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_08",
+                "kind": "rockTile",
+                "center": {
+                    "x": 6.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_09",
+                "kind": "rockTile",
+                "center": {
+                    "x": 5.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_10",
+                "kind": "rockTile",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_11",
+                "kind": "rockTile",
+                "center": {
+                    "x": 3.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_12",
+                "kind": "rockTile",
+                "center": {
+                    "x": 2.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_13",
+                "kind": "rockTile",
+                "center": {
+                    "x": 1.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_14",
+                "kind": "rockTile",
+                "center": {
+                    "x": 1.0,
+                    "y": 0.5,
+                    "z": 0.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_15",
+                "kind": "rockTile",
+                "center": {
+                    "x": 1.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_16",
+                "kind": "rockTile",
+                "center": {
+                    "x": 1.0,
+                    "y": 0.5,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_17",
+                "kind": "rockTile",
+                "center": {
+                    "x": -1.0,
+                    "y": 0.5,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_18",
+                "kind": "rockTile",
+                "center": {
+                    "x": 5.0,
+                    "y": 0.5,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_19",
+                "kind": "rockTile",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.5,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_20",
+                "kind": "rockTile",
+                "center": {
+                    "x": 5.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_21",
+                "kind": "rockTile",
+                "center": {
+                    "x": -5.0,
+                    "y": 0.5,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_22",
+                "kind": "rockTile",
+                "center": {
+                    "x": -5.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_23",
+                "kind": "rockTile",
+                "center": {
+                    "x": -4.0,
+                    "y": 0.5,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_24",
+                "kind": "rockTile",
+                "center": {
+                    "x": -3.0,
+                    "y": 0.5,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_25",
+                "kind": "rockTile",
+                "center": {
+                    "x": 3.0,
+                    "y": 0.5,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            }
+        ],
+        "hazards": [],
+        "interactiveObjects": [],
+        "decor": []
+    }
+}

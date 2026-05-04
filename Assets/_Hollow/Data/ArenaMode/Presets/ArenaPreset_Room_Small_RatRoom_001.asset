@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2165b946642dd4f8798e6d07769267eb, type: 3}
+  m_Name: ArenaPreset_Room_Small_RatRoom_001
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.ArenaModePresetDefinition
+  presetId: arena_room_small_ratroom_001
+  displayName: Room_Small_RatRoom_001
+  roomSize: 0
+  layoutStyle: 1
+  obstaclePreset: 0
+  survivalMode: 1
+  curatedRoomRuntimeJson: {fileID: 4900000, guid: eec5f2cc0af5447d88e0abe8831b6a8f, type: 3}
+  curatedLocked: 1
+  playerHp: 6
+  playerDamageBonus: 0
+  playerSpeedMetersPerSecond: 4
+  waves:
+  - displayName: Rats I
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyRat
+      count: 3
+      spawnPattern: 5
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+  - displayName: Rats II
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyRat
+      count: 5
+      spawnPattern: 5
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+  - displayName: Rats III
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyRat
+      count: 7
+      spawnPattern: 5
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0

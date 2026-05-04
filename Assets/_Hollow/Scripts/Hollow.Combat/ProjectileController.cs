@@ -25,6 +25,7 @@ namespace Hollow.Combat
         private bool heavyAttackProjectile;
         private ImpactForceClass impactForceClass = ImpactForceClass.Light;
         private float knockbackMeters;
+        private GameObject sourceOwner;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
@@ -38,9 +39,15 @@ namespace Hollow.Combat
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction, int nextDamage, float nextSpeedMetersPerSecond, float nextLifetimeSeconds)
         {
+            Configure(room, controller, direction, nextDamage, nextSpeedMetersPerSecond, nextLifetimeSeconds, null);
+        }
+
+        public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction, int nextDamage, float nextSpeedMetersPerSecond, float nextLifetimeSeconds, GameObject nextSourceOwner)
+        {
             roomRuntimeRoot = room;
             combatController = controller;
             diagnostics = controller != null ? controller.Diagnostics : null;
+            sourceOwner = nextSourceOwner;
             localDirection = direction.sqrMagnitude < 0.001f ? Vector3.forward : direction.normalized;
             damage = Mathf.Max(1, nextDamage);
             speedMetersPerSecond = Mathf.Max(0.1f, nextSpeedMetersPerSecond);
@@ -117,7 +124,7 @@ namespace Hollow.Combat
                     enemy.Health,
                     new DamageRequest(
                         damage,
-                        gameObject,
+                        sourceOwner != null ? sourceOwner : gameObject,
                         DamageFeedbackContext.Knockback(localDirection, knockback, profile.KnockbackSeconds),
                         DamageClassification.PhysicalProjectile(impactForceClass)));
                 DestroyProjectile(ProjectileDespawnReason.EnemyHit);

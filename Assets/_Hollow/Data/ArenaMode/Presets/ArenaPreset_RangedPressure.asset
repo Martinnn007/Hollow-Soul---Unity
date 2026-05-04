@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2165b946642dd4f8798e6d07769267eb, type: 3}
+  m_Name: ArenaPreset_RangedPressure
+  m_EditorClassIdentifier: 
+  presetId: arena_ranged_pressure
+  displayName: Ranged Pressure
+  roomSize: 2
+  layoutStyle: 1
+  obstaclePreset: 3
+  survivalMode: 0
+  curatedRoomRuntimeJson: {fileID: 0}
+  curatedLocked: 0
+  playerHp: 6
+  playerDamageBonus: 0
+  playerSpeedMetersPerSecond: 4
+  waves:
+  - displayName: Backline
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyHollowArcher
+      count: 3
+      spawnPattern: 6
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+    - spawnKind: spawnEnemyNormal
+      count: 3
+      spawnPattern: 0
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+  - displayName: Fireline
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyPowderGunner
+      count: 2
+      spawnPattern: 6
+      groupingMode: 1
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+    - spawnKind: spawnEnemyKnifeThrower
+      count: 3
+      spawnPattern: 3
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0

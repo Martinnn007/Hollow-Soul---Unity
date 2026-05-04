@@ -19,7 +19,11 @@ namespace Hollow.Combat
 
             var catalog = request.Catalog != null ? request.Catalog : EnemyCatalog.CreateRuntimeDefault();
             var difficulty = request.DifficultyTier != null ? request.DifficultyTier : DifficultyTierDefinition.CreateRuntimeDeveloperSample();
-            var anchors = request.Room.EnemySpawns.OrderBy(spawn => spawn.id).ToArray();
+            var anchors = (request.SpawnAnchors != null && request.SpawnAnchors.Count > 0
+                    ? request.SpawnAnchors
+                    : request.Room.EnemySpawns)
+                .OrderBy(spawn => spawn.id)
+                .ToArray();
             var assignedSpawnKinds = request.EncounterContext?.EnemySpawnKinds ?? System.Array.Empty<string>();
             var spawnCount = assignedSpawnKinds.Count > 0 ? Mathf.Min(anchors.Length, assignedSpawnKinds.Count) : anchors.Length;
 

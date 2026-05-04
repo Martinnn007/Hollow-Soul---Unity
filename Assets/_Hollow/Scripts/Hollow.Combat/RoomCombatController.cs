@@ -27,6 +27,7 @@ namespace Hollow.Combat
         [SerializeField] private RoomHazardTuningProfileDefinition hazardTuningProfile;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
+        [SerializeField] private bool autoInitialize = true;
 
         private readonly List<EnemyRuntimeController> enemies = new();
         private readonly List<RoomHazardController> hazards = new();
@@ -82,6 +83,8 @@ namespace Hollow.Combat
 
         public bool IgnoresEnemiesForRoomClear => ignoreEnemiesForRoomClear;
 
+        public bool AutoInitialize => autoInitialize;
+
         public void Configure(GameObject nextEnemyPrefab, GameObject nextProjectilePrefab)
         {
             enemyPrefab = nextEnemyPrefab;
@@ -107,9 +110,17 @@ namespace Hollow.Combat
             ignoreEnemiesForRoomClear = ignoreRoomClear;
         }
 
+        public void ConfigureAutoInitialize(bool enabled)
+        {
+            autoInitialize = enabled;
+        }
+
         private void Start()
         {
-            InitializeCombat();
+            if (autoInitialize)
+            {
+                InitializeCombat();
+            }
         }
 
         private void Update()
@@ -231,6 +242,42 @@ namespace Hollow.Combat
 
             ObjectiveState = RoomObjectiveState.InCombat;
             EvaluateRoomState();
+        }
+
+        public IReadOnlyList<EnemyRuntimeController> SpawnAdditionalEnemies(
+            IReadOnlyList<ImportedSpawnPoint> spawnAnchors,
+            RoomCombatEncounterContext encounterContext)
+        {
+            ResolveReferences();
+            if (roomRuntimeRoot == null ||
+                playerController == null ||
+                spawnAnchors == null ||
+                spawnAnchors.Count == 0)
+            {
+                return System.Array.Empty<EnemyRuntimeController>();
+            }
+
+            initialized = true;
+            activeEncounterContext = encounterContext ?? activeEncounterContext ?? RoomCombatEncounterContext.Empty;
+            var spawnResult = EnemySpawnService.SpawnEnemies(new EnemySpawnRequest(
+                roomRuntimeRoot,
+                playerController.transform.parent,
+                enemyPrefab,
+                projectilePrefab,
+                playerController,
+                enemyCatalog,
+                difficultyTier,
+                diagnostics,
+                activeEncounterContext,
+                spawnAnchors));
+            foreach (var enemy in spawnResult.Enemies)
+            {
+                RegisterEnemy(enemy);
+            }
+
+            ObjectiveState = RoomObjectiveState.InCombat;
+            diagnostics.SetEnemyCounts(enemies);
+            return spawnResult.Enemies;
         }
 
         public EnemyRuntimeController FindEnemyHit(Vector3 localPosition, float radius)

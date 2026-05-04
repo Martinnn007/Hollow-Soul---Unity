@@ -405,7 +405,8 @@ namespace Hollow.Combat
                 new Vector3(direction.x, 0f, direction.y),
                 attackDamage,
                 projectileSpeed,
-                lifetimeSeconds);
+                lifetimeSeconds,
+                gameObject);
             projectile.ConfigureCombatFeel(
                 CombatFeelProfileDefinition.Resolve(combatFeelProfile),
                 attack.AttackKind == AttackKind.Heavy,

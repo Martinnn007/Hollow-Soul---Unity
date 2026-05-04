@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2165b946642dd4f8798e6d07769267eb, type: 3}
+  m_Name: ArenaPreset_CritterSwarm
+  m_EditorClassIdentifier: 
+  presetId: arena_critter_swarm
+  displayName: Critter Swarm
+  roomSize: 1
+  layoutStyle: 4
+  obstaclePreset: 1
+  survivalMode: 0
+  curatedRoomRuntimeJson: {fileID: 0}
+  curatedLocked: 0
+  playerHp: 6
+  playerDamageBonus: 0
+  playerSpeedMetersPerSecond: 4
+  waves:
+  - displayName: Rats
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyRat
+      count: 6
+      spawnPattern: 5
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+  - displayName: Spiders
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemySpider
+      count: 8
+      spawnPattern: 4
+      groupingMode: 2
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+  - displayName: Mixed Critters
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyRat
+      count: 4
+      spawnPattern: 3
+      groupingMode: 1
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+    - spawnKind: spawnEnemySpider
+      count: 6
+      spawnPattern: 1
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0

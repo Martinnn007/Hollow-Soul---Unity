@@ -6,6 +6,7 @@ namespace Hollow.Core
         TransientDeveloperSample = 1,
         TransientRoomDesignerPlaytest = 2,
         TransientChallenge = 3,
-        DeveloperLab = 4
+        DeveloperLab = 4,
+        TransientArena = 5
     }
 }

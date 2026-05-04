@@ -16,6 +16,8 @@ namespace Hollow.Combat
 
         public event Action<CombatantHealth> Damaged;
 
+        public event Action<CombatantHealth, DamageRequest, int> DamageApplied;
+
         public event Action<CombatantHealth> Died;
 
         public void Configure(int nextMaxHealth)
@@ -58,7 +60,9 @@ namespace Hollow.Combat
                 return false;
             }
 
+            var appliedAmount = Mathf.Min(currentHealth, amount);
             currentHealth = Mathf.Max(0, currentHealth - amount);
+            DamageApplied?.Invoke(this, request, appliedAmount);
             Damaged?.Invoke(this);
             if (currentHealth == 0)
             {

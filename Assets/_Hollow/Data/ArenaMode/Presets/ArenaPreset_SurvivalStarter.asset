@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2165b946642dd4f8798e6d07769267eb, type: 3}
+  m_Name: ArenaPreset_SurvivalStarter
+  m_EditorClassIdentifier: 
+  presetId: arena_survival_starter
+  displayName: Survival Starter
+  roomSize: 1
+  layoutStyle: 1
+  obstaclePreset: 1
+  survivalMode: 1
+  curatedRoomRuntimeJson: {fileID: 0}
+  curatedLocked: 0
+  playerHp: 6
+  playerDamageBonus: 0
+  playerSpeedMetersPerSecond: 4
+  waves:
+  - displayName: Survival A
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemyNormal
+      count: 3
+      spawnPattern: 1
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+    - spawnKind: spawnEnemyRat
+      count: 3
+      spawnPattern: 4
+      groupingMode: 2
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+  - displayName: Survival B
+    spawnDelaySeconds: 0
+    groups:
+    - spawnKind: spawnEnemySpider
+      count: 5
+      spawnPattern: 5
+      groupingMode: 3
+      patrolIntent: 0
+      spawnDelaySeconds: 0
+    - spawnKind: spawnEnemyHollowArcher
+      count: 1
+      spawnPattern: 6
+      groupingMode: 0
+      patrolIntent: 0
+      spawnDelaySeconds: 0

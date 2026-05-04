@@ -188,16 +188,27 @@ namespace Hollow.UI.Shell
 
         private string RestartMessage()
         {
-            return IsChallengeSession()
+            return IsArenaSession()
+                ? "Restart this arena setup and discard the current score?"
+                : IsChallengeSession()
                 ? "Restart this challenge from the beginning with its fixed curated seed and the same challenge loadout?"
                 : "Restart this run from the beginning with the same character and a fresh random seed?";
         }
 
         private string QuitMessage()
         {
-            return IsChallengeSession()
+            return IsArenaSession()
+                ? "Leave Arena Mode and return to the profile menu. Arena scores are current-run only in V1."
+                : IsChallengeSession()
                 ? "Save this challenge into the profile active-run slot and return to the profile menu. This can overwrite another saved run."
                 : "Save the current run checkpoint and return to the profile menu. Continue can restore it later.";
+        }
+
+        private bool IsArenaSession()
+        {
+            ResolveSessionController();
+            return gameSessionController != null &&
+                   gameSessionController.SessionState?.SessionMode == RuntimeSessionMode.TransientArena;
         }
 
         private bool IsChallengeSession()

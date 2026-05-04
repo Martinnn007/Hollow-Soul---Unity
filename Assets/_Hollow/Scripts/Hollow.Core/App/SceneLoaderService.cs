@@ -16,6 +16,7 @@ namespace Hollow.Core.App
                 AppShellRoute.GameVisionOSImmersive => "Game_VisionOS_Immersive",
                 AppShellRoute.RoomDesigner => "RoomDesigner",
                 AppShellRoute.DeveloperSandbox => "DeveloperSandbox",
+                AppShellRoute.ArenaMode => "ArenaMode",
                 _ => "Boot"
             };
         }

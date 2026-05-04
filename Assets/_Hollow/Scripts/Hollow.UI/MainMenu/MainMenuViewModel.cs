@@ -267,6 +267,24 @@ namespace Hollow.UI.MainMenu
             return route;
         }
 
+        public AppShellRoute LaunchArenaMode()
+        {
+            if (!selectedProfileContext.HasSelection)
+            {
+                SetError("Select or create a profile first.");
+                return AppShellRoute.MainMenu;
+            }
+
+            State = MainMenuState.Launching;
+            selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
+            selectedProfileContext.SetSelectedCharacterId("balanced");
+            selectedProfileContext.SetSelectedChallengeId(string.Empty);
+            selectedProfileContext.SetDeveloperLabRequested(false);
+            var route = AppShellRoute.ArenaMode;
+            appStateMachine.TransitionTo(route);
+            return route;
+        }
+
         public AppShellRoute OpenRoomDesigner()
         {
             if (!selectedProfileContext.HasSelection)

@@ -10,7 +10,8 @@ namespace Hollow.Core.App
         GameVisionOSBounded = 3,
         GameVisionOSImmersive = 4,
         RoomDesigner = 5,
-        DeveloperSandbox = 6
+        DeveloperSandbox = 6,
+        ArenaMode = 7
     }
 
     public sealed class AppStateMachine

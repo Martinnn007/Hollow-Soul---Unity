@@ -114,6 +114,18 @@ namespace Hollow.UI.MainMenu
             SceneLoaderService.LoadRouteAsync(route);
         }
 
+        public void LaunchArenaMode()
+        {
+            var route = ViewModel.LaunchArenaMode();
+            if (ViewModel.State == MainMenuState.Error)
+            {
+                screen.Rebuild();
+                return;
+            }
+
+            SceneLoaderService.LoadRouteAsync(route);
+        }
+
         public void OpenChallenges()
         {
             ViewModel.OpenChallenges();
