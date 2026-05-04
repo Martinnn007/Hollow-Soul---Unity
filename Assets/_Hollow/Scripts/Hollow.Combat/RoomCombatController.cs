@@ -33,6 +33,7 @@ namespace Hollow.Combat
         private readonly List<RoomHazardController> hazards = new();
         private readonly List<DestructibleRoomObjectController> destructibleObjects = new();
         private readonly RoomThreatDirector threatDirector = new();
+        private readonly RoomTacticalDirector tacticalDirector = new();
         private CombatantHealth playerHealth;
         private CombatFeelProfileDefinition resolvedCombatFeelProfile;
         private RoomHazardTuningProfileDefinition resolvedHazardTuningProfile;
@@ -68,6 +69,8 @@ namespace Hollow.Combat
         public CombatDiagnosticsModel Diagnostics => diagnostics;
 
         public RoomThreatDirector ThreatDirector => threatDirector;
+
+        public RoomTacticalDirector TacticalDirector => tacticalDirector;
 
         public IReadOnlyList<EnemyRuntimeController> Enemies => enemies;
 
@@ -127,6 +130,7 @@ namespace Hollow.Combat
         {
             TickPlayerFootstepStimuli(Time.time);
             threatDirector.Tick(enemies);
+            tacticalDirector.Tick(enemies, roomRuntimeRoot, playerController, Time.time);
             EvaluateRoomState();
         }
 
@@ -175,6 +179,7 @@ namespace Hollow.Combat
             nextEnemyAttackBudgetTime = 0f;
             nextEnemyMeleeAttackBudgetTime = 0f;
             threatDirector.Reset();
+            tacticalDirector.Reset();
             nextPlayerFootstepStimulusTime = 0f;
             hasLastPlayerFootstepStimulusLocalPosition = false;
             ConfigureRoomHazards();

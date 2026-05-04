@@ -172,7 +172,7 @@ namespace Hollow.Combat
             return localPosition;
         }
 
-        private static bool CanOccupy(RoomRuntimeRoot room, Vector3 localPosition, float radius)
+        public static bool CanOccupy(RoomRuntimeRoot room, Vector3 localPosition, float radius)
         {
             return !IsOutsideWalkable(room, localPosition, radius) && !IntersectsObstacle(room, localPosition, radius);
         }

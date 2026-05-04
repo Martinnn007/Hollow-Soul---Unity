@@ -36,6 +36,7 @@ namespace Hollow.Branches
         private bool debugLightAttackSpeedDoubled;
         private bool debugEnemyPathTracingEnabled;
         private bool debugEnemyAiBlackboardEnabled;
+        private bool debugEnemyTacticalOverlayEnabled;
         private int groupIndex;
         private int entityIndex;
         private Rect windowRect = new(24f, 100f, 420f, 260f);
@@ -46,12 +47,15 @@ namespace Hollow.Branches
 
         public bool DebugEnemyAiBlackboardEnabled => debugEnemyAiBlackboardEnabled;
 
+        public bool DebugEnemyTacticalOverlayEnabled => debugEnemyTacticalOverlayEnabled;
+
         public void Bind(BranchSessionController controller)
         {
             session = controller;
             ApplyDebugLightAttackSpeedToPlayer();
             EnemyNavigationDebugOverlay.SetPathTracingEnabled(debugEnemyPathTracingEnabled);
             EnemyAiDebugOverlay.SetBlackboardEnabled(debugEnemyAiBlackboardEnabled);
+            EnemyTacticalDebugOverlay.SetEnabled(debugEnemyTacticalOverlayEnabled);
         }
 
         public void SetDebugLightAttackSpeedDoubled(bool enabled)
@@ -72,6 +76,12 @@ namespace Hollow.Branches
             EnemyAiDebugOverlay.SetBlackboardEnabled(enabled);
         }
 
+        public void SetDebugEnemyTacticalOverlayEnabled(bool enabled)
+        {
+            debugEnemyTacticalOverlayEnabled = enabled;
+            EnemyTacticalDebugOverlay.SetEnabled(enabled);
+        }
+
         private void Update()
         {
             if (!IsAvailable())
@@ -88,6 +98,7 @@ namespace Hollow.Branches
             ApplyDebugLightAttackSpeedToPlayer(false);
             SetDebugEnemyPathTracingEnabled(false);
             SetDebugEnemyAiBlackboardEnabled(false);
+            SetDebugEnemyTacticalOverlayEnabled(false);
         }
 
         private void OnGUI()
@@ -180,6 +191,12 @@ namespace Hollow.Branches
                 SetDebugEnemyAiBlackboardEnabled(!debugEnemyAiBlackboardEnabled);
             }
             GUILayout.Label(EnemyAiDebugOverlay.DiagnosticsSummary);
+            var tacticalOverlayLabel = $"Enemy Tactical Overlay: {(debugEnemyTacticalOverlayEnabled ? "ON" : "OFF")}";
+            if (GUILayout.Button(tacticalOverlayLabel))
+            {
+                SetDebugEnemyTacticalOverlayEnabled(!debugEnemyTacticalOverlayEnabled);
+            }
+            GUILayout.Label(EnemyTacticalDebugOverlay.DiagnosticsSummary);
 
             if (GUILayout.Button("Spawn In Front Of Player"))
             {

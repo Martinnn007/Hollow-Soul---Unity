@@ -145,6 +145,8 @@ namespace Hollow.Combat
         private float currentDisturbanceScore;
         private float investigationEndTime = float.NegativeInfinity;
         private readonly EnemyAiBrain aiBrain = new();
+        private readonly EnemyLocomotionAgent locomotionAgent = new();
+        private EnemyTacticalIntent lastTacticalIntent = EnemyTacticalIntent.Empty;
         private EnemyNavigationResult lastNavigationResult;
         private Vector3 cachedPathGoalLocalPosition;
         private Vector3 cachedPathNextWaypointLocalPosition;
@@ -316,6 +318,12 @@ namespace Hollow.Combat
 
         public EnemyAiBlackboard AiBlackboard => aiBrain.Blackboard;
 
+        public EnemyTacticalIntent LastTacticalIntent => lastTacticalIntent;
+
+        public int LocomotionBlockedFrames => locomotionAgent.BlockedFrames;
+
+        public string LastLocomotionBlockedReason => locomotionAgent.LastBlockedReason;
+
         public float DistanceToPlayerMeters => DistanceToPlayer();
 
         public Vector3 DirectionToPlayer
@@ -446,6 +454,11 @@ namespace Hollow.Combat
             return ResolveSpacingForActionId(actionId);
         }
 
+        public EnemyResolvedActionSpacing ResolveActionSpacingForTacticalIntent(string actionId)
+        {
+            return ResolveSpacingForActionId(actionId);
+        }
+
         public void BeginEntryGrace(float seconds, float currentTimeSeconds)
         {
             var graceEndTime = currentTimeSeconds + Mathf.Max(0f, seconds);
@@ -571,7 +584,9 @@ namespace Hollow.Combat
             recoveryMovementRemainingMeters = 0f;
             recoveryMovementActionId = string.Empty;
             recoveryMovementMode = EnemySpacingRecoveryMode.Planted;
+            lastTacticalIntent = EnemyTacticalIntent.Empty;
             ResetPathCache();
+            locomotionAgent.Reset();
             aiBrain.Reset();
 
             Health = GetComponent<CombatantHealth>() ?? gameObject.AddComponent<CombatantHealth>();
@@ -916,13 +931,25 @@ namespace Hollow.Combat
                 return false;
             }
 
-            if (aiBrain.TryReuseCommand(this, timeSeconds, distanceToPlayer, out var cachedCommand) &&
-                ExecuteBehaviorCommand(cachedCommand, deltaTime, timeSeconds, distanceToPlayer))
+            if (aiBrain.TryReuseCommand(this, timeSeconds, distanceToPlayer, out var cachedCommand))
             {
-                lastBehaviorTreeNodeId = cachedCommand.Reason;
-                lastBehaviorCommand = cachedCommand.Kind.ToString();
-                lastBehaviorReason = cachedCommand.ActionId;
-                return true;
+                if (roomCombatController != null)
+                {
+                    cachedCommand = roomCombatController.TacticalDirector.PlanCommand(
+                        this,
+                        cachedCommand,
+                        timeSeconds,
+                        distanceToPlayer,
+                        out lastTacticalIntent);
+                }
+
+                if (ExecuteBehaviorCommand(cachedCommand, deltaTime, timeSeconds, distanceToPlayer))
+                {
+                    lastBehaviorTreeNodeId = cachedCommand.Reason;
+                    lastBehaviorCommand = cachedCommand.Kind.ToString();
+                    lastBehaviorReason = cachedCommand.ActionId;
+                    return true;
+                }
             }
 
             var context = new EnemyBehaviorTreeContext(
@@ -953,6 +980,20 @@ namespace Hollow.Combat
                 timeSeconds,
                 distanceToPlayer,
                 roomCombatController != null ? roomCombatController.ThreatDirector : null);
+            if (roomCombatController != null)
+            {
+                command = roomCombatController.TacticalDirector.PlanCommand(
+                    this,
+                    command,
+                    timeSeconds,
+                    distanceToPlayer,
+                    out lastTacticalIntent);
+            }
+            else
+            {
+                lastTacticalIntent = EnemyTacticalIntent.Empty;
+            }
+
             lastBehaviorCommand = command.Kind.ToString();
             lastBehaviorReason = command.ActionId;
 
@@ -980,6 +1021,11 @@ namespace Hollow.Combat
             var spacing = ResolveSpacingForActionId(command.ActionId);
             if (spacing.IsTooFar(distanceToPlayer))
             {
+                if (TryMoveTowardTacticalReservation(deltaTime, Mathf.Max(0.65f, command.SpeedMultiplier), EnemyNavigationIntent.PreferredRange))
+                {
+                    return;
+                }
+
                 MovePreferredRange(deltaTime, distanceToPlayer, Mathf.Max(0.65f, command.SpeedMultiplier));
                 return;
             }
@@ -1059,6 +1105,11 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (TryMoveTowardTacticalReservation(deltaTime, Mathf.Max(0.1f, speedMultiplier), EnemyNavigationIntent.PreferredRange))
+            {
+                return;
+            }
+
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
             if (delta.sqrMagnitude <= 0.01f)
@@ -1073,6 +1124,34 @@ namespace Hollow.Combat
             }
 
             MoveInDirection(direction, deltaTime, RangeIntentSpeedMultiplier(direction, delta.normalized, distanceToPlayer) * Mathf.Max(0.1f, speedMultiplier), intent: EnemyNavigationIntent.PreferredRange);
+        }
+
+        private bool TryMoveTowardTacticalReservation(float deltaTime, float speedMultiplier, EnemyNavigationIntent intent)
+        {
+            if (!lastTacticalIntent.HasReservedPosition ||
+                playerController == null ||
+                lastTacticalIntent.Role is EnemyTacticalRole.Hold or EnemyTacticalRole.Waiting or EnemyTacticalRole.StationarySentinel ||
+                readabilityState != EnemyReadabilityState.Idle)
+            {
+                return false;
+            }
+
+            var delta = lastTacticalIntent.ReservedLocalPosition - transform.localPosition;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= 0.0625f)
+            {
+                FacePlayer();
+                return true;
+            }
+
+            MoveInDirection(
+                delta.normalized,
+                deltaTime,
+                Mathf.Max(0.1f, speedMultiplier),
+                allowSteering: true,
+                intent: intent,
+                finalGoalLocalPosition: lastTacticalIntent.ReservedLocalPosition);
+            return true;
         }
 
         private bool TryStartSpacingReset(string actionId, EnemyResolvedActionSpacing spacing, float timeSeconds)
@@ -1506,6 +1585,11 @@ namespace Hollow.Combat
 
         private void TickChase(float deltaTime, bool allowSteering = true)
         {
+            if (allowSteering && TryMoveTowardTacticalReservation(deltaTime, 1f, EnemyNavigationIntent.MoveToPlayer))
+            {
+                return;
+            }
+
             var delta = playerController.transform.localPosition - transform.localPosition;
             delta.y = 0f;
             if (delta.sqrMagnitude <= 0.01f)
@@ -3694,7 +3778,7 @@ namespace Hollow.Combat
                 actionEnvelopeDesired,
                 actionEnvelopeMin,
                 actionEnvelopeMax);
-            lastNavigationResult = EnemyNavigationAdapter.Resolve(request);
+            lastNavigationResult = locomotionAgent.Resolve(request, lastTacticalIntent);
             UpdatePathCacheAfterResult(lastNavigationResult, finalGoal, intent, allowPathfinding);
             return lastNavigationResult.ResolvedLocalPosition;
         }
@@ -5172,7 +5256,8 @@ namespace Hollow.Combat
             }
 
             EnemyAiDebugOverlay.ReportBlackboard(GetInstanceID(), aiBrain.Blackboard);
-            if (!EnemyAiDebugOverlay.BlackboardEnabled || !isActiveAndEnabled)
+            EnemyTacticalDebugOverlay.ReportIntent(GetInstanceID(), lastTacticalIntent);
+            if ((!EnemyAiDebugOverlay.BlackboardEnabled && !EnemyTacticalDebugOverlay.Enabled) || !isActiveAndEnabled)
             {
                 SetAiDebugTextVisible(false);
                 return;
@@ -5184,7 +5269,9 @@ namespace Hollow.Combat
                 return;
             }
 
-            text.text = aiBrain.Blackboard.Summary;
+            text.text = EnemyTacticalDebugOverlay.Enabled
+                ? $"{aiBrain.Blackboard.Summary}\n{lastTacticalIntent.Summary}"
+                : aiBrain.Blackboard.Summary;
             text.transform.localPosition = new Vector3(0f, 1.45f, 0f);
             text.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
             text.gameObject.SetActive(true);
