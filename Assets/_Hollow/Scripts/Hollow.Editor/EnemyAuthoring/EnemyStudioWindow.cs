@@ -4,6 +4,7 @@ using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Editor.BehaviorTreeStudio;
+using Hollow.Editor.CombatEncounterSimulator;
 using Hollow.Editor.EnemyAiBrainStudio;
 using Hollow.Editor.EnemyPreviewLab;
 using Hollow.Presentation;
@@ -127,6 +128,18 @@ namespace Hollow.Editor.EnemyAuthoring
                     else
                     {
                         EnemyPreviewLabWindow.Open();
+                    }
+                }
+
+                if (GUILayout.Button(Tr("Encounter Sim", "Symulacja"), EditorStyles.toolbarButton, GUILayout.Width(104f)))
+                {
+                    if (rootDraft.Draft is EnemyDefinition enemyDraft)
+                    {
+                        CombatEncounterSimulatorWindow.OpenWithEnemy(selectedSource as EnemyDefinition ?? enemyDraft);
+                    }
+                    else
+                    {
+                        CombatEncounterSimulatorWindow.Open();
                     }
                 }
 
