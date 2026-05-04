@@ -582,6 +582,7 @@ namespace Hollow.Combat
             Health.Died += OnDied;
             ApplyVisualMaterial(RoleForDefinition(Definition));
             PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDefinition(Definition), transform, Vector3.zero, Vector3.one);
+            InstantiateOptionalEnemyVisuals(Definition);
             ConfigureCombatFeel(null);
         }
 
@@ -685,7 +686,8 @@ namespace Hollow.Combat
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
             transform.localScale = Vector3.one * bossDefinition.VisualScale;
             Health.Configure(bossDefinition.MaxHealth);
-            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyBoss, transform, Vector3.zero, Vector3.one);
+            PresentationPrefabResolver.InstantiateVisual(bossDefinition.PresentationPrefabRole, transform, Vector3.zero, Vector3.one);
+            InstantiateOptionalBossVisuals(bossDefinition);
             bossRuntime = GetComponent<BossRuntimeController>() ?? gameObject.AddComponent<BossRuntimeController>();
             bossRuntime.Configure(this, bossDefinition, roomRuntimeRoot, playerController, enemyProjectilePrefab, combatFeelProfile);
             ConfigureCombatFeel(combatFeelProfile);
@@ -726,6 +728,93 @@ namespace Hollow.Combat
             disposition = EnemyInstinctDispositionExtensions.Clamp((int)nextDisposition);
             awarenessState = InitialAwarenessFor(disposition);
             engagedStartTime = awarenessState == EnemyAwarenessState.Engaged ? Time.time : float.NegativeInfinity;
+        }
+
+        public void ApplyDebugTuningOverride(EnemyRuntimeTuningOverride tuning)
+        {
+            if (!tuning.HasAnyOverride || bossDefinition != null)
+            {
+                return;
+            }
+
+            tuning = tuning.Sanitized();
+            if (tuning.overrideMaxHealth && Health != null)
+            {
+                Health.SetMaxHealthPreservingCurrent(tuning.maxHealth, 0);
+            }
+
+            if (tuning.overrideSpeed)
+            {
+                speedMetersPerSecond = tuning.speedMetersPerSecond;
+            }
+
+            if (tuning.overrideRadius)
+            {
+                radiusMeters = tuning.radiusMeters;
+            }
+
+            if (tuning.overrideSenses)
+            {
+                sightRadiusMeters = tuning.sightRadiusMeters;
+                sightAngleDegrees = tuning.sightAngleDegrees;
+                hearingRadiusMeters = tuning.hearingRadiusMeters;
+            }
+
+            if (tuning.overrideIntelligenceDisposition)
+            {
+                ApplyIntelligenceDisposition(tuning.intelligence, tuning.disposition);
+            }
+
+            if (tuning.overrideAttackExecution)
+            {
+                attackWindupScale = tuning.attackWindupScale;
+                attackActiveScale = tuning.attackActiveScale;
+                attackRecoveryScale = tuning.attackRecoveryScale;
+                hitArcDegreesBonus = tuning.hitArcDegreesBonus;
+                poiseBreakThresholdOffset = tuning.poiseBreakThresholdOffset;
+            }
+
+            ConfigureCombatFeel(combatFeelProfile);
+        }
+
+        public void ApplyDebugTuningOverride(EnemyDefinition tunedDefinition)
+        {
+            if (tunedDefinition == null || bossDefinition != null)
+            {
+                return;
+            }
+
+            Definition = tunedDefinition;
+            archetypeId = tunedDefinition.ArchetypeId;
+            behaviorId = tunedDefinition.BehaviorId;
+            movementMode = tunedDefinition.MovementMode;
+            bodyClass = tunedDefinition.BodyClass;
+            contactDamagePolicy = tunedDefinition.ContactDamagePolicy;
+            passiveContactHazardType = tunedDefinition.PassiveContactHazardType;
+            contactDamage = tunedDefinition.ContactDamage;
+            contactCooldownSeconds = tunedDefinition.ContactCooldownSeconds;
+            preferredRangeMinMeters = tunedDefinition.PreferredRangeMinMeters;
+            preferredRangeMaxMeters = tunedDefinition.PreferredRangeMaxMeters;
+            hearingSensitivityMultiplier = tunedDefinition.HearingSensitivityMultiplier;
+            disturbanceEscalationThreshold = tunedDefinition.DisturbanceEscalationThreshold;
+            investigationDurationSeconds = tunedDefinition.InvestigationDurationSeconds;
+            allyAlertSharingEnabled = tunedDefinition.AllyAlertSharingEnabled;
+            allyAlertRadiusMeters = tunedDefinition.AllyAlertRadiusMeters;
+            allyAlertCooldownSeconds = tunedDefinition.AllyAlertCooldownSeconds;
+            allyAlertMinimumAwareness = tunedDefinition.AllyAlertMinimumAwareness;
+            lungeAttackEnabled = tunedDefinition.LungeAttackEnabled;
+            lungeTriggerRangeMeters = tunedDefinition.LungeTriggerRangeMeters;
+            lungeWindupSeconds = tunedDefinition.LungeWindupSeconds;
+            lungeActiveSeconds = tunedDefinition.LungeActiveSeconds;
+            lungeDistanceMeters = tunedDefinition.LungeDistanceMeters;
+            lungeCooldownSeconds = tunedDefinition.LungeCooldownSeconds;
+            behaviorTreeDefinition = tunedDefinition.BehaviorTree;
+            spacingProfile = tunedDefinition.SpacingProfile;
+            resolvedGuardProfile = tunedDefinition.GuardProfile;
+            ApplyDebugTuningOverride(EnemyRuntimeTuningOverride.FromDefinition(tunedDefinition));
+            ApplyVisualMaterial(RoleForDefinition(tunedDefinition));
+            PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDefinition(tunedDefinition), transform, Vector3.zero, Vector3.one);
+            InstantiateOptionalEnemyVisuals(tunedDefinition);
         }
 
         public void ArmBossActiveContactWindow(EnemyAttackProfileDefinition profile, float timeSeconds)
@@ -4899,40 +4988,7 @@ namespace Hollow.Combat
                 return MaterialRole.EnemyNormal;
             }
 
-            return definition.BehaviorId switch
-            {
-                EnemyBehaviorId.Charger => MaterialRole.EnemyCharger,
-                EnemyBehaviorId.TurretShooter => MaterialRole.EnemyTurret,
-                EnemyBehaviorId.Splitter => MaterialRole.EnemySplitter,
-                EnemyBehaviorId.SpittingPod => MaterialRole.EnemySpittingPod,
-                EnemyBehaviorId.Rat => MaterialRole.EnemyRat,
-                EnemyBehaviorId.Spider => MaterialRole.EnemySpider,
-                EnemyBehaviorId.HollowBird => MaterialRole.EnemyHollowBird,
-                EnemyBehaviorId.HollowBeast => MaterialRole.EnemyHollowBeast,
-                EnemyBehaviorId.SkeletonSword => MaterialRole.EnemySkeletonSword,
-                EnemyBehaviorId.SkeletonSpear => MaterialRole.EnemySkeletonSpear,
-                EnemyBehaviorId.Knight => MaterialRole.EnemyKnight,
-                EnemyBehaviorId.Giant => MaterialRole.EnemyGiant,
-                EnemyBehaviorId.HollowArcher => MaterialRole.EnemyHollowArcher,
-                EnemyBehaviorId.PowderGunner => MaterialRole.EnemyPowderGunner,
-                EnemyBehaviorId.KnifeThrower => MaterialRole.EnemyKnifeThrower,
-                EnemyBehaviorId.RepeaterTurret => MaterialRole.EnemyRepeaterTurret,
-                EnemyBehaviorId.ClockworkSentry => MaterialRole.EnemyClockworkSentry,
-                EnemyBehaviorId.HollowAcolyte => MaterialRole.EnemyHollowAcolyte,
-                EnemyBehaviorId.Wraith => MaterialRole.EnemyWraith,
-                EnemyBehaviorId.SoulEater => MaterialRole.EnemySoulEater,
-                EnemyBehaviorId.CurseBinder => MaterialRole.EnemyCurseBinder,
-                EnemyBehaviorId.GraveLantern => MaterialRole.EnemyGraveLantern,
-                EnemyBehaviorId.BossWarden => MaterialRole.EnemyBoss,
-                EnemyBehaviorId.FlyingChaser => MaterialRole.EnemyFlying,
-                _ => definition.ArchetypeId switch
-                {
-                    EnemyArchetypeId.Fast => MaterialRole.EnemyFast,
-                    EnemyArchetypeId.Heavy => MaterialRole.EnemyHeavy,
-                    EnemyArchetypeId.Boss => MaterialRole.EnemyBoss,
-                    _ => MaterialRole.EnemyNormal
-                }
-            };
+            return definition.PresentationMaterialRole;
         }
 
         private static PresentationPrefabRole PrefabRoleForDefinition(EnemyDefinition definition)
@@ -4942,40 +4998,43 @@ namespace Hollow.Combat
                 return PresentationPrefabRole.EnemyNormal;
             }
 
-            return definition.BehaviorId switch
+            return definition.PresentationPrefabRole;
+        }
+
+        private void InstantiateOptionalEnemyVisuals(EnemyDefinition definition)
+        {
+            if (definition == null)
             {
-                EnemyBehaviorId.Charger => PresentationPrefabRole.EnemyCharger,
-                EnemyBehaviorId.TurretShooter => PresentationPrefabRole.EnemyTurret,
-                EnemyBehaviorId.Splitter => PresentationPrefabRole.EnemySplitter,
-                EnemyBehaviorId.SpittingPod => PresentationPrefabRole.EnemySpittingPod,
-                EnemyBehaviorId.Rat => PresentationPrefabRole.EnemyRat,
-                EnemyBehaviorId.Spider => PresentationPrefabRole.EnemySpider,
-                EnemyBehaviorId.HollowBird => PresentationPrefabRole.EnemyHollowBird,
-                EnemyBehaviorId.HollowBeast => PresentationPrefabRole.EnemyHollowBeast,
-                EnemyBehaviorId.SkeletonSword => PresentationPrefabRole.EnemySkeletonSword,
-                EnemyBehaviorId.SkeletonSpear => PresentationPrefabRole.EnemySkeletonSpear,
-                EnemyBehaviorId.Knight => PresentationPrefabRole.EnemyKnight,
-                EnemyBehaviorId.Giant => PresentationPrefabRole.EnemyGiant,
-                EnemyBehaviorId.HollowArcher => PresentationPrefabRole.EnemyHollowArcher,
-                EnemyBehaviorId.PowderGunner => PresentationPrefabRole.EnemyPowderGunner,
-                EnemyBehaviorId.KnifeThrower => PresentationPrefabRole.EnemyKnifeThrower,
-                EnemyBehaviorId.RepeaterTurret => PresentationPrefabRole.EnemyRepeaterTurret,
-                EnemyBehaviorId.ClockworkSentry => PresentationPrefabRole.EnemyClockworkSentry,
-                EnemyBehaviorId.HollowAcolyte => PresentationPrefabRole.EnemyHollowAcolyte,
-                EnemyBehaviorId.Wraith => PresentationPrefabRole.EnemyWraith,
-                EnemyBehaviorId.SoulEater => PresentationPrefabRole.EnemySoulEater,
-                EnemyBehaviorId.CurseBinder => PresentationPrefabRole.EnemyCurseBinder,
-                EnemyBehaviorId.GraveLantern => PresentationPrefabRole.EnemyGraveLantern,
-                EnemyBehaviorId.BossWarden => PresentationPrefabRole.EnemyBoss,
-                EnemyBehaviorId.FlyingChaser => PresentationPrefabRole.EnemyFlying,
-                _ => definition.ArchetypeId switch
-                {
-                    EnemyArchetypeId.Fast => PresentationPrefabRole.EnemyFast,
-                    EnemyArchetypeId.Heavy => PresentationPrefabRole.EnemyHeavy,
-                    EnemyArchetypeId.Boss => PresentationPrefabRole.EnemyBoss,
-                    _ => PresentationPrefabRole.EnemyNormal
-                }
-            };
+                return;
+            }
+
+            if (definition.HasWeaponPrefabRoleOverride)
+            {
+                PresentationPrefabResolver.InstantiateVisual(definition.WeaponPrefabRole, transform, new Vector3(0.28f, 0.18f, 0.18f), Vector3.one * 0.45f);
+            }
+
+            if (definition.HasOffhandPrefabRoleOverride)
+            {
+                PresentationPrefabResolver.InstantiateVisual(definition.OffhandPrefabRole, transform, new Vector3(-0.28f, 0.18f, 0.12f), Vector3.one * 0.38f);
+            }
+        }
+
+        private void InstantiateOptionalBossVisuals(BossDefinition definition)
+        {
+            if (definition == null)
+            {
+                return;
+            }
+
+            if (definition.HasWeaponPrefabRoleOverride)
+            {
+                PresentationPrefabResolver.InstantiateVisual(definition.WeaponPrefabRole, transform, new Vector3(0.42f, 0.24f, 0.2f), Vector3.one * 0.65f);
+            }
+
+            if (definition.HasOffhandPrefabRoleOverride)
+            {
+                PresentationPrefabResolver.InstantiateVisual(definition.OffhandPrefabRole, transform, new Vector3(-0.42f, 0.24f, 0.16f), Vector3.one * 0.55f);
+            }
         }
 
         private void OnDrawGizmosSelected()

@@ -1,0 +1,206 @@
+using System.Linq;
+using Hollow.Editor.DesignerRooms;
+using Hollow.RoomDesigner;
+using Hollow.Rooms;
+using NUnit.Framework;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace Hollow.Tests.EditMode
+{
+    public sealed class DesignerRoomSceneAuthoringToolsTests
+    {
+        [Test]
+        public void EnemyRuntimeKindPaletteIncludesCurrentRoster()
+        {
+            var options = DesignerRoomSceneAuthoringUtility.RuntimeKindsFor(DesignerRoomSceneMarkerKind.EnemySpawn);
+
+            Assert.Contains(RoomDesignerMarkerKinds.EnemyRat, options.ToArray());
+            Assert.Contains(RoomDesignerMarkerKinds.EnemySpider, options.ToArray());
+            Assert.Contains(RoomDesignerMarkerKinds.EnemySkeletonSpear, options.ToArray());
+            Assert.Contains(RoomDesignerMarkerKinds.EnemyHollowArcher, options.ToArray());
+            Assert.Contains(RoomDesignerMarkerKinds.EnemyWraith, options.ToArray());
+        }
+
+        [Test]
+        public void PolishAuthoringLocalizationExposesCoreLabels()
+        {
+            var previous = DesignerRoomAuthoringLocalization.CurrentLanguage;
+            try
+            {
+                DesignerRoomAuthoringLocalization.CurrentLanguage = DesignerRoomAuthoringLanguage.Polish;
+
+                Assert.AreEqual("Paleta", DesignerRoomAuthoringLocalization.PanelLabels[0]);
+                Assert.AreEqual("Drzwi", DesignerRoomAuthoringLocalization.DisplayNameForRuntimeKind(RoomDesignerDoorKinds.Door));
+                Assert.AreEqual("Szczur", DesignerRoomAuthoringLocalization.DisplayNameForRuntimeKind(RoomDesignerMarkerKinds.EnemyRat));
+                Assert.AreEqual("Spawn wroga", DesignerRoomAuthoringLocalization.MarkerKindLabel(DesignerRoomSceneMarkerKind.EnemySpawn));
+            }
+            finally
+            {
+                DesignerRoomAuthoringLocalization.CurrentLanguage = previous;
+            }
+        }
+
+        [Test]
+        public void SnapMarkerRoundsNormalMarkersToOneMeterGrid()
+        {
+            var root = CreateRoot();
+            var marker = DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.EnemySpawn,
+                RoomDesignerMarkerKinds.EnemyRat,
+                new Vector3(1.3f, 0f, -1.7f));
+            marker.transform.localPosition = new Vector3(2.49f, 0.25f, -2.51f);
+
+            DesignerRoomSceneAuthoringUtility.SnapMarker(marker, recordUndo: false);
+
+            Assert.AreEqual(2f, marker.transform.localPosition.x, 0.001f);
+            Assert.AreEqual(-3f, marker.transform.localPosition.z, 0.001f);
+        }
+
+        [Test]
+        public void SnapDoorMarkerUsesNearestValidRoomEdge()
+        {
+            var root = CreateRoot();
+            var marker = DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.DoorPort,
+                RoomDesignerDoorKinds.Door,
+                new Vector3(6.2f, 0f, 0.2f));
+
+            DesignerRoomSceneAuthoringUtility.SnapMarker(marker, recordUndo: false);
+
+            Assert.AreEqual("east", marker.DoorDirection);
+            Assert.AreEqual(6.5f, marker.transform.localPosition.x, 0.001f);
+            Assert.AreEqual(0f, marker.transform.localPosition.z, 0.001f);
+        }
+
+        [Test]
+        public void BuildProjectFromScenePreservesTypedEnemyAndDoor()
+        {
+            var root = CreateRoot();
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.SafeStart,
+                RoomDesignerMarkerKinds.SafeStart,
+                new Vector3(0f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.EnemySpawn,
+                RoomDesignerMarkerKinds.EnemyRat,
+                new Vector3(3f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.DoorPort,
+                RoomDesignerDoorKinds.Door,
+                new Vector3(6.5f, 0f, 0f));
+
+            var project = DesignerRoomSceneAuthoringUtility.BuildRoomDesignerProject(SceneManager.GetActiveScene());
+            var report = RoomDesignerDraftValidator.Validate(project);
+
+            Assert.IsTrue(report.IsValid, string.Join("; ", report.Errors));
+            Assert.IsTrue(project.markers.Any(marker => marker.kind == RoomDesignerMarkerKinds.EnemyRat));
+            Assert.IsTrue(project.doorPorts.Any(door => door.direction == "east" && door.state == RoomDesignerDoorKinds.Door));
+        }
+
+        [Test]
+        public void ValidationReportsMissingSafeStart()
+        {
+            var root = CreateRoot();
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.EnemySpawn,
+                RoomDesignerMarkerKinds.EnemySpider,
+                new Vector3(3f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.DoorPort,
+                RoomDesignerDoorKinds.Door,
+                new Vector3(6.5f, 0f, 0f));
+
+            var report = DesignerRoomSceneAuthoringUtility.ValidateScene(SceneManager.GetActiveScene());
+
+            Assert.IsFalse(report.IsValid);
+            Assert.IsTrue(report.Errors.Any(error => error.Contains("safe-start")));
+        }
+
+        [Test]
+        public void VisualPreviewBuildsNonExportedPrefabLayer()
+        {
+            var root = CreateRoot();
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.SafeStart,
+                RoomDesignerMarkerKinds.SafeStart,
+                Vector3.zero);
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.EnemySpawn,
+                RoomDesignerMarkerKinds.EnemySkeletonSpear,
+                new Vector3(2f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.Obstacle,
+                RoomDesignerCellKinds.Rock,
+                new Vector3(-2f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.DoorPort,
+                RoomDesignerDoorKinds.Door,
+                new Vector3(6.5f, 0f, 0f));
+
+            var preview = DesignerRoomSceneVisualPreviewBuilder.BuildPreview(SceneManager.GetActiveScene());
+
+            Assert.IsNotNull(preview);
+            Assert.AreEqual(DesignerRoomSceneVisualPreviewBuilder.PreviewRootName, preview.name);
+            Assert.AreEqual(0, preview.GetComponentsInChildren<DesignerRoomSceneMarker>(true).Length);
+            Assert.IsNotNull(preview.transform.Find("Floor"));
+            Assert.IsNotNull(preview.transform.Find("Obstacles"));
+            Assert.IsNotNull(preview.transform.Find("Doors"));
+            Assert.IsNotNull(preview.transform.Find("Spawns/Enemies"));
+            Assert.GreaterOrEqual(preview.GetComponentsInChildren<Light>(true).Length, 2);
+
+            var project = DesignerRoomSceneAuthoringUtility.BuildRoomDesignerProject(SceneManager.GetActiveScene());
+            Assert.IsTrue(project.markers.Any(marker => marker.kind == RoomDesignerMarkerKinds.EnemySkeletonSpear));
+        }
+
+        [Test]
+        public void VisualPreviewCanBeCleared()
+        {
+            var root = CreateRoot();
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.SafeStart,
+                RoomDesignerMarkerKinds.SafeStart,
+                Vector3.zero);
+
+            DesignerRoomSceneVisualPreviewBuilder.BuildPreview(SceneManager.GetActiveScene());
+            Assert.IsTrue(DesignerRoomSceneVisualPreviewBuilder.HasPreview(SceneManager.GetActiveScene()));
+
+            DesignerRoomSceneVisualPreviewBuilder.ClearPreview(SceneManager.GetActiveScene());
+
+            Assert.IsFalse(DesignerRoomSceneVisualPreviewBuilder.HasPreview(SceneManager.GetActiveScene()));
+        }
+
+        private static DesignerRoomSceneMarker CreateRoot()
+        {
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var rootObject = new GameObject("DesignerRoomRoot.AuthoringTest");
+            var root = rootObject.AddComponent<DesignerRoomSceneMarker>();
+            root.ConfigureAuthoring(
+                "authoring_test_room",
+                DesignerRoomSceneMarkerKind.RoomRoot,
+                "combat",
+                "authoring_test_room",
+                string.Empty,
+                "Test room root.",
+                false,
+                "Authoring Test Room",
+                true,
+                true,
+                0.5f);
+            return root;
+        }
+    }
+}

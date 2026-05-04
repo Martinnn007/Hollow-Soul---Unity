@@ -58,6 +58,16 @@ namespace Hollow.Combat
         [SerializeField] private EnemyGuardProfileDefinition guardProfile;
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTree;
         [SerializeField] private EnemySpacingProfileDefinition spacingProfile;
+        [SerializeField] private bool presentationPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole presentationPrefabRoleOverride = PresentationPrefabRole.EnemyNormal;
+        [SerializeField] private bool weaponPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole weaponPrefabRoleOverride = PresentationPrefabRole.WeaponMelee;
+        [SerializeField] private bool offhandPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole offhandPrefabRoleOverride = PresentationPrefabRole.Armor;
+        [SerializeField] private bool projectilePrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole projectilePrefabRoleOverride = PresentationPrefabRole.EnemyProjectile;
+        [SerializeField] private bool vfxPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole vfxPrefabRoleOverride = PresentationPrefabRole.VfxEnemyHit;
         [SerializeField] private Color color = new(0.85f, 0.16f, 0.14f, 1f);
 
         public string SpawnKind => spawnKind;
@@ -193,6 +203,30 @@ namespace Hollow.Combat
         public EnemyGuardProfileDefinition GuardProfile => guardProfile != null
             ? guardProfile
             : EnemyGuardProfileDefinition.DefaultForBehavior(BehaviorId);
+
+        public bool HasPresentationPrefabRoleOverride => presentationPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole PresentationPrefabRole => presentationPrefabRoleOverrideEnabled
+            ? presentationPrefabRoleOverride
+            : DefaultPresentationPrefabRoleFor(archetypeId, behaviorId);
+
+        public MaterialRole PresentationMaterialRole => DefaultMaterialRoleFor(PresentationPrefabRole, archetypeId, behaviorId);
+
+        public bool HasWeaponPrefabRoleOverride => weaponPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole WeaponPrefabRole => weaponPrefabRoleOverride;
+
+        public bool HasOffhandPrefabRoleOverride => offhandPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole OffhandPrefabRole => offhandPrefabRoleOverride;
+
+        public bool HasProjectilePrefabRoleOverride => projectilePrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole ProjectilePrefabRole => projectilePrefabRoleOverride;
+
+        public bool HasVfxPrefabRoleOverride => vfxPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole VfxPrefabRole => vfxPrefabRoleOverride;
 
         public Color Color => color;
 
@@ -550,6 +584,30 @@ namespace Hollow.Combat
             guardProfile = nextGuardProfile;
         }
 
+        public void ConfigurePresentationRoles(
+            bool hasPresentationRoleOverride,
+            PresentationPrefabRole nextPresentationRole,
+            bool hasWeaponRoleOverride,
+            PresentationPrefabRole nextWeaponRole,
+            bool hasOffhandRoleOverride,
+            PresentationPrefabRole nextOffhandRole,
+            bool hasProjectileRoleOverride,
+            PresentationPrefabRole nextProjectileRole,
+            bool hasVfxRoleOverride,
+            PresentationPrefabRole nextVfxRole)
+        {
+            presentationPrefabRoleOverrideEnabled = hasPresentationRoleOverride;
+            presentationPrefabRoleOverride = nextPresentationRole;
+            weaponPrefabRoleOverrideEnabled = hasWeaponRoleOverride;
+            weaponPrefabRoleOverride = nextWeaponRole;
+            offhandPrefabRoleOverrideEnabled = hasOffhandRoleOverride;
+            offhandPrefabRoleOverride = nextOffhandRole;
+            projectilePrefabRoleOverrideEnabled = hasProjectileRoleOverride;
+            projectilePrefabRoleOverride = nextProjectileRole;
+            vfxPrefabRoleOverrideEnabled = hasVfxRoleOverride;
+            vfxPrefabRoleOverride = nextVfxRole;
+        }
+
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)
         {
             if (attackProfiles != null)
@@ -732,6 +790,91 @@ namespace Hollow.Combat
             }
 
             return EnemyBodyClass.Medium;
+        }
+
+        public static PresentationPrefabRole DefaultPresentationPrefabRoleFor(
+            EnemyArchetypeId nextArchetypeId,
+            EnemyBehaviorId nextBehaviorId)
+        {
+            return nextBehaviorId switch
+            {
+                EnemyBehaviorId.Charger => PresentationPrefabRole.EnemyCharger,
+                EnemyBehaviorId.TurretShooter => PresentationPrefabRole.EnemyTurret,
+                EnemyBehaviorId.Splitter => PresentationPrefabRole.EnemySplitter,
+                EnemyBehaviorId.SpittingPod => PresentationPrefabRole.EnemySpittingPod,
+                EnemyBehaviorId.Rat => PresentationPrefabRole.EnemyRat,
+                EnemyBehaviorId.Spider => PresentationPrefabRole.EnemySpider,
+                EnemyBehaviorId.HollowBird => PresentationPrefabRole.EnemyHollowBird,
+                EnemyBehaviorId.HollowBeast => PresentationPrefabRole.EnemyHollowBeast,
+                EnemyBehaviorId.SkeletonSword => PresentationPrefabRole.EnemySkeletonSword,
+                EnemyBehaviorId.SkeletonSpear => PresentationPrefabRole.EnemySkeletonSpear,
+                EnemyBehaviorId.Knight => PresentationPrefabRole.EnemyKnight,
+                EnemyBehaviorId.Giant => PresentationPrefabRole.EnemyGiant,
+                EnemyBehaviorId.HollowArcher => PresentationPrefabRole.EnemyHollowArcher,
+                EnemyBehaviorId.PowderGunner => PresentationPrefabRole.EnemyPowderGunner,
+                EnemyBehaviorId.KnifeThrower => PresentationPrefabRole.EnemyKnifeThrower,
+                EnemyBehaviorId.RepeaterTurret => PresentationPrefabRole.EnemyRepeaterTurret,
+                EnemyBehaviorId.ClockworkSentry => PresentationPrefabRole.EnemyClockworkSentry,
+                EnemyBehaviorId.HollowAcolyte => PresentationPrefabRole.EnemyHollowAcolyte,
+                EnemyBehaviorId.Wraith => PresentationPrefabRole.EnemyWraith,
+                EnemyBehaviorId.SoulEater => PresentationPrefabRole.EnemySoulEater,
+                EnemyBehaviorId.CurseBinder => PresentationPrefabRole.EnemyCurseBinder,
+                EnemyBehaviorId.GraveLantern => PresentationPrefabRole.EnemyGraveLantern,
+                EnemyBehaviorId.BossWarden => PresentationPrefabRole.EnemyBoss,
+                EnemyBehaviorId.FlyingChaser => PresentationPrefabRole.EnemyFlying,
+                _ => nextArchetypeId switch
+                {
+                    EnemyArchetypeId.Fast => PresentationPrefabRole.EnemyFast,
+                    EnemyArchetypeId.Heavy => PresentationPrefabRole.EnemyHeavy,
+                    EnemyArchetypeId.Boss => PresentationPrefabRole.EnemyBoss,
+                    _ => PresentationPrefabRole.EnemyNormal
+                }
+            };
+        }
+
+        public static MaterialRole DefaultMaterialRoleFor(
+            PresentationPrefabRole prefabRole,
+            EnemyArchetypeId fallbackArchetypeId,
+            EnemyBehaviorId fallbackBehaviorId)
+        {
+            return prefabRole switch
+            {
+                PresentationPrefabRole.EnemyFlying => MaterialRole.EnemyFlying,
+                PresentationPrefabRole.EnemyFast => MaterialRole.EnemyFast,
+                PresentationPrefabRole.EnemyHeavy => MaterialRole.EnemyHeavy,
+                PresentationPrefabRole.EnemyCharger => MaterialRole.EnemyCharger,
+                PresentationPrefabRole.EnemyTurret => MaterialRole.EnemyTurret,
+                PresentationPrefabRole.EnemySplitter => MaterialRole.EnemySplitter,
+                PresentationPrefabRole.EnemySpittingPod => MaterialRole.EnemySpittingPod,
+                PresentationPrefabRole.EnemyRat => MaterialRole.EnemyRat,
+                PresentationPrefabRole.EnemySpider => MaterialRole.EnemySpider,
+                PresentationPrefabRole.EnemyHollowBird => MaterialRole.EnemyHollowBird,
+                PresentationPrefabRole.EnemyHollowBeast => MaterialRole.EnemyHollowBeast,
+                PresentationPrefabRole.EnemySkeletonSword => MaterialRole.EnemySkeletonSword,
+                PresentationPrefabRole.EnemySkeletonSpear => MaterialRole.EnemySkeletonSpear,
+                PresentationPrefabRole.EnemyKnight => MaterialRole.EnemyKnight,
+                PresentationPrefabRole.EnemyGiant => MaterialRole.EnemyGiant,
+                PresentationPrefabRole.EnemyHollowArcher => MaterialRole.EnemyHollowArcher,
+                PresentationPrefabRole.EnemyPowderGunner => MaterialRole.EnemyPowderGunner,
+                PresentationPrefabRole.EnemyKnifeThrower => MaterialRole.EnemyKnifeThrower,
+                PresentationPrefabRole.EnemyRepeaterTurret => MaterialRole.EnemyRepeaterTurret,
+                PresentationPrefabRole.EnemyClockworkSentry => MaterialRole.EnemyClockworkSentry,
+                PresentationPrefabRole.EnemyHollowAcolyte => MaterialRole.EnemyHollowAcolyte,
+                PresentationPrefabRole.EnemyWraith => MaterialRole.EnemyWraith,
+                PresentationPrefabRole.EnemySoulEater => MaterialRole.EnemySoulEater,
+                PresentationPrefabRole.EnemyCurseBinder => MaterialRole.EnemyCurseBinder,
+                PresentationPrefabRole.EnemyGraveLantern => MaterialRole.EnemyGraveLantern,
+                PresentationPrefabRole.EnemyBoss => MaterialRole.EnemyBoss,
+                _ => fallbackBehaviorId == EnemyBehaviorId.FlyingChaser
+                    ? MaterialRole.EnemyFlying
+                    : fallbackArchetypeId switch
+                    {
+                        EnemyArchetypeId.Fast => MaterialRole.EnemyFast,
+                        EnemyArchetypeId.Heavy => MaterialRole.EnemyHeavy,
+                        EnemyArchetypeId.Boss => MaterialRole.EnemyBoss,
+                        _ => MaterialRole.EnemyNormal
+                    }
+            };
         }
 
         public static EnemyIntelligenceLevel DefaultIntelligenceFor(

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -129,6 +130,16 @@ namespace Hollow.Combat
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTreeMetadata;
         [SerializeField] private EnemySpacingProfileDefinition spacingProfileMetadata;
+        [SerializeField] private bool presentationPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole presentationPrefabRoleOverride = PresentationPrefabRole.EnemyBoss;
+        [SerializeField] private bool weaponPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole weaponPrefabRoleOverride = PresentationPrefabRole.WeaponMelee;
+        [SerializeField] private bool offhandPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole offhandPrefabRoleOverride = PresentationPrefabRole.Armor;
+        [SerializeField] private bool projectilePrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole projectilePrefabRoleOverride = PresentationPrefabRole.EnemyProjectile;
+        [SerializeField] private bool vfxPrefabRoleOverrideEnabled;
+        [SerializeField] private PresentationPrefabRole vfxPrefabRoleOverride = PresentationPrefabRole.VfxEnemyHit;
 
         public string BossId => string.IsNullOrWhiteSpace(bossId) ? "stone_warden" : bossId;
 
@@ -205,6 +216,28 @@ namespace Hollow.Combat
         public EnemySpacingProfileDefinition SpacingProfileMetadata => spacingProfileMetadata != null
             ? spacingProfileMetadata
             : EnemySpacingProfileDefaults.CreateBossMetadataProfile(this);
+
+        public bool HasPresentationPrefabRoleOverride => presentationPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole PresentationPrefabRole => presentationPrefabRoleOverrideEnabled
+            ? presentationPrefabRoleOverride
+            : PresentationPrefabRole.EnemyBoss;
+
+        public bool HasWeaponPrefabRoleOverride => weaponPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole WeaponPrefabRole => weaponPrefabRoleOverride;
+
+        public bool HasOffhandPrefabRoleOverride => offhandPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole OffhandPrefabRole => offhandPrefabRoleOverride;
+
+        public bool HasProjectilePrefabRoleOverride => projectilePrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole ProjectilePrefabRole => projectilePrefabRoleOverride;
+
+        public bool HasVfxPrefabRoleOverride => vfxPrefabRoleOverrideEnabled;
+
+        public PresentationPrefabRole VfxPrefabRole => vfxPrefabRoleOverride;
 
         public void Configure(
             string nextBossId,
@@ -321,6 +354,30 @@ namespace Hollow.Combat
         public void ConfigureSpacingProfileMetadata(EnemySpacingProfileDefinition nextSpacingProfileMetadata)
         {
             spacingProfileMetadata = nextSpacingProfileMetadata;
+        }
+
+        public void ConfigurePresentationRoles(
+            bool hasPresentationRoleOverride,
+            PresentationPrefabRole nextPresentationRole,
+            bool hasWeaponRoleOverride,
+            PresentationPrefabRole nextWeaponRole,
+            bool hasOffhandRoleOverride,
+            PresentationPrefabRole nextOffhandRole,
+            bool hasProjectileRoleOverride,
+            PresentationPrefabRole nextProjectileRole,
+            bool hasVfxRoleOverride,
+            PresentationPrefabRole nextVfxRole)
+        {
+            presentationPrefabRoleOverrideEnabled = hasPresentationRoleOverride;
+            presentationPrefabRoleOverride = nextPresentationRole;
+            weaponPrefabRoleOverrideEnabled = hasWeaponRoleOverride;
+            weaponPrefabRoleOverride = nextWeaponRole;
+            offhandPrefabRoleOverrideEnabled = hasOffhandRoleOverride;
+            offhandPrefabRoleOverride = nextOffhandRole;
+            projectilePrefabRoleOverrideEnabled = hasProjectileRoleOverride;
+            projectilePrefabRoleOverride = nextProjectileRole;
+            vfxPrefabRoleOverrideEnabled = hasVfxRoleOverride;
+            vfxPrefabRoleOverride = nextVfxRole;
         }
 
         public EnemyAttackProfileDefinition ResolveAttackProfile(string attackId)

@@ -27,6 +27,15 @@ namespace Hollow.Rooms
         [SerializeField] private string sourceRuntimePath = string.Empty;
         [SerializeField] private string notes = string.Empty;
         [SerializeField] private bool editableByDesigner = true;
+        [SerializeField] private string displayName = string.Empty;
+        [SerializeField] private bool showLabel = true;
+        [SerializeField] private bool lockedLayer;
+        [SerializeField] private float previewRadiusMeters = 0.5f;
+        [SerializeField] private string doorDirection = string.Empty;
+        [SerializeField] private int doorLaneIndex;
+        [SerializeField] private int hostCellX;
+        [SerializeField] private int hostCellZ;
+        [SerializeField] private string doorState = "door";
 
         public string MarkerId => markerId;
 
@@ -41,6 +50,50 @@ namespace Hollow.Rooms
         public string Notes => notes;
 
         public bool EditableByDesigner => editableByDesigner;
+
+        public string DisplayName => displayName;
+
+        public bool ShowLabel => showLabel;
+
+        public bool LockedLayer => lockedLayer;
+
+        public float PreviewRadiusMeters => Mathf.Max(0.05f, previewRadiusMeters);
+
+        public string DoorDirection => doorDirection;
+
+        public int DoorLaneIndex => Mathf.Max(0, doorLaneIndex);
+
+        public int HostCellX => hostCellX;
+
+        public int HostCellZ => hostCellZ;
+
+        public string DoorState => string.IsNullOrWhiteSpace(doorState) ? "door" : doorState;
+
+        public string Label
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(displayName))
+                {
+                    return displayName;
+                }
+
+                return markerKind switch
+                {
+                    DesignerRoomSceneMarkerKind.RoomRoot => string.IsNullOrWhiteSpace(sourceRoomId) ? "Room Root" : sourceRoomId,
+                    DesignerRoomSceneMarkerKind.FloorRegion => "Floor Region",
+                    DesignerRoomSceneMarkerKind.DoorPort => $"Door {DoorDirectionLabel()}_{DoorLaneIndex}",
+                    DesignerRoomSceneMarkerKind.SafeStart => "Safe Start",
+                    DesignerRoomSceneMarkerKind.EnemySpawn => EnemyDisplayName(runtimeKind),
+                    DesignerRoomSceneMarkerKind.ItemSpawn => runtimeKind == "spawn_point_chest" ? "Chest" : "Room Reward",
+                    DesignerRoomSceneMarkerKind.Obstacle => "Rock",
+                    DesignerRoomSceneMarkerKind.Hazard => "Spike",
+                    DesignerRoomSceneMarkerKind.InteractiveObject => runtimeKind == "barrelExplosive" ? "Explosive Barrel" : "Barrel",
+                    DesignerRoomSceneMarkerKind.HoleTile => "Hole",
+                    _ => string.IsNullOrWhiteSpace(markerId) ? markerKind.ToString() : markerId
+                };
+            }
+        }
 
         public void Configure(
             string nextMarkerId,
@@ -58,6 +111,68 @@ namespace Hollow.Rooms
             sourceRuntimePath = nextSourceRuntimePath ?? string.Empty;
             notes = nextNotes ?? string.Empty;
             editableByDesigner = nextEditableByDesigner;
+        }
+
+        public void ConfigureAuthoring(
+            string nextMarkerId,
+            DesignerRoomSceneMarkerKind nextMarkerKind,
+            string nextRuntimeKind,
+            string nextSourceRoomId,
+            string nextSourceRuntimePath,
+            string nextNotes,
+            bool nextEditableByDesigner,
+            string nextDisplayName,
+            bool nextShowLabel,
+            bool nextLockedLayer,
+            float nextPreviewRadiusMeters,
+            string nextDoorDirection = "",
+            int nextDoorLaneIndex = 0,
+            int nextHostCellX = 0,
+            int nextHostCellZ = 0,
+            string nextDoorState = "door")
+        {
+            Configure(
+                nextMarkerId,
+                nextMarkerKind,
+                nextRuntimeKind,
+                nextSourceRoomId,
+                nextSourceRuntimePath,
+                nextNotes,
+                nextEditableByDesigner);
+            displayName = nextDisplayName ?? string.Empty;
+            showLabel = nextShowLabel;
+            lockedLayer = nextLockedLayer;
+            previewRadiusMeters = nextPreviewRadiusMeters <= 0f ? 0.5f : nextPreviewRadiusMeters;
+            ConfigureDoor(nextDoorDirection, nextDoorLaneIndex, nextHostCellX, nextHostCellZ, nextDoorState);
+        }
+
+        public void ConfigureDoor(string nextDoorDirection, int nextDoorLaneIndex, int nextHostCellX, int nextHostCellZ, string nextDoorState)
+        {
+            doorDirection = nextDoorDirection ?? string.Empty;
+            doorLaneIndex = Mathf.Max(0, nextDoorLaneIndex);
+            hostCellX = nextHostCellX;
+            hostCellZ = nextHostCellZ;
+            doorState = string.IsNullOrWhiteSpace(nextDoorState) ? "door" : nextDoorState;
+        }
+
+        public void SetDisplayName(string nextDisplayName)
+        {
+            displayName = nextDisplayName ?? string.Empty;
+        }
+
+        public void SetShowLabel(bool nextShowLabel)
+        {
+            showLabel = nextShowLabel;
+        }
+
+        public void SetLockedLayer(bool nextLockedLayer)
+        {
+            lockedLayer = nextLockedLayer;
+        }
+
+        public void SetPreviewRadius(float nextPreviewRadiusMeters)
+        {
+            previewRadiusMeters = nextPreviewRadiusMeters <= 0f ? 0.5f : nextPreviewRadiusMeters;
         }
 
         private void OnDrawGizmos()
@@ -96,7 +211,7 @@ namespace Hollow.Rooms
             Gizmos.color = previous;
         }
 
-        private static Color ColorFor(DesignerRoomSceneMarkerKind kind)
+        public static Color ColorFor(DesignerRoomSceneMarkerKind kind)
         {
             return kind switch
             {
@@ -111,6 +226,58 @@ namespace Hollow.Rooms
                 DesignerRoomSceneMarkerKind.InteractiveObject => new Color(0.65f, 0.38f, 0.18f, 0.95f),
                 DesignerRoomSceneMarkerKind.HoleTile => new Color(0.08f, 0.08f, 0.1f, 0.95f),
                 _ => Color.white
+            };
+        }
+
+        private string DoorDirectionLabel()
+        {
+            if (!string.IsNullOrWhiteSpace(doorDirection))
+            {
+                return doorDirection;
+            }
+
+            if (!string.IsNullOrWhiteSpace(markerId))
+            {
+                var separator = markerId.IndexOf('_');
+                if (separator > 0)
+                {
+                    return markerId.Substring(0, separator);
+                }
+            }
+
+            return "?";
+        }
+
+        private static string EnemyDisplayName(string kind)
+        {
+            return kind switch
+            {
+                "spawnEnemyFlying" => "Flying Chaser",
+                "spawnEnemyFast" => "Fast Chaser",
+                "spawnEnemyHeavy" => "Heavy Chaser",
+                "spawnEnemyCharger" => "Ash Charger",
+                "spawnEnemyTurret" => "Bone Turret",
+                "spawnEnemySplitter" => "Husk Splitter",
+                "spawnEnemySpittingPod" => "Spitting Pod",
+                "spawnEnemyRat" => "Rat",
+                "spawnEnemySpider" => "Spider",
+                "spawnEnemyHollowBird" => "Hollow Bird",
+                "spawnEnemyHollowBeast" => "Hollow Beast",
+                "spawnEnemySkeletonSword" => "Skeleton Sword",
+                "spawnEnemySkeletonSpear" => "Skeleton Spear",
+                "spawnEnemyKnight" => "Knight",
+                "spawnEnemyGiant" => "Giant",
+                "spawnEnemyHollowArcher" => "Hollow Archer",
+                "spawnEnemyPowderGunner" => "Powder Gunner",
+                "spawnEnemyKnifeThrower" => "Knife Thrower",
+                "spawnEnemyRepeaterTurret" => "Repeater Turret",
+                "spawnEnemyClockworkSentry" => "Clockwork Sentry",
+                "spawnEnemyHollowAcolyte" => "Hollow Acolyte",
+                "spawnEnemyWraith" => "Wraith",
+                "spawnEnemySoulEater" => "Soul Eater",
+                "spawnEnemyCurseBinder" => "Curse Binder",
+                "spawnEnemyGraveLantern" => "Grave Lantern",
+                _ => "Normal Chaser"
             };
         }
     }
