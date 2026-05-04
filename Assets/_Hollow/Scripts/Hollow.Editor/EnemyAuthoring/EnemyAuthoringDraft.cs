@@ -64,6 +64,10 @@ namespace Hollow.Editor.EnemyAuthoring
             {
                 ApplyBehaviorTreeDraft(sourceTree, draftTree);
             }
+            else if (Source is EnemyBehaviorTreeTemplateDefinition sourceTemplate && Draft is EnemyBehaviorTreeTemplateDefinition draftTemplate)
+            {
+                ApplyBehaviorTreeTemplateDraft(sourceTemplate, draftTemplate);
+            }
             else
             {
                 var sourceName = Source.name;
@@ -118,6 +122,11 @@ namespace Hollow.Editor.EnemyAuthoring
                 return CloneBehaviorTreeForDraft(tree);
             }
 
+            if (source is EnemyBehaviorTreeTemplateDefinition template)
+            {
+                return CloneBehaviorTreeTemplateForDraft(template);
+            }
+
             var clone = UnityEngine.Object.Instantiate(source);
             clone.name = $"{source.name}.Draft";
             clone.hideFlags = HideFlags.HideAndDontSave;
@@ -166,6 +175,55 @@ namespace Hollow.Editor.EnemyAuthoring
 
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return clone;
+        }
+
+        private EnemyBehaviorTreeTemplateDefinition CloneBehaviorTreeTemplateForDraft(EnemyBehaviorTreeTemplateDefinition source)
+        {
+            var clone = UnityEngine.Object.Instantiate(source);
+            clone.name = $"{source.name}.Draft";
+            clone.hideFlags = HideFlags.HideAndDontSave;
+            temporaryObjects.Add(clone);
+
+            var map = CloneNodeMapForDraft(source.Nodes);
+            foreach (var cloneNode in map.Values)
+            {
+                RemapNodeReferences(cloneNode, map);
+            }
+
+            var serialized = new SerializedObject(clone);
+            serialized.FindProperty("rootNode").objectReferenceValue = source.RootNode != null && map.TryGetValue(source.RootNode, out var rootClone)
+                ? rootClone
+                : null;
+            var nodes = serialized.FindProperty("nodes");
+            nodes.arraySize = map.Count;
+            var index = 0;
+            foreach (var node in map.Values)
+            {
+                nodes.GetArrayElementAtIndex(index++).objectReferenceValue = node;
+            }
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return clone;
+        }
+
+        private Dictionary<EnemyBehaviorTreeNodeDefinition, EnemyBehaviorTreeNodeDefinition> CloneNodeMapForDraft(IEnumerable<EnemyBehaviorTreeNodeDefinition> sourceNodes)
+        {
+            var map = new Dictionary<EnemyBehaviorTreeNodeDefinition, EnemyBehaviorTreeNodeDefinition>();
+            foreach (var sourceNode in sourceNodes ?? Array.Empty<EnemyBehaviorTreeNodeDefinition>())
+            {
+                if (sourceNode == null || map.ContainsKey(sourceNode))
+                {
+                    continue;
+                }
+
+                var cloneNode = UnityEngine.Object.Instantiate(sourceNode);
+                cloneNode.name = $"{sourceNode.name}.Draft";
+                cloneNode.hideFlags = HideFlags.HideAndDontSave;
+                temporaryObjects.Add(cloneNode);
+                map[sourceNode] = cloneNode;
+            }
+
+            return map;
         }
 
         private static void ApplyBehaviorTreeDraft(EnemyBehaviorTreeDefinition source, EnemyBehaviorTreeDefinition draft)
@@ -229,6 +287,80 @@ namespace Hollow.Editor.EnemyAuthoring
                     UnityEngine.Object.DestroyImmediate(oldNode, allowDestroyingAssets: true);
                 }
             }
+        }
+
+        private static void ApplyBehaviorTreeTemplateDraft(EnemyBehaviorTreeTemplateDefinition source, EnemyBehaviorTreeTemplateDefinition draft)
+        {
+            var path = AssetDatabase.GetAssetPath(source);
+            var oldNodes = AssetDatabase.LoadAllAssetsAtPath(path)
+                .OfType<EnemyBehaviorTreeNodeDefinition>()
+                .ToArray();
+            var map = CopyDraftNodesIntoAsset(source, draft.Nodes);
+
+            var sourceSerialized = new SerializedObject(source);
+            var draftSerialized = new SerializedObject(draft);
+            sourceSerialized.FindProperty("templateId").stringValue = draftSerialized.FindProperty("templateId").stringValue;
+            sourceSerialized.FindProperty("displayName").stringValue = draftSerialized.FindProperty("displayName").stringValue;
+            sourceSerialized.FindProperty("description").stringValue = draftSerialized.FindProperty("description").stringValue;
+            sourceSerialized.FindProperty("role").enumValueIndex = draftSerialized.FindProperty("role").enumValueIndex;
+            sourceSerialized.FindProperty("recommendedBehaviorId").enumValueIndex = draftSerialized.FindProperty("recommendedBehaviorId").enumValueIndex;
+            sourceSerialized.FindProperty("recommendedDisposition").enumValueIndex = draftSerialized.FindProperty("recommendedDisposition").enumValueIndex;
+            sourceSerialized.FindProperty("minimumIntelligence").enumValueIndex = draftSerialized.FindProperty("minimumIntelligence").enumValueIndex;
+            sourceSerialized.FindProperty("bossMetadataOnly").boolValue = draftSerialized.FindProperty("bossMetadataOnly").boolValue;
+            sourceSerialized.FindProperty("rootNode").objectReferenceValue = draft.RootNode != null && map.TryGetValue(draft.RootNode, out var mappedRoot)
+                ? mappedRoot
+                : null;
+            var sourceNodes = sourceSerialized.FindProperty("nodes");
+            sourceNodes.arraySize = map.Count;
+            var index = 0;
+            foreach (var node in map.Values)
+            {
+                sourceNodes.GetArrayElementAtIndex(index++).objectReferenceValue = node;
+            }
+
+            sourceSerialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(source);
+
+            foreach (var oldNode in oldNodes)
+            {
+                if (oldNode != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(oldNode, allowDestroyingAssets: true);
+                }
+            }
+        }
+
+        private static Dictionary<EnemyBehaviorTreeNodeDefinition, EnemyBehaviorTreeNodeDefinition> CopyDraftNodesIntoAsset(UnityEngine.Object sourceAsset, IEnumerable<EnemyBehaviorTreeNodeDefinition> draftNodes)
+        {
+            var map = new Dictionary<EnemyBehaviorTreeNodeDefinition, EnemyBehaviorTreeNodeDefinition>();
+
+            Undo.RegisterCompleteObjectUndo(sourceAsset, "Apply Enemy Behavior Tree Draft");
+            foreach (var draftNode in draftNodes ?? Array.Empty<EnemyBehaviorTreeNodeDefinition>())
+            {
+                if (draftNode == null || map.ContainsKey(draftNode))
+                {
+                    continue;
+                }
+
+                var newNode = ScriptableObject.CreateInstance(draftNode.GetType()) as EnemyBehaviorTreeNodeDefinition;
+                if (newNode == null)
+                {
+                    continue;
+                }
+
+                EditorUtility.CopySerialized(draftNode, newNode);
+                newNode.name = draftNode.name.Replace(".Draft", string.Empty);
+                AssetDatabase.AddObjectToAsset(newNode, sourceAsset);
+                map[draftNode] = newNode;
+            }
+
+            foreach (var newNode in map.Values)
+            {
+                RemapNodeReferences(newNode, map);
+                EditorUtility.SetDirty(newNode);
+            }
+
+            return map;
         }
 
         internal void TrackTemporary(UnityEngine.Object temporary)
@@ -336,7 +468,9 @@ namespace Hollow.Editor.EnemyAuthoring
                 BossDefinition boss => boss.BossId,
                 EnemyAttackProfileDefinition attack => attack.AttackId,
                 EnemyActionProfileDefinition action => action.ActionId,
+                EnemyAiBrainTemplateDefinition brainTemplate => brainTemplate.TemplateId,
                 EnemyBehaviorTreeDefinition tree => tree.OwnerId,
+                EnemyBehaviorTreeTemplateDefinition template => template.TemplateId,
                 EnemySpacingProfileDefinition spacing => spacing.OwnerSpawnKind,
                 _ => asset != null ? asset.name : string.Empty
             };
@@ -350,7 +484,9 @@ namespace Hollow.Editor.EnemyAuthoring
                 BossDefinition => "boss",
                 EnemyAttackProfileDefinition => "attack",
                 EnemyActionProfileDefinition => "action",
+                EnemyAiBrainTemplateDefinition => "ai_brain_template",
                 EnemyBehaviorTreeDefinition => "behavior_tree",
+                EnemyBehaviorTreeTemplateDefinition => "behavior_tree_template",
                 EnemySpacingProfileDefinition => "spacing",
                 EnemyGuardProfileDefinition => "guard",
                 _ => asset != null ? asset.GetType().Name : "unknown"

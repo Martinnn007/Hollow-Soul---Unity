@@ -22,6 +22,7 @@ namespace Hollow.Editor.DesignerRooms
         private bool showSelectedEnemyRange = true;
         private bool previewLightingEnabled = true;
         private bool previewCameraEnabled = true;
+        private string playtestCharacterId = "balanced";
         private Vector2 scrollPosition;
         private DesignerRoomSceneValidationResult lastValidation;
         private string lastExportPath = string.Empty;
@@ -35,6 +36,7 @@ namespace Hollow.Editor.DesignerRooms
 
         private void OnEnable()
         {
+            playtestCharacterId = DesignerRoomPlaytestLauncher.SelectedCharacterId;
             SceneView.duringSceneGui += OnSceneGUI;
         }
 
@@ -315,6 +317,25 @@ namespace Hollow.Editor.DesignerRooms
 
         private void DrawPreviewPanel()
         {
+            EditorGUILayout.LabelField(T("Playtest", "Playtest"), EditorStyles.boldLabel);
+            var selectedCharacterIndex = Mathf.Max(0, Array.IndexOf(DesignerRoomPlaytestLauncher.CharacterIds, playtestCharacterId));
+            selectedCharacterIndex = EditorGUILayout.Popup(
+                T("Loadout", "Loadout"),
+                selectedCharacterIndex,
+                DesignerRoomPlaytestLauncher.CharacterLabels);
+            playtestCharacterId = DesignerRoomPlaytestLauncher.CharacterIds[Mathf.Clamp(selectedCharacterIndex, 0, DesignerRoomPlaytestLauncher.CharacterIds.Length - 1)];
+            DesignerRoomPlaytestLauncher.SelectedCharacterId = playtestCharacterId;
+            if (GUILayout.Button(T("Play This Room", "Testuj ten pokój"), GUILayout.Height(34f)))
+            {
+                DesignerRoomPlaytestLauncher.PlayActiveDesignerRoom(playtestCharacterId);
+            }
+
+            EditorGUILayout.HelpBox(T(
+                "Launches the active Designer Room in Game_Windows with runtime doors, enemies, hazards, lighting, player spawn, and transient no-save playtest mode. Stop Play Mode to return to this scene.",
+                "Uruchamia aktywny Designer Room w Game_Windows z runtime drzwiami, wrogami, hazardami, oświetleniem, spawnem gracza i tymczasowym trybem bez zapisu. Zatrzymaj Play Mode, aby wrócić do tej sceny."),
+                MessageType.Info);
+
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField(T("Visual Preview", "Podgląd wizualny"), EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(T(
                 "Creates a temporary non-exported runtime-style preview using art-pass prefabs or fallback materials. Markers remain the only source of exported room data.",

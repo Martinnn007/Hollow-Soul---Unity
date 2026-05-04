@@ -1,4 +1,7 @@
+using System.IO;
 using System.Linq;
+using Hollow.Core;
+using Hollow.Core.App;
 using Hollow.Editor.DesignerRooms;
 using Hollow.RoomDesigner;
 using Hollow.Rooms;
@@ -181,6 +184,54 @@ namespace Hollow.Tests.EditMode
             DesignerRoomSceneVisualPreviewBuilder.ClearPreview(SceneManager.GetActiveScene());
 
             Assert.IsFalse(DesignerRoomSceneVisualPreviewBuilder.HasPreview(SceneManager.GetActiveScene()));
+        }
+
+        [Test]
+        public void PlaytestLauncherBuildsRuntimeJsonAndHandoff()
+        {
+            var root = CreateRoot();
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.SafeStart,
+                RoomDesignerMarkerKinds.SafeStart,
+                Vector3.zero);
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.EnemySpawn,
+                RoomDesignerMarkerKinds.EnemySpider,
+                new Vector3(2f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.DoorPort,
+                RoomDesignerDoorKinds.Door,
+                new Vector3(6.5f, 0f, 0f));
+
+            var runtimeJson = DesignerRoomPlaytestLauncher.BuildRuntimeJsonForScene(SceneManager.GetActiveScene());
+
+            Assert.IsTrue(HollowRuntimeV2Importer.TryImport(runtimeJson, out var imported, out var error), error);
+            Assert.IsTrue(imported.EnemySpawns.Any(spawn => spawn.kind == RoomDesignerMarkerKinds.EnemySpider));
+
+            DesignerRoomPlaytestLauncher.PrimeHandoffForScene(SceneManager.GetActiveScene(), "heavy");
+            Assert.IsTrue(RoomPlaytestHandoff.TryConsume(out var handoffJson, out var mode, out var returnRoute, out var characterId));
+            Assert.AreEqual(RuntimeSessionMode.TransientRoomDesignerPlaytest, mode);
+            Assert.AreEqual(AppShellRoute.MainMenu, returnRoute);
+            Assert.AreEqual("heavy", characterId);
+            Assert.IsTrue(HollowRuntimeV2Importer.TryImport(handoffJson, out _, out error), error);
+        }
+
+        [Test]
+        public void PlaytestLauncherSanitizesUnknownLoadout()
+        {
+            DesignerRoomPlaytestLauncher.SelectedCharacterId = "unknown";
+
+            Assert.AreEqual("balanced", DesignerRoomPlaytestLauncher.SelectedCharacterId);
+        }
+
+        [Test]
+        public void PlaytestLauncherGuideArtifactsExist()
+        {
+            Assert.IsTrue(File.Exists("Docs/Hollow_Room_Playtest_Launcher_Guide.md"));
+            Assert.IsTrue(File.Exists("output/pdf/Hollow_Room_Playtest_Launcher_Guide.pdf"));
         }
 
         private static DesignerRoomSceneMarker CreateRoot()

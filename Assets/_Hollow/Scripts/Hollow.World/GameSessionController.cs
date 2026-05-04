@@ -69,14 +69,16 @@ namespace Hollow.World
         {
             ResolveReferences();
             presentationRoot?.Configure(platformKind);
-            var isDesignerPlaytest = RoomPlaytestHandoff.TryConsume(out var playtestJson, out var playtestMode, out var playtestReturnRoute);
+            var isDesignerPlaytest = RoomPlaytestHandoff.TryConsume(out var playtestJson, out var playtestMode, out var playtestReturnRoute, out var playtestCharacterId);
             transientReturnRoute = isDesignerPlaytest ? playtestReturnRoute : AppShellRoute.MainMenu;
             var importedAsset = isDesignerPlaytest ? ImportRoomAsset(playtestJson, "Room Designer Playtest") : ImportRoomAssetIfAvailable();
             var spawnPosition = importedAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             var selectedProfileContext = ProfileSessionHost.Instance?.SelectedProfileContext;
             var selectedProfile = selectedProfileContext?.SelectedProfile;
             var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
-            var selectedCharacterId = selectedProfileContext?.SelectedCharacterId ?? "balanced";
+            var selectedCharacterId = isDesignerPlaytest
+                ? playtestCharacterId
+                : selectedProfileContext?.SelectedCharacterId ?? "balanced";
             var selectedChallengeId = selectedProfileContext?.SelectedChallengeId ?? string.Empty;
             var developerLabRequested = selectedProfileContext?.DeveloperLabRequested ?? false;
             var effectiveSessionMode = isDesignerPlaytest

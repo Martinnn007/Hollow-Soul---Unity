@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
+using Hollow.Editor.BehaviorTreeStudio;
+using Hollow.Editor.EnemyAiBrainStudio;
+using Hollow.Editor.EnemyPreviewLab;
 using Hollow.Presentation;
 using UnityEditor;
 using UnityEngine;
@@ -101,6 +104,30 @@ namespace Hollow.Editor.EnemyAuthoring
                 {
                     EnemyAuthoringLocalization.CurrentLanguage = (EnemyAuthoringLanguage)language;
                     Repaint();
+                }
+
+                if (GUILayout.Button(Tr("AI Brain", "Mózg AI"), EditorStyles.toolbarButton, GUILayout.Width(78f)))
+                {
+                    if (rootDraft.Draft is EnemyDefinition enemyDraft)
+                    {
+                        EnemyAiBrainStudioWindow.OpenEnemy(selectedSource as EnemyDefinition ?? enemyDraft);
+                    }
+                    else
+                    {
+                        EnemyAiBrainStudioWindow.Open();
+                    }
+                }
+
+                if (GUILayout.Button(Tr("Preview Lab", "Preview Lab"), EditorStyles.toolbarButton, GUILayout.Width(94f)))
+                {
+                    if (rootDraft.Draft is EnemyDefinition enemyDraft)
+                    {
+                        EnemyPreviewLabSceneBuilder.OpenWithEnemy(selectedSource as EnemyDefinition ?? enemyDraft);
+                    }
+                    else
+                    {
+                        EnemyPreviewLabWindow.Open();
+                    }
                 }
 
                 if (GUILayout.Button(Tr("Refresh", "Odśwież"), EditorStyles.toolbarButton, GUILayout.Width(74f)))
@@ -279,9 +306,20 @@ namespace Hollow.Editor.EnemyAuthoring
 
             var propertyName = draft is BossDefinition ? "behaviorTreeMetadata" : "behaviorTree";
             var tree = DrawObjectReferenceField<EnemyBehaviorTreeDefinition>(draft, propertyName, Tr("Behavior Tree", "Drzewo AI"));
-            if (tree != null && GUILayout.Button(Tr("Edit Tree Draft", "Edytuj szkic drzewa")))
+            if (tree != null)
             {
-                SelectLinked(tree);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button(Tr("Open In Behaviour Tree Studio", "Otwórz w Behaviour Tree Studio")))
+                    {
+                        BehaviourTreeStudioWindow.OpenTree(tree);
+                    }
+
+                    if (GUILayout.Button(Tr("Edit Tree Draft Here", "Edytuj szkic tutaj")))
+                    {
+                        SelectLinked(tree);
+                    }
+                }
             }
 
             if (linkedDraft.Draft is not EnemyBehaviorTreeDefinition linkedTree)
