@@ -20,6 +20,7 @@ namespace Hollow.Editor.Generation
         public const string TreeDirectory = "Assets/_Hollow/Data/EnemyBehaviorTrees/M115";
         public const string EncounterDirectory = "Assets/_Hollow/Data/Encounters/M115";
         public const string MechanicalRoomDirectory = "Assets/_Hollow/Data/Rooms/DesignerApproved/M115";
+        public static readonly Vector3 MechanicalModelLocalEuler = new(-90f, 0f, 0f);
         private const string EnemyCatalogPath = "Assets/_Hollow/Data/Enemies/EnemyCatalog.asset";
 
         public static IReadOnlyList<string> SpawnKinds { get; } = new[]
@@ -229,7 +230,11 @@ namespace Hollow.Editor.Generation
                 model.transform.localScale = Vector3.one;
                 AssignMaterialToRenderers(model, material);
                 StripGameplayComponents(root);
-                PresentationVisualBoundsFitter.FitToTargetBounds(model.transform, spec.TargetBounds, 0f);
+                PresentationVisualBoundsFitter.FitToTargetBounds(
+                    model.transform,
+                    spec.TargetBounds,
+                    0f,
+                    Quaternion.Euler(MechanicalModelLocalEuler));
 
                 var path = $"{Milestone23AssetGenerator.ArtPassRoot}/AP_{spec.PrefabRole}.prefab";
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);

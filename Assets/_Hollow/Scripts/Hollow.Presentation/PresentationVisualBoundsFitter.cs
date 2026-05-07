@@ -4,7 +4,11 @@ namespace Hollow.Presentation
 {
     public static class PresentationVisualBoundsFitter
     {
-        public static bool FitToTargetBounds(Transform visualRoot, Vector3 targetSize, float targetBottomLocalY = 0f)
+        public static bool FitToTargetBounds(
+            Transform visualRoot,
+            Vector3 targetSize,
+            float targetBottomLocalY = 0f,
+            Quaternion? initialLocalRotation = null)
         {
             if (visualRoot == null)
             {
@@ -12,7 +16,7 @@ namespace Hollow.Presentation
             }
 
             visualRoot.localPosition = Vector3.zero;
-            visualRoot.localRotation = Quaternion.identity;
+            visualRoot.localRotation = initialLocalRotation ?? Quaternion.identity;
             visualRoot.localScale = Vector3.one;
 
             if (!TryGetRendererBounds(visualRoot, out var bounds))

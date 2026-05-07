@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-6490887838937765126
+--- !u!114 &-6662444800450674809
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -17,7 +17,7 @@ MonoBehaviour:
   actionId: 
   speedMultiplier: 1
   reason: Crimson Rail Spider repositions before charging its railgun.
---- !u!114 &-6120670569495151837
+--- !u!114 &-6130231862605490490
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -26,14 +26,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
-  m_Name: crimson_rail_spider_beam
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSequenceNodeDefinition
-  nodeId: crimson_rail_spider_beam
-  children:
-  - {fileID: 2199548831712340724}
-  - {fileID: 5055149261004357815}
---- !u!114 &-4776997906624471937
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
+  m_Name: crimson_rail_spider_range
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
+  nodeId: crimson_rail_spider_range
+  commandKind: 3
+  actionId: 
+  speedMultiplier: 0.85
+  reason: Crimson Rail Spider keeps a railgun lane at preferred range.
+--- !u!114 &-3575485888597223674
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -47,10 +48,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSelectorNodeDefinition
   nodeId: crimson_rail_spider_root
   children:
-  - {fileID: 6169109324514297291}
-  - {fileID: -6120670569495151837}
-  - {fileID: 4656649653922987008}
---- !u!114 &11400000
+  - {fileID: 2021761480496370753}
+  - {fileID: 6029016782823259280}
+  - {fileID: -6130231862605490490}
+--- !u!114 &-1745558784598527431
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -59,24 +60,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
-  m_Name: EnemyTree_spawnEnemyCrimsonRailSpider
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
-  treeId: enemy_spawnEnemyCrimsonRailSpider_m82_tree
-  displayName: Crimson Rail Spider M82 Behavior Tree
-  ownerId: spawnEnemyCrimsonRailSpider
-  bossMetadataOnly: 0
-  rootNode: {fileID: -4776997906624471937}
-  nodes:
-  - {fileID: 8454558063658392762}
-  - {fileID: -6490887838937765126}
-  - {fileID: 6169109324514297291}
-  - {fileID: 2199548831712340724}
-  - {fileID: 5055149261004357815}
-  - {fileID: -6120670569495151837}
-  - {fileID: 4656649653922987008}
-  - {fileID: -4776997906624471937}
---- !u!114 &2199548831712340724
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
+  m_Name: start_ranged_railgun_lock_beam
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_railgun_lock_beam
+  commandKind: 8
+  actionId: railgun_lock_beam
+  speedMultiplier: 1
+  reason: Start ranged action railgun_lock_beam.
+--- !u!114 &-115333292180508886
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -97,7 +89,7 @@ MonoBehaviour:
   behaviorId: 0
   actionId: railgun_lock_beam
   threshold: 0
---- !u!114 &4656649653922987008
+--- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -106,32 +98,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
-  m_Name: crimson_rail_spider_range
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
-  nodeId: crimson_rail_spider_range
-  commandKind: 3
-  actionId: 
-  speedMultiplier: 0.85
-  reason: Crimson Rail Spider keeps a railgun lane at preferred range.
---- !u!114 &5055149261004357815
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
-  m_Name: start_ranged_railgun_lock_beam
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
-  nodeId: start_ranged_railgun_lock_beam
-  commandKind: 8
-  actionId: railgun_lock_beam
-  speedMultiplier: 1
-  reason: Start ranged action railgun_lock_beam.
---- !u!114 &6169109324514297291
+  m_Script: {fileID: 11500000, guid: 8820da8f15fa4b3aa089383d8fd95e72, type: 3}
+  m_Name: EnemyTree_spawnEnemyCrimsonRailSpider
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorTreeDefinition
+  treeId: enemy_spawnEnemyCrimsonRailSpider_m82_tree
+  displayName: Crimson Rail Spider M82 Behavior Tree
+  ownerId: spawnEnemyCrimsonRailSpider
+  bossMetadataOnly: 0
+  rootNode: {fileID: -3575485888597223674}
+  nodes:
+  - {fileID: 3316688131932086312}
+  - {fileID: -6662444800450674809}
+  - {fileID: 2021761480496370753}
+  - {fileID: -115333292180508886}
+  - {fileID: -1745558784598527431}
+  - {fileID: 6029016782823259280}
+  - {fileID: -6130231862605490490}
+  - {fileID: -3575485888597223674}
+--- !u!114 &2021761480496370753
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -145,9 +129,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSequenceNodeDefinition
   nodeId: crimson_rail_spider_too_close
   children:
-  - {fileID: 8454558063658392762}
-  - {fileID: -6490887838937765126}
---- !u!114 &8454558063658392762
+  - {fileID: 3316688131932086312}
+  - {fileID: -6662444800450674809}
+--- !u!114 &3316688131932086312
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -168,3 +152,19 @@ MonoBehaviour:
   behaviorId: 0
   actionId: 
   threshold: 0
+--- !u!114 &6029016782823259280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d29b0591f8f944549a025756a9d0af4e, type: 3}
+  m_Name: crimson_rail_spider_beam
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSequenceNodeDefinition
+  nodeId: crimson_rail_spider_beam
+  children:
+  - {fileID: -115333292180508886}
+  - {fileID: -1745558784598527431}

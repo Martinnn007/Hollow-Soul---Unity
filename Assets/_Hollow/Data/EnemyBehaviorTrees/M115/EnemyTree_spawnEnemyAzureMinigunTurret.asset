@@ -1,60 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8298590903899025021
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4d074dd4dd94a1fa2bcb7f8577abff8, type: 3}
-  m_Name: azure_minigun_turret_root
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSelectorNodeDefinition
-  nodeId: azure_minigun_turret_root
-  children:
-  - {fileID: -613661172016288433}
-  - {fileID: -1578914099979132900}
---- !u!114 &-7353623231072344907
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
-  m_Name: azure_minigun_engage
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorConditionNodeDefinition
-  nodeId: azure_minigun_engage
-  condition: 13
-  invert: 0
-  awareness: 3
-  disposition: 0
-  intelligence: 0
-  behaviorId: 0
-  actionId: 
-  threshold: 0
---- !u!114 &-5565610908738220494
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
-  m_Name: start_ranged_ion_minigun_stream
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
-  nodeId: start_ranged_ion_minigun_stream
-  commandKind: 8
-  actionId: ion_minigun_stream
-  speedMultiplier: 1
-  reason: Start ranged action ion_minigun_stream.
---- !u!114 &-1637862528722211267
+--- !u!114 &-8334714239636047693
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,24 +21,7 @@ MonoBehaviour:
   behaviorId: 0
   actionId: ion_minigun_stream
   threshold: 0
---- !u!114 &-1578914099979132900
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
-  m_Name: azure_minigun_hold
-  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
-  nodeId: azure_minigun_hold
-  commandKind: 1
-  actionId: 
-  speedMultiplier: 1
-  reason: Azure Minigun Turret remains planted while tracking the player.
---- !u!114 &-613661172016288433
+--- !u!114 &-2428132729807122906
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -106,9 +35,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSequenceNodeDefinition
   nodeId: azure_minigun_fire
   children:
-  - {fileID: -7353623231072344907}
-  - {fileID: -1637862528722211267}
-  - {fileID: -5565610908738220494}
+  - {fileID: 3373517284090981862}
+  - {fileID: -8334714239636047693}
+  - {fileID: -768607319812266067}
+--- !u!114 &-768607319812266067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
+  m_Name: start_ranged_ion_minigun_stream
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
+  nodeId: start_ranged_ion_minigun_stream
+  commandKind: 8
+  actionId: ion_minigun_stream
+  speedMultiplier: 1
+  reason: Start ranged action ion_minigun_stream.
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -125,11 +71,65 @@ MonoBehaviour:
   displayName: Azure Minigun Turret M82 Behavior Tree
   ownerId: spawnEnemyAzureMinigunTurret
   bossMetadataOnly: 0
-  rootNode: {fileID: -8298590903899025021}
+  rootNode: {fileID: 770611213302370650}
   nodes:
-  - {fileID: -7353623231072344907}
-  - {fileID: -1637862528722211267}
-  - {fileID: -5565610908738220494}
-  - {fileID: -613661172016288433}
-  - {fileID: -1578914099979132900}
-  - {fileID: -8298590903899025021}
+  - {fileID: 3373517284090981862}
+  - {fileID: -8334714239636047693}
+  - {fileID: -768607319812266067}
+  - {fileID: -2428132729807122906}
+  - {fileID: 7395913130699959910}
+  - {fileID: 770611213302370650}
+--- !u!114 &770611213302370650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4d074dd4dd94a1fa2bcb7f8577abff8, type: 3}
+  m_Name: azure_minigun_turret_root
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorSelectorNodeDefinition
+  nodeId: azure_minigun_turret_root
+  children:
+  - {fileID: -2428132729807122906}
+  - {fileID: 7395913130699959910}
+--- !u!114 &3373517284090981862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d59d42c21e5a450198946fa822df3279, type: 3}
+  m_Name: azure_minigun_engage
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorConditionNodeDefinition
+  nodeId: azure_minigun_engage
+  condition: 13
+  invert: 0
+  awareness: 3
+  disposition: 0
+  intelligence: 0
+  behaviorId: 0
+  actionId: 
+  threshold: 0
+--- !u!114 &7395913130699959910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387189ad05654b38a0bb72db6bb5d062, type: 3}
+  m_Name: azure_minigun_hold
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyBehaviorActionNodeDefinition
+  nodeId: azure_minigun_hold
+  commandKind: 1
+  actionId: 
+  speedMultiplier: 1
+  reason: Azure Minigun Turret remains planted while tracking the player.

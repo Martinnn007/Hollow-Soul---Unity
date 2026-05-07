@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: VisionOSSettings
   m_EditorClassIdentifier: Unity.XR.VisionOS.Editor::UnityEditor.XR.VisionOS.VisionOSSettings
   m_AppMode: 3
-  m_HandsTrackingUsageDescription: 
-  m_WorldSensingUsageDescription: 
+  m_HandsTrackingUsageDescription: Hand tracking required for picking things up
+  m_WorldSensingUsageDescription: Just a test
   m_RuntimeSettings: {fileID: 11400000, guid: 18e8b3c66f91b4fb3943617c0eb46f44, type: 2}
   m_UpperLimbVisibility: 0
   m_HighQualityRecordingMode: 0

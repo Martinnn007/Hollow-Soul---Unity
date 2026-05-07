@@ -266,7 +266,9 @@ namespace Hollow.Tests.EditMode
                 var prefabPath = $"{Milestone23AssetGenerator.ArtPassRoot}/AP_{spec.PrefabRole}.prefab";
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
                 Assert.IsNotNull(prefab, prefabPath);
-                Assert.IsNotNull(prefab.transform.Find("MeshyMechanicalModel"), $"{spec.PrefabRole} should contain the Meshy FBX model root.");
+                var model = prefab.transform.Find("MeshyMechanicalModel");
+                Assert.IsNotNull(model, $"{spec.PrefabRole} should contain the Meshy FBX model root.");
+                AssertModelOrientation(model, spec.PrefabRole.ToString());
                 Assert.AreEqual(1, prefab.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == spec.PrefabRole));
                 Assert.AreEqual(0, prefab.GetComponentsInChildren<Collider>(includeInactive: true).Length, spec.PrefabRole.ToString());
@@ -307,7 +309,9 @@ namespace Hollow.Tests.EditMode
                         .SingleOrDefault(candidate => candidate.Role == spec.PrefabRole);
                     Assert.IsNotNull(marker, spec.SpawnKind);
                     Assert.IsFalse(marker.IsFallback, spec.SpawnKind);
-                    Assert.IsNotNull(marker.transform.Find("MeshyMechanicalModel"), spec.SpawnKind);
+                    var model = marker.transform.Find("MeshyMechanicalModel");
+                    Assert.IsNotNull(model, spec.SpawnKind);
+                    AssertModelOrientation(model, spec.SpawnKind);
                     var visualRenderers = marker.GetComponentsInChildren<Renderer>(includeInactive: true);
                     Assert.Greater(visualRenderers.Length, 0, spec.SpawnKind);
                     Assert.IsTrue(visualRenderers.Any(renderer => renderer.enabled), spec.SpawnKind);
@@ -418,6 +422,13 @@ namespace Hollow.Tests.EditMode
             var texture = material.GetTexture(propertyName);
             Assert.IsNotNull(texture, $"{material.name} missing texture {propertyName}");
             Assert.AreEqual(expectedPath, AssetDatabase.GetAssetPath(texture), $"{material.name} {propertyName}");
+        }
+
+        private static void AssertModelOrientation(Transform model, string context)
+        {
+            var expected = Quaternion.Euler(Milestone115AssetGenerator.MechanicalModelLocalEuler);
+            Assert.That(Quaternion.Angle(expected, model.localRotation), Is.LessThan(0.1f), context);
+            Assert.That(model.localPosition.y, Is.GreaterThanOrEqualTo(-0.001f), context);
         }
     }
 }
