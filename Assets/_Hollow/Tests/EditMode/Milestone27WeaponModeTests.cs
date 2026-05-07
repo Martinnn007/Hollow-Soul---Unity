@@ -25,8 +25,13 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(WeaponSlot.Melee, starterBlade.Slot);
             Assert.AreEqual(AttackKind.Light, starterBlade.LightAttack.AttackKind);
             Assert.Greater(starterBlade.HeavyAttack.Damage, starterBlade.LightAttack.Damage);
+            Assert.IsTrue(catalog.TryGetWeapon("starter_bow", out var starterBow));
+            Assert.AreEqual(WeaponSlot.Ranged, starterBow.Slot);
+            Assert.AreEqual(WeaponCategory.Bow, starterBow.Category);
+            Assert.AreEqual(WeaponRangedFireMode.DrawAndRelease, starterBow.RangedFireMode);
             Assert.IsTrue(catalog.TryGetWeapon("starter_bolt", out var starterBolt));
             Assert.AreEqual(WeaponSlot.Ranged, starterBolt.Slot);
+            Assert.AreEqual(WeaponRangedFireMode.Instant, starterBolt.RangedFireMode);
             Assert.IsTrue(catalog.TryGetWeapon("iron_cleaver", out var ironCleaver));
             Assert.AreEqual(WeaponSlot.Melee, ironCleaver.Slot);
             Assert.IsTrue(catalog.TryGetWeapon("ember_bolt", out var emberBolt));
@@ -49,6 +54,11 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(0f, starterBolt.LightAttack.StaminaCost, 0.001f);
             Assert.AreEqual(10f, starterBolt.HeavyAttack.CooldownSeconds, 0.001f);
             Assert.AreEqual(35f, starterBolt.HeavyAttack.StaminaCost, 0.001f);
+
+            Assert.IsTrue(catalog.TryGetWeapon("starter_bow", out var starterBow));
+            Assert.AreEqual(1f, starterBow.LightAttack.RequiredDrawSeconds, 0.001f);
+            Assert.AreEqual(1.35f, starterBow.HeavyAttack.RequiredDrawSeconds, 0.001f);
+            Assert.AreEqual(2f, starterBow.LightAttack.StaminaCost, 0.001f);
         }
 
         [Test]

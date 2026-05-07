@@ -12,6 +12,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private WeaponSlot slot;
         [SerializeField] private WeaponCategory category;
         [SerializeField] private EquipmentLoadClass loadClass = EquipmentLoadClass.Light;
+        [SerializeField] private WeaponRangedFireMode rangedFireMode = WeaponRangedFireMode.Instant;
         [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
         [SerializeField] private WeaponAttackDefinition lightAttack;
         [SerializeField] private WeaponAttackDefinition heavyAttack;
@@ -25,6 +26,11 @@ namespace Hollow.Data.Definitions
         public WeaponCategory Category => category;
 
         public EquipmentLoadClass LoadClass => loadClass;
+
+        public WeaponRangedFireMode RangedFireMode =>
+            slot == WeaponSlot.Ranged && category == WeaponCategory.Bow
+                ? WeaponRangedFireMode.DrawAndRelease
+                : rangedFireMode;
 
         public IReadOnlyList<BuildTag> Tags => tags;
 
@@ -40,19 +46,28 @@ namespace Hollow.Data.Definitions
             IEnumerable<BuildTag> nextTags = null,
             WeaponAttackDefinition? nextLightAttack = null,
             WeaponAttackDefinition? nextHeavyAttack = null,
-            EquipmentLoadClass nextLoadClass = EquipmentLoadClass.Light)
+            EquipmentLoadClass nextLoadClass = EquipmentLoadClass.Light,
+            WeaponRangedFireMode? nextRangedFireMode = null)
         {
             weaponId = nextWeaponId ?? string.Empty;
             displayName = nextDisplayName ?? string.Empty;
             slot = nextSlot;
             category = nextCategory;
             loadClass = nextLoadClass;
+            rangedFireMode = nextRangedFireMode ?? DefaultRangedFireMode(nextSlot, nextCategory);
             tags = (nextTags ?? Enumerable.Empty<BuildTag>())
                 .Where(tag => tag != BuildTag.None)
                 .Distinct()
                 .ToArray();
             lightAttack = nextLightAttack ?? WeaponAttackDefinition.DefaultLight(slot);
             heavyAttack = nextHeavyAttack ?? WeaponAttackDefinition.DefaultHeavy(slot);
+        }
+
+        private static WeaponRangedFireMode DefaultRangedFireMode(WeaponSlot nextSlot, WeaponCategory nextCategory)
+        {
+            return nextSlot == WeaponSlot.Ranged && nextCategory == WeaponCategory.Bow
+                ? WeaponRangedFireMode.DrawAndRelease
+                : WeaponRangedFireMode.Instant;
         }
     }
 }

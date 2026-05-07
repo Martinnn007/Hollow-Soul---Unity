@@ -33,7 +33,7 @@ MonoBehaviour:
   startingSouls: 0
   loadout:
     meleeWeaponId: iron_cleaver
-    rangedWeaponId: starter_bolt
+    rangedWeaponId: starter_bow
     armorId: 
     activeItemId: 
     consumableCardId: ember_card

@@ -60,6 +60,14 @@ namespace Hollow.Combat
                 "Could provide mature NavMesh surfaces, runtime baking, dynamic obstacles, and links.",
                 "Only adopt if runtime/generated-room baking is deterministic and cheaper than custom corridors."),
             new(
+                "Unity Behavior",
+                "official Unity behavior-tree graph/runtime candidate",
+                "https://docs.unity3d.com/ja/current/Manual/com.unity.behavior.html",
+                false,
+                3,
+                "Official graph authoring, reusable subgraphs, C# integration, and play-mode debugging for high-level AI decisions.",
+                "Adopt enemy-by-enemy only if graphs can output Hollow commands without replacing combat data, attack windows, or pressure budgets."),
+            new(
                 "A* Pathfinding Project Pro",
                 "paid navigation/local-avoidance candidate",
                 "https://assetstore.unity.com/packages/tools/behavior-ai/a-pathfinding-project-pro-87744",

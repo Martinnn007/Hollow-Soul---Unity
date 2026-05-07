@@ -18,6 +18,8 @@ namespace Hollow.Tests.EditMode
     public sealed class Milestone23ArtContentReplacementTests
     {
         private const string SamplePath = "Assets/_Hollow/Data/Rooms/Templates/combat_single_sample.hollowruntime.json";
+        private const float ExpectedRuntimeDoorHeightMeters = 2.2f;
+        private const float ExpectedRuntimeDoorCenterY = ExpectedRuntimeDoorHeightMeters * 0.5f;
 
         [SetUp]
         public void SetUp()
@@ -85,6 +87,15 @@ namespace Hollow.Tests.EditMode
                 AssertVisualChild(floor, PresentationPrefabRole.RoomFloor);
                 AssertVisualChild(rock, PresentationPrefabRole.RoomObstacleRock);
                 AssertVisualChild(door, PresentationPrefabRole.DoorActive);
+                Assert.AreEqual(ExpectedRuntimeDoorCenterY, door.localPosition.y, 0.001f);
+                Assert.AreEqual(ExpectedRuntimeDoorHeightMeters, door.localScale.y, 0.001f);
+                var doorSlab = door.GetComponentsInChildren<Transform>(includeInactive: true)
+                    .FirstOrDefault(transform => transform.name == "door_slab");
+                Assert.IsNotNull(doorSlab);
+                Assert.AreEqual(1f, doorSlab.localScale.y, 0.001f);
+                var worldFootprint = Vector3.Scale(door.localScale, doorSlab.localScale);
+                Assert.LessOrEqual(worldFootprint.x, door.localScale.x + 0.001f);
+                Assert.LessOrEqual(worldFootprint.z, door.localScale.z + 0.001f);
                 Assert.AreEqual(0, floor.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .SelectMany(marker => marker.GetComponentsInChildren<Collider>(includeInactive: true))
                     .Count());

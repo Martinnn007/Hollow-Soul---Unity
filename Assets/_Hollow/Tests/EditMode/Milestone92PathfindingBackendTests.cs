@@ -10,6 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
 {
+    [Ignore("Superseded by M97 Unity NavMesh runtime replacement tests.")]
     public sealed class Milestone92PathfindingBackendTests
     {
         private const string SamplePath = "Assets/_Hollow/Data/Rooms/Templates/combat_single_sample.hollowruntime.json";

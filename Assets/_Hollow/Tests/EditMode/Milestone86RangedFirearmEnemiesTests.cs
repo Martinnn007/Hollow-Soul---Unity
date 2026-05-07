@@ -137,7 +137,7 @@ namespace Hollow.Tests.EditMode
             {
                 var definition = EnemyCatalog.CreateRuntimeDefault().Resolve(spawnKind);
                 var profile = definition.ResolveAttackProfile(actionId);
-                var enemy = CreateEnemy(root.transform, room, player, definition);
+                var enemy = CreateEnemy(root.transform, null, player, definition);
                 enemy.transform.localPosition = Vector3.zero;
                 player.transform.localPosition = new Vector3(0f, 0f, playerZ);
 

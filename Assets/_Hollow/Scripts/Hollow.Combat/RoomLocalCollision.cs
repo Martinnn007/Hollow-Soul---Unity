@@ -58,6 +58,97 @@ namespace Hollow.Combat
                 : clamped;
         }
 
+        public static Vector3 ResolveNearestOccupiablePosition(
+            RoomRuntimeRoot room,
+            Vector3 preferredLocal,
+            float radius,
+            Vector3 preferredDirection,
+            float maxSearchRadius = 3f)
+        {
+            if (room == null)
+            {
+                return preferredLocal;
+            }
+
+            radius = Mathf.Max(MinimumRadiusMeters, radius);
+            maxSearchRadius = Mathf.Max(0.25f, maxSearchRadius);
+            var clampedPreferred = ClampToBounds(room, preferredLocal, radius);
+            if (CanOccupy(room, clampedPreferred, radius))
+            {
+                return clampedPreferred;
+            }
+
+            preferredDirection.y = 0f;
+            var hasPreferredDirection = preferredDirection.sqrMagnitude > 0.001f;
+            if (hasPreferredDirection)
+            {
+                preferredDirection.Normalize();
+                for (var step = 1; step <= 12; step++)
+                {
+                    var distance = Mathf.Min(maxSearchRadius, step * 0.25f);
+                    var directedCandidate = ClampToBounds(room, clampedPreferred + preferredDirection * distance, radius);
+                    if (CanOccupy(room, directedCandidate, radius))
+                    {
+                        return directedCandidate;
+                    }
+                }
+            }
+
+            var best = clampedPreferred;
+            var bestScore = float.PositiveInfinity;
+            var directions = new[]
+            {
+                Vector3.forward,
+                Vector3.back,
+                Vector3.left,
+                Vector3.right,
+                (Vector3.forward + Vector3.left).normalized,
+                (Vector3.forward + Vector3.right).normalized,
+                (Vector3.back + Vector3.left).normalized,
+                (Vector3.back + Vector3.right).normalized
+            };
+
+            for (var ring = 1; ring <= 14; ring++)
+            {
+                var distance = Mathf.Min(maxSearchRadius, ring * 0.25f);
+                for (var index = 0; index < directions.Length; index++)
+                {
+                    var candidate = ClampToBounds(room, clampedPreferred + directions[index] * distance, radius);
+                    if (!CanOccupy(room, candidate, radius))
+                    {
+                        continue;
+                    }
+
+                    var score = Vector3.Distance(Flat(candidate), Flat(preferredLocal));
+                    if (hasPreferredDirection)
+                    {
+                        var offset = candidate - clampedPreferred;
+                        offset.y = 0f;
+                        if (offset.sqrMagnitude > 0.001f)
+                        {
+                            score -= Mathf.Max(0f, Vector3.Dot(offset.normalized, preferredDirection)) * 0.35f;
+                        }
+                    }
+
+                    if (score >= bestScore)
+                    {
+                        continue;
+                    }
+
+                    bestScore = score;
+                    best = candidate;
+                }
+
+                if (bestScore < float.PositiveInfinity)
+                {
+                    return best;
+                }
+            }
+
+            var nearestWalkable = ClampToBounds(room, NearestWalkablePosition(room, clampedPreferred), radius);
+            return CanOccupy(room, nearestWalkable, radius) ? nearestWalkable : clampedPreferred;
+        }
+
         public static bool IntersectsObstacle(RoomRuntimeRoot room, Vector3 localPosition, float radius)
         {
             if (room?.Obstacles == null)
@@ -93,17 +184,158 @@ namespace Hollow.Combat
                 }
             }
 
+            foreach (var dynamicObject in room.DynamicNavigationObjects)
+            {
+                if (dynamicObject == null || !dynamicObject.CarvingActive)
+                {
+                    continue;
+                }
+
+                var halfX = dynamicObject.SizeMeters.x * 0.5f + radius;
+                var halfZ = dynamicObject.SizeMeters.z * 0.5f + radius;
+                if (Mathf.Abs(localPosition.x - dynamicObject.transform.localPosition.x) <= halfX &&
+                    Mathf.Abs(localPosition.z - dynamicObject.transform.localPosition.z) <= halfZ)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
         public static bool IntersectsProjectileBlocker(RoomRuntimeRoot room, Vector3 localPosition, float radius)
         {
-            if (IntersectsObstacle(room, localPosition, radius))
+            if (room?.Obstacles == null)
+            {
+                return false;
+            }
+
+            radius = Mathf.Max(0f, radius);
+            foreach (var obstacle in room.Obstacles)
+            {
+                if (!obstacle.BlocksProjectiles)
+                {
+                    continue;
+                }
+
+                var halfX = obstacle.Size.x * 0.5f + radius;
+                var halfZ = obstacle.Size.z * 0.5f + radius;
+                if (Mathf.Abs(localPosition.x - obstacle.Center.x) <= halfX &&
+                    Mathf.Abs(localPosition.z - obstacle.Center.z) <= halfZ)
+                {
+                    return true;
+                }
+            }
+
+            foreach (var roomObject in room.InteractiveObjectMarkers)
+            {
+                if (roomObject == null || !roomObject.BlocksProjectiles)
+                {
+                    continue;
+                }
+
+                var halfX = roomObject.SizeMeters.x * 0.5f + radius;
+                var halfZ = roomObject.SizeMeters.z * 0.5f + radius;
+                if (Mathf.Abs(localPosition.x - roomObject.transform.localPosition.x) <= halfX &&
+                    Mathf.Abs(localPosition.z - roomObject.transform.localPosition.z) <= halfZ)
+                {
+                    return true;
+                }
+            }
+
+            foreach (var dynamicObject in room.DynamicNavigationObjects)
+            {
+                if (dynamicObject == null || !dynamicObject.CarvingActive)
+                {
+                    continue;
+                }
+
+                var halfX = dynamicObject.SizeMeters.x * 0.5f + radius;
+                var halfZ = dynamicObject.SizeMeters.z * 0.5f + radius;
+                if (Mathf.Abs(localPosition.x - dynamicObject.transform.localPosition.x) <= halfX &&
+                    Mathf.Abs(localPosition.z - dynamicObject.transform.localPosition.z) <= halfZ)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool HasClearMovementLane(RoomRuntimeRoot room, Vector3 fromLocalPosition, Vector3 toLocalPosition, float radius, out string blockedReason)
+        {
+            return HasClearSampledLane(
+                room,
+                fromLocalPosition,
+                toLocalPosition,
+                Mathf.Max(MinimumRadiusMeters, radius),
+                sampleOutsideBounds: true,
+                sampleProjectileBlockers: false,
+                blockedReason: out blockedReason);
+        }
+
+        public static bool HasClearProjectileLine(RoomRuntimeRoot room, Vector3 fromLocalPosition, Vector3 toLocalPosition, float radius, out string blockedReason)
+        {
+            return HasClearSampledLane(
+                room,
+                fromLocalPosition,
+                toLocalPosition,
+                Mathf.Max(0f, radius),
+                sampleOutsideBounds: false,
+                sampleProjectileBlockers: true,
+                blockedReason: out blockedReason);
+        }
+
+        private static bool HasClearSampledLane(
+            RoomRuntimeRoot room,
+            Vector3 fromLocalPosition,
+            Vector3 toLocalPosition,
+            float radius,
+            bool sampleOutsideBounds,
+            bool sampleProjectileBlockers,
+            out string blockedReason)
+        {
+            blockedReason = string.Empty;
+            if (room == null)
             {
                 return true;
             }
 
-            return false;
+            fromLocalPosition.y = 0f;
+            toLocalPosition.y = 0f;
+            var delta = toLocalPosition - fromLocalPosition;
+            var distance = delta.magnitude;
+            if (distance <= 0.001f)
+            {
+                return true;
+            }
+
+            var stepCount = Mathf.Max(1, Mathf.CeilToInt(distance / 0.2f));
+            for (var index = 1; index < stepCount; index++)
+            {
+                var sample = Vector3.Lerp(fromLocalPosition, toLocalPosition, index / (float)stepCount);
+                if (sampleOutsideBounds && IsOutsideBounds(room, sample, radius))
+                {
+                    blockedReason = "blocked_by_bounds_or_hole";
+                    return false;
+                }
+
+                if (sampleProjectileBlockers)
+                {
+                    if (IntersectsProjectileBlocker(room, sample, radius))
+                    {
+                        blockedReason = "blocked_by_projectile_cover";
+                        return false;
+                    }
+                }
+                else if (IntersectsObstacle(room, sample, radius))
+                {
+                    blockedReason = "blocked_by_obstacle";
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static bool IsOutsideBounds(RoomRuntimeRoot room, Vector3 localPosition, float radius)
@@ -268,6 +500,12 @@ namespace Hollow.Combat
             var candidateDelta = candidate - current;
             candidateDelta.y = 0f;
             return Vector3.Dot(candidateDelta, desiredDelta.normalized);
+        }
+
+        private static Vector3 Flat(Vector3 value)
+        {
+            value.y = 0f;
+            return value;
         }
     }
 }

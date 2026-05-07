@@ -6,6 +6,7 @@ namespace Hollow.Input
     public static class GameplayInputReader
     {
         private const float StickDeadZone = 0.2f;
+        private const float MouseAimMovePixels = 0.5f;
 
         public static GameplayInputSnapshot ReadCurrent()
         {
@@ -23,9 +24,13 @@ namespace Hollow.Input
                     false,
                     false,
                     pausePressed,
+                    false,
                     false);
             }
 
+            var pointerScreenPosition = ReadPointerScreenPosition(out var hasPointerScreenPosition, out var mouseAimIntent);
+            var lightAttackHeld = ReadLightAttackHeld();
+            var heavyAttackHeld = ReadHeavyAttackHeld();
             return new GameplayInputSnapshot(
                 ReadMove(),
                 ReadShoot(),
@@ -37,7 +42,15 @@ namespace Hollow.Input
                 ReadUseConsumableCardPressed(),
                 ReadGuardHeld(),
                 pausePressed,
-                ReadRollPressed());
+                ReadRollPressed(),
+                ReadLockTargetPressed(),
+                pointerScreenPosition,
+                hasPointerScreenPosition,
+                mouseAimIntent,
+                lightAttackHeld,
+                ReadLightAttackReleased(lightAttackHeld),
+                heavyAttackHeld,
+                ReadHeavyAttackReleased(heavyAttackHeld));
         }
 
         public static Vector2 CardinalizeShoot(Vector2 rawShoot)
@@ -50,6 +63,28 @@ namespace Hollow.Input
             return Mathf.Abs(rawShoot.x) >= Mathf.Abs(rawShoot.y)
                 ? new Vector2(Mathf.Sign(rawShoot.x), 0f)
                 : new Vector2(0f, Mathf.Sign(rawShoot.y));
+        }
+
+        public static Vector2 QuantizeEightAxis(Vector2 rawDirection)
+        {
+            if (rawDirection.sqrMagnitude < StickDeadZone * StickDeadZone)
+            {
+                return Vector2.zero;
+            }
+
+            var angle = Mathf.Atan2(rawDirection.y, rawDirection.x) * Mathf.Rad2Deg;
+            var snapped = Mathf.Round(angle / 45f) * 45f * Mathf.Deg2Rad;
+            return new Vector2(Mathf.Cos(snapped), Mathf.Sin(snapped)).normalized;
+        }
+
+        public static Vector2 NormalizeAimDirection(Vector2 rawDirection)
+        {
+            if (rawDirection.sqrMagnitude < StickDeadZone * StickDeadZone)
+            {
+                return Vector2.zero;
+            }
+
+            return Vector2.ClampMagnitude(rawDirection, 1f).normalized;
         }
 
         private static Vector2 ReadMove()
@@ -124,6 +159,25 @@ namespace Hollow.Input
             return shoot;
         }
 
+        private static Vector2 ReadPointerScreenPosition(out bool hasPointerScreenPosition, out bool mouseAimIntent)
+        {
+            var mouse = Mouse.current;
+            if (mouse == null)
+            {
+                hasPointerScreenPosition = false;
+                mouseAimIntent = false;
+                return Vector2.zero;
+            }
+
+            hasPointerScreenPosition = true;
+            var mouseDelta = mouse.delta.ReadValue();
+            mouseAimIntent =
+                mouseDelta.sqrMagnitude >= MouseAimMovePixels * MouseAimMovePixels ||
+                mouse.leftButton.isPressed ||
+                mouse.rightButton.isPressed;
+            return mouse.position.ReadValue();
+        }
+
         private static bool ReadInteractPressed()
         {
             var keyboard = Keyboard.current;
@@ -171,6 +225,57 @@ namespace Hollow.Input
             return gamepad != null && gamepad.rightShoulder.wasPressedThisFrame;
         }
 
+        private static bool ReadLightAttackHeld()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null &&
+                (keyboard.jKey.isPressed ||
+                 keyboard.leftArrowKey.isPressed ||
+                 keyboard.rightArrowKey.isPressed ||
+                 keyboard.downArrowKey.isPressed ||
+                 keyboard.upArrowKey.isPressed))
+            {
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.leftButton.isPressed)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightShoulder.isPressed;
+        }
+
+        private static bool ReadLightAttackReleased(bool lightAttackHeld)
+        {
+            if (lightAttackHeld)
+            {
+                return false;
+            }
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null &&
+                (keyboard.jKey.wasReleasedThisFrame ||
+                 keyboard.leftArrowKey.wasReleasedThisFrame ||
+                 keyboard.rightArrowKey.wasReleasedThisFrame ||
+                 keyboard.downArrowKey.wasReleasedThisFrame ||
+                 keyboard.upArrowKey.wasReleasedThisFrame))
+            {
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.leftButton.wasReleasedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightShoulder.wasReleasedThisFrame;
+        }
+
         private static bool ReadHeavyAttackPressed()
         {
             var keyboard = Keyboard.current;
@@ -187,6 +292,47 @@ namespace Hollow.Input
 
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.rightTrigger.wasPressedThisFrame;
+        }
+
+        private static bool ReadHeavyAttackHeld()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.kKey.isPressed)
+            {
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.rightButton.isPressed)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightTrigger.isPressed;
+        }
+
+        private static bool ReadHeavyAttackReleased(bool heavyAttackHeld)
+        {
+            if (heavyAttackHeld)
+            {
+                return false;
+            }
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.kKey.wasReleasedThisFrame)
+            {
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.rightButton.wasReleasedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightTrigger.wasReleasedThisFrame;
         }
 
         private static bool ReadUseActiveItemPressed()
@@ -223,6 +369,18 @@ namespace Hollow.Input
 
             var gamepad = Gamepad.current;
             return gamepad != null && gamepad.buttonEast.wasPressedThisFrame;
+        }
+
+        private static bool ReadLockTargetPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.lKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            var gamepad = Gamepad.current;
+            return gamepad != null && gamepad.rightStickButton.wasPressedThisFrame;
         }
 
         private static bool ReadGuardHeld()

@@ -44,6 +44,9 @@ namespace Hollow.Combat
             "spawnEnemyKnifeThrower",
             "spawnEnemyRepeaterTurret",
             "spawnEnemyClockworkSentry",
+            "spawnEnemyStarforgedOctantSentry",
+            "spawnEnemyCrimsonRailSpider",
+            "spawnEnemyAzureMinigunTurret",
             "spawnEnemyHollowAcolyte",
             "spawnEnemyWraith",
             "spawnEnemySoulEater",
@@ -79,6 +82,9 @@ namespace Hollow.Combat
                 "spawnEnemyKnifeThrower" => BuildKnifeThrower(builder),
                 "spawnEnemyRepeaterTurret" => BuildRepeaterTurret(builder),
                 "spawnEnemyClockworkSentry" => BuildClockworkSentry(builder),
+                "spawnEnemyStarforgedOctantSentry" => BuildStarforgedOctantSentry(builder),
+                "spawnEnemyCrimsonRailSpider" => BuildCrimsonRailSpider(builder),
+                "spawnEnemyAzureMinigunTurret" => BuildAzureMinigunTurret(builder),
                 "spawnEnemyHollowAcolyte" => BuildHollowAcolyte(builder),
                 "spawnEnemyWraith" => BuildWraith(builder),
                 "spawnEnemySoulEater" => BuildSoulEater(builder),
@@ -364,6 +370,31 @@ namespace Hollow.Combat
                 b.Action("clockwork_sentry_range", EnemyBehaviorCommandKind.MovePreferredRange, speed: 0.58f, reason: "Clockwork Sentry slowly repositions into projectile pattern range."));
         }
 
+        private static EnemyBehaviorTreeNodeDefinition BuildStarforgedOctantSentry(TreeBuilder b)
+        {
+            return b.Selector(
+                "starforged_octant_sentry_root",
+                b.Sequence("starforged_octant_fire", b.Condition("starforged_octant_engage", EnemyBehaviorConditionKind.ShouldSentinelEngage), b.CanRanged("octant_clockwise_shot"), b.StartRanged("octant_clockwise_shot")),
+                b.Action("starforged_octant_hold", EnemyBehaviorCommandKind.Hold, reason: "Starforged Octant Sentry remains planted until engaged."));
+        }
+
+        private static EnemyBehaviorTreeNodeDefinition BuildCrimsonRailSpider(TreeBuilder b)
+        {
+            return b.Selector(
+                "crimson_rail_spider_root",
+                b.Sequence("crimson_rail_spider_too_close", b.Condition("crimson_rail_spider_too_close_condition", EnemyBehaviorConditionKind.IsTooClose), b.Action("crimson_rail_spider_reset_range", EnemyBehaviorCommandKind.MovePreferredRange, speed: 1f, reason: "Crimson Rail Spider repositions before charging its railgun.")),
+                b.Sequence("crimson_rail_spider_beam", b.CanRanged("railgun_lock_beam"), b.StartRanged("railgun_lock_beam")),
+                b.Action("crimson_rail_spider_range", EnemyBehaviorCommandKind.MovePreferredRange, speed: 0.85f, reason: "Crimson Rail Spider keeps a railgun lane at preferred range."));
+        }
+
+        private static EnemyBehaviorTreeNodeDefinition BuildAzureMinigunTurret(TreeBuilder b)
+        {
+            return b.Selector(
+                "azure_minigun_turret_root",
+                b.Sequence("azure_minigun_fire", b.Condition("azure_minigun_engage", EnemyBehaviorConditionKind.ShouldSentinelEngage), b.CanRanged("ion_minigun_stream"), b.StartRanged("ion_minigun_stream")),
+                b.Action("azure_minigun_hold", EnemyBehaviorCommandKind.Hold, reason: "Azure Minigun Turret remains planted while tracking the player."));
+        }
+
         private static EnemyBehaviorTreeNodeDefinition BuildHollowAcolyte(TreeBuilder b)
         {
             return b.Selector(
@@ -460,6 +491,9 @@ namespace Hollow.Combat
                 "spawnEnemyKnifeThrower" => "Knife Thrower",
                 "spawnEnemyRepeaterTurret" => "Repeater Turret",
                 "spawnEnemyClockworkSentry" => "Clockwork Sentry",
+                "spawnEnemyStarforgedOctantSentry" => "Starforged Octant Sentry",
+                "spawnEnemyCrimsonRailSpider" => "Crimson Rail Spider",
+                "spawnEnemyAzureMinigunTurret" => "Azure Minigun Turret",
                 "spawnEnemyHollowAcolyte" => "Hollow Acolyte",
                 "spawnEnemyWraith" => "Wraith",
                 "spawnEnemySoulEater" => "Soul Eater",

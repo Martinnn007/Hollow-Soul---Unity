@@ -24,7 +24,9 @@ namespace Hollow.Combat
             Vector3? actionEnvelopeAnchorLocalPosition = null,
             float actionEnvelopeDesiredDistanceMeters = 0f,
             float actionEnvelopeMinDistanceMeters = 0f,
-            float actionEnvelopeMaxDistanceMeters = 0f)
+            float actionEnvelopeMaxDistanceMeters = 0f,
+            EnemyNavMeshAgentBridge navMeshAgentBridge = null,
+            float desiredSpeedMetersPerSecond = 0f)
         {
             Room = room;
             CurrentLocalPosition = currentLocalPosition;
@@ -45,6 +47,8 @@ namespace Hollow.Combat
             ActionEnvelopeDesiredDistanceMeters = Mathf.Max(0f, actionEnvelopeDesiredDistanceMeters);
             ActionEnvelopeMinDistanceMeters = Mathf.Max(0f, actionEnvelopeMinDistanceMeters);
             ActionEnvelopeMaxDistanceMeters = Mathf.Max(ActionEnvelopeMinDistanceMeters, actionEnvelopeMaxDistanceMeters);
+            NavMeshAgentBridge = navMeshAgentBridge;
+            DesiredSpeedMetersPerSecond = Mathf.Max(0f, desiredSpeedMetersPerSecond);
         }
 
         public RoomRuntimeRoot Room { get; }
@@ -84,5 +88,9 @@ namespace Hollow.Combat
         public float ActionEnvelopeMinDistanceMeters { get; }
 
         public float ActionEnvelopeMaxDistanceMeters { get; }
+
+        public EnemyNavMeshAgentBridge NavMeshAgentBridge { get; }
+
+        public float DesiredSpeedMetersPerSecond { get; }
     }
 }

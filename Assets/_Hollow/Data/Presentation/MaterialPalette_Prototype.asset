@@ -36,7 +36,7 @@ MonoBehaviour:
     fallbackColor: {r: 0.24999997, g: 1, b: 0.45, a: 1}
   - role: 6
     material: {fileID: 2100000, guid: feb7c7c8a2ed14ed7aa8f07da3fe314b, type: 2}
-    fallbackColor: {r: 0.19999996, g: 0.21999997, b: 0.23999995, a: 0.55}
+    fallbackColor: {r: 0.34, g: 0.38, b: 0.44, a: 0.9}
   - role: 7
     material: {fileID: 2100000, guid: da9daf63893084398b1f7a40889733f8, type: 2}
     fallbackColor: {r: 0.35999998, g: 1, b: 0.53999996, a: 1}

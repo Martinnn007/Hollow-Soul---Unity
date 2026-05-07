@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
+using UnityEngine.AI;
 
 namespace Hollow.Rooms
 {
@@ -10,13 +11,23 @@ namespace Hollow.Rooms
     {
         public const float DefaultWidthMeters = 13f;
         public const float DefaultDepthMeters = 7f;
+        private const float DoorVisualHeightMeters = 2.2f;
+        private const float DoorVisualCenterY = DoorVisualHeightMeters * 0.5f;
 
         [SerializeField] private Vector2 roomSizeMeters = new(DefaultWidthMeters, DefaultDepthMeters);
         private readonly Dictionary<string, List<Renderer>> doorRenderersByDirection = new();
         private readonly Dictionary<string, Renderer> doorRenderersByPortId = new();
         private readonly Dictionary<string, GameObject> doorMarkersByPortId = new();
+        private readonly Dictionary<string, RoomDynamicNavigationObjectMarker> doorNavigationByPortId = new();
+        private readonly Dictionary<string, string> doorDirectionByPortId = new();
         private readonly List<RoomHazardMarker> hazardMarkers = new();
         private readonly List<RoomInteractiveObjectMarker> interactiveObjectMarkers = new();
+        private readonly List<RoomDynamicNavigationObjectMarker> dynamicNavigationObjects = new();
+        private NavMeshDataInstance navMeshDataInstance;
+        private NavMeshData activeNavMeshData;
+        private string navMeshBakeError = string.Empty;
+        private bool activeNavMeshWasRuntimeBuilt;
+        private string navMeshBakeSource = string.Empty;
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
@@ -26,6 +37,14 @@ namespace Hollow.Rooms
 
         public RoomLayout CurrentLayout => LastBuiltAsset?.Layout;
 
+        public bool HasNavMeshBake => activeNavMeshData != null && navMeshDataInstance.valid;
+
+        public string NavMeshBakeError => navMeshBakeError;
+
+        public bool HasRuntimeBuiltNavMesh => HasNavMeshBake && activeNavMeshWasRuntimeBuilt;
+
+        public string NavMeshBakeSource => navMeshBakeSource;
+
         public Rect LocalBounds => CurrentLayout?.Bounds ?? Rect.MinMaxRect(-DefaultWidthMeters * 0.5f, -DefaultDepthMeters * 0.5f, DefaultWidthMeters * 0.5f, DefaultDepthMeters * 0.5f);
 
         public System.Collections.Generic.IReadOnlyList<RoomLayoutObstacle> Obstacles => CurrentLayout?.Obstacles ?? System.Array.Empty<RoomLayoutObstacle>();
@@ -33,6 +52,8 @@ namespace Hollow.Rooms
         public System.Collections.Generic.IReadOnlyList<RoomHazardMarker> HazardMarkers => hazardMarkers;
 
         public System.Collections.Generic.IReadOnlyList<RoomInteractiveObjectMarker> InteractiveObjectMarkers => interactiveObjectMarkers;
+
+        public System.Collections.Generic.IReadOnlyList<RoomDynamicNavigationObjectMarker> DynamicNavigationObjects => dynamicNavigationObjects;
 
         public System.Collections.Generic.IReadOnlyList<ImportedSpawnPoint> EnemySpawns => LastBuiltAsset?.EnemySpawns ?? System.Array.Empty<ImportedSpawnPoint>();
 
@@ -47,6 +68,11 @@ namespace Hollow.Rooms
 
         public void BuildFrom(ImportedRoomRuntimeAsset asset)
         {
+            BuildFrom(asset, RoomNavMeshRuntimeFallbackMode.EditorOrDevelopmentRuntimeBake);
+        }
+
+        public void BuildFrom(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode)
+        {
             if (asset == null)
             {
                 Debug.LogError("Cannot build room runtime from a null imported asset.");
@@ -59,25 +85,40 @@ namespace Hollow.Rooms
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
             doorMarkersByPortId.Clear();
+            doorNavigationByPortId.Clear();
+            doorDirectionByPortId.Clear();
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
+            dynamicNavigationObjects.Clear();
             BuildFloor(asset.Layout);
+            BuildHoleMarkers(asset.Layout);
             BuildObstacles(asset.Layout);
             BuildHazards(asset);
             BuildInteractiveObjects(asset);
             BuildDoors(asset);
             BuildSpawnMarkers(asset);
+            AttachNavMesh(asset, fallbackMode);
+            ConfigureCarvingObstacles();
         }
 
         public void ClearRuntime()
         {
             LastBuiltAsset = null;
+            ReleaseNavMesh();
             ClearChildren();
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
             doorMarkersByPortId.Clear();
+            doorNavigationByPortId.Clear();
+            doorDirectionByPortId.Clear();
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
+            dynamicNavigationObjects.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseNavMesh();
         }
 
         public bool TryGetDoorPort(string direction, out RoomDoorPort port)
@@ -109,6 +150,14 @@ namespace Hollow.Rooms
                     PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDoorState(state), renderer.transform, Vector3.zero, Vector3.one);
                 }
             }
+
+            foreach (var pair in doorDirectionByPortId)
+            {
+                if (pair.Value == direction && doorNavigationByPortId.TryGetValue(pair.Key, out var navigation) && navigation != null)
+                {
+                    navigation.ApplyDoorState(state);
+                }
+            }
         }
 
         public void SetDoorVisualStateById(string portId, RoomDoorVisualState state)
@@ -124,6 +173,11 @@ namespace Hollow.Rooms
                 ClearArtPassChildren(marker.transform);
                 PresentationPrefabResolver.InstantiateVisual(PrefabRoleForDoorState(state), marker.transform, Vector3.zero, Vector3.one);
             }
+
+            if (doorNavigationByPortId.TryGetValue(portId, out var navigation) && navigation != null)
+            {
+                navigation.ApplyDoorState(state);
+            }
         }
 
         public void ApplyInteractiveObjectState(System.Collections.Generic.IEnumerable<string> destroyedObjectIds)
@@ -138,6 +192,17 @@ namespace Hollow.Rooms
 
                 marker.MarkDestroyed();
                 marker.gameObject.SetActive(false);
+            }
+        }
+
+        public void SetDynamicNavigationDebugLabelsVisible(bool visible)
+        {
+            foreach (var marker in dynamicNavigationObjects)
+            {
+                if (marker != null)
+                {
+                    marker.SetDebugLabelVisible(visible);
+                }
             }
         }
 
@@ -161,6 +226,7 @@ namespace Hollow.Rooms
 
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
+            dynamicNavigationObjects.RemoveAll(marker => marker == null);
         }
 
         private void ClearChildren()
@@ -211,6 +277,41 @@ namespace Hollow.Rooms
                 block.transform.localScale = obstacle.Size;
                 MaterialResolver.ApplyTo(block, MaterialRole.RoomObstacleRock);
                 PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.RoomObstacleRock, block.transform, Vector3.zero, Vector3.one);
+                var navigationMarker = block.AddComponent<RoomDynamicNavigationObjectMarker>();
+                navigationMarker.ConfigureStaticBaked(
+                    obstacle.Id,
+                    obstacle.Kind,
+                    obstacle.Size,
+                    RoomDynamicNavigationObjectCategory.StaticBakedBlocker,
+                    "static_rock_baked_into_room_navmesh");
+                dynamicNavigationObjects.Add(navigationMarker);
+            }
+        }
+
+        private void BuildHoleMarkers(RoomLayout layout)
+        {
+            foreach (var hole in layout.HoleTiles ?? System.Array.Empty<Vector2Int>())
+            {
+                var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                marker.name = $"holeTile.{hole.x}_{hole.y}";
+                marker.transform.SetParent(transform, false);
+                marker.transform.localPosition = new Vector3(hole.x, 0.012f, hole.y);
+                marker.transform.localScale = new Vector3(0.88f, 0.024f, 0.88f);
+                MaterialResolver.ApplyTo(marker, MaterialRole.RoomHazardSpike);
+                var collider = marker.GetComponent<Collider>();
+                if (collider != null)
+                {
+                    collider.enabled = false;
+                }
+
+                var navigationMarker = marker.AddComponent<RoomDynamicNavigationObjectMarker>();
+                navigationMarker.ConfigureStaticBaked(
+                    $"hole_{hole.x}_{hole.y}",
+                    "hole",
+                    new Vector3(1f, RoomNavMeshBuildUtility.StaticBlockerHeightMeters, 1f),
+                    RoomDynamicNavigationObjectCategory.HoleBakedBlocker,
+                    "hole_baked_into_room_navmesh");
+                dynamicNavigationObjects.Add(navigationMarker);
             }
         }
 
@@ -274,7 +375,143 @@ namespace Hollow.Rooms
                 var objectMarker = marker.AddComponent<RoomInteractiveObjectMarker>();
                 objectMarker.Configure(roomObject);
                 interactiveObjectMarkers.Add(objectMarker);
+
+                var navigationMarker = marker.AddComponent<RoomDynamicNavigationObjectMarker>();
+                if (objectMarker.BlocksMovement)
+                {
+                    navigationMarker.ConfigureDynamicCarver(
+                        objectMarker.ObjectId,
+                        objectMarker.ObjectKind,
+                        objectMarker.SizeMeters,
+                        active: true,
+                        reason: "interactive_blocker_live");
+                }
+                else
+                {
+                    navigationMarker.ConfigureStaticBaked(
+                        objectMarker.ObjectId,
+                        objectMarker.ObjectKind,
+                        objectMarker.SizeMeters,
+                        RoomDynamicNavigationObjectCategory.NonBlocking,
+                        "interactive_non_blocking");
+                }
+
+                dynamicNavigationObjects.Add(navigationMarker);
             }
+        }
+
+        private void AttachNavMesh(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode)
+        {
+            ReleaseNavMesh();
+            navMeshBakeError = string.Empty;
+            navMeshBakeSource = string.Empty;
+            var roomId = asset?.Id ?? string.Empty;
+            var catalog = RoomNavMeshCatalogDefinition.LoadDefault();
+            if (catalog != null && catalog.TryGetNavMeshData(roomId, out activeNavMeshData) && activeNavMeshData != null)
+            {
+                AttachResolvedNavMeshData(roomId, runtimeBuilt: false, source: "catalog");
+                return;
+            }
+
+            navMeshBakeError = catalog == null
+                ? RoomNavMeshCatalogDefinition.MissingCatalogMessage()
+                : RoomNavMeshCatalogDefinition.MissingBakeMessage(roomId);
+            if (CanUseRuntimeNavMeshFallback(fallbackMode))
+            {
+                activeNavMeshData = RoomNavMeshBuildUtility.BuildRoom(asset, "NavMesh.DevRuntime", out var runtimeBuildError);
+                if (activeNavMeshData != null)
+                {
+                    Debug.LogWarning(
+                        $"Room '{roomId}' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run {RoomNavMeshCatalogDefinition.PreferredBakeMenuPath} before shipping or locking QA. Missing bake: {navMeshBakeError}",
+                        this);
+                    AttachResolvedNavMeshData(roomId, runtimeBuilt: true, source: "dev-runtime-fallback");
+                    return;
+                }
+
+                navMeshBakeError = $"{navMeshBakeError}:runtime_build_failed={runtimeBuildError}";
+            }
+
+            Debug.LogError(
+                $"Room '{roomId}' has no usable Unity NavMesh. {navMeshBakeError}. Run {RoomNavMeshCatalogDefinition.PreferredBakeMenuPath}. Dev-only runtime fallback mode: {fallbackMode}.",
+                this);
+        }
+
+        private void AttachResolvedNavMeshData(string roomId, bool runtimeBuilt, string source)
+        {
+            activeNavMeshWasRuntimeBuilt = runtimeBuilt;
+            navMeshBakeError = string.Empty;
+            navMeshBakeSource = source ?? string.Empty;
+
+            navMeshDataInstance = NavMesh.AddNavMeshData(activeNavMeshData, transform.position, transform.rotation);
+            if (!navMeshDataInstance.valid)
+            {
+                navMeshBakeError = runtimeBuilt ? $"invalid_runtime_navmesh:{roomId}" : $"invalid_navmesh_bake:{roomId}";
+                navMeshBakeSource = string.Empty;
+                Debug.LogError($"Room '{roomId}' has invalid Unity NavMesh data.", this);
+            }
+        }
+
+        private static bool CanUseRuntimeNavMeshFallback(RoomNavMeshRuntimeFallbackMode fallbackMode)
+        {
+            return fallbackMode == RoomNavMeshRuntimeFallbackMode.EditorOrDevelopmentRuntimeBake &&
+                (Application.isEditor || Debug.isDebugBuild);
+        }
+
+        private void ReleaseNavMesh()
+        {
+            if (navMeshDataInstance.valid)
+            {
+                navMeshDataInstance.Remove();
+            }
+
+            navMeshDataInstance = default;
+            if (activeNavMeshWasRuntimeBuilt && activeNavMeshData != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(activeNavMeshData);
+                }
+                else
+                {
+                    DestroyImmediate(activeNavMeshData);
+                }
+            }
+
+            activeNavMeshData = null;
+            activeNavMeshWasRuntimeBuilt = false;
+            navMeshBakeError = string.Empty;
+            navMeshBakeSource = string.Empty;
+        }
+
+        private void ConfigureCarvingObstacles()
+        {
+            foreach (var marker in interactiveObjectMarkers)
+            {
+                if (marker != null)
+                {
+                    ConfigureCarvingObstacle(marker.gameObject, marker);
+                }
+            }
+        }
+
+        private static void ConfigureCarvingObstacle(GameObject marker, RoomInteractiveObjectMarker objectMarker)
+        {
+            if (marker == null || objectMarker == null || !objectMarker.BlocksMovement)
+            {
+                return;
+            }
+
+            if (!marker.TryGetComponent<RoomDynamicNavigationObjectMarker>(out var navigationMarker))
+            {
+                navigationMarker = marker.AddComponent<RoomDynamicNavigationObjectMarker>();
+            }
+
+            navigationMarker.ConfigureDynamicCarver(
+                objectMarker.ObjectId,
+                objectMarker.ObjectKind,
+                objectMarker.SizeMeters,
+                active: true,
+                reason: "interactive_blocker_refreshed");
         }
 
         private void BuildDoors(ImportedRoomRuntimeAsset asset)
@@ -284,13 +521,14 @@ namespace Hollow.Rooms
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 marker.name = $"doorAnchorActive.{port.Id}";
                 marker.transform.SetParent(transform, false);
-                marker.transform.localPosition = new Vector3(port.Position.x, 0.65f, port.Position.z);
+                marker.transform.localPosition = new Vector3(port.Position.x, DoorVisualCenterY, port.Position.z);
                 marker.transform.localScale = DoorScaleFor(port.Direction);
                 MaterialResolver.ApplyTo(marker, MaterialRole.DoorActive);
                 PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.DoorActive, marker.transform, Vector3.zero, Vector3.one);
                 var renderer = marker.GetComponent<Renderer>();
                 doorRenderersByPortId[port.Id] = renderer;
                 doorMarkersByPortId[port.Id] = marker;
+                doorDirectionByPortId[port.Id] = port.Direction;
                 if (!doorRenderersByDirection.TryGetValue(port.Direction, out var renderers))
                 {
                     renderers = new List<Renderer>();
@@ -304,6 +542,11 @@ namespace Hollow.Rooms
                 {
                     collider.enabled = false;
                 }
+
+                var navigationMarker = marker.AddComponent<RoomDynamicNavigationObjectMarker>();
+                navigationMarker.ConfigureDoor(port.Id, port.Kind, DoorScaleFor(port.Direction), RoomDoorVisualState.Active);
+                doorNavigationByPortId[port.Id] = navigationMarker;
+                dynamicNavigationObjects.Add(navigationMarker);
             }
         }
 
@@ -408,8 +651,8 @@ namespace Hollow.Rooms
         private static Vector3 DoorScaleFor(string direction)
         {
             return direction == "east" || direction == "west"
-                ? new Vector3(0.18f, 1.3f, 1f)
-                : new Vector3(1f, 1.3f, 0.18f);
+                ? new Vector3(0.18f, DoorVisualHeightMeters, 1f)
+                : new Vector3(1f, DoorVisualHeightMeters, 0.18f);
         }
 
     }

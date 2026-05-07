@@ -26,6 +26,9 @@ namespace Hollow.Data.Definitions
         BarrelExplode,
         HazardCoinDrop,
         ChestOpen,
-        CoinPickup
+        CoinPickup,
+        PlayerRollStart,
+        PlayerRollTrail,
+        PlayerRollRecovery
     }
 }

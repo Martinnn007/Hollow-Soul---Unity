@@ -10,6 +10,12 @@ namespace Hollow.Combat
             }
 
             var damaged = target.ApplyDamage(request);
+            var defense = target.GetComponent<PlayerDefenseController>();
+            if (!damaged && (defense == null || !defense.LastHitWasGuarded))
+            {
+                return false;
+            }
+
             if (target.IsAlive && request.Feedback.HasKnockback)
             {
                 var guardMultiplier = GuardRecoilMultiplier(target, request);

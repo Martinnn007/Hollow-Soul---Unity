@@ -68,6 +68,9 @@ namespace Hollow.Data.Definitions
         EnemyWraith,
         EnemySoulEater,
         EnemyCurseBinder,
-        EnemyGraveLantern
+        EnemyGraveLantern,
+        EnemyStarforgedOctantSentry,
+        EnemyCrimsonRailSpider,
+        EnemyAzureMinigunTurret
     }
 }

@@ -15,9 +15,9 @@ namespace Hollow.Branches
 
         private static readonly DebugSpawnGroup[] Groups =
         {
-            new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter", "spawnEnemySpittingPod", "spawnEnemyRat", "spawnEnemySpider", "spawnEnemyHollowBird", "spawnEnemyHollowBeast", "spawnEnemySkeletonSword", "spawnEnemySkeletonSpear", "spawnEnemyKnight", "spawnEnemyGiant", "spawnEnemyHollowArcher", "spawnEnemyPowderGunner", "spawnEnemyKnifeThrower", "spawnEnemyRepeaterTurret", "spawnEnemyClockworkSentry", "spawnEnemyHollowAcolyte", "spawnEnemyWraith", "spawnEnemySoulEater", "spawnEnemyCurseBinder", "spawnEnemyGraveLantern" }),
+            new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter", "spawnEnemySpittingPod", "spawnEnemyRat", "spawnEnemySpider", "spawnEnemyHollowBird", "spawnEnemyHollowBeast", "spawnEnemySkeletonSword", "spawnEnemySkeletonSpear", "spawnEnemyKnight", "spawnEnemyGiant", "spawnEnemyHollowArcher", "spawnEnemyPowderGunner", "spawnEnemyKnifeThrower", "spawnEnemyRepeaterTurret", "spawnEnemyClockworkSentry", "spawnEnemyHollowAcolyte", "spawnEnemyWraith", "spawnEnemySoulEater", "spawnEnemyCurseBinder", "spawnEnemyGraveLantern", "spawnEnemyStarforgedOctantSentry", "spawnEnemyCrimsonRailSpider", "spawnEnemyAzureMinigunTurret" }),
             new("Bosses", new[] { "stone_warden", "splinter_saint", "gravel_maw", "cartouche_widow", "iron_reliquary", "mirror_husk", "ash_comet", "choir_of_teeth", "rust_bishop", "hollow_star_larva" }),
-            new("Weapons", new[] { "starter_blade", "starter_bolt", "skeletal_sword", "bone_bow", "dragon_fang", "dragon_bow" }),
+            new("Weapons", new[] { "starter_blade", "starter_bow", "starter_bolt", "skeletal_sword", "bone_bow", "dragon_fang", "dragon_bow" }),
             new("Armor", new[] { "skeletal_armor", "dragon_scale_armor" }),
             new("Shields", new[] { "starter_buckler", "iron_kite_shield", "stone_wall_shield" }),
             new("Items", new[] { "vital_locket", "iron_stitch", "fleet_pin", "stamina_thread", "cursed_skull", "bone_totem", "dragon_tooth", "dragon_heart", "double_barrel", "triple_shot", "quad_shot", "power_up", "fire_rate_up" }),
@@ -37,6 +37,7 @@ namespace Hollow.Branches
         private bool debugEnemyPathTracingEnabled;
         private bool debugEnemyAiBlackboardEnabled;
         private bool debugEnemyTacticalOverlayEnabled;
+        private bool debugEnemyDesignerDebugEnabled;
         private int groupIndex;
         private int entityIndex;
         private Rect windowRect = new(24f, 100f, 420f, 260f);
@@ -49,6 +50,8 @@ namespace Hollow.Branches
 
         public bool DebugEnemyTacticalOverlayEnabled => debugEnemyTacticalOverlayEnabled;
 
+        public bool DebugEnemyDesignerDebugEnabled => debugEnemyDesignerDebugEnabled;
+
         public void Bind(BranchSessionController controller)
         {
             session = controller;
@@ -56,6 +59,11 @@ namespace Hollow.Branches
             EnemyNavigationDebugOverlay.SetPathTracingEnabled(debugEnemyPathTracingEnabled);
             EnemyAiDebugOverlay.SetBlackboardEnabled(debugEnemyAiBlackboardEnabled);
             EnemyTacticalDebugOverlay.SetEnabled(debugEnemyTacticalOverlayEnabled);
+            EnemyDesignerDebugOverlay.SetEnabled(debugEnemyDesignerDebugEnabled);
+            if (debugEnemyDesignerDebugEnabled)
+            {
+                SetDebugEnemyDesignerDebugEnabled(true);
+            }
         }
 
         public void SetDebugLightAttackSpeedDoubled(bool enabled)
@@ -82,6 +90,24 @@ namespace Hollow.Branches
             EnemyTacticalDebugOverlay.SetEnabled(enabled);
         }
 
+        public void SetDebugEnemyDesignerDebugEnabled(bool enabled)
+        {
+            debugEnemyDesignerDebugEnabled = enabled;
+            EnemyDesignerDebugOverlay.SetEnabled(enabled);
+            if (enabled)
+            {
+                SetDebugEnemyPathTracingEnabled(true);
+                SetDebugEnemyAiBlackboardEnabled(true);
+                SetDebugEnemyTacticalOverlayEnabled(true);
+            }
+            else
+            {
+                SetDebugEnemyPathTracingEnabled(false);
+                SetDebugEnemyAiBlackboardEnabled(false);
+                SetDebugEnemyTacticalOverlayEnabled(false);
+            }
+        }
+
         private void Update()
         {
             if (!IsAvailable())
@@ -99,6 +125,7 @@ namespace Hollow.Branches
             SetDebugEnemyPathTracingEnabled(false);
             SetDebugEnemyAiBlackboardEnabled(false);
             SetDebugEnemyTacticalOverlayEnabled(false);
+            SetDebugEnemyDesignerDebugEnabled(false);
         }
 
         private void OnGUI()
@@ -197,6 +224,12 @@ namespace Hollow.Branches
                 SetDebugEnemyTacticalOverlayEnabled(!debugEnemyTacticalOverlayEnabled);
             }
             GUILayout.Label(EnemyTacticalDebugOverlay.DiagnosticsSummary);
+            var designerDebugLabel = $"Designer Enemy Debug: {(debugEnemyDesignerDebugEnabled ? "ON" : "OFF")}";
+            if (GUILayout.Button(designerDebugLabel))
+            {
+                SetDebugEnemyDesignerDebugEnabled(!debugEnemyDesignerDebugEnabled);
+            }
+            GUILayout.Label(EnemyDesignerDebugOverlay.DiagnosticsSummary);
 
             if (GUILayout.Button("Spawn In Front Of Player"))
             {

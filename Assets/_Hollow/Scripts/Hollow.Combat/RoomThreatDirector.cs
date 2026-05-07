@@ -122,7 +122,7 @@ namespace Hollow.Combat
                 {
                     EnemyAttackRuntimeKind.Charge => ThreatLane.Charge,
                     EnemyAttackRuntimeKind.Area => ThreatLane.Area,
-                    EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.Beam => ThreatLane.Ranged,
+                    EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile or EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => ThreatLane.Ranged,
                     EnemyAttackRuntimeKind.MeleeLunge or EnemyAttackRuntimeKind.Contact or EnemyAttackRuntimeKind.WeaponMelee => ThreatLane.Melee,
                     _ => ThreatLane.Utility
                 };

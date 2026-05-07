@@ -67,6 +67,9 @@ namespace Hollow.Editor.Validation
             PresentationPrefabRole.EnemyKnifeThrower,
             PresentationPrefabRole.EnemyRepeaterTurret,
             PresentationPrefabRole.EnemyClockworkSentry,
+            PresentationPrefabRole.EnemyStarforgedOctantSentry,
+            PresentationPrefabRole.EnemyCrimsonRailSpider,
+            PresentationPrefabRole.EnemyAzureMinigunTurret,
             PresentationPrefabRole.EnemyHollowAcolyte,
             PresentationPrefabRole.EnemyWraith,
             PresentationPrefabRole.EnemySoulEater,
@@ -348,7 +351,9 @@ namespace Hollow.Editor.Validation
                     PresentationPrefabRole.EnemyKnight or PresentationPrefabRole.EnemyGiant or
                     PresentationPrefabRole.EnemyHollowArcher or PresentationPrefabRole.EnemyPowderGunner or
                     PresentationPrefabRole.EnemyKnifeThrower or PresentationPrefabRole.EnemyRepeaterTurret or
-                    PresentationPrefabRole.EnemyClockworkSentry or PresentationPrefabRole.EnemyHollowAcolyte or
+                    PresentationPrefabRole.EnemyClockworkSentry or PresentationPrefabRole.EnemyStarforgedOctantSentry or
+                    PresentationPrefabRole.EnemyCrimsonRailSpider or PresentationPrefabRole.EnemyAzureMinigunTurret or
+                    PresentationPrefabRole.EnemyHollowAcolyte or
                     PresentationPrefabRole.EnemyWraith or PresentationPrefabRole.EnemySoulEater or
                     PresentationPrefabRole.EnemyCurseBinder or PresentationPrefabRole.EnemyGraveLantern => "Enemies",
                 PresentationPrefabRole.EnemyBoss => "Boss",

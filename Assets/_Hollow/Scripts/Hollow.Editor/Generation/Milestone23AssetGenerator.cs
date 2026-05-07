@@ -199,7 +199,7 @@ namespace Hollow.Editor.Generation
                 case PresentationPrefabRole.DoorCleared:
                 case PresentationPrefabRole.DoorUnavailable:
                 case PresentationPrefabRole.SecretDoorDebug:
-                    AddPrimitive(parent, PrimitiveType.Cube, "door_slab", Vector3.zero, new Vector3(0.92f, 0.9f, 0.12f), role, alpha: 0.78f);
+                    AddPrimitive(parent, PrimitiveType.Cube, "door_slab", Vector3.zero, new Vector3(0.92f, 1f, 0.12f), role, alpha: 0.78f);
                     AddPrimitive(parent, PrimitiveType.Cylinder, "door_dot", new Vector3(0f, 0.2f, -0.08f), new Vector3(0.16f, 0.04f, 0.16f), role);
                     break;
                 case PresentationPrefabRole.HubShop:
@@ -559,6 +559,9 @@ namespace Hollow.Editor.Generation
                 PresentationPrefabRole.EnemyKnifeThrower => MaterialRole.EnemyKnifeThrower,
                 PresentationPrefabRole.EnemyRepeaterTurret => MaterialRole.EnemyRepeaterTurret,
                 PresentationPrefabRole.EnemyClockworkSentry => MaterialRole.EnemyClockworkSentry,
+                PresentationPrefabRole.EnemyStarforgedOctantSentry => MaterialRole.EnemyStarforgedOctantSentry,
+                PresentationPrefabRole.EnemyCrimsonRailSpider => MaterialRole.EnemyCrimsonRailSpider,
+                PresentationPrefabRole.EnemyAzureMinigunTurret => MaterialRole.EnemyAzureMinigunTurret,
                 PresentationPrefabRole.EnemyHollowAcolyte => MaterialRole.EnemyHollowAcolyte,
                 PresentationPrefabRole.EnemyWraith => MaterialRole.EnemyWraith,
                 PresentationPrefabRole.EnemySoulEater => MaterialRole.EnemySoulEater,

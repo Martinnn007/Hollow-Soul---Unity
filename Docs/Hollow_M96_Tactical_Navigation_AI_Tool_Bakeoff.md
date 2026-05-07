@@ -19,6 +19,7 @@ Source of truth: `Hollow enemy/action/spacing/behavior data`.
 | --- | --- | --- | ---: | --- |
 | Current Custom RoomGridAStar | baseline navigation backend | no | 2 | Must stop rock scraping, hold stable frame time, and feed tactical slots. |
 | Unity AI Navigation | built-in NavMesh candidate | no | 3 | Only adopt if runtime/generated-room baking is deterministic and cheaper than custom corridors. |
+| Unity Behavior | official Unity behavior-tree graph/runtime candidate | no | 3 | Adopt enemy-by-enemy only if graphs can output Hollow commands without replacing combat data, attack windows, or pressure budgets. |
 | A* Pathfinding Project Pro | paid navigation/local-avoidance candidate | yes | 3 | Only adopt if it clearly beats custom A* in obstacle feel and 20-40 enemy performance. |
 | Behavior Designer Pro 3 | paid behavior-authoring candidate | yes | 4 | Only adopt if it mirrors Hollow data cleanly without replacing our source-of-truth assets. |
 

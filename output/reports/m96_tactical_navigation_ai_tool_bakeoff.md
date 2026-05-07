@@ -3,7 +3,7 @@
 - Runtime tactical layer: `RoomTacticalDirector`, `EnemyTacticalIntent`, `EnemyLocomotionAgent`.
 - Active tactical threat slots: 2-4.
 - Source of truth: `Hollow enemy/action/spacing/behavior data`.
-- Free/built-in candidates: 2.
+- Free/built-in candidates: 3.
 - Paid external candidates: 2.
 - Adopt external tools only after feel + performance gates pass.
 - Debug overlays: tactical role/slot/intent summary plus existing path tracing and AI blackboard.

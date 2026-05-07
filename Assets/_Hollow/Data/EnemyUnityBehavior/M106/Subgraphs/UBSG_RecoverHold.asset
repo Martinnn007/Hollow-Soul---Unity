@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8759a0e56f84cf28e68035ac64f4491, type: 3}
+  m_Name: UBSG_RecoverHold
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyUnityBehaviorSubgraphDefinition
+  subgraphId: recover_hold
+  displayName: Recover / Hold
+  kind: 7
+  behaviorGraph: {fileID: 0}
+  outputCommandKind: 1
+  outputActionId: 
+  outputSpeedMultiplier: 0
+  outputReason: unity_behavior_recover_hold
+  requiredBlackboardInputs:
+  - DistanceToPlayer
+  - Awareness
+  - Disposition
+  - Endangered
+  - IsIdle
+  - TacticalRole
+  - PathStatus
+  requiredBlackboardOutputs:
+  - OutputCommandKind
+  - OutputActionId
+  - OutputSpeedMultiplier
+  - OutputReason
+  requiredNodeNames:
+  - HollowEnemyRecoverHoldAction
+  - HollowEnemyHoldFaceAction
+  authoringNotes: Non-damaging recovery/hold branch used after failed or deferred commits.

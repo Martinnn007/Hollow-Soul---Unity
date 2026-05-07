@@ -458,6 +458,9 @@ namespace Hollow.Editor.Generation
                 "spawnEnemyKnifeThrower" => PresentationPrefabRole.EnemyKnifeThrower,
                 "spawnEnemyRepeaterTurret" => PresentationPrefabRole.EnemyRepeaterTurret,
                 "spawnEnemyClockworkSentry" => PresentationPrefabRole.EnemyClockworkSentry,
+                "spawnEnemyStarforgedOctantSentry" => PresentationPrefabRole.EnemyStarforgedOctantSentry,
+                "spawnEnemyCrimsonRailSpider" => PresentationPrefabRole.EnemyCrimsonRailSpider,
+                "spawnEnemyAzureMinigunTurret" => PresentationPrefabRole.EnemyAzureMinigunTurret,
                 "spawnEnemyHollowAcolyte" => PresentationPrefabRole.EnemyHollowAcolyte,
                 "spawnEnemyWraith" => PresentationPrefabRole.EnemyWraith,
                 "spawnEnemySoulEater" => PresentationPrefabRole.EnemySoulEater,
@@ -497,6 +500,9 @@ namespace Hollow.Editor.Generation
             RoomDesignerMarkerKinds.EnemyKnifeThrower,
             RoomDesignerMarkerKinds.EnemyRepeaterTurret,
             RoomDesignerMarkerKinds.EnemyClockworkSentry,
+            RoomDesignerMarkerKinds.EnemyStarforgedOctantSentry,
+            RoomDesignerMarkerKinds.EnemyCrimsonRailSpider,
+            RoomDesignerMarkerKinds.EnemyAzureMinigunTurret,
             RoomDesignerMarkerKinds.EnemyHollowAcolyte,
             RoomDesignerMarkerKinds.EnemyWraith,
             RoomDesignerMarkerKinds.EnemySoulEater,
@@ -507,6 +513,7 @@ namespace Hollow.Editor.Generation
         private static readonly string[] BuildPickupLabels =
         {
             "starter_blade",
+            "starter_bow",
             "starter_bolt",
             "skeletal_sword",
             "bone_bow",

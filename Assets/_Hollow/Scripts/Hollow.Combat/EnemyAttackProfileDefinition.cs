@@ -28,6 +28,7 @@ namespace Hollow.Combat
         [SerializeField] private ImpactForceClass poiseBreakThreshold = ImpactForceClass.Medium;
         [SerializeField] private float activeMovementDistanceMeters = -1f;
         [SerializeField] private string comboFollowUpAttackId = string.Empty;
+        [SerializeField] private EnemyAttackObstructionPolicy obstructionPolicy = EnemyAttackObstructionPolicy.RuntimeDefault;
         [TextArea(1, 4)]
         [SerializeField] private string notes = string.Empty;
 
@@ -77,6 +78,12 @@ namespace Hollow.Combat
 
         public string ComboFollowUpAttackId => comboFollowUpAttackId ?? string.Empty;
 
+        public EnemyAttackObstructionPolicy AuthoredObstructionPolicy => obstructionPolicy;
+
+        public EnemyAttackObstructionPolicy ResolvedObstructionPolicy => obstructionPolicy == EnemyAttackObstructionPolicy.RuntimeDefault
+            ? DefaultObstructionPolicy(RuntimeKind, DamageDelivery, AttackId, DisplayName, Notes, Damage)
+            : obstructionPolicy;
+
         public string Notes => notes ?? string.Empty;
 
         public DamageClassification Classification => new(DamageChannel, DamageDelivery, ForceClass, DamageElement);
@@ -105,6 +112,7 @@ namespace Hollow.Combat
             poiseBreakThreshold = spec.PoiseBreakThreshold;
             activeMovementDistanceMeters = spec.ActiveMovementDistanceMeters;
             comboFollowUpAttackId = spec.ComboFollowUpAttackId ?? string.Empty;
+            obstructionPolicy = spec.ObstructionPolicy;
             notes = spec.Notes ?? string.Empty;
         }
 
@@ -135,8 +143,8 @@ namespace Hollow.Combat
                 EnemyAttackRuntimeKind.MeleeLunge => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.24f : 0.16f,
                 EnemyAttackRuntimeKind.Contact => 0.14f,
                 EnemyAttackRuntimeKind.Area => 0.2f,
-                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => 0.18f,
-                EnemyAttackRuntimeKind.Beam => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.55f : 0.38f,
+                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile => 0.18f,
+                EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => (int)forceClass >= (int)ImpactForceClass.Heavy ? 0.55f : 0.38f,
                 EnemyAttackRuntimeKind.Movement => 0.18f,
                 EnemyAttackRuntimeKind.Defense => 0.28f,
                 EnemyAttackRuntimeKind.CreatureMove => 0.16f,
@@ -160,10 +168,67 @@ namespace Hollow.Combat
                 EnemyAttackRuntimeKind.MeleeLunge => 125f,
                 EnemyAttackRuntimeKind.Contact => 110f,
                 EnemyAttackRuntimeKind.Area => 360f,
-                EnemyAttackRuntimeKind.Beam => 55f,
+                EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => 55f,
                 EnemyAttackRuntimeKind.CreatureMove or EnemyAttackRuntimeKind.CreatureSignal or EnemyAttackRuntimeKind.PhaseMove => 360f,
                 _ => 120f
             };
+        }
+
+        public static EnemyAttackObstructionPolicy DefaultObstructionPolicy(EnemyAttackRuntimeKind runtimeKind)
+        {
+            return DefaultObstructionPolicy(runtimeKind, DamageDelivery.Contact, string.Empty, string.Empty, string.Empty, 1);
+        }
+
+        public static EnemyAttackObstructionPolicy DefaultObstructionPolicy(
+            EnemyAttackRuntimeKind runtimeKind,
+            DamageDelivery delivery,
+            string attackId,
+            string displayName,
+            string notes,
+            int damage)
+        {
+            if (damage <= 0 && runtimeKind is (EnemyAttackRuntimeKind.Defense
+                    or EnemyAttackRuntimeKind.Movement
+                    or EnemyAttackRuntimeKind.CreatureSignal))
+            {
+                return EnemyAttackObstructionPolicy.IgnoresObstruction;
+            }
+
+            if (runtimeKind == EnemyAttackRuntimeKind.Projectile && LooksBallistic(attackId, displayName, notes))
+            {
+                return EnemyAttackObstructionPolicy.BallisticArc;
+            }
+
+            return runtimeKind switch
+            {
+                EnemyAttackRuntimeKind.Charge => EnemyAttackObstructionPolicy.BodyLane,
+                EnemyAttackRuntimeKind.MeleeLunge or EnemyAttackRuntimeKind.Contact or EnemyAttackRuntimeKind.CreatureMove => EnemyAttackObstructionPolicy.BodyLane,
+                EnemyAttackRuntimeKind.WeaponMelee => EnemyAttackObstructionPolicy.ClearLine,
+                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile or EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => EnemyAttackObstructionPolicy.ClearLine,
+                EnemyAttackRuntimeKind.Area => EnemyAttackObstructionPolicy.SelfArea,
+                EnemyAttackRuntimeKind.PhaseMove => EnemyAttackObstructionPolicy.IgnoresObstruction,
+                _ => delivery == DamageDelivery.Projectile
+                    ? EnemyAttackObstructionPolicy.ClearLine
+                    : EnemyAttackObstructionPolicy.IgnoresObstruction
+            };
+        }
+
+        private static bool LooksBallistic(string attackId, string displayName, string notes)
+        {
+            return ContainsAnyBallisticTerm(attackId) ||
+                   ContainsAnyBallisticTerm(displayName) ||
+                   ContainsAnyBallisticTerm(notes);
+        }
+
+        private static bool ContainsAnyBallisticTerm(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            return value.IndexOf("lob", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   value.IndexOf("ballistic", System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

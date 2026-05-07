@@ -24,14 +24,7 @@ namespace Hollow.Branches
                 position = port.Position;
             }
 
-            return entryDirection switch
-            {
-                "north" => new Vector3(position.x, 0f, position.z + DoorEntryInsetMeters),
-                "south" => new Vector3(position.x, 0f, position.z - DoorEntryInsetMeters),
-                "east" => new Vector3(position.x - DoorEntryInsetMeters, 0f, position.z),
-                "west" => new Vector3(position.x + DoorEntryInsetMeters, 0f, position.z),
-                _ => Vector3.zero
-            };
+            return position + EntryInsetDirectionFor(entryDirection) * DoorEntryInsetMeters;
         }
 
         public static Vector3 EntryPositionFor(RoomRuntimeRoot room, BranchConnection connection)
@@ -54,12 +47,17 @@ namespace Hollow.Branches
                 }
             }
 
-            return connection.ToDirection switch
+            return position + EntryInsetDirectionFor(connection.ToDirection) * DoorEntryInsetMeters;
+        }
+
+        public static Vector3 EntryInsetDirectionFor(string entryDirection)
+        {
+            return entryDirection switch
             {
-                "north" => new Vector3(position.x, 0f, position.z + DoorEntryInsetMeters),
-                "south" => new Vector3(position.x, 0f, position.z - DoorEntryInsetMeters),
-                "east" => new Vector3(position.x - DoorEntryInsetMeters, 0f, position.z),
-                "west" => new Vector3(position.x + DoorEntryInsetMeters, 0f, position.z),
+                "north" => Vector3.forward,
+                "south" => Vector3.back,
+                "east" => Vector3.left,
+                "west" => Vector3.right,
                 _ => Vector3.zero
             };
         }

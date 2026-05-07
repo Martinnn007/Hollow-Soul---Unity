@@ -186,7 +186,7 @@ namespace Hollow.Editor.EnemyAuthoring
                 result.Error($"{attack.AttackId}: knockback cannot be negative.");
             }
 
-            if (attack.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile &&
+            if (attack.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile &&
                 attack.ProjectileCount <= 0)
             {
                 result.Error($"{attack.AttackId}: projectile runtime kind requires projectile count.");

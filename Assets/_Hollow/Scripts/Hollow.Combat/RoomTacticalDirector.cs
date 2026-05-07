@@ -3,6 +3,7 @@ using System.Linq;
 using Hollow.Entities;
 using Hollow.Rooms;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Hollow.Combat
 {
@@ -10,6 +11,7 @@ namespace Hollow.Combat
     {
         public const int MinActiveThreatSlots = 2;
         public const int MaxActiveThreatSlots = 4;
+        public const float ReservationNavMeshSampleRadiusMeters = 0.85f;
 
         private readonly Dictionary<int, EnemyTacticalIntent> intents = new();
         private readonly List<Vector3> reservedPositions = new();
@@ -71,7 +73,7 @@ namespace Hollow.Combat
                 var isActive = activeSet.Contains(enemy.GetInstanceID());
                 var role = ResolveRole(enemy, isActive);
                 var commitPolicy = ResolveCommitPolicy(role);
-                var slotIndex = isActive ? activeSlot++ : -1;
+                var slotIndex = isActive ? activeSlot : -1;
                 var actionId = enemy.AiBlackboard.ChosenActionId;
                 var hasReservation = TryResolveReservedPosition(
                     enemy,
@@ -81,7 +83,43 @@ namespace Hollow.Combat
                     role,
                     slotIndex,
                     Mathf.Max(1, activeLimit),
-                    out var reserved);
+                    out var reserved,
+                    out var reservationPathStatus,
+                    out var reservationPathCornerCount,
+                    out var reservationPathLengthMeters,
+                    out var reservationReason);
+                if (role == EnemyTacticalRole.ActiveThreat && !hasReservation)
+                {
+                    var activeReservationReason = reservationReason;
+                    isActive = false;
+                    role = EnemyTacticalRole.SupportPressure;
+                    commitPolicy = ResolveCommitPolicy(role);
+                    slotIndex = -1;
+                    hasReservation = TryResolveReservedPosition(
+                        enemy,
+                        room,
+                        player,
+                        actionId,
+                        role,
+                        slotIndex,
+                        Mathf.Max(1, activeLimit),
+                        out reserved,
+                        out reservationPathStatus,
+                        out reservationPathCornerCount,
+                        out reservationPathLengthMeters,
+                        out reservationReason);
+                    var activeMissingPrefix = string.IsNullOrWhiteSpace(activeReservationReason)
+                        ? "active_slot_missing_reachable_reservation"
+                        : $"active_slot_missing_reachable_reservation:{activeReservationReason}";
+                    reservationReason = hasReservation
+                        ? $"{activeMissingPrefix}:support_reachable:{reservationReason}"
+                        : activeMissingPrefix;
+                }
+                else if (role == EnemyTacticalRole.ActiveThreat)
+                {
+                    activeSlot++;
+                }
+
                 var intent = new EnemyTacticalIntent(
                     role,
                     commitPolicy,
@@ -91,8 +129,13 @@ namespace Hollow.Combat
                     slotIndex,
                     ThreatScore(enemy),
                     enemy.CurrentThreatLane.ToString(),
-                    EnemyNavigationBackend.RoomGridAStar.ToString(),
-                    isActive ? "active_slot" : "support_or_wait");
+                    EnemyNavigationBackend.UnityNavMesh.ToString(),
+                    hasReservation
+                        ? $"{(isActive ? "active_slot" : "support_or_wait")}:{reservationReason}"
+                        : $"{(isActive ? "active_slot" : "support_or_wait")}:no_reachable_reservation",
+                    reservationPathStatus,
+                    reservationPathCornerCount,
+                    reservationPathLengthMeters);
 
                 intents[enemy.GetInstanceID()] = intent;
                 if (role == EnemyTacticalRole.ActiveThreat)
@@ -140,6 +183,51 @@ namespace Hollow.Combat
             }
 
             return requested;
+        }
+
+        public bool TryResolveClearAttackReposition(
+            EnemyRuntimeController enemy,
+            RoomRuntimeRoot room,
+            PlaceholderPlayerController player,
+            string actionId,
+            out Vector3 reserved,
+            out string reason)
+        {
+            reserved = enemy != null ? enemy.transform.localPosition : Vector3.zero;
+            reason = string.Empty;
+            if (enemy == null || room == null || player == null || string.IsNullOrWhiteSpace(actionId))
+            {
+                reason = "missing_attack_reposition_context";
+                return false;
+            }
+
+            if (!TryResolveReservedPosition(
+                    enemy,
+                    room,
+                    player,
+                    actionId,
+                    EnemyTacticalRole.ActiveThreat,
+                    Mathf.Abs(enemy.SpawnIndex) % MaxActiveThreatSlots,
+                    MaxActiveThreatSlots,
+                    out reserved,
+                    out var pathStatus,
+                    out _,
+                    out _,
+                    out reason,
+                    respectExistingReservations: false,
+                    recordReservation: false))
+            {
+                return false;
+            }
+
+            if (pathStatus != EnemyPathStatus.Ready)
+            {
+                reason = $"clear_attack_reposition_path_{pathStatus.ToString().ToLowerInvariant()}";
+                return false;
+            }
+
+            reason = string.IsNullOrWhiteSpace(reason) ? "clear_attack_reposition" : $"clear_attack_reposition:{reason}";
+            return true;
         }
 
         public EnemyTacticalIntent ResolveIntent(EnemyRuntimeController enemy, string actionId = "")
@@ -273,11 +361,22 @@ namespace Hollow.Combat
             EnemyTacticalRole role,
             int slotIndex,
             int slotCount,
-            out Vector3 reserved)
+            out Vector3 reserved,
+            out EnemyPathStatus reservationPathStatus,
+            out int reservationPathCornerCount,
+            out float reservationPathLengthMeters,
+            out string reservationReason,
+            bool respectExistingReservations = true,
+            bool recordReservation = true)
         {
             reserved = enemy != null ? enemy.transform.localPosition : Vector3.zero;
+            reservationPathStatus = EnemyPathStatus.NotRequested;
+            reservationPathCornerCount = 0;
+            reservationPathLengthMeters = 0f;
+            reservationReason = string.Empty;
             if (enemy == null || room == null || player == null || role is EnemyTacticalRole.Hold or EnemyTacticalRole.Waiting or EnemyTacticalRole.StationarySentinel)
             {
+                reservationReason = "reservation_not_needed";
                 return false;
             }
 
@@ -307,6 +406,10 @@ namespace Hollow.Combat
 
             var bestScore = float.NegativeInfinity;
             var best = reserved;
+            var bestPathStatus = EnemyPathStatus.NotRequested;
+            var bestCornerCount = 0;
+            var bestPathLength = 0f;
+            var bestReason = string.Empty;
             for (var distanceIndex = 0; distanceIndex < distances.Length; distanceIndex++)
             {
                 for (var angleIndex = 0; angleIndex < angleOffsets.Length; angleIndex++)
@@ -315,37 +418,186 @@ namespace Hollow.Combat
                     var direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
                     var candidate = anchor + direction.normalized * distances[distanceIndex];
                     candidate.y = enemy.transform.localPosition.y;
-                    if (!RoomLocalCollision.CanOccupy(room, candidate, enemy.RadiusMeters))
+                    if (!TryResolveReachableReservation(
+                            room,
+                            enemy.transform.localPosition,
+                            candidate,
+                            enemy.RadiusMeters,
+                            out var reachableCandidate,
+                            out var pathStatus,
+                            out var cornerCount,
+                            out var pathLength,
+                            out var reachReason))
                     {
+                        reservationReason = reachReason;
                         continue;
                     }
 
-                    if (IsTooCloseToReserved(candidate, enemy.RadiusMeters + 0.42f))
+                    if (respectExistingReservations && IsTooCloseToReserved(reachableCandidate, enemy.RadiusMeters + 0.42f))
                     {
+                        reservationReason = "reservation_collision";
                         continue;
                     }
 
-                    var score = ClearanceScore(room, candidate, enemy.RadiusMeters) * 0.35f
+                    if (!HasClearAttackReservation(enemy, room, player, actionId, reachableCandidate, out var attackReachReason))
+                    {
+                        reservationReason = attackReachReason;
+                        continue;
+                    }
+
+                    var score = ClearanceScore(room, reachableCandidate, enemy.RadiusMeters) * 0.35f
                         - Mathf.Abs(distances[distanceIndex] - desiredDistance) * 0.75f
-                        - Vector3.Distance(Flat(candidate), Flat(enemy.transform.localPosition)) * 0.04f
-                        - angleIndex * 0.02f;
+                        - Vector3.Distance(Flat(reachableCandidate), Flat(enemy.transform.localPosition)) * 0.04f
+                        - pathLength * 0.025f
+                        - angleIndex * 0.02f
+                        + (pathStatus == EnemyPathStatus.Ready ? 0.5f : 0f);
                     if (score <= bestScore)
                     {
                         continue;
                     }
 
                     bestScore = score;
-                    best = candidate;
+                    best = reachableCandidate;
+                    bestPathStatus = pathStatus;
+                    bestCornerCount = cornerCount;
+                    bestPathLength = pathLength;
+                    bestReason = reachReason;
                 }
             }
 
             if (bestScore <= float.NegativeInfinity)
             {
+                reservationReason = string.IsNullOrWhiteSpace(reservationReason) ? "no_reachable_navmesh_candidate" : reservationReason;
                 return false;
             }
 
             reserved = best;
-            reservedPositions.Add(best);
+            reservationPathStatus = bestPathStatus;
+            reservationPathCornerCount = bestCornerCount;
+            reservationPathLengthMeters = bestPathLength;
+            reservationReason = bestReason;
+            if (recordReservation)
+            {
+                reservedPositions.Add(best);
+            }
+
+            return true;
+        }
+
+        private static bool HasClearAttackReservation(
+            EnemyRuntimeController enemy,
+            RoomRuntimeRoot room,
+            PlaceholderPlayerController player,
+            string actionId,
+            Vector3 candidateLocalPosition,
+            out string reason)
+        {
+            reason = string.Empty;
+            if (enemy == null || room == null || player == null || string.IsNullOrWhiteSpace(actionId))
+            {
+                return true;
+            }
+
+            var attack = enemy.ResolveAttackProfileForAi(actionId);
+            if (attack == null)
+            {
+                return true;
+            }
+
+            var result = EnemyAttackReachabilityService.Evaluate(
+                room,
+                candidateLocalPosition,
+                player.transform.localPosition,
+                enemy.RadiusMeters,
+                PlaceholderPlayerController.DefaultRadiusMeters,
+                attack,
+                attack.RuntimeKind,
+                canReposition: false);
+            if (result.CanCommit)
+            {
+                reason = "attack_line_clear";
+                return true;
+            }
+
+            reason = $"no_clear_attack_line:{result.Reason}";
+            return false;
+        }
+
+        public static bool TryResolveReachableReservation(
+            RoomRuntimeRoot room,
+            Vector3 currentLocalPosition,
+            Vector3 candidateLocalPosition,
+            float radiusMeters,
+            out Vector3 resolvedLocalPosition,
+            out EnemyPathStatus pathStatus,
+            out int pathCornerCount,
+            out float pathLengthMeters,
+            out string reason)
+        {
+            resolvedLocalPosition = candidateLocalPosition;
+            pathStatus = EnemyPathStatus.NotRequested;
+            pathCornerCount = 0;
+            pathLengthMeters = 0f;
+            reason = string.Empty;
+
+            if (room == null)
+            {
+                reason = "missing_room";
+                pathStatus = EnemyPathStatus.InvalidRequest;
+                return false;
+            }
+
+            if (!room.HasNavMeshBake)
+            {
+                reason = string.IsNullOrWhiteSpace(room.NavMeshBakeError) ? "missing_navmesh_bake" : room.NavMeshBakeError;
+                pathStatus = EnemyPathStatus.InvalidRequest;
+                return false;
+            }
+
+            var areaMask = WalkableAreaMask();
+            var startWorld = room.transform.TransformPoint(currentLocalPosition);
+            if (!NavMesh.SamplePosition(startWorld, out var startHit, ReservationNavMeshSampleRadiusMeters, areaMask))
+            {
+                reason = "start_not_on_navmesh";
+                pathStatus = EnemyPathStatus.InvalidRequest;
+                return false;
+            }
+
+            var candidateWorld = room.transform.TransformPoint(candidateLocalPosition);
+            if (!NavMesh.SamplePosition(candidateWorld, out var candidateHit, ReservationNavMeshSampleRadiusMeters, areaMask))
+            {
+                reason = "candidate_not_on_navmesh";
+                pathStatus = EnemyPathStatus.Unreachable;
+                return false;
+            }
+
+            resolvedLocalPosition = room.transform.InverseTransformPoint(candidateHit.position);
+            resolvedLocalPosition.y = candidateLocalPosition.y;
+            if (!RoomLocalCollision.CanOccupy(room, resolvedLocalPosition, radiusMeters))
+            {
+                reason = "candidate_blocked";
+                pathStatus = EnemyPathStatus.Unreachable;
+                return false;
+            }
+
+            var path = new NavMeshPath();
+            if (!NavMesh.CalculatePath(startHit.position, candidateHit.position, areaMask, path))
+            {
+                reason = "navmesh_path_failed";
+                pathStatus = EnemyPathStatus.Unreachable;
+                return false;
+            }
+
+            pathStatus = MapReservationPathStatus(path.status);
+            pathCornerCount = path.corners != null ? path.corners.Length : 0;
+            pathLengthMeters = PathLength(path.corners);
+            if (pathStatus != EnemyPathStatus.Ready)
+            {
+                reason = pathStatus == EnemyPathStatus.Partial ? "navmesh_path_partial" : "navmesh_path_unreachable";
+                return false;
+            }
+
+            reason = "navmesh_reachable";
             return true;
         }
 
@@ -388,6 +640,39 @@ namespace Hollow.Combat
             }
 
             return score;
+        }
+
+        private static EnemyPathStatus MapReservationPathStatus(NavMeshPathStatus status)
+        {
+            return status switch
+            {
+                NavMeshPathStatus.PathComplete => EnemyPathStatus.Ready,
+                NavMeshPathStatus.PathPartial => EnemyPathStatus.Partial,
+                NavMeshPathStatus.PathInvalid => EnemyPathStatus.Unreachable,
+                _ => EnemyPathStatus.InvalidRequest
+            };
+        }
+
+        private static float PathLength(Vector3[] corners)
+        {
+            if (corners == null || corners.Length < 2)
+            {
+                return 0f;
+            }
+
+            var length = 0f;
+            for (var index = 1; index < corners.Length; index++)
+            {
+                length += Vector3.Distance(Flat(corners[index - 1]), Flat(corners[index]));
+            }
+
+            return length;
+        }
+
+        private static int WalkableAreaMask()
+        {
+            var notWalkable = NavMesh.GetAreaFromName("Not Walkable");
+            return notWalkable >= 0 ? NavMesh.AllAreas & ~(1 << notWalkable) : NavMesh.AllAreas;
         }
 
         private static EnemyTacticalIntent BuildFallbackIntent(EnemyRuntimeController enemy)

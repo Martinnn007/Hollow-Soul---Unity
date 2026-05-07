@@ -155,6 +155,16 @@ namespace Hollow.Combat
                     {
                         errors.Add("Curated room JSON must include a player safe start.");
                     }
+
+                    var navMeshCatalog = RoomNavMeshCatalogDefinition.LoadDefault();
+                    if (navMeshCatalog == null)
+                    {
+                        errors.Add($"Curated room '{curatedRoom.Id}' cannot verify NavMesh: {RoomNavMeshCatalogDefinition.MissingCatalogMessage()}.");
+                    }
+                    else if (!navMeshCatalog.TryGetNavMeshData(curatedRoom.Id, out var navMeshData) || navMeshData == null)
+                    {
+                        errors.Add($"Curated room '{curatedRoom.Id}' is missing its Unity NavMesh bake: {RoomNavMeshCatalogDefinition.MissingBakeMessage(curatedRoom.Id)}.");
+                    }
                 }
             }
 

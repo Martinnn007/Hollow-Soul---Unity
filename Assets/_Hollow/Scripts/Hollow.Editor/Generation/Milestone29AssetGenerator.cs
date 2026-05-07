@@ -125,7 +125,7 @@ namespace Hollow.Editor.Generation
                 displayName,
                 baseStats,
                 "starter_blade",
-                "starter_bolt",
+                "starter_bow",
                 passiveSkill,
                 string.Empty,
                 tags);

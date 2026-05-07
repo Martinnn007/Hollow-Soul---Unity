@@ -15,6 +15,9 @@ MonoBehaviour:
   catalogId: m48_content_lock_encounter_catalog_v1
   encounters:
   - {fileID: 11400000, guid: 156abbc5a3080448a83f8eb139132c88, type: 2}
+  - {fileID: 11400000, guid: 1e5be93108f724aa2a7761e3b762cd19, type: 2}
+  - {fileID: 11400000, guid: b39075a98235d4dd7ad628e1ea867dce, type: 2}
+  - {fileID: 11400000, guid: 554451f79a1b5470ea91b0e8865678a0, type: 2}
   - {fileID: 11400000, guid: 048f2eb39ead441d680708a754d66281, type: 2}
   - {fileID: 11400000, guid: 917a65a605c7e4c139253148fd41a916, type: 2}
   - {fileID: 11400000, guid: 25a00f82521d04322aaf1e88f6c52149, type: 2}

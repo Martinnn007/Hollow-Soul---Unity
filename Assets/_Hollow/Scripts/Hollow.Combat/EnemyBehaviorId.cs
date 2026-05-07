@@ -26,6 +26,9 @@ namespace Hollow.Combat
         Wraith = 21,
         SoulEater = 22,
         CurseBinder = 23,
-        GraveLantern = 24
+        GraveLantern = 24,
+        OctantSentry = 25,
+        RailSpider = 26,
+        MinigunTurret = 27
     }
 }

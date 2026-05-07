@@ -27,6 +27,7 @@ namespace Hollow.Combat
 
             var candidates = new List<EnemyAiActionScore>();
             var actions = enemy.Definition.ActionProfiles;
+            EnemyAiDebugOverlay.RecordScorerCall(actions.Count);
             for (var index = 0; index < actions.Count; index++)
             {
                 var action = actions[index];
@@ -122,7 +123,7 @@ namespace Hollow.Combat
                 return attack.RuntimeKind switch
                 {
                     EnemyAttackRuntimeKind.MeleeLunge or EnemyAttackRuntimeKind.Contact or EnemyAttackRuntimeKind.WeaponMelee => EnemyBehaviorCommandKind.StartMeleeAction,
-                    EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.Beam => EnemyBehaviorCommandKind.StartRangedAction,
+                    EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile or EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => EnemyBehaviorCommandKind.StartRangedAction,
                     EnemyAttackRuntimeKind.Charge => EnemyBehaviorCommandKind.StartChargeAction,
                     EnemyAttackRuntimeKind.Area => EnemyBehaviorCommandKind.StartAreaAction,
                     EnemyAttackRuntimeKind.Defense => EnemyBehaviorCommandKind.StartGuardAction,

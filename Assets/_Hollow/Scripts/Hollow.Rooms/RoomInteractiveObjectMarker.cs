@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Hollow.Rooms
 {
@@ -36,6 +37,16 @@ namespace Hollow.Rooms
         public void MarkDestroyed()
         {
             destroyed = true;
+            if (TryGetComponent<RoomDynamicNavigationObjectMarker>(out var dynamicNavigation))
+            {
+                dynamicNavigation.MarkDestroyed();
+            }
+
+            var obstacle = GetComponent<NavMeshObstacle>();
+            if (obstacle != null)
+            {
+                obstacle.enabled = false;
+            }
         }
     }
 }

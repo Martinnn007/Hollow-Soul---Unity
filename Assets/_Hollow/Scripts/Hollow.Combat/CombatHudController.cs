@@ -51,6 +51,8 @@ namespace Hollow.Combat
                     $"HP {model.PlayerHealth}/{model.PlayerMaxHealth} | {model.DefenseSummary}\n" +
                     $"Enemies {model.EnemiesRemaining}\n" +
                     $"Tier {model.DifficultyName}\n" +
+                    $"{model.RollDebugLine}\n" +
+                    $"{model.RangedDrawDebugLine}\n" +
                     $"Types {model.ArchetypeSummary}\n" +
                     $"{model.ProjectileSummary}\n" +
                     $"{model.DirectorDebugLine}";

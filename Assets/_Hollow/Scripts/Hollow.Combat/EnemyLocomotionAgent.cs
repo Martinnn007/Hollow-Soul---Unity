@@ -37,6 +37,12 @@ namespace Hollow.Combat
                 ? "locomotion_blocked"
                 : result.FallbackReason;
 
+            if (result.Backend == EnemyNavigationBackend.UnityNavMesh)
+            {
+                lastResolvedLocalPosition = result.ResolvedLocalPosition;
+                return result;
+            }
+
             if (!request.AllowLocalDetour ||
                 request.Room == null ||
                 !tacticalIntent.HasReservedPosition ||

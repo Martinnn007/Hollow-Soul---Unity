@@ -26,6 +26,7 @@ namespace Hollow.Combat
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private RoomCombatController combatController;
         [SerializeField] private PlayerWeaponController weaponController;
+        [SerializeField] private PlayerAimLockController aimLockController;
         [SerializeField] private ShieldGuardProfileDefinition shieldProfile;
 
         private ShieldGuardVisualController visualController;
@@ -118,7 +119,7 @@ namespace Hollow.Combat
         public void Tick(GameplayInputSnapshot input, float deltaTime, float timeSeconds)
         {
             ResolveReferences();
-            UpdateGuardFacing(input);
+            UpdateGuardFacing(input, timeSeconds);
             if (weaponController != null && (weaponController.IsAttackCommitted || weaponController.IsRolling))
             {
                 isGuarding = false;
@@ -323,13 +324,16 @@ namespace Hollow.Combat
             combatController?.EmitPlayerStimulus(EnemyStimulusKind.GuardImpact, transform.localPosition, Time.time, EnemyStimulusTier.Loud, result.ToString());
         }
 
-        private void UpdateGuardFacing(GameplayInputSnapshot input)
+        private void UpdateGuardFacing(GameplayInputSnapshot input, float timeSeconds)
         {
-            var facing = input.HasShoot
-                ? new Vector3(input.Shoot.x, 0f, input.Shoot.y)
-                : input.Move.sqrMagnitude > 0.001f
-                    ? new Vector3(input.Move.x, 0f, input.Move.y)
-                    : GuardFacing;
+            var resolved = aimLockController != null
+                ? aimLockController.ResolveGuardDirection(input, timeSeconds)
+                : input.HasShoot
+                    ? input.Shoot
+                    : GameplayInputReader.NormalizeAimDirection(input.Move);
+            var facing = resolved.sqrMagnitude > 0.001f
+                ? new Vector3(resolved.x, 0f, resolved.y)
+                : GuardFacing;
             facing.y = 0f;
             if (facing.sqrMagnitude > 0.001f)
             {
@@ -379,6 +383,11 @@ namespace Hollow.Combat
                 weaponController = GetComponent<PlayerWeaponController>();
             }
 
+            if (aimLockController == null)
+            {
+                aimLockController = GetComponent<PlayerAimLockController>() ?? gameObject.AddComponent<PlayerAimLockController>();
+            }
+
             if (roomRuntimeRoot == null)
             {
                 roomRuntimeRoot = GetComponentInParent<RoomRuntimeRoot>() ?? FindAnyObjectByType<RoomRuntimeRoot>();
@@ -388,6 +397,8 @@ namespace Hollow.Combat
             {
                 combatController = GetComponentInParent<RoomCombatController>() ?? FindAnyObjectByType<RoomCombatController>();
             }
+
+            aimLockController.Configure(combatController);
 
             if (shieldProfile == null)
             {

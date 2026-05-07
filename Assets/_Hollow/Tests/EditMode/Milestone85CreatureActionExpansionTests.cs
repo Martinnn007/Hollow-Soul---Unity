@@ -152,6 +152,36 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void CreatureSignalsRespectAuthoredRangeBeforeStarting()
+        {
+            var root = CreateHarness(out var room, out var player);
+            try
+            {
+                var catalog = EnemyCatalog.CreateRuntimeDefault();
+                var normal = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemyNormal"));
+                normal.transform.localPosition = Vector3.zero;
+                player.transform.localPosition = new Vector3(0f, 0f, 4.2f);
+
+                Assert.IsFalse(normal.CanStartBehaviorCreatureSignalAction("warning_feint", 3f));
+                player.transform.localPosition = new Vector3(0f, 0f, 2.1f);
+                Assert.IsTrue(normal.CanStartBehaviorCreatureSignalAction("warning_feint", 3.1f));
+
+                var flying = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemyFlying"));
+                flying.transform.localPosition = new Vector3(4f, 0f, 0f);
+                player.transform.localPosition = new Vector3(4f, 0f, 5.5f);
+                flying.ReceiveStimulus(EnemyStimulusKind.RangedAttack, player.transform.localPosition, 4f, EnemyStimulusTier.Normal);
+
+                Assert.IsFalse(flying.CanStartBehaviorCreatureSignalAction("dive_feint", 4.1f));
+                player.transform.localPosition = new Vector3(4f, 0f, 2.6f);
+                Assert.IsTrue(flying.CanStartBehaviorCreatureSignalAction("dive_feint", 4.2f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void CuratedRoomsDocsPdfExtractAndValidatorPass()
         {
             foreach (var roomId in Milestone85AssetGenerator.CreatureRoomIds)

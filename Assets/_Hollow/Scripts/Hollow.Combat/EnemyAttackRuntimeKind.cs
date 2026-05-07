@@ -17,6 +17,8 @@ namespace Hollow.Combat
         CreatureMove = 12,
         CreatureSignal = 13,
         Beam = 14,
-        PhaseMove = 15
+        PhaseMove = 15,
+        SequentialRadialProjectile = 16,
+        LockingBeam = 17
     }
 }

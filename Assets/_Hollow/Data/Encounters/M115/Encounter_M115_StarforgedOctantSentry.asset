@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f74f1c6f135634e6c91969bc086fc012, type: 3}
+  m_Name: Encounter_M115_StarforgedOctantSentry
+  m_EditorClassIdentifier: Hollow.Branches::Hollow.Branches.EncounterDefinition
+  encounterId: m115_starforged_octant_sentry
+  displayName: M115 Starforged Octant Sentry
+  roomRole: 1
+  minDifficultyBand: 0
+  maxDifficultyBand: 99
+  minFootprintCells: 1
+  maxFootprintCells: 99
+  weight: 1
+  spawns:
+  - spawnKind: spawnEnemyStarforgedOctantSentry
+    count: 1

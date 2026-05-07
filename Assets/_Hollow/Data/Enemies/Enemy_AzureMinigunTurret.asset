@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_AzureMinigunTurret
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyAzureMinigunTurret
+  displayName: Azure Minigun Turret
+  archetypeId: 3
+  behaviorId: 27
+  movementMode: 0
+  maxHealth: 20
+  speedMetersPerSecond: 0
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.46
+  attackRangeMeters: 8.5
+  preferredRangeMinMeters: 5.8
+  preferredRangeMaxMeters: 8.5
+  sightRadiusMeters: 9.5
+  sightAngleDegrees: 300
+  hearingRadiusMeters: 5.5
+  hearingSensitivityMultiplier: 1.2
+  disturbanceEscalationThreshold: 1.15
+  investigationDurationSeconds: 1.7
+  allyAlertSharingEnabled: 1
+  allyAlertRadiusMeters: 5.5
+  allyAlertCooldownSeconds: 2.5
+  allyAlertMinimumAwareness: 3
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 1
+  projectileSpeedMetersPerSecond: 9.5
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 2
+  intelligence: 3
+  disposition: 2
+  attackWindupScale: 1
+  attackActiveScale: 1
+  attackRecoveryScale: 1
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 1
+  attackProfiles:
+  - {fileID: 11400000, guid: d0d10970eda304c4cb403cddd1ccb49b, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: 1959e63dd96ac470d9aaed96f141550e, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: bead8c7219d2041aeab90e33b5b0c4d9, type: 2}
+  behaviorRuntimeMode: 0
+  unityBehaviorGraph: {fileID: 0}
+  spacingProfile: {fileID: 0}
+  presentationPrefabRoleOverrideEnabled: 1
+  presentationPrefabRoleOverride: 69
+  weaponPrefabRoleOverrideEnabled: 0
+  weaponPrefabRoleOverride: 0
+  offhandPrefabRoleOverrideEnabled: 0
+  offhandPrefabRoleOverride: 0
+  projectilePrefabRoleOverrideEnabled: 0
+  projectilePrefabRoleOverride: 0
+  vfxPrefabRoleOverrideEnabled: 0
+  vfxPrefabRoleOverride: 0
+  color: {r: 0.24, g: 0.66, b: 0.9, a: 1}

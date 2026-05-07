@@ -49,16 +49,16 @@ namespace Hollow.Combat
         {
             ClearChildren();
             rootPanel = null;
-            overlayPanel = CreatePanel("ArenaOverlay", transform, new Vector2(480f, 150f), new Color(0.04f, 0.05f, 0.08f, 0.74f));
+            overlayPanel = CreatePanel("ArenaOverlay", transform, new Vector2(560f, 218f), new Color(0.04f, 0.05f, 0.08f, 0.74f));
             overlayPanel.anchorMin = new Vector2(0f, 1f);
             overlayPanel.anchorMax = new Vector2(0f, 1f);
             overlayPanel.pivot = new Vector2(0f, 1f);
             overlayPanel.anchoredPosition = new Vector2(22f, -22f);
             if (controller != null && controller.IsEditorOrDevelopmentLaunch && controller.CurrentSettings?.CuratedLocked != true)
             {
-                AddButton(overlayPanel, "Spawn Selected", new Vector2(-118f, -102f), () => controller.SpawnManualGroup(SelectedSpawnKind, selectedManualCount), new Color(0.35f, 0.42f, 0.72f), new Vector2(210f, 32f));
-                AddButton(overlayPanel, "- Count", new Vector2(68f, -102f), () => { selectedManualCount = Mathf.Max(1, selectedManualCount - 1); RefreshOverlay(); }, new Color(0.22f, 0.25f, 0.33f), new Vector2(88f, 32f));
-                AddButton(overlayPanel, "+ Count", new Vector2(164f, -102f), () => { selectedManualCount = Mathf.Min(32, selectedManualCount + 1); RefreshOverlay(); }, new Color(0.22f, 0.25f, 0.33f), new Vector2(88f, 32f));
+                AddButton(overlayPanel, "Spawn Selected", new Vector2(-128f, -172f), () => controller.SpawnManualGroup(SelectedSpawnKind, selectedManualCount), new Color(0.35f, 0.42f, 0.72f), new Vector2(220f, 32f));
+                AddButton(overlayPanel, "- Count", new Vector2(74f, -172f), () => { selectedManualCount = Mathf.Max(1, selectedManualCount - 1); RefreshOverlay(); }, new Color(0.22f, 0.25f, 0.33f), new Vector2(92f, 32f));
+                AddButton(overlayPanel, "+ Count", new Vector2(176f, -172f), () => { selectedManualCount = Mathf.Min(32, selectedManualCount + 1); RefreshOverlay(); }, new Color(0.22f, 0.25f, 0.33f), new Vector2(92f, 32f));
             }
 
             RefreshOverlay();
@@ -86,14 +86,26 @@ namespace Hollow.Combat
             var label = overlayPanel.Find("ArenaOverlayText")?.GetComponent<Text>();
             if (label == null)
             {
-                label = AddText(overlayPanel, string.Empty, 14, FontStyle.Bold, new Vector2(0f, -40f), new Vector2(440f, 88f), new Color(0.92f, 0.94f, 1f));
+                label = AddText(overlayPanel, string.Empty, 13, FontStyle.Bold, new Vector2(0f, -74f), new Vector2(520f, 148f), new Color(0.92f, 0.94f, 1f));
                 label.gameObject.name = "ArenaOverlayText";
+            }
+
+            var perfLine = string.Empty;
+            if (controller.IsEditorOrDevelopmentLaunch)
+            {
+                EnemyAiDebugOverlay.ReportRoomEnemyCount(controller.EnemiesRemaining);
+                var ai = EnemyAiDebugOverlay.PerformanceStats;
+                var nav = EnemyNavigationDebugOverlay.Stats;
+                perfLine =
+                    $"\nAI {ai.ActiveAiAgents} F/R/B {ai.FullLodAgents}/{ai.ReducedLodAgents}/{ai.BackgroundLodAgents} | brain/s {ai.BrainThinksPerSecond} scorer/s {ai.ScorerCallsPerSecond} UB/s {ai.BehaviorGraphTicksPerSecond}" +
+                    $"\nNav agents {nav.ActivePathUsers} pending {nav.PendingPathUsers} stuck {nav.StuckAgents} | pressure {ai.MeleePressure:0.0}/{ai.RangedPressure:0.0}/{ai.AreaPressure:0.0}/{ai.ChargePressure:0.0}";
             }
 
             label.text =
                 $"{controller.CurrentSettings?.DisplayName ?? "Arena"}\n" +
                 $"Wave {controller.CurrentWaveNumber} | Enemies {controller.EnemiesRemaining} | Score {controller.ScoreTracker.Score}\n" +
                 $"Damage {controller.ScoreTracker.DamageDealt} | Kills {controller.ScoreTracker.Kills} | Time {FormatTime(controller.ScoreTracker.TimeSurvivedSeconds)}" +
+                perfLine +
                 (controller.IsEditorOrDevelopmentLaunch && controller.CurrentSettings?.CuratedLocked != true ? $"\nManual: {DisplayNameFor(SelectedSpawnKind)} x{selectedManualCount}" : string.Empty);
         }
 

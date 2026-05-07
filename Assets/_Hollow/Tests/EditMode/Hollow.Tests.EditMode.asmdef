@@ -18,8 +18,11 @@
     "Hollow.Rewards",
     "Hollow.RoomDesigner",
     "Hollow.Editor",
+    "Unity.Behavior",
+    "Unity.Behavior.SerializableGUID",
     "Unity.Addressables",
     "Unity.Addressables.Editor",
+    "UnityEngine.AIModule",
     "Unity.ResourceManager"
   ],
   "includePlatforms": [

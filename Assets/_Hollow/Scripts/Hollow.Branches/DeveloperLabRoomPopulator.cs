@@ -46,6 +46,7 @@ namespace Hollow.Branches
         private static readonly string[] BuildPickupLabels =
         {
             "starter_blade",
+            "starter_bow",
             "starter_bolt",
             "skeletal_sword",
             "bone_bow",

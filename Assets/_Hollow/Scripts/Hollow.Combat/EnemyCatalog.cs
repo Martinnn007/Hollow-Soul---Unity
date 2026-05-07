@@ -123,9 +123,18 @@ namespace Hollow.Combat
             var lantern = EnemyDefinition.CreateRuntime("spawnEnemyGraveLantern", "Grave Lantern", EnemyArchetypeId.Heavy, EnemyMovementMode.Grounded, 6, 0f, 0, new Color(0.28f, 0.58f, 0.78f, 1f));
             lantern.Configure("spawnEnemyGraveLantern", "Grave Lantern", EnemyArchetypeId.Heavy, EnemyBehaviorId.GraveLantern, EnemyMovementMode.Grounded, 6, 0f, 0, 1f, 0.42f, 8.5f, 1.55f, 1, 4.6f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Heavy, EnemyIntelligenceLevel.Basic, EnemyInstinctDisposition.Sentinel, 5.5f, 8.5f, new Color(0.28f, 0.58f, 0.78f, 1f));
             lantern.ConfigureSenseAndLunge(9.2f, 240f, 7.2f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
+            var starforged = EnemyDefinition.CreateRuntime("spawnEnemyStarforgedOctantSentry", "Starforged Octant Sentry", EnemyArchetypeId.Heavy, EnemyMovementMode.Grounded, 20, 0f, 0, new Color(0.72f, 0.62f, 0.44f, 1f));
+            starforged.Configure("spawnEnemyStarforgedOctantSentry", "Starforged Octant Sentry", EnemyArchetypeId.Heavy, EnemyBehaviorId.OctantSentry, EnemyMovementMode.Grounded, 20, 0f, 0, 1f, 0.46f, 7.8f, 1.4f, 1, 5.8f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Heavy, EnemyIntelligenceLevel.Trained, EnemyInstinctDisposition.Sentinel, 5.2f, 7.8f, new Color(0.72f, 0.62f, 0.44f, 1f));
+            starforged.ConfigureSenseAndLunge(9.5f, 360f, 5.5f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
+            var railSpider = EnemyDefinition.CreateRuntime("spawnEnemyCrimsonRailSpider", "Crimson Rail Spider", EnemyArchetypeId.Fast, EnemyMovementMode.Grounded, 10, 1.25f, 0, new Color(0.62f, 0.22f, 0.2f, 1f));
+            railSpider.Configure("spawnEnemyCrimsonRailSpider", "Crimson Rail Spider", EnemyArchetypeId.Fast, EnemyBehaviorId.RailSpider, EnemyMovementMode.Grounded, 10, 1.25f, 0, 1f, 0.36f, 9f, 1.4f, 3, 0.1f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Medium, EnemyIntelligenceLevel.Tactical, EnemyInstinctDisposition.Territorial, 5.2f, 8.4f, new Color(0.62f, 0.22f, 0.2f, 1f));
+            railSpider.ConfigureSenseAndLunge(10f, 170f, 6.5f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
+            var azure = EnemyDefinition.CreateRuntime("spawnEnemyAzureMinigunTurret", "Azure Minigun Turret", EnemyArchetypeId.Heavy, EnemyMovementMode.Grounded, 20, 0f, 0, new Color(0.24f, 0.66f, 0.9f, 1f));
+            azure.Configure("spawnEnemyAzureMinigunTurret", "Azure Minigun Turret", EnemyArchetypeId.Heavy, EnemyBehaviorId.MinigunTurret, EnemyMovementMode.Grounded, 20, 0f, 0, 1f, 0.46f, 8.5f, 1.4f, 1, 9.5f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Heavy, EnemyIntelligenceLevel.Trained, EnemyInstinctDisposition.Sentinel, 5.8f, 8.5f, new Color(0.24f, 0.66f, 0.9f, 1f));
+            azure.ConfigureSenseAndLunge(9.5f, 300f, 5.5f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
 
             var catalog = CreateInstance<EnemyCatalog>();
-            catalog.Configure(new[] { normal, flying, fast, heavy, boss, charger, turret, splitter, pod, rat, spider, hollowBird, hollowBeast, skeletonSword, skeletonSpear, knight, giant, archer, gunner, thrower, repeater, clockwork, acolyte, wraith, soulEater, curseBinder, lantern }, normal);
+            catalog.Configure(new[] { normal, flying, fast, heavy, boss, charger, turret, splitter, pod, rat, spider, hollowBird, hollowBeast, skeletonSword, skeletonSpear, knight, giant, archer, gunner, thrower, repeater, clockwork, acolyte, wraith, soulEater, curseBinder, lantern, starforged, railSpider, azure }, normal);
             return catalog;
         }
     }

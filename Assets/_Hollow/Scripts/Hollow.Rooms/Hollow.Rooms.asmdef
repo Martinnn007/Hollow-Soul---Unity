@@ -5,7 +5,8 @@
     "Hollow.Core",
     "Hollow.Entities",
     "Hollow.Data",
-    "Hollow.Presentation"
+    "Hollow.Presentation",
+    "UnityEngine.AIModule"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

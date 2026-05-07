@@ -7,14 +7,25 @@ using UnityEngine;
 
 namespace Hollow.Combat
 {
+    public enum PlayerRollPhase
+    {
+        None = 0,
+        Startup = 1,
+        InvulnerableTravel = 2,
+        Recovery = 3
+    }
+
     public sealed class PlayerWeaponController : MonoBehaviour
     {
         public const float DefaultCooldownSeconds = 0.22f;
         public const float AttackMovementMultiplier = 0.55f;
         public const float RollStaminaCost = 18f;
-        public const float RollDurationSeconds = 0.46f;
-        public const float RollInvulnerabilitySeconds = 0.32f;
-        public const float RollDistanceMeters = 1.9f;
+        public const float RollStartupSeconds = 0.04f;
+        public const float RollInvulnerabilitySeconds = 0.22f;
+        public const float RollRecoverySeconds = 0.18f;
+        public const float RollDurationSeconds = RollStartupSeconds + RollInvulnerabilitySeconds + RollRecoverySeconds;
+        public const float RollTravelSeconds = RollStartupSeconds + RollInvulnerabilitySeconds;
+        public const float RollDistanceMeters = 1.25f;
 
         private enum PlayerAttackExecutionState
         {
@@ -22,7 +33,9 @@ namespace Hollow.Combat
             Windup,
             Active,
             Recovery,
-            Rolling
+            RollStartup,
+            RollInvulnerableTravel,
+            RollRecovery
         }
 
         [SerializeField] private float cooldownSeconds = DefaultCooldownSeconds;
@@ -37,15 +50,16 @@ namespace Hollow.Combat
         [SerializeField] private float maxStamina = 100f;
         [SerializeField] private float currentStamina = 100f;
         [SerializeField] private float staminaRegenPerSecond = 18f;
-        [SerializeField] private WeaponSlot activeWeaponSlot = WeaponSlot.Ranged;
+        [SerializeField] private WeaponSlot activeWeaponSlot = WeaponSlot.Melee;
         [SerializeField] private string meleeWeaponId = "starter_blade";
-        [SerializeField] private string rangedWeaponId = "starter_bolt";
+        [SerializeField] private string rangedWeaponId = "starter_bow";
         [SerializeField] private WeaponCatalogDefinition weaponCatalog;
         [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private RoomCombatController combatController;
         [SerializeField] private PlayerDefenseController defenseController;
+        [SerializeField] private PlayerAimLockController aimLockController;
 
         private float nextAllowedShotTime;
         private float nextAllowedMeleeTime;
@@ -61,7 +75,14 @@ namespace Hollow.Combat
         private float attackActiveEndTime;
         private float attackRecoveryEndTime;
         private bool pendingAttackApplied;
+        private bool rangedDrawActive;
+        private AttackKind rangedDrawAttackKind = AttackKind.Light;
+        private WeaponAttackDefinition rangedDrawAttack;
+        private Vector2 rangedDrawDirection = Vector2.up;
+        private float rangedDrawStartTime;
+        private float rangedDrawRequiredSeconds;
         private Vector2 rollDirection = Vector2.up;
+        private float rollInvulnerableStartTime;
         private float rollEndTime;
         private float rollInvulnerableEndTime;
         private float lastActionEvaluationTime;
@@ -83,21 +104,82 @@ namespace Hollow.Combat
 
         public bool DebugLightAttackSpeedDoubled => debugLightAttackSpeedDoubled;
 
-        public bool IsAttackCommitted => attackExecutionState is PlayerAttackExecutionState.Windup
+        public bool IsAttackCommitted => rangedDrawActive ||
+            attackExecutionState is PlayerAttackExecutionState.Windup
             or PlayerAttackExecutionState.Active
             or PlayerAttackExecutionState.Recovery;
 
-        public bool IsRolling => attackExecutionState == PlayerAttackExecutionState.Rolling;
+        public bool IsRangedDrawActive => rangedDrawActive;
 
-        public bool IsRollInvulnerable => IsRolling && lastActionEvaluationTime < rollInvulnerableEndTime;
+        public float RangedDrawProgress01 => rangedDrawActive
+            ? Mathf.Clamp01((lastActionEvaluationTime - rangedDrawStartTime) / Mathf.Max(0.01f, rangedDrawRequiredSeconds))
+            : 0f;
+
+        public string RangedDrawDebugLine
+        {
+            get
+            {
+                if (!rangedDrawActive)
+                {
+                    return "Bow draw: --";
+                }
+
+                return $"Bow draw {rangedDrawAttackKind} | {RangedDrawProgress01 * 100f:0}% | release";
+            }
+        }
+
+        public bool IsRolling => CurrentRollPhase != PlayerRollPhase.None;
+
+        public bool IsRollTraveling => CurrentRollPhase is PlayerRollPhase.Startup or PlayerRollPhase.InvulnerableTravel;
+
+        public bool IsRollInvulnerable => IsRollInvulnerableAt(lastActionEvaluationTime);
+
+        public PlayerRollPhase CurrentRollPhase => attackExecutionState switch
+        {
+            PlayerAttackExecutionState.RollStartup => PlayerRollPhase.Startup,
+            PlayerAttackExecutionState.RollInvulnerableTravel => PlayerRollPhase.InvulnerableTravel,
+            PlayerAttackExecutionState.RollRecovery => PlayerRollPhase.Recovery,
+            _ => PlayerRollPhase.None
+        };
 
         public Vector2 RollDirection => rollDirection.sqrMagnitude > 0.001f ? rollDirection.normalized : LastAimDirection;
 
-        public float RollSpeedMetersPerSecond => RollDistanceMeters / RollDurationSeconds;
+        public float RollSpeedMetersPerSecond => RollDistanceMeters / RollTravelSeconds;
+
+        public string RollDebugLine
+        {
+            get
+            {
+                var phase = CurrentRollPhase;
+                if (phase == PlayerRollPhase.None)
+                {
+                    return $"Roll ready | STA {CurrentStamina:0}/{MaxStamina:0}";
+                }
+
+                return $"Roll {phase} | i-frame {(IsRollInvulnerable ? "ON" : "off")} | {RollPhaseRemainingSeconds:0.00}s";
+            }
+        }
+
+        public float RollPhaseRemainingSeconds
+        {
+            get
+            {
+                var now = lastActionEvaluationTime;
+                return CurrentRollPhase switch
+                {
+                    PlayerRollPhase.Startup => Mathf.Max(0f, rollInvulnerableStartTime - now),
+                    PlayerRollPhase.InvulnerableTravel => Mathf.Max(0f, rollInvulnerableEndTime - now),
+                    PlayerRollPhase.Recovery => Mathf.Max(0f, rollEndTime - now),
+                    _ => 0f
+                };
+            }
+        }
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
-        public Vector2 LastAimDirection => lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+        public Vector2 LastAimDirection => aimLockController != null
+            ? aimLockController.AttackDirection
+            : (lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up);
 
         public float MeleeRangeBonusMeters => meleeRangeBonusMeters;
 
@@ -113,6 +195,8 @@ namespace Hollow.Combat
 
         public event Action<WeaponSlot> ActiveWeaponSlotChanged;
 
+        public event Action<WeaponSlot, AttackKind, Vector2, float> WeaponActionAnimationRequested;
+
         public event Action<WeaponSlot, AttackKind, Vector2> WeaponAttackVisualRequested;
 
         private void OnDisable()
@@ -125,6 +209,8 @@ namespace Hollow.Combat
             roomRuntimeRoot = room;
             combatController = controller;
             projectilePrefab = prefab;
+            EnsureAimLockController();
+            aimLockController.Configure(controller);
         }
 
         public void ConfigureStats(float nextCooldownMultiplier, int nextProjectileDamageBonus)
@@ -184,7 +270,7 @@ namespace Hollow.Combat
             staminaRegenPerSecond = Mathf.Max(0f, nextStaminaRegenPerSecond);
             currentStamina = Mathf.Clamp(nextCurrentStamina <= 0f ? maxStamina : nextCurrentStamina, 0f, maxStamina);
             meleeWeaponId = string.IsNullOrWhiteSpace(nextMeleeWeaponId) ? "starter_blade" : nextMeleeWeaponId;
-            rangedWeaponId = string.IsNullOrWhiteSpace(nextRangedWeaponId) ? "starter_bolt" : nextRangedWeaponId;
+            rangedWeaponId = string.IsNullOrWhiteSpace(nextRangedWeaponId) ? "starter_bow" : nextRangedWeaponId;
             SetActiveWeaponSlot(nextActiveWeaponSlot);
         }
 
@@ -199,15 +285,21 @@ namespace Hollow.Combat
             var input = GameplayInputReader.ReadCurrent();
             RegenerateStamina(Time.deltaTime);
             TickAction(Time.deltaTime, Time.time);
+            EnsureAimLockController();
+            aimLockController.Configure(combatController);
+            aimLockController.TickAim(input, Time.time);
+            if (rangedDrawActive)
+            {
+                HandleRangedDrawInput(input, Time.time);
+                return;
+            }
+
             if (input.SwapWeaponPressed)
             {
                 ToggleWeaponSlot();
             }
 
-            if (input.HasShoot)
-            {
-                lastAimDirection = input.Shoot;
-            }
+            lastAimDirection = CurrentAim(input);
 
             if (input.RollPressed && TryRoll(input.Move, CurrentAim(input), Time.time))
             {
@@ -243,6 +335,7 @@ namespace Hollow.Combat
                 return;
             }
 
+            CancelRangedDraw();
             activeWeaponSlot = slot;
             ActiveWeaponSlotChanged?.Invoke(activeWeaponSlot);
         }
@@ -253,6 +346,7 @@ namespace Hollow.Combat
             TickAction(0f, timeSeconds);
             if (IsGuarding)
             {
+                CancelRangedDraw();
                 return false;
             }
 
@@ -270,26 +364,77 @@ namespace Hollow.Combat
         {
             BindHealthEvents();
             TickAction(0f, timeSeconds);
-            if (attackExecutionState != PlayerAttackExecutionState.Idle || IsGuarding || !TrySpendStamina(RollStaminaCost))
+            if (rangedDrawActive || attackExecutionState != PlayerAttackExecutionState.Idle || IsGuarding || !TrySpendStamina(RollStaminaCost))
             {
                 return false;
             }
 
+            var direction = ResolveRollDirection(moveDirection, aimDirection);
+            rollDirection = direction.normalized;
+            rollInvulnerableStartTime = timeSeconds + RollStartupSeconds;
+            rollInvulnerableEndTime = rollInvulnerableStartTime + RollInvulnerabilitySeconds;
+            rollEndTime = timeSeconds + RollDurationSeconds;
+            lastActionEvaluationTime = timeSeconds;
+            attackExecutionState = PlayerAttackExecutionState.RollStartup;
+            combatController?.EmitPlayerStimulus(EnemyStimulusKind.Roll, transform.localPosition, timeSeconds, EnemyStimulusTier.Normal, "roll");
+            return true;
+        }
+
+        private Vector2 ResolveRollDirection(Vector2 moveDirection, Vector2 aimDirection)
+        {
+            var lockedDirection = ResolveLockedRollDirection(moveDirection);
+            if (lockedDirection.sqrMagnitude > 0.001f)
+            {
+                return lockedDirection.normalized;
+            }
+
             var direction = moveDirection.sqrMagnitude > 0.001f
                 ? Vector2.ClampMagnitude(moveDirection, 1f)
-                : GameplayInputReader.CardinalizeShoot(aimDirection);
+                : GameplayInputReader.NormalizeAimDirection(aimDirection);
             if (direction.sqrMagnitude < 0.001f)
             {
                 direction = LastAimDirection;
             }
 
-            rollDirection = direction.normalized;
-            rollEndTime = timeSeconds + RollDurationSeconds;
-            rollInvulnerableEndTime = timeSeconds + RollInvulnerabilitySeconds;
-            lastActionEvaluationTime = timeSeconds;
-            attackExecutionState = PlayerAttackExecutionState.Rolling;
-            combatController?.EmitPlayerStimulus(EnemyStimulusKind.Roll, transform.localPosition, timeSeconds, EnemyStimulusTier.Normal, "roll");
-            return true;
+            return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up;
+        }
+
+        private Vector2 ResolveLockedRollDirection(Vector2 moveDirection)
+        {
+            if (aimLockController == null)
+            {
+                aimLockController = GetComponent<PlayerAimLockController>();
+            }
+
+            if (aimLockController == null || !aimLockController.IsTargetLocked || aimLockController.LockedEnemy == null)
+            {
+                return Vector2.zero;
+            }
+
+            var toTarget3 = aimLockController.LockedEnemy.transform.localPosition - transform.localPosition;
+            var toTarget = new Vector2(toTarget3.x, toTarget3.z);
+            if (toTarget.sqrMagnitude < 0.001f)
+            {
+                return Vector2.zero;
+            }
+
+            var forward = toTarget.normalized;
+            var away = -forward;
+            var move = GameplayInputReader.NormalizeAimDirection(moveDirection);
+            if (move.sqrMagnitude < 0.001f)
+            {
+                return away;
+            }
+
+            var right = new Vector2(forward.y, -forward.x);
+            var lateral = Vector2.Dot(move, right);
+            var radial = Vector2.Dot(move, forward);
+            if (Mathf.Abs(lateral) > Mathf.Abs(radial))
+            {
+                return lateral >= 0f ? right : -right;
+            }
+
+            return radial >= 0f ? forward : away;
         }
 
         public void TickAction(float deltaTime, float timeSeconds)
@@ -302,7 +447,29 @@ namespace Hollow.Combat
                     return;
                 }
 
-                if (attackExecutionState == PlayerAttackExecutionState.Rolling)
+                if (attackExecutionState == PlayerAttackExecutionState.RollStartup)
+                {
+                    if (timeSeconds < rollInvulnerableStartTime)
+                    {
+                        return;
+                    }
+
+                    attackExecutionState = PlayerAttackExecutionState.RollInvulnerableTravel;
+                    continue;
+                }
+
+                if (attackExecutionState == PlayerAttackExecutionState.RollInvulnerableTravel)
+                {
+                    if (timeSeconds < rollInvulnerableEndTime)
+                    {
+                        return;
+                    }
+
+                    attackExecutionState = PlayerAttackExecutionState.RollRecovery;
+                    continue;
+                }
+
+                if (attackExecutionState == PlayerAttackExecutionState.RollRecovery)
                 {
                     if (timeSeconds < rollEndTime)
                     {
@@ -355,18 +522,24 @@ namespace Hollow.Combat
             TickAction(0f, timeSeconds);
             if (IsGuarding)
             {
+                CancelRangedDraw();
                 return false;
             }
 
-            var cardinal = GameplayInputReader.CardinalizeShoot(shootDirection);
-            if (cardinal.sqrMagnitude < 0.001f)
+            var aim = GameplayInputReader.NormalizeAimDirection(shootDirection);
+            if (aim.sqrMagnitude < 0.001f)
             {
-                cardinal = lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+                aim = lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
             }
 
             var weapon = ResolveWeapon(WeaponSlot.Ranged);
             var attack = ResolveAttack(weapon, WeaponSlot.Ranged, attackKind);
-            if (cardinal.sqrMagnitude < 0.001f ||
+            if (weapon != null && weapon.RangedFireMode == WeaponRangedFireMode.DrawAndRelease)
+            {
+                return TryStartRangedDraw(attackKind, attack, aim, timeSeconds);
+            }
+
+            if (aim.sqrMagnitude < 0.001f ||
                 timeSeconds < nextAllowedShotTime ||
                 attackExecutionState != PlayerAttackExecutionState.Idle ||
                 projectilePrefab == null ||
@@ -378,8 +551,104 @@ namespace Hollow.Combat
 
             var attackCooldown = EffectiveRangedCooldown(attack, attackKind);
             nextAllowedShotTime = timeSeconds + attackCooldown;
-            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, cardinal, timeSeconds);
+            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
             return true;
+        }
+
+        private bool TryStartRangedDraw(AttackKind attackKind, WeaponAttackDefinition attack, Vector2 aim, float timeSeconds)
+        {
+            if (aim.sqrMagnitude < 0.001f ||
+                timeSeconds < nextAllowedShotTime ||
+                rangedDrawActive ||
+                attackExecutionState != PlayerAttackExecutionState.Idle ||
+                projectilePrefab == null ||
+                combatController == null)
+            {
+                return false;
+            }
+
+            rangedDrawActive = true;
+            rangedDrawAttackKind = attackKind;
+            rangedDrawAttack = attack;
+            rangedDrawDirection = aim.normalized;
+            rangedDrawStartTime = timeSeconds;
+            rangedDrawRequiredSeconds = RequiredDrawSeconds(attack);
+            lastAimDirection = rangedDrawDirection;
+            lastActionEvaluationTime = timeSeconds;
+            return true;
+        }
+
+        private void HandleRangedDrawInput(GameplayInputSnapshot input, float timeSeconds)
+        {
+            lastAimDirection = CurrentAim(input);
+            if (input.SwapWeaponPressed || input.RollPressed || input.GuardHeld)
+            {
+                CancelRangedDraw();
+                return;
+            }
+
+            var release = rangedDrawAttackKind == AttackKind.Heavy
+                ? input.HeavyAttackReleased
+                : input.LightAttackReleased;
+            if (!release)
+            {
+                return;
+            }
+
+            TryReleaseRangedDraw(CurrentAim(input), timeSeconds);
+        }
+
+        public bool TryReleaseRangedDraw(Vector2 releaseDirection, float timeSeconds)
+        {
+            TickAction(0f, timeSeconds);
+            if (!rangedDrawActive)
+            {
+                return false;
+            }
+
+            if (timeSeconds - rangedDrawStartTime + 0.001f < rangedDrawRequiredSeconds)
+            {
+                CancelRangedDraw();
+                return false;
+            }
+
+            var aim = GameplayInputReader.NormalizeAimDirection(releaseDirection);
+            if (aim.sqrMagnitude < 0.001f)
+            {
+                aim = rangedDrawDirection.sqrMagnitude > 0.001f ? rangedDrawDirection : LastAimDirection;
+            }
+
+            if (timeSeconds < nextAllowedShotTime ||
+                attackExecutionState != PlayerAttackExecutionState.Idle ||
+                projectilePrefab == null ||
+                combatController == null ||
+                !TrySpendStamina(AdjustedAttackStaminaCost(rangedDrawAttack.StaminaCost)))
+            {
+                CancelRangedDraw();
+                return false;
+            }
+
+            var attackKind = rangedDrawAttackKind;
+            var attack = rangedDrawAttack;
+            CancelRangedDraw();
+            nextAllowedShotTime = timeSeconds + EffectiveRangedCooldown(attack, attackKind);
+            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
+            return true;
+        }
+
+        private void CancelRangedDraw()
+        {
+            rangedDrawActive = false;
+            rangedDrawAttackKind = AttackKind.Light;
+            rangedDrawAttack = default;
+            rangedDrawDirection = Vector2.up;
+            rangedDrawStartTime = 0f;
+            rangedDrawRequiredSeconds = 0f;
+        }
+
+        private static float RequiredDrawSeconds(WeaponAttackDefinition attack)
+        {
+            return Mathf.Max(0.01f, attack.RequiredDrawSeconds > 0f ? attack.RequiredDrawSeconds : 1f);
         }
 
         private void SpawnProjectile(ProjectileShotSpec shot, int attackDamage, float projectileSpeed, float lifetimeSeconds, WeaponAttackDefinition attack)
@@ -487,10 +756,10 @@ namespace Hollow.Combat
                 return false;
             }
 
-            var cardinal = GameplayInputReader.CardinalizeShoot(attackDirection);
-            if (cardinal.sqrMagnitude < 0.001f)
+            var aim = GameplayInputReader.NormalizeAimDirection(attackDirection);
+            if (aim.sqrMagnitude < 0.001f)
             {
-                cardinal = lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+                aim = lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
             }
 
             var weapon = ResolveWeapon(WeaponSlot.Melee);
@@ -505,7 +774,7 @@ namespace Hollow.Combat
             }
 
             nextAllowedMeleeTime = timeSeconds + cooldown;
-            StartPendingAttack(WeaponSlot.Melee, attackKind, attack, cardinal, timeSeconds);
+            StartPendingAttack(WeaponSlot.Melee, attackKind, attack, aim, timeSeconds);
             return true;
         }
 
@@ -515,11 +784,14 @@ namespace Hollow.Combat
             pendingAttackKind = attackKind;
             pendingAttack = attack;
             pendingAttackDirection = direction.sqrMagnitude > 0.001f ? direction.normalized : LastAimDirection;
+            lastAimDirection = pendingAttackDirection;
             pendingAttackApplied = false;
             attackWindupEndTime = timeSeconds + attack.WindupSeconds;
             attackActiveEndTime = attackWindupEndTime + attack.ActiveSeconds;
             attackRecoveryEndTime = attackActiveEndTime + attack.RecoverySeconds;
             attackExecutionState = PlayerAttackExecutionState.Windup;
+            var actionDurationSeconds = Mathf.Max(0.01f, attack.WindupSeconds + attack.ActiveSeconds + attack.RecoverySeconds);
+            WeaponActionAnimationRequested?.Invoke(slot, attackKind, pendingAttackDirection, actionDurationSeconds);
         }
 
         private void ExecutePendingAttack(float timeSeconds)
@@ -591,13 +863,17 @@ namespace Hollow.Combat
             {
                 var damage = Mathf.Max(1, pendingAttack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus);
                 var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
-                DamageSystem.ApplyDamage(
+                if (DamageSystem.ApplyDamage(
                     target.Health,
                     new DamageRequest(
                         damage,
                         gameObject,
                         DamageFeedbackContext.Knockback(direction, pendingAttack.KnockbackMeters, profile.KnockbackSeconds),
-                        DamageClassification.PhysicalMelee(pendingAttack.ImpactForceClass)));
+                        DamageClassification.PhysicalMelee(pendingAttack.ImpactForceClass))))
+                {
+                    aimLockController?.NotifyEnemyDamaged(target, timeSeconds);
+                }
+
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
             }
@@ -630,13 +906,22 @@ namespace Hollow.Combat
 
         private void ClearPendingAction()
         {
+            CancelRangedDraw();
             attackExecutionState = PlayerAttackExecutionState.Idle;
             pendingAttackApplied = false;
             attackWindupEndTime = 0f;
             attackActiveEndTime = 0f;
             attackRecoveryEndTime = 0f;
+            rollInvulnerableStartTime = 0f;
             rollEndTime = 0f;
             rollInvulnerableEndTime = 0f;
+        }
+
+        public bool IsRollInvulnerableAt(float timeSeconds)
+        {
+            return IsRolling &&
+                timeSeconds >= rollInvulnerableStartTime &&
+                timeSeconds < rollInvulnerableEndTime;
         }
 
         private float EffectiveMeleeCooldown(WeaponAttackDefinition attack, AttackKind attackKind)
@@ -688,12 +973,25 @@ namespace Hollow.Combat
 
         private Vector2 CurrentAim(GameplayInputSnapshot input)
         {
+            if (aimLockController != null)
+            {
+                return aimLockController.ResolveAttackDirection(input, Time.time);
+            }
+
             if (input.HasShoot)
             {
                 return input.Shoot;
             }
 
             return lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+        }
+
+        private void EnsureAimLockController()
+        {
+            if (aimLockController == null)
+            {
+                aimLockController = GetComponent<PlayerAimLockController>() ?? gameObject.AddComponent<PlayerAimLockController>();
+            }
         }
 
         private WeaponDefinition ResolveWeapon(WeaponSlot slot)
@@ -774,7 +1072,7 @@ namespace Hollow.Combat
 
         private void OnPlayerDamaged(CombatantHealth _)
         {
-            if (attackExecutionState != PlayerAttackExecutionState.Rolling)
+            if (!IsRolling)
             {
                 ClearPendingAction();
             }

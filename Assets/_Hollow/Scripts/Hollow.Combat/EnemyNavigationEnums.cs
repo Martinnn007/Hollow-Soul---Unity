@@ -4,7 +4,8 @@ namespace Hollow.Combat
     {
         LocalSteering = 0,
         FuturePathfinding = 1,
-        RoomGridAStar = 2
+        RoomGridAStar = 2,
+        UnityNavMesh = 3
     }
 
     public enum EnemyPathStatus

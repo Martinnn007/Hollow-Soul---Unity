@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edbc1120b3c4639a9c7375cd6bd16bb, type: 3}
+  m_Name: Enemy_spawnEnemyCrimsonRailSpider_railgun_lock_beam
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyAttackProfileDefinition
+  attackId: railgun_lock_beam
+  displayName: Railgun Lock Beam
+  runtimeKind: 17
+  damage: 3
+  cooldownSeconds: 3
+  windupSeconds: 2
+  activeSeconds: 0.12
+  rangeMeters: 9
+  projectileCount: 0
+  projectileSpeedMetersPerSecond: 0.1
+  damageChannel: 2
+  damageDelivery: 2
+  damageElement: 6
+  forceClass: 2
+  threatKind: 3
+  knockbackMeters: 0.72
+  guardKnockbackMultiplier: 0.35
+  recoverySeconds: 0.45
+  hitArcDegrees: 12
+  poiseBreakThreshold: 2
+  activeMovementDistanceMeters: -1
+  comboFollowUpAttackId: 
+  obstructionPolicy: 0
+  notes: M115 railgun tracks for one second, locks an amber lane for one second,
+    then fires along that lane.

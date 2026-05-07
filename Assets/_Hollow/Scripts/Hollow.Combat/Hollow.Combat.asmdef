@@ -9,6 +9,10 @@
     "Hollow.Presentation",
     "Hollow.RoomDesigner",
     "Hollow.Rooms",
+    "Unity.Behavior",
+    "Unity.Behavior.SerializableGUID",
+    "Unity.Properties",
+    "UnityEngine.AIModule",
     "UnityEngine.UI"
   ],
   "includePlatforms": [],

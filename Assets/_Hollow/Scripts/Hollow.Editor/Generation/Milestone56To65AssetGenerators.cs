@@ -157,7 +157,7 @@ namespace Hollow.Editor.Generation
                 "m63_beta_content_selection_lock_v1",
                 "M63 Beta Content Selection Lock",
                 new[] { "balanced", "heavy" },
-                new[] { "starter_blade", "starter_bolt", "skeletal_sword", "bone_bow", "dragon_fang", "dragon_bow" },
+                new[] { "starter_blade", "starter_bow", "starter_bolt", "skeletal_sword", "bone_bow", "dragon_fang", "dragon_bow" },
                 new[] { "m52_standard_sparse_rewards", "m54_treasure_projectile_passive_rewards", "m54_boss_projectile_passive_rewards" },
                 new[] { "M13 macro fixtures", "M36 approved rooms", "M48 approved rooms", "M53 boss arenas", "M55 developer lab rooms" },
                 new[] { "stone_warden", "splinter_saint", "gravel_maw", "cartouche_widow", "iron_reliquary", "mirror_husk", "ash_comet", "choir_of_teeth", "rust_bishop", "hollow_star_larva" },

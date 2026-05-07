@@ -212,6 +212,7 @@ namespace Hollow.Tests.EditMode
 
                 var damageSource = new GameObject("M80RollDamageSource");
                 damageSource.transform.SetParent(root.transform, false);
+                rollWeapon.TickAction(0f, PlayerWeaponController.RollStartupSeconds + 0.01f);
                 var applied = DamageSystem.ApplyDamage(rollHealth, new DamageRequest(1, damageSource));
                 Assert.IsFalse(applied);
                 Assert.AreEqual(rollHealth.MaxHealth, rollHealth.CurrentHealth);

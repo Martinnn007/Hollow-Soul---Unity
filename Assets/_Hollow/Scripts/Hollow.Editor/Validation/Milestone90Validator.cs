@@ -71,9 +71,10 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateGlobalContracts(List<string> failures)
         {
-            if (EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.LocalSteering)
+            if (EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.LocalSteering &&
+                EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.UnityNavMesh)
             {
-                failures.Add("M90 should lock the M88 LocalSteering backend until a later backend is explicitly enabled.");
+                failures.Add("M90 expects LocalSteering, or the later M97 UnityNavMesh backend once explicitly enabled.");
             }
 
             if (EnemyStimulusTierExtensions.DefaultFor(EnemyStimulusKind.AllyAlert) != EnemyStimulusTier.Normal)

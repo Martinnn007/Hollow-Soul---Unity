@@ -20,6 +20,7 @@ namespace Hollow.Editor.Validation
             "RoomTacticalDirector",
             "EnemyTacticalIntent",
             "EnemyLocomotionAgent",
+            "Unity Behavior",
             "A* Pathfinding Project Pro",
             "Behavior Designer Pro 3",
             "Hollow data as the source of truth"
@@ -82,9 +83,10 @@ namespace Hollow.Editor.Validation
             var optionNames = EnemyAiToolBakeOffEvaluation.Options.Select(option => option.Name).ToArray();
             if (!optionNames.Any(name => name.Contains("A* Pathfinding Project Pro")) ||
                 !optionNames.Any(name => name.Contains("Behavior Designer Pro 3")) ||
+                !optionNames.Any(name => name.Contains("Unity Behavior")) ||
                 !optionNames.Any(name => name.Contains("Unity AI Navigation")))
             {
-                failures.Add("M96 bake-off options must include A* Pro, Behavior Designer Pro 3, and Unity AI Navigation.");
+                failures.Add("M96 bake-off options must include Unity Behavior, A* Pro, Behavior Designer Pro 3, and Unity AI Navigation.");
             }
         }
 

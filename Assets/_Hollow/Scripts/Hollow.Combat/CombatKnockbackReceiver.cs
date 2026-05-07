@@ -16,6 +16,7 @@ namespace Hollow.Combat
         private Vector3 velocity;
         private float remainingSeconds;
         private PlayerDefenseController defenseController;
+        private EnemyRuntimeController enemyRuntime;
 
         public bool IsKnockbackActive => remainingSeconds > 0f;
 
@@ -25,6 +26,7 @@ namespace Hollow.Combat
             radiusMeters = Mathf.Max(CombatFeelTuning.MinimumCollisionRadiusMeters, radius);
             ignoreObstacles = nextIgnoreObstacles;
             resistanceMultiplier = Mathf.Max(0f, nextResistanceMultiplier);
+            enemyRuntime = GetComponent<EnemyRuntimeController>();
         }
 
         public void ConfigureStability(int nextStability)
@@ -40,7 +42,7 @@ namespace Hollow.Combat
 
         public void ApplyKnockback(Vector3 direction, float meters, float seconds, DamageClassification classification)
         {
-            var enemy = GetComponent<EnemyRuntimeController>();
+            var enemy = ResolveEnemyRuntime();
             if (enemy != null && enemy.IsInspectionFrozen)
             {
                 return;
@@ -55,6 +57,7 @@ namespace Hollow.Combat
 
             remainingSeconds = Mathf.Max(0.01f, seconds);
             velocity = flatDirection.normalized * (distance / remainingSeconds);
+            enemy?.SyncNavMeshAgentAfterExternalDisplacement("knockback_start");
             VfxPresenter.Play(VfxCueId.KnockbackImpact, transform.position, transform.parent);
         }
 
@@ -76,6 +79,8 @@ namespace Hollow.Combat
             transform.localPosition = ignoreObstacles
                 ? RoomLocalCollision.ResolveMoveIgnoringObstacles(roomRuntimeRoot, desired, radiusMeters)
                 : RoomLocalCollision.ResolveMove(roomRuntimeRoot, transform.localPosition, desired, radiusMeters);
+            var enemy = ResolveEnemyRuntime();
+            enemy?.SyncNavMeshAgentAfterExternalDisplacement("knockback");
 
             if (remainingSeconds <= 0f)
             {
@@ -101,6 +106,16 @@ namespace Hollow.Combat
             }
 
             return multiplier;
+        }
+
+        private EnemyRuntimeController ResolveEnemyRuntime()
+        {
+            if (enemyRuntime == null)
+            {
+                enemyRuntime = GetComponent<EnemyRuntimeController>();
+            }
+
+            return enemyRuntime;
         }
     }
 }

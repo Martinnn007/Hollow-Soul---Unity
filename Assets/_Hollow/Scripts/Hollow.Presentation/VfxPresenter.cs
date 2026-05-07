@@ -118,12 +118,27 @@ namespace Hollow.Presentation
                 VfxCueId.HazardCoinDrop => new Color(1f, 0.82f, 0.15f, 0.9f),
                 VfxCueId.ChestOpen => new Color(1f, 0.76f, 0.18f, 0.92f),
                 VfxCueId.CoinPickup => new Color(1f, 0.86f, 0.28f, 0.9f),
+                VfxCueId.PlayerRollStart => new Color(0.75f, 0.82f, 0.92f, 0.72f),
+                VfxCueId.PlayerRollTrail => new Color(0.38f, 0.72f, 1f, 0.34f),
+                VfxCueId.PlayerRollRecovery => new Color(0.65f, 0.76f, 0.88f, 0.48f),
                 _ => default
             };
 
             if (cue is VfxCueId.EnemyCorpseGhost or VfxCueId.ShieldParryCounter or VfxCueId.BarrelExplode or VfxCueId.ChestOpen)
             {
                 scale = 0.22f;
+            }
+            else if (cue == VfxCueId.PlayerRollStart)
+            {
+                scale = 0.2f;
+            }
+            else if (cue == VfxCueId.PlayerRollTrail)
+            {
+                scale = 0.16f;
+            }
+            else if (cue == VfxCueId.PlayerRollRecovery)
+            {
+                scale = 0.18f;
             }
 
             return color != default;

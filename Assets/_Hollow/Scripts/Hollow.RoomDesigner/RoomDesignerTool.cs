@@ -42,6 +42,9 @@ namespace Hollow.RoomDesigner
         EnemyWraith = 37,
         EnemySoulEater = 38,
         EnemyCurseBinder = 39,
-        EnemyGraveLantern = 40
+        EnemyGraveLantern = 40,
+        EnemyStarforgedOctantSentry = 41,
+        EnemyCrimsonRailSpider = 42,
+        EnemyAzureMinigunTurret = 43
     }
 }

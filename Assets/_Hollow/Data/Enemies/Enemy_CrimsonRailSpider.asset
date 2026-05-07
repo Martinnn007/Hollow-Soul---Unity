@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855bfa65e053c47d9b6b7def8d88ea42, type: 3}
+  m_Name: Enemy_CrimsonRailSpider
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyDefinition
+  spawnKind: spawnEnemyCrimsonRailSpider
+  displayName: Crimson Rail Spider
+  archetypeId: 2
+  behaviorId: 26
+  movementMode: 0
+  maxHealth: 10
+  speedMetersPerSecond: 1.25
+  contactDamage: 0
+  contactCooldownSeconds: 1
+  contactDamagePolicy: 0
+  passiveContactHazardType: 0
+  radiusMeters: 0.36
+  attackRangeMeters: 9
+  preferredRangeMinMeters: 5.2
+  preferredRangeMaxMeters: 8.4
+  sightRadiusMeters: 10
+  sightAngleDegrees: 170
+  hearingRadiusMeters: 6.5
+  hearingSensitivityMultiplier: 1.2
+  disturbanceEscalationThreshold: 1.25
+  investigationDurationSeconds: 1.25
+  allyAlertSharingEnabled: 1
+  allyAlertRadiusMeters: 5.25
+  allyAlertCooldownSeconds: 2.5
+  allyAlertMinimumAwareness: 3
+  lungeAttackEnabled: 0
+  lungeTriggerRangeMeters: 1.4
+  lungeWindupSeconds: 0.22
+  lungeActiveSeconds: 0.18
+  lungeDistanceMeters: 0.75
+  lungeCooldownSeconds: 1.15
+  attackCooldownSeconds: 1.4
+  projectileDamage: 3
+  projectileSpeedMetersPerSecond: 0.1
+  chargeSpeedMetersPerSecond: 0
+  chargeCooldownSeconds: 1
+  splitSpawnKind: spawnEnemyNormal
+  splitCount: 0
+  bodyClass: 1
+  intelligence: 4
+  disposition: 4
+  attackWindupScale: 1
+  attackActiveScale: 1
+  attackRecoveryScale: 1
+  hitArcDegreesBonus: 0
+  poiseBreakThresholdOffset: 1
+  attackProfiles:
+  - {fileID: 11400000, guid: 4b5d5817594724d49b1111eaa292b13f, type: 2}
+  actionProfiles:
+  - {fileID: 11400000, guid: b871a9e8f2fef442ab8bba1c2ae57aae, type: 2}
+  guardProfile: {fileID: 0}
+  behaviorTree: {fileID: 11400000, guid: ff9bce5d37e184ed0a4675f4efc43499, type: 2}
+  behaviorRuntimeMode: 0
+  unityBehaviorGraph: {fileID: 0}
+  spacingProfile: {fileID: 0}
+  presentationPrefabRoleOverrideEnabled: 1
+  presentationPrefabRoleOverride: 68
+  weaponPrefabRoleOverrideEnabled: 0
+  weaponPrefabRoleOverride: 0
+  offhandPrefabRoleOverrideEnabled: 0
+  offhandPrefabRoleOverride: 0
+  projectilePrefabRoleOverrideEnabled: 0
+  projectilePrefabRoleOverride: 0
+  vfxPrefabRoleOverrideEnabled: 0
+  vfxPrefabRoleOverride: 0
+  color: {r: 0.62, g: 0.22, b: 0.2, a: 1}

@@ -25,7 +25,7 @@ MonoBehaviour:
     rangedDamageBonus: 0
     attackCooldownMultiplier: 1
   starterMeleeWeaponId: starter_blade
-  starterRangedWeaponId: starter_bolt
+  starterRangedWeaponId: starter_bow
   starterPassiveRewardId: 
   passiveSkill: {fileID: 11400000, guid: 45e3831152e6044cfba2f3c6ec8c57b8, type: 2}
   tags: 050000000200000001000000

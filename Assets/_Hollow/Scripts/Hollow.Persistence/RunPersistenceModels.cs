@@ -222,8 +222,8 @@ namespace Hollow.Persistence
     public sealed class RunEquipmentSlotsSaveState
     {
         public string meleeWeaponId = "starter_blade";
-        public string rangedWeaponId = "starter_bolt";
-        public string activeWeaponSlot = "Ranged";
+        public string rangedWeaponId = "starter_bow";
+        public string activeWeaponSlot = "Melee";
         public string activeItemId = string.Empty;
         public int activeItemCharges;
         public string consumableCardId = string.Empty;

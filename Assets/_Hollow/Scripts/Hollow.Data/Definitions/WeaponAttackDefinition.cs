@@ -17,6 +17,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private float activeSeconds;
         [SerializeField] private float recoverySeconds;
         [SerializeField] private float hitArcDegrees;
+        [SerializeField] private float requiredDrawSeconds;
 
         public WeaponAttackDefinition(AttackKind attackKind, int damage, float cooldownSeconds, float staminaCost, float rangeMeters)
             : this(attackKind, damage, cooldownSeconds, staminaCost, rangeMeters, ImpactForceClass.Light, attackKind == AttackKind.Heavy ? 0.55f : 0.3f)
@@ -34,7 +35,8 @@ namespace Hollow.Data.Definitions
             float windupSeconds = -1f,
             float activeSeconds = -1f,
             float recoverySeconds = -1f,
-            float hitArcDegrees = -1f)
+            float hitArcDegrees = -1f,
+            float requiredDrawSeconds = 0f)
         {
             this.attackKind = attackKind;
             this.damage = Mathf.Max(0, damage);
@@ -47,6 +49,7 @@ namespace Hollow.Data.Definitions
             this.activeSeconds = activeSeconds >= 0f ? Mathf.Max(0.01f, activeSeconds) : DefaultActiveSeconds(attackKind, rangeMeters);
             this.recoverySeconds = recoverySeconds >= 0f ? Mathf.Max(0.01f, recoverySeconds) : DefaultRecoverySeconds(attackKind, rangeMeters);
             this.hitArcDegrees = hitArcDegrees >= 0f ? Mathf.Clamp(hitArcDegrees, 1f, 360f) : DefaultHitArcDegrees(attackKind, rangeMeters);
+            this.requiredDrawSeconds = Mathf.Max(0f, requiredDrawSeconds);
         }
 
         public AttackKind AttackKind => attackKind;
@@ -70,6 +73,8 @@ namespace Hollow.Data.Definitions
         public float RecoverySeconds => recoverySeconds > 0f ? recoverySeconds : DefaultRecoverySeconds(attackKind, rangeMeters);
 
         public float HitArcDegrees => hitArcDegrees > 0f ? Mathf.Clamp(hitArcDegrees, 1f, 360f) : DefaultHitArcDegrees(attackKind, rangeMeters);
+
+        public float RequiredDrawSeconds => Mathf.Max(0f, requiredDrawSeconds);
 
         public static WeaponAttackDefinition DefaultLight(WeaponSlot slot)
         {

@@ -130,6 +130,12 @@ namespace Hollow.Combat
         {
             TickPlayerFootstepStimuli(Time.time);
             threatDirector.Tick(enemies);
+            EnemyAiDebugOverlay.ReportRoomEnemyCount(enemies.Count(enemy => enemy != null && enemy.IsAlive && enemy.BossDefinition == null));
+            EnemyAiDebugOverlay.ReportRoomPressure(
+                threatDirector.MeleePressure,
+                threatDirector.RangedPressure,
+                threatDirector.AreaPressure,
+                threatDirector.ChargePressure);
             tacticalDirector.Tick(enemies, roomRuntimeRoot, playerController, Time.time);
             EvaluateRoomState();
         }
@@ -175,6 +181,16 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (!roomRuntimeRoot.HasNavMeshBake)
+            {
+                Debug.LogError(
+                    $"Cannot begin room '{roomRuntimeRoot.LastBuiltAsset?.Id ?? "<unknown>"}': Unity NavMesh data is unavailable ({roomRuntimeRoot.NavMeshBakeError}). Run {RoomNavMeshCatalogDefinition.PreferredBakeMenuPath}; Designer Room and Arena playtests may use dev-only fallback, but authored runtime rooms require a catalog bake.",
+                    roomRuntimeRoot);
+                initialized = false;
+                ObjectiveState = RoomObjectiveState.WaitingToStart;
+                return;
+            }
+
             CleanupRoomCombatObjects();
             nextEnemyAttackBudgetTime = 0f;
             nextEnemyMeleeAttackBudgetTime = 0f;
@@ -190,20 +206,36 @@ namespace Hollow.Combat
             }
 
             var movement = playerController.GetComponent<PlayerMovementController>() ?? playerController.gameObject.AddComponent<PlayerMovementController>();
-            movement.Configure(roomRuntimeRoot);
+            movement.Configure(roomRuntimeRoot, this);
 
             var weapon = playerController.GetComponent<PlayerWeaponController>() ?? playerController.gameObject.AddComponent<PlayerWeaponController>();
             weapon.Configure(roomRuntimeRoot, this, projectilePrefab);
             weapon.ConfigureCombatFeel(CombatFeelProfile);
+            var aimLock = playerController.GetComponent<PlayerAimLockController>() ?? playerController.gameObject.AddComponent<PlayerAimLockController>();
+            aimLock.Configure(this);
+            var locomotionAnimator = playerController.GetComponent<PlayerLocomotionAnimator>();
+            locomotionAnimator?.BindGameplay(weapon, playerHealth, aimLock);
             var heldWeaponVisual = playerController.GetComponent<PlayerHeldWeaponVisualController>() ?? playerController.gameObject.AddComponent<PlayerHeldWeaponVisualController>();
             heldWeaponVisual.Bind(weapon);
+            var rollVisual = playerController.GetComponent<PlayerRollVisualController>() ?? playerController.gameObject.AddComponent<PlayerRollVisualController>();
+            rollVisual.Bind(weapon);
 
             var defense = playerController.GetComponent<PlayerDefenseController>() ?? playerController.gameObject.AddComponent<PlayerDefenseController>();
             defense.Bind(roomRuntimeRoot, this);
             defense.ConfigureShieldProfile(ShieldGuardProfileDefinition.Resolve(null));
             var playerFeedback = playerController.GetComponent<PlayerDamageFeedbackController>() ?? playerController.gameObject.AddComponent<PlayerDamageFeedbackController>();
             playerFeedback.Configure(roomRuntimeRoot, CombatFeelProfile);
-            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
+            if (HasMeshyPlayerVisual(playerController.transform))
+            {
+                RemoveLegacyPlayerPresentationVisuals(playerController.transform);
+                aimLock.BindPresentation(null);
+            }
+            else
+            {
+                var playerVisual = PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Player, playerController.transform, Vector3.zero, Vector3.one);
+                aimLock.BindPresentation(playerVisual);
+            }
+
             lastPlayerFootstepStimulusLocalPosition = playerController.transform.localPosition;
             hasLastPlayerFootstepStimulusLocalPosition = true;
 
@@ -285,6 +317,11 @@ namespace Hollow.Combat
             return spawnResult.Enemies;
         }
 
+        public void RegisterRuntimeEnemy(EnemyRuntimeController enemy)
+        {
+            RegisterEnemy(enemy);
+        }
+
         public EnemyRuntimeController FindEnemyHit(Vector3 localPosition, float radius)
         {
             foreach (var enemy in enemies)
@@ -336,7 +373,8 @@ namespace Hollow.Combat
                 diagnostics.EnemySummary(),
                 diagnostics.ProjectileSummary(),
                 playerController != null ? playerController.GetComponent<PlayerDefenseController>() : null,
-                activeEncounterContext);
+                activeEncounterContext,
+                playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null);
         }
 
         public void EvaluateRoomState()
@@ -735,6 +773,58 @@ namespace Hollow.Combat
             {
                 DestroyImmediate(target);
             }
+        }
+
+        private static bool HasMeshyPlayerVisual(Transform playerRoot)
+        {
+            return playerRoot != null &&
+                (playerRoot.Find("MainCharacter_VisualRoot") != null ||
+                 playerRoot.GetComponent<PlayerLocomotionAnimator>() != null);
+        }
+
+        private static void RemoveLegacyPlayerPresentationVisuals(Transform playerRoot)
+        {
+            if (playerRoot == null)
+            {
+                return;
+            }
+
+            var meshyRoot = playerRoot.Find("MainCharacter_VisualRoot");
+            var legacyVisuals = playerRoot
+                .GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                .Where(marker =>
+                    marker != null &&
+                    marker.Role == PresentationPrefabRole.Player &&
+                    marker.transform != playerRoot &&
+                    !IsChildOf(marker.transform, meshyRoot))
+                .Select(marker => marker.gameObject)
+                .Distinct()
+                .ToArray();
+            foreach (var legacyVisual in legacyVisuals)
+            {
+                DestroyRuntimeObject(legacyVisual);
+            }
+        }
+
+        private static bool IsChildOf(Transform candidate, Transform parent)
+        {
+            if (candidate == null || parent == null)
+            {
+                return false;
+            }
+
+            var current = candidate;
+            while (current != null)
+            {
+                if (current == parent)
+                {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
         }
 
         private void TintDoorsOnClear()

@@ -747,6 +747,15 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.EnemyClockworkSentry:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyClockworkSentry, "spawn_enemy_clockwork_sentry");
                     break;
+                case RoomDesignerTool.EnemyStarforgedOctantSentry:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyStarforgedOctantSentry, "spawn_enemy_starforged_octant_sentry");
+                    break;
+                case RoomDesignerTool.EnemyCrimsonRailSpider:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyCrimsonRailSpider, "spawn_enemy_crimson_rail_spider");
+                    break;
+                case RoomDesignerTool.EnemyAzureMinigunTurret:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyAzureMinigunTurret, "spawn_enemy_azure_minigun_turret");
+                    break;
                 case RoomDesignerTool.EnemyHollowAcolyte:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyHollowAcolyte, "spawn_enemy_hollow_acolyte");
                     break;
@@ -915,6 +924,9 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyKnifeThrower => RoomDesignerTool.EnemyKnifeThrower,
                 RoomDesignerMarkerKinds.EnemyRepeaterTurret => RoomDesignerTool.EnemyRepeaterTurret,
                 RoomDesignerMarkerKinds.EnemyClockworkSentry => RoomDesignerTool.EnemyClockworkSentry,
+                RoomDesignerMarkerKinds.EnemyStarforgedOctantSentry => RoomDesignerTool.EnemyStarforgedOctantSentry,
+                RoomDesignerMarkerKinds.EnemyCrimsonRailSpider => RoomDesignerTool.EnemyCrimsonRailSpider,
+                RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => RoomDesignerTool.EnemyAzureMinigunTurret,
                 RoomDesignerMarkerKinds.EnemyHollowAcolyte => RoomDesignerTool.EnemyHollowAcolyte,
                 RoomDesignerMarkerKinds.EnemyWraith => RoomDesignerTool.EnemyWraith,
                 RoomDesignerMarkerKinds.EnemySoulEater => RoomDesignerTool.EnemySoulEater,

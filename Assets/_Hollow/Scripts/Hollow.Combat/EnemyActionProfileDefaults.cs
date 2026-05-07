@@ -385,7 +385,12 @@ namespace Hollow.Combat
 
         private static (float min, float ideal, float max) ScoringRangeFor(EnemyAttackProfileSpec attack)
         {
-            if (attack.DamageDelivery == DamageDelivery.Projectile || attack.RuntimeKind is EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.Beam)
+            if (attack.DamageDelivery == DamageDelivery.Projectile ||
+                attack.RuntimeKind is EnemyAttackRuntimeKind.FanProjectile
+                    or EnemyAttackRuntimeKind.RadialProjectile
+                    or EnemyAttackRuntimeKind.SequentialRadialProjectile
+                    or EnemyAttackRuntimeKind.Beam
+                    or EnemyAttackRuntimeKind.LockingBeam)
             {
                 var max = Math.Max(attack.RangeMeters, 3f);
                 return (Math.Min(2f, max * 0.35f), max * 0.7f, max);
@@ -427,7 +432,7 @@ namespace Hollow.Combat
                         : EnemyActionCategory.Magic;
             }
 
-            if (attack.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile &&
+            if (attack.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile &&
                 attack.OwnerId is "spawnEnemyHollowArcher" or "spawnEnemyPowderGunner" or "spawnEnemyKnifeThrower")
             {
                 return EnemyActionCategory.Ranged;
@@ -437,10 +442,10 @@ namespace Hollow.Combat
             {
                 EnemyAttackRuntimeKind.WeaponMelee => EnemyActionCategory.Weapon,
                 EnemyAttackRuntimeKind.Defense => EnemyActionCategory.Defense,
-                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile => EnemyActionCategory.Projectile,
+                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile => EnemyActionCategory.Projectile,
                 EnemyAttackRuntimeKind.Summon or EnemyAttackRuntimeKind.Split => EnemyActionCategory.Summon,
                 EnemyAttackRuntimeKind.Area => EnemyActionCategory.Hazard,
-                EnemyAttackRuntimeKind.Beam => EnemyActionCategory.Magic,
+                EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => EnemyActionCategory.Magic,
                 EnemyAttackRuntimeKind.Movement or EnemyAttackRuntimeKind.CreatureMove => EnemyActionCategory.Movement,
                 EnemyAttackRuntimeKind.PhaseMove => EnemyActionCategory.GhostSoul,
                 EnemyAttackRuntimeKind.CreatureSignal => EnemyActionCategory.Body,
@@ -481,7 +486,7 @@ namespace Hollow.Combat
                 return EnemyActionIntent.Summon;
             }
 
-            if (attack.RuntimeKind == EnemyAttackRuntimeKind.Beam)
+            if (attack.RuntimeKind is EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam)
             {
                 return EnemyActionIntent.Pressure;
             }
@@ -516,8 +521,8 @@ namespace Hollow.Combat
             {
                 EnemyAttackRuntimeKind.Projectile => EnemyActionShape.Projectile,
                 EnemyAttackRuntimeKind.FanProjectile => EnemyActionShape.Fan,
-                EnemyAttackRuntimeKind.RadialProjectile => EnemyActionShape.Radial,
-                EnemyAttackRuntimeKind.Beam => EnemyActionShape.Lane,
+                EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile => EnemyActionShape.Radial,
+                EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => EnemyActionShape.Lane,
                 EnemyAttackRuntimeKind.Charge => EnemyActionShape.Lane,
                 EnemyAttackRuntimeKind.Summon or EnemyAttackRuntimeKind.Split or EnemyAttackRuntimeKind.Area => EnemyActionShape.CircleArea,
                 EnemyAttackRuntimeKind.Movement => EnemyActionShape.Lane,
@@ -561,6 +566,8 @@ namespace Hollow.Combat
                 "spawnEnemyHollowArcher" or "spawnEnemyKnifeThrower" => EnemyIntelligenceLevel.Basic,
                 "spawnEnemyPowderGunner" or "spawnEnemyRepeaterTurret" => EnemyIntelligenceLevel.Trained,
                 "spawnEnemyClockworkSentry" => EnemyIntelligenceLevel.Tactical,
+                "spawnEnemyStarforgedOctantSentry" or "spawnEnemyAzureMinigunTurret" => EnemyIntelligenceLevel.Trained,
+                "spawnEnemyCrimsonRailSpider" => EnemyIntelligenceLevel.Tactical,
                 "spawnEnemyHollowAcolyte" or "spawnEnemySoulEater" => EnemyIntelligenceLevel.Trained,
                 "spawnEnemyWraith" or "spawnEnemyCurseBinder" => EnemyIntelligenceLevel.Tactical,
                 "spawnEnemyGraveLantern" => EnemyIntelligenceLevel.Basic,
@@ -585,8 +592,8 @@ namespace Hollow.Combat
                 "spawnEnemyHollowBird" or "spawnEnemyHollowBeast" => new[] { EnemyInstinctDisposition.Predator },
                 "spawnEnemySkeletonSpear" or "spawnEnemyKnight" => new[] { EnemyInstinctDisposition.Sentinel },
                 "spawnEnemyGiant" => new[] { EnemyInstinctDisposition.Mindless },
-                "spawnEnemyHollowArcher" or "spawnEnemyPowderGunner" or "spawnEnemyRepeaterTurret" or "spawnEnemyClockworkSentry" or "spawnEnemyHollowAcolyte" or "spawnEnemyGraveLantern" => new[] { EnemyInstinctDisposition.Sentinel },
-                "spawnEnemyKnifeThrower" or "spawnEnemyCurseBinder" => new[] { EnemyInstinctDisposition.Territorial },
+                "spawnEnemyHollowArcher" or "spawnEnemyPowderGunner" or "spawnEnemyRepeaterTurret" or "spawnEnemyClockworkSentry" or "spawnEnemyHollowAcolyte" or "spawnEnemyGraveLantern" or "spawnEnemyStarforgedOctantSentry" or "spawnEnemyAzureMinigunTurret" => new[] { EnemyInstinctDisposition.Sentinel },
+                "spawnEnemyKnifeThrower" or "spawnEnemyCurseBinder" or "spawnEnemyCrimsonRailSpider" => new[] { EnemyInstinctDisposition.Territorial },
                 "spawnEnemyWraith" or "spawnEnemySoulEater" => new[] { EnemyInstinctDisposition.Predator },
                 _ => new[] { EnemyInstinctDisposition.Predator }
             };
@@ -602,6 +609,9 @@ namespace Hollow.Combat
             return attack.OwnerId switch
             {
                 "spawnEnemyTurret" or "spawnEnemySpittingPod" or "spawnEnemyRepeaterTurret" => new[] { "ranged", "stationary" },
+                "spawnEnemyStarforgedOctantSentry" => new[] { "ranged", "stationary", "machine", "octant-pattern" },
+                "spawnEnemyCrimsonRailSpider" => new[] { "ranged", "machine", "railgun" },
+                "spawnEnemyAzureMinigunTurret" => new[] { "ranged", "stationary", "machine", "tracking-fire" },
                 "spawnEnemyHollowArcher" => new[] { "ranged", "archer", "humanoid" },
                 "spawnEnemyPowderGunner" => new[] { "ranged", "firearm", "humanoid" },
                 "spawnEnemyKnifeThrower" => new[] { "ranged", "thrower", "skirmisher" },

@@ -18,7 +18,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void AdapterUsesLocalSteeringBackendAndDefaultModes()
         {
-            Assert.AreEqual(EnemyNavigationBackend.LocalSteering, EnemyNavigationAdapter.CurrentBackend);
+            Assert.AreEqual(EnemyNavigationBackend.UnityNavMesh, EnemyNavigationAdapter.CurrentBackend);
             Assert.AreEqual(EnemyNavigationMode.GroundedLocal, EnemyNavigationAdapter.DefaultModeFor(EnemyMovementMode.Grounded));
             Assert.AreEqual(EnemyNavigationMode.FlyingLocal, EnemyNavigationAdapter.DefaultModeFor(EnemyMovementMode.Flying));
         }
@@ -106,10 +106,10 @@ namespace Hollow.Tests.EditMode
 
                 enemy.Tick(0.5f, 2f);
 
-                Assert.That(enemy.LastNavigationBackend, Is.EqualTo(EnemyNavigationBackend.LocalSteering).Or.EqualTo(EnemyNavigationBackend.RoomGridAStar));
+                Assert.That(enemy.LastNavigationBackend, Is.EqualTo(EnemyNavigationBackend.LocalSteering).Or.EqualTo(EnemyNavigationBackend.UnityNavMesh));
                 Assert.AreEqual(EnemyNavigationMode.GroundedLocal, enemy.LastNavigationMode);
                 Assert.AreEqual(EnemyNavigationIntent.PreferredRange, enemy.LastNavigationIntent);
-                Assert.IsTrue(enemy.LastNavigationUsedFallbackSteering || enemy.LastNavigationBackend == EnemyNavigationBackend.RoomGridAStar);
+                Assert.IsTrue(enemy.LastNavigationUsedFallbackSteering || enemy.LastNavigationBackend == EnemyNavigationBackend.UnityNavMesh);
                 Assert.IsFalse(RoomLocalCollision.IntersectsObstacle(room, enemy.transform.localPosition, enemy.RadiusMeters));
             }
             finally

@@ -120,13 +120,18 @@ namespace Hollow.Combat
                 var knockback = knockbackMeters > 0f
                     ? knockbackMeters
                     : profile.EnemyProjectileKnockbackMeters * (heavyAttackProjectile ? profile.HeavyAttackKnockbackMultiplier : 1f);
-                DamageSystem.ApplyDamage(
+                if (DamageSystem.ApplyDamage(
                     enemy.Health,
                     new DamageRequest(
                         damage,
                         sourceOwner != null ? sourceOwner : gameObject,
                         DamageFeedbackContext.Knockback(localDirection, knockback, profile.KnockbackSeconds),
-                        DamageClassification.PhysicalProjectile(impactForceClass)));
+                        DamageClassification.PhysicalProjectile(impactForceClass))))
+                {
+                    var aimLock = sourceOwner != null ? sourceOwner.GetComponent<PlayerAimLockController>() : null;
+                    aimLock?.NotifyEnemyDamaged(enemy);
+                }
+
                 DestroyProjectile(ProjectileDespawnReason.EnemyHit);
                 return true;
             }
@@ -145,7 +150,7 @@ namespace Hollow.Combat
                 return true;
             }
 
-            if (RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            if (RoomLocalCollision.IntersectsProjectileBlocker(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
             {
                 DestroyProjectile(ProjectileDespawnReason.ObstacleHit);
                 return true;

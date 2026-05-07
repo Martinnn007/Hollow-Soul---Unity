@@ -41,7 +41,7 @@ namespace Hollow.Combat
             health = enemy != null ? enemy.Health : null;
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(profile);
             healthBarRevealRemaining = 0f;
-            targetRenderer = GetComponentInChildren<Renderer>();
+            targetRenderer = ResolveTargetRenderer();
             if (targetRenderer != null)
             {
                 baseMaterial = targetRenderer.sharedMaterial;
@@ -93,6 +93,20 @@ namespace Hollow.Combat
 
             VfxPresenter.Play(VfxCueId.EnemyHit, transform.position, transform.parent);
             AudioPresenter.Play(AudioCueId.EnemyHit, transform.position);
+        }
+
+        private Renderer ResolveTargetRenderer()
+        {
+            var renderers = GetComponentsInChildren<Renderer>(includeInactive: false);
+            foreach (var renderer in renderers)
+            {
+                if (renderer != null && renderer.enabled && renderer.GetComponent<TextMesh>() == null)
+                {
+                    return renderer;
+                }
+            }
+
+            return null;
         }
 
         private void OnDied(CombatantHealth _)
@@ -343,6 +357,8 @@ namespace Hollow.Combat
                 {
                     EnemyReadabilityState.GuardActive => MaterialRole.ShieldGuard,
                     EnemyReadabilityState.Charging or EnemyReadabilityState.MeleeLunge or EnemyReadabilityState.RangedActive => MaterialRole.CombatTelegraphDanger,
+                    EnemyReadabilityState.RangedWindup when enemy.RangedTelegraphPhase == EnemyRangedTelegraphPhase.Tracking => MaterialRole.CombatTelegraphTracking,
+                    EnemyReadabilityState.RangedWindup when enemy.RangedTelegraphPhase == EnemyRangedTelegraphPhase.Locked => MaterialRole.CombatTelegraphLocked,
                     _ => MaterialRole.CombatTelegraphWarning
                 };
                 MaterialResolver.ApplyTo(aimRenderer, role);

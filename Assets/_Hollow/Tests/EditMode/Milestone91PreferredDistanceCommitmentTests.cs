@@ -68,6 +68,38 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void EngagedChasersUseDamagingAttackSpacingInsteadOfFeintSpacing()
+        {
+            var root = CreateHarness(out var room, out var player);
+            try
+            {
+                var catalog = EnemyCatalog.CreateRuntimeDefault();
+                var normal = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemyNormal"));
+                normal.transform.localPosition = Vector3.zero;
+                player.transform.localPosition = new Vector3(0f, 0f, 2.1f);
+
+                var normalSpacing = normal.ResolveActionSpacingForTests(string.Empty);
+                Assert.AreNotEqual("warning_feint", normalSpacing.ActionId);
+                Assert.AreNotEqual("short_backstep", normalSpacing.ActionId);
+                Assert.LessOrEqual(normalSpacing.CommitRangeMaxMeters + normalSpacing.LongToleranceMeters, 1.8f);
+
+                var flying = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemyFlying"));
+                flying.transform.localPosition = new Vector3(4f, 0f, 0f);
+                player.transform.localPosition = new Vector3(4f, 0f, 2.6f);
+                flying.ReceiveStimulus(EnemyStimulusKind.RangedAttack, player.transform.localPosition, 2f, EnemyStimulusTier.Normal);
+
+                var flyingSpacing = flying.ResolveActionSpacingForTests(string.Empty);
+                Assert.AreNotEqual("dive_feint", flyingSpacing.ActionId);
+                Assert.AreNotEqual("fly_strafe", flyingSpacing.ActionId);
+                Assert.LessOrEqual(flyingSpacing.CommitRangeMaxMeters + flyingSpacing.LongToleranceMeters, 1.8f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void RecoveryModesMatchEnemyIdentity()
         {
             var catalog = EnemyCatalog.CreateRuntimeDefault();

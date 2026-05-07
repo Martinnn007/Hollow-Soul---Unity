@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07b8b845ecac43adb9c21ead73eb0065, type: 3}
+  m_Name: Weapon_StarterBow
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.WeaponDefinition
+  weaponId: starter_bow
+  displayName: Practice Bow
+  slot: 1
+  category: 1
+  loadClass: 0
+  rangedFireMode: 1
+  tags: 0200000004000000
+  lightAttack:
+    attackKind: 0
+    damage: 1
+    cooldownSeconds: 1
+    staminaCost: 2
+    rangeMeters: 6.5
+    impactForceClass: 0
+    knockbackMeters: 0.32
+    windupSeconds: 0.01
+    activeSeconds: 0.03
+    recoverySeconds: 0.16
+    hitArcDegrees: 1
+    requiredDrawSeconds: 1
+  heavyAttack:
+    attackKind: 1
+    damage: 2
+    cooldownSeconds: 8
+    staminaCost: 28
+    rangeMeters: 6.75
+    impactForceClass: 1
+    knockbackMeters: 0.55
+    windupSeconds: 0.01
+    activeSeconds: 0.04
+    recoverySeconds: 0.32
+    hitArcDegrees: 1
+    requiredDrawSeconds: 1.35

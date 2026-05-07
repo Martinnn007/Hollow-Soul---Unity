@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2ce0b8d8bbf43c78a8de47e08eea293, type: 3}
+  m_Name: Enemy_spawnEnemyCrimsonRailSpider_railgun_lock_beam
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyActionProfileDefinition
+  actionId: railgun_lock_beam
+  displayName: Railgun Lock Beam
+  category: 4
+  intent: 1
+  shape: 4
+  usageState: 0
+  linkedAttackProfile: {fileID: 11400000, guid: 4b5d5817594724d49b1111eaa292b13f, type: 2}
+  linkedAttackId: railgun_lock_beam
+  explicitlyNonDamaging: 0
+  minRangeMeters: 2
+  idealRangeMeters: 6.2999997
+  maxRangeMeters: 9
+  baseWeight: 2.05
+  pressureCost: 3
+  cooldownGroup: current_lockingbeam
+  minimumIntelligence: 4
+  allowedDispositions: 04000000
+  minimumAwareness: 3
+  requiresFacing: 1
+  facingArcDegrees: 12
+  telegraphNote: Readable area tell before the active window; M80 timing remains
+    the runtime source.
+  punishabilityRating: 1
+  guardPressureRating: 5
+  poiseBreakNote: Windup poise uses the linked M76/M80 threshold `Heavy`.
+  parryable: 0
+  blockable: 1
+  dodgeable: 1
+  recoveryPunishNote: Recovery should leave a short punish window when the player
+    dodges, blocks, or spaces the action.
+  bestUserTags:
+  - ranged
+  - machine
+  - railgun
+  notes: M81 action wrapper around an existing M76 attack profile; runtime behavior
+    is unchanged.

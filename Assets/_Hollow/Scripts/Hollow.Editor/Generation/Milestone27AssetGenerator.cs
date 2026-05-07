@@ -47,6 +47,15 @@ namespace Hollow.Editor.Generation
                 new[] { BuildTag.Ranged, BuildTag.Magic },
                 new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 0f, 6f),
                 new WeaponAttackDefinition(AttackKind.Heavy, 2, 10f, 35f, 6f));
+            var starterBow = SaveWeapon(
+                "Weapon_StarterBow.asset",
+                "starter_bow",
+                "Practice Bow",
+                WeaponSlot.Ranged,
+                WeaponCategory.Bow,
+                new[] { BuildTag.Ranged, BuildTag.Fast },
+                new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 2f, 6.5f, ImpactForceClass.Light, 0.32f, 0.01f, 0.03f, 0.16f, 1f, 1f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 2, 8f, 28f, 6.75f, ImpactForceClass.Medium, 0.55f, 0.01f, 0.04f, 0.32f, 1f, 1.35f));
             var ironCleaver = SaveWeapon(
                 "Weapon_IronCleaver.asset",
                 "iron_cleaver",
@@ -66,7 +75,7 @@ namespace Hollow.Editor.Generation
                 new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 4f, 6.33f),
                 new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 38f, 5.67f));
 
-            var catalog = SaveCatalog(new[] { starterBlade, starterBolt, ironCleaver, emberBolt });
+            var catalog = SaveCatalog(new[] { starterBlade, starterBolt, starterBow, ironCleaver, emberBolt });
             var weaponRewardPool = SaveWeaponRewardPool(ironCleaver, emberBolt);
             AssignToGameScenes(catalog, weaponRewardPool);
 

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Editor.Generation;
+using Hollow.Editor.Navigation;
 using Hollow.Rooms;
 using UnityEditor;
 using UnityEngine;
@@ -68,9 +69,10 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateBackendContract(List<string> failures)
         {
-            if (EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.LocalSteering)
+            if (EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.LocalSteering &&
+                EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.UnityNavMesh)
             {
-                failures.Add("M92 must preserve the M88 LocalSteering compatibility constant.");
+                failures.Add("M92 expects LocalSteering, or the later M97 UnityNavMesh replacement backend.");
             }
 
             if (RoomGridAStarPathfinder.CellSizeMeters <= 0f)
@@ -112,6 +114,17 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateSamplePath(List<string> failures)
         {
+            if (EnemyNavigationAdapter.CurrentBackend == EnemyNavigationBackend.UnityNavMesh)
+            {
+                var catalog = AssetDatabase.LoadAssetAtPath<RoomNavMeshCatalogDefinition>(RoomNavMeshBakeUtility.CatalogAssetPath);
+                if (catalog == null || catalog.Entries.Count == 0)
+                {
+                    failures.Add("M92/M97 navigation validation requires a baked RoomNavMeshCatalog.");
+                }
+
+                return;
+            }
+
             if (!File.Exists(SampleRoomPath))
             {
                 failures.Add($"Missing M92 sample room: {SampleRoomPath}");

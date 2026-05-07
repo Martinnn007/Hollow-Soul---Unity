@@ -17,8 +17,11 @@
     "Hollow.Branches",
     "Hollow.Rewards",
     "Hollow.RoomDesigner",
+    "Unity.Behavior",
+    "Unity.Behavior.SerializableGUID",
     "Unity.Addressables",
     "Unity.Addressables.Editor",
+    "UnityEngine.AIModule",
     "UnityEditor.TestRunner",
     "UnityEngine.TestRunner",
     "UnityEngine.UI"

@@ -29,6 +29,11 @@ namespace Hollow.Combat
         {
             command = EnemyBehaviorCommand.None("ai_no_cached_command");
             LodTier = ResolveLodTier(enemy, distanceToPlayer);
+            if (enemy != null)
+            {
+                EnemyAiDebugOverlay.ReportBrainAgent(enemy.GetInstanceID(), LodTier);
+            }
+
             if (enemy == null ||
                 enemy.ReadabilityState != EnemyReadabilityState.Idle ||
                 timeSeconds >= nextThinkTime ||
@@ -40,6 +45,7 @@ namespace Hollow.Combat
 
             command = SimplifyForLod(cachedCommand, enemy);
             UpdateBlackboard(enemy, cachedCommand, command, distanceToPlayer, 0f, "cached_plan");
+            EnemyAiDebugOverlay.RecordCommandReuse(enemy.GetInstanceID(), LodTier);
             return true;
         }
 
@@ -51,7 +57,13 @@ namespace Hollow.Combat
             RoomThreatDirector threatDirector)
         {
             LodTier = ResolveLodTier(enemy, distanceToPlayer);
-            nextThinkTime = timeSeconds + ThinkInterval(enemy, LodTier) + ThinkJitter(enemy);
+            var thinkInterval = ThinkInterval(enemy, LodTier);
+            nextThinkTime = timeSeconds + thinkInterval + ThinkJitter(enemy);
+            if (enemy != null)
+            {
+                EnemyAiDebugOverlay.RecordBrainThink(enemy.GetInstanceID(), LodTier, thinkInterval);
+            }
+
             var chosen = SimplifyForLod(treeCommand, enemy);
             var pressurePenalty = 0f;
             var cooldownReason = "tree";
@@ -64,6 +76,7 @@ namespace Hollow.Combat
                 chosen = new EnemyBehaviorCommand(scored.CommandKind, scored.ActionId, Mathf.Max(0.1f, treeCommand.SpeedMultiplier), "ai_scorer");
                 pressurePenalty = scored.PressurePenalty;
                 cooldownReason = scored.Reason;
+                EnemyAiDebugOverlay.RecordPressurePenalty(pressurePenalty);
             }
             else if (chosen.StartsCommittedAction && LodTier == EnemyAiLodTier.Background)
             {
@@ -131,16 +144,60 @@ namespace Hollow.Combat
             };
         }
 
+        public static float ResolveAdaptiveThinkIntervalForDiagnostics(
+            EnemyIntelligenceLevel intelligence,
+            EnemyAiLodTier tier,
+            int activeEnemyCount,
+            int pendingPathCount,
+            bool protectResponsiveness)
+        {
+            var baseInterval = BaseThinkInterval(intelligence, tier);
+            if (protectResponsiveness)
+            {
+                return baseInterval;
+            }
+
+            var swarmLoad = Mathf.Clamp01((Mathf.Max(0, activeEnemyCount) - 18) / 22f);
+            var pathLoad = Mathf.Clamp01(Mathf.Max(0, pendingPathCount) / 16f);
+            var load = Mathf.Max(swarmLoad, pathLoad * 0.75f);
+            var multiplier = tier switch
+            {
+                EnemyAiLodTier.Full => 1f + load * 0.22f,
+                EnemyAiLodTier.Reduced => 1f + load * 0.55f,
+                _ => 1f + load * 0.85f
+            };
+            return Mathf.Min(baseInterval * multiplier, tier switch
+            {
+                EnemyAiLodTier.Full => 0.24f,
+                EnemyAiLodTier.Reduced => 0.82f,
+                _ => 1.65f
+            });
+        }
+
         private static float ThinkInterval(EnemyRuntimeController enemy, EnemyAiLodTier tier)
         {
             var intelligence = enemy != null ? enemy.Intelligence : EnemyIntelligenceLevel.Simple;
-            var baseInterval = tier switch
+            var navStats = EnemyNavigationDebugOverlay.Stats;
+            var protectResponsiveness = enemy != null &&
+                (enemy.ReadabilityState != EnemyReadabilityState.Idle ||
+                    enemy.IsEndangeredNow ||
+                    enemy.DistanceToPlayerMeters <= 4.25f);
+            return ResolveAdaptiveThinkIntervalForDiagnostics(
+                intelligence,
+                tier,
+                EnemyAiDebugOverlay.EstimatedActiveAiAgents,
+                navStats.PendingPathUsers,
+                protectResponsiveness);
+        }
+
+        private static float BaseThinkInterval(EnemyIntelligenceLevel intelligence, EnemyAiLodTier tier)
+        {
+            return tier switch
             {
                 EnemyAiLodTier.Full => intelligence is EnemyIntelligenceLevel.Tactical or EnemyIntelligenceLevel.Cunning ? 0.11f : 0.16f,
                 EnemyAiLodTier.Reduced => intelligence is EnemyIntelligenceLevel.Tactical or EnemyIntelligenceLevel.Cunning ? 0.34f : 0.48f,
                 _ => 0.95f
             };
-            return baseInterval;
         }
 
         private static float ThinkJitter(EnemyRuntimeController enemy)

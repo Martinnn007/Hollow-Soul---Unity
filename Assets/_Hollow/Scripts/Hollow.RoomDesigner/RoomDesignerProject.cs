@@ -185,6 +185,9 @@ namespace Hollow.RoomDesigner
         public const string EnemyKnifeThrower = "spawnEnemyKnifeThrower";
         public const string EnemyRepeaterTurret = "spawnEnemyRepeaterTurret";
         public const string EnemyClockworkSentry = "spawnEnemyClockworkSentry";
+        public const string EnemyStarforgedOctantSentry = "spawnEnemyStarforgedOctantSentry";
+        public const string EnemyCrimsonRailSpider = "spawnEnemyCrimsonRailSpider";
+        public const string EnemyAzureMinigunTurret = "spawnEnemyAzureMinigunTurret";
         public const string EnemyHollowAcolyte = "spawnEnemyHollowAcolyte";
         public const string EnemyWraith = "spawnEnemyWraith";
         public const string EnemySoulEater = "spawnEnemySoulEater";
@@ -219,6 +222,9 @@ namespace Hollow.RoomDesigner
             EnemyKnifeThrower,
             EnemyRepeaterTurret,
             EnemyClockworkSentry,
+            EnemyStarforgedOctantSentry,
+            EnemyCrimsonRailSpider,
+            EnemyAzureMinigunTurret,
             EnemyHollowAcolyte,
             EnemyWraith,
             EnemySoulEater,

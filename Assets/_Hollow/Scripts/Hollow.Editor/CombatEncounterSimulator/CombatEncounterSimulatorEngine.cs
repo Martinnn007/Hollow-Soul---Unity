@@ -529,7 +529,7 @@ namespace Hollow.Editor.CombatEncounterSimulator
             }
 
             var range = enemy.attackProfile.RangeMeters > 0.05f ? enemy.attackProfile.RangeMeters : enemy.definition.AttackRangeMeters;
-            if (enemy.attackProfile.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.Beam)
+            if (enemy.attackProfile.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile or EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam)
             {
                 return Mathf.Max(range, enemy.definition.AttackRangeMeters);
             }
@@ -540,7 +540,7 @@ namespace Hollow.Editor.CombatEncounterSimulator
         private static float DesiredDistance(SimEnemy enemy)
         {
             var actionRange = AttackCommitRange(enemy);
-            if (enemy.attackProfile?.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.Beam)
+            if (enemy.attackProfile?.RuntimeKind is EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile or EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam)
             {
                 return Mathf.Clamp(actionRange * 0.8f, enemy.definition.PreferredRangeMinMeters, enemy.definition.PreferredRangeMaxMeters);
             }
@@ -614,7 +614,7 @@ namespace Hollow.Editor.CombatEncounterSimulator
 
             return attack.RuntimeKind switch
             {
-                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.Beam => CombatEncounterPressureLane.Ranged,
+                EnemyAttackRuntimeKind.Projectile or EnemyAttackRuntimeKind.FanProjectile or EnemyAttackRuntimeKind.RadialProjectile or EnemyAttackRuntimeKind.SequentialRadialProjectile or EnemyAttackRuntimeKind.Beam or EnemyAttackRuntimeKind.LockingBeam => CombatEncounterPressureLane.Ranged,
                 EnemyAttackRuntimeKind.Area => CombatEncounterPressureLane.Area,
                 EnemyAttackRuntimeKind.Charge => CombatEncounterPressureLane.Charge,
                 _ => CombatEncounterPressureLane.Melee

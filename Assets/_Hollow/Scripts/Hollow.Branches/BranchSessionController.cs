@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Hollow.Core;
@@ -26,6 +27,7 @@ namespace Hollow.Branches
         private const string HubReplacementContextId = "__hub__";
         private const string RuntimeRewardMarkerKind = "spawn_point_roomReward";
         private const string RuntimeChestMarkerKind = "spawn_point_chest";
+        private const float PlayerDeathMainMenuDelaySeconds = 1.1f;
 
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
@@ -103,6 +105,7 @@ namespace Hollow.Branches
         private bool challengeCompletionRecorded;
         private PickupRevealModel latestPickupReveal = PickupRevealModel.Empty;
         private int pickupRevealSequence;
+        private Coroutine playerDeathRouteCoroutine;
 
         public BranchSessionState State { get; private set; }
 
@@ -518,6 +521,12 @@ namespace Hollow.Branches
 
         private void OnDestroy()
         {
+            if (playerDeathRouteCoroutine != null)
+            {
+                StopCoroutine(playerDeathRouteCoroutine);
+                playerDeathRouteCoroutine = null;
+            }
+
             if (roomCombatController != null)
             {
                 roomCombatController.RoomCleared -= OnRoomCleared;
@@ -696,9 +705,17 @@ namespace Hollow.Branches
             }
 
             roomRuntimeRoot.ApplyInteractiveObjectState(DestroyedObjectIdsForCurrentRoom());
+            var entryBiasDirection = entryConnection != null
+                ? BranchTraversalService.EntryInsetDirectionFor(entryConnection.ToDirection)
+                : Vector3.zero;
             var playerLocalPosition = entryConnection != null
                 ? BranchTraversalService.EntryPositionFor(roomRuntimeRoot, entryConnection)
                 : requestedPlayerLocalPosition ?? currentRoomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
+            playerLocalPosition = RoomLocalCollision.ResolveNearestOccupiablePosition(
+                roomRuntimeRoot,
+                playerLocalPosition,
+                Hollow.Entities.PlaceholderPlayerController.DefaultRadiusMeters,
+                entryBiasDirection);
             playerController.transform.localPosition = playerLocalPosition;
             State.CurrentRoom.MarkVisited();
             if (State.CurrentRoom.Role == BranchRoomRole.Origin && !State.CurrentRoom.IsCleared)
@@ -722,6 +739,12 @@ namespace Hollow.Branches
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
+            playerController.transform.localPosition = RoomLocalCollision.ResolveNearestOccupiablePosition(
+                roomRuntimeRoot,
+                playerController.transform.localPosition,
+                Hollow.Entities.PlaceholderPlayerController.DefaultRadiusMeters,
+                entryBiasDirection,
+                2.5f);
             RewardApplicationService.RechargeActiveItem(playerRunBuild, usableItemCatalog);
             ApplyRunStatsToPlayer(healAmount: 0);
             VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
@@ -2464,11 +2487,23 @@ namespace Hollow.Branches
             }
 
             SaveStatus = "Run Lost";
-            if (HollowBootstrap.Instance != null)
+            if (HollowBootstrap.Instance != null && playerDeathRouteCoroutine == null)
             {
-                HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
-                SceneLoaderService.LoadRouteAsync(AppShellRoute.MainMenu);
+                playerDeathRouteCoroutine = StartCoroutine(LoadMainMenuAfterPlayerDeathDelay());
             }
+        }
+
+        private IEnumerator LoadMainMenuAfterPlayerDeathDelay()
+        {
+            yield return new WaitForSeconds(PlayerDeathMainMenuDelaySeconds);
+            playerDeathRouteCoroutine = null;
+            if (HollowBootstrap.Instance == null)
+            {
+                yield break;
+            }
+
+            HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
+            SceneLoaderService.LoadRouteAsync(AppShellRoute.MainMenu);
         }
 
         private void ApplyRunStatsToPlayer(int healAmount)

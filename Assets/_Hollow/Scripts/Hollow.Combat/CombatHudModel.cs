@@ -42,6 +42,21 @@ namespace Hollow.Combat
             string projectileSummary,
             PlayerDefenseController defenseController,
             RoomCombatEncounterContext encounterContext)
+            : this(playerHealth, playerMaxHealth, enemiesRemaining, roomState, difficultyName, archetypeSummary, projectileSummary, defenseController, encounterContext, null)
+        {
+        }
+
+        public CombatHudModel(
+            int playerHealth,
+            int playerMaxHealth,
+            int enemiesRemaining,
+            RoomObjectiveState roomState,
+            string difficultyName,
+            string archetypeSummary,
+            string projectileSummary,
+            PlayerDefenseController defenseController,
+            RoomCombatEncounterContext encounterContext,
+            PlayerWeaponController weaponController)
         {
             PlayerHealth = playerHealth;
             PlayerMaxHealth = playerMaxHealth;
@@ -56,6 +71,8 @@ namespace Hollow.Combat
             LastGuardResult = defenseController != null ? defenseController.LastGuardResult : ShieldGuardResult.None;
             LastDamageReduction = defenseController != null ? defenseController.LastDamageReduction : 0;
             DirectorDebugLine = encounterContext != null ? encounterContext.DirectorDebugLine : "Director: --";
+            RollDebugLine = weaponController != null ? weaponController.RollDebugLine : "Roll: --";
+            RangedDrawDebugLine = weaponController != null ? weaponController.RangedDrawDebugLine : "Bow draw: --";
         }
 
         public int PlayerHealth { get; }
@@ -83,6 +100,10 @@ namespace Hollow.Combat
         public int LastDamageReduction { get; }
 
         public string DirectorDebugLine { get; }
+
+        public string RollDebugLine { get; }
+
+        public string RangedDrawDebugLine { get; }
 
         public string StatusText => RoomState == RoomObjectiveState.Cleared ? "Room Clear" : "In Combat";
 

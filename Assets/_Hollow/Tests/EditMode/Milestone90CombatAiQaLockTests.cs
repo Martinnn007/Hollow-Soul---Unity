@@ -98,7 +98,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void NavigationStimulusAndAlertSharingContractsRemainStable()
         {
-            Assert.AreEqual(EnemyNavigationBackend.LocalSteering, EnemyNavigationAdapter.CurrentBackend);
+            Assert.AreEqual(EnemyNavigationBackend.UnityNavMesh, EnemyNavigationAdapter.CurrentBackend);
             Assert.AreEqual(EnemyStimulusTier.Normal, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.AllyAlert));
             Assert.AreEqual(EnemyStimulusTier.Quiet, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.Footstep));
             Assert.AreEqual(EnemyStimulusTier.Loud, RoomCombatController.DefaultStimulusTierFor(EnemyStimulusKind.GuardImpact));

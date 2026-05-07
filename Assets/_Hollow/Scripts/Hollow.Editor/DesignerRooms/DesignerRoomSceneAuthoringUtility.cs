@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Hollow.Editor.Navigation;
 using Hollow.RoomDesigner;
 using Hollow.Rooms;
 using UnityEditor;
@@ -134,6 +135,9 @@ namespace Hollow.Editor.DesignerRooms
                 RoomDesignerMarkerKinds.EnemyKnifeThrower => "Knife Thrower",
                 RoomDesignerMarkerKinds.EnemyRepeaterTurret => "Repeater Turret",
                 RoomDesignerMarkerKinds.EnemyClockworkSentry => "Clockwork Sentry",
+                RoomDesignerMarkerKinds.EnemyStarforgedOctantSentry => "Starforged Octant Sentry",
+                RoomDesignerMarkerKinds.EnemyCrimsonRailSpider => "Crimson Rail Spider",
+                RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => "Azure Minigun Turret",
                 RoomDesignerMarkerKinds.EnemyHollowAcolyte => "Hollow Acolyte",
                 RoomDesignerMarkerKinds.EnemyWraith => "Wraith",
                 RoomDesignerMarkerKinds.EnemySoulEater => "Soul Eater",
@@ -418,6 +422,12 @@ namespace Hollow.Editor.DesignerRooms
                 foreach (var warning in validation.Warnings)
                 {
                     result.AddWarning(warning);
+                }
+
+                var runtimeAsset = RoomDesignerCompiler.Compile(project);
+                if (RoomNavMeshBakeUtility.TryDescribeMissingBake(runtimeAsset, out var navMeshMessage))
+                {
+                    result.AddWarning($"NavMesh bake: {navMeshMessage} Designer Room playtests can use the dev-only runtime fallback, but approved runtime rooms should be baked before QA.");
                 }
             }
             catch (Exception exception)

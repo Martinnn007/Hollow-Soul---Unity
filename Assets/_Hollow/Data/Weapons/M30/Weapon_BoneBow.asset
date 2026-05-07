@@ -17,6 +17,7 @@ MonoBehaviour:
   slot: 1
   category: 1
   loadClass: 1
+  rangedFireMode: 1
   tags: 02000000040000000d000000
   lightAttack:
     attackKind: 0
@@ -26,6 +27,7 @@ MonoBehaviour:
     rangeMeters: 6.67
     impactForceClass: 0
     knockbackMeters: 0.35
+    requiredDrawSeconds: 0.9
   heavyAttack:
     attackKind: 1
     damage: 3
@@ -34,3 +36,4 @@ MonoBehaviour:
     rangeMeters: 6.67
     impactForceClass: 1
     knockbackMeters: 0.6
+    requiredDrawSeconds: 1.25

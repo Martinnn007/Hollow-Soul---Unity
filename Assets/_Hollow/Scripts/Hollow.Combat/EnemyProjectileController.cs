@@ -39,6 +39,8 @@ namespace Hollow.Combat
 
         public float KnockbackMeters => Mathf.Max(0f, knockbackMeters);
 
+        public Vector3 Direction => localDirection;
+
         public bool IsBallistic => ballistic;
 
         public Vector3 BallisticTargetLocalPosition => ballisticTargetLocalPosition;
@@ -256,7 +258,7 @@ namespace Hollow.Combat
         private bool CheckImpact()
         {
             if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters) ||
-                RoomLocalCollision.IntersectsObstacle(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+                RoomLocalCollision.IntersectsProjectileBlocker(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
             {
                 DestroyProjectile();
                 return true;

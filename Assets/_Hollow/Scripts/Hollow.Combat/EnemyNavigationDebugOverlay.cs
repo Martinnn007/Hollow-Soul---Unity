@@ -5,6 +5,8 @@ namespace Hollow.Combat
         private const float RollingWindowSeconds = 1f;
 
         private static readonly System.Collections.Generic.HashSet<int> ActivePathUserIds = new();
+        private static readonly System.Collections.Generic.HashSet<int> PendingPathUserIds = new();
+        private static readonly System.Collections.Generic.HashSet<int> StuckPathUserIds = new();
 
         private static int activePathUserFrame = -1;
         private static int requestsThisWindow;
@@ -31,6 +33,8 @@ namespace Hollow.Combat
                 RefreshActivePathUserFrame();
                 return new EnemyNavigationDebugStats(
                     ActivePathUserIds.Count,
+                    PendingPathUserIds.Count,
+                    StuckPathUserIds.Count,
                     requestsThisWindow,
                     freshSolvesThisWindow,
                     cacheHitsThisWindow,
@@ -50,7 +54,7 @@ namespace Hollow.Combat
             get
             {
                 var stats = Stats;
-                return $"Path users {stats.ActivePathUsers} | req/s {stats.RequestsPerSecond} | solves/s {stats.FreshSolvesPerSecond} | cache/s {stats.CacheHitsPerSecond} | builds/s {stats.OccupancyBuildsPerSecond} | deferred/s {stats.BudgetDeferredPerSecond} | fallback/s {stats.FallbacksPerSecond} | budget {stats.BudgetUsedThisFrame}/{stats.BudgetLimitPerFrame} | avg {stats.AverageSolveMilliseconds:0.00}ms max {stats.MaxSolveMilliseconds:0.00}ms | last {stats.LastFallbackReason}";
+                return $"NavMesh users {stats.ActivePathUsers} | pending {stats.PendingPathUsers} | stuck {stats.StuckAgents} | req/s {stats.RequestsPerSecond} | paths/s {stats.FreshSolvesPerSecond} | deferred/s {stats.BudgetDeferredPerSecond} | invalid/s {stats.FallbacksPerSecond} | budget {stats.BudgetUsedThisFrame}/{stats.BudgetLimitPerFrame} | avg {stats.AverageSolveMilliseconds:0.00}ms max {stats.MaxSolveMilliseconds:0.00}ms | last {stats.LastFallbackReason}";
             }
         }
 
@@ -62,6 +66,8 @@ namespace Hollow.Combat
         public static void ResetDiagnostics()
         {
             ActivePathUserIds.Clear();
+            PendingPathUserIds.Clear();
+            StuckPathUserIds.Clear();
             activePathUserFrame = UnityEngine.Time.frameCount;
             requestsThisWindow = 0;
             freshSolvesThisWindow = 0;
@@ -80,8 +86,24 @@ namespace Hollow.Combat
 
         public static void ReportActivePathUser(int instanceId)
         {
+            ReportActivePathUser(instanceId, pathPending: false, stuck: false, reason: string.Empty);
+        }
+
+        public static void ReportActivePathUser(int instanceId, bool pathPending, bool stuck, string reason)
+        {
             RefreshActivePathUserFrame();
             ActivePathUserIds.Add(instanceId);
+            if (pathPending)
+            {
+                PendingPathUserIds.Add(instanceId);
+            }
+
+            if (stuck)
+            {
+                StuckPathUserIds.Add(instanceId);
+                lastFallbackReason = string.IsNullOrWhiteSpace(reason) ? "stuck_agent" : reason;
+                EnemyAiDebugOverlay.RecordStuckAgent(instanceId, lastFallbackReason);
+            }
         }
 
         public static void RecordPathRequest()
@@ -170,6 +192,8 @@ namespace Hollow.Combat
             }
 
             ActivePathUserIds.Clear();
+            PendingPathUserIds.Clear();
+            StuckPathUserIds.Clear();
             activePathUserFrame = frame;
         }
     }
@@ -178,6 +202,8 @@ namespace Hollow.Combat
     {
         public EnemyNavigationDebugStats(
             int activePathUsers,
+            int pendingPathUsers,
+            int stuckAgents,
             int requestsPerSecond,
             int freshSolvesPerSecond,
             int cacheHitsPerSecond,
@@ -191,6 +217,8 @@ namespace Hollow.Combat
             string lastFallbackReason)
         {
             ActivePathUsers = activePathUsers;
+            PendingPathUsers = pendingPathUsers;
+            StuckAgents = stuckAgents;
             RequestsPerSecond = requestsPerSecond;
             FreshSolvesPerSecond = freshSolvesPerSecond;
             CacheHitsPerSecond = cacheHitsPerSecond;
@@ -205,6 +233,10 @@ namespace Hollow.Combat
         }
 
         public int ActivePathUsers { get; }
+
+        public int PendingPathUsers { get; }
+
+        public int StuckAgents { get; }
 
         public int RequestsPerSecond { get; }
 

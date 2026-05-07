@@ -57,6 +57,8 @@ namespace Hollow.Combat
         [SerializeField] private List<EnemyActionProfileDefinition> actionProfiles = new();
         [SerializeField] private EnemyGuardProfileDefinition guardProfile;
         [SerializeField] private EnemyBehaviorTreeDefinition behaviorTree;
+        [SerializeField] private EnemyBehaviorRuntimeMode behaviorRuntimeMode = EnemyBehaviorRuntimeMode.HollowBehaviorTree;
+        [SerializeField] private EnemyUnityBehaviorPilotGraphDefinition unityBehaviorGraph;
         [SerializeField] private EnemySpacingProfileDefinition spacingProfile;
         [SerializeField] private bool presentationPrefabRoleOverrideEnabled;
         [SerializeField] private PresentationPrefabRole presentationPrefabRoleOverride = PresentationPrefabRole.EnemyNormal;
@@ -195,6 +197,17 @@ namespace Hollow.Combat
         public EnemyBehaviorTreeDefinition BehaviorTree => behaviorTree != null
             ? behaviorTree
             : EnemyBehaviorTreeDefaults.ResolveEnemyTree(SpawnKind);
+
+        public EnemyBehaviorRuntimeMode BehaviorRuntimeMode => behaviorRuntimeMode == EnemyBehaviorRuntimeMode.UnityBehaviorGraph ||
+            EnemyUnityBehaviorPilotGraphDefinition.IsPilotSpawnKind(SpawnKind)
+                ? EnemyBehaviorRuntimeMode.UnityBehaviorGraph
+                : EnemyBehaviorRuntimeMode.HollowBehaviorTree;
+
+        public EnemyUnityBehaviorPilotGraphDefinition UnityBehaviorGraph => unityBehaviorGraph != null
+            ? unityBehaviorGraph
+            : BehaviorRuntimeMode == EnemyBehaviorRuntimeMode.UnityBehaviorGraph
+                ? EnemyUnityBehaviorPilotGraphDefinition.CreateRuntimeDefault(SpawnKind)
+                : null;
 
         public EnemySpacingProfileDefinition SpacingProfile => spacingProfile != null
             ? spacingProfile
@@ -574,6 +587,14 @@ namespace Hollow.Combat
             behaviorTree = nextBehaviorTree;
         }
 
+        public void ConfigureUnityBehaviorGraph(
+            EnemyBehaviorRuntimeMode nextRuntimeMode,
+            EnemyUnityBehaviorPilotGraphDefinition nextUnityBehaviorGraph)
+        {
+            behaviorRuntimeMode = nextRuntimeMode;
+            unityBehaviorGraph = nextUnityBehaviorGraph;
+        }
+
         public void ConfigureSpacingProfile(EnemySpacingProfileDefinition nextSpacingProfile)
         {
             spacingProfile = nextSpacingProfile;
@@ -751,7 +772,13 @@ namespace Hollow.Combat
                 return EnemyBodyClass.Massive;
             }
 
-            if (nextBehaviorId is EnemyBehaviorId.PowderGunner or EnemyBehaviorId.RepeaterTurret or EnemyBehaviorId.ClockworkSentry or EnemyBehaviorId.SoulEater or EnemyBehaviorId.GraveLantern)
+            if (nextBehaviorId is EnemyBehaviorId.PowderGunner
+                or EnemyBehaviorId.RepeaterTurret
+                or EnemyBehaviorId.ClockworkSentry
+                or EnemyBehaviorId.OctantSentry
+                or EnemyBehaviorId.MinigunTurret
+                or EnemyBehaviorId.SoulEater
+                or EnemyBehaviorId.GraveLantern)
             {
                 return EnemyBodyClass.Heavy;
             }
@@ -775,6 +802,11 @@ namespace Hollow.Combat
             }
 
             if (nextBehaviorId is EnemyBehaviorId.HollowArcher or EnemyBehaviorId.KnifeThrower or EnemyBehaviorId.HollowAcolyte or EnemyBehaviorId.CurseBinder)
+            {
+                return EnemyBodyClass.Medium;
+            }
+
+            if (nextBehaviorId == EnemyBehaviorId.RailSpider)
             {
                 return EnemyBodyClass.Medium;
             }
@@ -815,6 +847,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => PresentationPrefabRole.EnemyKnifeThrower,
                 EnemyBehaviorId.RepeaterTurret => PresentationPrefabRole.EnemyRepeaterTurret,
                 EnemyBehaviorId.ClockworkSentry => PresentationPrefabRole.EnemyClockworkSentry,
+                EnemyBehaviorId.OctantSentry => PresentationPrefabRole.EnemyStarforgedOctantSentry,
+                EnemyBehaviorId.RailSpider => PresentationPrefabRole.EnemyCrimsonRailSpider,
+                EnemyBehaviorId.MinigunTurret => PresentationPrefabRole.EnemyAzureMinigunTurret,
                 EnemyBehaviorId.HollowAcolyte => PresentationPrefabRole.EnemyHollowAcolyte,
                 EnemyBehaviorId.Wraith => PresentationPrefabRole.EnemyWraith,
                 EnemyBehaviorId.SoulEater => PresentationPrefabRole.EnemySoulEater,
@@ -859,6 +894,9 @@ namespace Hollow.Combat
                 PresentationPrefabRole.EnemyKnifeThrower => MaterialRole.EnemyKnifeThrower,
                 PresentationPrefabRole.EnemyRepeaterTurret => MaterialRole.EnemyRepeaterTurret,
                 PresentationPrefabRole.EnemyClockworkSentry => MaterialRole.EnemyClockworkSentry,
+                PresentationPrefabRole.EnemyStarforgedOctantSentry => MaterialRole.EnemyStarforgedOctantSentry,
+                PresentationPrefabRole.EnemyCrimsonRailSpider => MaterialRole.EnemyCrimsonRailSpider,
+                PresentationPrefabRole.EnemyAzureMinigunTurret => MaterialRole.EnemyAzureMinigunTurret,
                 PresentationPrefabRole.EnemyHollowAcolyte => MaterialRole.EnemyHollowAcolyte,
                 PresentationPrefabRole.EnemyWraith => MaterialRole.EnemyWraith,
                 PresentationPrefabRole.EnemySoulEater => MaterialRole.EnemySoulEater,
@@ -906,6 +944,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => EnemyIntelligenceLevel.Basic,
                 EnemyBehaviorId.RepeaterTurret => EnemyIntelligenceLevel.Trained,
                 EnemyBehaviorId.ClockworkSentry => EnemyIntelligenceLevel.Tactical,
+                EnemyBehaviorId.OctantSentry => EnemyIntelligenceLevel.Trained,
+                EnemyBehaviorId.RailSpider => EnemyIntelligenceLevel.Tactical,
+                EnemyBehaviorId.MinigunTurret => EnemyIntelligenceLevel.Trained,
                 EnemyBehaviorId.HollowAcolyte => EnemyIntelligenceLevel.Trained,
                 EnemyBehaviorId.Wraith => EnemyIntelligenceLevel.Tactical,
                 EnemyBehaviorId.SoulEater => EnemyIntelligenceLevel.Trained,
@@ -960,12 +1001,19 @@ namespace Hollow.Combat
                 return EnemyInstinctDisposition.Sentinel;
             }
 
-            if (nextBehaviorId is EnemyBehaviorId.HollowArcher or EnemyBehaviorId.PowderGunner or EnemyBehaviorId.RepeaterTurret or EnemyBehaviorId.ClockworkSentry or EnemyBehaviorId.HollowAcolyte or EnemyBehaviorId.GraveLantern)
+            if (nextBehaviorId is EnemyBehaviorId.HollowArcher
+                or EnemyBehaviorId.PowderGunner
+                or EnemyBehaviorId.RepeaterTurret
+                or EnemyBehaviorId.ClockworkSentry
+                or EnemyBehaviorId.OctantSentry
+                or EnemyBehaviorId.MinigunTurret
+                or EnemyBehaviorId.HollowAcolyte
+                or EnemyBehaviorId.GraveLantern)
             {
                 return EnemyInstinctDisposition.Sentinel;
             }
 
-            if (nextBehaviorId == EnemyBehaviorId.KnifeThrower || nextBehaviorId == EnemyBehaviorId.CurseBinder)
+            if (nextBehaviorId == EnemyBehaviorId.KnifeThrower || nextBehaviorId == EnemyBehaviorId.CurseBinder || nextBehaviorId == EnemyBehaviorId.RailSpider)
             {
                 return EnemyInstinctDisposition.Territorial;
             }
@@ -1018,6 +1066,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => new Vector2(2.7f, 5.25f),
                 EnemyBehaviorId.RepeaterTurret => new Vector2(6.0f, 9.25f),
                 EnemyBehaviorId.ClockworkSentry => new Vector2(4.8f, 7.8f),
+                EnemyBehaviorId.OctantSentry => new Vector2(5.2f, 7.8f),
+                EnemyBehaviorId.RailSpider => new Vector2(5.2f, 8.4f),
+                EnemyBehaviorId.MinigunTurret => new Vector2(5.8f, 8.5f),
                 EnemyBehaviorId.HollowAcolyte => new Vector2(3.8f, 6.8f),
                 EnemyBehaviorId.Wraith => new Vector2(2.2f, 5.2f),
                 EnemyBehaviorId.SoulEater => new Vector2(2.4f, 4.8f),
@@ -1059,6 +1110,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => new Vector3(8f, 190f, 6.4f),
                 EnemyBehaviorId.RepeaterTurret => new Vector3(10f, 95f, 3.2f),
                 EnemyBehaviorId.ClockworkSentry => new Vector3(9f, 220f, 6.5f),
+                EnemyBehaviorId.OctantSentry => new Vector3(9.5f, 360f, 5.5f),
+                EnemyBehaviorId.RailSpider => new Vector3(10f, 170f, 6.5f),
+                EnemyBehaviorId.MinigunTurret => new Vector3(9.5f, 300f, 5.5f),
                 EnemyBehaviorId.HollowAcolyte => new Vector3(8.4f, 180f, 6.2f),
                 EnemyBehaviorId.Wraith => new Vector3(8.8f, 300f, 7f),
                 EnemyBehaviorId.SoulEater => new Vector3(7.6f, 170f, 6f),
@@ -1085,6 +1139,9 @@ namespace Hollow.Combat
                 nextBehaviorId == EnemyBehaviorId.KnifeThrower ||
                 nextBehaviorId == EnemyBehaviorId.RepeaterTurret ||
                 nextBehaviorId == EnemyBehaviorId.ClockworkSentry ||
+                nextBehaviorId == EnemyBehaviorId.OctantSentry ||
+                nextBehaviorId == EnemyBehaviorId.RailSpider ||
+                nextBehaviorId == EnemyBehaviorId.MinigunTurret ||
                 nextBehaviorId == EnemyBehaviorId.HollowAcolyte ||
                 nextBehaviorId == EnemyBehaviorId.Wraith ||
                 nextBehaviorId == EnemyBehaviorId.SoulEater ||
@@ -1153,6 +1210,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => new Vector3(1.15f, 1.25f, 1.1f),
                 EnemyBehaviorId.RepeaterTurret => new Vector3(1.25f, 1.1f, 1.8f),
                 EnemyBehaviorId.ClockworkSentry => new Vector3(1.1f, 1.25f, 1.5f),
+                EnemyBehaviorId.OctantSentry => new Vector3(1.15f, 1.15f, 1.7f),
+                EnemyBehaviorId.RailSpider => new Vector3(1.2f, 1.25f, 1.25f),
+                EnemyBehaviorId.MinigunTurret => new Vector3(1.2f, 1.15f, 1.7f),
                 EnemyBehaviorId.HollowAcolyte => new Vector3(1.15f, 1.25f, 1.45f),
                 EnemyBehaviorId.Wraith => new Vector3(1.3f, 1.05f, 1f),
                 EnemyBehaviorId.SoulEater => new Vector3(1.2f, 1.2f, 1.25f),
@@ -1186,6 +1246,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => new AllyAlertDefaults(true, 4.25f, 2.1f, EnemyAwarenessState.Engaged),
                 EnemyBehaviorId.RepeaterTurret => new AllyAlertDefaults(true, 4.5f, 2.25f, EnemyAwarenessState.Engaged),
                 EnemyBehaviorId.ClockworkSentry => new AllyAlertDefaults(true, 6f, 2.75f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.OctantSentry => new AllyAlertDefaults(true, 5.5f, 2.5f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.RailSpider => new AllyAlertDefaults(true, 5.25f, 2.5f, EnemyAwarenessState.Engaged),
+                EnemyBehaviorId.MinigunTurret => new AllyAlertDefaults(true, 5.5f, 2.5f, EnemyAwarenessState.Engaged),
                 EnemyBehaviorId.HollowAcolyte => new AllyAlertDefaults(true, 5f, 2.25f, EnemyAwarenessState.Engaged),
                 EnemyBehaviorId.SoulEater => new AllyAlertDefaults(true, 4.5f, 2.4f, EnemyAwarenessState.Engaged),
                 EnemyBehaviorId.CurseBinder => new AllyAlertDefaults(true, 5.75f, 2.6f, EnemyAwarenessState.Engaged),
@@ -1224,6 +1287,9 @@ namespace Hollow.Combat
                 EnemyBehaviorId.KnifeThrower => new AttackExecutionDefaults(0.88f, 0.95f, 0.88f, 0f, -1),
                 EnemyBehaviorId.RepeaterTurret => new AttackExecutionDefaults(1f, 1f, 0.95f, 0f, 1),
                 EnemyBehaviorId.ClockworkSentry => new AttackExecutionDefaults(1.05f, 1f, 1.05f, 0f, 1),
+                EnemyBehaviorId.OctantSentry => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 1),
+                EnemyBehaviorId.RailSpider => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 1),
+                EnemyBehaviorId.MinigunTurret => new AttackExecutionDefaults(1f, 1f, 1f, 0f, 1),
                 EnemyBehaviorId.HollowAcolyte => new AttackExecutionDefaults(1.08f, 1f, 1.08f, 0f, 0),
                 EnemyBehaviorId.Wraith => new AttackExecutionDefaults(0.92f, 0.95f, 0.85f, 18f, -1),
                 EnemyBehaviorId.SoulEater => new AttackExecutionDefaults(1.05f, 1f, 1.05f, 6f, 0),

@@ -121,25 +121,31 @@ namespace Hollow.UI.Shell
             AddControlsColumn(panel, "Keyboard", new Vector2(-225f, 10f), new[]
             {
                 "Move: WASD",
-                "Aim: Arrow Keys",
+                "Aim: Mouse / Arrow Keys",
+                "Lock Target: L",
                 "Interact: E",
                 "Swap Weapon: Tab",
                 "Light Attack: J / Arrow Keys / Mouse Left",
                 "Heavy Attack: K / Mouse Right",
+                "Bow: Hold attack, release after draw",
+                "Roll: Space",
                 "Active Item: Q",
                 "Consumable Card: F",
                 "Guard: Shift",
                 "Pause: Escape",
                 "Debug Overlay: F3"
             });
-            AddControlsColumn(panel, "DualShock 5", new Vector2(225f, 10f), new[]
+            AddControlsColumn(panel, "Controller", new Vector2(225f, 10f), new[]
             {
                 "Move: Left Stick",
-                "Aim: Right Stick",
+                "Aim / Retarget: Right Stick",
+                "Lock Target: R3",
                 "Interact: Cross",
                 "Swap Weapon: L1",
                 "Light Attack: R1",
                 "Heavy Attack: R2",
+                "Bow: Hold attack, release after draw",
+                "Roll: B / Circle",
                 "Active Item: Triangle",
                 "Consumable Card: Square",
                 "Guard: L2",
@@ -316,12 +322,12 @@ namespace Hollow.UI.Shell
 
         private void AddControlsColumn(RectTransform parent, string title, Vector2 anchoredPosition, string[] rows)
         {
-            var panel = CreatePanel($"Controls.{title}", parent, new Vector2(380f, 405f), new Color(0.10f, 0.11f, 0.16f, 0.92f));
+            var panel = CreatePanel($"Controls.{title}", parent, new Vector2(380f, 430f), new Color(0.10f, 0.11f, 0.16f, 0.92f));
             panel.anchoredPosition = anchoredPosition;
-            AddText(panel, title, 20, FontStyle.Bold, new Vector2(0f, 175f), new Vector2(330f, 34f), new Color(1f, 0.91f, 0.72f));
+            AddText(panel, title, 20, FontStyle.Bold, new Vector2(0f, 190f), new Vector2(330f, 34f), new Color(1f, 0.91f, 0.72f));
             for (var index = 0; index < rows.Length; index++)
             {
-                AddText(panel, rows[index], 14, FontStyle.Normal, new Vector2(0f, 130f - index * 31f), new Vector2(330f, 28f), Color.white);
+                AddText(panel, rows[index], 14, FontStyle.Normal, new Vector2(0f, 145f - index * 28f), new Vector2(330f, 28f), Color.white);
             }
         }
 

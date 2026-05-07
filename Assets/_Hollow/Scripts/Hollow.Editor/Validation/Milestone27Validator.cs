@@ -91,7 +91,7 @@ namespace Hollow.Editor.Validation
                 return;
             }
 
-            foreach (var weaponId in new[] { "starter_blade", "starter_bolt", "iron_cleaver", "ember_bolt" })
+            foreach (var weaponId in new[] { "starter_blade", "starter_bolt", "starter_bow", "iron_cleaver", "ember_bolt" })
             {
                 if (!catalog.TryGetWeapon(weaponId, out var weapon) || string.IsNullOrWhiteSpace(weapon.DisplayName))
                 {
@@ -109,6 +109,16 @@ namespace Hollow.Editor.Validation
                 if (weapon.LightAttack.CooldownSeconds < minimumLightCooldown || weapon.HeavyAttack.CooldownSeconds < minimumHeavyCooldown)
                 {
                     failures.Add($"M27 weapon {weaponId} is tuned too fast for the readable combat baseline.");
+                }
+            }
+
+            if (catalog.TryGetWeapon("starter_bow", out var starterBow))
+            {
+                if (starterBow.RangedFireMode != WeaponRangedFireMode.DrawAndRelease ||
+                    starterBow.LightAttack.RequiredDrawSeconds < 0.95f ||
+                    starterBow.HeavyAttack.RequiredDrawSeconds <= starterBow.LightAttack.RequiredDrawSeconds)
+                {
+                    failures.Add("starter_bow must be a draw-and-release bow with configured light/heavy draw timings.");
                 }
             }
 

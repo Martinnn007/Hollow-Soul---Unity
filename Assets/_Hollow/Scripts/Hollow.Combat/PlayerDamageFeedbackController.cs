@@ -11,7 +11,7 @@ namespace Hollow.Combat
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
 
-        private readonly Dictionary<Renderer, Material> originalMaterials = new();
+        private readonly Dictionary<Renderer, Material[]> originalMaterials = new();
         private CombatantHealth health;
         private PlayerWeaponController weaponController;
         private float invulnerableUntil;
@@ -93,6 +93,7 @@ namespace Hollow.Combat
             if (enabled)
             {
                 originalMaterials.Clear();
+                var flashMaterial = MaterialResolver.Resolve(MaterialRole.CombatHitFlash);
                 foreach (var renderer in GetComponentsInChildren<Renderer>(includeInactive: true))
                 {
                     if (renderer == null)
@@ -100,8 +101,21 @@ namespace Hollow.Combat
                         continue;
                     }
 
-                    originalMaterials[renderer] = renderer.sharedMaterial;
-                    renderer.sharedMaterial = MaterialResolver.Resolve(MaterialRole.CombatHitFlash);
+                    var materials = renderer.sharedMaterials;
+                    originalMaterials[renderer] = materials;
+                    if (materials == null || materials.Length == 0)
+                    {
+                        renderer.sharedMaterials = new[] { flashMaterial };
+                        continue;
+                    }
+
+                    var flashMaterials = new Material[materials.Length];
+                    for (var index = 0; index < flashMaterials.Length; index++)
+                    {
+                        flashMaterials[index] = flashMaterial;
+                    }
+
+                    renderer.sharedMaterials = flashMaterials;
                 }
 
                 return;
@@ -111,7 +125,7 @@ namespace Hollow.Combat
             {
                 if (pair.Key != null)
                 {
-                    pair.Key.sharedMaterial = pair.Value;
+                    pair.Key.sharedMaterials = pair.Value;
                 }
             }
 

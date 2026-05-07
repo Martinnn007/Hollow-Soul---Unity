@@ -54,9 +54,10 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateAdapterContract(List<string> failures)
         {
-            if (EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.LocalSteering)
+            if (EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.LocalSteering &&
+                EnemyNavigationAdapter.CurrentBackend != EnemyNavigationBackend.UnityNavMesh)
             {
-                failures.Add("M88 must keep LocalSteering as the current backend.");
+                failures.Add("M88 expects LocalSteering, or the later M97 UnityNavMesh replacement backend.");
             }
 
             if (EnemyNavigationAdapter.DefaultModeFor(EnemyMovementMode.Grounded) != EnemyNavigationMode.GroundedLocal ||

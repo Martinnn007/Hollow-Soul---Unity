@@ -95,8 +95,8 @@ namespace Hollow.Rewards
             {
                 ConfigureCharacter("balanced", PlayerBaseStats.Default);
                 Equipment.EquipMeleeWeapon("starter_blade");
-                Equipment.EquipRangedWeapon("starter_bolt");
-                Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                Equipment.EquipRangedWeapon("starter_bow");
+                Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
                 CurrentStamina = DerivedStats.MaxStamina;
                 return;
             }
@@ -104,7 +104,7 @@ namespace Hollow.Rewards
             ConfigureCharacter(character.CharacterId, character.BaseStats);
             Equipment.EquipMeleeWeapon(character.StarterMeleeWeaponId);
             Equipment.EquipRangedWeapon(character.StarterRangedWeaponId);
-            Equipment.SetActiveWeaponSlot(WeaponSlot.Ranged);
+            Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
             ApplyPassiveSkill(character.PassiveSkill);
             if (!string.IsNullOrWhiteSpace(character.StarterPassiveRewardId))
             {

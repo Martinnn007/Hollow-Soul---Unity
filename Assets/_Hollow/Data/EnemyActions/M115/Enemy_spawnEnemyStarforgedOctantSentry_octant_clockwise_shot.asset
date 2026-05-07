@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2ce0b8d8bbf43c78a8de47e08eea293, type: 3}
+  m_Name: Enemy_spawnEnemyStarforgedOctantSentry_octant_clockwise_shot
+  m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.EnemyActionProfileDefinition
+  actionId: octant_clockwise_shot
+  displayName: Octant Clockwise Shot
+  category: 3
+  intent: 0
+  shape: 8
+  usageState: 0
+  linkedAttackProfile: {fileID: 11400000, guid: 4be7877480c9943b6a5e63fd5eceb5f1, type: 2}
+  linkedAttackId: octant_clockwise_shot
+  explicitlyNonDamaging: 0
+  minRangeMeters: 2
+  idealRangeMeters: 5.46
+  maxRangeMeters: 7.8
+  baseWeight: 1.35
+  pressureCost: 1
+  cooldownGroup: current_sequentialradialprojectile
+  minimumIntelligence: 3
+  allowedDispositions: 02000000
+  minimumAwareness: 3
+  requiresFacing: 0
+  facingArcDegrees: 360
+  telegraphNote: Readable projectile tell before the active window; M80 timing remains
+    the runtime source.
+  punishabilityRating: 3
+  guardPressureRating: 2
+  poiseBreakNote: Windup poise uses the linked M76/M80 threshold `Medium`.
+  parryable: 0
+  blockable: 1
+  dodgeable: 1
+  recoveryPunishNote: Recovery should leave a short punish window when the player
+    dodges, blocks, or spaces the action.
+  bestUserTags:
+  - ranged
+  - stationary
+  - machine
+  - octant-pattern
+  notes: M81 action wrapper around an existing M76 attack profile; runtime behavior
+    is unchanged.

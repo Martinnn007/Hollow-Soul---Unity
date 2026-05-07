@@ -38,7 +38,7 @@ namespace Hollow.Data.Definitions
                 return weapon;
             }
 
-            var starterId = fallbackSlot == WeaponSlot.Melee ? "starter_blade" : "starter_bolt";
+            var starterId = fallbackSlot == WeaponSlot.Melee ? "starter_blade" : "starter_bow";
             return TryGetWeapon(starterId, out var starter) && starter.Slot == fallbackSlot ? starter : null;
         }
 
