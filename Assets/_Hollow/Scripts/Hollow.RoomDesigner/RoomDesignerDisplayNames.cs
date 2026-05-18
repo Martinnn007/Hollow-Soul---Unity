@@ -47,6 +47,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.EnemySoulEater => "Soul Eater",
                 RoomDesignerTool.EnemyCurseBinder => "Curse Binder",
                 RoomDesignerTool.EnemyGraveLantern => "Lantern",
+                RoomDesignerTool.DecorGrassTuft => "Grass",
+                RoomDesignerTool.DecorCrystalCluster => "Crystal",
+                RoomDesignerTool.DecorSmallTree => "Tree",
+                RoomDesignerTool.DecorStoneRuin => "Ruin",
                 RoomDesignerTool.InactiveDoor => "Inactive",
                 RoomDesignerTool.Spike => "Spike",
                 RoomDesignerTool.StandardBarrel => "Barrel",
@@ -99,6 +103,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.EnemySoulEater => "SOL",
                 RoomDesignerTool.EnemyCurseBinder => "CRS",
                 RoomDesignerTool.EnemyGraveLantern => "LAN",
+                RoomDesignerTool.DecorGrassTuft => "GRS",
+                RoomDesignerTool.DecorCrystalCluster => "CRY",
+                RoomDesignerTool.DecorSmallTree => "TRE",
+                RoomDesignerTool.DecorStoneRuin => "RUN",
                 RoomDesignerTool.InactiveDoor => "OFF",
                 RoomDesignerTool.Spike => "SPK",
                 RoomDesignerTool.StandardBarrel => "BRL",
@@ -159,6 +167,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.StandardBarrel => "Barrel",
                 RoomDesignerMarkerKinds.ExplosiveBarrel => "Boom",
                 RoomDesignerMarkerKinds.ChestSpawn => "Chest",
+                RoomDesignerMarkerKinds.DecorGrassTuft => "Grass",
+                RoomDesignerMarkerKinds.DecorCrystalCluster => "Crystal",
+                RoomDesignerMarkerKinds.DecorSmallTree => "Tree",
+                RoomDesignerMarkerKinds.DecorStoneRuin => "Ruin",
                 _ => Shorten(kind)
             };
         }

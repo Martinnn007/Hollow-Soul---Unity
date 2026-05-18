@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.0716237">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="676" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.071624" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1791" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="675" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.061993" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="6675" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1792" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="675" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.056272" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1793" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="675" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.050557" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1794" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="675" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.044912" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1754" name="SampleEnvironmentTextureSetTests" fullname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests" classname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.034976" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1756" name="ArtPassFloorMaterialsUseGeneratedBaseColorTextures" fullname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests.ArtPassFloorMaterialsUseGeneratedBaseColorTextures" methodname="ArtPassFloorMaterialsUseGeneratedBaseColorTextures" classname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests" runstate="Runnable" seed="460192699" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.017112" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1758" name="PresentationPalettesResolveSampleFloorAndWallMaterials" fullname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests.PresentationPalettesResolveSampleFloorAndWallMaterials" methodname="PresentationPalettesResolveSampleFloorAndWallMaterials" classname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests" runstate="Runnable" seed="1934950520" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.006950" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1755" name="SampleBaseColorTexturesAreRepeatableImportedAssets" fullname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests.SampleBaseColorTexturesAreRepeatableImportedAssets" methodname="SampleBaseColorTexturesAreRepeatableImportedAssets" classname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests" runstate="Runnable" seed="1857554602" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.001705" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1757" name="WallTransparentMaterialsUseTransparentAlpha" fullname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests.WallTransparentMaterialsUseTransparentAlpha" methodname="WallTransparentMaterialsUseTransparentAlpha" classname="Hollow.Tests.EditMode.SampleEnvironmentTextureSetTests" runstate="Runnable" seed="1788765667" result="Passed" start-time="2026-05-15 13:22:14Z" end-time="2026-05-15 13:22:14Z" duration="0.002015" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

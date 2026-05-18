@@ -19,7 +19,7 @@ Milestone 6 expands the M5 combat slice into the first multi-room branch. The br
 
 - `BranchMiniMapController` renders on `PlatformShellCanvas`, outside `WorldPresentationRoot`.
 - The minimap shows current, visited, cleared, and reward-pending rooms.
-- Vision Pro bounded still scales only `WorldPresentationRoot` to `0.1`; branch logic, combat, rewards, and UI stay in normal runtime units.
+- Vision Pro bounded still scales only `WorldPresentationRoot` to `0.5`; branch logic, combat, rewards, and UI stay in normal runtime units.
 
 ## Controls
 

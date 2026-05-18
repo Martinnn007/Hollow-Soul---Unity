@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using Hollow.RoomDesigner;
@@ -40,6 +41,7 @@ namespace Hollow.Editor.DesignerRooms
             previewRoot.transform.localScale = Vector3.one;
 
             BuildFloor(previewRoot.transform, asset.Layout);
+            BuildPerimeterWalls(previewRoot.transform, asset.Layout, asset.DoorPorts);
             BuildHoles(previewRoot.transform, asset.Layout);
             BuildObstacles(previewRoot.transform, asset.Layout);
             BuildHazards(previewRoot.transform, asset);
@@ -150,6 +152,137 @@ namespace Hollow.Editor.DesignerRooms
             origin.transform.localPosition = new Vector3(0f, 0.03f, 0f);
             origin.transform.localScale = new Vector3(0.25f, 0.04f, 0.25f);
             MaterialResolver.ApplyTo(origin, MaterialRole.RoomOriginMarker);
+        }
+
+        private static void BuildPerimeterWalls(Transform previewRoot, RoomLayout layout, IReadOnlyList<RoomDoorPort> doorPorts)
+        {
+            if (layout == null)
+            {
+                return;
+            }
+
+            var parent = CreatePreviewObject("PerimeterWalls", previewRoot).transform;
+            foreach (var edge in RoomWallOutlineUtility.BuildExposedEdges(layout))
+            {
+                BuildWallSide(
+                    parent,
+                    edge.Side,
+                    edge.AxisMin,
+                    edge.AxisMax,
+                    OffsetWallCoordinate(edge.Side, edge.FixedCoordinate),
+                    edge.HorizontalOnX,
+                    DoorGapsForSide(edge.Side, doorPorts));
+            }
+        }
+
+        private static float OffsetWallCoordinate(RoomWallSide side, float fixedCoordinate)
+        {
+            return side is RoomWallSide.North or RoomWallSide.West
+                ? fixedCoordinate - RoomRuntimeRoot.PerimeterWallThicknessMeters * 0.5f
+                : fixedCoordinate + RoomRuntimeRoot.PerimeterWallThicknessMeters * 0.5f;
+        }
+
+        private static void BuildWallSide(
+            Transform parent,
+            RoomWallSide side,
+            float axisMin,
+            float axisMax,
+            float fixedCoordinate,
+            bool horizontalOnX,
+            List<Vector2> gaps)
+        {
+            gaps.Sort((left, right) => left.x.CompareTo(right.x));
+            var cursor = axisMin;
+            var segmentIndex = 0;
+            foreach (var gap in gaps)
+            {
+                var clampedStart = Mathf.Clamp(gap.x, axisMin, axisMax);
+                var clampedEnd = Mathf.Clamp(gap.y, axisMin, axisMax);
+                if (clampedEnd <= cursor)
+                {
+                    continue;
+                }
+
+                segmentIndex = CreateWallSegment(parent, side, segmentIndex, cursor, Mathf.Max(cursor, clampedStart), fixedCoordinate, horizontalOnX);
+                cursor = Mathf.Max(cursor, clampedEnd);
+            }
+
+            CreateWallSegment(parent, side, segmentIndex, cursor, axisMax, fixedCoordinate, horizontalOnX);
+        }
+
+        private static int CreateWallSegment(
+            Transform parent,
+            RoomWallSide side,
+            int segmentIndex,
+            float axisStart,
+            float axisEnd,
+            float fixedCoordinate,
+            bool horizontalOnX)
+        {
+            var length = axisEnd - axisStart;
+            if (length < 0.08f)
+            {
+                return segmentIndex;
+            }
+
+            var localPosition = Vector3.zero;
+            var localScale = Vector3.one;
+            if (horizontalOnX)
+            {
+                localPosition = new Vector3((axisStart + axisEnd) * 0.5f, RoomRuntimeRoot.PerimeterWallHeightMeters * 0.5f, fixedCoordinate);
+                localScale = new Vector3(length, RoomRuntimeRoot.PerimeterWallHeightMeters, RoomRuntimeRoot.PerimeterWallThicknessMeters);
+            }
+            else
+            {
+                localPosition = new Vector3(fixedCoordinate, RoomRuntimeRoot.PerimeterWallHeightMeters * 0.5f, (axisStart + axisEnd) * 0.5f);
+                localScale = new Vector3(RoomRuntimeRoot.PerimeterWallThicknessMeters, RoomRuntimeRoot.PerimeterWallHeightMeters, length);
+            }
+
+            RoomWallMeshUtility.CreateSegment(
+                $"Wall.{side}.{segmentIndex}",
+                parent,
+                localPosition,
+                localScale,
+                MaterialResolver.Resolve(MaterialRole.RoomWall));
+            return segmentIndex + 1;
+        }
+
+        private static List<Vector2> DoorGapsForSide(RoomWallSide side, IReadOnlyList<RoomDoorPort> doorPorts)
+        {
+            var gaps = new List<Vector2>();
+            if (doorPorts == null)
+            {
+                return gaps;
+            }
+
+            var direction = DirectionForWallSide(side);
+            foreach (var port in doorPorts)
+            {
+                if (port == null || port.Direction != direction)
+                {
+                    continue;
+                }
+
+                var center = side is RoomWallSide.North or RoomWallSide.South
+                    ? port.Position.x
+                    : port.Position.z;
+                var halfGap = RoomRuntimeRoot.PerimeterWallDoorGapMeters * 0.5f;
+                gaps.Add(new Vector2(center - halfGap, center + halfGap));
+            }
+
+            return gaps;
+        }
+
+        private static string DirectionForWallSide(RoomWallSide side)
+        {
+            return side switch
+            {
+                RoomWallSide.North => "north",
+                RoomWallSide.South => "south",
+                RoomWallSide.East => "east",
+                RoomWallSide.West => "west",
+                _ => "north"
+            };
         }
 
         private static void BuildHoles(Transform previewRoot, RoomLayout layout)

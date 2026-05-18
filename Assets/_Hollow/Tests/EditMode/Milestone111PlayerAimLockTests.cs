@@ -4,6 +4,7 @@ using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Input;
+using Hollow.Presentation;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -184,6 +185,42 @@ namespace Hollow.Tests.EditMode
                 aim.TickAim(SnapshotWithPointer(new Vector2(pointer.x, pointer.y), lockPressed: true), 0.1f);
                 Assert.IsTrue(aim.IsExplicitlyLocked);
                 Assert.AreSame(northEnemy, aim.LockedEnemy);
+                Assert.AreEqual(0f, aim.AttackDirection.x, 0.001f);
+                Assert.AreEqual(1f, aim.AttackDirection.y, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MouseAimResolvesInRotatedGameplayRootLocalSpace()
+        {
+            var root = new GameObject("M111RotatedMouseAimHarness");
+            var cameraObject = new GameObject("Main Camera");
+            try
+            {
+                root.AddComponent<PlatformPresentationRoot>().Configure(Hollow.Platform.HollowPlatformKind.VisionOSBoundedTabletop);
+                cameraObject.tag = "MainCamera";
+                var camera = cameraObject.AddComponent<Camera>();
+                camera.orthographic = true;
+                camera.orthographicSize = 5f;
+                camera.pixelRect = new Rect(0f, 0f, 1000f, 1000f);
+                camera.transform.position = new Vector3(0f, 10f, 0f);
+                camera.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("Player").AddComponent<PlaceholderPlayerController>();
+                player.transform.SetParent(root.transform, false);
+                var aim = player.gameObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+
+                var worldTarget = root.transform.TransformPoint(new Vector3(0f, 0f, 3f));
+                var pointer = camera.WorldToScreenPoint(worldTarget);
+                aim.TickAim(SnapshotWithPointer(new Vector2(pointer.x, pointer.y), lockPressed: false), 0f);
+
                 Assert.AreEqual(0f, aim.AttackDirection.x, 0.001f);
                 Assert.AreEqual(1f, aim.AttackDirection.y, 0.001f);
             }

@@ -18,6 +18,7 @@ namespace Hollow.Persistence
         public int runSeed;
         public int worldIndex = 1;
         public string worldPhase = "Legacy";
+        public string activeBiomeId = "hollow_threshold";
         public string activeHubPortalId = string.Empty;
         public int hubShopRefreshIndex;
         public string bossKeyState = "None";

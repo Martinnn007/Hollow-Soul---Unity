@@ -39,11 +39,11 @@ namespace Hollow.Branches
         public static BranchFloorGraph CreateMacroFixtureBranch(IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> roomPool, int seed)
         {
             var graph = new BranchFloorGraph(MacroFixtureBranchId, seed == 0 ? DefaultMacroFixtureSeed : seed);
-            var origin = RequireRoom(roomPool, "combat_macro_single_1x1");
-            var north = RequireRoom(roomPool, "combat_macro_tall_1x2");
-            var south = RequireRoom(roomPool, "combat_macro_l_3cell");
-            var east = RequireRoom(roomPool, "combat_macro_wide_2x1");
-            var west = RequireRoom(roomPool, "combat_macro_block_2x2");
+            var origin = RequireRoomByIdOrShape(roomPool, "combat_macro_single_1x1", RoomFootprintShape.Single1x1);
+            var north = RequireRoomByIdOrShape(roomPool, "combat_macro_tall_1x2", RoomFootprintShape.Tall1x2);
+            var south = RequireRoomByIdOrShape(roomPool, "combat_macro_l_3cell", RoomFootprintShape.L3Cell);
+            var east = RequireRoomByIdOrShape(roomPool, "combat_macro_wide_2x1", RoomFootprintShape.Wide2x1);
+            var west = RequireRoomByIdOrShape(roomPool, "combat_macro_block_2x2", RoomFootprintShape.Block2x2);
 
             graph.AddRoom(CreateRoom(BranchRoomId.Origin, Vector2Int.zero, origin, BranchRoomRole.Origin));
             graph.AddRoom(CreateRoom(BranchRoomId.North, new Vector2Int(0, -2), north, BranchRoomRole.Reward));
@@ -61,6 +61,11 @@ namespace Hollow.Branches
 
         public static BranchFloorGraph CreateSeededMacroBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
         {
+            return CreateSeededMacroBranch(content, settings, seed, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static BranchFloorGraph CreateSeededMacroBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId)
+        {
             if (content == null || !content.HasMacroFixturePool)
             {
                 throw new InvalidOperationException("Seeded macro branch generation requires a complete macro room pool.");
@@ -72,10 +77,15 @@ namespace Hollow.Branches
                 throw new InvalidOperationException("M15 seeded macro branch generation does not support loops.");
             }
 
-            return CreateSeededBranch(content, settings, seed, SeededMacroBranchId, enableTreasureLeaf: false, milestoneLabel: "M15");
+            return CreateSeededBranch(content, settings, seed, SeededMacroBranchId, enableTreasureLeaf: false, milestoneLabel: "M15", activeRoomPool: ActivePoolFor(content, biomeId));
         }
 
         public static BranchFloorGraph CreateSeededFeatureBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
+        {
+            return CreateSeededFeatureBranch(content, settings, seed, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static BranchFloorGraph CreateSeededFeatureBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId)
         {
             if (content == null || !content.HasMacroFixturePool)
             {
@@ -88,10 +98,15 @@ namespace Hollow.Branches
                 throw new InvalidOperationException("M17 seeded feature branch generation does not support loops.");
             }
 
-            return CreateSeededBranch(content, settings, seed, FeatureBranchId, enableTreasureLeaf: true, milestoneLabel: "M17");
+            return CreateSeededBranch(content, settings, seed, FeatureBranchId, enableTreasureLeaf: true, milestoneLabel: "M17", activeRoomPool: ActivePoolFor(content, biomeId));
         }
 
         public static BranchFloorGraph CreateSeededEncounterBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
+        {
+            return CreateSeededEncounterBranch(content, settings, seed, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static BranchFloorGraph CreateSeededEncounterBranch(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId)
         {
             if (content == null || !content.HasMacroFixturePool)
             {
@@ -104,10 +119,15 @@ namespace Hollow.Branches
                 throw new InvalidOperationException("M19 seeded encounter branch generation does not support loops.");
             }
 
-            return CreateSeededBranch(content, settings, seed, EnemyEncounterBranchId, enableTreasureLeaf: true, milestoneLabel: "M19");
+            return CreateSeededBranch(content, settings, seed, EnemyEncounterBranchId, enableTreasureLeaf: true, milestoneLabel: "M19", activeRoomPool: ActivePoolFor(content, biomeId));
         }
 
         public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed)
+        {
+            return CreateSeededBranchFeatures(content, settings, seed, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId)
         {
             if (content == null || !content.HasMacroFixturePool)
             {
@@ -120,7 +140,7 @@ namespace Hollow.Branches
                 throw new InvalidOperationException("M20 branch feature generation does not support loops.");
             }
 
-            var graph = CreateSeededBranch(content, settings, seed, BranchFeaturesId, enableTreasureLeaf: true, milestoneLabel: "M20");
+            var graph = CreateSeededBranch(content, settings, seed, BranchFeaturesId, enableTreasureLeaf: true, milestoneLabel: "M20", activeRoomPool: ActivePoolFor(content, biomeId));
             ApplyBossKeyLock(graph);
             return graph;
         }
@@ -143,6 +163,18 @@ namespace Hollow.Branches
             int seed,
             string bossRoomAssetId)
         {
+            return CreateDirectedEncounterBranch(content, settings, directorProfile, worldIndex, seed, bossRoomAssetId, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static BranchFloorGraph CreateDirectedEncounterBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            EncounterDirectorProfileDefinition directorProfile,
+            int worldIndex,
+            int seed,
+            string bossRoomAssetId,
+            string biomeId)
+        {
             if (content == null || !content.HasMacroFixturePool)
             {
                 throw new InvalidOperationException("M46 directed encounter branch generation requires a complete macro room pool.");
@@ -164,7 +196,8 @@ namespace Hollow.Branches
                 enableTreasureLeaf: true,
                 milestoneLabel: "M46",
                 targetRoomCountOverride: targetRooms,
-                bossRoomAssetId: bossRoomAssetId);
+                bossRoomAssetId: bossRoomAssetId,
+                activeRoomPool: ActivePoolFor(content, biomeId));
             ApplyBossKeyLock(graph);
             return graph;
         }
@@ -177,11 +210,12 @@ namespace Hollow.Branches
             bool enableTreasureLeaf,
             string milestoneLabel,
             int targetRoomCountOverride = 0,
-            string bossRoomAssetId = "")
+            string bossRoomAssetId = "",
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> activeRoomPool = null)
         {
             var resolvedSeed = seed == 0 ? settings.DefaultSeed : seed;
             var random = new System.Random(resolvedSeed);
-            var roomPool = content.MacroRoomPool;
+            var roomPool = activeRoomPool != null && activeRoomPool.Count > 0 ? activeRoomPool : content.MacroRoomPool;
             var fixturePool = content.FixtureRoomPool;
             var candidatesByShape = BuildCandidatesByShape(roomPool.Values);
             var fixtureIds = settings.AllowedFixtureIds
@@ -199,7 +233,10 @@ namespace Hollow.Branches
             var usedPortsByTempIndex = new Dictionary<int, HashSet<string>>();
             var occupiedCells = new HashSet<Vector2Int>();
 
-            var originAsset = RequireRoom(fixturePool, "combat_macro_single_1x1");
+            var originAsset = ChooseCandidateForShape(
+                candidatesByShape,
+                RequireRoom(fixturePool, "combat_macro_single_1x1"),
+                random);
             var origin = new PlacementRecord(0, originAsset, Vector2Int.zero, PlaceFootprint(originAsset.Footprint, Vector2Int.zero));
             records.Add(origin);
             usedPortsByTempIndex[0] = new HashSet<string>();
@@ -818,6 +855,44 @@ namespace Hollow.Branches
             }
 
             throw new KeyNotFoundException($"Macro fixture branch requires room asset '{id}'.");
+        }
+
+        private static ImportedRoomRuntimeAsset RequireRoomByIdOrShape(
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> roomPool,
+            string id,
+            RoomFootprintShape fallbackShape)
+        {
+            if (roomPool != null && roomPool.TryGetValue(id, out var asset) && asset != null)
+            {
+                return asset;
+            }
+
+            asset = roomPool?.Values
+                .Where(candidate => candidate != null && RoomFootprintShapeUtility.Classify(candidate.Footprint) == fallbackShape)
+                .OrderBy(candidate => candidate.Id)
+                .FirstOrDefault();
+            if (asset != null)
+            {
+                return asset;
+            }
+
+            throw new KeyNotFoundException($"Macro fixture branch requires room asset '{id}' or a {fallbackShape} room.");
+        }
+
+        private static IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> ActivePoolFor(BranchSessionContent content, string biomeId)
+        {
+            if (content == null)
+            {
+                return null;
+            }
+
+            var pool = content.ResolveRoomPoolForBiome(biomeId, out var usedFallback);
+            if (usedFallback)
+            {
+                Debug.LogWarning($"Biome room pool '{RoomBiomeIds.Normalize(biomeId)}' is incomplete; falling back to the global macro room pool.");
+            }
+
+            return pool;
         }
 
         private static Vector2Int WorldHostCell(PlacementRecord record, RoomDoorPort port)

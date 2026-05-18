@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="8" result="Passed" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.8188387">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="688" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.818839" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1804" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="687" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.811875" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="77772" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1805" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="687" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.808267" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1806" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="687" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.804782" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1807" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="687" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.801040" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1494" name="Milestone6BranchTraversalRewardTests" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.791321" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1495" name="FiveRoomCrossHasExpectedRoomsAndConnections" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.FiveRoomCrossHasExpectedRoomsAndConnections" methodname="FiveRoomCrossHasExpectedRoomsAndConnections" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="1147850448" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.013002" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1501" name="MiniMapControllerBuildsShapeMapGraphicsInsteadOfAsciiTokens" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.MiniMapControllerBuildsShapeMapGraphicsInsteadOfAsciiTokens" methodname="MiniMapControllerBuildsShapeMapGraphicsInsteadOfAsciiTokens" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="119496393" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.158038" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1500" name="MiniMapModelReportsCurrentVisitedClearedAndPendingReward" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.MiniMapModelReportsCurrentVisitedClearedAndPendingReward" methodname="MiniMapModelReportsCurrentVisitedClearedAndPendingReward" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="1280546196" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.506162" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1502" name="MiniMapRecentersCurrentRoomAfterTraversal" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.MiniMapRecentersCurrentRoomAfterTraversal" methodname="MiniMapRecentersCurrentRoomAfterTraversal" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="1010117905" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.015338" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1498" name="RevisitingClearedRoomDoesNotRespawnEnemies" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.RevisitingClearedRoomDoesNotRespawnEnemies" methodname="RevisitingClearedRoomDoesNotRespawnEnemies" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="329137327" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.016583" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1499" name="RewardsCanBeClaimedOnceAndPortalAppearsWhenBranchComplete" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.RewardsCanBeClaimedOnceAndPortalAppearsWhenBranchComplete" methodname="RewardsCanBeClaimedOnceAndPortalAppearsWhenBranchComplete" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="260224439" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.050285" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1496" name="StarterRoomAllowsImmediateTraversal" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.StarterRoomAllowsImmediateTraversal" methodname="StarterRoomAllowsImmediateTraversal" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="1753995741" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:18Z" duration="0.012310" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1497" name="TraversalSucceedsAfterClearAndPositionsPlayerInsideOppositeDoor" fullname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests.TraversalSucceedsAfterClearAndPositionsPlayerInsideOppositeDoor" methodname="TraversalSucceedsAfterClearAndPositionsPlayerInsideOppositeDoor" classname="Hollow.Tests.EditMode.Milestone6BranchTraversalRewardTests" runstate="Runnable" seed="241030897" result="Passed" start-time="2026-05-18 14:02:18Z" end-time="2026-05-18 14:02:19Z" duration="0.011811" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

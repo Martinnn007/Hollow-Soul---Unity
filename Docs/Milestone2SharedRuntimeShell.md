@@ -19,7 +19,7 @@ Combat, imported room layouts, real traversal, and branch generation stay out of
 Gameplay coordinates remain authored in real meters. Presentation can scale the visible world for the target platform.
 
 - Windows standard 3D: world scale `1.0`.
-- Vision Pro bounded tabletop: world scale `0.1`.
+- Vision Pro bounded tabletop: world scale `0.5`.
 - Vision Pro immersive: world scale `1.0`.
 
 HUD and shell UI must stay outside `WorldPresentationRoot`, so tabletop scaling never shrinks menus or overlays.

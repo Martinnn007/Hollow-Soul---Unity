@@ -14,20 +14,32 @@ namespace Hollow.UI.MainMenu
         private readonly SelectedProfileContext selectedProfileContext;
         private readonly AppStateMachine appStateMachine;
         private readonly ChallengeCatalogDefinition challengeCatalog;
+        private readonly CharacterCatalogDefinition characterCatalog;
         private readonly List<ProfileSlotCardViewModel> profileCards = new();
         private HollowPlatformKind pendingNewRunPlatformKind = HollowPlatformKind.WindowsStandard3D;
 
         public MainMenuViewModel(IProfileStore profileStore, SelectedProfileContext selectedProfileContext, AppStateMachine appStateMachine)
-            : this(profileStore, selectedProfileContext, appStateMachine, null)
+            : this(profileStore, selectedProfileContext, appStateMachine, null, null)
         {
         }
 
         public MainMenuViewModel(IProfileStore profileStore, SelectedProfileContext selectedProfileContext, AppStateMachine appStateMachine, ChallengeCatalogDefinition challengeCatalog)
+            : this(profileStore, selectedProfileContext, appStateMachine, challengeCatalog, null)
+        {
+        }
+
+        public MainMenuViewModel(
+            IProfileStore profileStore,
+            SelectedProfileContext selectedProfileContext,
+            AppStateMachine appStateMachine,
+            ChallengeCatalogDefinition challengeCatalog,
+            CharacterCatalogDefinition characterCatalog)
         {
             this.profileStore = profileStore ?? throw new ArgumentNullException(nameof(profileStore));
             this.selectedProfileContext = selectedProfileContext ?? throw new ArgumentNullException(nameof(selectedProfileContext));
             this.appStateMachine = appStateMachine ?? throw new ArgumentNullException(nameof(appStateMachine));
             this.challengeCatalog = challengeCatalog != null ? challengeCatalog : ChallengeCatalogDefinition.CreateRuntimeDefault();
+            this.characterCatalog = characterCatalog != null ? characterCatalog : CharacterCatalogDefinition.CreateRuntimeDefault();
             Refresh();
         }
 
@@ -44,6 +56,8 @@ namespace Hollow.UI.MainMenu
         public string SelectedCharacterId => selectedProfileContext.SelectedCharacterId;
 
         public IReadOnlyList<ChallengeDefinition> Challenges => challengeCatalog.Challenges;
+
+        public IReadOnlyList<CharacterDefinition> Characters => characterCatalog.Characters;
 
         public string ChallengeRecordSummary(string challengeId)
         {
@@ -269,6 +283,11 @@ namespace Hollow.UI.MainMenu
 
         public AppShellRoute LaunchArenaMode()
         {
+            return LaunchArenaMode("balanced");
+        }
+
+        public AppShellRoute LaunchArenaMode(string characterId)
+        {
             if (!selectedProfileContext.HasSelection)
             {
                 SetError("Select or create a profile first.");
@@ -277,7 +296,7 @@ namespace Hollow.UI.MainMenu
 
             State = MainMenuState.Launching;
             selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
-            selectedProfileContext.SetSelectedCharacterId("balanced");
+            selectedProfileContext.SetSelectedCharacterId(string.IsNullOrWhiteSpace(characterId) ? "balanced" : characterId);
             selectedProfileContext.SetSelectedChallengeId(string.Empty);
             selectedProfileContext.SetDeveloperLabRequested(false);
             var route = AppShellRoute.ArenaMode;

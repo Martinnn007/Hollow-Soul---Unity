@@ -43,10 +43,42 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(PlatformPresentationMode.VisionOSImmersive, immersive.Mode);
             Assert.AreEqual(1f, windows.WorldScale, 0.0001f);
             Assert.AreEqual(PresentationScalePolicy.VisionOSBoundedTabletopScale, bounded.WorldScale, 0.0001f);
+            Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraLocalPosition, windows.CameraLocalPosition);
+            Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraLocalEulerAngles, windows.CameraLocalEulerAngles);
+            Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraFieldOfView, windows.CameraFieldOfView, 0.0001f);
+            Assert.AreEqual(PresentationOrientationPolicy.DefaultWorldYawDegrees, windows.WorldYawDegrees, 0.0001f);
+            Assert.AreEqual(PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, bounded.WorldYawDegrees, 0.0001f);
+            Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraLocalPosition, immersive.CameraLocalPosition);
+            Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraLocalEulerAngles, immersive.CameraLocalEulerAngles);
+            Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraFieldOfView, immersive.CameraFieldOfView, 0.0001f);
+            Assert.AreEqual(PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, immersive.WorldYawDegrees, 0.0001f);
             Assert.IsTrue(immersive.UseComfortVignette);
             Assert.GreaterOrEqual(windows.TargetFrameRate, 120);
             Assert.GreaterOrEqual(bounded.TargetFrameRate, 90);
             Assert.GreaterOrEqual(immersive.TargetFrameRate, 90);
+        }
+
+        [Test]
+        public void PlatformPresentationRootAppliesVisionOSWorldYaw()
+        {
+            var rootObject = new GameObject("WorldPresentationRoot");
+            try
+            {
+                var root = rootObject.AddComponent<PlatformPresentationRoot>();
+
+                root.Configure(Hollow.Platform.HollowPlatformKind.VisionOSBoundedTabletop);
+
+                Assert.AreEqual(PresentationScalePolicy.VisionOSBoundedTabletopScale, root.WorldScale, 0.0001f);
+                Assert.AreEqual(PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, root.WorldYawDegrees, 0.0001f);
+                Assert.AreEqual(
+                    Quaternion.Euler(0f, PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, 0f),
+                    root.transform.localRotation);
+                Assert.AreEqual(Vector3.one * PresentationScalePolicy.VisionOSBoundedTabletopScale, root.transform.localScale);
+            }
+            finally
+            {
+                Object.DestroyImmediate(rootObject);
+            }
         }
 
         [Test]
@@ -56,6 +88,7 @@ namespace Hollow.Tests.EditMode
             profile.Configure(
                 PlatformPresentationMode.VisionOSImmersive,
                 1f,
+                37f,
                 new Vector3(0f, 4f, -7f),
                 new Vector3(28f, 0f, 0f),
                 52f,
@@ -83,6 +116,8 @@ namespace Hollow.Tests.EditMode
                 applier.Apply(camera, root);
 
                 Assert.AreEqual(1f, root.WorldScale, 0.0001f);
+                Assert.AreEqual(37f, root.WorldYawDegrees, 0.0001f);
+                Assert.AreEqual(Quaternion.Euler(0f, 37f, 0f), root.transform.localRotation);
                 Assert.AreEqual(52f, camera.fieldOfView, 0.0001f);
                 Assert.AreEqual(new Vector3(0f, 4f, -7f), camera.transform.localPosition);
                 Assert.AreEqual(90, Application.targetFrameRate);
@@ -110,8 +145,8 @@ namespace Hollow.Tests.EditMode
             try
             {
                 cameraObject.transform.SetParent(rigObject.transform, false);
-                cameraObject.transform.localPosition = new Vector3(0f, 7f, -10f);
-                cameraObject.transform.localRotation = Quaternion.Euler(35f, 0f, 0f);
+                cameraObject.transform.localPosition = Milestone10AssetGenerator.ArpgCameraLocalPosition;
+                cameraObject.transform.localRotation = Quaternion.Euler(Milestone10AssetGenerator.ArpgCameraLocalEulerAngles);
                 rigObject.transform.position = new Vector3(0f, 1.25f, 0f);
                 playerObject.transform.position = new Vector3(4f, 0.4f, -3f);
 
@@ -119,13 +154,13 @@ namespace Hollow.Tests.EditMode
                 follow.Configure(playerObject.transform, Hollow.Platform.HollowPlatformKind.WindowsStandard3D);
 
                 Assert.AreEqual(new Vector3(4f, 1.25f, -3f), rigObject.transform.position);
-                Assert.AreEqual(new Vector3(0f, 7f, -10f), cameraObject.transform.localPosition);
+                Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraLocalPosition, cameraObject.transform.localPosition);
 
                 playerObject.transform.position = new Vector3(-2f, 0.4f, 5f);
                 follow.ApplyImmediate();
 
                 Assert.AreEqual(new Vector3(-2f, 1.25f, 5f), rigObject.transform.position);
-                Assert.AreEqual(new Vector3(0f, 7f, -10f), cameraObject.transform.localPosition);
+                Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraLocalPosition, cameraObject.transform.localPosition);
             }
             finally
             {

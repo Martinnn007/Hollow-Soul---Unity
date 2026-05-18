@@ -127,8 +127,17 @@ namespace Hollow.UI.MainMenu
         private void ConfigureCanvas()
         {
             var canvas = GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 10;
+
+            var presenter = GetComponent<MainMenuPlatformPresenter>();
+            if (presenter != null)
+            {
+                presenter.Apply(presenter.PlatformKind);
+            }
+            else
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
 
             var scaler = GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

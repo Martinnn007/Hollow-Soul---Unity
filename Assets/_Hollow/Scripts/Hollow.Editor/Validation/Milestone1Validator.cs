@@ -17,12 +17,14 @@ namespace Hollow.Editor.Validation
             "Assets/_Hollow/Scripts/Hollow.UI/MainMenu/MainMenuController.cs",
             "Assets/_Hollow/Prefabs/Core/AppRoot.prefab",
             "Assets/_Hollow/Prefabs/UI/MainMenuRoot.prefab",
+            "Assets/_Hollow/Prefabs/UI/MainMenuRoot_VisionOS.prefab",
             "Assets/_Hollow/Prefabs/UI/ProfileSlotCard.prefab",
             "Assets/_Hollow/Prefabs/Cameras/WindowsCameraRig.prefab",
             "Assets/_Hollow/Prefabs/Cameras/VisionOSBoundedRig.prefab",
             "Assets/_Hollow/Prefabs/Cameras/VisionOSImmersiveRig.prefab",
             "Assets/_Hollow/Scenes/Boot.unity",
             "Assets/_Hollow/Scenes/MainMenu.unity",
+            "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity",
             "Assets/_Hollow/Scenes/Game_Windows.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity"
@@ -32,6 +34,7 @@ namespace Hollow.Editor.Validation
         {
             "Assets/_Hollow/Scenes/Boot.unity",
             "Assets/_Hollow/Scenes/MainMenu.unity",
+            "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity",
             "Assets/_Hollow/Scenes/Game_Windows.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity"

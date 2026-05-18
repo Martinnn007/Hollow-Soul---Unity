@@ -4,8 +4,10 @@ using System.Linq;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Build;
 using Hollow.Editor.Generation;
+using Unity.PolySpatial;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Hollow.Editor.Validation
@@ -200,17 +202,20 @@ namespace Hollow.Editor.Validation
                 return;
             }
 
-            foreach (var scenePath in new[] { "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity" })
+            foreach (var scenePath in new[] { "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity" })
             {
                 if (!File.Exists(scenePath))
                 {
                     failures.Add($"Vision Pro scene is missing: {scenePath}");
+                    continue;
                 }
 
                 if (!EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == scenePath))
                 {
                     failures.Add($"Vision Pro scene must be enabled in build settings: {scenePath}");
                 }
+
+                ValidateSceneVolumeCamera(scenePath, failures);
             }
 
             if (!File.Exists(Milestone10AssetGenerator.BoundedProfilePath))
@@ -221,6 +226,37 @@ namespace Hollow.Editor.Validation
             if (!File.Exists(Milestone10AssetGenerator.ImmersiveProfilePath))
             {
                 failures.Add($"Missing immersive Vision Pro polish profile: {Milestone10AssetGenerator.ImmersiveProfilePath}");
+            }
+
+            if (!File.Exists(VisionOSVolumeCameraSetup.BoundedConfigPath))
+            {
+                failures.Add($"Missing bounded Vision Pro volume camera configuration: {VisionOSVolumeCameraSetup.BoundedConfigPath}");
+            }
+
+            if (!File.Exists(VisionOSVolumeCameraSetup.ImmersiveConfigPath))
+            {
+                failures.Add($"Missing immersive Vision Pro volume camera configuration: {VisionOSVolumeCameraSetup.ImmersiveConfigPath}");
+            }
+        }
+
+        private static void ValidateSceneVolumeCamera(string scenePath, List<string> failures)
+        {
+            EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            var volumeCamera = Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            if (volumeCamera == null)
+            {
+                failures.Add($"Vision Pro scene must contain an explicit VolumeCamera: {scenePath}");
+                return;
+            }
+
+            if (!volumeCamera.OpenWindowOnLoad)
+            {
+                failures.Add($"Vision Pro VolumeCamera must open on load: {scenePath}");
+            }
+
+            if (volumeCamera.WindowConfiguration == null)
+            {
+                failures.Add($"Vision Pro VolumeCamera must reference a window configuration: {scenePath}");
             }
         }
     }

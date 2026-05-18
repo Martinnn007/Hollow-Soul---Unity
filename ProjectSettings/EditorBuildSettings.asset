@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/_Hollow/Scenes/MainMenu.unity
     guid: 09a162385ecfe478a810b05145d54878
   - enabled: 1
+    path: Assets/_Hollow/Scenes/MainMenu_VisionOS.unity
+    guid: 0283e23e0ea9a42a2aa6d64e9a15544d
+  - enabled: 1
     path: Assets/_Hollow/Scenes/Game_Windows.unity
     guid: 9c58598e435e9477e9d35f678cc144f8
   - enabled: 1

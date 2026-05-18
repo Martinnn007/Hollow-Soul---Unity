@@ -75,17 +75,22 @@ namespace Hollow.Tests.EditMode
                     .FirstOrDefault(transform => transform.name.StartsWith("tileGround.", StringComparison.Ordinal));
                 var door = rootObject.GetComponentsInChildren<Transform>()
                     .FirstOrDefault(transform => transform.name.StartsWith("doorAnchorActive.", StringComparison.Ordinal));
-                var rock = rootObject.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                var rock = rootObject.GetComponentsInChildren<Transform>()
+                    .FirstOrDefault(transform => transform.name.StartsWith("rockTile.", StringComparison.Ordinal));
+                var rockVisualAnchor = rootObject.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .FirstOrDefault(marker => marker.Role == PresentationPrefabRole.RoomObstacleRock)
                     ?.transform.parent;
 
                 Assert.IsNotNull(floor);
                 Assert.IsNotNull(rock);
+                Assert.IsNotNull(rockVisualAnchor);
                 Assert.IsNotNull(door);
                 Assert.IsNotNull(floor.GetComponent<BoxCollider>(), "Gameplay floor collider should remain on authoritative runtime object.");
                 Assert.IsNotNull(rock.GetComponent<BoxCollider>(), "Gameplay obstacle collider should remain on authoritative runtime object.");
+                Assert.IsFalse(rock.GetComponent<Renderer>().enabled, "Gameplay obstacle renderer should be hidden when an ArtPass rock visual is attached.");
                 AssertVisualChild(floor, PresentationPrefabRole.RoomFloor);
-                AssertVisualChild(rock, PresentationPrefabRole.RoomObstacleRock);
+                AssertVisualChild(rockVisualAnchor, PresentationPrefabRole.RoomObstacleRock);
+                Assert.AreEqual(Vector3.one, rockVisualAnchor.localScale, "Rock visual anchors should stay uniformly scaled so Meshy axis correction cannot shear.");
                 AssertVisualChild(door, PresentationPrefabRole.DoorActive);
                 Assert.AreEqual(ExpectedRuntimeDoorCenterY, door.localPosition.y, 0.001f);
                 Assert.AreEqual(ExpectedRuntimeDoorHeightMeters, door.localScale.y, 0.001f);

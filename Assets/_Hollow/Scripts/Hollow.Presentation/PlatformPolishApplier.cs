@@ -34,7 +34,7 @@ namespace Hollow.Presentation
             ApplyPerformance();
             if (presentationRoot != null)
             {
-                presentationRoot.Configure(profile.Mode.ToPlatformKind(), profile.WorldScale);
+                presentationRoot.Configure(profile.Mode.ToPlatformKind(), profile.WorldScale, profile.WorldYawDegrees);
             }
 
             if (targetCamera != null)

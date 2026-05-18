@@ -2,6 +2,7 @@ using System.Collections;
 using Hollow.Diagnostics;
 using Hollow.Presentation;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -13,6 +14,7 @@ namespace Hollow.Tests.PlayMode
         public IEnumerator MainMenuRoomDesignerAndAllPlatformScenesExposeQaProbeData()
         {
             yield return LoadAndAssertMenuScene("MainMenu");
+            yield return LoadAndAssertMenuScene("MainMenu_VisionOS");
             yield return LoadAndAssertDesignerScene("RoomDesigner");
             yield return LoadAndAssertGameScene("Game_Windows", expectedScale: 1f);
             yield return LoadAndAssertGameScene("Game_VisionOS_Bounded", expectedScale: PresentationScalePolicy.VisionOSBoundedTabletopScale);
@@ -56,6 +58,11 @@ namespace Hollow.Tests.PlayMode
             Assert.IsTrue(snapshot.hudOutsideWorldRoot, $"{sceneName} HUD/shell must remain outside WorldPresentationRoot.");
             Assert.AreEqual(expectedScale, snapshot.worldScale, 0.001f, $"{sceneName} world scale drifted.");
             Assert.IsTrue(snapshot.hasPresentationCatalog, "Presentation catalog should be available in runtime smoke.");
+
+            if (sceneName == "Game_VisionOS_Bounded")
+            {
+                Assert.IsNotNull(Object.FindFirstObjectByType<VisionOSGameplayInputDiagnostics>(), "Bounded visionOS gameplay should expose input diagnostics.");
+            }
         }
     }
 }

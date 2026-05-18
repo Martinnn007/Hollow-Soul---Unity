@@ -1,6 +1,7 @@
 using Hollow.Entities;
 using Hollow.Data.Definitions;
 using Hollow.Input;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -74,7 +75,7 @@ namespace Hollow.Combat
                 return;
             }
 
-            var input = GameplayInputReader.ReadCurrent();
+            var input = GameplayInputReader.ReadCurrent(ResolveGameplayRoot());
             currentFrameGuardHeld = input.GuardHeld;
             Move(input.Move, Time.deltaTime);
             currentFrameGuardHeld = false;
@@ -218,6 +219,17 @@ namespace Hollow.Combat
             lastBodyBlockedEnemy = enemy;
             nextBodyBumpStimulusTime = now + BodyBumpStimulusIntervalSeconds;
             enemy.ReceiveStimulus(EnemyStimulusKind.Bump, localPosition, now, EnemyStimulusTier.Normal, "player_body_block");
+        }
+
+        private Transform ResolveGameplayRoot()
+        {
+            var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
+            if (presentationRoot != null)
+            {
+                return presentationRoot.transform;
+            }
+
+            return roomRuntimeRoot != null ? roomRuntimeRoot.transform : transform.parent;
         }
     }
 }

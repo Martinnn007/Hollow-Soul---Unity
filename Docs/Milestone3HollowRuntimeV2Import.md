@@ -27,7 +27,7 @@ The default sample is a `13m x 7m` single combat room centered at origin:
 M2 presentation behavior remains unchanged:
 
 - Windows: world scale `1.0`.
-- Vision Pro bounded tabletop: `WorldPresentationRoot` scale `0.1`.
+- Vision Pro bounded tabletop: `WorldPresentationRoot` scale `0.5`.
 - Vision Pro immersive: world scale `1.0`.
 - HUD and shell UI stay outside `WorldPresentationRoot`.
 

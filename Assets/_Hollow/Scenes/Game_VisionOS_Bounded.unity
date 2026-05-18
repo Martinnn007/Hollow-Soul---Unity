@@ -216,7 +216,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36904706026ee485490efedcf3408abd, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.BranchMiniMapController
 --- !u!114 &600839879
 MonoBehaviour:
@@ -228,7 +228,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6eb86b907c9e4e198ca3925a56f4262, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.CombatHudController
 --- !u!114 &600839880
 MonoBehaviour:
@@ -240,7 +240,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 705f24508107946928203763ad032c16, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.PlatformShellController
   platformKind: 1
 --- !u!114 &600839881
@@ -363,6 +363,66 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 246807d0848d4bb7a81e456d8360be7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.PlayerBuildHudController
+--- !u!1 &862926366
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 862926368}
+  - component: {fileID: 862926367}
+  m_Layer: 0
+  m_Name: VisionOSVolumeCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &862926367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 862926366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33acc3b6f04fc124fa646203f42ed25f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Unity.PolySpatial::Unity.PolySpatial.VolumeCamera
+  m_Dimensions: {x: 8, y: 5.333333, z: 8}
+  m_ScaleWithWindow: 1
+  m_IsUniformScale: 0
+  m_OutputConfiguration: {fileID: 11400000, guid: 6fe4368d6478e427cb48fe9448556943, type: 2}
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  OpenWindowOnLoad: 1
+  m_TargetDisplay: 0
+  m_ShowVolumeCameraEventsFoldout: 0
+  WindowStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  ViewpointChanged:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &862926368
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 862926366}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.6666665, z: 0.25}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &901488121
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -492,6 +552,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1248658199}
   - component: {fileID: 1248658198}
+  - component: {fileID: 1248658200}
   - component: {fileID: 1248658197}
   - component: {fileID: 1248658196}
   m_Layer: 0
@@ -561,6 +622,7 @@ MonoBehaviour:
   hazardTuningProfile: {fileID: 0}
   roomRuntimeRoot: {fileID: 0}
   playerController: {fileID: 0}
+  autoInitialize: 1
 --- !u!114 &1248658198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -580,6 +642,28 @@ MonoBehaviour:
   roomRuntimeRoot: {fileID: 0}
   playerSpawnPoint: {fileID: 0}
   playerController: {fileID: 0}
+--- !u!114 &1248658200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1248658195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c87128892a7f4ebebf48f9a2c81d2d5f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Hollow.Diagnostics::Hollow.Diagnostics.VisionOSGameplayInputDiagnostics
+  forceEnabled: 0
+  showHudInDevelopmentBuild: 1
+  enablePointerMovePad: 0
+  logDeviceSummaryOnStart: 1
+  logFirstMovementSample: 1
+  logGamepadInputEvents: 1
+  noInputSampleLogDelaySeconds: 2
+  noInputSampleLogIntervalSeconds: 3
+  hudUpdateIntervalSeconds: 0.2
+  gamepadEventLogIntervalSeconds: 1
 --- !u!4 &1248658199
 Transform:
   m_ObjectHideFlags: 0
@@ -856,7 +940,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 901488122}
@@ -876,7 +960,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.PlatformPresentationRoot
   platformKind: 1
-  worldScale: 0.1
+  worldScale: 0.5
+  worldYawDegrees: 45
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -887,3 +972,4 @@ SceneRoots:
   - {fileID: 1974946527}
   - {fileID: 1248658199}
   - {fileID: 600839884}
+  - {fileID: 862926368}

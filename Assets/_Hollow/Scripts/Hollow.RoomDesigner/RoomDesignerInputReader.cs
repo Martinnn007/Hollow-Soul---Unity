@@ -14,6 +14,10 @@ namespace Hollow.RoomDesigner
             var moveX = Held(keyboard?.dKey, keyboard?.rightArrowKey) ? 1 : Held(keyboard?.aKey, keyboard?.leftArrowKey) ? -1 : 0;
             var moveZ = Held(keyboard?.wKey, keyboard?.upArrowKey) ? 1 : Held(keyboard?.sKey, keyboard?.downArrowKey) ? -1 : 0;
             var toolDelta = Pressed(keyboard?.eKey) ? 1 : Pressed(keyboard?.qKey) ? -1 : 0;
+            var bracketDelta = Pressed(keyboard?.rightBracketKey) ? 1 : Pressed(keyboard?.leftBracketKey) ? -1 : 0;
+            var shiftHeld = Held(keyboard?.leftShiftKey, keyboard?.rightShiftKey);
+            var toolGroupDelta = shiftHeld ? 0 : bracketDelta;
+            var biomeDelta = shiftHeld ? bracketDelta : 0;
             var layerDelta = Pressed(keyboard?.xKey) ? 1 : Pressed(keyboard?.zKey) ? -1 : 0;
             var zoomDelta = Pressed(keyboard?.equalsKey, keyboard?.numpadPlusKey) ? 1 : Pressed(keyboard?.minusKey, keyboard?.numpadMinusKey) ? -1 : 0;
 
@@ -43,7 +47,9 @@ namespace Hollow.RoomDesigner
                 Pressed(keyboard?.escapeKey) || gamepad?.startButton.wasPressedThisFrame == true,
                 Pressed(keyboard?.vKey),
                 Pressed(keyboard?.cKey) || gamepad?.selectButton.wasPressedThisFrame == true,
-                zoomDelta);
+                zoomDelta,
+                toolGroupDelta,
+                biomeDelta);
         }
 
         private static bool Pressed(params KeyControl[] keys)

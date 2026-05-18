@@ -10,6 +10,7 @@ namespace Hollow.Data.Definitions
     {
         [SerializeField] private int worldIndex = 1;
         [SerializeField] private string identityId = "hollow_threshold";
+        [SerializeField] private string biomeId = RoomBiomeIds.HollowThreshold;
         [SerializeField] private string displayName = "The Hollow Threshold";
         [SerializeField] private string subtitle = "A room-made wound in the dark.";
         [SerializeField] private WorldBiomeTag[] biomeTags = { WorldBiomeTag.MixedThreshold };
@@ -26,6 +27,8 @@ namespace Hollow.Data.Definitions
         public int WorldIndex => Mathf.Max(1, worldIndex);
 
         public string IdentityId => string.IsNullOrWhiteSpace(identityId) ? $"world_{WorldIndex:00}" : identityId;
+
+        public string BiomeId => RoomBiomeIds.Normalize(biomeId);
 
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? $"World {WorldIndex}" : displayName;
 
@@ -96,6 +99,7 @@ namespace Hollow.Data.Definitions
         {
             worldIndex = Mathf.Max(1, nextWorldIndex);
             identityId = string.IsNullOrWhiteSpace(nextIdentityId) ? $"world_{worldIndex:00}" : nextIdentityId.Trim();
+            biomeId = RoomBiomeIds.HollowThreshold;
             displayName = nextDisplayName ?? string.Empty;
             subtitle = nextSubtitle ?? string.Empty;
             biomeTags = (nextBiomeTags ?? Array.Empty<WorldBiomeTag>())
@@ -114,6 +118,11 @@ namespace Hollow.Data.Definitions
                 .Select(echo => echo.Trim())
                 .Distinct()
                 .ToArray();
+        }
+
+        public void ConfigureBiome(string nextBiomeId)
+        {
+            biomeId = RoomBiomeIds.Normalize(nextBiomeId);
         }
     }
 }

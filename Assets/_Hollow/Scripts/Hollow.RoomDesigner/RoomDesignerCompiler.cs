@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Data.Definitions;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -35,6 +36,7 @@ namespace Hollow.RoomDesigner
                 schemaVersion = HollowRuntimeV2Importer.SupportedSchemaVersion,
                 sourceProjectId = project.projectId,
                 canonicalRoomId = $"designer_{project.projectId}",
+                biomeId = RoomBiomeIds.Normalize(project.biomeId),
                 displayName = project.displayName,
                 roomType = "designer",
                 rewardType = "designer",
@@ -177,7 +179,30 @@ namespace Hollow.RoomDesigner
                         blocksProjectiles = true
                     });
                 }
+                else if (RoomDesignerMarkerKinds.IsDecor(marker.kind))
+                {
+                    runtime.decor.Add(new ImportedRoomDecor
+                    {
+                        id = string.IsNullOrWhiteSpace(marker.id) ? $"decor_{runtime.decor.Count:00}" : marker.id,
+                        kind = marker.kind,
+                        center = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z },
+                        size = VectorForDecor(marker.kind),
+                        blocking = false,
+                        blocksProjectiles = false
+                    });
+                }
             }
+        }
+
+        private static ImportedVector3 VectorForDecor(string decorKind)
+        {
+            return decorKind switch
+            {
+                RoomDesignerMarkerKinds.DecorSmallTree => new ImportedVector3 { x = 0.8f, y = 1.25f, z = 0.8f },
+                RoomDesignerMarkerKinds.DecorStoneRuin => new ImportedVector3 { x = 0.9f, y = 0.62f, z = 0.58f },
+                RoomDesignerMarkerKinds.DecorCrystalCluster => new ImportedVector3 { x = 0.56f, y = 0.62f, z = 0.56f },
+                _ => new ImportedVector3 { x = 0.55f, y = 0.35f, z = 0.55f }
+            };
         }
 
         private static void BuildDoorPorts(RoomDesignerProject project, ImportedHollowRuntime runtime)

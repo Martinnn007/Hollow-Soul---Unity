@@ -21,13 +21,18 @@ namespace Hollow.Presentation
 
         public static GameObject InstantiateVisual(PresentationPrefabRole role, Transform parent, Vector3 localPosition, Vector3 localScale)
         {
+            return InstantiateVisual(role, null, parent, localPosition, localScale);
+        }
+
+        public static GameObject InstantiateVisual(PresentationPrefabRole role, GameObject prefabOverride, Transform parent, Vector3 localPosition, Vector3 localScale)
+        {
             if (parent == null)
             {
                 return null;
             }
 
             RemoveExistingVisual(parent, role);
-            var prefab = Resolve(role);
+            var prefab = prefabOverride != null ? prefabOverride : Resolve(role);
             if (prefab == null)
             {
                 return null;
@@ -156,6 +161,10 @@ namespace Hollow.Presentation
             {
                 PresentationPrefabRole.RoomFloor => new Vector3(1f, 0.08f, 1f),
                 PresentationPrefabRole.DoorLocked or PresentationPrefabRole.DoorActive or PresentationPrefabRole.DoorCleared or PresentationPrefabRole.DoorUnavailable => new Vector3(0.8f, 1.1f, 0.16f),
+                PresentationPrefabRole.DecorGrassTuft => new Vector3(0.55f, 0.32f, 0.55f),
+                PresentationPrefabRole.DecorCrystalCluster => new Vector3(0.48f, 0.58f, 0.48f),
+                PresentationPrefabRole.DecorSmallTree => new Vector3(0.72f, 1.2f, 0.72f),
+                PresentationPrefabRole.DecorStoneRuin => new Vector3(0.82f, 0.58f, 0.5f),
                 PresentationPrefabRole.Projectile or PresentationPrefabRole.EnemyProjectile => Vector3.one * 0.22f,
                 PresentationPrefabRole.EnemySpittingPod => new Vector3(0.78f, 0.58f, 0.78f),
                 PresentationPrefabRole.EnemyRat => new Vector3(0.46f, 0.22f, 0.28f),
@@ -230,6 +239,10 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.EnemyProjectile => MaterialRole.EnemyProjectile,
                 PresentationPrefabRole.RoomFloor => MaterialRole.RoomFloor,
                 PresentationPrefabRole.RoomObstacleRock => MaterialRole.RoomObstacleRock,
+                PresentationPrefabRole.DecorGrassTuft => MaterialRole.DecorGrassTuft,
+                PresentationPrefabRole.DecorCrystalCluster => MaterialRole.DecorCrystalCluster,
+                PresentationPrefabRole.DecorSmallTree => MaterialRole.DecorSmallTree,
+                PresentationPrefabRole.DecorStoneRuin => MaterialRole.DecorStoneRuin,
                 PresentationPrefabRole.DoorLocked => MaterialRole.DoorLocked,
                 PresentationPrefabRole.DoorActive => MaterialRole.DoorActive,
                 PresentationPrefabRole.DoorCleared => MaterialRole.DoorCleared,

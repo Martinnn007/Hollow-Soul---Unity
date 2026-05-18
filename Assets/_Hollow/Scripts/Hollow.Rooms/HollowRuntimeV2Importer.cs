@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.Rooms
@@ -62,6 +63,7 @@ namespace Hollow.Rooms
             return new ImportedRoomRuntimeAsset(
                 runtime.canonicalRoomId,
                 runtime.displayName,
+                RoomBiomeIds.Normalize(runtime.biomeId),
                 layout,
                 footprint,
                 doorPorts,

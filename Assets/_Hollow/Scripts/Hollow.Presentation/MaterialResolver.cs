@@ -20,7 +20,7 @@ namespace Hollow.Presentation
 
             if (!FallbackMaterials.TryGetValue(role, out var fallback) || fallback == null)
             {
-                fallback = CreateRuntimeMaterial(FallbackColorFor(role));
+                fallback = CreateRuntimeMaterial(FallbackColorFor(role), IsDoubleSidedFallback(role));
                 fallback.name = $"Fallback_{role}";
                 FallbackMaterials[role] = fallback;
             }
@@ -50,10 +50,22 @@ namespace Hollow.Presentation
 
         public static Material CreateRuntimeMaterial(Color color)
         {
-            return new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
+            return CreateRuntimeMaterial(color, doubleSided: false);
+        }
+
+        private static Material CreateRuntimeMaterial(Color color, bool doubleSided)
+        {
+            var material = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
             {
                 color = color
             };
+            if (doubleSided)
+            {
+                SetFloat(material, "_Cull", 0f);
+            }
+
+            ConfigureSurfaceForAlpha(material, color.a);
+            return material;
         }
 
         public static Color FallbackColorFor(MaterialRole role)
@@ -69,6 +81,12 @@ namespace Hollow.Presentation
             return role switch
             {
                 MaterialRole.RoomFloor => new Color(0.22f, 0.29f, 0.34f, 1f),
+                MaterialRole.RoomWall => new Color(0.28f, 0.31f, 0.34f, 1f),
+                MaterialRole.RoomWallTransparent => new Color(0.28f, 0.31f, 0.34f, 0.32f),
+                MaterialRole.DecorGrassTuft => new Color(0.22f, 0.55f, 0.24f, 1f),
+                MaterialRole.DecorCrystalCluster => new Color(0.34f, 0.9f, 0.78f, 1f),
+                MaterialRole.DecorSmallTree => new Color(0.18f, 0.42f, 0.22f, 1f),
+                MaterialRole.DecorStoneRuin => new Color(0.4f, 0.42f, 0.38f, 1f),
                 MaterialRole.RoomOriginMarker => new Color(0.1f, 0.8f, 1f, 1f),
                 MaterialRole.RoomObstacleRock => new Color(0.36f, 0.34f, 0.31f, 1f),
                 MaterialRole.DoorLocked => new Color(0.82f, 0.28f, 0.18f, 1f),
@@ -162,6 +180,38 @@ namespace Hollow.Presentation
         {
             FallbackMaterials.Clear();
             PresentationPrefabResolver.ClearCache();
+        }
+
+        private static bool IsDoubleSidedFallback(MaterialRole role)
+        {
+            return role is MaterialRole.RoomWall or MaterialRole.RoomWallTransparent;
+        }
+
+        private static void ConfigureSurfaceForAlpha(Material material, float alpha)
+        {
+            if (material == null || alpha >= 0.999f)
+            {
+                return;
+            }
+
+            SetFloat(material, "_Surface", 1f);
+            SetFloat(material, "_Blend", 0f);
+            SetFloat(material, "_AlphaClip", 0f);
+            SetFloat(material, "_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            SetFloat(material, "_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            SetFloat(material, "_ZWrite", 0f);
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.DisableKeyword("_ALPHATEST_ON");
+        }
+
+        private static void SetFloat(Material material, string propertyName, float value)
+        {
+            if (material.HasProperty(propertyName))
+            {
+                material.SetFloat(propertyName, value);
+            }
         }
     }
 }

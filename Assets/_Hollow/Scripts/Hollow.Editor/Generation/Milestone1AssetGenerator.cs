@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Linq;
 using Hollow.Branches;
 using Hollow.Combat;
 using Hollow.Core.App;
 using Hollow.Data.Definitions;
+using Hollow.Diagnostics;
 using Hollow.Entities;
 using Hollow.Persistence;
 using Hollow.Platform;
@@ -136,6 +138,7 @@ namespace Hollow.Editor.Generation
         {
             SavePrefab(CreateAppRoot(), $"{Root}/Prefabs/Core/AppRoot.prefab");
             SavePrefab(CreateMainMenuRoot(), $"{Root}/Prefabs/UI/MainMenuRoot.prefab");
+            SavePrefab(CreateVisionOSMainMenuRoot(), $"{Root}/Prefabs/UI/MainMenuRoot_VisionOS.prefab");
             SavePrefab(CreateProfileSlotCard(), $"{Root}/Prefabs/UI/ProfileSlotCard.prefab");
             SavePrefab(CreateRoomRuntimeRoot(), $"{Root}/Prefabs/Rooms/RoomRuntimeRoot.prefab");
             SavePrefab(CreatePlayerCharacter(), $"{Root}/Prefabs/Player/PlayerCharacter.prefab");
@@ -143,9 +146,9 @@ namespace Hollow.Editor.Generation
             SavePrefab(CreateProjectileBase(), $"{Root}/Prefabs/Combat/ProjectileBase.prefab");
             SavePrefab(CreateRewardPickup(), RewardPickupPrefabPath);
             SavePrefab(CreateHubReturnPortal(), HubReturnPortalPrefabPath);
-            SavePrefab(CreateCameraRig("WindowsCameraRig", HollowPlatformKind.WindowsStandard3D, new Vector3(0f, 7f, -10f), new Vector3(35f, 0f, 0f)), $"{Root}/Prefabs/Cameras/WindowsCameraRig.prefab");
+            SavePrefab(CreateCameraRig("WindowsCameraRig", HollowPlatformKind.WindowsStandard3D, Milestone10AssetGenerator.ArpgCameraLocalPosition, Milestone10AssetGenerator.ArpgCameraLocalEulerAngles), $"{Root}/Prefabs/Cameras/WindowsCameraRig.prefab");
             SavePrefab(CreateCameraRig("VisionOSBoundedRig", HollowPlatformKind.VisionOSBoundedTabletop, new Vector3(0f, 1.35f, -2.4f), new Vector3(24f, 0f, 0f)), $"{Root}/Prefabs/Cameras/VisionOSBoundedRig.prefab");
-            SavePrefab(CreateCameraRig("VisionOSImmersiveRig", HollowPlatformKind.VisionOSImmersive, new Vector3(0f, 6f, -9f), new Vector3(32f, 0f, 0f)), $"{Root}/Prefabs/Cameras/VisionOSImmersiveRig.prefab");
+            SavePrefab(CreateCameraRig("VisionOSImmersiveRig", HollowPlatformKind.VisionOSImmersive, Milestone10AssetGenerator.ArpgCameraLocalPosition, Milestone10AssetGenerator.ArpgCameraLocalEulerAngles), $"{Root}/Prefabs/Cameras/VisionOSImmersiveRig.prefab");
         }
 
         private static GameObject CreateAppRoot()
@@ -162,6 +165,23 @@ namespace Hollow.Editor.Generation
             root.AddComponent<MainMenuPlatformPresenter>();
             root.AddComponent<MainMenuScreen>();
             root.AddComponent<MainMenuController>();
+            return root;
+        }
+
+        private static GameObject CreateVisionOSMainMenuRoot()
+        {
+            var root = new GameObject("MainMenuRoot_VisionOS", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            root.layer = LayerMask.NameToLayer("UI");
+            root.AddComponent<MainMenuPlatformPresenter>().Apply(HollowPlatformKind.VisionOSBoundedTabletop);
+            var canvas = root.GetComponent<Canvas>();
+            canvas.sortingOrder = 20;
+            if (SortingLayer.layers.Any(layer => layer.name == "PolySpatialUI"))
+            {
+                canvas.sortingLayerName = "PolySpatialUI";
+            }
+
+            root.AddComponent<VisionOSMainMenuScreen>();
+            root.AddComponent<MainMenuController>().ConfigureDefaults(HollowPlatformKind.VisionOSBoundedTabletop, AppShellRoute.MainMenuVisionOS);
             return root;
         }
 
@@ -316,8 +336,10 @@ namespace Hollow.Editor.Generation
 
         private static void GenerateScenes()
         {
+            VisionOSVolumeCameraSetup.EnsureConfigurations();
             GenerateBootScene();
             GenerateMainMenuScene();
+            GenerateVisionOSMainMenuScene();
             GeneratePlatformScene("Game_Windows", HollowPlatformKind.WindowsStandard3D, "WindowsCameraRig");
             GeneratePlatformScene("Game_VisionOS_Bounded", HollowPlatformKind.VisionOSBoundedTabletop, "VisionOSBoundedRig");
             GeneratePlatformScene("Game_VisionOS_Immersive", HollowPlatformKind.VisionOSImmersive, "VisionOSImmersiveRig");
@@ -326,6 +348,7 @@ namespace Hollow.Editor.Generation
             {
                 BuildScene($"{Root}/Scenes/Boot.unity"),
                 BuildScene($"{Root}/Scenes/MainMenu.unity"),
+                BuildScene($"{Root}/Scenes/MainMenu_VisionOS.unity"),
                 BuildScene($"{Root}/Scenes/Game_Windows.unity"),
                 BuildScene($"{Root}/Scenes/Game_VisionOS_Bounded.unity"),
                 BuildScene($"{Root}/Scenes/Game_VisionOS_Immersive.unity")
@@ -343,6 +366,7 @@ namespace Hollow.Editor.Generation
             InstantiatePrefab($"{Root}/Prefabs/Core/AppRoot.prefab");
             var boot = new GameObject("BootSceneController");
             boot.AddComponent<BootSceneController>();
+            VisionOSVolumeCameraSetup.EnsureOpenSceneVolumeCamera(HollowPlatformKind.VisionOSImmersive);
             SaveScene(scene, $"{Root}/Scenes/Boot.unity");
         }
 
@@ -354,7 +378,26 @@ namespace Hollow.Editor.Generation
             InstantiatePrefab($"{Root}/Prefabs/UI/MainMenuRoot.prefab");
             CreateEventSystem();
             CreateDirectionalLight();
+            VisionOSVolumeCameraSetup.EnsureOpenSceneVolumeCamera(HollowPlatformKind.VisionOSImmersive);
             SaveScene(scene, $"{Root}/Scenes/MainMenu.unity");
+        }
+
+        private static void GenerateVisionOSMainMenuScene()
+        {
+            var scene = NewScene("MainMenu_VisionOS");
+            InstantiatePrefab($"{Root}/Prefabs/Core/AppRoot.prefab");
+            InstantiatePrefab($"{Root}/Prefabs/Cameras/VisionOSBoundedRig.prefab");
+            var menu = InstantiatePrefab($"{Root}/Prefabs/UI/MainMenuRoot_VisionOS.prefab");
+            var controller = menu.GetComponent<MainMenuController>();
+            controller.ConfigureDefaults(HollowPlatformKind.VisionOSBoundedTabletop, AppShellRoute.MainMenuVisionOS);
+            controller.ConfigureChallengeCatalog(AssetDatabase.LoadAssetAtPath<ChallengeCatalogDefinition>(Milestone47AssetGenerator.ChallengeCatalogPath));
+            controller.ConfigureCharacterCatalog(AssetDatabase.LoadAssetAtPath<CharacterCatalogDefinition>(Milestone29AssetGenerator.CharacterCatalogPath));
+            CreateEventSystem();
+            CreateDirectionalLight();
+            VisionOSVolumeCameraSetup.EnsureOpenSceneVolumeCamera(
+                HollowPlatformKind.VisionOSBoundedTabletop,
+                VisionOSBoundedVolumeFraming.MenuCentered);
+            SaveScene(scene, $"{Root}/Scenes/MainMenu_VisionOS.unity");
         }
 
         private static void GeneratePlatformScene(string sceneName, HollowPlatformKind platformKind, string cameraRigName)
@@ -366,6 +409,14 @@ namespace Hollow.Editor.Generation
             CreateDirectionalLight();
             CreateGameSessionRoot(platformKind);
             CreateShellCanvas(platformKind);
+            if (platformKind != HollowPlatformKind.WindowsStandard3D)
+            {
+                VisionOSVolumeCameraSetup.EnsureOpenSceneVolumeCamera(
+                    platformKind,
+                    platformKind == HollowPlatformKind.VisionOSBoundedTabletop
+                        ? VisionOSBoundedVolumeFraming.LevelBottomAnchored
+                        : VisionOSBoundedVolumeFraming.MenuCentered);
+            }
             SaveScene(scene, $"{Root}/Scenes/{sceneName}.unity");
         }
 
@@ -374,6 +425,11 @@ namespace Hollow.Editor.Generation
             var root = new GameObject("GameSessionRoot");
             var sampleRoomRuntimeJson = AssetDatabase.LoadAssetAtPath<TextAsset>(SampleRoomRuntimePath);
             root.AddComponent<GameSessionController>().Configure(platformKind, sampleRoomRuntimeJson);
+            if (platformKind == HollowPlatformKind.VisionOSBoundedTabletop)
+            {
+                root.AddComponent<VisionOSGameplayInputDiagnostics>();
+            }
+
             var enemyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Prefabs/Combat/EnemyBase.prefab");
             var projectilePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Prefabs/Combat/ProjectileBase.prefab");
             var enemyCatalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogPath);

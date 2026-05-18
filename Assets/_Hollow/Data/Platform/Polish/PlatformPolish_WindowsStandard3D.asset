@@ -17,9 +17,10 @@ MonoBehaviour:
   notes: 
   mode: 0
   worldScale: 1
-  cameraLocalPosition: {x: 0, y: 7, z: -10}
-  cameraLocalEulerAngles: {x: 35, y: 0, z: 0}
-  cameraFieldOfView: 60
+  worldYawDegrees: 0
+  cameraLocalPosition: {x: -6.5, y: 8.25, z: -6.5}
+  cameraLocalEulerAngles: {x: 42, y: 45, z: 0}
+  cameraFieldOfView: 50
   nearClipPlane: 0.03
   farClipPlane: 95
   cameraBackgroundColor: {r: 0.018, g: 0.023, b: 0.034, a: 1}

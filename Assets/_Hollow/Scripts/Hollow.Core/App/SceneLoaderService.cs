@@ -11,6 +11,7 @@ namespace Hollow.Core.App
             {
                 AppShellRoute.Boot => "Boot",
                 AppShellRoute.MainMenu => "MainMenu",
+                AppShellRoute.MainMenuVisionOS => "MainMenu_VisionOS",
                 AppShellRoute.GameWindows => "Game_Windows",
                 AppShellRoute.GameVisionOSBounded => "Game_VisionOS_Bounded",
                 AppShellRoute.GameVisionOSImmersive => "Game_VisionOS_Immersive",

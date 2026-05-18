@@ -56,6 +56,6 @@ The M25 gate validates:
 
 - Windows: start New Run with the locked seed, clear combat rooms, collect rewards, unlock the boss door, defeat boss, enter hub, buy one shop card, and inspect all three next-branch portals.
 - Windows: quit after a checkpoint and Continue to confirm room/reward/key/shop/hub state restores.
-- Vision Pro bounded: repeat route smoke with tabletop scale `0.1`, HUD/minimap unscaled, readable door/shop/portal cards, and no ArtPass visual collider takeover.
+- Vision Pro bounded: repeat route smoke with tabletop scale `0.5`, HUD/minimap unscaled, readable door/shop/portal cards, and no ArtPass visual collider takeover.
 - Vision Pro immersive: repeat route smoke at full world scale, verify comfort posture/readability, boss/projectile clarity, and next-branch portal placement.
 - All platforms: confirm transient designer/sample sessions remain excluded from run saves and profile mutation.

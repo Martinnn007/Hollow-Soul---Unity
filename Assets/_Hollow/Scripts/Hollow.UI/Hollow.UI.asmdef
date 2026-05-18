@@ -4,6 +4,7 @@
     "references": [
         "Hollow.Core",
         "Hollow.Branches",
+        "Hollow.Combat",
         "Hollow.Data",
         "Hollow.Rewards",
         "Hollow.Persistence",

@@ -8,7 +8,7 @@ namespace Hollow.Branches
             string phaseLabel,
             string message,
             string seedSummary)
-            : this(title, subtitle, phaseLabel, message, seedSummary, string.Empty, string.Empty)
+            : this(title, subtitle, phaseLabel, message, seedSummary, string.Empty, string.Empty, "hollow_threshold")
         {
         }
 
@@ -20,6 +20,19 @@ namespace Hollow.Branches
             string seedSummary,
             string worldIdentityId,
             string worldDisplayName)
+            : this(title, subtitle, phaseLabel, message, seedSummary, worldIdentityId, worldDisplayName, "hollow_threshold")
+        {
+        }
+
+        public RunFramingSnapshot(
+            string title,
+            string subtitle,
+            string phaseLabel,
+            string message,
+            string seedSummary,
+            string worldIdentityId,
+            string worldDisplayName,
+            string biomeId)
         {
             Title = title ?? string.Empty;
             Subtitle = subtitle ?? string.Empty;
@@ -28,6 +41,7 @@ namespace Hollow.Branches
             SeedSummary = seedSummary ?? string.Empty;
             WorldIdentityId = worldIdentityId ?? string.Empty;
             WorldDisplayName = worldDisplayName ?? string.Empty;
+            BiomeId = string.IsNullOrWhiteSpace(biomeId) ? "hollow_threshold" : biomeId;
         }
 
         public string Title { get; }
@@ -44,6 +58,8 @@ namespace Hollow.Branches
 
         public string WorldDisplayName { get; }
 
-        public string SummaryKey => $"{Title}|{Subtitle}|{PhaseLabel}|{Message}|{SeedSummary}|{WorldIdentityId}|{WorldDisplayName}";
+        public string BiomeId { get; }
+
+        public string SummaryKey => $"{Title}|{Subtitle}|{PhaseLabel}|{Message}|{SeedSummary}|{WorldIdentityId}|{WorldDisplayName}|{BiomeId}";
     }
 }

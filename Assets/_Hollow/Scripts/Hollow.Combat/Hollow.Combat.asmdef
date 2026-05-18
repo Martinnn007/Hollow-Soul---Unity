@@ -6,6 +6,7 @@
     "Hollow.Data",
     "Hollow.Entities",
     "Hollow.Input",
+    "Hollow.Platform",
     "Hollow.Presentation",
     "Hollow.RoomDesigner",
     "Hollow.Rooms",

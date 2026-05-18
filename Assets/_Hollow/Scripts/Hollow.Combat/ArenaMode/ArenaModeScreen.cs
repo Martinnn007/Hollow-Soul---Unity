@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Hollow.Platform;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -357,8 +358,15 @@ namespace Hollow.Combat
         private void ConfigureCanvas()
         {
             var canvas = GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 22;
+            var platformKind = controller != null ? controller.PlatformKind : HollowPlatformKind.WindowsStandard3D;
+            canvas.renderMode = platformKind == HollowPlatformKind.WindowsStandard3D ? RenderMode.ScreenSpaceOverlay : RenderMode.WorldSpace;
+            if (canvas.renderMode == RenderMode.WorldSpace)
+            {
+                transform.localPosition = new Vector3(0f, 1.32f, 2.35f);
+                transform.localRotation = Quaternion.identity;
+                transform.localScale = Vector3.one * 0.0018f;
+            }
 
             var scaler = GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

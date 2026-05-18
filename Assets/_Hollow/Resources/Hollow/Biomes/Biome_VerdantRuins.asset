@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d671946eac3cf4098b61a44a76aee8fe, type: 3}
+  m_Name: Biome_VerdantRuins
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RoomBiomeDefinition
+  biomeId: verdant_ruins
+  displayName: Verdant Ruins
+  biomeTags: 0c0000000d0000000e000000
+  roomTemplates:
+  - {fileID: 4900000, guid: 636b0a022bede4f8292c1d39652e68e6, type: 3}
+  - {fileID: 4900000, guid: fd06661d1c52b430491d6e9c09ab337d, type: 3}
+  - {fileID: 4900000, guid: 84752bc60af3246ebb95fa958c310c8c, type: 3}
+  - {fileID: 4900000, guid: 903ae4979fb8d40089cbfeed5a0f9bcf, type: 3}
+  - {fileID: 4900000, guid: 4891e681cba08465cac3a01d970087b7, type: 3}
+  materialOverrides:
+  - role: 0
+    material: {fileID: 2100000, guid: 62eb23cdb459f406e98f2e95924ba346, type: 2}
+  - role: 86
+    material: {fileID: 2100000, guid: a8c44a6cd32fe48069218b04266458b8, type: 2}
+  - role: 87
+    material: {fileID: 2100000, guid: 84c369c14e8024cbf9c21e6a4413cac1, type: 2}
+  - role: 2
+    material: {fileID: 2100000, guid: c2a657843df8a4dcdbe46c436c349d59, type: 2}
+  - role: 4
+    material: {fileID: 2100000, guid: 3822d4ea654594f4caf2ac49fa358c6b, type: 2}
+  - role: 5
+    material: {fileID: 2100000, guid: 4c23973f21bc24a2b8b2798a39e0a04e, type: 2}
+  - role: 3
+    material: {fileID: 2100000, guid: 98db8083c1791483f96c5899f2a5ca48, type: 2}
+  - role: 6
+    material: {fileID: 2100000, guid: 06f72fd0bd8b54255b4d2b06260d4625, type: 2}
+  - role: 88
+    material: {fileID: 2100000, guid: 5d7136586612a43309a079a4e2af7a57, type: 2}
+  - role: 89
+    material: {fileID: 2100000, guid: 742cb5327bc144f8297c57698a50c012, type: 2}
+  - role: 90
+    material: {fileID: 2100000, guid: ac2e86c6399cc48e9ac32f0795c99c05, type: 2}
+  - role: 91
+    material: {fileID: 2100000, guid: b3b15225135d645b5bd8c51b04743426, type: 2}
+  prefabOverrides:
+  - role: 70
+    prefab: {fileID: 1847666274767754582, guid: 663ad37db6b5b449dbb1aebe167f4c83, type: 3}
+  - role: 71
+    prefab: {fileID: 8901252871527791470, guid: 3c74171513d0b44d88c665027974f3ae, type: 3}
+  - role: 72
+    prefab: {fileID: 4554965912670301397, guid: 320c47e529402466a9fe6976ebba9bfe, type: 3}
+  - role: 73
+    prefab: {fileID: 7761968158216945197, guid: 824a9913d30c14a66a470f746e036dc3, type: 3}
+  decorPrefabBindings:
+  - decorKind: decorGrassTuft
+    prefabRole: 70
+  - decorKind: decorCrystalCluster
+    prefabRole: 71
+  - decorKind: decorSmallTree
+    prefabRole: 72
+  - decorKind: decorStoneRuin
+    prefabRole: 73

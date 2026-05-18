@@ -297,7 +297,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void ControllerShowsClickableFullToolToolbarAndHighlightsCurrentTool()
+        public void ControllerShowsGroupedToolToolbarAndKeyboardNavigation()
         {
             var root = new GameObject("RoomDesignerToolbarController");
             try
@@ -308,20 +308,70 @@ namespace Hollow.Tests.EditMode
                 var toolbar = GameObject.Find("RoomDesignerToolToolbar");
                 Assert.IsNotNull(toolbar);
                 Assert.IsTrue(toolbar.activeSelf);
-                Assert.AreEqual(System.Enum.GetValues(typeof(RoomDesignerTool)).Length, toolbar.transform.childCount);
+                Assert.AreEqual("Terrain", controller.CurrentToolGroupName);
+                Assert.AreEqual(9, toolbar.GetComponentsInChildren<Transform>(true).Count(transform => transform.name.StartsWith("ToolGroupTile_")));
+                Assert.AreEqual(2, toolbar.GetComponentsInChildren<Transform>(true).Count(transform => transform.name.StartsWith("ToolTile_")));
 
                 var groundTile = GameObject.Find("ToolTile_Ground");
                 Assert.IsNotNull(groundTile);
                 Assert.Greater(groundTile.GetComponent<UnityEngine.UI.Outline>().effectColor.g, 0.9f);
+                Assert.IsNull(GameObject.Find("ToolTile_EnemyTurret"));
 
+                controller.SelectToolGroup(4);
                 var turretTile = GameObject.Find("ToolTile_EnemyTurret");
                 Assert.IsNotNull(turretTile);
                 turretTile.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
                 Assert.AreEqual(RoomDesignerTool.EnemyTurret, controller.CurrentTool);
+                Assert.AreEqual("Enemies Basic", controller.CurrentToolGroupName);
 
                 turretTile = GameObject.Find("ToolTile_EnemyTurret");
                 Assert.IsNotNull(turretTile);
                 Assert.Greater(turretTile.GetComponent<UnityEngine.UI.Outline>().effectColor.g, 0.9f);
+
+                controller.ApplyInput(Input(toolDelta: 1), 1f);
+                Assert.AreEqual(RoomDesignerTool.EnemySplitter, controller.CurrentTool);
+
+                controller.ApplyInput(Input(toolGroupDelta: 1), 2f);
+                Assert.AreEqual("Enemies Martial", controller.CurrentToolGroupName);
+                Assert.AreEqual(RoomDesignerTool.EnemySkeletonSword, controller.CurrentTool);
+                Assert.IsNotNull(GameObject.Find("ToolTile_EnemySkeletonSword"));
+                Assert.IsNull(GameObject.Find("ToolTile_EnemyTurret"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ControllerCyclesBiomeLiveAndPersistsDraft()
+        {
+            var root = new GameObject("RoomDesignerBiomeController");
+            try
+            {
+                var store = new RoomDesignerStore(tempRoot);
+                var slotId = new ProfileSlotId(0);
+                var project = RoomDesignerProject.CreateDefault();
+                var controller = root.AddComponent<RoomDesignerController>();
+                controller.InitializeForTest(store, slotId, project);
+
+                Assert.AreEqual(RoomBiomeIds.HollowThreshold, controller.CurrentBiomeId);
+
+                controller.ApplyInput(Input(toolGroupDelta: 1), 1f);
+                Assert.AreEqual("Structure", controller.CurrentToolGroupName);
+                Assert.AreEqual(RoomBiomeIds.HollowThreshold, controller.CurrentBiomeId);
+
+                controller.ApplyInput(Input(biomeDelta: 1), 2f);
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, controller.CurrentBiomeId);
+                AssertStoredBiome(store, slotId, project.projectId, RoomBiomeIds.VerdantRuins);
+
+                controller.ApplyInput(Input(biomeDelta: -1), 3f);
+                Assert.AreEqual(RoomBiomeIds.HollowThreshold, controller.CurrentBiomeId);
+                AssertStoredBiome(store, slotId, project.projectId, RoomBiomeIds.HollowThreshold);
+
+                controller.SetCurrentBiome(RoomBiomeIds.VerdantRuins);
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, controller.CurrentBiomeId);
+                AssertStoredBiome(store, slotId, project.projectId, RoomBiomeIds.VerdantRuins);
             }
             finally
             {
@@ -512,9 +562,17 @@ namespace Hollow.Tests.EditMode
             bool erase = false,
             bool togglePreview = false,
             bool toggleCamera = false,
-            int zoomDelta = 0)
+            int zoomDelta = 0,
+            int toolGroupDelta = 0,
+            int biomeDelta = 0)
         {
-            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview, toggleCamera, zoomDelta);
+            return new RoomDesignerInputSnapshot(moveX, moveZ, toolDelta, layerDelta, place, erase, false, false, false, false, false, false, togglePreview, toggleCamera, zoomDelta, toolGroupDelta, biomeDelta);
+        }
+
+        private static void AssertStoredBiome(RoomDesignerStore store, ProfileSlotId slotId, string projectId, string expectedBiomeId)
+        {
+            var stored = store.LoadExistingDrafts(slotId).Single(project => project.projectId == projectId);
+            Assert.AreEqual(expectedBiomeId, stored.biomeId);
         }
 
         private static Transform FindChild(GameObject root, string name)

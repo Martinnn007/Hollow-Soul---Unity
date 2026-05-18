@@ -71,6 +71,10 @@ namespace Hollow.Data.Definitions
         EnemyGraveLantern,
         EnemyStarforgedOctantSentry,
         EnemyCrimsonRailSpider,
-        EnemyAzureMinigunTurret
+        EnemyAzureMinigunTurret,
+        DecorGrassTuft,
+        DecorCrystalCluster,
+        DecorSmallTree,
+        DecorStoneRuin
     }
 }

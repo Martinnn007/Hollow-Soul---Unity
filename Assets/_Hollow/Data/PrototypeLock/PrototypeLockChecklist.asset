@@ -63,7 +63,7 @@ MonoBehaviour:
     status: 2
     notes: Validated by M11 generator, validator, and EditMode suite.
   - id: performance.visionos-bounded
-    title: Vision Pro bounded tabletop profile keeps 0.1 world scale, HUD separation,
+    title: Vision Pro bounded tabletop profile keeps 0.5 world scale, HUD separation,
       and 90 FPS target.
     group: Performance
     required: 1

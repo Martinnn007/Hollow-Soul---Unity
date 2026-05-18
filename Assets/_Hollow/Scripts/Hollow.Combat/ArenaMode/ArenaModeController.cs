@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Hollow.Core.App;
 using Hollow.Entities;
+using Hollow.Platform;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -18,6 +20,7 @@ namespace Hollow.Combat
         [SerializeField] private PlaceholderPlayerController playerController;
         [SerializeField] private Canvas targetCanvas;
         [SerializeField] private bool showSetupOnStart = true;
+        [SerializeField] private HollowPlatformKind platformKind = HollowPlatformKind.WindowsStandard3D;
 
         private readonly ArenaModeScoreTracker scoreTracker = new();
         private ArenaModeRuntimeSettings currentSettings;
@@ -29,6 +32,7 @@ namespace Hollow.Combat
         private bool arenaComplete;
         private bool waitingForNextWave;
         private AppShellRoute returnRoute = AppShellRoute.MainMenu;
+        private string selectedCharacterId = "balanced";
 
         public IReadOnlyList<ArenaModePresetDefinition> Presets => ResolvePresets();
 
@@ -45,6 +49,10 @@ namespace Hollow.Combat
         public ArenaModeScoreTracker ScoreTracker => scoreTracker;
 
         public bool IsEditorOrDevelopmentLaunch => Debug.isDebugBuild || Application.isEditor;
+
+        public HollowPlatformKind PlatformKind => platformKind;
+
+        public string SelectedCharacterId => selectedCharacterId;
 
 #if UNITY_EDITOR
         public void ConfigureArenaPresetsForEditor(ArenaModePresetDefinition[] nextPresets, bool nextShowSetupOnStart)
@@ -63,9 +71,17 @@ namespace Hollow.Combat
         private void Start()
         {
             ResolveReferences();
-            EnsureScreen();
-            var hadHandoff = ArenaModeHandoff.TryConsume(out var presetId, out var autoStart, out var nextReturnRoute);
+            var hadHandoff = ArenaModeHandoff.TryConsume(out var presetId, out var autoStart, out var nextReturnRoute, out var nextPlatformKind, out var nextSelectedCharacterId);
             returnRoute = hadHandoff ? nextReturnRoute : AppShellRoute.MainMenu;
+            if (hadHandoff)
+            {
+                platformKind = nextPlatformKind;
+                selectedCharacterId = string.IsNullOrWhiteSpace(nextSelectedCharacterId) ? "balanced" : nextSelectedCharacterId;
+            }
+
+            ApplyPlatformKind(platformKind);
+            ConfigureGameplayCameraFollow();
+            EnsureScreen();
             currentSettings = ResolvePreset(presetId)?.CreateRuntimeSettings()
                 ?? ResolvePresets().FirstOrDefault()?.CreateRuntimeSettings()
                 ?? CreateFallbackSettings();
@@ -126,6 +142,7 @@ namespace Hollow.Combat
             playerController.ConfigureDefault();
             roomCombatController.BeginRoom(roomRuntimeRoot, playerController, alreadyCleared: true, RoomCombatEncounterKind.Standard, RoomCombatEncounterContext.Empty);
             ApplyPlayerOverrides();
+            ConfigureGameplayCameraFollow();
             scoreTracker.Reset(playerController);
             screen?.ShowCombatOverlay();
             SpawnNextWave();
@@ -304,6 +321,31 @@ namespace Hollow.Combat
                 nextActiveWeaponSlot: weapon.ActiveWeaponSlot,
                 nextCurrentStamina: weapon.MaxStamina,
                 nextWeaponCatalog: weapon.WeaponCatalog);
+        }
+
+        private void ApplyPlatformKind(HollowPlatformKind nextPlatformKind)
+        {
+            var presentation = FindAnyObjectByType<PlatformPresentationRoot>();
+            presentation?.Configure(nextPlatformKind);
+        }
+
+        private void ConfigureGameplayCameraFollow()
+        {
+            if (playerController == null)
+            {
+                return;
+            }
+
+            var targetCamera = Camera.main != null ? Camera.main : FindAnyObjectByType<Camera>();
+            if (targetCamera == null)
+            {
+                return;
+            }
+
+            var rigMetadata = targetCamera.GetComponentInParent<CameraRigMetadata>();
+            var host = rigMetadata != null ? rigMetadata.gameObject : targetCamera.gameObject;
+            var follow = host.GetComponent<GameplayCameraFollowController>() ?? host.AddComponent<GameplayCameraFollowController>();
+            follow.Configure(playerController.transform, platformKind);
         }
 
         private void EnsureScreen()

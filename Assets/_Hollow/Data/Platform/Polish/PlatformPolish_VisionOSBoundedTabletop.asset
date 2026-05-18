@@ -16,7 +16,8 @@ MonoBehaviour:
   displayName: 
   notes: 
   mode: 1
-  worldScale: 0.1
+  worldScale: 0.5
+  worldYawDegrees: 45
   cameraLocalPosition: {x: 0, y: 1.35, z: -2.4}
   cameraLocalEulerAngles: {x: 24, y: 0, z: 0}
   cameraFieldOfView: 48

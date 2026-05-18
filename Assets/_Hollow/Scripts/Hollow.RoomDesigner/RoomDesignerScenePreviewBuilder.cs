@@ -8,6 +8,11 @@ namespace Hollow.RoomDesigner
     {
         public static bool BuildVisualForCell(GameObject host, RoomDesignerCell cell)
         {
+            return BuildVisualForCell(host, cell, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static bool BuildVisualForCell(GameObject host, RoomDesignerCell cell, string biomeId)
+        {
             if (host == null || cell == null)
             {
                 return false;
@@ -15,15 +20,20 @@ namespace Hollow.RoomDesigner
 
             return cell.kind switch
             {
-                RoomDesignerCellKinds.Ground => AttachBoundVisual(host, PresentationPrefabRole.RoomFloor),
-                RoomDesignerCellKinds.Rock => AttachBoundVisual(host, PresentationPrefabRole.RoomObstacleRock),
-                RoomDesignerCellKinds.Spike => AttachBoundVisual(host, PresentationPrefabRole.RoomHazardSpike),
+                RoomDesignerCellKinds.Ground => AttachBoundVisual(host, PresentationPrefabRole.RoomFloor, biomeId),
+                RoomDesignerCellKinds.Rock => AttachBoundVisual(host, PresentationPrefabRole.RoomObstacleRock, biomeId),
+                RoomDesignerCellKinds.Spike => AttachBoundVisual(host, PresentationPrefabRole.RoomHazardSpike, biomeId),
                 RoomDesignerCellKinds.Hole => true,
                 _ => false
             };
         }
 
         public static bool BuildVisualForDoor(GameObject host, RoomDesignerDoorPortState door)
+        {
+            return BuildVisualForDoor(host, door, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static bool BuildVisualForDoor(GameObject host, RoomDesignerDoorPortState door, string biomeId)
         {
             if (host == null || door == null)
             {
@@ -36,17 +46,22 @@ namespace Hollow.RoomDesigner
                 RoomDesignerDoorKinds.Secret => PresentationPrefabRole.SecretDoorDebug,
                 _ => PresentationPrefabRole.DoorUnavailable
             };
-            return AttachBoundVisual(host, role);
+            return AttachBoundVisual(host, role, biomeId);
         }
 
         public static bool BuildVisualForMarker(GameObject host, RoomDesignerMarker marker)
+        {
+            return BuildVisualForMarker(host, marker, RoomBiomeIds.HollowThreshold);
+        }
+
+        public static bool BuildVisualForMarker(GameObject host, RoomDesignerMarker marker, string biomeId)
         {
             if (host == null || marker == null)
             {
                 return false;
             }
 
-            var attached = AttachBoundVisual(host, PrefabRoleForMarker(marker.kind));
+            var attached = AttachBoundVisual(host, PrefabRoleForMarker(marker.kind), biomeId);
             if (attached)
             {
                 host.transform.localScale = Vector3.one;
@@ -64,6 +79,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.ChestSpawn => PresentationPrefabRole.ChestNormal,
                 RoomDesignerMarkerKinds.StandardBarrel => PresentationPrefabRole.StandardBarrel,
                 RoomDesignerMarkerKinds.ExplosiveBarrel => PresentationPrefabRole.ExplosiveBarrel,
+                RoomDesignerMarkerKinds.DecorGrassTuft => PresentationPrefabRole.DecorGrassTuft,
+                RoomDesignerMarkerKinds.DecorCrystalCluster => PresentationPrefabRole.DecorCrystalCluster,
+                RoomDesignerMarkerKinds.DecorSmallTree => PresentationPrefabRole.DecorSmallTree,
+                RoomDesignerMarkerKinds.DecorStoneRuin => PresentationPrefabRole.DecorStoneRuin,
                 RoomDesignerMarkerKinds.EnemyFlying => PresentationPrefabRole.EnemyFlying,
                 RoomDesignerMarkerKinds.EnemyFast => PresentationPrefabRole.EnemyFast,
                 RoomDesignerMarkerKinds.EnemyHeavy => PresentationPrefabRole.EnemyHeavy,
@@ -96,14 +115,14 @@ namespace Hollow.RoomDesigner
             };
         }
 
-        private static bool AttachBoundVisual(GameObject host, PresentationPrefabRole role)
+        private static bool AttachBoundVisual(GameObject host, PresentationPrefabRole role, string biomeId)
         {
-            if (!HasConfiguredPrefab(role))
+            if (!HasConfiguredPrefab(role, biomeId))
             {
                 return false;
             }
 
-            var visual = PresentationPrefabResolver.InstantiateVisual(role, host.transform, Vector3.zero, Vector3.one);
+            var visual = RoomBiomePresentationResolver.InstantiateVisual(biomeId, role, host.transform, Vector3.zero, Vector3.one);
             if (visual == null)
             {
                 return false;
@@ -118,8 +137,18 @@ namespace Hollow.RoomDesigner
             return true;
         }
 
-        private static bool HasConfiguredPrefab(PresentationPrefabRole role)
+        private static bool HasConfiguredPrefab(PresentationPrefabRole role, string biomeId)
         {
+            var biomeCatalog = RoomBiomeCatalogDefinition.LoadDefault();
+            if (biomeCatalog != null &&
+                biomeCatalog.TryGetBiome(biomeId, out var biome) &&
+                biome != null &&
+                biome.TryResolve(role, out var biomePrefab) &&
+                biomePrefab != null)
+            {
+                return true;
+            }
+
             var catalog = PresentationContentProvider.ActiveCatalog;
             if (catalog == null)
             {

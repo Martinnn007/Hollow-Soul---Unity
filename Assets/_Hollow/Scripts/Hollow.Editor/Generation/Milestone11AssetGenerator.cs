@@ -20,6 +20,7 @@ namespace Hollow.Editor.Generation
         {
             "Assets/_Hollow/Scenes/Boot.unity",
             "Assets/_Hollow/Scenes/MainMenu.unity",
+            "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity",
             "Assets/_Hollow/Scenes/Game_Windows.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity",
@@ -63,7 +64,7 @@ namespace Hollow.Editor.Generation
                 Required("save.active-run-lifecycle", "New Run, checkpoint, Continue, completion banking, and death clear coverage passed.", "Save/Load"),
                 Required("content.validation", "Material palette, cue catalog, Addressables labels, prefab refs, and naming validation passed.", "Content"),
                 Required("performance.windows", "Windows standard 3D profile meets prototype frame and render-scale budgets.", "Performance"),
-                Required("performance.visionos-bounded", "Vision Pro bounded tabletop profile keeps 0.1 world scale, HUD separation, and 90 FPS target.", "Performance"),
+                Required("performance.visionos-bounded", "Vision Pro bounded tabletop profile keeps 0.5 world scale, HUD separation, and 90 FPS target.", "Performance"),
                 Required("performance.visionos-immersive", "Vision Pro immersive profile enables comfort metadata and 90 FPS target.", "Performance"),
                 Required("build.scenes-and-handoff", "Build scenes, validation commands, and handoff notes are captured for prototype delivery.", "Build Handoff"),
                 Optional("deferred.final-art-audio", "Final art, production SFX/music, remote Addressables, and platform certification remain post-prototype scope.", "Deferred Scope")
@@ -94,7 +95,7 @@ namespace Hollow.Editor.Generation
             budget.Configure(new[]
             {
                 new PlatformPerformanceBudget(PlatformPresentationMode.WindowsStandard3D, 120, 8.33f, 1f, 24, 48, 800, "Desktop prototype budget. Keep full-scale gameplay and high refresh readability."),
-                new PlatformPerformanceBudget(PlatformPresentationMode.VisionOSBoundedTabletop, 90, 11.11f, 0.9f, 20, 40, 550, "Bounded tabletop budget. World root scales to 0.1 while HUD and shell remain unscaled."),
+                new PlatformPerformanceBudget(PlatformPresentationMode.VisionOSBoundedTabletop, 90, 11.11f, 0.9f, 20, 40, 550, "Bounded tabletop budget. World root scales to 0.5 while HUD and shell remain unscaled."),
                 new PlatformPerformanceBudget(PlatformPresentationMode.VisionOSImmersive, 90, 11.11f, 0.85f, 18, 36, 500, "Immersive comfort budget. Keep reduced render scale, conservative FOV, and comfort vignette metadata.")
             });
             EditorUtility.SetDirty(budget);

@@ -48,6 +48,8 @@ namespace Hollow.Editor.Generation
             catalog.Configure(palette, vfxCues, audioCues, prefabBindings);
             EditorUtility.SetDirty(catalog);
             PresentationContentProvider.Configure(catalog);
+            MeshyEnvironmentPropAssetGenerator.GenerateAssets(saveAssets: false, refresh: false);
+            SampleEnvironmentTextureSetGenerator.GenerateAssets(saveAssets: false, refresh: false);
 
             ConfigureAddressables(palette, prefabBindings, vfxCues, audioCues, catalog);
             AssetDatabase.SaveAssets();

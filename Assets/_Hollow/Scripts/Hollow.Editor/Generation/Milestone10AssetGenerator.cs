@@ -20,6 +20,9 @@ namespace Hollow.Editor.Generation
         public const string BoundedProfilePath = PlatformPolishDirectory + "/PlatformPolish_VisionOSBoundedTabletop.asset";
         public const string ImmersiveProfilePath = PlatformPolishDirectory + "/PlatformPolish_VisionOSImmersive.asset";
         public const string PlatformAddressableLabel = "hollow.platform";
+        public static readonly Vector3 ArpgCameraLocalPosition = new(-6.5f, 8.25f, -6.5f);
+        public static readonly Vector3 ArpgCameraLocalEulerAngles = new(42f, 45f, 0f);
+        public const float ArpgCameraFieldOfView = 50f;
 
         [MenuItem("Hollow/Generation/Generate Milestone 10 Assets")]
         public static void Generate()
@@ -31,9 +34,10 @@ namespace Hollow.Editor.Generation
                 WindowsProfilePath,
                 PlatformPresentationMode.WindowsStandard3D,
                 1f,
-                new Vector3(0f, 7f, -10f),
-                new Vector3(35f, 0f, 0f),
-                60f,
+                PresentationOrientationPolicy.DefaultWorldYawDegrees,
+                ArpgCameraLocalPosition,
+                ArpgCameraLocalEulerAngles,
+                ArpgCameraFieldOfView,
                 0.03f,
                 95f,
                 new Color(0.018f, 0.023f, 0.034f, 1f),
@@ -48,6 +52,7 @@ namespace Hollow.Editor.Generation
                 BoundedProfilePath,
                 PlatformPresentationMode.VisionOSBoundedTabletop,
                 PresentationScalePolicy.VisionOSBoundedTabletopScale,
+                PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees,
                 new Vector3(0f, 1.35f, -2.4f),
                 new Vector3(24f, 0f, 0f),
                 48f,
@@ -65,9 +70,10 @@ namespace Hollow.Editor.Generation
                 ImmersiveProfilePath,
                 PlatformPresentationMode.VisionOSImmersive,
                 1f,
-                new Vector3(0f, 5.2f, -8.2f),
-                new Vector3(30f, 0f, 0f),
-                52f,
+                PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees,
+                ArpgCameraLocalPosition,
+                ArpgCameraLocalEulerAngles,
+                ArpgCameraFieldOfView,
                 0.03f,
                 70f,
                 new Color(0.01f, 0.014f, 0.022f, 1f),
@@ -87,6 +93,8 @@ namespace Hollow.Editor.Generation
             ApplyProfileToScene("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", HollowPlatformKind.VisionOSBoundedTabletop, bounded);
             ApplyProfileToScene("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", HollowPlatformKind.VisionOSImmersive, immersive);
             ApplyProfileToScene("Assets/_Hollow/Scenes/MainMenu.unity", HollowPlatformKind.WindowsStandard3D, windows);
+            VisionOSVolumeCameraSetup.ConfigureProject();
+            VisionOSMainMenuSetup.ConfigureProject();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -101,6 +109,7 @@ namespace Hollow.Editor.Generation
             string path,
             PlatformPresentationMode mode,
             float worldScale,
+            float worldYawDegrees,
             Vector3 cameraPosition,
             Vector3 cameraEuler,
             float fieldOfView,
@@ -122,7 +131,7 @@ namespace Hollow.Editor.Generation
                 AssetDatabase.CreateAsset(profile, path);
             }
 
-            profile.Configure(mode, worldScale, cameraPosition, cameraEuler, fieldOfView, nearClip, farClip, backgroundColor, ambientColor, targetFrameRate, vSyncCount, renderScale, useComfortVignette, vignetteRadius, vignetteOpacity);
+            profile.Configure(mode, worldScale, worldYawDegrees, cameraPosition, cameraEuler, fieldOfView, nearClip, farClip, backgroundColor, ambientColor, targetFrameRate, vSyncCount, renderScale, useComfortVignette, vignetteRadius, vignetteOpacity);
             EditorUtility.SetDirty(profile);
             return profile;
         }

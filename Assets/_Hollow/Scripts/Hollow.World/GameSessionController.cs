@@ -70,7 +70,7 @@ namespace Hollow.World
             ResolveReferences();
             presentationRoot?.Configure(platformKind);
             var isDesignerPlaytest = RoomPlaytestHandoff.TryConsume(out var playtestJson, out var playtestMode, out var playtestReturnRoute, out var playtestCharacterId);
-            transientReturnRoute = isDesignerPlaytest ? playtestReturnRoute : AppShellRoute.MainMenu;
+            transientReturnRoute = isDesignerPlaytest ? playtestReturnRoute : ProfileMenuRouteForPlatform(platformKind);
             var importedAsset = isDesignerPlaytest ? ImportRoomAsset(playtestJson, "Room Designer Playtest") : ImportRoomAssetIfAvailable();
             var spawnPosition = importedAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             var selectedProfileContext = ProfileSessionHost.Instance?.SelectedProfileContext;
@@ -201,7 +201,7 @@ namespace Hollow.World
             context?.SetLaunchMode(RunLaunchMode.NewRun);
             context?.SetSelectedChallengeId(string.Empty);
             context?.SetDeveloperLabRequested(false);
-            TransitionAndLoad(AppShellRoute.MainMenu);
+            TransitionAndLoad(ProfileMenuRouteForPlatform(platformKind));
         }
 
         private void Update()
@@ -216,6 +216,13 @@ namespace Hollow.World
                     SceneLoaderService.LoadRouteAsync(transientReturnRoute);
                 }
             }
+        }
+
+        private static AppShellRoute ProfileMenuRouteForPlatform(HollowPlatformKind platformKind)
+        {
+            return platformKind == HollowPlatformKind.WindowsStandard3D
+                ? AppShellRoute.MainMenu
+                : AppShellRoute.MainMenuVisionOS;
         }
 
         private void ResolveReferences()

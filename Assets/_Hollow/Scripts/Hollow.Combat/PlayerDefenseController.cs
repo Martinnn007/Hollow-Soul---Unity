@@ -95,7 +95,7 @@ namespace Hollow.Combat
                 return;
             }
 
-            var input = GameplayInputReader.ReadCurrent();
+            var input = GameplayInputReader.ReadCurrent(ResolveGameplayRoot());
             Tick(input, Time.deltaTime, Time.time);
         }
 
@@ -339,6 +339,12 @@ namespace Hollow.Combat
             {
                 guardFacing = facing.normalized;
             }
+        }
+
+        private Transform ResolveGameplayRoot()
+        {
+            var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
+            return presentationRoot != null ? presentationRoot.transform : roomRuntimeRoot != null ? roomRuntimeRoot.transform : transform.parent;
         }
 
         private Vector3 SourceDirection(DamageRequest request)

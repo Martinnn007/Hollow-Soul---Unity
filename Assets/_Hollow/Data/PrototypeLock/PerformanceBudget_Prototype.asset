@@ -31,7 +31,7 @@ MonoBehaviour:
     maximumVisibleEnemies: 20
     maximumProjectiles: 40
     maximumDrawCalls: 550
-    notes: Bounded tabletop budget. World root scales to 0.1 while HUD and shell
+    notes: Bounded tabletop budget. World root scales to 0.5 while HUD and shell
       remain unscaled.
   - mode: 2
     minimumTargetFrameRate: 90

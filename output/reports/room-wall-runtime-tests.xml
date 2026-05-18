@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="3" result="Passed" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.4717899">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="677" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.471790" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1792" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="676" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.453300" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="13707" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1793" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="676" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.440960" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1794" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="676" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.428933" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1795" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="676" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.416787" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1751" name="RoomWallRuntimeTests" fullname="Hollow.Tests.EditMode.RoomWallRuntimeTests" classname="Hollow.Tests.EditMode.RoomWallRuntimeTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.396342" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1752" name="RuntimeRootBuildsVisualOnlyPerimeterWallsWithDoorGaps" fullname="Hollow.Tests.EditMode.RoomWallRuntimeTests.RuntimeRootBuildsVisualOnlyPerimeterWallsWithDoorGaps" methodname="RuntimeRootBuildsVisualOnlyPerimeterWallsWithDoorGaps" classname="Hollow.Tests.EditMode.RoomWallRuntimeTests" runstate="Runnable" seed="782577387" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:57Z" duration="0.244693" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1754" name="RuntimeRootBuildsWallsAroundLShapedFloorRegions" fullname="Hollow.Tests.EditMode.RoomWallRuntimeTests.RuntimeRootBuildsWallsAroundLShapedFloorRegions" methodname="RuntimeRootBuildsWallsAroundLShapedFloorRegions" classname="Hollow.Tests.EditMode.RoomWallRuntimeTests" runstate="Runnable" seed="1414286688" result="Passed" start-time="2026-05-15 13:45:57Z" end-time="2026-05-15 13:45:58Z" duration="0.070641" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_macro_l_3cell' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_macro_l_3cell:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+]]></output>
+              </test-case>
+              <test-case id="1753" name="WallVisibilityControllerMakesNearestSideTransparent" fullname="Hollow.Tests.EditMode.RoomWallRuntimeTests.WallVisibilityControllerMakesNearestSideTransparent" methodname="WallVisibilityControllerMakesNearestSideTransparent" classname="Hollow.Tests.EditMode.RoomWallRuntimeTests" runstate="Runnable" seed="1568093052" result="Passed" start-time="2026-05-15 13:45:58Z" end-time="2026-05-15 13:45:58Z" duration="0.069960" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Room 'combat_single_sample' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run Hollow/Navigation/Bake Runtime Room NavMeshes before shipping or locking QA. Missing bake: missing_navmesh_bake:combat_single_sample:catalog=Assets/_Hollow/Resources/Navigation/RoomNavMeshCatalog.asset:run=Hollow/Navigation/Bake Runtime Room NavMeshes
+Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

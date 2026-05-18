@@ -228,7 +228,7 @@ namespace Hollow.Editor.Generation
                 "Prefab root has PresentationVisualMarker with the matching role.",
                 "No gameplay colliders and no gameplay scripts on visual children.",
                 "Pivot/origin is centered; floor objects and doors use bottom at y=0 where applicable.",
-                "Readable from Windows perspective camera and Vision Pro bounded tabletop scale 0.1.",
+                "Readable from Windows perspective camera and Vision Pro bounded tabletop scale 0.5.",
                 "Uses simple materials compatible with Unity 6 URP Linear color."
             };
         }

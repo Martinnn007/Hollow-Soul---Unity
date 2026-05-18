@@ -9,6 +9,7 @@ using Hollow.Diagnostics;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
 using Hollow.Presentation;
+using Unity.PolySpatial;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Build;
@@ -253,8 +254,14 @@ namespace Hollow.Editor.Build
 
             ValidateScene(profile, "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", failures);
             ValidateScene(profile, "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", failures);
+            ValidateScene(profile, "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", failures);
             ValidateFile(Milestone10AssetGenerator.BoundedProfilePath, failures);
             ValidateFile(Milestone10AssetGenerator.ImmersiveProfilePath, failures);
+            ValidateFile(VisionOSVolumeCameraSetup.BoundedConfigPath, failures);
+            ValidateFile(VisionOSVolumeCameraSetup.ImmersiveConfigPath, failures);
+            ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", failures);
+            ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", failures);
+            ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", failures);
 
             if (!Enum.GetNames(typeof(BuildTargetGroup)).Contains("VisionOS") || !Enum.GetNames(typeof(BuildTarget)).Contains("VisionOS"))
             {
@@ -271,7 +278,7 @@ namespace Hollow.Editor.Build
             stopwatch.Stop();
             if (failures.Length > 0)
             {
-                return PlatformBuildTargetResult.Failed("visionos-readiness", "visionOS Simulator/Readiness", string.Empty, stopwatch.Elapsed.TotalMilliseconds, failures.ToString().Trim(), "Regenerate M10-M24 assets and ensure both Vision Pro scenes/profiles are enabled.");
+                return PlatformBuildTargetResult.Failed("visionos-readiness", "visionOS Simulator/Readiness", string.Empty, stopwatch.Elapsed.TotalMilliseconds, failures.ToString().Trim(), "Regenerate M10-M24 assets and ensure the Vision Pro menu, scenes, and profiles are enabled.");
             }
 
             if (blocked)
@@ -279,7 +286,33 @@ namespace Hollow.Editor.Build
                 return PlatformBuildTargetResult.BlockedByEnvironment("visionos-readiness", "visionOS Simulator/Readiness", string.Empty, stopwatch.Elapsed.TotalMilliseconds, "Vision Pro project readiness is present, but local simulator/build tooling is incomplete.", remediation.ToString().Trim());
             }
 
-            return PlatformBuildTargetResult.Passed("visionos-readiness", "visionOS Simulator/Readiness", string.Empty, stopwatch.Elapsed.TotalMilliseconds, "Vision Pro bounded/immersive scenes, polish profiles, and simulator tooling are present.");
+            return PlatformBuildTargetResult.Passed("visionos-readiness", "visionOS Simulator/Readiness", string.Empty, stopwatch.Elapsed.TotalMilliseconds, "Vision Pro menu, bounded/immersive scenes, polish profiles, and simulator tooling are present.");
+        }
+
+        private static void ValidateVisionOSVolumeCamera(string scenePath, StringBuilder failures)
+        {
+            if (!File.Exists(scenePath))
+            {
+                return;
+            }
+
+            EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            var volumeCamera = UnityEngine.Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            if (volumeCamera == null)
+            {
+                failures.AppendLine($"Missing explicit VolumeCamera in {scenePath}.");
+                return;
+            }
+
+            if (volumeCamera.WindowConfiguration == null)
+            {
+                failures.AppendLine($"VolumeCamera has no window configuration in {scenePath}.");
+            }
+
+            if (!volumeCamera.OpenWindowOnLoad)
+            {
+                failures.AppendLine($"VolumeCamera should open on load in {scenePath}.");
+            }
         }
 
         private static PlatformBuildTargetResult RunEditModeTests(PlatformBuildQaProfileDefinition profile)
@@ -368,6 +401,7 @@ namespace Hollow.Editor.Build
             {
                 Directory.CreateDirectory(profile.ReportRoot);
                 ValidateQaProbeScene("Assets/_Hollow/Scenes/MainMenu.unity", "MainMenu", expectedScale: null, expectMainMenu: true, expectDesigner: false, expectGame: false, failures, report);
+                ValidateQaProbeScene("Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", "MainMenu_VisionOS", expectedScale: null, expectMainMenu: true, expectDesigner: false, expectGame: false, failures, report);
                 ValidateQaProbeScene("Assets/_Hollow/Scenes/RoomDesigner.unity", "RoomDesigner", expectedScale: null, expectMainMenu: false, expectDesigner: true, expectGame: false, failures, report);
                 ValidateQaProbeScene("Assets/_Hollow/Scenes/Game_Windows.unity", "Game_Windows", 1f, expectMainMenu: false, expectDesigner: false, expectGame: true, failures, report);
                 ValidateQaProbeScene("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", "Game_VisionOS_Bounded", PresentationScalePolicy.VisionOSBoundedTabletopScale, expectMainMenu: false, expectDesigner: false, expectGame: true, failures, report);
@@ -524,7 +558,7 @@ namespace Hollow.Editor.Build
             {
                 "Windows: launch HollowSoul.exe, create/select profile, start New Run, move/shoot/clear one room, traverse a door, buy a shop card, quit and Continue.",
                 "Windows: open Room Designer, create a 1x1 draft, move cursor, place/erase a rock/enemy marker, export JSON/USDA bundle.",
-                "Vision Pro bounded: verify tabletop world scale is 0.1, HUD/minimap are readable and unscaled, and ArtPass visuals do not add gameplay colliders.",
+                "Vision Pro bounded: verify tabletop world scale is 0.5, HUD/minimap are readable and unscaled, and ArtPass visuals do not add gameplay colliders.",
                 "Vision Pro immersive: verify full-scale world, comfort vignette profile metadata, camera posture, and readable combat spacing.",
                 "All platforms: confirm save/profile state changes only occur in profile-backed sessions and transient designer/sample sessions stay safe."
             };

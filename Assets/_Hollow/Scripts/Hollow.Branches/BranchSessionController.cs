@@ -9,6 +9,7 @@ using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Input;
 using Hollow.Persistence;
+using Hollow.Platform;
 using Hollow.Presentation;
 using Hollow.Rewards;
 using Hollow.Rooms;
@@ -89,6 +90,7 @@ namespace Hollow.Branches
         private int runSeed;
         private int worldIndex = 1;
         private RunWorldPhase worldPhase = RunWorldPhase.Legacy;
+        private string activeBiomeId = RoomBiomeIds.HollowThreshold;
         private string activeHubPortalId = string.Empty;
         private IRunSaveStore runSaveStore;
         private IChallengeResultStore challengeResultStore;
@@ -160,6 +162,8 @@ namespace Hollow.Branches
         public int WorldIndex => worldIndex <= 0 ? 1 : worldIndex;
 
         public RunWorldPhase WorldPhase => worldPhase;
+
+        public string ActiveBiomeId => RoomBiomeIds.Normalize(activeBiomeId);
 
         public string ActiveHubPortalId => activeHubPortalId;
 
@@ -405,6 +409,7 @@ namespace Hollow.Branches
                 : ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
             worldIndex = 1;
             worldPhase = IsDeveloperLab ? RunWorldPhase.Legacy : IsWorldLoopRuntime() ? RunWorldPhase.Prologue : RunWorldPhase.Legacy;
+            activeBiomeId = ResolveBiomeIdForWorld(worldIndex);
             activeHubPortalId = string.Empty;
             currentBranchSeed = IsDeveloperLab
                 ? DeveloperLabDefinition.Seed
@@ -478,6 +483,9 @@ namespace Hollow.Branches
             worldPhase = Enum.TryParse(snapshot?.worldPhase, out RunWorldPhase parsedWorldPhase)
                 ? parsedWorldPhase
                 : RunWorldPhase.Legacy;
+            activeBiomeId = string.IsNullOrWhiteSpace(snapshot?.activeBiomeId)
+                ? ResolveBiomeIdForWorld(worldIndex)
+                : RoomBiomeIds.Normalize(snapshot.activeBiomeId);
             activeHubPortalId = snapshot?.activeHubPortalId ?? string.Empty;
             currentBranchSeed = snapshot != null && snapshot.currentBranchSeed != 0
                 ? snapshot.currentBranchSeed
@@ -588,6 +596,12 @@ namespace Hollow.Branches
                 RunSeed,
                 branchSeed,
                 bossRoomActive);
+        }
+
+        private string ResolveBiomeIdForWorld(int nextWorldIndex)
+        {
+            var definition = RunWorldItineraryService.Resolve(runFramingCatalog, RunSeed, nextWorldIndex <= 0 ? 1 : nextWorldIndex);
+            return definition != null ? definition.BiomeId : RoomBiomeIds.HollowThreshold;
         }
 
         public bool TryTraverse(string direction)
@@ -1165,11 +1179,7 @@ namespace Hollow.Branches
             }
 
             CompleteActiveRunIfPersistent();
-            if (HollowBootstrap.Instance != null)
-            {
-                HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
-                SceneLoaderService.LoadRouteAsync(AppShellRoute.MainMenu);
-            }
+            ReturnToProfileMenu();
 
             return true;
         }
@@ -1236,11 +1246,7 @@ namespace Hollow.Branches
             {
                 worldPhase = RunWorldPhase.Completed;
                 CompleteActiveRunIfPersistent();
-                if (HollowBootstrap.Instance != null)
-                {
-                    HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
-                    SceneLoaderService.LoadRouteAsync(AppShellRoute.MainMenu);
-                }
+                ReturnToProfileMenu();
 
                 return;
             }
@@ -1267,6 +1273,7 @@ namespace Hollow.Branches
             }
 
             currentBranchSeed = choice.Seed;
+            activeBiomeId = ResolveBiomeIdForWorld(worldIndex);
             bossKeyState = BossKeyState.None;
             bossDoorUnlocked = false;
             if (choice.Kind == HubPortalKind.NextWorld)
@@ -2080,8 +2087,8 @@ namespace Hollow.Branches
                         }
 
                         return branchGenerationSettings.EnableTreasureLeaf
-                            ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, seed)
-                            : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, seed);
+                            ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, seed, ActiveBiomeId)
+                            : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, seed, ActiveBiomeId);
                     }
                     catch (Exception error)
                     {
@@ -2089,7 +2096,9 @@ namespace Hollow.Branches
                     }
                 }
 
-                return BranchGenerator.CreateMacroFixtureBranch(branchContent.MacroRoomPool, seed == 0 ? branchContent.BranchSeed : seed);
+                return BranchGenerator.CreateMacroFixtureBranch(
+                    branchContent.ResolveRoomPoolForBiome(ActiveBiomeId, out _),
+                    seed == 0 ? branchContent.BranchSeed : seed);
             }
 
             return BranchGenerator.CreateFiveRoomCross(roomAsset);
@@ -2261,7 +2270,8 @@ namespace Hollow.Branches
                 return BranchGenerator.CreateSeededEncounterBranch(
                     branchContent,
                     branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed,
+                    ActiveBiomeId);
             }
 
             if (snapshot != null &&
@@ -2272,7 +2282,8 @@ namespace Hollow.Branches
                 return BranchGenerator.CreateSeededFeatureBranch(
                     branchContent,
                     branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed,
+                    ActiveBiomeId);
             }
 
             if (snapshot != null &&
@@ -2283,7 +2294,8 @@ namespace Hollow.Branches
                 return BranchGenerator.CreateSeededMacroBranch(
                     branchContent,
                     branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed,
+                    ActiveBiomeId);
             }
 
             if (snapshot != null &&
@@ -2292,7 +2304,7 @@ namespace Hollow.Branches
                 branchContent.HasMacroFixturePool)
             {
                 return BranchGenerator.CreateMacroFixtureBranch(
-                    branchContent.MacroRoomPool,
+                    branchContent.ResolveRoomPoolForBiome(ActiveBiomeId, out _),
                     snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
             }
 
@@ -2304,7 +2316,8 @@ namespace Hollow.Branches
             return BranchGenerator.CreateSeededBranchFeatures(
                 branchContent,
                 branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                seed == 0 ? macroBranchSeed : seed);
+                seed == 0 ? macroBranchSeed : seed,
+                ActiveBiomeId);
         }
 
         private BranchFloorGraph CreateM46Graph(int seed, int nextWorldIndex)
@@ -2324,7 +2337,8 @@ namespace Hollow.Branches
                 encounterDirectorProfile,
                 resolvedWorldIndex,
                 resolvedSeed,
-                selectedBoss != null ? selectedBoss.Arena.arenaId : string.Empty);
+                selectedBoss != null ? selectedBoss.Arena.arenaId : string.Empty,
+                ActiveBiomeId);
         }
 
         private BranchFloorGraph CreateWorldLoopGraph(int seed)
@@ -2502,8 +2516,21 @@ namespace Hollow.Branches
                 yield break;
             }
 
-            HollowBootstrap.Instance.AppStateMachine.TransitionTo(AppShellRoute.MainMenu);
-            SceneLoaderService.LoadRouteAsync(AppShellRoute.MainMenu);
+            ReturnToProfileMenu();
+        }
+
+        private void ReturnToProfileMenu()
+        {
+            if (HollowBootstrap.Instance == null)
+            {
+                return;
+            }
+
+            var route = gameSessionState?.PlatformKind == HollowPlatformKind.WindowsStandard3D
+                ? AppShellRoute.MainMenu
+                : AppShellRoute.MainMenuVisionOS;
+            HollowBootstrap.Instance.AppStateMachine.TransitionTo(route);
+            SceneLoaderService.LoadRouteAsync(route);
         }
 
         private void ApplyRunStatsToPlayer(int healAmount)
@@ -2933,6 +2960,7 @@ namespace Hollow.Branches
                 runSeed = runSeed == 0 ? currentBranchSeed : runSeed,
                 worldIndex = worldIndex <= 0 ? 1 : worldIndex,
                 worldPhase = worldPhase.ToString(),
+                activeBiomeId = ActiveBiomeId,
                 activeHubPortalId = activeHubPortalId ?? string.Empty,
                 hubShopRefreshIndex = interBranchHubState.ShopRefreshIndex,
                 bossKeyState = bossKeyState.ToString(),

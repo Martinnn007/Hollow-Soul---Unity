@@ -16,7 +16,7 @@ namespace Hollow.Tests.EditMode
         public void PresentationScalePolicyKeepsOnlyBoundedVisionAtTabletopScale()
         {
             Assert.AreEqual(1f, PresentationScalePolicy.WorldScaleFor(HollowPlatformKind.WindowsStandard3D));
-            Assert.AreEqual(0.1f, PresentationScalePolicy.WorldScaleFor(HollowPlatformKind.VisionOSBoundedTabletop));
+            Assert.AreEqual(0.5f, PresentationScalePolicy.WorldScaleFor(HollowPlatformKind.VisionOSBoundedTabletop));
             Assert.AreEqual(1f, PresentationScalePolicy.WorldScaleFor(HollowPlatformKind.VisionOSImmersive));
         }
 
@@ -34,7 +34,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(state.HasProfile);
             Assert.AreEqual("profile-001", state.ProfileId);
             Assert.AreEqual("Sample Profile", state.ProfileDisplayName);
-            Assert.AreEqual(0.1f, state.PresentationScale);
+            Assert.AreEqual(0.5f, state.PresentationScale);
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace Hollow.Tests.EditMode
                 controller.InitializeSession();
 
                 Assert.AreEqual(HollowPlatformKind.VisionOSBoundedTabletop, controller.PlatformKind);
-                Assert.AreEqual(0.1f, controller.PresentationRoot.WorldScale);
+                Assert.AreEqual(0.5f, controller.PresentationRoot.WorldScale);
                 Assert.AreEqual(Vector3.zero, controller.PlayerController.transform.position);
                 Assert.AreEqual(Vector3.zero, controller.SessionState.PlayerSpawnPosition);
                 var follow = cameraRig.GetComponent<GameplayCameraFollowController>();

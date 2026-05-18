@@ -95,6 +95,27 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void JsonProfileStoreRecoversProfileMetadataFromAtomicBackup()
+        {
+            var store = new JsonProfileStore(tempRoot);
+            var slotId = new ProfileSlotId(0);
+            store.CreateOrLoadProfile(slotId, "Recoverable");
+            store.MarkRunStarted(slotId);
+            store.SaveActiveRun(slotId, CreateSnapshot("east", 4));
+
+            var savePath = Path.Combine(tempRoot, "hollow_profiles.json");
+            var backupPath = savePath + ".bak";
+            Assert.IsTrue(File.Exists(backupPath), "Repeated saves should leave an atomic recovery backup.");
+
+            File.WriteAllText(savePath, "{broken_json");
+
+            var summaries = new JsonProfileStore(tempRoot).LoadSlotSummaries();
+
+            Assert.AreEqual(3, summaries.Count);
+            Assert.AreEqual("Recoverable", summaries[0].DisplayName);
+        }
+
+        [Test]
         public void CompleteActiveRunBanksSoulsAndClearsSnapshot()
         {
             var store = new JsonProfileStore(tempRoot);

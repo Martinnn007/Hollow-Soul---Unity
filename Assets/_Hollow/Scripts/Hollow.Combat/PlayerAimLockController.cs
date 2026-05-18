@@ -1,4 +1,5 @@
 using Hollow.Input;
+using Hollow.Presentation;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -472,7 +473,10 @@ namespace Hollow.Combat
                 return float.MaxValue;
             }
 
-            var delta = enemy.transform.position - transform.position;
+            var gameplayRoot = ResolveGameplayRoot();
+            var enemyPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(enemy.transform.position) : enemy.transform.position;
+            var playerPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
+            var delta = enemyPosition - playerPosition;
             delta.y = 0f;
             return delta.magnitude;
         }
@@ -484,7 +488,10 @@ namespace Hollow.Combat
                 return BodyFacingDirection;
             }
 
-            var delta = enemy.transform.position - transform.position;
+            var gameplayRoot = ResolveGameplayRoot();
+            var enemyPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(enemy.transform.position) : enemy.transform.position;
+            var playerPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
+            var delta = enemyPosition - playerPosition;
             delta.y = 0f;
             if (delta.sqrMagnitude <= 0.001f)
             {
@@ -502,21 +509,18 @@ namespace Hollow.Combat
                 return false;
             }
 
-            var camera = Camera.main != null ? Camera.main : UnityEngine.Object.FindAnyObjectByType<Camera>();
-            if (camera == null)
+            var gameplayRoot = ResolveGameplayRoot();
+            if (!GameplayInputProjection.TryScreenPointToGameplayPlane(
+                    input.PointerScreenPosition,
+                    gameplayRoot,
+                    transform.position,
+                    out var localPoint))
             {
                 return false;
             }
 
-            var ray = camera.ScreenPointToRay(input.PointerScreenPosition);
-            var plane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
-            if (!plane.Raycast(ray, out var enter))
-            {
-                return false;
-            }
-
-            var point = ray.GetPoint(enter);
-            var delta = point - transform.position;
+            var localPlayer = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
+            var delta = localPoint - localPlayer;
             delta.y = 0f;
             if (delta.sqrMagnitude <= 0.001f)
             {
@@ -530,6 +534,12 @@ namespace Hollow.Combat
         private static Vector2 SafeDirection(Vector2 direction)
         {
             return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up;
+        }
+
+        private Transform ResolveGameplayRoot()
+        {
+            var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
+            return presentationRoot != null ? presentationRoot.transform : transform.parent;
         }
     }
 }

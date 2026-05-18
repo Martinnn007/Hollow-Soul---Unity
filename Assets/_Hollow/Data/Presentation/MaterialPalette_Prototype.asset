@@ -145,3 +145,9 @@ MonoBehaviour:
   - role: 42
     material: {fileID: 2100000, guid: 1394b9ec1b9a942f0a3c1c9f1b8f8bd2, type: 2}
     fallbackColor: {r: 1, g: 0.11999995, b: 0.07999996, a: 0.9}
+  - role: 86
+    material: {fileID: 2100000, guid: 3f7d3c8d5b4a4d0d9a1e2f3b4c5d6e72, type: 2}
+    fallbackColor: {r: 0.28, g: 0.31, b: 0.34, a: 1}
+  - role: 87
+    material: {fileID: 2100000, guid: 4f7d3c8d5b4a4d0d9a1e2f3b4c5d6e73, type: 2}
+    fallbackColor: {r: 0.28, g: 0.31, b: 0.34, a: 0.32}

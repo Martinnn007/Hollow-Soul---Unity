@@ -9,6 +9,8 @@ namespace Hollow.Persistence
     public sealed class JsonProfileStore : IProfileStore, IRunSaveStore, IChallengeResultStore
     {
         private const string FileName = "hollow_profiles.json";
+        private const string BackupExtension = ".bak";
+        private const string TempExtension = ".tmp";
         private readonly string savePath;
 
         public JsonProfileStore()
@@ -232,24 +234,99 @@ namespace Hollow.Persistence
 
         private ProfileStoreSaveData LoadData()
         {
-            if (!File.Exists(savePath))
+            if (TryLoadData(savePath, out var data))
             {
-                var empty = CreateEmptyData();
-                SaveData(empty);
-                return empty;
+                return data;
             }
 
-            var json = File.ReadAllText(savePath);
-            var data = JsonUtility.FromJson<ProfileStoreSaveData>(json) ?? CreateEmptyData();
-            Normalize(data);
-            return data;
+            var backupPath = savePath + BackupExtension;
+            if (TryLoadData(backupPath, out var backupData))
+            {
+                SaveData(backupData);
+                return backupData;
+            }
+
+            var empty = CreateEmptyData();
+            SaveData(empty);
+            return empty;
         }
 
         private void SaveData(ProfileStoreSaveData data)
         {
             Normalize(data);
-            Directory.CreateDirectory(Path.GetDirectoryName(savePath));
-            File.WriteAllText(savePath, JsonUtility.ToJson(data, prettyPrint: true));
+            var directory = Path.GetDirectoryName(savePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var tempPath = savePath + TempExtension;
+            var backupPath = savePath + BackupExtension;
+            File.WriteAllText(tempPath, JsonUtility.ToJson(data, prettyPrint: true));
+
+            try
+            {
+                if (File.Exists(savePath))
+                {
+                    File.Replace(tempPath, savePath, backupPath, ignoreMetadataErrors: true);
+                }
+                else
+                {
+                    File.Move(tempPath, savePath);
+                }
+            }
+            catch (PlatformNotSupportedException)
+            {
+                ReplaceByCopy(tempPath, backupPath);
+            }
+            catch (IOException)
+            {
+                ReplaceByCopy(tempPath, backupPath);
+            }
+        }
+
+        private bool TryLoadData(string path, out ProfileStoreSaveData data)
+        {
+            data = null;
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            try
+            {
+                var json = File.ReadAllText(path);
+                if (string.IsNullOrWhiteSpace(json) || !json.Contains("\"slots\""))
+                {
+                    return false;
+                }
+
+                data = JsonUtility.FromJson<ProfileStoreSaveData>(json);
+            }
+            catch (Exception)
+            {
+                data = null;
+                return false;
+            }
+
+            if (data == null || data.slots == null || data.slots.Count == 0)
+            {
+                return false;
+            }
+
+            Normalize(data);
+            return true;
+        }
+
+        private void ReplaceByCopy(string tempPath, string backupPath)
+        {
+            if (File.Exists(savePath))
+            {
+                File.Copy(savePath, backupPath, overwrite: true);
+            }
+
+            File.Copy(tempPath, savePath, overwrite: true);
+            File.Delete(tempPath);
         }
 
         private static ProfileStoreSaveData CreateEmptyData()

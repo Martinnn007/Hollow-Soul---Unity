@@ -18,6 +18,7 @@ namespace Hollow.Branches
             var message = "Clear rooms, keep what helps, and choose how deep to go.";
             var identityId = string.Empty;
             var identityName = string.Empty;
+            var biomeId = RoomBiomeIds.HollowThreshold;
             var definition = RunWorldItineraryService.Resolve(catalog, runSeed, normalizedWorld);
             if (definition != null)
             {
@@ -26,6 +27,7 @@ namespace Hollow.Branches
                 message = MessageFor(definition, phase, bossRoomActive);
                 identityId = definition.IdentityId;
                 identityName = definition.DisplayName;
+                biomeId = definition.BiomeId;
             }
             else
             {
@@ -39,7 +41,8 @@ namespace Hollow.Branches
                 message,
                 $"Run Seed {runSeed} | Branch {branchSeed}",
                 identityId,
-                identityName);
+                identityName,
+                biomeId);
         }
 
         public static string PhaseLabelFor(RunWorldPhase phase, bool bossRoomActive)

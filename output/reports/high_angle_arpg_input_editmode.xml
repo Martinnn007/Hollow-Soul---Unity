@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="12" result="Passed" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.3537057">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="682" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.353706" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1797" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="681" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.323466" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="85803" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1798" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="681" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.306643" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1799" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="681" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.289846" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1800" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="681" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.274053" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1763" name="VisionOSGameplayInputDiagnosticsTests" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.241258" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1768" name="CameraRelativeMovementProjectsIntoRotatedGameplayRoot" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.CameraRelativeMovementProjectsIntoRotatedGameplayRoot" methodname="CameraRelativeMovementProjectsIntoRotatedGameplayRoot" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1838914350" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.093297" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1769" name="CameraRelativeRightStickAimProjectsIntoRotatedGameplayRoot" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.CameraRelativeRightStickAimProjectsIntoRotatedGameplayRoot" methodname="CameraRelativeRightStickAimProjectsIntoRotatedGameplayRoot" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1042495491" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.032917" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1773" name="DiagnosticsDescribeConnectedInputDevicesListsAvailability" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.DiagnosticsDescribeConnectedInputDevicesListsAvailability" methodname="DiagnosticsDescribeConnectedInputDevicesListsAvailability" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="521388711" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.013513" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1775" name="DiagnosticsHudLineReportsCurrentMove" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.DiagnosticsHudLineReportsCurrentMove" methodname="DiagnosticsHudLineReportsCurrentMove" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="363495217" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.006691" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1774" name="DiagnosticsInputSamplesIncludeKeyboardGamepadAndExternalValues" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.DiagnosticsInputSamplesIncludeKeyboardGamepadAndExternalValues" methodname="DiagnosticsInputSamplesIncludeKeyboardGamepadAndExternalValues" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="36686532" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.010020" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1766" name="ExternalMoveOverrideProducesMovement" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.ExternalMoveOverrideProducesMovement" methodname="ExternalMoveOverrideProducesMovement" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1440560666" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.003680" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1770" name="GamepadDpadFallbackProducesMovement" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.GamepadDpadFallbackProducesMovement" methodname="GamepadDpadFallbackProducesMovement" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1074983732" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.007831" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1767" name="GamepadLeftStickPreservesAnalogMagnitude" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.GamepadLeftStickPreservesAnalogMagnitude" methodname="GamepadLeftStickPreservesAnalogMagnitude" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1188599128" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.007390" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1772" name="JoystickStickFallbackProducesMovement" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.JoystickStickFallbackProducesMovement" methodname="JoystickStickFallbackProducesMovement" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="2111877279" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.006085" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1764" name="KeyboardWasdProducesMovement" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.KeyboardWasdProducesMovement" methodname="KeyboardWasdProducesMovement" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1755543248" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.005928" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1765" name="NonCurrentKeyboardStillProducesMovement" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.NonCurrentKeyboardStillProducesMovement" methodname="NonCurrentKeyboardStillProducesMovement" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="1918525487" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.006548" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1771" name="StrongestGamepadMoveWinsAcrossConnectedGamepads" fullname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests.StrongestGamepadMoveWinsAcrossConnectedGamepads" methodname="StrongestGamepadMoveWinsAcrossConnectedGamepads" classname="Hollow.Tests.EditMode.VisionOSGameplayInputDiagnosticsTests" runstate="Runnable" seed="556900619" result="Passed" start-time="2026-05-17 00:47:56Z" end-time="2026-05-17 00:47:56Z" duration="0.007880" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

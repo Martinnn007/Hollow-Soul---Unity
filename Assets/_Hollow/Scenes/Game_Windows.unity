@@ -877,6 +877,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Presentation::Hollow.Presentation.PlatformPresentationRoot
   platformKind: 0
   worldScale: 1
+  worldYawDegrees: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

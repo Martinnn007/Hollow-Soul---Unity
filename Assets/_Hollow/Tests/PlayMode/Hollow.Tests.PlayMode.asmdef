@@ -12,6 +12,9 @@
     "Hollow.Rewards",
     "Hollow.Presentation",
     "Hollow.Diagnostics",
+    "Unity.PolySpatial",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework",
     "UnityEngine.UI"
   ],
   "includePlatforms": [],

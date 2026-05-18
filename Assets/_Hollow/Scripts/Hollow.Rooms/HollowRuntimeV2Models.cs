@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.Rooms
@@ -16,6 +17,7 @@ namespace Hollow.Rooms
         public int schemaVersion;
         public string sourceProjectId;
         public string canonicalRoomId;
+        public string biomeId = RoomBiomeIds.HollowThreshold;
         public string displayName;
         public string roomType;
         public string rewardType;
@@ -186,9 +188,41 @@ namespace Hollow.Rooms
             IReadOnlyList<ImportedRoomInteractiveObject> interactiveObjects,
             IReadOnlyList<ImportedRoomDecor> decor,
             ImportedHollowRoomManifest sourceManifest)
+            : this(
+                id,
+                displayName,
+                RoomBiomeIds.HollowThreshold,
+                layout,
+                footprint,
+                doorPorts,
+                enemySpawns,
+                itemSpawns,
+                safeStart,
+                hazards,
+                interactiveObjects,
+                decor,
+                sourceManifest)
+        {
+        }
+
+        public ImportedRoomRuntimeAsset(
+            string id,
+            string displayName,
+            string biomeId,
+            RoomLayout layout,
+            RoomInstanceFootprint footprint,
+            IReadOnlyList<RoomDoorPort> doorPorts,
+            IReadOnlyList<ImportedSpawnPoint> enemySpawns,
+            IReadOnlyList<ImportedSpawnPoint> itemSpawns,
+            ImportedSpawnPoint safeStart,
+            IReadOnlyList<ImportedRoomHazard> hazards,
+            IReadOnlyList<ImportedRoomInteractiveObject> interactiveObjects,
+            IReadOnlyList<ImportedRoomDecor> decor,
+            ImportedHollowRoomManifest sourceManifest)
         {
             Id = id;
             DisplayName = displayName;
+            BiomeId = RoomBiomeIds.Normalize(biomeId);
             Layout = layout;
             Footprint = footprint;
             DoorPorts = doorPorts;
@@ -204,6 +238,8 @@ namespace Hollow.Rooms
         public string Id { get; }
 
         public string DisplayName { get; }
+
+        public string BiomeId { get; }
 
         public RoomLayout Layout { get; }
 

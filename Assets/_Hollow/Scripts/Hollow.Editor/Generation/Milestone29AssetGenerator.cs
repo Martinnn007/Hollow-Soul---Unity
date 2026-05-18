@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using Hollow.Branches;
 using Hollow.Data.Definitions;
+using Hollow.UI.MainMenu;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,6 +20,12 @@ namespace Hollow.Editor.Generation
             "Assets/_Hollow/Scenes/Game_Windows.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity",
             "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity"
+        };
+
+        private static readonly string[] MenuScenes =
+        {
+            "Assets/_Hollow/Scenes/MainMenu.unity",
+            "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity"
         };
 
         [MenuItem("Hollow/Generation/Generate Milestone 29 Assets")]
@@ -77,6 +84,7 @@ namespace Hollow.Editor.Generation
 
             var catalog = SaveCatalog(new[] { balanced, heavy });
             AssignToGameScenes(catalog);
+            AssignToMainMenuScenes(catalog);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -160,6 +168,29 @@ namespace Hollow.Editor.Generation
 
                 branch.ConfigureCharacterCatalog(catalog);
                 EditorUtility.SetDirty(branch);
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
+        }
+
+        private static void AssignToMainMenuScenes(CharacterCatalogDefinition catalog)
+        {
+            foreach (var scenePath in MenuScenes)
+            {
+                if (!File.Exists(scenePath))
+                {
+                    continue;
+                }
+
+                var scene = EditorSceneManager.OpenScene(scenePath);
+                var controller = Object.FindFirstObjectByType<MainMenuController>();
+                if (controller == null)
+                {
+                    throw new MissingComponentException($"{scenePath} is missing MainMenuController.");
+                }
+
+                controller.ConfigureCharacterCatalog(catalog);
+                EditorUtility.SetDirty(controller);
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
             }

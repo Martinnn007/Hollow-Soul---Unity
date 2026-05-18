@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hollow.Core;
 using Hollow.Core.App;
@@ -30,11 +31,24 @@ namespace Hollow.RoomDesigner
         private const float LibraryListRowHeight = 34f;
         private const float LibraryListRowGap = 6f;
 
+        private static readonly RoomDesignerToolGroup[] ToolGroups =
+        {
+            new RoomDesignerToolGroup("Terrain", RoomDesignerTool.Ground, RoomDesignerTool.Hole),
+            new RoomDesignerToolGroup("Structure", RoomDesignerTool.Rock, RoomDesignerTool.Spike),
+            new RoomDesignerToolGroup("Doors", RoomDesignerTool.ActiveDoor, RoomDesignerTool.SecretDoor, RoomDesignerTool.InactiveDoor),
+            new RoomDesignerToolGroup("Objects", RoomDesignerTool.SafeStart, RoomDesignerTool.RewardSpawn, RoomDesignerTool.ChestSpawn, RoomDesignerTool.StandardBarrel, RoomDesignerTool.ExplosiveBarrel),
+            new RoomDesignerToolGroup("Enemies Basic", RoomDesignerTool.EnemySpawn, RoomDesignerTool.EnemyNormal, RoomDesignerTool.EnemyFlying, RoomDesignerTool.EnemyFast, RoomDesignerTool.EnemyHeavy, RoomDesignerTool.EnemyCharger, RoomDesignerTool.EnemyTurret, RoomDesignerTool.EnemySplitter, RoomDesignerTool.EnemySpittingPod, RoomDesignerTool.EnemyRat, RoomDesignerTool.EnemySpider),
+            new RoomDesignerToolGroup("Enemies Martial", RoomDesignerTool.EnemySkeletonSword, RoomDesignerTool.EnemySkeletonSpear, RoomDesignerTool.EnemyKnight, RoomDesignerTool.EnemyGiant, RoomDesignerTool.EnemyHollowBird, RoomDesignerTool.EnemyHollowBeast, RoomDesignerTool.EnemyHollowArcher, RoomDesignerTool.EnemyPowderGunner, RoomDesignerTool.EnemyKnifeThrower, RoomDesignerTool.EnemyRepeaterTurret, RoomDesignerTool.EnemyClockworkSentry),
+            new RoomDesignerToolGroup("Enemies Occult", RoomDesignerTool.EnemyHollowAcolyte, RoomDesignerTool.EnemyWraith, RoomDesignerTool.EnemySoulEater, RoomDesignerTool.EnemyCurseBinder, RoomDesignerTool.EnemyGraveLantern, RoomDesignerTool.EnemyStarforgedOctantSentry, RoomDesignerTool.EnemyCrimsonRailSpider, RoomDesignerTool.EnemyAzureMinigunTurret),
+            new RoomDesignerToolGroup("Decor", RoomDesignerTool.DecorGrassTuft, RoomDesignerTool.DecorCrystalCluster, RoomDesignerTool.DecorSmallTree, RoomDesignerTool.DecorStoneRuin),
+            new RoomDesignerToolGroup("Utility", RoomDesignerTool.Erase, RoomDesignerTool.Eyedropper)
+        };
+
         [SerializeField] private Transform previewRoot;
         [SerializeField] private Canvas hudCanvas;
         [SerializeField] private RoomDesignerCuratedDraftCatalogDefinition curatedDraftCatalog;
 
-        private readonly RoomDesignerTool[] tools = Enum.GetValues(typeof(RoomDesignerTool)).Cast<RoomDesignerTool>().ToArray();
+        private readonly RoomDesignerTool[] tools = ToolGroups.SelectMany(group => group.Tools).ToArray();
         private readonly RoomDesignerFootprintPreset[] templatePresets = Enum.GetValues(typeof(RoomDesignerFootprintPreset)).Cast<RoomDesignerFootprintPreset>().ToArray();
         private readonly RoomDesignerCameraController cameraController = new();
         private readonly RoomDesignerLightingController lightingController = new();
@@ -59,6 +73,7 @@ namespace Hollow.RoomDesigner
         private RectTransform zoomInButtonPanel;
         private float nextMoveTime;
         private int toolIndex;
+        private int toolGroupIndex;
         private int librarySelectedIndex;
         private float libraryScrollOffset;
         private int scenePreviewMissingBindings;
@@ -81,11 +96,19 @@ namespace Hollow.RoomDesigner
 
         public RoomDesignerTool CurrentTool => tools[Mathf.Clamp(toolIndex, 0, tools.Length - 1)];
 
+        public int CurrentToolGroupIndex => Mathf.Clamp(toolGroupIndex, 0, ToolGroups.Length - 1);
+
+        public string CurrentToolGroupName => ToolGroups[CurrentToolGroupIndex].Name;
+
+        public IReadOnlyList<RoomDesignerTool> CurrentToolGroupTools => ToolGroups[CurrentToolGroupIndex].Tools;
+
         public Vector3 CameraTargetPosition => cameraController.TargetPosition;
 
         public RoomDesignerPreviewMode PreviewMode { get; private set; } = RoomDesignerPreviewMode.Graybox;
 
         public RoomDesignerCameraViewMode CameraViewMode { get; private set; } = RoomDesignerCameraViewMode.Perspective;
+
+        public string CurrentBiomeId => currentProject != null ? RoomBiomeIds.Normalize(currentProject.biomeId) : RoomBiomeIds.HollowThreshold;
 
         public float CameraZoomMultiplier => cameraController.ZoomMultiplier;
 
@@ -145,20 +168,24 @@ namespace Hollow.RoomDesigner
         public void ShowLibrary()
         {
             EnsureRoots();
+            var preferredProjectId = currentProject?.projectId;
             Mode = RoomDesignerMode.Library;
             pendingDeleteProjectId = string.Empty;
             pendingDeleteDisplayName = string.Empty;
             currentProject = null;
             store ??= new RoomDesignerStore();
             libraryState ??= new RoomDesignerDraftLibraryState(store, slotId, autoCreateDefaultDraft: false, curatedDraftCatalog);
-            libraryState.Reload();
+            libraryState.Reload(preferredProjectId);
             if (libraryState.Drafts.Count == 0 && libraryState.CuratedDrafts.Count == 0)
             {
                 ShowCreateTemplates();
                 return;
             }
 
-            librarySelectedIndex = Mathf.Clamp(librarySelectedIndex, 0, Mathf.Max(0, LibraryOptionCount() - 1));
+            var preferredIndex = LibraryIndexForProject(preferredProjectId);
+            librarySelectedIndex = preferredIndex >= 0
+                ? preferredIndex
+                : Mathf.Clamp(librarySelectedIndex, 0, Mathf.Max(0, LibraryOptionCount() - 1));
             status = libraryState.LatestMessage;
             ClearPreview();
             RefreshHud();
@@ -205,6 +232,51 @@ namespace Hollow.RoomDesigner
             status = libraryState.LatestMessage;
             EnterEditing(currentProject);
             return currentProject;
+        }
+
+        public void SetCurrentBiome(string biomeId)
+        {
+            if (currentProject == null)
+            {
+                return;
+            }
+
+            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
+            currentProject.biomeId = catalog != null
+                ? catalog.ResolveBiomeId(biomeId)
+                : RoomBiomeIds.Normalize(biomeId);
+            currentProject.updatedAtUtcTicks = DateTime.UtcNow.Ticks;
+            status = $"Biome: {currentProject.biomeId}";
+            store?.SaveDraft(slotId, currentProject);
+            RebuildPreview();
+            RefreshHud();
+        }
+
+        public void CycleCurrentBiome(int direction)
+        {
+            if (currentProject == null)
+            {
+                return;
+            }
+
+            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
+            var biomes = catalog?.Biomes
+                .Where(biome => biome != null)
+                .Select(biome => biome.BiomeId)
+                .Distinct()
+                .ToArray() ?? new[] { RoomBiomeIds.HollowThreshold };
+            if (biomes.Length == 0)
+            {
+                biomes = new[] { RoomBiomeIds.HollowThreshold };
+            }
+
+            var currentIndex = Array.FindIndex(biomes, id => RoomBiomeIds.Matches(id, currentProject.biomeId));
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
+            SetCurrentBiome(biomes[Mod(currentIndex + direction, biomes.Length)]);
         }
 
         public RoomDesignerProject DeleteDraft(string projectId)
@@ -329,13 +401,67 @@ namespace Hollow.RoomDesigner
 
         public void SelectTool(RoomDesignerTool tool)
         {
-            var index = Array.IndexOf(tools, tool);
-            if (index >= 0)
+            if (SetCurrentTool(tool))
             {
-                toolIndex = index;
                 RefreshHud();
                 RefreshToolToolbar();
             }
+        }
+
+        public void SelectToolGroup(int groupIndex)
+        {
+            SetToolGroup(groupIndex, selectFirstTool: true);
+            RefreshHud();
+            RefreshToolToolbar();
+        }
+
+        private bool SetCurrentTool(RoomDesignerTool tool)
+        {
+            var index = Array.IndexOf(tools, tool);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            toolIndex = index;
+            SyncToolGroupToCurrentTool();
+            return true;
+        }
+
+        private void SelectToolInCurrentGroup(int delta)
+        {
+            var group = ToolGroups[CurrentToolGroupIndex].Tools;
+            var index = Array.IndexOf(group, CurrentTool);
+            if (index < 0)
+            {
+                index = 0;
+            }
+
+            SetCurrentTool(group[Mod(index + delta, group.Length)]);
+        }
+
+        private void SetToolGroup(int nextGroupIndex, bool selectFirstTool)
+        {
+            toolGroupIndex = Mod(nextGroupIndex, ToolGroups.Length);
+            if (selectFirstTool)
+            {
+                SetCurrentTool(ToolGroups[toolGroupIndex].Tools[0]);
+            }
+        }
+
+        private void SyncToolGroupToCurrentTool()
+        {
+            var tool = CurrentTool;
+            for (var index = 0; index < ToolGroups.Length; index++)
+            {
+                if (Array.IndexOf(ToolGroups[index].Tools, tool) >= 0)
+                {
+                    toolGroupIndex = index;
+                    return;
+                }
+            }
+
+            toolGroupIndex = 0;
         }
 
         public void TogglePreviewMode()
@@ -416,8 +542,19 @@ namespace Hollow.RoomDesigner
 
             if (input.ToolDelta != 0)
             {
-                toolIndex = Mod(toolIndex + input.ToolDelta, tools.Length);
+                SelectToolInCurrentGroup(input.ToolDelta);
                 changed = true;
+            }
+
+            if (input.ToolGroupDelta != 0)
+            {
+                SetToolGroup(toolGroupIndex + input.ToolGroupDelta, selectFirstTool: true);
+                changed = true;
+            }
+
+            if (input.BiomeDelta != 0)
+            {
+                CycleCurrentBiome(input.BiomeDelta);
             }
 
             if (input.LayerDelta != 0)
@@ -780,6 +917,18 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.ChestSpawn:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.ChestSpawn, "spawn_chest");
                     break;
+                case RoomDesignerTool.DecorGrassTuft:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.DecorGrassTuft, "decor_grass_tuft");
+                    break;
+                case RoomDesignerTool.DecorCrystalCluster:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.DecorCrystalCluster, "decor_crystal_cluster");
+                    break;
+                case RoomDesignerTool.DecorSmallTree:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.DecorSmallTree, "decor_small_tree");
+                    break;
+                case RoomDesignerTool.DecorStoneRuin:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.DecorStoneRuin, "decor_stone_ruin");
+                    break;
                 case RoomDesignerTool.ActiveDoor:
                     SetNearestDoor(RoomDesignerDoorKinds.Door);
                     break;
@@ -874,30 +1023,30 @@ namespace Hollow.RoomDesigner
             var marker = currentProject.markers.FirstOrDefault(candidate => Mathf.RoundToInt(candidate.x) == CursorX && Mathf.RoundToInt(candidate.z) == CursorZ);
             if (marker != null && RoomDesignerMarkerKinds.IsEnemy(marker.kind))
             {
-                toolIndex = Array.IndexOf(tools, ToolForEnemyKind(marker.kind));
+                SetCurrentTool(ToolForEnemyKind(marker.kind));
                 return;
             }
 
             if (marker?.kind == RoomDesignerMarkerKinds.RoomReward)
             {
-                toolIndex = Array.IndexOf(tools, RoomDesignerTool.RewardSpawn);
+                SetCurrentTool(RoomDesignerTool.RewardSpawn);
                 return;
             }
 
             if (marker?.kind == RoomDesignerMarkerKinds.ChestSpawn)
             {
-                toolIndex = Array.IndexOf(tools, RoomDesignerTool.ChestSpawn);
+                SetCurrentTool(RoomDesignerTool.ChestSpawn);
                 return;
             }
 
             var cell = currentProject.cells.LastOrDefault(candidate => candidate.x == CursorX && candidate.z == CursorZ && candidate.layer == CursorLayer);
-            toolIndex = cell?.kind switch
+            SetCurrentTool(cell?.kind switch
             {
-                RoomDesignerCellKinds.Hole => Array.IndexOf(tools, RoomDesignerTool.Hole),
-                RoomDesignerCellKinds.Rock => Array.IndexOf(tools, RoomDesignerTool.Rock),
-                RoomDesignerCellKinds.Spike => Array.IndexOf(tools, RoomDesignerTool.Spike),
-                _ => Array.IndexOf(tools, RoomDesignerTool.Ground)
-            };
+                RoomDesignerCellKinds.Hole => RoomDesignerTool.Hole,
+                RoomDesignerCellKinds.Rock => RoomDesignerTool.Rock,
+                RoomDesignerCellKinds.Spike => RoomDesignerTool.Spike,
+                _ => RoomDesignerTool.Ground
+            });
         }
 
         private static RoomDesignerTool ToolForEnemyKind(string kind)
@@ -1144,7 +1293,7 @@ namespace Hollow.RoomDesigner
                 return;
             }
 
-            if (!RoomDesignerScenePreviewBuilder.BuildVisualForCell(host, cell))
+            if (!RoomDesignerScenePreviewBuilder.BuildVisualForCell(host, cell, currentProject?.biomeId))
             {
                 scenePreviewMissingBindings++;
             }
@@ -1157,7 +1306,7 @@ namespace Hollow.RoomDesigner
                 return;
             }
 
-            if (!RoomDesignerScenePreviewBuilder.BuildVisualForDoor(host, door))
+            if (!RoomDesignerScenePreviewBuilder.BuildVisualForDoor(host, door, currentProject?.biomeId))
             {
                 scenePreviewMissingBindings++;
             }
@@ -1170,7 +1319,7 @@ namespace Hollow.RoomDesigner
                 return;
             }
 
-            if (!RoomDesignerScenePreviewBuilder.BuildVisualForMarker(host, marker))
+            if (!RoomDesignerScenePreviewBuilder.BuildVisualForMarker(host, marker, currentProject?.biomeId))
             {
                 scenePreviewMissingBindings++;
             }
@@ -1205,6 +1354,10 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.StandardBarrel => MaterialRole.DesignerBarrel,
                 RoomDesignerMarkerKinds.ExplosiveBarrel => MaterialRole.DesignerExplosiveBarrel,
                 RoomDesignerMarkerKinds.ChestSpawn => MaterialRole.DesignerChest,
+                RoomDesignerMarkerKinds.DecorGrassTuft => MaterialRole.DecorGrassTuft,
+                RoomDesignerMarkerKinds.DecorCrystalCluster => MaterialRole.DecorCrystalCluster,
+                RoomDesignerMarkerKinds.DecorSmallTree => MaterialRole.DecorSmallTree,
+                RoomDesignerMarkerKinds.DecorStoneRuin => MaterialRole.DecorStoneRuin,
                 _ => MaterialRole.DesignerSpawnReward
             };
         }
@@ -1765,7 +1918,7 @@ namespace Hollow.RoomDesigner
             toolToolbarPanel.anchorMax = new Vector2(0.5f, 1f);
             toolToolbarPanel.pivot = new Vector2(0.5f, 1f);
             toolToolbarPanel.anchoredPosition = new Vector2(0f, -18f);
-            toolToolbarPanel.sizeDelta = new Vector2(1440f, 94f);
+            toolToolbarPanel.sizeDelta = new Vector2(1440f, 138f);
             panelObject.GetComponent<Image>().color = new Color(0.035f, 0.04f, 0.045f, 0.8f);
             toolToolbarPanel.gameObject.SetActive(false);
         }
@@ -1787,16 +1940,63 @@ namespace Hollow.RoomDesigner
             toolToolbarPanel.gameObject.SetActive(true);
             ClearChildren(toolToolbarPanel);
 
-            const float tileWidth = 70f;
-            const float tileHeight = 72f;
+            DrawToolGroupRow();
+            DrawToolEntityRow();
+        }
+
+        private void DrawToolGroupRow()
+        {
+            const float tileWidth = 142f;
+            const float tileHeight = 34f;
             const float gap = 7f;
-            var totalWidth = tools.Length * tileWidth + (tools.Length - 1) * gap;
+            var totalWidth = ToolGroups.Length * tileWidth + (ToolGroups.Length - 1) * gap;
             var startX = -totalWidth * 0.5f + tileWidth * 0.5f;
 
-            for (var index = 0; index < tools.Length; index++)
+            for (var index = 0; index < ToolGroups.Length; index++)
             {
-                var tool = tools[index];
-                var selected = index == toolIndex;
+                var group = ToolGroups[index];
+                var selected = index == CurrentToolGroupIndex;
+                var capturedIndex = index;
+                var tileObject = new GameObject($"ToolGroupTile_{index}_{group.Name.Replace(" ", string.Empty).Replace("/", string.Empty)}", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Outline));
+                tileObject.transform.SetParent(toolToolbarPanel, false);
+                var rect = (RectTransform)tileObject.transform;
+                rect.anchorMin = new Vector2(0.5f, 1f);
+                rect.anchorMax = new Vector2(0.5f, 1f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.sizeDelta = new Vector2(tileWidth, tileHeight);
+                rect.anchoredPosition = new Vector2(startX + index * (tileWidth + gap), -8f);
+
+                var image = tileObject.GetComponent<Image>();
+                image.color = selected
+                    ? new Color(0.14f, 0.26f, 0.34f, 0.98f)
+                    : new Color(0.08f, 0.095f, 0.11f, 0.9f);
+
+                var outline = tileObject.GetComponent<Outline>();
+                outline.effectColor = selected ? new Color(0.35f, 0.75f, 1f, 0.98f) : new Color(0.34f, 0.38f, 0.42f, 0.52f);
+                outline.effectDistance = selected ? new Vector2(2f, -2f) : new Vector2(1f, -1f);
+
+                var button = tileObject.GetComponent<Button>();
+                button.targetGraphic = image;
+                button.onClick.AddListener(() => SelectToolGroup(capturedIndex));
+
+                AddToolbarText(tileObject.transform, "Name", group.Name, selected ? 13 : 12, FontStyle.Bold, new Vector2(0f, -4f), new Vector2(tileWidth, 26f), TextAnchor.MiddleCenter, selected);
+            }
+        }
+
+        private void DrawToolEntityRow()
+        {
+            var groupTools = ToolGroups[CurrentToolGroupIndex].Tools;
+            const float maxTotalWidth = 1370f;
+            const float tileHeight = 72f;
+            const float gap = 7f;
+            var tileWidth = Mathf.Clamp((maxTotalWidth - (groupTools.Length - 1) * gap) / Mathf.Max(1, groupTools.Length), 70f, 92f);
+            var totalWidth = groupTools.Length * tileWidth + (groupTools.Length - 1) * gap;
+            var startX = -totalWidth * 0.5f + tileWidth * 0.5f;
+
+            for (var index = 0; index < groupTools.Length; index++)
+            {
+                var tool = groupTools[index];
+                var selected = tool == CurrentTool;
                 var capturedTool = tool;
                 var tileObject = new GameObject($"ToolTile_{tool}", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Outline));
                 tileObject.transform.SetParent(toolToolbarPanel, false);
@@ -1805,7 +2005,7 @@ namespace Hollow.RoomDesigner
                 rect.anchorMax = new Vector2(0.5f, 1f);
                 rect.pivot = new Vector2(0.5f, 1f);
                 rect.sizeDelta = new Vector2(tileWidth, tileHeight);
-                rect.anchoredPosition = new Vector2(startX + index * (tileWidth + gap), -11f);
+                rect.anchoredPosition = new Vector2(startX + index * (tileWidth + gap), -54f);
 
                 var image = tileObject.GetComponent<Image>();
                 image.color = selected
@@ -1889,13 +2089,13 @@ namespace Hollow.RoomDesigner
             var draftCount = libraryState?.Drafts.Count ?? 0;
             hudText.text =
                 $"Room Designer - Macro Authoring\n" +
-                $"Drafts: {draftCount} | {currentProject.footprintPreset} | {dimensions.x}x{dimensions.y}m | Ports {enabledPorts}/{currentProject.doorPorts.Count}\n" +
+                $"Drafts: {draftCount} | {currentProject.footprintPreset} | {dimensions.x}x{dimensions.y}m | Biome {BiomeDisplayName(CurrentBiomeId)} | Ports {enabledPorts}/{currentProject.doorPorts.Count}\n" +
                 $"Cursor ({CursorX}, {CursorLayer}, {CursorZ}) | Door {selectedDoor} | Labels {(LabelsVisible ? "Important" : "Off")}\n" +
                 $"Validation: {LastValidationReport.Summary()} | E:{LastValidationReport.Errors.Count} W:{LastValidationReport.Warnings.Count}";
             if (controlsText != null)
             {
                 controlsText.text =
-                    "WASD/Arrows move | Q/E tools | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview | C camera | -/+ zoom\n" +
+                    "WASD/Arrows move | Q/E entity | [/ ] group | Shift+[/] biome | Z/X layer | Space place | Delete erase | F pick | Tab labels | V preview | C camera | -/+ zoom\n" +
                     "P playtest | J export bundle | U export USDA | Esc library\n" +
                     DesignerStatusText();
             }
@@ -1914,6 +2114,14 @@ namespace Hollow.RoomDesigner
             }
 
             return status;
+        }
+
+        private static string BiomeDisplayName(string biomeId)
+        {
+            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
+            return catalog != null && catalog.TryGetBiome(biomeId, out var biome) && biome != null
+                ? biome.DisplayName
+                : RoomBiomeIds.Normalize(biomeId);
         }
 
         private void EnsurePreviewModeButton()
@@ -2166,6 +2374,32 @@ namespace Hollow.RoomDesigner
                 : -1;
         }
 
+        private int LibraryIndexForProject(string projectId)
+        {
+            if (string.IsNullOrWhiteSpace(projectId) || libraryState == null)
+            {
+                return -1;
+            }
+
+            for (var index = 0; index < libraryState.CuratedDrafts.Count; index++)
+            {
+                if (string.Equals(libraryState.CuratedDrafts[index].projectId, projectId, StringComparison.Ordinal))
+                {
+                    return index;
+                }
+            }
+
+            for (var index = 0; index < libraryState.Drafts.Count; index++)
+            {
+                if (string.Equals(libraryState.Drafts[index].projectId, projectId, StringComparison.Ordinal))
+                {
+                    return libraryState.CuratedDrafts.Count + index;
+                }
+            }
+
+            return -1;
+        }
+
         private void ClearPreview()
         {
             EnsureRoots();
@@ -2211,6 +2445,19 @@ namespace Hollow.RoomDesigner
         private static int Mod(int value, int length)
         {
             return (value % length + length) % length;
+        }
+
+        private readonly struct RoomDesignerToolGroup
+        {
+            public RoomDesignerToolGroup(string name, params RoomDesignerTool[] tools)
+            {
+                Name = name;
+                Tools = tools;
+            }
+
+            public string Name { get; }
+
+            public RoomDesignerTool[] Tools { get; }
         }
     }
 }

@@ -77,6 +77,35 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void VisionOSChallengeLaunchUsesBoundedRouteAndFixedChallengeCharacter()
+        {
+            var tempRoot = Path.Combine(Application.temporaryCachePath, "hollow_m47_visionos_tests", Path.GetRandomFileName());
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var store = new JsonProfileStore(tempRoot);
+                var profile = store.CreateOrLoadProfile(new ProfileSlotId(0), "Vision Runner");
+                var selectedContext = new SelectedProfileContext();
+                var viewModel = new MainMenuViewModel(store, selectedContext, new AppStateMachine(), LoadChallengeCatalog());
+                viewModel.SelectOrCreateSlot(profile.SlotIndex);
+
+                viewModel.OpenChallenges();
+                var route = viewModel.LaunchChallenge("stone_oath", HollowPlatformKind.VisionOSBoundedTabletop);
+
+                Assert.AreEqual(AppShellRoute.GameVisionOSBounded, route);
+                Assert.AreEqual("stone_oath", selectedContext.SelectedChallengeId);
+                Assert.AreEqual("heavy", selectedContext.SelectedCharacterId);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Test]
         public void ChallengeRecordsPersistBestClearTimeOnlyWhenImproved()
         {
             var tempRoot = Path.Combine(Application.temporaryCachePath, "hollow_m47_record_tests", Path.GetRandomFileName());

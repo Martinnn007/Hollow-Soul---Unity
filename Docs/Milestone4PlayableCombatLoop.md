@@ -26,7 +26,7 @@ Milestone 4 turns the imported M3 sample room into the first playable combat sli
 
 ## Platform Rule
 
-Gameplay stays in local room meters. Vision Pro bounded still scales only `WorldPresentationRoot` to `0.1`; the HUD stays on `PlatformShellCanvas` outside the scaled world.
+Gameplay stays in local room meters. Vision Pro bounded still scales only `WorldPresentationRoot` to `0.5`; the HUD stays on `PlatformShellCanvas` outside the scaled world.
 
 ## Commands
 

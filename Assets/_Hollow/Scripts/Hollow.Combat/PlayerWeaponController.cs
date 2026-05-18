@@ -177,9 +177,11 @@ namespace Hollow.Combat
 
         public WeaponCatalogDefinition WeaponCatalog => weaponCatalog;
 
-        public Vector2 LastAimDirection => aimLockController != null
-            ? aimLockController.AttackDirection
-            : (lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up);
+        public Vector2 LastAimDirection => lastAimDirection.sqrMagnitude > 0.001f
+            ? lastAimDirection.normalized
+            : aimLockController != null
+                ? aimLockController.AttackDirection
+                : Vector2.up;
 
         public float MeleeRangeBonusMeters => meleeRangeBonusMeters;
 
@@ -282,7 +284,7 @@ namespace Hollow.Combat
             }
 
             BindHealthEvents();
-            var input = GameplayInputReader.ReadCurrent();
+            var input = GameplayInputReader.ReadCurrent(ResolveGameplayRoot());
             RegenerateStamina(Time.deltaTime);
             TickAction(Time.deltaTime, Time.time);
             EnsureAimLockController();
@@ -992,6 +994,12 @@ namespace Hollow.Combat
             {
                 aimLockController = GetComponent<PlayerAimLockController>() ?? gameObject.AddComponent<PlayerAimLockController>();
             }
+        }
+
+        private Transform ResolveGameplayRoot()
+        {
+            var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
+            return presentationRoot != null ? presentationRoot.transform : transform.parent;
         }
 
         private WeaponDefinition ResolveWeapon(WeaponSlot slot)

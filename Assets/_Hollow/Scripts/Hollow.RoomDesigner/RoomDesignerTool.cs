@@ -45,6 +45,10 @@ namespace Hollow.RoomDesigner
         EnemyGraveLantern = 40,
         EnemyStarforgedOctantSentry = 41,
         EnemyCrimsonRailSpider = 42,
-        EnemyAzureMinigunTurret = 43
+        EnemyAzureMinigunTurret = 43,
+        DecorGrassTuft = 44,
+        DecorCrystalCluster = 45,
+        DecorSmallTree = 46,
+        DecorStoneRuin = 47
     }
 }

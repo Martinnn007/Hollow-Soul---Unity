@@ -1,5 +1,9 @@
+using System;
+using System.Globalization;
+using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace Hollow.Input
 {
@@ -8,7 +12,21 @@ namespace Hollow.Input
         private const float StickDeadZone = 0.2f;
         private const float MouseAimMovePixels = 0.5f;
 
+        private static Vector2 externalMoveOverride;
+        private static int externalMoveOverrideFrame = -1000;
+
+        public static bool HasKeyboardDevice => HasAnyKeyboardDevice();
+
+        public static bool HasGamepadDevice => Gamepad.current != null || Gamepad.all.Count > 0;
+
+        public static bool HasJoystickDevice => Joystick.current != null || Joystick.all.Count > 0;
+
         public static GameplayInputSnapshot ReadCurrent()
+        {
+            return ReadCurrent(null);
+        }
+
+        public static GameplayInputSnapshot ReadCurrent(Transform gameplayRoot)
         {
             var pausePressed = ReadPausePressed();
             if (GameplayPauseState.IsPaused)
@@ -32,8 +50,8 @@ namespace Hollow.Input
             var lightAttackHeld = ReadLightAttackHeld();
             var heavyAttackHeld = ReadHeavyAttackHeld();
             return new GameplayInputSnapshot(
-                ReadMove(),
-                ReadShoot(),
+                ReadMove(gameplayRoot),
+                ReadShoot(gameplayRoot),
                 ReadInteractPressed(),
                 ReadSwapWeaponPressed(),
                 ReadLightAttackPressed(),
@@ -87,76 +105,157 @@ namespace Hollow.Input
             return Vector2.ClampMagnitude(rawDirection, 1f).normalized;
         }
 
+        public static Vector2 ReadMoveForDiagnostics()
+        {
+            return ReadMove();
+        }
+
+        public static Vector2 ReadMoveForDiagnostics(Transform gameplayRoot)
+        {
+            return ReadMove(gameplayRoot);
+        }
+
+        public static void SetExternalMoveOverride(Vector2 move)
+        {
+            externalMoveOverride = Vector2.ClampMagnitude(move, 1f);
+            externalMoveOverrideFrame = Time.frameCount;
+        }
+
+        public static string DescribeConnectedInputDevices()
+        {
+            var builder = new StringBuilder(256);
+            builder.Append("keyboard=").Append(HasKeyboardDevice ? "yes" : "no");
+            builder.Append(" gamepad=").Append(HasGamepadDevice ? "yes" : "no");
+            builder.Append(" joystick=").Append(HasJoystickDevice ? "yes" : "no");
+            builder.Append(" currentKeyboard=").Append(Keyboard.current?.displayName ?? "none");
+            builder.Append(" currentGamepad=").Append(Gamepad.current?.displayName ?? "none");
+            builder.Append(" currentJoystick=").Append(Joystick.current?.displayName ?? "none");
+            builder.Append(" devices=");
+
+            var devices = InputSystem.devices;
+            if (devices.Count == 0)
+            {
+                builder.Append("none");
+                return builder.ToString();
+            }
+
+            for (var i = 0; i < devices.Count; i++)
+            {
+                var device = devices[i];
+                if (i > 0)
+                {
+                    builder.Append(", ");
+                }
+
+                builder
+                    .Append(device.displayName)
+                    .Append('(')
+                    .Append(device.layout)
+                    .Append('/');
+
+                if (device.enabled)
+                {
+                    builder.Append("enabled");
+                }
+                else
+                {
+                    builder.Append("disabled");
+                }
+
+                builder.Append(')');
+            }
+
+            builder.Append(" gamepadDetails=[");
+            for (var i = 0; i < Gamepad.all.Count; i++)
+            {
+                if (i > 0)
+                {
+                    builder.Append("; ");
+                }
+
+                AppendGamepadDeviceDetails(builder, Gamepad.all[i]);
+            }
+
+            builder.Append(']');
+            return builder.ToString();
+        }
+
+        public static string DescribeCurrentInputSamples()
+        {
+            return DescribeCurrentInputSamples(null);
+        }
+
+        public static string DescribeCurrentInputSamples(Transform gameplayRoot)
+        {
+            var builder = new StringBuilder(512);
+            AppendVector(builder.Append("keyboardMove="), ReadKeyboardMove());
+            AppendVector(builder.Append(" keyboardShoot="), ReadKeyboardShoot());
+            AppendVector(builder.Append(" gamepadMove="), ReadStrongestGamepadMove());
+            AppendVector(builder.Append(" gamepadShoot="), ReadStrongestGamepadStick(gamepad => gamepad.rightStick));
+            AppendVector(builder.Append(" joystickMove="), ReadStrongestJoystickStick());
+            AppendVector(builder.Append(" genericStick="), ReadStrongestGenericControllerVector());
+            AppendVector(builder.Append(" externalMove="), ReadExternalMoveOverride());
+            if (gameplayRoot != null)
+            {
+                AppendVector(builder.Append(" projectedMove="), ReadMove(gameplayRoot));
+                AppendVector(builder.Append(" projectedShoot="), ReadShoot(gameplayRoot));
+            }
+
+            builder.Append(" keyboards=[");
+            var keyboardIndex = 0;
+            AppendKeyboardSample(builder, Keyboard.current, ref keyboardIndex, "current");
+            foreach (var device in InputSystem.devices)
+            {
+                if (device == Keyboard.current || device is not Keyboard keyboard)
+                {
+                    continue;
+                }
+
+                AppendKeyboardSample(builder, keyboard, ref keyboardIndex, "device");
+            }
+
+            builder.Append("] gamepads=[");
+            var gamepadIndex = 0;
+            AppendGamepadSample(builder, Gamepad.current, ref gamepadIndex, "current");
+            foreach (var gamepad in Gamepad.all)
+            {
+                if (gamepad == Gamepad.current)
+                {
+                    continue;
+                }
+
+                AppendGamepadSample(builder, gamepad, ref gamepadIndex, "device");
+            }
+
+            builder.Append("]");
+            return builder.ToString();
+        }
+
         private static Vector2 ReadMove()
         {
-            var move = Vector2.zero;
-            var keyboard = Keyboard.current;
-            if (keyboard != null)
-            {
-                if (keyboard.aKey.isPressed)
-                {
-                    move.x -= 1f;
-                }
+            return ReadMove(null);
+        }
 
-                if (keyboard.dKey.isPressed)
-                {
-                    move.x += 1f;
-                }
+        private static Vector2 ReadMove(Transform gameplayRoot)
+        {
+            var move = ReadKeyboardMove();
+            move += ReadBestMoveStick();
+            move += ReadExternalMoveOverride();
 
-                if (keyboard.sKey.isPressed)
-                {
-                    move.y -= 1f;
-                }
-
-                if (keyboard.wKey.isPressed)
-                {
-                    move.y += 1f;
-                }
-            }
-
-            var gamepad = Gamepad.current;
-            if (gamepad != null)
-            {
-                move += gamepad.leftStick.ReadValue();
-            }
-
-            return Vector2.ClampMagnitude(move, 1f);
+            return GameplayInputProjection.ScreenVectorToGameplayVector(Vector2.ClampMagnitude(move, 1f), gameplayRoot);
         }
 
         private static Vector2 ReadShoot()
         {
-            var shoot = Vector2.zero;
-            var keyboard = Keyboard.current;
-            if (keyboard != null)
-            {
-                if (keyboard.leftArrowKey.isPressed)
-                {
-                    shoot.x -= 1f;
-                }
+            return ReadShoot(null);
+        }
 
-                if (keyboard.rightArrowKey.isPressed)
-                {
-                    shoot.x += 1f;
-                }
+        private static Vector2 ReadShoot(Transform gameplayRoot)
+        {
+            var shoot = ReadKeyboardShoot();
+            shoot += ReadStrongestGamepadStick(gamepad => gamepad.rightStick);
 
-                if (keyboard.downArrowKey.isPressed)
-                {
-                    shoot.y -= 1f;
-                }
-
-                if (keyboard.upArrowKey.isPressed)
-                {
-                    shoot.y += 1f;
-                }
-            }
-
-            var gamepad = Gamepad.current;
-            if (gamepad != null)
-            {
-                shoot += gamepad.rightStick.ReadValue();
-            }
-
-            return shoot;
+            return GameplayInputProjection.ScreenVectorToGameplayVector(shoot, gameplayRoot);
         }
 
         private static Vector2 ReadPointerScreenPosition(out bool hasPointerScreenPosition, out bool mouseAimIntent)
@@ -180,37 +279,32 @@ namespace Hollow.Input
 
         private static bool ReadInteractPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.eKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.eKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.buttonSouth.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.buttonSouth);
         }
 
         private static bool ReadSwapWeaponPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.tabKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.tabKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.leftShoulder.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.leftShoulder);
         }
 
         private static bool ReadLightAttackPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null &&
+            if (ReadAnyKeyboard(keyboard =>
                 (keyboard.jKey.wasPressedThisFrame ||
                  keyboard.leftArrowKey.isPressed ||
                  keyboard.rightArrowKey.isPressed ||
                  keyboard.downArrowKey.isPressed ||
-                 keyboard.upArrowKey.isPressed))
+                 keyboard.upArrowKey.isPressed)))
             {
                 return true;
             }
@@ -221,19 +315,17 @@ namespace Hollow.Input
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightShoulder.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.rightShoulder);
         }
 
         private static bool ReadLightAttackHeld()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null &&
+            if (ReadAnyKeyboard(keyboard =>
                 (keyboard.jKey.isPressed ||
                  keyboard.leftArrowKey.isPressed ||
                  keyboard.rightArrowKey.isPressed ||
                  keyboard.downArrowKey.isPressed ||
-                 keyboard.upArrowKey.isPressed))
+                 keyboard.upArrowKey.isPressed)))
             {
                 return true;
             }
@@ -244,8 +336,7 @@ namespace Hollow.Input
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightShoulder.isPressed;
+            return ReadAnyGamepadButtonHeld(gamepad => gamepad.rightShoulder);
         }
 
         private static bool ReadLightAttackReleased(bool lightAttackHeld)
@@ -255,13 +346,12 @@ namespace Hollow.Input
                 return false;
             }
 
-            var keyboard = Keyboard.current;
-            if (keyboard != null &&
+            if (ReadAnyKeyboard(keyboard =>
                 (keyboard.jKey.wasReleasedThisFrame ||
                  keyboard.leftArrowKey.wasReleasedThisFrame ||
                  keyboard.rightArrowKey.wasReleasedThisFrame ||
                  keyboard.downArrowKey.wasReleasedThisFrame ||
-                 keyboard.upArrowKey.wasReleasedThisFrame))
+                 keyboard.upArrowKey.wasReleasedThisFrame)))
             {
                 return true;
             }
@@ -272,14 +362,12 @@ namespace Hollow.Input
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightShoulder.wasReleasedThisFrame;
+            return ReadAnyGamepadButtonReleased(gamepad => gamepad.rightShoulder);
         }
 
         private static bool ReadHeavyAttackPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.kKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.kKey.wasPressedThisFrame))
             {
                 return true;
             }
@@ -290,14 +378,12 @@ namespace Hollow.Input
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightTrigger.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.rightTrigger);
         }
 
         private static bool ReadHeavyAttackHeld()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.kKey.isPressed)
+            if (ReadAnyKeyboard(keyboard => keyboard.kKey.isPressed))
             {
                 return true;
             }
@@ -308,8 +394,7 @@ namespace Hollow.Input
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightTrigger.isPressed;
+            return ReadAnyGamepadButtonHeld(gamepad => gamepad.rightTrigger);
         }
 
         private static bool ReadHeavyAttackReleased(bool heavyAttackHeld)
@@ -319,8 +404,7 @@ namespace Hollow.Input
                 return false;
             }
 
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.kKey.wasReleasedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.kKey.wasReleasedThisFrame))
             {
                 return true;
             }
@@ -331,86 +415,528 @@ namespace Hollow.Input
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightTrigger.wasReleasedThisFrame;
+            return ReadAnyGamepadButtonReleased(gamepad => gamepad.rightTrigger);
         }
 
         private static bool ReadUseActiveItemPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.qKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.qKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.buttonNorth.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.buttonNorth);
         }
 
         private static bool ReadUseConsumableCardPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.fKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.fKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.buttonWest.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.buttonWest);
         }
 
         private static bool ReadRollPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.spaceKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.buttonEast.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.buttonEast);
         }
 
         private static bool ReadLockTargetPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.lKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.lKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightStickButton.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.rightStickButton);
         }
 
         private static bool ReadGuardHeld()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed))
+            if (ReadAnyKeyboard(keyboard => keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.leftTrigger.ReadValue() > 0.5f;
+            return ReadAnyGamepadTriggerHeld(gamepad => gamepad.leftTrigger, 0.5f);
         }
 
         public static bool ReadPausePressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+            if (ReadAnyKeyboard(keyboard => keyboard.escapeKey.wasPressedThisFrame))
             {
                 return true;
             }
 
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.startButton.wasPressedThisFrame;
+            return ReadAnyGamepadButtonPressed(gamepad => gamepad.startButton);
         }
 
         public static bool ReadDebugHudTogglePressed()
         {
-            var keyboard = Keyboard.current;
-            return keyboard != null && keyboard.f3Key.wasPressedThisFrame;
+            return ReadAnyKeyboard(keyboard => keyboard.f3Key.wasPressedThisFrame);
+        }
+
+        private static bool HasAnyKeyboardDevice()
+        {
+            if (Keyboard.current != null)
+            {
+                return true;
+            }
+
+            foreach (var device in InputSystem.devices)
+            {
+                if (device is Keyboard)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static Vector2 ReadExternalMoveOverride()
+        {
+            return Time.frameCount - externalMoveOverrideFrame <= 1 ? externalMoveOverride : Vector2.zero;
+        }
+
+        private static Vector2 ReadKeyboardMove()
+        {
+            var move = ReadKeyboardMove(Keyboard.current);
+            foreach (var device in InputSystem.devices)
+            {
+                if (device == Keyboard.current || device is not Keyboard keyboard)
+                {
+                    continue;
+                }
+
+                move += ReadKeyboardMove(keyboard);
+            }
+
+            return Vector2.ClampMagnitude(move, 1f);
+        }
+
+        private static Vector2 ReadKeyboardMove(Keyboard keyboard)
+        {
+            if (keyboard == null)
+            {
+                return Vector2.zero;
+            }
+
+            var move = Vector2.zero;
+            if (keyboard.aKey.isPressed)
+            {
+                move.x -= 1f;
+            }
+
+            if (keyboard.dKey.isPressed)
+            {
+                move.x += 1f;
+            }
+
+            if (keyboard.sKey.isPressed)
+            {
+                move.y -= 1f;
+            }
+
+            if (keyboard.wKey.isPressed)
+            {
+                move.y += 1f;
+            }
+
+            return move;
+        }
+
+        private static Vector2 ReadKeyboardShoot()
+        {
+            var shoot = ReadKeyboardShoot(Keyboard.current);
+            foreach (var device in InputSystem.devices)
+            {
+                if (device == Keyboard.current || device is not Keyboard keyboard)
+                {
+                    continue;
+                }
+
+                shoot += ReadKeyboardShoot(keyboard);
+            }
+
+            return shoot;
+        }
+
+        private static Vector2 ReadKeyboardShoot(Keyboard keyboard)
+        {
+            if (keyboard == null)
+            {
+                return Vector2.zero;
+            }
+
+            var shoot = Vector2.zero;
+            if (keyboard.leftArrowKey.isPressed)
+            {
+                shoot.x -= 1f;
+            }
+
+            if (keyboard.rightArrowKey.isPressed)
+            {
+                shoot.x += 1f;
+            }
+
+            if (keyboard.downArrowKey.isPressed)
+            {
+                shoot.y -= 1f;
+            }
+
+            if (keyboard.upArrowKey.isPressed)
+            {
+                shoot.y += 1f;
+            }
+
+            return shoot;
+        }
+
+        private static bool ReadAnyKeyboard(Func<Keyboard, bool> predicate)
+        {
+            if (Keyboard.current != null && predicate(Keyboard.current))
+            {
+                return true;
+            }
+
+            foreach (var device in InputSystem.devices)
+            {
+                if (device == Keyboard.current || device is not Keyboard keyboard)
+                {
+                    continue;
+                }
+
+                if (predicate(keyboard))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static Vector2 ReadBestMoveStick()
+        {
+            var gamepadMove = ReadStrongestGamepadMove();
+            if (gamepadMove != Vector2.zero)
+            {
+                return gamepadMove;
+            }
+
+            var joystickMove = ReadStrongestJoystickStick();
+            if (joystickMove != Vector2.zero)
+            {
+                return joystickMove;
+            }
+
+            return ReadStrongestGenericControllerVector();
+        }
+
+        private static Vector2 ReadStrongestGamepadMove()
+        {
+            var strongest = Vector2.zero;
+            var strongestMagnitude = 0f;
+
+            AccumulateGamepadMove(Gamepad.current, ref strongest, ref strongestMagnitude);
+            foreach (var gamepad in Gamepad.all)
+            {
+                if (gamepad == Gamepad.current)
+                {
+                    continue;
+                }
+
+                AccumulateGamepadMove(gamepad, ref strongest, ref strongestMagnitude);
+            }
+
+            return strongest;
+        }
+
+        private static void AccumulateGamepadMove(Gamepad gamepad, ref Vector2 strongest, ref float strongestMagnitude)
+        {
+            if (gamepad == null)
+            {
+                return;
+            }
+
+            ConsiderVectorCandidate(ReadStickWithDeadZone(gamepad.leftStick), ref strongest, ref strongestMagnitude);
+            ConsiderVectorCandidate(ReadStickWithDeadZone(gamepad.dpad), ref strongest, ref strongestMagnitude);
+        }
+
+        private static Vector2 ReadStrongestGamepadStick(Func<Gamepad, Vector2Control> selectStick)
+        {
+            var strongest = ReadStickWithDeadZone(Gamepad.current != null ? selectStick(Gamepad.current) : null);
+            var strongestMagnitude = strongest.sqrMagnitude;
+
+            foreach (var gamepad in Gamepad.all)
+            {
+                if (gamepad == Gamepad.current)
+                {
+                    continue;
+                }
+
+                var candidate = ReadStickWithDeadZone(selectStick(gamepad));
+                ConsiderVectorCandidate(candidate, ref strongest, ref strongestMagnitude);
+            }
+
+            return strongest;
+        }
+
+        private static Vector2 ReadStrongestJoystickStick()
+        {
+            var strongest = ReadStickWithDeadZone(Joystick.current?.stick);
+            var strongestMagnitude = strongest.sqrMagnitude;
+
+            foreach (var joystick in Joystick.all)
+            {
+                if (joystick == Joystick.current)
+                {
+                    continue;
+                }
+
+                var candidate = ReadStickWithDeadZone(joystick.stick);
+                ConsiderVectorCandidate(candidate, ref strongest, ref strongestMagnitude);
+            }
+
+            return strongest;
+        }
+
+        private static Vector2 ReadStrongestGenericControllerVector()
+        {
+            var strongest = Vector2.zero;
+            var strongestMagnitude = 0f;
+
+            foreach (var device in InputSystem.devices)
+            {
+                if (device is Keyboard || device is Mouse || device is Gamepad || device is Joystick || !IsLikelyControllerDevice(device))
+                {
+                    continue;
+                }
+
+                foreach (var control in device.allControls)
+                {
+                    if (control is not Vector2Control vector)
+                    {
+                        continue;
+                    }
+
+                    var candidate = ReadStickWithDeadZone(vector);
+                    ConsiderVectorCandidate(candidate, ref strongest, ref strongestMagnitude);
+                }
+            }
+
+            return strongest;
+        }
+
+        private static Vector2 ReadStickWithDeadZone(Vector2Control stick)
+        {
+            if (stick == null)
+            {
+                return Vector2.zero;
+            }
+
+            var value = Vector2.ClampMagnitude(stick.ReadValue(), 1f);
+            return value.sqrMagnitude >= StickDeadZone * StickDeadZone ? value : Vector2.zero;
+        }
+
+        private static void ConsiderVectorCandidate(Vector2 candidate, ref Vector2 strongest, ref float strongestMagnitude)
+        {
+            var candidateMagnitude = candidate.sqrMagnitude;
+            if (candidateMagnitude > strongestMagnitude)
+            {
+                strongest = candidate;
+                strongestMagnitude = candidateMagnitude;
+            }
+        }
+
+        private static bool ReadAnyGamepadButtonPressed(Func<Gamepad, ButtonControl> selectButton)
+        {
+            return ReadAnyGamepadButton(selectButton, button => button.wasPressedThisFrame);
+        }
+
+        private static bool ReadAnyGamepadButtonHeld(Func<Gamepad, ButtonControl> selectButton)
+        {
+            return ReadAnyGamepadButton(selectButton, button => button.isPressed);
+        }
+
+        private static bool ReadAnyGamepadButtonReleased(Func<Gamepad, ButtonControl> selectButton)
+        {
+            return ReadAnyGamepadButton(selectButton, button => button.wasReleasedThisFrame);
+        }
+
+        private static bool ReadAnyGamepadTriggerHeld(Func<Gamepad, ButtonControl> selectButton, float threshold)
+        {
+            return ReadAnyGamepadButton(selectButton, button => button.ReadValue() > threshold);
+        }
+
+        private static bool ReadAnyGamepadButton(Func<Gamepad, ButtonControl> selectButton, Func<ButtonControl, bool> predicate)
+        {
+            if (Gamepad.current != null && predicate(selectButton(Gamepad.current)))
+            {
+                return true;
+            }
+
+            foreach (var gamepad in Gamepad.all)
+            {
+                if (gamepad == Gamepad.current)
+                {
+                    continue;
+                }
+
+                if (predicate(selectButton(gamepad)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsLikelyControllerDevice(InputDevice device)
+        {
+            var description = device.description;
+            var identity = string.Concat(
+                device.layout,
+                " ",
+                device.name,
+                " ",
+                device.displayName,
+                " ",
+                description.product,
+                " ",
+                description.manufacturer).ToLowerInvariant();
+
+            return
+                identity.Contains("gamepad") ||
+                identity.Contains("controller") ||
+                identity.Contains("dualshock") ||
+                identity.Contains("dualsense") ||
+                identity.Contains("xbox") ||
+                identity.Contains("joystick");
+        }
+
+        private static void AppendKeyboardSample(StringBuilder builder, Keyboard keyboard, ref int index, string role)
+        {
+            if (keyboard == null)
+            {
+                return;
+            }
+
+            if (index > 0)
+            {
+                builder.Append("; ");
+            }
+
+            builder
+                .Append(role)
+                .Append('#')
+                .Append(index)
+                .Append(':')
+                .Append(keyboard.displayName)
+                .Append(" wasd=")
+                .Append(keyboard.wKey.isPressed ? '1' : '0')
+                .Append(keyboard.aKey.isPressed ? '1' : '0')
+                .Append(keyboard.sKey.isPressed ? '1' : '0')
+                .Append(keyboard.dKey.isPressed ? '1' : '0')
+                .Append(" arrows=")
+                .Append(keyboard.upArrowKey.isPressed ? '1' : '0')
+                .Append(keyboard.leftArrowKey.isPressed ? '1' : '0')
+                .Append(keyboard.downArrowKey.isPressed ? '1' : '0')
+                .Append(keyboard.rightArrowKey.isPressed ? '1' : '0')
+                .Append(" space=")
+                .Append(keyboard.spaceKey.isPressed ? '1' : '0');
+
+            index++;
+        }
+
+        private static void AppendGamepadSample(StringBuilder builder, Gamepad gamepad, ref int index, string role)
+        {
+            if (gamepad == null)
+            {
+                return;
+            }
+
+            if (index > 0)
+            {
+                builder.Append("; ");
+            }
+
+            builder
+                .Append(role)
+                .Append('#')
+                .Append(index)
+                .Append(':')
+                .Append(gamepad.displayName)
+                .Append(" layout=")
+                .Append(gamepad.layout)
+                .Append(gamepad.enabled ? " enabled=1" : " enabled=0")
+                .Append(" lastUpdate=")
+                .Append(gamepad.lastUpdateTime.ToString("0.000", CultureInfo.InvariantCulture))
+                .Append(" left=");
+
+            AppendVector(builder, gamepad.leftStick.ReadValue())
+                .Append(" dpad=");
+
+            AppendVector(builder, gamepad.dpad.ReadValue())
+                .Append(" right=");
+
+            AppendVector(builder, gamepad.rightStick.ReadValue())
+                .Append(" south=")
+                .Append(gamepad.buttonSouth.isPressed ? '1' : '0')
+                .Append(" east=")
+                .Append(gamepad.buttonEast.isPressed ? '1' : '0')
+                .Append(" start=")
+                .Append(gamepad.startButton.isPressed ? '1' : '0');
+
+            index++;
+        }
+
+        private static void AppendGamepadDeviceDetails(StringBuilder builder, Gamepad gamepad)
+        {
+            if (gamepad == null)
+            {
+                builder.Append("none");
+                return;
+            }
+
+            var description = gamepad.description;
+            builder
+                .Append(gamepad.displayName)
+                .Append(" layout=")
+                .Append(gamepad.layout)
+                .Append(gamepad.enabled ? " enabled=1" : " enabled=0")
+                .Append(" manufacturer=")
+                .Append(string.IsNullOrWhiteSpace(description.manufacturer) ? "unknown" : description.manufacturer)
+                .Append(" product=")
+                .Append(string.IsNullOrWhiteSpace(description.product) ? "unknown" : description.product)
+                .Append(" lastUpdate=")
+                .Append(gamepad.lastUpdateTime.ToString("0.000", CultureInfo.InvariantCulture))
+                .Append(" left=");
+
+            AppendVector(builder, gamepad.leftStick.ReadValue())
+                .Append(" dpad=");
+
+            AppendVector(builder, gamepad.dpad.ReadValue())
+                .Append(" right=");
+
+            AppendVector(builder, gamepad.rightStick.ReadValue());
+        }
+
+        private static StringBuilder AppendVector(StringBuilder builder, Vector2 value)
+        {
+            return builder
+                .Append('(')
+                .Append(value.x.ToString("0.00", CultureInfo.InvariantCulture))
+                .Append(',')
+                .Append(value.y.ToString("0.00", CultureInfo.InvariantCulture))
+                .Append(')');
         }
     }
 }

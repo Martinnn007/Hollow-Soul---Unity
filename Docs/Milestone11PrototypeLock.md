@@ -31,7 +31,7 @@ Required checklist items must be `Passed`. Deferred items are allowed only for c
 The prototype budget is intentionally simple and practical:
 
 - Windows standard 3D: 120 FPS target, render scale up to `1.0`.
-- Vision Pro bounded tabletop: 90 FPS target, render scale up to `0.9`, world root scale remains `0.1`.
+- Vision Pro bounded tabletop: 90 FPS target, render scale up to `0.9`, world root scale remains `0.5`.
 - Vision Pro immersive: 90 FPS target, render scale up to `0.85`, comfort vignette metadata enabled.
 
 The validator compares these budgets against the M10 platform polish profiles.

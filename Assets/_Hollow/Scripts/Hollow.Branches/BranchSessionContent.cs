@@ -12,12 +12,14 @@ namespace Hollow.Branches
             IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> fixtureRoomPool,
             IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> approvedRoomPool,
             IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> macroRoomPool,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>> biomeRoomPools,
             int branchSeed)
         {
             LegacySampleRoomAsset = legacySampleRoomAsset;
             FixtureRoomPool = fixtureRoomPool ?? new Dictionary<string, ImportedRoomRuntimeAsset>();
             ApprovedRoomPool = approvedRoomPool ?? new Dictionary<string, ImportedRoomRuntimeAsset>();
             MacroRoomPool = macroRoomPool ?? new Dictionary<string, ImportedRoomRuntimeAsset>();
+            BiomeRoomPools = biomeRoomPools ?? new Dictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>>();
             BranchSeed = branchSeed == 0 ? BranchGenerator.DefaultMacroFixtureSeed : branchSeed;
         }
 
@@ -28,6 +30,8 @@ namespace Hollow.Branches
         public IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> ApprovedRoomPool { get; }
 
         public IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> MacroRoomPool { get; }
+
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>> BiomeRoomPools { get; }
 
         public int BranchSeed { get; }
 
@@ -45,8 +49,39 @@ namespace Hollow.Branches
                 return true;
             }
 
+            if (!string.IsNullOrWhiteSpace(roomAssetId))
+            {
+                foreach (var pool in BiomeRoomPools.Values)
+                {
+                    if (pool != null && pool.TryGetValue(roomAssetId, out asset))
+                    {
+                        return true;
+                    }
+                }
+            }
+
             asset = LegacySampleRoomAsset;
             return asset != null;
+        }
+
+        public IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> ResolveRoomPoolForBiome(string biomeId, out bool usedFallback)
+        {
+            usedFallback = false;
+            var normalized = RoomBiomeIds.Normalize(biomeId);
+            if (!RoomBiomeIds.Matches(normalized, RoomBiomeIds.HollowThreshold) &&
+                BiomeRoomPools.TryGetValue(normalized, out var pool) &&
+                HasCompleteShapeCoverage(pool))
+            {
+                return pool;
+            }
+
+            usedFallback = !RoomBiomeIds.Matches(normalized, RoomBiomeIds.HollowThreshold);
+            return MacroRoomPool;
+        }
+
+        public bool HasCompleteBiomePool(string biomeId)
+        {
+            return BiomeRoomPools.TryGetValue(RoomBiomeIds.Normalize(biomeId), out var pool) && HasCompleteShapeCoverage(pool);
         }
 
         public static BranchSessionContent Create(
@@ -58,6 +93,7 @@ namespace Hollow.Branches
             var fixturePool = new Dictionary<string, ImportedRoomRuntimeAsset>();
             var approvedPool = new Dictionary<string, ImportedRoomRuntimeAsset>();
             var roomPool = new Dictionary<string, ImportedRoomRuntimeAsset>();
+            var biomePools = new Dictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>>();
             error = string.Empty;
             if (catalog != null)
             {
@@ -104,12 +140,77 @@ namespace Hollow.Branches
                 }
             }
 
+            var biomeCatalog = RoomBiomeCatalogDefinition.LoadDefault();
+            if (biomeCatalog != null)
+            {
+                foreach (var biome in biomeCatalog.Biomes)
+                {
+                    if (biome == null)
+                    {
+                        continue;
+                    }
+
+                    var biomePool = ImportBiomePool(biome, ref error);
+                    if (biomePool.Count > 0)
+                    {
+                        biomePools[biome.BiomeId] = biomePool;
+                    }
+                }
+            }
+
             return new BranchSessionContent(
                 legacySampleRoomAsset,
                 fixturePool,
                 approvedPool,
                 roomPool,
+                biomePools,
                 seed == 0 ? catalog?.DefaultSeed ?? BranchGenerator.DefaultMacroFixtureSeed : seed);
+        }
+
+        private static Dictionary<string, ImportedRoomRuntimeAsset> ImportBiomePool(RoomBiomeDefinition biome, ref string error)
+        {
+            var pool = new Dictionary<string, ImportedRoomRuntimeAsset>();
+            foreach (var template in biome.RoomTemplates)
+            {
+                if (template == null)
+                {
+                    continue;
+                }
+
+                if (!HollowRuntimeV2Importer.TryImport(template.text, out var asset, out var importError))
+                {
+                    AppendError(ref error, $"Biome '{biome.BiomeId}' template '{template.name}' import failed: {importError}");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(asset.Id))
+                {
+                    AppendError(ref error, $"Biome '{biome.BiomeId}' template '{template.name}' is missing canonicalRoomId.");
+                    continue;
+                }
+
+                pool[asset.Id] = asset;
+            }
+
+            return pool;
+        }
+
+        private static bool HasCompleteShapeCoverage(IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> pool)
+        {
+            if (pool == null)
+            {
+                return false;
+            }
+
+            var shapes = pool.Values
+                .Where(asset => asset != null)
+                .Select(asset => RoomFootprintShapeUtility.Classify(asset.Footprint))
+                .ToHashSet();
+            return shapes.Contains(RoomFootprintShape.Single1x1) &&
+                   shapes.Contains(RoomFootprintShape.Wide2x1) &&
+                   shapes.Contains(RoomFootprintShape.Tall1x2) &&
+                   shapes.Contains(RoomFootprintShape.Block2x2) &&
+                   shapes.Contains(RoomFootprintShape.L3Cell);
         }
 
         private static void AppendError(ref string error, string nextError)

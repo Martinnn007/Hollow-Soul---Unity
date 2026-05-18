@@ -13,6 +13,9 @@ namespace Hollow.Data.Definitions
         EndTimes = 8,
         Abyss = 9,
         Ritual = 10,
-        Memory = 11
+        Memory = 11,
+        VerdantRuins = 12,
+        Natural = 13,
+        Ruin = 14
     }
 }

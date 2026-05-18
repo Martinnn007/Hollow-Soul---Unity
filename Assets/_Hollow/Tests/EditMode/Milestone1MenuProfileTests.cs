@@ -1,5 +1,7 @@
 using System.IO;
 using Hollow.Core.App;
+using Hollow.Core;
+using Hollow.Combat;
 using Hollow.Persistence;
 using Hollow.Platform;
 using Hollow.UI.MainMenu;
@@ -75,6 +77,49 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(AppShellRoute.GameVisionOSBounded, appState.CurrentRoute);
             Assert.IsTrue(selectedContext.HasSelection);
             Assert.AreEqual("balanced", selectedContext.SelectedCharacterId);
+        }
+
+        [Test]
+        public void MainMenuViewModelVisionOSNormalRunLaunchesBoundedAfterCharacterSelection()
+        {
+            var store = new JsonProfileStore(tempRoot);
+            var selectedContext = new SelectedProfileContext();
+            var appState = new AppStateMachine();
+            var viewModel = new MainMenuViewModel(store, selectedContext, appState);
+
+            viewModel.SelectOrCreateSlot(0);
+            viewModel.BeginNewRun(HollowPlatformKind.VisionOSBoundedTabletop);
+            var route = viewModel.SelectCharacterAndLaunch("heavy");
+
+            Assert.AreEqual(AppShellRoute.GameVisionOSBounded, route);
+            Assert.AreEqual(AppShellRoute.GameVisionOSBounded, appState.CurrentRoute);
+            Assert.AreEqual("heavy", selectedContext.SelectedCharacterId);
+            Assert.AreEqual(RunLaunchMode.NewRun, selectedContext.LaunchMode);
+        }
+
+        [Test]
+        public void ArenaModeHandoffCarriesVisionOSMenuLaunchContext()
+        {
+            ArenaModeHandoff.Set(
+                string.Empty,
+                nextAutoStart: false,
+                AppShellRoute.MainMenuVisionOS,
+                HollowPlatformKind.VisionOSBoundedTabletop,
+                "heavy");
+
+            var consumed = ArenaModeHandoff.TryConsume(
+                out var presetId,
+                out var autoStart,
+                out var returnRoute,
+                out var platformKind,
+                out var selectedCharacterId);
+
+            Assert.IsTrue(consumed);
+            Assert.AreEqual(string.Empty, presetId);
+            Assert.IsFalse(autoStart);
+            Assert.AreEqual(AppShellRoute.MainMenuVisionOS, returnRoute);
+            Assert.AreEqual(HollowPlatformKind.VisionOSBoundedTabletop, platformKind);
+            Assert.AreEqual("heavy", selectedCharacterId);
         }
 
         [Test]

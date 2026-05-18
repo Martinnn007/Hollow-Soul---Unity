@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="17" result="Passed" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="1.0101497">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="689" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="1.010150" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1805" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="688" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="1.004184" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="68569" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1806" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="688" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="1.001782" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1807" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="688" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="0.999738" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1808" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="688" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="0.997812" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1246" name="Milestone22RoomDesignerMacroAuthoringPolishTests" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="0.987658" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1261" name="CameraControllerSupportsPerspectiveAndTopDownModes" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.CameraControllerSupportsPerspectiveAndTopDownModes" methodname="CameraControllerSupportsPerspectiveAndTopDownModes" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="631315837" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:55Z" duration="0.014861" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1249" name="CompilerOmitsInactivePortsAndExportsEncounterReadyEnemyKinds" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.CompilerOmitsInactivePortsAndExportsEncounterReadyEnemyKinds" methodname="CompilerOmitsInactivePortsAndExportsEncounterReadyEnemyKinds" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1583701399" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:55Z" duration="0.011318" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1255" name="ControllerAlignsCursorFlatTilesAndDoorBottomsToGridOrigin" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerAlignsCursorFlatTilesAndDoorBottomsToGridOrigin" methodname="ControllerAlignsCursorFlatTilesAndDoorBottomsToGridOrigin" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="527505201" result="Passed" start-time="2026-05-18 01:32:55Z" end-time="2026-05-18 01:32:56Z" duration="0.652173" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1254" name="ControllerCameraTargetFollowsActiveCursorCell" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerCameraTargetFollowsActiveCursorCell" methodname="ControllerCameraTargetFollowsActiveCursorCell" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="318573222" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.034773" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1253" name="ControllerCreatesOpensAndDeletesDraftsThroughLibraryStates" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerCreatesOpensAndDeletesDraftsThroughLibraryStates" methodname="ControllerCreatesOpensAndDeletesDraftsThroughLibraryStates" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1088089569" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.037115" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1259" name="ControllerCyclesBiomeLiveAndPersistsDraft" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerCyclesBiomeLiveAndPersistsDraft" methodname="ControllerCyclesBiomeLiveAndPersistsDraft" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1277516195" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.031085" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1262" name="ControllerShowsCameraToggleButtonAndSupportsSpatialTilt" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerShowsCameraToggleButtonAndSupportsSpatialTilt" methodname="ControllerShowsCameraToggleButtonAndSupportsSpatialTilt" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1344346087" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.016665" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1258" name="ControllerShowsGroupedToolToolbarAndKeyboardNavigation" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerShowsGroupedToolToolbarAndKeyboardNavigation" methodname="ControllerShowsGroupedToolToolbarAndKeyboardNavigation" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="118053664" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.037835" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1251" name="ControllerShowsMacroHudBlocksInvalidPlaytestAndSupportsNewTools" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerShowsMacroHudBlocksInvalidPlaytestAndSupportsNewTools" methodname="ControllerShowsMacroHudBlocksInvalidPlaytestAndSupportsNewTools" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="975475170" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.053351" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1263" name="ControllerShowsZoomButtonsAndZoomsWithoutMovingTarget" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerShowsZoomButtonsAndZoomsWithoutMovingTarget" methodname="ControllerShowsZoomButtonsAndZoomsWithoutMovingTarget" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="839833008" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.029505" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1252" name="ControllerStartsOnTemplateScreenWithoutAutoCreatingHiddenDefaultDraft" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerStartsOnTemplateScreenWithoutAutoCreatingHiddenDefaultDraft" methodname="ControllerStartsOnTemplateScreenWithoutAutoCreatingHiddenDefaultDraft" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1407898304" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.004695" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1260" name="ControllerTogglesScenePreviewAndAttachesArtPassVisuals" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerTogglesScenePreviewAndAttachesArtPassVisuals" methodname="ControllerTogglesScenePreviewAndAttachesArtPassVisuals" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1844022876" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.018762" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1257" name="ControllerUsesImportantShortLabelsWithoutGroundTileSpam" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ControllerUsesImportantShortLabelsWithoutGroundTileSpam" methodname="ControllerUsesImportantShortLabelsWithoutGroundTileSpam" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="373967237" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.017138" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1256" name="DisplayNamesCoverCurrentDesignerToolsAndSemanticKinds" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.DisplayNamesCoverCurrentDesignerToolsAndSemanticKinds" methodname="DisplayNamesCoverCurrentDesignerToolsAndSemanticKinds" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="492126712" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.000627" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1247" name="DraftLibraryCreatesPresetDraftsWithoutMutatingFootprints" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.DraftLibraryCreatesPresetDraftsWithoutMutatingFootprints" methodname="DraftLibraryCreatesPresetDraftsWithoutMutatingFootprints" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1881110833" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.007759" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1250" name="ExportBundleWritesRuntimeProjectUsdaAndValidationReport" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ExportBundleWritesRuntimeProjectUsdaAndValidationReport" methodname="ExportBundleWritesRuntimeProjectUsdaAndValidationReport" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1766998559" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.007990" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1248" name="ValidationBlocksMissingSafeStartPortsEnemiesAndInvalidPlacements" fullname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests.ValidationBlocksMissingSafeStartPortsEnemiesAndInvalidPlacements" methodname="ValidationBlocksMissingSafeStartPortsEnemiesAndInvalidPlacements" classname="Hollow.Tests.EditMode.Milestone22RoomDesignerMacroAuthoringPolishTests" runstate="Runnable" seed="1955715698" result="Passed" start-time="2026-05-18 01:32:56Z" end-time="2026-05-18 01:32:56Z" duration="0.002091" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Data.Definitions;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -23,6 +24,7 @@ namespace Hollow.RoomDesigner
             {
                 projectId = $"curated_{Sanitize(asset.Id)}",
                 displayName = string.IsNullOrWhiteSpace(runtime.displayName) ? asset.Id : runtime.displayName,
+                biomeId = RoomBiomeIds.Normalize(runtime.biomeId),
                 footprintPreset = preset,
                 widthTiles = dimensions.x,
                 heightTiles = dimensions.y,
@@ -127,6 +129,24 @@ namespace Hollow.RoomDesigner
                     0f,
                     center.z));
                 interactiveIndex++;
+            }
+
+            var decorIndex = 0;
+            foreach (var decor in runtime.decor ?? new List<ImportedRoomDecor>())
+            {
+                if (!RoomDesignerMarkerKinds.IsDecor(decor?.kind))
+                {
+                    continue;
+                }
+
+                var center = decor.center?.ToUnityVector3() ?? Vector3.zero;
+                project.markers.Add(new RoomDesignerMarker(
+                    string.IsNullOrWhiteSpace(decor.id) ? $"decor_{decorIndex}" : decor.id,
+                    decor.kind,
+                    center.x,
+                    center.y,
+                    center.z));
+                decorIndex++;
             }
 
             var runtimePortsById = (runtime.doorPorts ?? new List<ImportedRoomDoorPort>())

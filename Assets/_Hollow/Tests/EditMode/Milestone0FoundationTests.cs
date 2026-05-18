@@ -3,6 +3,7 @@ using Hollow.Core.App;
 using Hollow.Diagnostics;
 using Hollow.Platform;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace Hollow.Tests.EditMode
 {
@@ -34,6 +35,31 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual("Game_Windows", SceneLoaderService.SceneNameForRoute(AppShellRoute.GameWindows));
             Assert.AreEqual("Game_VisionOS_Bounded", SceneLoaderService.SceneNameForRoute(AppShellRoute.GameVisionOSBounded));
             Assert.AreEqual("Game_VisionOS_Immersive", SceneLoaderService.SceneNameForRoute(AppShellRoute.GameVisionOSImmersive));
+            Assert.AreEqual("MainMenu_VisionOS", SceneLoaderService.SceneNameForRoute(AppShellRoute.MainMenuVisionOS));
+        }
+
+        [Test]
+        public void BootRoutesVisionOSRuntimeToGuidedMenu()
+        {
+            var route = BootSceneController.ResolveStartupRoute(
+                RuntimePlatform.VisionOS,
+                AppShellRoute.MainMenu,
+                preferVisionOSRoute: true,
+                AppShellRoute.MainMenuVisionOS);
+
+            Assert.AreEqual(AppShellRoute.MainMenuVisionOS, route);
+        }
+
+        [Test]
+        public void BootKeepsMainMenuRouteOutsideVisionOS()
+        {
+            var route = BootSceneController.ResolveStartupRoute(
+                RuntimePlatform.OSXEditor,
+                AppShellRoute.MainMenu,
+                preferVisionOSRoute: true,
+                AppShellRoute.GameVisionOSImmersive);
+
+            Assert.AreEqual(AppShellRoute.MainMenu, route);
         }
 
         [Test]

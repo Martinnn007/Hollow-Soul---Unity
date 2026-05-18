@@ -87,6 +87,12 @@ namespace Hollow.Data.Definitions
         EnemyCrimsonRailSpider,
         EnemyAzureMinigunTurret,
         CombatTelegraphTracking,
-        CombatTelegraphLocked
+        CombatTelegraphLocked,
+        RoomWall,
+        RoomWallTransparent,
+        DecorGrassTuft,
+        DecorCrystalCluster,
+        DecorSmallTree,
+        DecorStoneRuin
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hollow.Data.Definitions;
 using UnityEngine;
 
 namespace Hollow.RoomDesigner
@@ -10,6 +11,7 @@ namespace Hollow.RoomDesigner
         public int schemaVersion = 1;
         public string projectId = string.Empty;
         public string displayName = "Designer Draft 13x7";
+        public string biomeId = RoomBiomeIds.HollowThreshold;
         public RoomDesignerFootprintPreset footprintPreset = RoomDesignerFootprintPreset.Single1x1;
         public int widthTiles = 13;
         public int heightTiles = 7;
@@ -32,6 +34,7 @@ namespace Hollow.RoomDesigner
             {
                 projectId = Guid.NewGuid().ToString("N"),
                 displayName = string.IsNullOrWhiteSpace(displayName) ? RoomDesignerFootprintUtility.DisplayName(preset) : displayName,
+                biomeId = RoomBiomeIds.HollowThreshold,
                 footprintPreset = preset,
                 widthTiles = dimensions.x,
                 heightTiles = dimensions.y,
@@ -197,6 +200,10 @@ namespace Hollow.RoomDesigner
         public const string ChestSpawn = "spawn_point_chest";
         public const string StandardBarrel = "barrelStandard";
         public const string ExplosiveBarrel = "barrelExplosive";
+        public const string DecorGrassTuft = RoomBiomeDecorKinds.GrassTuft;
+        public const string DecorCrystalCluster = RoomBiomeDecorKinds.CrystalCluster;
+        public const string DecorSmallTree = RoomBiomeDecorKinds.SmallTree;
+        public const string DecorStoneRuin = RoomBiomeDecorKinds.StoneRuin;
 
         public static readonly string[] EnemyKinds =
         {
@@ -242,9 +249,14 @@ namespace Hollow.RoomDesigner
             return kind == StandardBarrel || kind == ExplosiveBarrel;
         }
 
+        public static bool IsDecor(string kind)
+        {
+            return RoomBiomeDecorKinds.IsKnown(kind);
+        }
+
         public static bool IsPlacementMarker(string kind)
         {
-            return kind == RoomReward || kind == ChestSpawn || IsEnemy(kind) || IsInteractiveObject(kind);
+            return kind == RoomReward || kind == ChestSpawn || IsEnemy(kind) || IsInteractiveObject(kind) || IsDecor(kind);
         }
 
         public static string RuntimeEnemyKind(string kind)

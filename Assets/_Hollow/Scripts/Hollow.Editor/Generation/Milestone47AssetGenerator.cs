@@ -194,18 +194,25 @@ namespace Hollow.Editor.Generation
 
         private static void AssignToMainMenu(ChallengeCatalogDefinition catalog)
         {
-            const string scenePath = "Assets/_Hollow/Scenes/MainMenu.unity";
-            var scene = EditorSceneManager.OpenScene(scenePath);
-            var controller = Object.FindFirstObjectByType<MainMenuController>();
-            if (controller == null)
+            foreach (var scenePath in new[] { "Assets/_Hollow/Scenes/MainMenu.unity", "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity" })
             {
-                throw new MissingComponentException($"{scenePath} is missing MainMenuController.");
-            }
+                if (!File.Exists(scenePath))
+                {
+                    continue;
+                }
 
-            controller.ConfigureChallengeCatalog(catalog);
-            EditorUtility.SetDirty(controller);
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
+                var scene = EditorSceneManager.OpenScene(scenePath);
+                var controller = Object.FindFirstObjectByType<MainMenuController>();
+                if (controller == null)
+                {
+                    throw new MissingComponentException($"{scenePath} is missing MainMenuController.");
+                }
+
+                controller.ConfigureChallengeCatalog(catalog);
+                EditorUtility.SetDirty(controller);
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
         }
 
         private static void WriteReport(ChallengeCatalogDefinition catalog)

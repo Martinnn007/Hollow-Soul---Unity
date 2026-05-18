@@ -7,6 +7,7 @@ namespace Hollow.Data.Definitions
     {
         [SerializeField] private PlatformPresentationMode mode = PlatformPresentationMode.WindowsStandard3D;
         [SerializeField] private float worldScale = 1f;
+        [SerializeField] private float worldYawDegrees;
         [SerializeField] private Vector3 cameraLocalPosition = new(0f, 7f, -10f);
         [SerializeField] private Vector3 cameraLocalEulerAngles = new(35f, 0f, 0f);
         [SerializeField] private float cameraFieldOfView = 60f;
@@ -24,6 +25,8 @@ namespace Hollow.Data.Definitions
         public PlatformPresentationMode Mode => mode;
 
         public float WorldScale => worldScale;
+
+        public float WorldYawDegrees => worldYawDegrees;
 
         public Vector3 CameraLocalPosition => cameraLocalPosition;
 
@@ -68,8 +71,46 @@ namespace Hollow.Data.Definitions
             float nextComfortVignetteRadius,
             float nextComfortVignetteOpacity)
         {
+            Configure(
+                nextMode,
+                nextWorldScale,
+                0f,
+                nextCameraLocalPosition,
+                nextCameraLocalEulerAngles,
+                nextCameraFieldOfView,
+                nextNearClipPlane,
+                nextFarClipPlane,
+                nextCameraBackgroundColor,
+                nextAmbientLightColor,
+                nextTargetFrameRate,
+                nextVSyncCount,
+                nextRenderScale,
+                nextUseComfortVignette,
+                nextComfortVignetteRadius,
+                nextComfortVignetteOpacity);
+        }
+
+        public void Configure(
+            PlatformPresentationMode nextMode,
+            float nextWorldScale,
+            float nextWorldYawDegrees,
+            Vector3 nextCameraLocalPosition,
+            Vector3 nextCameraLocalEulerAngles,
+            float nextCameraFieldOfView,
+            float nextNearClipPlane,
+            float nextFarClipPlane,
+            Color nextCameraBackgroundColor,
+            Color nextAmbientLightColor,
+            int nextTargetFrameRate,
+            int nextVSyncCount,
+            float nextRenderScale,
+            bool nextUseComfortVignette,
+            float nextComfortVignetteRadius,
+            float nextComfortVignetteOpacity)
+        {
             mode = nextMode;
             worldScale = Mathf.Max(0.001f, nextWorldScale);
+            worldYawDegrees = nextWorldYawDegrees;
             cameraLocalPosition = nextCameraLocalPosition;
             cameraLocalEulerAngles = nextCameraLocalEulerAngles;
             cameraFieldOfView = Mathf.Clamp(nextCameraFieldOfView, 30f, 90f);

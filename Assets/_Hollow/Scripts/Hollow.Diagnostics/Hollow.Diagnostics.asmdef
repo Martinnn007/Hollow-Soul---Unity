@@ -10,7 +10,9 @@
     "Hollow.Rooms",
     "Hollow.World",
     "Hollow.UI",
-    "Hollow.RoomDesigner"
+    "Hollow.RoomDesigner",
+    "Unity.InputSystem",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

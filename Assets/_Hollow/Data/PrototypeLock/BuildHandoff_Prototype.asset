@@ -21,6 +21,7 @@ MonoBehaviour:
   requiredScenes:
   - Assets/_Hollow/Scenes/Boot.unity
   - Assets/_Hollow/Scenes/MainMenu.unity
+  - Assets/_Hollow/Scenes/MainMenu_VisionOS.unity
   - Assets/_Hollow/Scenes/Game_Windows.unity
   - Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity
   - Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity

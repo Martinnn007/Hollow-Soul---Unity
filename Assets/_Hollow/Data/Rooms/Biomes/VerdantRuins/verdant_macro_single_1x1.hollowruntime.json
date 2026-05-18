@@ -1,0 +1,682 @@
+{
+    "hollowRuntime": {
+        "schemaVersion": 2,
+        "sourceProjectId": "verdant_macro_single_1x1",
+        "canonicalRoomId": "verdant_macro_single_1x1",
+        "biomeId": "verdant_ruins",
+        "displayName": "Verdant Ruins Single 1x1",
+        "roomType": "combat",
+        "rewardType": "macro-fixture",
+        "prototypeStatus": "test-fixture",
+        "tileSizeMeters": 1.0,
+        "dimensions": {
+            "widthTiles": 13,
+            "heightTiles": 7,
+            "bounds": {
+                "minX": -6.5,
+                "maxX": 6.5,
+                "minZ": -3.5,
+                "maxZ": 3.5
+            }
+        },
+        "footprint": {
+            "primaryCell": {
+                "x": 0,
+                "z": 0
+            },
+            "occupiedBranchCells": [
+                {
+                    "x": 0,
+                    "z": 0
+                }
+            ],
+            "chunkBasisTiles": {
+                "width": 13,
+                "height": 7
+            }
+        },
+        "walkableTiles": [
+            {
+                "x": -6,
+                "z": -3
+            },
+            {
+                "x": -5,
+                "z": -3
+            },
+            {
+                "x": -4,
+                "z": -3
+            },
+            {
+                "x": -3,
+                "z": -3
+            },
+            {
+                "x": -2,
+                "z": -3
+            },
+            {
+                "x": -1,
+                "z": -3
+            },
+            {
+                "x": 0,
+                "z": -3
+            },
+            {
+                "x": 1,
+                "z": -3
+            },
+            {
+                "x": 2,
+                "z": -3
+            },
+            {
+                "x": 3,
+                "z": -3
+            },
+            {
+                "x": 4,
+                "z": -3
+            },
+            {
+                "x": 5,
+                "z": -3
+            },
+            {
+                "x": 6,
+                "z": -3
+            },
+            {
+                "x": -6,
+                "z": -2
+            },
+            {
+                "x": -5,
+                "z": -2
+            },
+            {
+                "x": -4,
+                "z": -2
+            },
+            {
+                "x": -3,
+                "z": -2
+            },
+            {
+                "x": -2,
+                "z": -2
+            },
+            {
+                "x": -1,
+                "z": -2
+            },
+            {
+                "x": 0,
+                "z": -2
+            },
+            {
+                "x": 1,
+                "z": -2
+            },
+            {
+                "x": 2,
+                "z": -2
+            },
+            {
+                "x": 3,
+                "z": -2
+            },
+            {
+                "x": 4,
+                "z": -2
+            },
+            {
+                "x": 5,
+                "z": -2
+            },
+            {
+                "x": 6,
+                "z": -2
+            },
+            {
+                "x": -6,
+                "z": -1
+            },
+            {
+                "x": -5,
+                "z": -1
+            },
+            {
+                "x": -4,
+                "z": -1
+            },
+            {
+                "x": -3,
+                "z": -1
+            },
+            {
+                "x": -2,
+                "z": -1
+            },
+            {
+                "x": -1,
+                "z": -1
+            },
+            {
+                "x": 0,
+                "z": -1
+            },
+            {
+                "x": 1,
+                "z": -1
+            },
+            {
+                "x": 2,
+                "z": -1
+            },
+            {
+                "x": 3,
+                "z": -1
+            },
+            {
+                "x": 4,
+                "z": -1
+            },
+            {
+                "x": 5,
+                "z": -1
+            },
+            {
+                "x": 6,
+                "z": -1
+            },
+            {
+                "x": -6,
+                "z": 0
+            },
+            {
+                "x": -5,
+                "z": 0
+            },
+            {
+                "x": -4,
+                "z": 0
+            },
+            {
+                "x": -3,
+                "z": 0
+            },
+            {
+                "x": -2,
+                "z": 0
+            },
+            {
+                "x": -1,
+                "z": 0
+            },
+            {
+                "x": 0,
+                "z": 0
+            },
+            {
+                "x": 1,
+                "z": 0
+            },
+            {
+                "x": 2,
+                "z": 0
+            },
+            {
+                "x": 3,
+                "z": 0
+            },
+            {
+                "x": 4,
+                "z": 0
+            },
+            {
+                "x": 5,
+                "z": 0
+            },
+            {
+                "x": 6,
+                "z": 0
+            },
+            {
+                "x": -6,
+                "z": 1
+            },
+            {
+                "x": -5,
+                "z": 1
+            },
+            {
+                "x": -4,
+                "z": 1
+            },
+            {
+                "x": -3,
+                "z": 1
+            },
+            {
+                "x": -2,
+                "z": 1
+            },
+            {
+                "x": -1,
+                "z": 1
+            },
+            {
+                "x": 0,
+                "z": 1
+            },
+            {
+                "x": 1,
+                "z": 1
+            },
+            {
+                "x": 2,
+                "z": 1
+            },
+            {
+                "x": 3,
+                "z": 1
+            },
+            {
+                "x": 4,
+                "z": 1
+            },
+            {
+                "x": 5,
+                "z": 1
+            },
+            {
+                "x": 6,
+                "z": 1
+            },
+            {
+                "x": -6,
+                "z": 2
+            },
+            {
+                "x": -5,
+                "z": 2
+            },
+            {
+                "x": -4,
+                "z": 2
+            },
+            {
+                "x": -3,
+                "z": 2
+            },
+            {
+                "x": -2,
+                "z": 2
+            },
+            {
+                "x": -1,
+                "z": 2
+            },
+            {
+                "x": 0,
+                "z": 2
+            },
+            {
+                "x": 1,
+                "z": 2
+            },
+            {
+                "x": 2,
+                "z": 2
+            },
+            {
+                "x": 3,
+                "z": 2
+            },
+            {
+                "x": 4,
+                "z": 2
+            },
+            {
+                "x": 5,
+                "z": 2
+            },
+            {
+                "x": 6,
+                "z": 2
+            },
+            {
+                "x": -6,
+                "z": 3
+            },
+            {
+                "x": -5,
+                "z": 3
+            },
+            {
+                "x": -4,
+                "z": 3
+            },
+            {
+                "x": -3,
+                "z": 3
+            },
+            {
+                "x": -2,
+                "z": 3
+            },
+            {
+                "x": -1,
+                "z": 3
+            },
+            {
+                "x": 0,
+                "z": 3
+            },
+            {
+                "x": 1,
+                "z": 3
+            },
+            {
+                "x": 2,
+                "z": 3
+            },
+            {
+                "x": 3,
+                "z": 3
+            },
+            {
+                "x": 4,
+                "z": 3
+            },
+            {
+                "x": 5,
+                "z": 3
+            },
+            {
+                "x": 6,
+                "z": 3
+            }
+        ],
+        "holeTiles": [],
+        "floorRegions": [
+            {
+                "id": "designer_floor_cell_0_0",
+                "center": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "halfSize": {
+                    "x": 6.5,
+                    "z": 3.5
+                }
+            }
+        ],
+        "doorPorts": [
+            {
+                "id": "north_0",
+                "direction": "north",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 0.0,
+                    "z": -3.5
+                },
+                "positionMeters": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": -3.5
+                },
+                "kind": "available"
+            },
+            {
+                "id": "south_0",
+                "direction": "south",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 0.0,
+                    "z": 3.5
+                },
+                "positionMeters": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 3.5
+                },
+                "kind": "available"
+            },
+            {
+                "id": "east_0",
+                "direction": "east",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 6.5,
+                    "z": 0.0
+                },
+                "positionMeters": {
+                    "x": 6.5,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "kind": "available"
+            },
+            {
+                "id": "west_0",
+                "direction": "west",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": -6.5,
+                    "z": 0.0
+                },
+                "positionMeters": {
+                    "x": -6.5,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "kind": "available"
+            }
+        ],
+        "playerSafeStart": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        "enemySpawns": [
+            {
+                "id": "spawn_enemy_0",
+                "kind": "spawnEnemyNormal",
+                "position": {
+                    "x": -4.0,
+                    "y": 0.0,
+                    "z": -2.0
+                }
+            },
+            {
+                "id": "spawn_enemy_1",
+                "kind": "spawnEnemyNormal",
+                "position": {
+                    "x": 4.0,
+                    "y": 0.0,
+                    "z": -2.0
+                }
+            },
+            {
+                "id": "spawn_enemy_2",
+                "kind": "spawnEnemyNormal",
+                "position": {
+                    "x": -4.0,
+                    "y": 0.0,
+                    "z": 2.0
+                }
+            },
+            {
+                "id": "spawn_enemy_3",
+                "kind": "spawnEnemyNormal",
+                "position": {
+                    "x": 4.0,
+                    "y": 0.0,
+                    "z": 2.0
+                }
+            }
+        ],
+        "itemSpawns": [
+            {
+                "id": "spawn_reward_0",
+                "kind": "spawn_point_roomReward",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 2.0
+                }
+            }
+        ],
+        "obstacles": [
+            {
+                "id": "rock_00",
+                "kind": "rockTile",
+                "center": {
+                    "x": -3.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_01",
+                "kind": "rockTile",
+                "center": {
+                    "x": -1.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_02",
+                "kind": "rockTile",
+                "center": {
+                    "x": 2.0,
+                    "y": 0.5,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "rock_03",
+                "kind": "rockTile",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.5,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            }
+        ],
+        "hazards": [],
+        "interactiveObjects": [],
+        "decor": [
+            {
+                "id": "verdant_decor_grass_tuft_01",
+                "kind": "decorGrassTuft",
+                "center": {
+                    "x": -4.0,
+                    "y": 0.0,
+                    "z": 1.0
+                },
+                "size": {
+                    "x": 0.6499999761581421,
+                    "y": 0.3499999940395355,
+                    "z": 0.6499999761581421
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            },
+            {
+                "id": "verdant_decor_crystal_cluster_01",
+                "kind": "decorCrystalCluster",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.0,
+                    "z": -1.0
+                },
+                "size": {
+                    "x": 0.5799999833106995,
+                    "y": 0.7200000286102295,
+                    "z": 0.5799999833106995
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            },
+            {
+                "id": "verdant_decor_small_tree_01",
+                "kind": "decorSmallTree",
+                "center": {
+                    "x": -5.0,
+                    "y": 0.0,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 0.8500000238418579,
+                    "y": 1.350000023841858,
+                    "z": 0.8500000238418579
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            },
+            {
+                "id": "verdant_decor_stone_ruin_01",
+                "kind": "decorStoneRuin",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.0,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 0.8999999761581421,
+                    "y": 0.6499999761581421,
+                    "z": 0.5199999809265137
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            }
+        ]
+    }
+}

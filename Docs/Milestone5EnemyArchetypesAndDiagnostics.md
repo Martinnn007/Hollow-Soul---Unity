@@ -32,7 +32,7 @@ Milestone 5 keeps the M4 combat loop intact and replaces the single hardcoded ch
 
 ## Platform Rule
 
-Gameplay remains in room-local meters. Windows and immersive routes use world scale `1.0`; Vision Pro bounded scales only `WorldPresentationRoot` to `0.1`. Enemy stats, movement, collision, and diagnostics are not affected by presentation scale.
+Gameplay remains in room-local meters. Windows and immersive routes use world scale `1.0`; Vision Pro bounded scales only `WorldPresentationRoot` to `0.5`. Enemy stats, movement, collision, and diagnostics are not affected by presentation scale.
 
 ## Commands
 

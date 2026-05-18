@@ -19,6 +19,9 @@ MonoBehaviour:
   - role: 29
     material: {fileID: 2100000, guid: e0ce59097d58a431fa311c963767ce73, type: 2}
     fallbackColor: {r: 0.7105, g: 0.63960004, b: 0.11849997, a: 1}
+  - role: 55
+    material: {fileID: 2100000, guid: 31c3cf03c5c44ce7b3d62b33bb1a7a65, type: 2}
+    fallbackColor: {r: 0.43, g: 0.28, b: 0.14, a: 1}
   - role: 22
     material: {fileID: 2100000, guid: cb5aae76281464761850dd57d569f8a9, type: 2}
     fallbackColor: {r: 0.7105, g: 0.5836, b: 0.13949996, a: 1}
@@ -47,8 +50,8 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 14ea7cd5bace843858947cb952e4c7e6, type: 2}
     fallbackColor: {r: 0.43049997, g: 0.4856, b: 0.5595, a: 0.8}
   - role: 35
-    material: {fileID: 2100000, guid: 4bd2725dc00c149c0abfbffb53fbcaa3, type: 2}
-    fallbackColor: {r: 0.64049995, g: 0.18459997, b: 0.71349996, a: 1}
+    material: {fileID: 2100000, guid: 067d8047c1fba4931801ed6f8076b383, type: 2}
+    fallbackColor: {r: 0.25, g: 0.28, b: 0.27, a: 1}
   - role: 36
     material: {fileID: 2100000, guid: e121b37c0199a49d7b3a0e59ef86a1a5, type: 2}
     fallbackColor: {r: 0.23449996, g: 0.7096, b: 0.40549996, a: 1}
@@ -129,10 +132,10 @@ MonoBehaviour:
     fallbackColor: {r: 0.7105, g: 0.17759997, b: 0.6785, a: 1}
   - role: 0
     material: {fileID: 2100000, guid: ce5fd933603004aada47b9c812fd7a97, type: 2}
-    fallbackColor: {r: 0.12999997, g: 0.15999997, b: 0.17999998, a: 1}
+    fallbackColor: {r: 0.25, g: 0.28, b: 0.27, a: 1}
   - role: 2
     material: {fileID: 2100000, guid: 895d7e1d2769f4d828c540983987e47d, type: 2}
-    fallbackColor: {r: 0.19999996, g: 0.18999997, b: 0.16999996, a: 1}
+    fallbackColor: {r: 0.22, g: 0.21, b: 0.18, a: 1}
   - role: 1
     material: {fileID: 2100000, guid: 01c6742fbb2e74d6c870af79505d80d3, type: 2}
     fallbackColor: {r: 0.080499984, g: 0.5696, b: 0.71349996, a: 1}
@@ -160,3 +163,9 @@ MonoBehaviour:
   - role: 7
     material: {fileID: 2100000, guid: 1ef5d394532714970a4b9e8bea543e5b, type: 2}
     fallbackColor: {r: 0.2625, g: 0.7096, b: 0.39149997, a: 1}
+  - role: 86
+    material: {fileID: 2100000, guid: 1f7d3c8d5b4a4d0d9a1e2f3b4c5d6e70, type: 2}
+    fallbackColor: {r: 0.28, g: 0.31, b: 0.34, a: 1}
+  - role: 87
+    material: {fileID: 2100000, guid: 2f7d3c8d5b4a4d0d9a1e2f3b4c5d6e71, type: 2}
+    fallbackColor: {r: 0.28, g: 0.31, b: 0.34, a: 0.32}
