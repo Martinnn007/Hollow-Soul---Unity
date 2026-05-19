@@ -626,9 +626,11 @@ namespace Hollow.Branches
                 return false;
             }
 
+            var preservedHealth = CaptureCurrentPlayerHealth();
             playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
             State.EnterRoom(connection.ToRoomId);
             LoadCurrentRoom(entryConnection: connection);
+            RestoreCurrentPlayerHealth(preservedHealth);
             CheckpointActiveRun();
             return true;
         }
@@ -1814,6 +1816,7 @@ namespace Hollow.Branches
                 return;
             }
 
+            var availableDoorPortIds = new List<string>();
             foreach (var port in roomRuntimeRoot.DoorPorts)
             {
                 var hasConnection = State.Graph.TryGetConnectionByPort(State.CurrentRoomId, port.Id, out var connectedConnection);
@@ -1823,24 +1826,43 @@ namespace Hollow.Branches
                                     State.Graph.TryGetConnection(State.CurrentRoomId, port.Direction, out connectedConnection);
                 }
 
-                var visualState = RoomDoorVisualState.Unavailable;
                 if (hasConnection)
                 {
-                    var connectedRoom = State.Graph.TryGetRoom(connectedConnection.ToRoomId, out var room) ? room : null;
-                    if (connectedConnection.LockKind == BranchConnectionLockKind.BossKey && !bossDoorUnlocked)
-                    {
-                        visualState = bossKeyState == BossKeyState.Held && State.CurrentRoom.IsCleared
-                            ? RoomDoorVisualState.Active
-                            : RoomDoorVisualState.Locked;
-                    }
-                    else if (connectedRoom?.Role == BranchRoomRole.Secret)
-                    {
-                        visualState = State.CurrentRoom.IsCleared ? RoomDoorVisualState.Active : RoomDoorVisualState.Locked;
-                    }
-                    else
-                    {
-                        visualState = State.CurrentRoom.IsCleared ? RoomDoorVisualState.Cleared : RoomDoorVisualState.Locked;
-                    }
+                    availableDoorPortIds.Add(port.Id);
+                }
+            }
+
+            roomRuntimeRoot.ApplyAvailableDoorPorts(availableDoorPortIds);
+
+            foreach (var port in roomRuntimeRoot.DoorPorts)
+            {
+                var hasConnection = State.Graph.TryGetConnectionByPort(State.CurrentRoomId, port.Id, out var connectedConnection);
+                if (!hasConnection)
+                {
+                    hasConnection = State.Graph.ConnectionsFrom(State.CurrentRoomId).All(connection => !connection.HasExplicitPorts) &&
+                                    State.Graph.TryGetConnection(State.CurrentRoomId, port.Direction, out connectedConnection);
+                }
+
+                if (!hasConnection)
+                {
+                    continue;
+                }
+
+                var connectedRoom = State.Graph.TryGetRoom(connectedConnection.ToRoomId, out var room) ? room : null;
+                var visualState = RoomDoorVisualState.Locked;
+                if (connectedConnection.LockKind == BranchConnectionLockKind.BossKey && !bossDoorUnlocked)
+                {
+                    visualState = bossKeyState == BossKeyState.Held && State.CurrentRoom.IsCleared
+                        ? RoomDoorVisualState.Active
+                        : RoomDoorVisualState.Locked;
+                }
+                else if (connectedRoom?.Role == BranchRoomRole.Secret)
+                {
+                    visualState = State.CurrentRoom.IsCleared ? RoomDoorVisualState.Active : RoomDoorVisualState.Locked;
+                }
+                else
+                {
+                    visualState = State.CurrentRoom.IsCleared ? RoomDoorVisualState.Cleared : RoomDoorVisualState.Locked;
                 }
 
                 roomRuntimeRoot.SetDoorVisualStateById(port.Id, visualState);
@@ -2473,6 +2495,23 @@ namespace Hollow.Branches
             }
 
             roomCombatController.PlayerHealth.Restore(CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth, snapshot.playerCurrentHealth);
+        }
+
+        private int CaptureCurrentPlayerHealth()
+        {
+            return roomCombatController?.PlayerHealth != null
+                ? roomCombatController.PlayerHealth.CurrentHealth
+                : CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth;
+        }
+
+        private void RestoreCurrentPlayerHealth(int currentHealth)
+        {
+            if (roomCombatController?.PlayerHealth == null)
+            {
+                return;
+            }
+
+            roomCombatController.PlayerHealth.Restore(CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth, currentHealth);
         }
 
         private void SubscribePlayerDeath()

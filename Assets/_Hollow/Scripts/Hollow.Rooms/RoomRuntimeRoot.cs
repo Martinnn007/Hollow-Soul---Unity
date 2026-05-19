@@ -24,6 +24,7 @@ namespace Hollow.Rooms
         private readonly Dictionary<string, GameObject> doorMarkersByPortId = new();
         private readonly Dictionary<string, RoomDynamicNavigationObjectMarker> doorNavigationByPortId = new();
         private readonly Dictionary<string, string> doorDirectionByPortId = new();
+        private readonly HashSet<string> openDoorPortIds = new();
         private readonly List<RoomHazardMarker> hazardMarkers = new();
         private readonly List<RoomInteractiveObjectMarker> interactiveObjectMarkers = new();
         private readonly List<RoomDynamicNavigationObjectMarker> dynamicNavigationObjects = new();
@@ -32,6 +33,7 @@ namespace Hollow.Rooms
         private string navMeshBakeError = string.Empty;
         private bool activeNavMeshWasRuntimeBuilt;
         private string navMeshBakeSource = string.Empty;
+        private GameObject perimeterWallsRoot;
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
@@ -88,11 +90,18 @@ namespace Hollow.Rooms
             LastBuiltAsset = asset;
             roomSizeMeters = new Vector2(asset.Layout.WidthTiles, asset.Layout.HeightTiles);
             ClearChildren();
+            perimeterWallsRoot = null;
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
             doorMarkersByPortId.Clear();
             doorNavigationByPortId.Clear();
             doorDirectionByPortId.Clear();
+            openDoorPortIds.Clear();
+            foreach (var port in asset.DoorPorts)
+            {
+                openDoorPortIds.Add(port.Id);
+            }
+
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
             dynamicNavigationObjects.Clear();
@@ -115,11 +124,13 @@ namespace Hollow.Rooms
             LastBuiltAsset = null;
             ReleaseNavMesh();
             ClearChildren();
+            perimeterWallsRoot = null;
             doorRenderersByDirection.Clear();
             doorRenderersByPortId.Clear();
             doorMarkersByPortId.Clear();
             doorNavigationByPortId.Clear();
             doorDirectionByPortId.Clear();
+            openDoorPortIds.Clear();
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
             dynamicNavigationObjects.Clear();
@@ -141,6 +152,60 @@ namespace Hollow.Rooms
         {
             port = DoorPorts.FirstOrDefault(candidate => candidate.Id == portId);
             return port != null;
+        }
+
+        public void ApplyAvailableDoorPorts(System.Collections.Generic.IEnumerable<string> availablePortIds)
+        {
+            if (LastBuiltAsset == null)
+            {
+                return;
+            }
+
+            var knownPortIds = new HashSet<string>(DoorPorts.Select(port => port.Id));
+            var nextOpenPortIds = new HashSet<string>((availablePortIds ?? System.Array.Empty<string>())
+                .Where(portId => knownPortIds.Contains(portId)));
+            if (openDoorPortIds.SetEquals(nextOpenPortIds))
+            {
+                return;
+            }
+
+            openDoorPortIds.Clear();
+            foreach (var portId in nextOpenPortIds)
+            {
+                openDoorPortIds.Add(portId);
+            }
+
+            foreach (var port in DoorPorts)
+            {
+                ApplyDoorAvailability(port.Id, openDoorPortIds.Contains(port.Id));
+            }
+
+            RebuildPerimeterWalls();
+        }
+
+        public void SetDoorAvailabilityById(string portId, bool available)
+        {
+            if (LastBuiltAsset == null || !DoorPorts.Any(port => port.Id == portId))
+            {
+                return;
+            }
+
+            if (openDoorPortIds.Contains(portId) == available)
+            {
+                return;
+            }
+
+            if (available)
+            {
+                openDoorPortIds.Add(portId);
+            }
+            else
+            {
+                openDoorPortIds.Remove(portId);
+            }
+
+            ApplyDoorAvailability(portId, available);
+            RebuildPerimeterWalls();
         }
 
         public void SetDoorVisualState(string direction, RoomDoorVisualState state)
@@ -286,6 +351,7 @@ namespace Hollow.Rooms
 
             var parent = new GameObject("PerimeterWalls");
             parent.transform.SetParent(transform, false);
+            perimeterWallsRoot = parent;
             var bindings = new List<RoomWallVisibilityController.WallBinding>();
 
             foreach (var edge in RoomWallOutlineUtility.BuildExposedEdges(layout))
@@ -309,6 +375,60 @@ namespace Hollow.Rooms
             }
 
             controller.Configure(bindings, layout.Bounds, biomeId);
+        }
+
+        private void RebuildPerimeterWalls()
+        {
+            DestroyPerimeterWallRoots();
+
+            BuildPerimeterWalls(CurrentLayout, OpenDoorPorts(), BiomeId);
+        }
+
+        private void DestroyPerimeterWallRoots()
+        {
+            var roots = new List<GameObject>();
+            if (perimeterWallsRoot != null)
+            {
+                roots.Add(perimeterWallsRoot);
+            }
+
+            for (var index = transform.childCount - 1; index >= 0; index--)
+            {
+                var child = transform.GetChild(index).gameObject;
+                if (child.name == "PerimeterWalls" && !roots.Contains(child))
+                {
+                    roots.Add(child);
+                }
+            }
+
+            foreach (var root in roots)
+            {
+                HideAndDestroyRuntimeChild(root);
+            }
+
+            perimeterWallsRoot = null;
+        }
+
+        private IReadOnlyList<RoomDoorPort> OpenDoorPorts()
+        {
+            return DoorPorts
+                .Where(port => openDoorPortIds.Contains(port.Id))
+                .ToArray();
+        }
+
+        private void ApplyDoorAvailability(string portId, bool available)
+        {
+            if (doorMarkersByPortId.TryGetValue(portId, out var marker) && marker != null)
+            {
+                marker.SetActive(available);
+            }
+
+            if (!available &&
+                doorNavigationByPortId.TryGetValue(portId, out var navigation) &&
+                navigation != null)
+            {
+                navigation.ApplyDoorState(RoomDoorVisualState.Active);
+            }
         }
 
         private static float OffsetWallCoordinate(RoomWallSide side, float fixedCoordinate)
@@ -859,6 +979,17 @@ namespace Hollow.Rooms
             {
                 DestroyImmediate(child);
             }
+        }
+
+        private static void HideAndDestroyRuntimeChild(GameObject child)
+        {
+            if (child == null)
+            {
+                return;
+            }
+
+            child.SetActive(false);
+            DestroyRuntimeChild(child);
         }
 
         private static void RemoveGeneratedCollider(Collider collider)

@@ -8,10 +8,12 @@ using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Platform;
 using Hollow.Rooms;
+using Hollow.UI.Shell;
 using Hollow.World;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
@@ -64,6 +66,106 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(model.Nodes.All(node => node.IsRevealed));
             Assert.AreEqual(graph.Connections.Count / 2, model.Connections.Count);
             Assert.IsTrue(model.Connections.All(connection => connection.LockKind == BranchConnectionLockKind.None));
+        }
+
+        [Test]
+        public void MacroMiniMapControllerDrawsUnifiedFootprintsWithOuterEdges()
+        {
+            var root = CreateBranchHarness(out var branch, out _, out _, out _);
+            var canvasObject = new GameObject("MacroMiniMapCanvas", typeof(RectTransform), typeof(Canvas), typeof(BranchMiniMapController));
+            try
+            {
+                canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                var controller = canvasObject.GetComponent<BranchMiniMapController>();
+                controller.Bind(branch);
+
+                var shapeRoot = canvasObject.GetComponentsInChildren<RectTransform>(true)
+                    .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
+                var contentRoot = shapeRoot.Find("BranchMiniMap.ContentRoot") as RectTransform;
+                Assert.IsNotNull(contentRoot);
+                Assert.AreEqual(0f, Mathf.DeltaAngle(contentRoot.localEulerAngles.z, 45f), 0.001f);
+                Assert.AreEqual(1f, contentRoot.localScale.x, 0.001f);
+                Assert.AreEqual(1f, contentRoot.localScale.y, 0.001f);
+                Assert.IsNotNull(shapeRoot.GetComponent<RectMask2D>());
+
+                var legacyCells = shapeRoot.GetComponentsInChildren<Image>(true)
+                    .Where(image => image.name.StartsWith("MiniMapRoomCell_"))
+                    .ToArray();
+                Assert.AreEqual(0, legacyCells.Length);
+
+                var footprintRoots = shapeRoot.GetComponentsInChildren<RectTransform>(true)
+                    .Where(rect => rect.name.StartsWith("MiniMapRoomFootprint_"))
+                    .ToArray();
+                Assert.AreEqual(5, footprintRoots.Length);
+                AssertFillCount(shapeRoot, BranchRoomId.Origin, 1);
+                AssertFillCount(shapeRoot, BranchRoomId.North, 2);
+                AssertFillCount(shapeRoot, BranchRoomId.South, 3);
+                AssertFillCount(shapeRoot, BranchRoomId.East, 2);
+                AssertFillCount(shapeRoot, BranchRoomId.West, 4);
+
+                AssertEdgeCount(shapeRoot, BranchRoomId.Origin, 4);
+                AssertEdgeCount(shapeRoot, BranchRoomId.North, 6);
+                AssertEdgeCount(shapeRoot, BranchRoomId.South, 8);
+                AssertEdgeCount(shapeRoot, BranchRoomId.East, 6);
+                AssertEdgeCount(shapeRoot, BranchRoomId.West, 8);
+
+                var currentDot = FindMiniMapRect(shapeRoot, "MiniMapCurrentPositionDot");
+                var originFill = FindMiniMapRect(shapeRoot, "MiniMapRoomFootprintFill_origin_0_0");
+                Assert.IsNotNull(currentDot);
+                Assert.IsNotNull(originFill);
+                Assert.AreEqual(16.5f, originFill.sizeDelta.x, 0.001f);
+                Assert.AreEqual(16.5f, originFill.sizeDelta.y, 0.001f);
+                Assert.AreEqual(originFill.anchoredPosition.x, currentDot.anchoredPosition.x, 0.001f);
+                Assert.AreEqual(originFill.anchoredPosition.y, currentDot.anchoredPosition.y, 0.001f);
+
+                var marker = shapeRoot.GetComponentsInChildren<Text>(true)
+                    .Single(text => text.name == "MiniMapMarker_O");
+                Assert.AreEqual(0f, Mathf.DeltaAngle(marker.rectTransform.localEulerAngles.z, -45f), 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasObject);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MacroMiniMapKeepsDefaultRoomBlockSizeAcrossCurrentRoomFootprints()
+        {
+            var root = CreateBranchHarness(out var branch, out _, out _, out _);
+            var originCanvas = new GameObject("MacroOriginMiniMapCanvas", typeof(RectTransform), typeof(Canvas), typeof(BranchMiniMapController));
+            var blockCanvas = new GameObject("MacroBlockMiniMapCanvas", typeof(RectTransform), typeof(Canvas), typeof(BranchMiniMapController));
+            try
+            {
+                originCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                originCanvas.GetComponent<BranchMiniMapController>().Bind(branch);
+                var originShapeRoot = originCanvas.GetComponentsInChildren<RectTransform>(true)
+                    .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
+                var originFill = FindMiniMapRect(originShapeRoot, "MiniMapRoomFootprintFill_origin_0_0");
+                Assert.IsNotNull(originFill);
+                Assert.AreEqual(16.5f, originFill.sizeDelta.x, 0.001f);
+                Assert.AreEqual(16.5f, originFill.sizeDelta.y, 0.001f);
+
+                Assert.IsTrue(branch.TryTraverse("west"));
+
+                blockCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                blockCanvas.GetComponent<BranchMiniMapController>().Bind(branch);
+                var blockShapeRoot = blockCanvas.GetComponentsInChildren<RectTransform>(true)
+                    .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
+                var originFillAfterBlockRoom = FindMiniMapRect(blockShapeRoot, "MiniMapRoomFootprintFill_origin_0_0");
+                Assert.IsNotNull(originFillAfterBlockRoom);
+
+                Assert.AreEqual(16.5f, originFillAfterBlockRoom.sizeDelta.x, 0.001f);
+                Assert.AreEqual(16.5f, originFillAfterBlockRoom.sizeDelta.y, 0.001f);
+                Assert.AreEqual(originFill.sizeDelta.x, originFillAfterBlockRoom.sizeDelta.x, 0.001f);
+                Assert.AreEqual(originFill.sizeDelta.y, originFillAfterBlockRoom.sizeDelta.y, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(blockCanvas);
+                Object.DestroyImmediate(originCanvas);
+                Object.DestroyImmediate(root);
+            }
         }
 
         [Test]
@@ -306,6 +408,30 @@ namespace Hollow.Tests.EditMode
         {
             var node = model.Nodes.Single(candidate => candidate.Id == roomId);
             Assert.AreEqual(expectedCells, node.OccupiedCells.Count);
+        }
+
+        private static void AssertFillCount(RectTransform root, BranchRoomId roomId, int expected)
+        {
+            var prefix = $"MiniMapRoomFootprintFill_{roomId.Value}_";
+            var fills = root.GetComponentsInChildren<Image>(true)
+                .Where(image => image.name.StartsWith(prefix))
+                .ToArray();
+            Assert.AreEqual(expected, fills.Length, roomId.Value);
+        }
+
+        private static void AssertEdgeCount(RectTransform root, BranchRoomId roomId, int expected)
+        {
+            var prefix = $"MiniMapRoomFootprintEdge_{roomId.Value}_";
+            var edges = root.GetComponentsInChildren<Image>(true)
+                .Where(image => image.name.StartsWith(prefix))
+                .ToArray();
+            Assert.AreEqual(expected, edges.Length, roomId.Value);
+        }
+
+        private static RectTransform FindMiniMapRect(RectTransform root, string name)
+        {
+            return root.GetComponentsInChildren<RectTransform>(true)
+                .SingleOrDefault(rect => rect.name == name);
         }
 
         private static void AddTestRoom(BranchFloorGraph graph, BranchRoomId roomId, Vector2Int primaryCell, ImportedRoomRuntimeAsset asset)

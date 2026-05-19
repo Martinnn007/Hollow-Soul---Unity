@@ -9,6 +9,7 @@ namespace Hollow.UI.Shell
     public sealed class RunFramingHudController : MonoBehaviour
     {
         private const float WorldToastDurationSeconds = 4.5f;
+        private const float MainBannerDurationSeconds = 3.5f;
 
         [SerializeField] private RunFramingCatalogDefinition catalog;
 
@@ -24,6 +25,7 @@ namespace Hollow.UI.Shell
         private string lastKey;
         private string lastWorldIdentityId;
         private float toastHideTime;
+        private float panelHideTime;
 
         public RunFramingCatalogDefinition Catalog => catalog;
 
@@ -64,6 +66,7 @@ namespace Hollow.UI.Shell
 
             Refresh(force: false);
             UpdateToastVisibility();
+            UpdatePanelVisibility();
         }
 
         private void Refresh(bool force)
@@ -93,6 +96,11 @@ namespace Hollow.UI.Shell
             titleText.text = snapshot.Title;
             phaseText.text = $"{snapshot.PhaseLabel} | {snapshot.SeedSummary}";
             messageText.text = $"{snapshot.Subtitle}\n{snapshot.Message}";
+            if (panel != null)
+            {
+                panel.gameObject.SetActive(true);
+                panelHideTime = Application.isPlaying ? Time.unscaledTime + MainBannerDurationSeconds : 0f;
+            }
         }
 
         private void ShowWorldEntryToast(RunFramingSnapshot snapshot)
@@ -119,6 +127,20 @@ namespace Hollow.UI.Shell
             if (Time.unscaledTime >= toastHideTime)
             {
                 toastPanel.gameObject.SetActive(false);
+            }
+        }
+
+        private void UpdatePanelVisibility()
+        {
+            if (panel == null || !panel.gameObject.activeSelf || panelHideTime <= 0f)
+            {
+                return;
+            }
+
+            if (Time.unscaledTime >= panelHideTime)
+            {
+                panel.gameObject.SetActive(false);
+                panelHideTime = 0f;
             }
         }
 

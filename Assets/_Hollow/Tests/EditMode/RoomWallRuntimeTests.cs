@@ -58,6 +58,94 @@ namespace Hollow.Tests.EditMode
                             .Any(binding => SegmentCoversPort(binding.Renderer.transform, side, port.Position)),
                         $"Door port {port.Id} should cut a gap through the {port.Direction} wall.");
                 }
+
+                AssertUniqueActiveWallSegments(controller);
+            }
+            finally
+            {
+                Object.DestroyImmediate(rootObject);
+                PresentationContentProvider.Reset();
+            }
+        }
+
+        [Test]
+        public void RuntimeRootFillsWallsAndHidesDoorAnchorsForUnavailablePorts()
+        {
+            var rootObject = new GameObject("RoomWallUnavailableDoorRoot");
+            try
+            {
+                var asset = HollowRuntimeV2Importer.Import(File.ReadAllText(SamplePath));
+                var room = rootObject.AddComponent<RoomRuntimeRoot>();
+                room.BuildFrom(asset);
+
+                room.ApplyAvailableDoorPorts(new[] { "north_0" });
+
+                var controller = rootObject.GetComponent<RoomWallVisibilityController>();
+                Assert.IsNotNull(controller);
+
+                foreach (var port in asset.DoorPorts)
+                {
+                    var doorAnchor = FindDoorAnchor(rootObject.transform, port.Id);
+                    Assert.IsNotNull(doorAnchor, port.Id);
+                    if (port.Id == "north_0")
+                    {
+                        Assert.IsTrue(doorAnchor.gameObject.activeSelf, "Connected door anchors should remain visible.");
+                        Assert.IsFalse(
+                            controller.WallBindings
+                                .Where(binding => binding.Side == WallSideFor(port.Direction))
+                                .Any(binding => SegmentCoversPort(binding.Renderer.transform, WallSideFor(port.Direction), port.Position)),
+                            "Connected door anchors should keep their wall gap.");
+                    }
+                    else
+                    {
+                        Assert.IsFalse(doorAnchor.gameObject.activeSelf, "Unavailable door anchors should be hidden.");
+                        Assert.IsTrue(
+                            controller.WallBindings
+                                .Where(binding => binding.Side == WallSideFor(port.Direction))
+                                .Any(binding => SegmentCoversPort(binding.Renderer.transform, WallSideFor(port.Direction), port.Position)),
+                            $"Unavailable door port {port.Id} should be covered by a continuous wall.");
+                    }
+                }
+
+                Assert.IsFalse(rootObject.GetComponentsInChildren<PresentationVisualMarker>()
+                    .Any(marker => marker.Role == PresentationPrefabRole.DoorUnavailable));
+                AssertUniqueActiveWallSegments(controller);
+                Assert.AreEqual(1, ActivePerimeterWallRoots(rootObject.transform).Length);
+            }
+            finally
+            {
+                Object.DestroyImmediate(rootObject);
+                PresentationContentProvider.Reset();
+            }
+        }
+
+        [Test]
+        public void RuntimeRootKeepsSingleActiveWallRootAcrossRepeatedDoorAvailabilityChanges()
+        {
+            var rootObject = new GameObject("RoomWallRepeatedAvailabilityRoot");
+            try
+            {
+                var asset = HollowRuntimeV2Importer.Import(File.ReadAllText(SamplePath));
+                var room = rootObject.AddComponent<RoomRuntimeRoot>();
+                room.BuildFrom(asset);
+
+                var staleRoot = new GameObject("PerimeterWalls");
+                staleRoot.transform.SetParent(rootObject.transform, false);
+                staleRoot.SetActive(false);
+
+                room.ApplyAvailableDoorPorts(new[] { "north_0" });
+                room.ApplyAvailableDoorPorts(new[] { "north_0", "east_0" });
+                room.SetDoorAvailabilityById("east_0", false);
+                room.SetDoorAvailabilityById("east_0", false);
+                room.SetDoorAvailabilityById("south_0", false);
+                room.ApplyAvailableDoorPorts(new[] { "north_0" });
+
+                var activeWallRoots = ActivePerimeterWallRoots(rootObject.transform);
+                Assert.AreEqual(1, activeWallRoots.Length, "Only the latest generated PerimeterWalls root should remain active.");
+
+                var controller = rootObject.GetComponent<RoomWallVisibilityController>();
+                Assert.IsNotNull(controller);
+                AssertUniqueActiveWallSegments(controller);
             }
             finally
             {
@@ -274,6 +362,50 @@ namespace Hollow.Tests.EditMode
                            axisPosition > zMin + tolerance &&
                            axisPosition < zMax - tolerance;
                 });
+        }
+
+        private static Transform FindDoorAnchor(Transform root, string portId)
+        {
+            return root.GetComponentsInChildren<Transform>(includeInactive: true)
+                .SingleOrDefault(transform => transform.name == $"doorAnchorActive.{portId}");
+        }
+
+        private static Transform[] ActivePerimeterWallRoots(Transform root)
+        {
+            return root.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(transform => transform.parent == root &&
+                                    transform.name == "PerimeterWalls" &&
+                                    transform.gameObject.activeSelf)
+                .ToArray();
+        }
+
+        private static void AssertUniqueActiveWallSegments(RoomWallVisibilityController controller)
+        {
+            var duplicateKeys = controller.WallBindings
+                .Where(binding => binding.Renderer != null && binding.Renderer.gameObject.activeInHierarchy)
+                .Select(binding => WallSegmentKey(binding.Side, binding.Renderer.transform))
+                .GroupBy(key => key)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key)
+                .ToArray();
+
+            Assert.IsEmpty(duplicateKeys, $"Duplicate active wall segment footprints: {string.Join(", ", duplicateKeys)}");
+        }
+
+        private static string WallSegmentKey(RoomWallSide side, Transform segment)
+        {
+            var fixedCoordinate = side is RoomWallSide.North or RoomWallSide.South
+                ? segment.localPosition.z
+                : segment.localPosition.x;
+            var axisCenter = side is RoomWallSide.North or RoomWallSide.South
+                ? segment.localPosition.x
+                : segment.localPosition.z;
+            var axisLength = side is RoomWallSide.North or RoomWallSide.South
+                ? segment.localScale.x
+                : segment.localScale.z;
+            var axisMin = axisCenter - axisLength * 0.5f;
+            var axisMax = axisCenter + axisLength * 0.5f;
+            return $"{side}:{fixedCoordinate:0.###}:{axisMin:0.###}:{axisMax:0.###}";
         }
 
         private static RoomWallSide WallSideFor(string direction)

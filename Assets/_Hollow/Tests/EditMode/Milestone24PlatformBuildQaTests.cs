@@ -114,7 +114,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void BranchMiniMapBuildsSeparatedReadableHudPanels()
+        public void BranchMiniMapBuildsCosmicMapWithoutDebugTextPanels()
         {
             var shellObject = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             try
@@ -126,24 +126,17 @@ namespace Hollow.Tests.EditMode
                 var economyPanel = shellObject.transform.Find("BranchMiniMap.EconomyPanel");
                 var itemLogPanel = shellObject.transform.Find("BranchMiniMap.ItemLogPanel");
                 Assert.IsNotNull(mapPanel);
-                Assert.IsNotNull(economyPanel);
-                Assert.IsNotNull(itemLogPanel);
+                Assert.IsNull(economyPanel);
+                Assert.IsNull(itemLogPanel);
 
                 var mapRect = (RectTransform)mapPanel;
                 Assert.AreEqual(Vector2.one, mapRect.anchorMin);
                 Assert.AreEqual(Vector2.one, mapRect.anchorMax);
                 Assert.AreEqual(Vector2.one, mapRect.pivot);
 
-                var mapText = mapPanel.GetComponentInChildren<Text>();
-                Assert.IsNotNull(mapText);
-                StringAssert.Contains("Branch Map", mapText.text);
-                Assert.That(mapText.text, Does.Not.Contain("Run Souls"));
-                Assert.That(mapText.text, Does.Not.Contain("Items"));
-
-                var economyText = economyPanel.GetComponentInChildren<Text>();
-                var itemLogText = itemLogPanel.GetComponentInChildren<Text>();
-                StringAssert.Contains("Run Souls", economyText.text);
-                StringAssert.Contains("Items", itemLogText.text);
+                Assert.IsNull(mapPanel.GetComponentInChildren<Text>());
+                Assert.IsFalse(shellObject.GetComponentsInChildren<Text>(true)
+                    .Any(text => text.text.Contains("Run Souls") || text.text.Contains("Items") || text.text.Contains("Branch Map")));
             }
             finally
             {

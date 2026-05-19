@@ -30,6 +30,8 @@ namespace Hollow.RoomDesigner
         private const float LibraryListViewportWidth = 778f;
         private const float LibraryListRowHeight = 34f;
         private const float LibraryListRowGap = 6f;
+        private const float LibraryListScrollbarWidth = 18f;
+        private const float LibraryScrollSensitivity = 180f;
 
         private static readonly RoomDesignerToolGroup[] ToolGroups =
         {
@@ -61,6 +63,7 @@ namespace Hollow.RoomDesigner
         private RectTransform libraryListViewport;
         private RectTransform libraryListContent;
         private ScrollRect libraryScrollRect;
+        private Scrollbar libraryScrollbar;
         private RectTransform infoPanel;
         private RectTransform controlsPanel;
         private Text controlsText;
@@ -642,7 +645,7 @@ namespace Hollow.RoomDesigner
             var optionCount = LibraryOptionCount();
             if ((input.MoveX != 0 || input.MoveZ != 0) && optionCount > 0 && timeSeconds >= nextMoveTime)
             {
-                var delta = input.MoveZ != 0 ? input.MoveZ : input.MoveX;
+                var delta = input.MoveZ != 0 ? -input.MoveZ : input.MoveX;
                 librarySelectedIndex = Mod(librarySelectedIndex + delta, optionCount);
                 nextMoveTime = timeSeconds + RepeatDelaySeconds;
                 RefreshHud();
@@ -1519,6 +1522,7 @@ namespace Hollow.RoomDesigner
             libraryListViewport = null;
             libraryListContent = null;
             libraryScrollRect = null;
+            libraryScrollbar = null;
             LibraryViewModel = BuildLibraryViewModel();
 
             AddPanelText("LibraryTitle", Mode switch
@@ -1641,7 +1645,7 @@ namespace Hollow.RoomDesigner
             }
 
             var contentHeight = Mathf.Max(LibraryListViewportHeight, -y + 10f);
-            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - 18f, contentHeight);
+            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - LibraryListScrollbarWidth - 16f, contentHeight);
             KeepLibrarySelectionVisible(selectedTop, selectedBottom, contentHeight);
 
             var createIndex = curatedCount + draftCount;
@@ -1668,18 +1672,34 @@ namespace Hollow.RoomDesigner
 
         private void RefreshCreateTemplatePanel()
         {
-            var y = -166f;
+            EnsureLibraryListViewport();
+            if (libraryListContent == null)
+            {
+                return;
+            }
+
+            ClearChildren(libraryListContent);
+            var y = 0f;
+            var selectedTop = -1f;
+            var selectedBottom = -1f;
             for (var index = 0; index < templatePresets.Length; index++)
             {
                 var row = new RoomDesignerTemplateRow(templatePresets[index]);
                 var selected = librarySelectedIndex == index;
                 var capturedIndex = index;
+                if (selected)
+                {
+                    selectedTop = -y;
+                    selectedBottom = selectedTop + 54f;
+                }
+
                 AddPanelButton(
+                    libraryListContent,
                     $"Template_{row.Preset}",
                     $"{(selected ? "> " : string.Empty)}{row.DisplayName}  |  {row.WidthTiles}x{row.HeightTiles}m",
                     index,
-                    new Vector2(36f, y),
-                    new Vector2(778f, 54f),
+                    new Vector2(0f, y),
+                    new Vector2(744f, 54f),
                     () =>
                     {
                         librarySelectedIndex = capturedIndex;
@@ -1688,11 +1708,15 @@ namespace Hollow.RoomDesigner
                 y -= 62f;
             }
 
+            var contentHeight = Mathf.Max(LibraryListViewportHeight, -y + 10f);
+            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - LibraryListScrollbarWidth - 16f, contentHeight);
+            KeepLibrarySelectionVisible(selectedTop, selectedBottom, contentHeight);
+
             AddPanelButton(
                 "TemplateBack",
                 $"{(librarySelectedIndex == templatePresets.Length ? "> " : string.Empty)}Back",
                 templatePresets.Length,
-                new Vector2(36f, y - 18f),
+                new Vector2(36f, -568f),
                 new Vector2(778f, 54f),
                 () =>
                 {
@@ -1751,16 +1775,62 @@ namespace Hollow.RoomDesigner
             libraryListContent.anchorMax = new Vector2(0f, 1f);
             libraryListContent.pivot = new Vector2(0f, 1f);
             libraryListContent.anchoredPosition = new Vector2(0f, libraryScrollOffset);
-            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - 18f, LibraryListViewportHeight);
+            libraryListContent.sizeDelta = new Vector2(LibraryListViewportWidth - LibraryListScrollbarWidth - 16f, LibraryListViewportHeight);
+
+            libraryScrollbar = CreateLibraryScrollbar();
 
             libraryScrollRect = viewportObject.GetComponent<ScrollRect>();
             libraryScrollRect.viewport = libraryListViewport;
             libraryScrollRect.content = libraryListContent;
             libraryScrollRect.horizontal = false;
             libraryScrollRect.vertical = true;
+            libraryScrollRect.verticalScrollbar = libraryScrollbar;
+            libraryScrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
             libraryScrollRect.movementType = ScrollRect.MovementType.Clamped;
-            libraryScrollRect.scrollSensitivity = 32f;
-            libraryScrollRect.inertia = true;
+            libraryScrollRect.scrollSensitivity = LibraryScrollSensitivity;
+            libraryScrollRect.inertia = false;
+            libraryScrollRect.onValueChanged.AddListener(_ => CaptureLibraryScrollOffset());
+        }
+
+        private Scrollbar CreateLibraryScrollbar()
+        {
+            var scrollbarObject = new GameObject("RoomDesignerLibraryScrollSlider", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+            scrollbarObject.transform.SetParent(libraryPanel, false);
+            var scrollbarRect = (RectTransform)scrollbarObject.transform;
+            scrollbarRect.anchorMin = new Vector2(0f, 1f);
+            scrollbarRect.anchorMax = new Vector2(0f, 1f);
+            scrollbarRect.pivot = new Vector2(0f, 1f);
+            scrollbarRect.anchoredPosition = new Vector2(36f + LibraryListViewportWidth - LibraryListScrollbarWidth, -150f);
+            scrollbarRect.sizeDelta = new Vector2(LibraryListScrollbarWidth, LibraryListViewportHeight);
+
+            var trackImage = scrollbarObject.GetComponent<Image>();
+            trackImage.color = new Color(0.05f, 0.06f, 0.075f, 0.86f);
+
+            var slidingAreaObject = new GameObject("Sliding Area", typeof(RectTransform));
+            slidingAreaObject.transform.SetParent(scrollbarObject.transform, false);
+            var slidingAreaRect = (RectTransform)slidingAreaObject.transform;
+            slidingAreaRect.anchorMin = Vector2.zero;
+            slidingAreaRect.anchorMax = Vector2.one;
+            slidingAreaRect.offsetMin = new Vector2(3f, 3f);
+            slidingAreaRect.offsetMax = new Vector2(-3f, -3f);
+
+            var handleObject = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handleObject.transform.SetParent(slidingAreaObject.transform, false);
+            var handleRect = (RectTransform)handleObject.transform;
+            handleRect.anchorMin = Vector2.zero;
+            handleRect.anchorMax = Vector2.one;
+            handleRect.offsetMin = Vector2.zero;
+            handleRect.offsetMax = Vector2.zero;
+
+            var handleImage = handleObject.GetComponent<Image>();
+            handleImage.color = new Color(0.48f, 0.62f, 0.72f, 0.96f);
+
+            var scrollbar = scrollbarObject.GetComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.targetGraphic = handleImage;
+            scrollbar.handleRect = handleRect;
+            scrollbar.value = 1f;
+            return scrollbar;
         }
 
         private void CaptureLibraryScrollOffset()
@@ -1790,6 +1860,18 @@ namespace Hollow.RoomDesigner
             if (libraryListContent != null)
             {
                 libraryListContent.anchoredPosition = new Vector2(0f, libraryScrollOffset);
+            }
+
+            if (libraryScrollRect != null)
+            {
+                libraryScrollRect.verticalNormalizedPosition = maxScroll > 0.5f
+                    ? 1f - libraryScrollOffset / maxScroll
+                    : 1f;
+            }
+
+            if (libraryScrollbar != null)
+            {
+                libraryScrollbar.gameObject.SetActive(maxScroll > 0.5f);
             }
         }
 

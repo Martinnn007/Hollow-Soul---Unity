@@ -9,10 +9,16 @@ namespace Hollow.UI.Shell
     [RequireComponent(typeof(Canvas))]
     public sealed class BranchMiniMapController : MonoBehaviour
     {
+        private const float MapContentRotationDegrees = 45f;
+        private const float MarkerCounterRotationDegrees = -45f;
+        private const float MapContentScale = 1f;
+        private const float DefaultMapCellStep = 34f;
+        private const float DefaultMapCellSize = 33f;
+        private const float DefaultMapCellGap = DefaultMapCellStep - DefaultMapCellSize;
+        private const string MiniMapPanelBackgroundResource = "UI/Minimap/CosmicMiniMapPanel";
+
         private BranchSessionController branchSessionController;
-        private Text mapText;
-        private Text economyText;
-        private Text itemLogText;
+        private RectTransform mapPanel;
         private RectTransform shapeRoot;
         private Font font;
         private string lastSummary;
@@ -42,31 +48,24 @@ namespace Hollow.UI.Shell
         private void Refresh(bool force)
         {
             BuildIfNeeded();
-            if (branchSessionController == null || mapText == null || economyText == null || itemLogText == null || shapeRoot == null)
+            if (branchSessionController == null || mapPanel == null || shapeRoot == null)
             {
                 return;
             }
 
             var model = branchSessionController.CreateMiniMapModel();
             var summary = model.Summary();
-            var itemNames = branchSessionController.RunEconomy.CollectedRewards.Count == 0
-                ? "None"
-                : string.Join(", ", branchSessionController.RunEconomy.CollectedRewards.Select(record => record.DisplayName));
             var activeSeed = branchSessionController.CurrentBranchSeed != 0
                 ? branchSessionController.CurrentBranchSeed
                 : branchSessionController.State?.Graph?.Seed ?? 0;
-            var displayState = $"{summary}|{branchSessionController.RunEconomy.RunSouls}|{branchSessionController.RunEconomy.RunCoins}|{branchSessionController.BankedSouls}|{branchSessionController.RewardCounter.ClaimedRewards}|{itemNames}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}|{activeSeed}|{branchSessionController.RunSeed}|{branchSessionController.WorldIndex}|{branchSessionController.WorldPhase}";
+            var displayState = $"{summary}|{branchSessionController.RewardCounter.ClaimedRewards}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}|{activeSeed}|{branchSessionController.RunSeed}|{branchSessionController.WorldIndex}|{branchSessionController.WorldPhase}";
             if (!force && displayState == lastSummary)
             {
                 return;
             }
 
             lastSummary = displayState;
-            mapText.text = "Branch Map\nBright: current | Gold: reward | Dark: nearby";
             RebuildShapeMap(model);
-            economyText.text =
-                $"Run Souls: {branchSessionController.RunEconomy.RunSouls}\nCoins: {branchSessionController.RunEconomy.RunCoins}\nBanked: {branchSessionController.BankedSouls}\nRewards: {branchSessionController.RewardCounter.ClaimedRewards}/4\nWorld: {branchSessionController.WorldIndex}\nRun Seed: {branchSessionController.RunSeed}\nBranch Seed: {activeSeed}\nSave: {branchSessionController.SaveStatus}";
-            itemLogText.text = $"Latest\n{branchSessionController.LastRewardMessage}\n\nItems\n{itemNames}";
         }
 
         public void RebuildShapeMap(BranchMiniMapModel model)
@@ -83,16 +82,17 @@ namespace Hollow.UI.Shell
                 return;
             }
 
-            var currentNode = visibleNodes.FirstOrDefault(node => node.IsCurrent);
-            var layout = MiniMapLayout.Create(visibleNodes, shapeRoot.rect.size, currentNode);
+            var currentNode = model.Nodes.FirstOrDefault(node => node.IsCurrent);
+            var layout = MiniMapLayout.Create(model.Nodes, shapeRoot.rect.size, currentNode);
+            var contentRoot = CreateContentRoot(shapeRoot);
             foreach (var connection in model.Connections)
             {
-                DrawConnection(connection, shapeRoot, layout);
+                DrawConnection(connection, contentRoot, layout);
             }
 
             foreach (var node in visibleNodes)
             {
-                DrawRoomNode(node, shapeRoot, layout);
+                DrawRoomNode(node, contentRoot, layout);
             }
         }
 
@@ -119,23 +119,30 @@ namespace Hollow.UI.Shell
 
         public void DrawRoomNode(BranchMiniMapNode node, RectTransform root, MiniMapLayout layout)
         {
-            foreach (var cell in node.OccupiedCells)
+            var footprintRoot = new GameObject($"MiniMapRoomFootprint_{node.Id.Value}", typeof(RectTransform)).GetComponent<RectTransform>();
+            footprintRoot.transform.SetParent(root, false);
+            StretchToParent(footprintRoot);
+
+            var occupiedCells = node.OccupiedCells.ToHashSet();
+            foreach (var cell in occupiedCells)
             {
-                var cellObject = new GameObject($"MiniMapRoomCell_{node.Id.Value}_{cell.x}_{cell.y}", typeof(RectTransform), typeof(Image), typeof(Outline));
-                cellObject.transform.SetParent(root, false);
+                var cellObject = new GameObject($"MiniMapRoomFootprintFill_{node.Id.Value}_{cell.x}_{cell.y}", typeof(RectTransform), typeof(Image));
+                cellObject.transform.SetParent(footprintRoot, false);
                 var rect = (RectTransform)cellObject.transform;
-                ConfigureMiniMapRect(rect, layout.PositionFor(cell));
-                rect.sizeDelta = Vector2.one * layout.CellSize;
+                ConfigureMiniMapRect(rect, ExpandedCellCenterFor(cell, occupiedCells, layout));
+                rect.sizeDelta = ExpandedCellSizeFor(cell, occupiedCells, layout);
 
                 cellObject.GetComponent<Image>().color = FillColorFor(node);
-                var outline = cellObject.GetComponent<Outline>();
-                outline.effectColor = OutlineColorFor(node);
-                outline.effectDistance = node.IsCurrent ? new Vector2(3f, -3f) : new Vector2(1.5f, -1.5f);
+            }
+
+            foreach (var cell in occupiedCells)
+            {
+                DrawFootprintEdges(node, footprintRoot, layout, occupiedCells, cell);
             }
 
             if (node.HasPendingReward)
             {
-                DrawOverlayDot(root, layout.PositionFor(node.OccupiedCells.First()), "MiniMapRewardDot", new Color(1f, 0.78f, 0.16f, 1f), 9f);
+                DrawOverlayDot(root, layout.PositionFor(node.OccupiedCells.First()), "MiniMapRewardDot", new Color(1f, 0.78f, 0.16f, 1f), 5f);
             }
 
             var marker = MarkerFor(node.Role);
@@ -146,7 +153,7 @@ namespace Hollow.UI.Shell
 
             if (node.IsCurrent)
             {
-                DrawDot(root, layout.CenterFor(node.OccupiedCells), "MiniMapCurrentPositionDot", new Color(0.2f, 1f, 0.35f, 1f), 8f);
+                DrawDot(root, layout.CenterFor(node.OccupiedCells), "MiniMapCurrentPositionDot", new Color(0.2f, 1f, 0.35f, 1f), 5f);
             }
         }
 
@@ -170,100 +177,75 @@ namespace Hollow.UI.Shell
 
             if (connection.LockKind == BranchConnectionLockKind.BossKey)
             {
-                DrawMarkerText(root, midpoint, "L", new Color(1f, 0.72f, 0.25f, 1f), 12);
+                DrawMarkerText(root, midpoint, "L", new Color(1f, 0.72f, 0.25f, 1f), 9);
             }
+        }
+
+        private static RectTransform CreateContentRoot(RectTransform parent)
+        {
+            var contentRoot = new GameObject("BranchMiniMap.ContentRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            contentRoot.transform.SetParent(parent, false);
+            StretchToParent(contentRoot);
+            contentRoot.localEulerAngles = new Vector3(0f, 0f, MapContentRotationDegrees);
+            contentRoot.localScale = Vector3.one * MapContentScale;
+            return contentRoot;
         }
 
         private void BuildIfNeeded()
         {
-            if (mapText != null && economyText != null && itemLogText != null && shapeRoot != null)
+            if (mapPanel != null && shapeRoot != null)
             {
                 return;
             }
 
             font ??= Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            mapText = AddPanelText(
-                "BranchMiniMap.MapPanel",
-                "Branch Map\nWaiting...",
-                new Vector2(1f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(-32f, -32f),
-                new Vector2(420f, 250f),
-                TextAnchor.UpperLeft,
-                15);
-            var mapPanel = (RectTransform)mapText.transform.parent;
-            var mapTextRect = (RectTransform)mapText.transform;
-            mapTextRect.anchorMin = new Vector2(0f, 1f);
-            mapTextRect.anchorMax = new Vector2(1f, 1f);
-            mapTextRect.pivot = new Vector2(0f, 1f);
-            mapTextRect.anchoredPosition = new Vector2(0f, 0f);
-            mapTextRect.sizeDelta = new Vector2(0f, 58f);
-            shapeRoot = new GameObject("BranchMiniMap.ShapeRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            mapPanel = AddMiniMapPanel();
+            shapeRoot = new GameObject("BranchMiniMap.ShapeRoot", typeof(RectTransform), typeof(RectMask2D)).GetComponent<RectTransform>();
             shapeRoot.transform.SetParent(mapPanel, false);
             shapeRoot.anchorMin = Vector2.zero;
             shapeRoot.anchorMax = Vector2.one;
-            shapeRoot.offsetMin = new Vector2(14f, 14f);
-            shapeRoot.offsetMax = new Vector2(-14f, -66f);
-            economyText = AddPanelText(
-                "BranchMiniMap.EconomyPanel",
-                "Run Souls: 0\nCoins: 0\nBanked: 0\nRewards: 0/4\nWorld: 1\nRun Seed: 0\nBranch Seed: 0\nSave: Ready",
-                new Vector2(0f, 1f),
-                new Vector2(0f, 1f),
-                new Vector2(0f, 1f),
-                new Vector2(32f, -315f),
-                new Vector2(390f, 250f),
-                TextAnchor.UpperLeft,
-                16);
-            itemLogText = AddPanelText(
-                "BranchMiniMap.ItemLogPanel",
-                "Latest\nNone\n\nItems\nNone",
-                new Vector2(0f, 0f),
-                new Vector2(0f, 0f),
-                new Vector2(0f, 0f),
-                new Vector2(32f, 32f),
-                new Vector2(500f, 145f),
-                TextAnchor.LowerLeft,
-                16);
+            shapeRoot.offsetMin = new Vector2(44f, 34f);
+            shapeRoot.offsetMax = new Vector2(-44f, -34f);
         }
 
-        private Text AddPanelText(
-            string panelName,
-            string initialText,
-            Vector2 anchorMin,
-            Vector2 anchorMax,
-            Vector2 pivot,
-            Vector2 anchoredPosition,
-            Vector2 size,
-            TextAnchor alignment,
-            int fontSize)
+        private RectTransform AddMiniMapPanel()
         {
-            var panel = new GameObject(panelName, typeof(RectTransform), typeof(Image));
+            var panel = new GameObject("BranchMiniMap.MapPanel", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(transform, false);
             var panelRect = (RectTransform)panel.transform;
-            panelRect.anchorMin = anchorMin;
-            panelRect.anchorMax = anchorMax;
-            panelRect.pivot = pivot;
-            panelRect.anchoredPosition = anchoredPosition;
-            panelRect.sizeDelta = size;
-            panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.42f);
+            panelRect.anchorMin = new Vector2(1f, 1f);
+            panelRect.anchorMax = new Vector2(1f, 1f);
+            panelRect.pivot = new Vector2(1f, 1f);
+            panelRect.anchoredPosition = new Vector2(-32f, -32f);
+            panelRect.sizeDelta = new Vector2(420f, 250f);
 
-            var textObject = new GameObject($"{panelName}.Text", typeof(RectTransform), typeof(Text));
-            textObject.transform.SetParent(panel.transform, false);
-            var textRect = (RectTransform)textObject.transform;
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(14f, 10f);
-            textRect.offsetMax = new Vector2(-14f, -10f);
+            var image = panel.GetComponent<Image>();
+            image.sprite = LoadMiniMapBackgroundSprite();
+            image.color = image.sprite != null ? Color.white : new Color(0f, 0f, 0f, 0.18f);
+            image.preserveAspect = false;
+            image.raycastTarget = false;
+            return panelRect;
+        }
 
-            var label = textObject.GetComponent<Text>();
-            label.font = font;
-            label.fontSize = fontSize;
-            label.alignment = alignment;
-            label.color = Color.white;
-            label.raycastTarget = false;
-            label.text = initialText;
-            return label;
+        private static Sprite LoadMiniMapBackgroundSprite()
+        {
+            var sprite = Resources.Load<Sprite>(MiniMapPanelBackgroundResource);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            var texture = Resources.Load<Texture2D>(MiniMapPanelBackgroundResource);
+            if (texture == null)
+            {
+                return null;
+            }
+
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                100f);
         }
 
         private static Color FillColorFor(BranchMiniMapNode node)
@@ -330,7 +312,7 @@ namespace Hollow.UI.Shell
 
         private void DrawOverlayDot(RectTransform root, Vector2 position, string name, Color color, float size)
         {
-            DrawDot(root, position + new Vector2(8f, -8f), name, color, size);
+            DrawDot(root, position + new Vector2(5f, -5f), name, color, size);
         }
 
         private void DrawDot(RectTransform root, Vector2 position, string name, Color color, float size)
@@ -343,13 +325,13 @@ namespace Hollow.UI.Shell
             dot.GetComponent<Image>().color = color;
         }
 
-        private void DrawMarkerText(RectTransform root, Vector2 position, string marker, Color color, int fontSize = 15)
+        private void DrawMarkerText(RectTransform root, Vector2 position, string marker, Color color, int fontSize = 11)
         {
             var textObject = new GameObject($"MiniMapMarker_{marker}", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(root, false);
             var rect = (RectTransform)textObject.transform;
             ConfigureMiniMapRect(rect, position);
-            rect.sizeDelta = new Vector2(28f, 24f);
+            rect.sizeDelta = new Vector2(20f, 18f);
             var text = textObject.GetComponent<Text>();
             text.font = font;
             text.fontSize = fontSize;
@@ -358,6 +340,96 @@ namespace Hollow.UI.Shell
             text.color = color;
             text.raycastTarget = false;
             text.text = marker;
+            rect.localEulerAngles = new Vector3(0f, 0f, MarkerCounterRotationDegrees);
+        }
+
+        private static void DrawFootprintEdges(
+            BranchMiniMapNode node,
+            RectTransform root,
+            MiniMapLayout layout,
+            HashSet<Vector2Int> occupiedCells,
+            Vector2Int cell)
+        {
+            var color = OutlineColorFor(node);
+            var thickness = node.IsCurrent ? 1.5f : 1f;
+            var leftExpanded = occupiedCells.Contains(new Vector2Int(cell.x - 1, cell.y));
+            var rightExpanded = occupiedCells.Contains(new Vector2Int(cell.x + 1, cell.y));
+            var bottomExpanded = occupiedCells.Contains(new Vector2Int(cell.x, cell.y - 1));
+            var topExpanded = occupiedCells.Contains(new Vector2Int(cell.x, cell.y + 1));
+
+            if (!leftExpanded)
+            {
+                DrawEdge(root, layout.LeftEdgeCenterFor(cell, topExpanded, bottomExpanded), $"MiniMapRoomFootprintEdge_{node.Id.Value}_{cell.x}_{cell.y}_W", color, new Vector2(thickness, layout.CellSize + VerticalGap(topExpanded, bottomExpanded, layout)));
+            }
+
+            if (!rightExpanded)
+            {
+                DrawEdge(root, layout.RightEdgeCenterFor(cell, topExpanded, bottomExpanded), $"MiniMapRoomFootprintEdge_{node.Id.Value}_{cell.x}_{cell.y}_E", color, new Vector2(thickness, layout.CellSize + VerticalGap(topExpanded, bottomExpanded, layout)));
+            }
+
+            if (!topExpanded)
+            {
+                DrawEdge(root, layout.TopEdgeCenterFor(cell, leftExpanded, rightExpanded), $"MiniMapRoomFootprintEdge_{node.Id.Value}_{cell.x}_{cell.y}_N", color, new Vector2(layout.CellSize + HorizontalGap(leftExpanded, rightExpanded, layout), thickness));
+            }
+
+            if (!bottomExpanded)
+            {
+                DrawEdge(root, layout.BottomEdgeCenterFor(cell, leftExpanded, rightExpanded), $"MiniMapRoomFootprintEdge_{node.Id.Value}_{cell.x}_{cell.y}_S", color, new Vector2(layout.CellSize + HorizontalGap(leftExpanded, rightExpanded, layout), thickness));
+            }
+        }
+
+        private static void DrawEdge(RectTransform root, Vector2 position, string name, Color color, Vector2 size)
+        {
+            var edgeObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+            edgeObject.transform.SetParent(root, false);
+            var rect = (RectTransform)edgeObject.transform;
+            ConfigureMiniMapRect(rect, position);
+            rect.sizeDelta = size;
+            edgeObject.GetComponent<Image>().color = color;
+        }
+
+        private static Vector2 ExpandedCellCenterFor(Vector2Int cell, HashSet<Vector2Int> occupiedCells, MiniMapLayout layout)
+        {
+            var position = layout.PositionFor(cell);
+            var leftExpand = occupiedCells.Contains(new Vector2Int(cell.x - 1, cell.y)) ? layout.HalfGap : 0f;
+            var rightExpand = occupiedCells.Contains(new Vector2Int(cell.x + 1, cell.y)) ? layout.HalfGap : 0f;
+            var bottomExpand = occupiedCells.Contains(new Vector2Int(cell.x, cell.y - 1)) ? layout.HalfGap : 0f;
+            var topExpand = occupiedCells.Contains(new Vector2Int(cell.x, cell.y + 1)) ? layout.HalfGap : 0f;
+            return new Vector2(position.x + (rightExpand - leftExpand) * 0.5f, position.y + (topExpand - bottomExpand) * 0.5f);
+        }
+
+        private static Vector2 ExpandedCellSizeFor(Vector2Int cell, HashSet<Vector2Int> occupiedCells, MiniMapLayout layout)
+        {
+            var horizontalGap = HorizontalGap(
+                occupiedCells.Contains(new Vector2Int(cell.x - 1, cell.y)),
+                occupiedCells.Contains(new Vector2Int(cell.x + 1, cell.y)),
+                layout);
+            var verticalGap = VerticalGap(
+                occupiedCells.Contains(new Vector2Int(cell.x, cell.y + 1)),
+                occupiedCells.Contains(new Vector2Int(cell.x, cell.y - 1)),
+                layout);
+            return new Vector2(layout.CellSize + horizontalGap, layout.CellSize + verticalGap);
+        }
+
+        private static float HorizontalGap(bool leftExpanded, bool rightExpanded, MiniMapLayout layout)
+        {
+            return (leftExpanded ? layout.HalfGap : 0f) + (rightExpanded ? layout.HalfGap : 0f);
+        }
+
+        private static float VerticalGap(bool topExpanded, bool bottomExpanded, MiniMapLayout layout)
+        {
+            return (topExpanded ? layout.HalfGap : 0f) + (bottomExpanded ? layout.HalfGap : 0f);
+        }
+
+        private static void StretchToParent(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+            rect.anchoredPosition = Vector2.zero;
         }
 
         private static void ConfigureMiniMapRect(RectTransform rect, Vector2 anchoredPosition)
@@ -391,33 +463,28 @@ namespace Hollow.UI.Shell
 
             public float Gap { get; }
 
+            public float HalfGap => Gap * 0.5f;
+
             public static MiniMapLayout Create(IReadOnlyCollection<BranchMiniMapNode> nodes, Vector2 availableSize, BranchMiniMapNode currentNode = null)
             {
-                var cells = nodes.SelectMany(node => node.OccupiedCells).ToArray();
+                var cells = nodes?.SelectMany(node => node.OccupiedCells).ToArray() ?? System.Array.Empty<Vector2Int>();
                 var focusCells = currentNode?.OccupiedCells?.ToArray();
                 if (focusCells == null || focusCells.Length == 0)
                 {
                     focusCells = cells;
                 }
 
-                var focusX = focusCells.Average(cell => cell.x);
-                var focusY = focusCells.Average(cell => cell.y);
-                var radiusX = Mathf.Max(0.5f, cells.Max(cell => Mathf.Abs(cell.x - (float)focusX)) + 0.5f);
-                var radiusY = Mathf.Max(0.5f, cells.Max(cell => Mathf.Abs(cell.y - (float)focusY)) + 0.5f);
-                var columns = Mathf.Max(1f, radiusX * 2f);
-                var rows = Mathf.Max(1f, radiusY * 2f);
+                var focusX = focusCells.Length > 0 ? focusCells.Average(cell => cell.x) : 0f;
+                var focusY = focusCells.Length > 0 ? focusCells.Average(cell => cell.y) : 0f;
                 var size = availableSize.x > 0f && availableSize.y > 0f ? availableSize : new Vector2(392f, 170f);
-                var step = Mathf.Clamp(Mathf.Min(size.x / columns, size.y / rows), 18f, 34f);
-                var cellSize = Mathf.Max(12f, step - 4f);
-                var gap = Mathf.Max(3f, step - cellSize);
                 return new MiniMapLayout(
                     (float)focusX,
                     (float)focusY,
                     size.x * 0.5f,
                     -size.y * 0.5f,
-                    step,
-                    cellSize,
-                    gap);
+                    DefaultMapCellStep,
+                    DefaultMapCellSize,
+                    DefaultMapCellGap);
             }
 
             public Vector2 PositionFor(Vector2Int cell)
@@ -426,6 +493,38 @@ namespace Hollow.UI.Shell
                 // game camera reads the opposite way on screen. Flip only the minimap
                 // presentation so traversal/generation data stays unchanged.
                 return new Vector2(originX + (cell.x - focusX) * step, originY + (cell.y - focusY) * step);
+            }
+
+            public Vector2 LeftEdgeCenterFor(Vector2Int cell, bool topExpanded, bool bottomExpanded)
+            {
+                var position = PositionFor(cell);
+                var topExpand = topExpanded ? HalfGap : 0f;
+                var bottomExpand = bottomExpanded ? HalfGap : 0f;
+                return new Vector2(position.x - CellSize * 0.5f, position.y + (topExpand - bottomExpand) * 0.5f);
+            }
+
+            public Vector2 RightEdgeCenterFor(Vector2Int cell, bool topExpanded, bool bottomExpanded)
+            {
+                var position = PositionFor(cell);
+                var topExpand = topExpanded ? HalfGap : 0f;
+                var bottomExpand = bottomExpanded ? HalfGap : 0f;
+                return new Vector2(position.x + CellSize * 0.5f, position.y + (topExpand - bottomExpand) * 0.5f);
+            }
+
+            public Vector2 TopEdgeCenterFor(Vector2Int cell, bool leftExpanded, bool rightExpanded)
+            {
+                var position = PositionFor(cell);
+                var leftExpand = leftExpanded ? HalfGap : 0f;
+                var rightExpand = rightExpanded ? HalfGap : 0f;
+                return new Vector2(position.x + (rightExpand - leftExpand) * 0.5f, position.y + CellSize * 0.5f);
+            }
+
+            public Vector2 BottomEdgeCenterFor(Vector2Int cell, bool leftExpanded, bool rightExpanded)
+            {
+                var position = PositionFor(cell);
+                var leftExpand = leftExpanded ? HalfGap : 0f;
+                var rightExpand = rightExpanded ? HalfGap : 0f;
+                return new Vector2(position.x + (rightExpand - leftExpand) * 0.5f, position.y - CellSize * 0.5f);
             }
 
             public Vector2 CenterFor(IEnumerable<Vector2Int> cells)

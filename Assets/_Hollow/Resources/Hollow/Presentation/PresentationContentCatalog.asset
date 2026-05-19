@@ -74,6 +74,8 @@ MonoBehaviour:
     prefab: {fileID: 6888684183948481987, guid: 6293801d727054fb3adad3fa9ba5a0d1, type: 3}
   - role: 41
     prefab: {fileID: 4991123347770752908, guid: 6da935014d74c8646bdd6f0adf2502d0, type: 3}
+  - role: 42
+    prefab: {fileID: 4991123347770752908, guid: 6da935014d74c8646bdd6f0adf2502d0, type: 3}
   - role: 36
     prefab: {fileID: 1041982103932035789, guid: bcc09b385bb3341f29c0e148fdb4b70e, type: 3}
   - role: 14

@@ -26,7 +26,7 @@ namespace Hollow.RoomDesigner
                 var left = gamepad.leftStick.ReadValue();
                 var dpad = gamepad.dpad.ReadValue();
                 moveX = NonZero(moveX, AxisToStep(left.x), AxisToStep(dpad.x));
-                moveZ = NonZero(moveZ, -AxisToStep(left.y), -AxisToStep(dpad.y));
+                moveZ = NonZero(moveZ, AxisToStep(left.y), AxisToStep(dpad.y));
                 toolDelta = NonZero(toolDelta, gamepad.rightShoulder.wasPressedThisFrame ? 1 : 0, gamepad.leftShoulder.wasPressedThisFrame ? -1 : 0);
                 layerDelta = NonZero(layerDelta, gamepad.rightTrigger.wasPressedThisFrame ? 1 : 0, gamepad.leftTrigger.wasPressedThisFrame ? -1 : 0);
                 zoomDelta = NonZero(zoomDelta, gamepad.rightStickButton.wasPressedThisFrame ? 1 : 0, gamepad.leftStickButton.wasPressedThisFrame ? -1 : 0);

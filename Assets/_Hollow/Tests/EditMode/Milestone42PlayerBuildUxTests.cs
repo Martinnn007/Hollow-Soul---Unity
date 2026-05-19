@@ -1,6 +1,7 @@
 using Hollow.Data.Definitions;
 using Hollow.Persistence;
 using Hollow.Rewards;
+using Hollow.UI.Shell;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -45,6 +46,80 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void PlayerBuildHudRendersAvatarAndHeartContainers()
+        {
+            var canvasObject = new GameObject("HudCanvas", typeof(Canvas), typeof(PlayerBuildHudController));
+            try
+            {
+                var controller = canvasObject.GetComponent<PlayerBuildHudController>();
+                var model = new PlayerBuildHudModel(
+                    "Balanced",
+                    3,
+                    5,
+                    1,
+                    false,
+                    4f,
+                    1,
+                    80f,
+                    100f,
+                    18f,
+                    0,
+                    0,
+                    0f,
+                    0f,
+                    1f,
+                    0,
+                    0,
+                    "Melee - Practice Blade",
+                    "Practice Blade",
+                    "Practice Bow",
+                    "None",
+                    "None",
+                    "None",
+                    "None");
+
+                controller.RefreshFromModel(model);
+
+                Assert.AreEqual(5, controller.RenderedHeartCount);
+                Assert.AreEqual(3, controller.RenderedFullHeartCount);
+                Assert.IsTrue(controller.HasRenderedStaminaBar);
+                Assert.AreEqual(0.8f, controller.RenderedStaminaFillAmount, 0.001f);
+                Assert.IsNotNull(canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.Avatar"));
+                Assert.IsNotNull(canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.Heart_01"));
+                Assert.IsNotNull(canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.StaminaBar"));
+                Assert.IsNotNull(canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.StaminaBar/PlayerBuildHud.StaminaFrame"));
+                Assert.IsNotNull(canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.StaminaBar/PlayerBuildHud.StaminaFill"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasObject);
+            }
+        }
+
+        [Test]
+        public void PlayerBuildHudStaminaFillClampsToCurrentStaminaRatio()
+        {
+            var canvasObject = new GameObject("HudCanvas", typeof(Canvas), typeof(PlayerBuildHudController));
+            try
+            {
+                var controller = canvasObject.GetComponent<PlayerBuildHudController>();
+
+                controller.RefreshFromModel(CreateHudModel(currentStamina: 0f, maxStamina: 100f));
+                Assert.AreEqual(0f, controller.RenderedStaminaFillAmount, 0.001f);
+
+                controller.RefreshFromModel(CreateHudModel(currentStamina: 150f, maxStamina: 100f));
+                Assert.AreEqual(1f, controller.RenderedStaminaFillAmount, 0.001f);
+
+                controller.RefreshFromModel(CreateHudModel(currentStamina: 50f, maxStamina: 0f));
+                Assert.AreEqual(0f, controller.RenderedStaminaFillAmount, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasObject);
+            }
+        }
+
+        [Test]
         public void ReplacementDetectorCapturesOldWeaponForSwapDrop()
         {
             var build = new PlayerRunBuild();
@@ -63,6 +138,35 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(RewardKind.Weapon, replacement.RewardKind);
             Assert.AreEqual("starter_blade", replacement.RewardId);
             Assert.AreEqual("origin", replacement.RoomId);
+        }
+
+        private static PlayerBuildHudModel CreateHudModel(float currentStamina, float maxStamina)
+        {
+            return new PlayerBuildHudModel(
+                "Balanced",
+                3,
+                5,
+                1,
+                false,
+                4f,
+                1,
+                currentStamina,
+                maxStamina,
+                18f,
+                0,
+                0,
+                0f,
+                0f,
+                1f,
+                0,
+                0,
+                "Melee - Practice Blade",
+                "Practice Blade",
+                "Practice Bow",
+                "None",
+                "None",
+                "None",
+                "None");
         }
 
         [Test]

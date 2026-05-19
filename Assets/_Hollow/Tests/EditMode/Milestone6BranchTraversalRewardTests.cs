@@ -1,10 +1,13 @@
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Hollow.Branches;
 using Hollow.Combat;
 using Hollow.Core;
+using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Platform;
+using Hollow.Presentation;
 using Hollow.Rooms;
 using Hollow.UI.Shell;
 using Hollow.World;
@@ -51,6 +54,42 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void BranchDoorVisualsHideAuthoredPortsWithoutConnections()
+        {
+            var root = new GameObject("M6SparseDoorVisualHarness");
+            try
+            {
+                var asset = ImportSampleRoom();
+                var roomObject = new GameObject("RoomRuntimeRoot");
+                roomObject.transform.SetParent(root.transform, false);
+                var room = roomObject.AddComponent<RoomRuntimeRoot>();
+                room.BuildFrom(asset);
+
+                var graph = new BranchFloorGraph("sparse_door_graph", 1);
+                graph.AddRoom(new BranchRoomState(BranchRoomId.Origin, Vector2Int.zero, new BranchRoomInstanceId("origin"), asset.Id, null, BranchRoomRole.Origin));
+                graph.AddRoom(new BranchRoomState(BranchRoomId.North, new Vector2Int(0, -1), new BranchRoomInstanceId("north"), asset.Id, null, BranchRoomRole.Combat));
+                graph.AddBidirectionalConnection(BranchRoomId.Origin, BranchRoomId.North, "north", "south", "north_0", "south_0");
+                graph.GetRoom(BranchRoomId.Origin).MarkCleared();
+
+                var branch = root.AddComponent<BranchSessionController>();
+                SetPrivateField(branch, "roomRuntimeRoot", room);
+                SetState(branch, BranchSessionState.Create(graph));
+                InvokePrivate(branch, "UpdateDoorVisuals");
+
+                Assert.IsTrue(FindDoorAnchor(room.transform, "north_0").gameObject.activeSelf);
+                Assert.IsFalse(FindDoorAnchor(room.transform, "south_0").gameObject.activeSelf);
+                Assert.IsFalse(FindDoorAnchor(room.transform, "east_0").gameObject.activeSelf);
+                Assert.IsFalse(FindDoorAnchor(room.transform, "west_0").gameObject.activeSelf);
+                Assert.IsFalse(room.GetComponentsInChildren<PresentationVisualMarker>()
+                    .Any(marker => marker.Role == PresentationPrefabRole.DoorUnavailable));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void TraversalSucceedsAfterClearAndPositionsPlayerInsideOppositeDoor()
         {
             var root = CreateBranchHarness(out var branch, out var combat, out var player);
@@ -59,6 +98,26 @@ namespace Hollow.Tests.EditMode
                 Assert.IsTrue(branch.TryTraverse("north"));
                 Assert.AreEqual(BranchRoomId.North, branch.State.CurrentRoomId);
                 Assert.AreEqual(2.75f, player.transform.localPosition.z, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void TraversalPreservesDamagedPlayerHealth()
+        {
+            var root = CreateBranchHarness(out var branch, out var combat, out _);
+            try
+            {
+                combat.PlayerHealth.Restore(combat.PlayerHealth.MaxHealth, 2);
+
+                Assert.IsTrue(branch.TryTraverse("north"));
+
+                Assert.AreEqual(BranchRoomId.North, branch.State.CurrentRoomId);
+                Assert.AreEqual(2, combat.PlayerHealth.CurrentHealth);
+                Assert.AreEqual(2, branch.CreatePlayerBuildHudModel().CurrentHealth);
             }
             finally
             {
@@ -168,32 +227,49 @@ namespace Hollow.Tests.EditMode
                     .SingleOrDefault(rect => rect.name == "BranchMiniMap.ShapeRoot");
                 Assert.IsNotNull(shapeRoot);
 
-                var cells = shapeRoot.GetComponentsInChildren<Image>(true)
+                var contentRoot = shapeRoot.Find("BranchMiniMap.ContentRoot") as RectTransform;
+                Assert.IsNotNull(contentRoot);
+                Assert.AreEqual(0f, Mathf.DeltaAngle(contentRoot.localEulerAngles.z, 45f), 0.001f);
+                Assert.AreEqual(1f, contentRoot.localScale.x, 0.001f);
+                Assert.AreEqual(1f, contentRoot.localScale.y, 0.001f);
+                Assert.IsNotNull(shapeRoot.GetComponent<RectMask2D>());
+                var mapPanel = canvasObject.GetComponentsInChildren<Image>(true)
+                    .Single(image => image.name == "BranchMiniMap.MapPanel");
+                Assert.IsNotNull(mapPanel.sprite);
+                Assert.IsFalse(mapPanel.preserveAspect);
+
+                var legacyCells = shapeRoot.GetComponentsInChildren<Image>(true)
                     .Where(image => image.name.StartsWith("MiniMapRoomCell_"))
                     .ToArray();
-                Assert.GreaterOrEqual(cells.Length, 5);
+                Assert.AreEqual(0, legacyCells.Length);
 
-                var originCell = shapeRoot.Find("MiniMapRoomCell_origin_0_0") as RectTransform;
-                var northCell = shapeRoot.Find("MiniMapRoomCell_north_0_-1") as RectTransform;
-                var southCell = shapeRoot.Find("MiniMapRoomCell_south_0_1") as RectTransform;
+                var footprints = shapeRoot.GetComponentsInChildren<RectTransform>(true)
+                    .Where(rect => rect.name.StartsWith("MiniMapRoomFootprint_"))
+                    .ToArray();
+                Assert.GreaterOrEqual(footprints.Length, 5);
+
+                var originCell = FindMiniMapRect(shapeRoot, "MiniMapRoomFootprintFill_origin_0_0");
+                var northCell = FindMiniMapRect(shapeRoot, "MiniMapRoomFootprintFill_north_0_-1");
+                var southCell = FindMiniMapRect(shapeRoot, "MiniMapRoomFootprintFill_south_0_1");
                 Assert.IsNotNull(originCell);
                 Assert.IsNotNull(northCell);
                 Assert.IsNotNull(southCell);
                 Assert.Less(northCell.anchoredPosition.y, originCell.anchoredPosition.y);
                 Assert.Greater(southCell.anchoredPosition.y, originCell.anchoredPosition.y);
-                var currentDot = shapeRoot.Find("MiniMapCurrentPositionDot") as RectTransform;
+                var currentDot = FindMiniMapRect(shapeRoot, "MiniMapCurrentPositionDot");
                 Assert.IsNotNull(currentDot);
                 Assert.AreEqual(originCell.anchoredPosition.x, currentDot.anchoredPosition.x, 0.001f);
                 Assert.AreEqual(originCell.anchoredPosition.y, currentDot.anchoredPosition.y, 0.001f);
 
-                var mapText = canvasObject.GetComponentsInChildren<Text>(true)
-                    .Single(text => text.name == "BranchMiniMap.MapPanel.Text");
-                Assert.IsTrue(mapText.text.Contains("Branch Map"));
-                Assert.IsFalse(mapText.text.Contains("[C]"));
+                var originMarker = shapeRoot.GetComponentsInChildren<Text>(true)
+                    .Single(text => text.name == "MiniMapMarker_O");
+                Assert.AreEqual(0f, Mathf.DeltaAngle(originMarker.rectTransform.localEulerAngles.z, -45f), 0.001f);
 
-                var economyText = canvasObject.GetComponentsInChildren<Text>(true)
-                    .Single(text => text.name == "BranchMiniMap.EconomyPanel.Text");
-                Assert.IsTrue(economyText.text.Contains("Seed:"));
+                Assert.IsFalse(canvasObject.GetComponentsInChildren<Text>(true)
+                    .Any(text => text.name == "BranchMiniMap.MapPanel.Text"));
+
+                Assert.IsFalse(canvasObject.GetComponentsInChildren<Text>(true)
+                    .Any(text => text.name.StartsWith("BranchMiniMap.") || text.text.Contains("Seed:")));
             }
             finally
             {
@@ -215,7 +291,7 @@ namespace Hollow.Tests.EditMode
                 originController.Bind(branch);
                 var originShapeRoot = originCanvas.GetComponentsInChildren<RectTransform>(true)
                     .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
-                var originDot = originShapeRoot.Find("MiniMapCurrentPositionDot") as RectTransform;
+                var originDot = FindMiniMapRect(originShapeRoot, "MiniMapCurrentPositionDot");
                 Assert.IsNotNull(originDot);
 
                 ClearCurrentRoom(combat);
@@ -226,9 +302,9 @@ namespace Hollow.Tests.EditMode
                 eastController.Bind(branch);
                 var eastShapeRoot = eastCanvas.GetComponentsInChildren<RectTransform>(true)
                     .Single(rect => rect.name == "BranchMiniMap.ShapeRoot");
-                var eastCell = eastShapeRoot.Find("MiniMapRoomCell_east_1_0") as RectTransform;
-                var eastDot = eastShapeRoot.Find("MiniMapCurrentPositionDot") as RectTransform;
-                var originCellAfterMove = eastShapeRoot.Find("MiniMapRoomCell_origin_0_0") as RectTransform;
+                var eastCell = FindMiniMapRect(eastShapeRoot, "MiniMapRoomFootprintFill_east_1_0");
+                var eastDot = FindMiniMapRect(eastShapeRoot, "MiniMapCurrentPositionDot");
+                var originCellAfterMove = FindMiniMapRect(eastShapeRoot, "MiniMapRoomFootprintFill_origin_0_0");
 
                 Assert.IsNotNull(eastCell);
                 Assert.IsNotNull(eastDot);
@@ -291,6 +367,39 @@ namespace Hollow.Tests.EditMode
         private static ImportedRoomRuntimeAsset ImportSampleRoom()
         {
             return HollowRuntimeV2Importer.Import(File.ReadAllText(SamplePath));
+        }
+
+        private static Transform FindDoorAnchor(Transform root, string portId)
+        {
+            return root.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Single(transform => transform.name == $"doorAnchorActive.{portId}");
+        }
+
+        private static void SetPrivateField(object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, fieldName);
+            field.SetValue(target, value);
+        }
+
+        private static void SetState(BranchSessionController branch, BranchSessionState state)
+        {
+            var field = typeof(BranchSessionController).GetField("<State>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, nameof(BranchSessionController.State));
+            field.SetValue(branch, state);
+        }
+
+        private static void InvokePrivate(object target, string methodName)
+        {
+            var method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(target, null);
+        }
+
+        private static RectTransform FindMiniMapRect(RectTransform root, string name)
+        {
+            return root.GetComponentsInChildren<RectTransform>(true)
+                .SingleOrDefault(rect => rect.name == name);
         }
 
         private static void ClearCurrentRoom(RoomCombatController combat)

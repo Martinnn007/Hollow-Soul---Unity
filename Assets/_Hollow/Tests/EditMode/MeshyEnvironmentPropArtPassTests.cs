@@ -97,6 +97,30 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void GoldenChestUsesMeshyChestArtUntilDedicatedModelExists()
+        {
+            var prefab = PresentationPrefabResolver.Resolve(PresentationPrefabRole.ChestGolden);
+            Assert.IsNotNull(prefab);
+            Assert.AreEqual("Assets/_Hollow/Prefabs/ArtPass/AP_ChestBasic.prefab", AssetDatabase.GetAssetPath(prefab));
+
+            var host = new GameObject("GoldenChestHost");
+            try
+            {
+                var visual = PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.ChestGolden, host.transform, Vector3.zero, Vector3.one);
+                Assert.IsNotNull(visual);
+                Assert.IsNotNull(visual.transform.Find("MeshyWeatheredChestModel"));
+                var marker = visual.GetComponent<PresentationVisualMarker>();
+                Assert.IsNotNull(marker);
+                Assert.AreEqual(PresentationPrefabRole.ChestGolden, marker.Role);
+                Assert.IsFalse(marker.IsFallback);
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
         public void MeshyEnvironmentPropVisualInstantiationKeepsGameplayHostColliders()
         {
             foreach (var spec in MeshyEnvironmentPropAssetGenerator.PropRows())

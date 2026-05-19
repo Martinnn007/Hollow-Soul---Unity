@@ -11,6 +11,8 @@ namespace Hollow.Combat
         private Text debugText;
         private RectTransform debugPanel;
         private Font font;
+        private RoomObjectiveState lastRoomState = (RoomObjectiveState)(-1);
+        private float roomStateHideTime;
 
         public void Bind(RoomCombatController controller)
         {
@@ -37,8 +39,7 @@ namespace Hollow.Combat
             }
 
             var model = combatController.CreateHudModel();
-            roomStateText.text = model.StatusText;
-            roomStateText.color = model.RoomState == RoomObjectiveState.Cleared ? new Color(0.25f, 1f, 0.45f) : Color.white;
+            RefreshRoomStateBadge(model);
             if (debugPanel != null)
             {
                 debugPanel.gameObject.SetActive(GameplayDebugHudState.IsVisible);
@@ -68,9 +69,36 @@ namespace Hollow.Combat
 
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             roomStateText = AddText("CombatHud.RoomState", new Vector2(0f, 472f), 22, TextAnchor.MiddleCenter, new Vector2(520f, 42f));
+            roomStateText.gameObject.SetActive(false);
             debugPanel = AddPanel("CombatHud.DebugPanel", new Vector2(610f, -230f), new Vector2(430f, 190f));
             debugText = AddText("CombatHud.DebugText", Vector2.zero, 16, TextAnchor.UpperLeft, new Vector2(400f, 160f), debugPanel);
             debugPanel.gameObject.SetActive(GameplayDebugHudState.IsVisible);
+        }
+
+        private void RefreshRoomStateBadge(CombatHudModel model)
+        {
+            if (roomStateText == null)
+            {
+                return;
+            }
+
+            if (model.RoomState != lastRoomState)
+            {
+                lastRoomState = model.RoomState;
+                roomStateText.text = model.StatusText;
+                roomStateText.color = model.RoomState == RoomObjectiveState.Cleared
+                    ? new Color(0.25f, 1f, 0.45f)
+                    : Color.white;
+                var shouldShow = model.RoomState == RoomObjectiveState.Cleared;
+                roomStateText.gameObject.SetActive(shouldShow);
+                roomStateHideTime = shouldShow && Application.isPlaying ? Time.unscaledTime + 2.25f : 0f;
+            }
+
+            if (roomStateText.gameObject.activeSelf && roomStateHideTime > 0f && Time.unscaledTime >= roomStateHideTime)
+            {
+                roomStateText.gameObject.SetActive(false);
+                roomStateHideTime = 0f;
+            }
         }
 
         private Text AddText(
