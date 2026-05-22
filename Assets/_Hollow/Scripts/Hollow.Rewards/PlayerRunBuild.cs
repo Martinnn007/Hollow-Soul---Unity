@@ -95,7 +95,7 @@ namespace Hollow.Rewards
             {
                 ConfigureCharacter("balanced", PlayerBaseStats.Default);
                 Equipment.EquipMeleeWeapon("starter_blade");
-                Equipment.EquipRangedWeapon("starter_bow");
+                Equipment.EquipRangedWeapon(WeaponIdAliases.StarterPistolId);
                 Equipment.SetActiveWeaponSlot(WeaponSlot.Melee);
                 CurrentStamina = DerivedStats.MaxStamina;
                 return;

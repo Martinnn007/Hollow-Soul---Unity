@@ -19,9 +19,9 @@ MonoBehaviour:
   parryWindowSeconds: 0.3
   guardConeDegrees: 140
   guardMoveMultiplier: 0.55
-  guardDrainStaminaPerSecond: 12
-  guardHitStaminaCost: 12
-  parryStaminaCost: 16
+  guardDrainStaminaPerSecond: 0
+  guardHitStaminaCost: 22
+  parryStaminaCost: 28
   guardDamageReduction: 1
   guardPushMeters: 0.25
   parryCounterDamage: 1

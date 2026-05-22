@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Hollow.Persistence
 {
-    public sealed class JsonProfileStore : IProfileStore, IRunSaveStore, IChallengeResultStore
+    public sealed class JsonProfileStore : IProfileStore, IRunSaveStore, IChallengeResultStore, IShipUpgradeStore
     {
         private const string FileName = "hollow_profiles.json";
         private const string BackupExtension = ".bak";
@@ -232,6 +232,70 @@ namespace Hollow.Persistence
             return record.ToRecord();
         }
 
+        public ChallengeResultRecord FailChallengeAttempt(ProfileSlotId slotId, string challengeId, int seed)
+        {
+            if (string.IsNullOrWhiteSpace(challengeId))
+            {
+                throw new ArgumentException("Challenge id cannot be empty.", nameof(challengeId));
+            }
+
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+            var record = GetOrCreateChallengeRecord(slot, challengeId);
+            record.lastResult = "Failed";
+            record.lastPlayedSeed = Math.Max(0, seed);
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
+            SaveData(data);
+            return record.ToRecord();
+        }
+
+        public bool TryPurchaseShipUpgrade(
+            ProfileSlotId slotId,
+            string upgradeId,
+            int soulCost,
+            out ProfileSlotSummary updatedSummary,
+            out string errorMessage)
+        {
+            updatedSummary = null;
+            errorMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(upgradeId))
+            {
+                errorMessage = "Upgrade is missing.";
+                return false;
+            }
+
+            soulCost = Math.Max(0, soulCost);
+            var data = LoadData();
+            var slot = data.slots[slotId.Value];
+            EnsureExistingProfile(slot, slotId);
+            slot.purchasedShipUpgradeIds ??= new List<string>();
+            if (slot.purchasedShipUpgradeIds.Contains(upgradeId))
+            {
+                updatedSummary = slot.ToSummary();
+                errorMessage = "Upgrade already purchased.";
+                return false;
+            }
+
+            if (slot.bankedSouls < soulCost)
+            {
+                updatedSummary = slot.ToSummary();
+                errorMessage = "Not enough souls.";
+                return false;
+            }
+
+            slot.bankedSouls -= soulCost;
+            slot.purchasedShipUpgradeIds.Add(upgradeId);
+            slot.purchasedShipUpgradeIds = slot.purchasedShipUpgradeIds
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+            slot.lastPlayedUtcTicks = DateTime.UtcNow.Ticks;
+            updatedSummary = slot.ToSummary();
+            SaveData(data);
+            return true;
+        }
+
         private ProfileStoreSaveData LoadData()
         {
             if (TryLoadData(savePath, out var data))
@@ -354,14 +418,15 @@ namespace Hollow.Persistence
                 bankedSouls = 0,
                 completedRuns = 0,
                 activeRun = null,
-                challengeRecords = new List<ChallengeRecordSaveState>()
+                challengeRecords = new List<ChallengeRecordSaveState>(),
+                purchasedShipUpgradeIds = new List<string>()
             };
         }
 
         private static void Normalize(ProfileStoreSaveData data)
         {
             var previousSchemaVersion = data.schemaVersion;
-            data.schemaVersion = 3;
+            data.schemaVersion = 4;
             data.slots ??= new List<ProfileSlotSaveData>();
             while (data.slots.Count < ProfileSlotConstants.MaxSlots)
             {
@@ -380,6 +445,11 @@ namespace Hollow.Persistence
                 data.slots[index].profileId ??= string.Empty;
                 data.slots[index].displayName ??= string.Empty;
                 data.slots[index].challengeRecords ??= new List<ChallengeRecordSaveState>();
+                data.slots[index].purchasedShipUpgradeIds ??= new List<string>();
+                data.slots[index].purchasedShipUpgradeIds = data.slots[index].purchasedShipUpgradeIds
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
                 data.slots[index].challengeRecords.RemoveAll(record => record == null || string.IsNullOrWhiteSpace(record.challengeId));
                 data.slots[index].challengeRecords = data.slots[index].challengeRecords
                     .GroupBy(record => record.challengeId)

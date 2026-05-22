@@ -18,6 +18,9 @@ namespace Hollow.Core.App
                 AppShellRoute.RoomDesigner => "RoomDesigner",
                 AppShellRoute.DeveloperSandbox => "DeveloperSandbox",
                 AppShellRoute.ArenaMode => "ArenaMode",
+                AppShellRoute.SpaceshipWindows => "Spaceship_Windows",
+                AppShellRoute.SpaceshipVisionOSBounded => "Spaceship_VisionOS_Bounded",
+                AppShellRoute.SpaceshipVisionOSImmersive => "Spaceship_VisionOS_Immersive",
                 _ => "Boot"
             };
         }

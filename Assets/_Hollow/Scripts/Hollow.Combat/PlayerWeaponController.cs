@@ -19,7 +19,9 @@ namespace Hollow.Combat
     {
         public const float DefaultCooldownSeconds = 0.22f;
         public const float AttackMovementMultiplier = 0.55f;
-        public const float RollStaminaCost = 18f;
+        public const float RollStaminaCost = 30f;
+        public const float StaminaRegenDelaySeconds = 0.65f;
+        public const float GuardHeldStaminaRegenMultiplier = 0.25f;
         public const float RollStartupSeconds = 0.04f;
         public const float RollInvulnerabilitySeconds = 0.22f;
         public const float RollRecoverySeconds = 0.18f;
@@ -38,6 +40,13 @@ namespace Hollow.Combat
             RollRecovery
         }
 
+        private enum StaminaSpendKind
+        {
+            Action,
+            GuardDrain,
+            GuardHit
+        }
+
         [SerializeField] private float cooldownSeconds = DefaultCooldownSeconds;
         [SerializeField] private float cooldownMultiplier = 1f;
         [SerializeField] private int projectileDamageBonus;
@@ -49,10 +58,10 @@ namespace Hollow.Combat
         private ProjectilePassiveState projectilePassiveState = ProjectilePassiveState.Default;
         [SerializeField] private float maxStamina = 100f;
         [SerializeField] private float currentStamina = 100f;
-        [SerializeField] private float staminaRegenPerSecond = 18f;
+        [SerializeField] private float staminaRegenPerSecond = 11f;
         [SerializeField] private WeaponSlot activeWeaponSlot = WeaponSlot.Melee;
         [SerializeField] private string meleeWeaponId = "starter_blade";
-        [SerializeField] private string rangedWeaponId = "starter_bow";
+        [SerializeField] private string rangedWeaponId = WeaponIdAliases.StarterPistolId;
         [SerializeField] private WeaponCatalogDefinition weaponCatalog;
         [SerializeField] private CombatFeelProfileDefinition combatFeelProfile;
         [SerializeField] private GameObject projectilePrefab;
@@ -86,6 +95,7 @@ namespace Hollow.Combat
         private float rollEndTime;
         private float rollInvulnerableEndTime;
         private float lastActionEvaluationTime;
+        private float staminaRegenBlockedUntil;
         private CombatantHealth health;
 
         public float CooldownSeconds => cooldownSeconds * cooldownMultiplier;
@@ -271,8 +281,11 @@ namespace Hollow.Combat
             maxStamina = Mathf.Max(1f, nextMaxStamina);
             staminaRegenPerSecond = Mathf.Max(0f, nextStaminaRegenPerSecond);
             currentStamina = Mathf.Clamp(nextCurrentStamina <= 0f ? maxStamina : nextCurrentStamina, 0f, maxStamina);
+            staminaRegenBlockedUntil = 0f;
             meleeWeaponId = string.IsNullOrWhiteSpace(nextMeleeWeaponId) ? "starter_blade" : nextMeleeWeaponId;
-            rangedWeaponId = string.IsNullOrWhiteSpace(nextRangedWeaponId) ? "starter_bow" : nextRangedWeaponId;
+            rangedWeaponId = string.IsNullOrWhiteSpace(nextRangedWeaponId)
+                ? WeaponIdAliases.StarterPistolId
+                : WeaponIdAliases.Normalize(nextRangedWeaponId);
             SetActiveWeaponSlot(nextActiveWeaponSlot);
         }
 
@@ -285,8 +298,8 @@ namespace Hollow.Combat
 
             BindHealthEvents();
             var input = GameplayInputReader.ReadCurrent(ResolveGameplayRoot());
-            RegenerateStamina(Time.deltaTime);
             TickAction(Time.deltaTime, Time.time);
+            RegenerateStamina(Time.deltaTime, Time.time);
             EnsureAimLockController();
             aimLockController.Configure(combatController);
             aimLockController.TickAim(input, Time.time);
@@ -366,7 +379,10 @@ namespace Hollow.Combat
         {
             BindHealthEvents();
             TickAction(0f, timeSeconds);
-            if (rangedDrawActive || attackExecutionState != PlayerAttackExecutionState.Idle || IsGuarding || !TrySpendStamina(RollStaminaCost))
+            if (rangedDrawActive ||
+                attackExecutionState != PlayerAttackExecutionState.Idle ||
+                IsGuarding ||
+                !TrySpendStamina(RollStaminaCost, timeSeconds, StaminaSpendKind.Action))
             {
                 return false;
             }
@@ -546,13 +562,16 @@ namespace Hollow.Combat
                 attackExecutionState != PlayerAttackExecutionState.Idle ||
                 projectilePrefab == null ||
                 combatController == null ||
-                !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost)))
+                !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost), timeSeconds, StaminaSpendKind.Action))
             {
                 return false;
             }
 
-            var attackCooldown = EffectiveRangedCooldown(attack, attackKind);
-            nextAllowedShotTime = timeSeconds + attackCooldown;
+            if (attackKind == AttackKind.Light)
+            {
+                nextAllowedShotTime = timeSeconds + EffectiveRangedCooldown(attack, attackKind);
+            }
+
             StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
             return true;
         }
@@ -624,7 +643,7 @@ namespace Hollow.Combat
                 attackExecutionState != PlayerAttackExecutionState.Idle ||
                 projectilePrefab == null ||
                 combatController == null ||
-                !TrySpendStamina(AdjustedAttackStaminaCost(rangedDrawAttack.StaminaCost)))
+                !TrySpendStamina(AdjustedAttackStaminaCost(rangedDrawAttack.StaminaCost), timeSeconds, StaminaSpendKind.Action))
             {
                 CancelRangedDraw();
                 return false;
@@ -633,7 +652,11 @@ namespace Hollow.Combat
             var attackKind = rangedDrawAttackKind;
             var attack = rangedDrawAttack;
             CancelRangedDraw();
-            nextAllowedShotTime = timeSeconds + EffectiveRangedCooldown(attack, attackKind);
+            if (attackKind == AttackKind.Light)
+            {
+                nextAllowedShotTime = timeSeconds + EffectiveRangedCooldown(attack, attackKind);
+            }
+
             StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
             return true;
         }
@@ -766,16 +789,19 @@ namespace Hollow.Combat
 
             var weapon = ResolveWeapon(WeaponSlot.Melee);
             var attack = ResolveAttack(weapon, WeaponSlot.Melee, attackKind);
-            var cooldown = EffectiveMeleeCooldown(attack, attackKind);
             if (timeSeconds < nextAllowedMeleeTime ||
                 attackExecutionState != PlayerAttackExecutionState.Idle ||
                 combatController == null ||
-                !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost)))
+                !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost), timeSeconds, StaminaSpendKind.Action))
             {
                 return false;
             }
 
-            nextAllowedMeleeTime = timeSeconds + cooldown;
+            if (attackKind == AttackKind.Light)
+            {
+                nextAllowedMeleeTime = timeSeconds + EffectiveMeleeCooldown(attack, attackKind);
+            }
+
             StartPendingAttack(WeaponSlot.Melee, attackKind, attack, aim, timeSeconds);
             return true;
         }
@@ -942,7 +968,7 @@ namespace Hollow.Combat
             return Mathf.Max(0.05f, cooldown * 0.5f);
         }
 
-        private bool TrySpendStamina(float amount)
+        private bool TrySpendStamina(float amount, float timeSeconds, StaminaSpendKind spendKind)
         {
             if (amount <= 0f)
             {
@@ -955,12 +981,22 @@ namespace Hollow.Combat
             }
 
             currentStamina -= amount;
+            if (spendKind != StaminaSpendKind.GuardDrain)
+            {
+                staminaRegenBlockedUntil = Mathf.Max(staminaRegenBlockedUntil, timeSeconds + StaminaRegenDelaySeconds);
+            }
+
             return true;
         }
 
         public bool SpendStaminaForDefense(float amount)
         {
-            return TrySpendStamina(amount);
+            return SpendStaminaForDefense(amount, delaysRegen: true, Time.time);
+        }
+
+        public bool SpendStaminaForDefense(float amount, bool delaysRegen, float timeSeconds)
+        {
+            return TrySpendStamina(amount, timeSeconds, delaysRegen ? StaminaSpendKind.GuardHit : StaminaSpendKind.GuardDrain);
         }
 
         private float AdjustedAttackStaminaCost(float amount)
@@ -968,9 +1004,19 @@ namespace Hollow.Combat
             return Mathf.Max(0f, amount) * Mathf.Max(0.01f, attackStaminaCostMultiplier);
         }
 
-        private void RegenerateStamina(float deltaTime)
+        private void RegenerateStamina(float deltaTime, float timeSeconds)
         {
-            currentStamina = Mathf.Min(maxStamina, currentStamina + Mathf.Max(0f, deltaTime) * staminaRegenPerSecond);
+            var safeDeltaTime = Mathf.Max(0f, deltaTime);
+            if (safeDeltaTime <= 0f ||
+                timeSeconds < staminaRegenBlockedUntil ||
+                IsAttackCommitted ||
+                IsRolling)
+            {
+                return;
+            }
+
+            var guardMultiplier = IsGuarding ? GuardHeldStaminaRegenMultiplier : 1f;
+            currentStamina = Mathf.Min(maxStamina, currentStamina + safeDeltaTime * staminaRegenPerSecond * guardMultiplier);
         }
 
         private Vector2 CurrentAim(GameplayInputSnapshot input)

@@ -31,5 +31,14 @@ namespace Hollow.Persistence
             ChallengeResultStore = jsonStore;
             SelectedProfileContext = new SelectedProfileContext();
         }
+
+        public void ConfigureForTests(IProfileStore profileStore, SelectedProfileContext selectedProfileContext)
+        {
+            Instance = this;
+            ProfileStore = profileStore;
+            RunSaveStore = profileStore as IRunSaveStore;
+            ChallengeResultStore = profileStore as IChallengeResultStore;
+            SelectedProfileContext = selectedProfileContext ?? new SelectedProfileContext();
+        }
     }
 }

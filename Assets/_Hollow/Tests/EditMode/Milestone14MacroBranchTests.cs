@@ -307,11 +307,11 @@ namespace Hollow.Tests.EditMode
             var root = CreateBranchHarness(out var branch, out var combat, out var player, out _);
             try
             {
-                ClearCurrentRoom(combat);
+                var defeatedSoulEnemies = ClearCurrentRoom(combat);
                 foreach (var direction in new[] { "north", "south", "east", "west" })
                 {
                     Assert.IsTrue(branch.TryTraverse(direction));
-                    ClearCurrentRoom(combat);
+                    defeatedSoulEnemies += ClearCurrentRoom(combat);
                     Assert.IsNotNull(branch.CurrentRewardPickup);
                     player.transform.localPosition = branch.CurrentRewardPickup.transform.localPosition;
                     Assert.IsTrue(branch.TryInteract());
@@ -321,7 +321,7 @@ namespace Hollow.Tests.EditMode
                 Assert.IsTrue(branch.State.AreAllRoomsCleared());
                 Assert.IsTrue(branch.State.AreAllRewardsClaimed());
                 Assert.AreEqual(4, branch.RewardCounter.ClaimedRewards);
-                Assert.AreEqual(40, branch.RunEconomy.RunSouls);
+                Assert.AreEqual(40 + defeatedSoulEnemies, branch.RunEconomy.RunSouls);
                 Assert.IsNotNull(branch.CurrentHubPortal);
             }
             finally
@@ -480,8 +480,13 @@ namespace Hollow.Tests.EditMode
                 source.SourceManifest);
         }
 
-        private static void ClearCurrentRoom(RoomCombatController combat)
+        private static int ClearCurrentRoom(RoomCombatController combat)
         {
+            var defeatedSoulEnemies = combat.Enemies.Count(enemy =>
+                enemy != null &&
+                enemy.IsAlive &&
+                enemy.BossDefinition == null &&
+                enemy.ArchetypeId != EnemyArchetypeId.Boss);
             foreach (var enemy in combat.Enemies.ToArray())
             {
                 DamageSystem.ApplyDamage(enemy.Health, new DamageRequest(99, combat.gameObject));
@@ -489,6 +494,7 @@ namespace Hollow.Tests.EditMode
 
             combat.EvaluateRoomState();
             Assert.AreEqual(RoomObjectiveState.Cleared, combat.ObjectiveState);
+            return defeatedSoulEnemies;
         }
 
         private static string Opposite(string direction)

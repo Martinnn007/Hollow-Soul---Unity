@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hollow.Persistence
 {
@@ -17,10 +18,11 @@ namespace Hollow.Persistence
         public int completedRuns;
         public RunSaveSnapshot activeRun;
         public List<ChallengeRecordSaveState> challengeRecords = new();
+        public List<string> purchasedShipUpgradeIds = new();
 
         public ProfileSlotSummary ToSummary()
         {
-            return new ProfileSlotSummary(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun, bankedSouls, completedRuns);
+            return new ProfileSlotSummary(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun, bankedSouls, completedRuns, purchasedShipUpgradeIds);
         }
 
         public static ProfileSlotSaveData FromSummary(ProfileSlotSummary summary)
@@ -35,7 +37,8 @@ namespace Hollow.Persistence
                 totalRuns = summary.TotalRuns,
                 hasActiveRun = summary.HasActiveRun,
                 bankedSouls = summary.BankedSouls,
-                completedRuns = summary.CompletedRuns
+                completedRuns = summary.CompletedRuns,
+                purchasedShipUpgradeIds = summary.PurchasedShipUpgradeIds?.ToList() ?? new List<string>()
             };
         }
     }
@@ -43,7 +46,7 @@ namespace Hollow.Persistence
     [Serializable]
     public sealed class ProfileStoreSaveData
     {
-        public int schemaVersion = 3;
+        public int schemaVersion = 4;
         public List<ProfileSlotSaveData> slots = new();
     }
 }

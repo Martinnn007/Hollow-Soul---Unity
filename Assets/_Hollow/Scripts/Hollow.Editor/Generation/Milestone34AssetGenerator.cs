@@ -17,7 +17,7 @@ namespace Hollow.Editor.Generation
                 BaselineReportPath,
                 "# M34 Shield / Defense / Armor Behavior V1\n\n" +
                 $"- Generated: {DateTime.UtcNow:O}\n" +
-                "- Scope: passive defense mitigation, shield guard input, guard stamina costs, contact pushback, and HUD defense status.\n" +
+                "- Scope: passive defense mitigation, shield guard input, guard hit stamina costs, contact pushback, and HUD defense status.\n" +
                 "- Verification: run Milestone34Validator and the M32 QA gate.\n");
             AssetDatabase.Refresh();
         }

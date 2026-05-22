@@ -25,10 +25,11 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(WeaponSlot.Melee, starterBlade.Slot);
             Assert.AreEqual(AttackKind.Light, starterBlade.LightAttack.AttackKind);
             Assert.Greater(starterBlade.HeavyAttack.Damage, starterBlade.LightAttack.Damage);
-            Assert.IsTrue(catalog.TryGetWeapon("starter_bow", out var starterBow));
-            Assert.AreEqual(WeaponSlot.Ranged, starterBow.Slot);
-            Assert.AreEqual(WeaponCategory.Bow, starterBow.Category);
-            Assert.AreEqual(WeaponRangedFireMode.DrawAndRelease, starterBow.RangedFireMode);
+            Assert.IsTrue(catalog.TryGetWeapon("starter_pistol", out var starterPistol));
+            Assert.AreEqual(WeaponSlot.Ranged, starterPistol.Slot);
+            Assert.AreEqual(WeaponCategory.Gun, starterPistol.Category);
+            Assert.AreEqual(WeaponRangedFireMode.Instant, starterPistol.RangedFireMode);
+            Assert.IsFalse(catalog.Weapons.Any(weapon => weapon.WeaponId == "starter_bow"));
             Assert.IsTrue(catalog.TryGetWeapon("starter_bolt", out var starterBolt));
             Assert.AreEqual(WeaponSlot.Ranged, starterBolt.Slot);
             Assert.AreEqual(WeaponRangedFireMode.Instant, starterBolt.RangedFireMode);
@@ -45,20 +46,30 @@ namespace Hollow.Tests.EditMode
 
             Assert.IsTrue(catalog.TryGetWeapon("starter_blade", out var starterBlade));
             Assert.AreEqual(0.67f, starterBlade.LightAttack.CooldownSeconds, 0.001f);
-            Assert.AreEqual(6f, starterBlade.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(14f, starterBlade.LightAttack.StaminaCost, 0.001f);
             Assert.AreEqual(3.5f, starterBlade.HeavyAttack.CooldownSeconds, 0.001f);
-            Assert.AreEqual(40f, starterBlade.HeavyAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(42f, starterBlade.HeavyAttack.StaminaCost, 0.001f);
 
             Assert.IsTrue(catalog.TryGetWeapon("starter_bolt", out var starterBolt));
             Assert.AreEqual(1f, starterBolt.LightAttack.CooldownSeconds, 0.001f);
-            Assert.AreEqual(0f, starterBolt.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(8f, starterBolt.LightAttack.StaminaCost, 0.001f);
             Assert.AreEqual(10f, starterBolt.HeavyAttack.CooldownSeconds, 0.001f);
-            Assert.AreEqual(35f, starterBolt.HeavyAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(36f, starterBolt.HeavyAttack.StaminaCost, 0.001f);
 
-            Assert.IsTrue(catalog.TryGetWeapon("starter_bow", out var starterBow));
-            Assert.AreEqual(1f, starterBow.LightAttack.RequiredDrawSeconds, 0.001f);
-            Assert.AreEqual(1.35f, starterBow.HeavyAttack.RequiredDrawSeconds, 0.001f);
-            Assert.AreEqual(2f, starterBow.LightAttack.StaminaCost, 0.001f);
+            Assert.IsTrue(catalog.TryGetWeapon("starter_pistol", out var starterPistol));
+            Assert.AreEqual(0.5f, starterPistol.LightAttack.CooldownSeconds, 0.001f);
+            Assert.AreEqual(0f, starterPistol.LightAttack.RequiredDrawSeconds, 0.001f);
+            Assert.AreEqual(0f, starterPistol.HeavyAttack.RequiredDrawSeconds, 0.001f);
+            Assert.AreEqual(6f, starterPistol.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(34f, starterPistol.HeavyAttack.StaminaCost, 0.001f);
+
+            Assert.IsTrue(catalog.TryGetWeapon("iron_cleaver", out var ironCleaver));
+            Assert.AreEqual(18f, ironCleaver.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(50f, ironCleaver.HeavyAttack.StaminaCost, 0.001f);
+
+            Assert.IsTrue(catalog.TryGetWeapon("ember_bolt", out var emberBolt));
+            Assert.AreEqual(10f, emberBolt.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(40f, emberBolt.HeavyAttack.StaminaCost, 0.001f);
         }
 
         [Test]
@@ -164,7 +175,7 @@ namespace Hollow.Tests.EditMode
                 Assert.IsFalse(weapon.DebugLightAttackSpeedDoubled);
                 Assert.IsTrue(weapon.TryFire(Vector2.up, 0f));
                 Assert.IsFalse(weapon.TryFire(Vector2.up, 0.49f));
-                Assert.IsTrue(weapon.TryFire(Vector2.up, 1f));
+                Assert.IsTrue(weapon.TryFire(Vector2.up, 0.5f));
 
                 var fastPlayer = new GameObject("FastPlayer");
                 fastPlayer.transform.SetParent(parent.transform, false);
@@ -174,12 +185,14 @@ namespace Hollow.Tests.EditMode
 
                 Assert.IsTrue(fastWeapon.DebugLightAttackSpeedDoubled);
                 Assert.IsTrue(fastWeapon.TryFire(Vector2.up, 0f));
-                Assert.IsFalse(fastWeapon.TryFire(Vector2.up, 0.49f));
-                Assert.IsTrue(fastWeapon.TryFire(Vector2.up, 0.5f));
+                Assert.IsFalse(fastWeapon.TryFire(Vector2.up, 0.24f));
+                Assert.IsTrue(fastWeapon.TryFire(Vector2.up, 0.25f));
 
+                fastWeapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
                 Assert.IsTrue(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 10f));
-                Assert.IsFalse(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 19.9f));
-                Assert.IsTrue(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 20f));
+                Assert.IsFalse(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 10.36f));
+                Assert.IsTrue(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 10.38f));
+                Assert.IsFalse(fastWeapon.TryAttack(AttackKind.Heavy, Vector2.up, 10.39f));
             }
             finally
             {
@@ -238,19 +251,20 @@ namespace Hollow.Tests.EditMode
             {
                 var weapon = player.AddComponent<PlayerWeaponController>();
                 weapon.Configure(null, combat, null);
+                weapon.ConfigureBuildStats(1f, 0, 0, 200f, 11f, "starter_blade", "starter_pistol", WeaponSlot.Melee, 200f, LoadCatalog());
                 weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
                 weapon.SetDebugLightAttackSpeedDoubled(true);
 
-                Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(200f, weapon.CurrentStamina, 0.001f);
                 Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
-                Assert.AreEqual(94f, weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(186f, weapon.CurrentStamina, 0.001f);
                 Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.32f));
                 Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.335f));
-                Assert.AreEqual(88f, weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(172f, weapon.CurrentStamina, 0.001f);
 
                 Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 5f));
-                Assert.IsFalse(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 8.49f));
-                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 8.5f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 5.71f));
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 5.72f));
             }
             finally
             {
@@ -329,6 +343,203 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void LegacyBowWeaponIdsNormalizeToPistolIds()
+        {
+            var catalog = LoadCatalog();
+            Assert.IsTrue(catalog.TryGetWeapon("starter_bow", out var starterWeapon));
+            Assert.AreEqual("starter_pistol", starterWeapon.WeaponId);
+            Assert.IsTrue(catalog.TryGetWeapon("bone_bow", out var boneWeapon));
+            Assert.AreEqual("bone_pistol", boneWeapon.WeaponId);
+            Assert.IsTrue(catalog.TryGetWeapon("dragon_bow", out var dragonWeapon));
+            Assert.AreEqual("dragon_pistol", dragonWeapon.WeaponId);
+
+            var restored = RunEquipmentSlots.FromSaveState(new Hollow.Persistence.RunEquipmentSlotsSaveState
+            {
+                meleeWeaponId = "starter_blade",
+                rangedWeaponId = "dragon_bow",
+                activeWeaponSlot = WeaponSlot.Ranged.ToString()
+            });
+            Assert.AreEqual("dragon_pistol", restored.RangedWeaponId);
+            Assert.AreEqual("dragon_pistol", restored.ToSaveState().rangedWeaponId);
+
+            var pickup = ReplacementPickupState.FromSaveState(new Hollow.Persistence.DroppedReplacementPickupSaveState
+            {
+                pickupId = "legacy_pickup",
+                roomId = "room",
+                rewardKind = RewardKind.Weapon.ToString(),
+                rewardId = "bone_bow",
+                displayName = "Bone Bow"
+            });
+            Assert.IsNotNull(pickup);
+            Assert.AreEqual("bone_pistol", pickup.RewardId);
+            Assert.AreEqual("Bone Pistol", pickup.DisplayName);
+
+            var build = new PlayerRunBuild();
+            build.Equipment.EquipRangedWeapon("bone_pistol");
+            var replacement = RewardReplacementDetector.CaptureBeforeApply(
+                new RewardGrant("legacy_reward", "bone_bow", "Bone Bow", RewardKind.Weapon, 0),
+                build,
+                catalog,
+                null,
+                null,
+                Vector3.zero);
+            Assert.IsNull(replacement);
+        }
+
+        [Test]
+        public void MeleeHeavyDoesNotRearmBlockLightAfterRecovery()
+        {
+            var parent = new GameObject("MeleeHeavyNoRearmParent");
+            var player = new GameObject("Player");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            player.transform.SetParent(parent.transform, false);
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, null);
+                weapon.ConfigureBuildStats(1f, 0, 0, 200f, 11f, "starter_blade", "starter_pistol", WeaponSlot.Melee, 200f, LoadCatalog());
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 0f));
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.69f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.71f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+                Object.DestroyImmediate(combat.gameObject);
+            }
+        }
+
+        [Test]
+        public void RangedHeavyDoesNotRearmBlockLightAfterRecovery()
+        {
+            var parent = new GameObject("RangedHeavyNoRearmParent");
+            var player = new GameObject("Player");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            player.transform.SetParent(parent.transform, false);
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.ConfigureBuildStats(1f, 0, 0, 200f, 11f, "starter_blade", "starter_bolt", WeaponSlot.Ranged, 200f, LoadCatalog());
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 0f));
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.67f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.69f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+                Object.DestroyImmediate(combat.gameObject);
+                Object.DestroyImmediate(projectilePrefab);
+            }
+        }
+
+        [Test]
+        public void RepeatedRollsExhaustStaminaUntilRegen()
+        {
+            var player = new GameObject("RollStaminaPlayer");
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+
+                Assert.IsTrue(weapon.TryRoll(Vector2.up, Vector2.zero, 0f));
+                weapon.TickAction(0f, 0.5f);
+                Assert.IsTrue(weapon.TryRoll(Vector2.up, Vector2.zero, 1f));
+                weapon.TickAction(0f, 1.5f);
+                Assert.IsTrue(weapon.TryRoll(Vector2.up, Vector2.zero, 2f));
+                weapon.TickAction(0f, 2.5f);
+                Assert.AreEqual(10f, weapon.CurrentStamina, 0.001f);
+                Assert.IsFalse(weapon.TryRoll(Vector2.up, Vector2.zero, 3f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void LightAttacksConsumeMeaningfulStaminaAndCannotSpamForever()
+        {
+            var player = new GameObject("LightStaminaPlayer");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, null);
+                weapon.ConfigureBuildStats(1f, 0, 0, 28f, 11f, "starter_blade", "starter_pistol", WeaponSlot.Melee, 28f, LoadCatalog());
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                weapon.TickAction(0f, 0.8f);
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 1f));
+                weapon.TickAction(0f, 1.8f);
+                Assert.AreEqual(0f, weapon.CurrentStamina, 0.001f);
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 2f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(combat.gameObject);
+            }
+        }
+
+        [Test]
+        public void StaminaRegenWaitsForDelayAndClampsToMax()
+        {
+            var player = new GameObject("RegenDelayPlayer");
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.ConfigureBuildStats(1f, 0, 0, 50f, 11f, "starter_blade", "starter_pistol", WeaponSlot.Melee, 50f, LoadCatalog());
+
+                Assert.IsTrue(weapon.TryRoll(Vector2.up, Vector2.zero, 10f));
+                weapon.TickAction(0f, 10.5f);
+                InvokeRegenerateStamina(weapon, 0.6f, 10.6f);
+                Assert.AreEqual(20f, weapon.CurrentStamina, 0.001f);
+
+                InvokeRegenerateStamina(weapon, 1f, 10.66f);
+                Assert.AreEqual(31f, weapon.CurrentStamina, 0.001f);
+
+                InvokeRegenerateStamina(weapon, 10f, 12f);
+                Assert.AreEqual(50f, weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void GuardHeldRegenIsSlowedAndGuardHoldDoesNotDrainStamina()
+        {
+            var player = new GameObject("GuardRegenPlayer");
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.ConfigureBuildStats(1f, 0, 0, 50f, 11f, "starter_blade", "starter_pistol", WeaponSlot.Melee, 50f, LoadCatalog());
+                var defense = player.AddComponent<PlayerDefenseController>();
+                defense.ConfigureShieldProfile(null);
+
+                Assert.IsTrue(weapon.TryRoll(Vector2.up, Vector2.zero, 0f));
+                weapon.TickAction(0f, 0.5f);
+                defense.Tick(true, 0.1f);
+                defense.Tick(true, 0.1f);
+                var guardedStamina = weapon.CurrentStamina;
+
+                InvokeRegenerateStamina(weapon, 1f, 0.66f);
+
+                Assert.AreEqual(20f, guardedStamina, 0.001f);
+                Assert.AreEqual(guardedStamina + 11f * PlayerWeaponController.GuardHeldStaminaRegenMultiplier, weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
         public void WeaponRewardPoolContainsRareWeaponRewards()
         {
             var pool = AssetDatabase.LoadAssetAtPath<RewardPoolDefinition>(Milestone27AssetGenerator.WeaponRewardPoolPath);
@@ -376,6 +587,13 @@ namespace Hollow.Tests.EditMode
             var field = typeof(BranchSessionController).GetField("playerController", BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field);
             field.SetValue(branch, player);
+        }
+
+        private static void InvokeRegenerateStamina(PlayerWeaponController weapon, float deltaTime, float timeSeconds)
+        {
+            var method = typeof(PlayerWeaponController).GetMethod("RegenerateStamina", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+            method.Invoke(weapon, new object[] { deltaTime, timeSeconds });
         }
     }
 }

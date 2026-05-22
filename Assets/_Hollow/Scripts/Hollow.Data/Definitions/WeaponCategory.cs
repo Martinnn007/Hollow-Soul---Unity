@@ -5,6 +5,7 @@ namespace Hollow.Data.Definitions
         Blade = 0,
         Bow = 1,
         Wand = 2,
-        Explosive = 3
+        Explosive = 3,
+        Gun = 4
     }
 }

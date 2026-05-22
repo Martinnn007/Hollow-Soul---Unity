@@ -13,8 +13,8 @@ M30 adds the first run-only set synergy layer without changing branch generation
 
 ## Generated Sets
 
-- Skeletal pieces: `skeletal_sword`, `bone_bow`, `skeletal_armor`, `cursed_skull`, and `bone_totem`.
-- Dragon pieces: `dragon_fang`, `dragon_bow`, `dragon_scale_armor`, `dragon_tooth`, and `dragon_heart`.
+- Skeletal pieces: `skeletal_sword`, `bone_pistol`, `skeletal_armor`, `cursed_skull`, and `bone_totem`.
+- Dragon pieces: `dragon_fang`, `dragon_pistol`, `dragon_scale_armor`, `dragon_tooth`, and `dragon_heart`.
 - Skeletal Set bonus: `+1 melee damage` and attack cooldown `x0.98`.
 - Dragon Set bonus: `+1 ranged damage` and `+10 max stamina`.
 

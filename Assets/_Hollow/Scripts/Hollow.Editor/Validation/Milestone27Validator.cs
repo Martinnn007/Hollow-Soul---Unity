@@ -91,7 +91,7 @@ namespace Hollow.Editor.Validation
                 return;
             }
 
-            foreach (var weaponId in new[] { "starter_blade", "starter_bolt", "starter_bow", "iron_cleaver", "ember_bolt" })
+            foreach (var weaponId in new[] { "starter_blade", "starter_bolt", "starter_pistol", "iron_cleaver", "ember_bolt" })
             {
                 if (!catalog.TryGetWeapon(weaponId, out var weapon) || string.IsNullOrWhiteSpace(weapon.DisplayName))
                 {
@@ -104,7 +104,9 @@ namespace Hollow.Editor.Validation
                     failures.Add($"M27 weapon {weaponId} must have meaningful light/heavy attack tuning.");
                 }
 
-                var minimumLightCooldown = weapon.Slot == WeaponSlot.Melee ? 0.6f : 0.75f;
+                var minimumLightCooldown = weapon.WeaponId == WeaponIdAliases.StarterPistolId
+                    ? 0.5f
+                    : weapon.Slot == WeaponSlot.Melee ? 0.6f : 0.75f;
                 var minimumHeavyCooldown = weapon.Slot == WeaponSlot.Melee ? 2.5f : 5f;
                 if (weapon.LightAttack.CooldownSeconds < minimumLightCooldown || weapon.HeavyAttack.CooldownSeconds < minimumHeavyCooldown)
                 {
@@ -112,13 +114,15 @@ namespace Hollow.Editor.Validation
                 }
             }
 
-            if (catalog.TryGetWeapon("starter_bow", out var starterBow))
+            if (catalog.TryGetWeapon(WeaponIdAliases.StarterPistolId, out var starterPistol))
             {
-                if (starterBow.RangedFireMode != WeaponRangedFireMode.DrawAndRelease ||
-                    starterBow.LightAttack.RequiredDrawSeconds < 0.95f ||
-                    starterBow.HeavyAttack.RequiredDrawSeconds <= starterBow.LightAttack.RequiredDrawSeconds)
+                if (starterPistol.Category != WeaponCategory.Gun ||
+                    starterPistol.RangedFireMode != WeaponRangedFireMode.Instant ||
+                    !Mathf.Approximately(starterPistol.LightAttack.CooldownSeconds, 0.5f) ||
+                    !Mathf.Approximately(starterPistol.LightAttack.RequiredDrawSeconds, 0f) ||
+                    !Mathf.Approximately(starterPistol.HeavyAttack.RequiredDrawSeconds, 0f))
                 {
-                    failures.Add("starter_bow must be a draw-and-release bow with configured light/heavy draw timings.");
+                    failures.Add("starter_pistol must be an instant Basic Pistol tuned to fire light shots twice per second.");
                 }
             }
 

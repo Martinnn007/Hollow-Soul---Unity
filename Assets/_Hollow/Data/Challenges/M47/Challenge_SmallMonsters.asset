@@ -33,7 +33,7 @@ MonoBehaviour:
   startingSouls: 0
   loadout:
     meleeWeaponId: starter_blade
-    rangedWeaponId: starter_bow
+    rangedWeaponId: starter_pistol
     armorId: 
     activeItemId: 
     consumableCardId: swift_card

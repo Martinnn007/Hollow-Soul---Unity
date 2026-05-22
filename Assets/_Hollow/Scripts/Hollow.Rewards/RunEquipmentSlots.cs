@@ -7,7 +7,7 @@ namespace Hollow.Rewards
     {
         public string MeleeWeaponId { get; private set; } = "starter_blade";
 
-        public string RangedWeaponId { get; private set; } = "starter_bow";
+        public string RangedWeaponId { get; private set; } = WeaponIdAliases.StarterPistolId;
 
         public WeaponSlot ActiveWeaponSlot { get; private set; } = WeaponSlot.Melee;
 
@@ -28,7 +28,8 @@ namespace Hollow.Rewards
 
         public void EquipRangedWeapon(string weaponId)
         {
-            RangedWeaponId = string.IsNullOrWhiteSpace(weaponId) ? "starter_bow" : weaponId;
+            var normalizedWeaponId = WeaponIdAliases.Normalize(weaponId);
+            RangedWeaponId = string.IsNullOrWhiteSpace(normalizedWeaponId) ? WeaponIdAliases.StarterPistolId : normalizedWeaponId;
         }
 
         public void SetActiveWeaponSlot(WeaponSlot slot)

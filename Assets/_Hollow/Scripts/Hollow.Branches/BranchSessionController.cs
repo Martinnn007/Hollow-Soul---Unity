@@ -18,7 +18,7 @@ using UnityEngine;
 
 namespace Hollow.Branches
 {
-    public sealed class BranchSessionController : MonoBehaviour, IBranchSessionController
+    public sealed class BranchSessionController : MonoBehaviour, IBranchSessionController, IPlayerBuildHudModelProvider
     {
         private const float RewardInteractionRadiusMeters = 1.25f;
         private const float CoinPickupRadiusMeters = 0.55f;
@@ -29,6 +29,7 @@ namespace Hollow.Branches
         private const string RuntimeRewardMarkerKind = "spawn_point_roomReward";
         private const string RuntimeChestMarkerKind = "spawn_point_chest";
         private const float PlayerDeathMainMenuDelaySeconds = 1.1f;
+        private const int EnemyKillSoulReward = 1;
 
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
@@ -51,6 +52,8 @@ namespace Hollow.Branches
         [SerializeField] private ShieldCatalogDefinition shieldCatalog;
         [SerializeField] private SynergyCatalogDefinition synergyCatalog;
         [SerializeField] private ChallengeCatalogDefinition challengeCatalog;
+        [SerializeField] private ShipUpgradeCatalogDefinition shipUpgradeCatalog;
+        [SerializeField] private SpaceshipBranchDefinition spaceshipBranchDefinition;
         [SerializeField] private EncounterCatalogDefinition encounterCatalog;
         [SerializeField] private BossCatalogDefinition bossCatalog;
         [SerializeField] private EncounterDirectorProfileDefinition encounterDirectorProfile;
@@ -72,6 +75,9 @@ namespace Hollow.Branches
         private readonly List<HazardCoinPickup> currentHazardCoinPickups = new();
         private readonly List<RoomChestController> currentRoomChests = new();
         private readonly List<CoinPickupController> currentCoinPickups = new();
+        private readonly List<SpaceshipTerminal> currentShipTerminals = new();
+        private readonly List<GameObject> currentShipObjects = new();
+        private readonly Dictionary<string, ImportedRoomRuntimeAsset> spaceshipRoomAssets = new(StringComparer.Ordinal);
         private readonly List<RunRoomHazardStateSave> roomHazardStates = new();
         private readonly List<RunChestStateSave> roomChestStates = new();
         private readonly List<RunCoinPickupSaveState> looseCoinPickupStates = new();
@@ -108,6 +114,9 @@ namespace Hollow.Branches
         private PickupRevealModel latestPickupReveal = PickupRevealModel.Empty;
         private int pickupRevealSequence;
         private Coroutine playerDeathRouteCoroutine;
+        private SpaceshipArrivalSnapshot spaceshipArrival;
+        private bool spaceshipQuarantineRequired;
+        private bool spaceshipQuarantineUnlocked;
 
         public BranchSessionState State { get; private set; }
 
@@ -118,6 +127,8 @@ namespace Hollow.Branches
         public PlayerRunStats PlayerRunStats => playerRunStats;
 
         public int BankedSouls { get; private set; }
+
+        public AppShellRoute LastLaunchedRoute { get; private set; } = AppShellRoute.Boot;
 
         public string SaveStatus { get; private set; } = "Transient";
 
@@ -239,6 +250,12 @@ namespace Hollow.Branches
 
         public bool IsDeveloperLab => gameSessionState?.SessionMode == RuntimeSessionMode.DeveloperLab;
 
+        public bool IsSpaceshipHub => gameSessionState?.SessionMode == RuntimeSessionMode.SpaceshipHub;
+
+        public bool SpaceshipQuarantineRequired => spaceshipQuarantineRequired;
+
+        public bool SpaceshipQuarantineUnlocked => spaceshipQuarantineUnlocked;
+
         public RoomCombatController RoomCombatController => roomCombatController;
 
         public PlaceholderPlayerController PlayerController => playerController;
@@ -320,6 +337,11 @@ namespace Hollow.Branches
             challengeCatalog = nextChallengeCatalog;
         }
 
+        public void ConfigureSpaceshipBranch(SpaceshipBranchDefinition nextSpaceshipBranchDefinition)
+        {
+            spaceshipBranchDefinition = nextSpaceshipBranchDefinition;
+        }
+
         public void ConfigureEncounterCatalog(EncounterCatalogDefinition nextEncounterCatalog)
         {
             encounterCatalog = nextEncounterCatalog;
@@ -361,6 +383,8 @@ namespace Hollow.Branches
 
             roomCombatController.RoomCleared -= OnRoomCleared;
             roomCombatController.RoomCleared += OnRoomCleared;
+            roomCombatController.EnemyDefeated -= OnEnemyDefeated;
+            roomCombatController.EnemyDefeated += OnEnemyDefeated;
             roomCombatController.InteractiveObjectDestroyed -= OnInteractiveObjectDestroyed;
             roomCombatController.InteractiveObjectDestroyed += OnInteractiveObjectDestroyed;
 
@@ -394,7 +418,7 @@ namespace Hollow.Branches
             looseCoinPickupStates.Clear();
             latestPickupReveal = PickupRevealModel.Empty;
             pickupRevealSequence = 0;
-            activeChallenge = IsDeveloperLab ? null : ResolveActiveChallenge();
+            activeChallenge = IsDeveloperLab || IsSpaceshipHub ? null : ResolveActiveChallenge();
             ApplySelectedCharacterForFreshRun();
             ApplyChallengeRulesForFreshRun();
             rewardCounter.SetClaimedRewards(0);
@@ -402,16 +426,20 @@ namespace Hollow.Branches
             branchDepth = 0;
             challengeStartedRealtime = activeChallenge != null ? Time.realtimeSinceStartup : 0f;
             challengeCompletionRecorded = false;
-            runSeed = IsDeveloperLab
+            runSeed = IsSpaceshipHub
+                ? 0
+                : IsDeveloperLab
                 ? DeveloperLabDefinition.Seed
                 : activeChallenge != null
                 ? activeChallenge.FixedRunSeed
                 : ShouldUseRandomFreshRunSeed() ? RunSeedProvider.CreateSeed() : macroBranchSeed;
             worldIndex = 1;
-            worldPhase = IsDeveloperLab ? RunWorldPhase.Legacy : IsWorldLoopRuntime() ? RunWorldPhase.Prologue : RunWorldPhase.Legacy;
+            worldPhase = IsDeveloperLab || IsSpaceshipHub ? RunWorldPhase.Legacy : IsWorldLoopRuntime() ? RunWorldPhase.Prologue : RunWorldPhase.Legacy;
             activeBiomeId = ResolveBiomeIdForWorld(worldIndex);
             activeHubPortalId = string.Empty;
-            currentBranchSeed = IsDeveloperLab
+            currentBranchSeed = IsSpaceshipHub
+                ? 0
+                : IsDeveloperLab
                 ? DeveloperLabDefinition.Seed
                 : worldPhase == RunWorldPhase.Prologue
                 ? RunSeedDeriver.PrologueBranchSeed(runSeed, worldIndex)
@@ -419,10 +447,26 @@ namespace Hollow.Branches
             bossKeyState = BossKeyState.None;
             bossDoorUnlocked = false;
             interBranchHubState = InterBranchHubState.Inactive;
-            State = BranchSessionState.Create(CreateFreshGraph());
+            if (IsSpaceshipHub)
+            {
+                PrepareSpaceshipSession();
+                State = BranchSessionState.Create(
+                    CreateSpaceshipGraph(),
+                    spaceshipArrival.RequiresQuarantine
+                        ? new BranchRoomId(SpaceshipBranchDefinition.ArrivalsRoomId)
+                        : new BranchRoomId(SpaceshipBranchDefinition.DeparturesRoomId));
+            }
+            else
+            {
+                State = BranchSessionState.Create(CreateFreshGraph());
+            }
             branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
-            proceduralRewardPlan = CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
-            encounterPlan = CreateEncounterPlanForGraph(State.Graph);
+            proceduralRewardPlan = IsSpaceshipHub
+                ? ProceduralRewardPlan.Empty
+                : CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
+            encounterPlan = IsSpaceshipHub
+                ? EncounterPlan.Empty
+                : CreateEncounterPlanForGraph(State.Graph);
             LoadCurrentRoom();
             CheckpointActiveRun();
         }
@@ -538,6 +582,7 @@ namespace Hollow.Branches
             if (roomCombatController != null)
             {
                 roomCombatController.RoomCleared -= OnRoomCleared;
+                roomCombatController.EnemyDefeated -= OnEnemyDefeated;
                 roomCombatController.InteractiveObjectDestroyed -= OnInteractiveObjectDestroyed;
                 if (roomCombatController.PlayerHealth != null)
                 {
@@ -573,6 +618,12 @@ namespace Hollow.Branches
 
         public bool TryInteract()
         {
+            if (IsSpaceshipHub)
+            {
+                return TryUseShipTerminal() ||
+                       TryTraverseNearestDoor();
+            }
+
             return TryClaimBossKey() ||
                    TryOpenNearestChest() ||
                    TryClaimReward() ||
@@ -637,7 +688,9 @@ namespace Hollow.Branches
 
         public BranchMiniMapModel CreateMiniMapModel()
         {
-            return new BranchMiniMapModel(State);
+            return IsSpaceshipHub
+                ? new BranchMiniMapModel(State, revealAll: true, room => SpaceshipBranchDefinition.LabelForRoom(room.Id.Value))
+                : new BranchMiniMapModel(State);
         }
 
         public PlayerBuildHudModel CreatePlayerBuildHudModel()
@@ -647,14 +700,18 @@ namespace Hollow.Branches
             var weapon = playerController != null ? playerController.GetComponent<PlayerWeaponController>() : null;
             var defense = playerController != null ? playerController.GetComponent<PlayerDefenseController>() : null;
             var health = roomCombatController?.PlayerHealth;
+            var equipmentLoad = EquipmentLoadResolver.Resolve(appliedBuild, weaponCatalog, armorCatalog, shieldCatalog);
+            var hudCombatStats = PlayerBuildHudStatCalculator.Calculate(appliedBuild, weaponCatalog, armorCatalog, shieldCatalog);
+            var activeWeaponSlot = weapon != null ? weapon.ActiveWeaponSlot : appliedBuild.Equipment.ActiveWeaponSlot;
+            var activeWeaponId = ResolveActiveWeaponId(appliedBuild, weapon, activeWeaponSlot);
             return new PlayerBuildHudModel(
                 CharacterDisplayName(appliedBuild.SelectedCharacterId),
                 health != null ? health.CurrentHealth : Mathf.RoundToInt(derived.MaxHealth),
                 Mathf.RoundToInt(derived.MaxHealth),
                 derived.Defense,
-                derived.Stability + EquipmentLoadResolver.Resolve(appliedBuild, weaponCatalog, armorCatalog, shieldCatalog).ArmorStabilityBonus,
+                derived.Stability + equipmentLoad.ArmorStabilityBonus,
                 defense != null && defense.IsGuarding,
-                derived.SpeedMetersPerSecond,
+                hudCombatStats.MoveSpeedMetersPerSecond,
                 derived.Strength,
                 weapon != null ? weapon.CurrentStamina : appliedBuild.CurrentStamina,
                 weapon != null ? weapon.MaxStamina : derived.MaxStamina,
@@ -664,17 +721,53 @@ namespace Hollow.Branches
                 derived.MeleeRangeBonusMeters,
                 derived.RangedRangeBonusMeters,
                 derived.AttackCooldownMultiplier,
-                runEconomy.RunCoins,
-                runEconomy.RunSouls,
+                IsSpaceshipHub ? 0 : runEconomy.RunCoins,
+                IsSpaceshipHub ? BankedSouls : runEconomy.RunSouls,
+                0,
+                !IsSpaceshipHub && bossKeyState == BossKeyState.Held,
+                hudCombatStats.MeleeLightDamage,
+                hudCombatStats.MeleeHeavyDamage,
+                hudCombatStats.MeleeLightAttacksPerSecond,
+                hudCombatStats.RangedLightDamage,
+                hudCombatStats.RangedHeavyDamage,
+                hudCombatStats.RangedLightAttacksPerSecond,
+                hudCombatStats.EffectiveRangeMeters,
+                hudCombatStats.MoveSpeedMetersPerSecond,
+                hudCombatStats.Karma,
+                activeWeaponId,
+                activeWeaponSlot,
                 weapon != null ? $"{weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}" : appliedBuild.Equipment.ActiveWeaponSlot.ToString(),
                 ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.MeleeWeaponId),
                 ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.RangedWeaponId),
                 ResolveRewardName(RewardKind.Armor, appliedBuild.Equipment.ArmorId),
                 ResolveRewardName(RewardKind.Shield, appliedBuild.Equipment.ShieldId),
-                EquipmentLoadResolver.Resolve(appliedBuild, weaponCatalog, armorCatalog, shieldCatalog),
+                equipmentLoad,
                 ActiveItemSummary(appliedBuild),
                 CardSummary(appliedBuild),
                 ActiveSynergyDisplayName);
+        }
+
+        private string ResolveActiveWeaponId(PlayerRunBuild appliedBuild, PlayerWeaponController weapon, WeaponSlot activeWeaponSlot)
+        {
+            var rawWeaponId = activeWeaponSlot == WeaponSlot.Ranged
+                ? weapon != null ? weapon.RangedWeaponId : appliedBuild.Equipment.RangedWeaponId
+                : weapon != null ? weapon.MeleeWeaponId : appliedBuild.Equipment.MeleeWeaponId;
+            if (weaponCatalog != null)
+            {
+                var resolved = weaponCatalog.Resolve(rawWeaponId, activeWeaponSlot);
+                if (resolved != null)
+                {
+                    return resolved.WeaponId;
+                }
+            }
+
+            var normalized = WeaponIdAliases.Normalize(rawWeaponId);
+            if (!string.IsNullOrWhiteSpace(normalized))
+            {
+                return normalized;
+            }
+
+            return activeWeaponSlot == WeaponSlot.Ranged ? WeaponIdAliases.StarterPistolId : "starter_blade";
         }
 
         private bool TryTraverseNearestDoor()
@@ -715,7 +808,7 @@ namespace Hollow.Branches
             DestroyTransientInteractables();
             currentRoomAsset = ResolveCurrentRoomAsset();
             roomRuntimeRoot.BuildFrom(currentRoomAsset);
-            if (State.CurrentRoom.Role == BranchRoomRole.Origin)
+            if (!IsSpaceshipHub && State.CurrentRoom.Role == BranchRoomRole.Origin)
             {
                 roomRuntimeRoot.ClearHazardsAndInteractiveObjects();
             }
@@ -734,12 +827,12 @@ namespace Hollow.Branches
                 entryBiasDirection);
             playerController.transform.localPosition = playerLocalPosition;
             State.CurrentRoom.MarkVisited();
-            if (State.CurrentRoom.Role == BranchRoomRole.Origin && !State.CurrentRoom.IsCleared)
+            if (!IsSpaceshipHub && State.CurrentRoom.Role == BranchRoomRole.Origin && !State.CurrentRoom.IsCleared)
             {
                 State.CurrentRoom.MarkCleared();
             }
 
-            if (State.CurrentRoom.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret && !State.CurrentRoom.IsCleared)
+            if (!IsSpaceshipHub && State.CurrentRoom.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret && !State.CurrentRoom.IsCleared)
             {
                 State.CurrentRoom.MarkCleared();
                 State.CurrentRoom.MarkRewardPending();
@@ -749,12 +842,13 @@ namespace Hollow.Branches
             roomCombatController.BeginRoom(
                 roomRuntimeRoot,
                 playerController,
-                State.CurrentRoom.IsCleared,
+                State.CurrentRoom.IsCleared || IsSpaceshipHub,
                 State.CurrentRoom.Role == BranchRoomRole.Boss ? RoomCombatEncounterKind.Boss : RoomCombatEncounterKind.Standard,
                 CreateEncounterContextForCurrentRoom());
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
+            SpawnSpaceshipTerminalsForCurrentRoom();
             playerController.transform.localPosition = RoomLocalCollision.ResolveNearestOccupiablePosition(
                 roomRuntimeRoot,
                 playerController.transform.localPosition,
@@ -765,14 +859,17 @@ namespace Hollow.Branches
             ApplyRunStatsToPlayer(healAmount: 0);
             VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
             AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
-            SpawnRewardIfNeeded();
-            SpawnHazardCoinPickupsForCurrentRoom();
-            SpawnSavedChestsForCurrentRoom();
-            SpawnLooseCoinPickupsForCurrentRoom();
-            SpawnReplacementPickupsForCurrentContext();
-            PopulateDeveloperLabRoomIfNeeded();
-            EnsureDebugSpawnMenu();
-            SpawnHubPortalIfReady();
+            if (!IsSpaceshipHub)
+            {
+                SpawnRewardIfNeeded();
+                SpawnHazardCoinPickupsForCurrentRoom();
+                SpawnSavedChestsForCurrentRoom();
+                SpawnLooseCoinPickupsForCurrentRoom();
+                SpawnReplacementPickupsForCurrentContext();
+                PopulateDeveloperLabRoomIfNeeded();
+                EnsureDebugSpawnMenu();
+                SpawnHubPortalIfReady();
+            }
             CheckpointActiveRun();
         }
 
@@ -785,7 +882,6 @@ namespace Hollow.Branches
 
             State.CurrentRoom.MarkCleared();
             RewardApplicationService.RechargeActiveItem(playerRunBuild, usableItemCatalog);
-            ApplyRunStatsToPlayer(healAmount: 0);
             if (State.CurrentRoom.Id != BranchRoomId.Origin)
             {
                 State.CurrentRoom.MarkRewardPending();
@@ -794,6 +890,295 @@ namespace Hollow.Branches
             UpdateDoorVisuals();
             SpawnRewardIfNeeded();
             SpawnHubPortalIfReady();
+        }
+
+        private void OnEnemyDefeated(EnemyRuntimeController enemy)
+        {
+            if (enemy == null ||
+                enemy.BossDefinition != null ||
+                enemy.ArchetypeId == EnemyArchetypeId.Boss)
+            {
+                return;
+            }
+
+            runEconomy.AddSouls(EnemyKillSoulReward);
+            CheckpointActiveRun();
+        }
+
+        private void SpawnSpaceshipTerminalsForCurrentRoom()
+        {
+            if (!IsSpaceshipHub || currentRoomAsset == null || playerController == null)
+            {
+                return;
+            }
+
+            var roomId = State?.CurrentRoomId.Value ?? string.Empty;
+            switch (roomId)
+            {
+                case SpaceshipBranchDefinition.ArrivalsRoomId:
+                    AddShipTerminal(
+                        SpaceshipTerminalKind.SterilizationConsole,
+                        "sterilize",
+                        spaceshipQuarantineUnlocked ? "Quarantine Clear" : "Sterilize",
+                        ShipTerminalPosition("ship_terminal_sterilization", new Vector3(-2.6f, 0.45f, -1.85f)),
+                        MaterialRole.SecretDoorDebug);
+                    break;
+                case SpaceshipBranchDefinition.DeparturesRoomId:
+                    AddShipTerminal(
+                        SpaceshipTerminalKind.Departures,
+                        "normal_expedition",
+                        "Departures",
+                        ShipTerminalPosition("ship_terminal_departures", new Vector3(0f, 0.45f, 0f)),
+                        MaterialRole.HubReturnPortal);
+                    AddShipBox("ShipTeleportPlatform", new Vector3(1.2f, 0.08f, 0f), new Vector3(1.6f, 0.16f, 1.6f), MaterialRole.HubReturnPortal);
+                    break;
+                case SpaceshipBranchDefinition.MissionCenterRoomId:
+                    SpawnShipChallengeTerminals();
+                    break;
+                case SpaceshipBranchDefinition.TechnologyLabRoomId:
+                    SpawnShipUpgradeTerminals();
+                    break;
+            }
+        }
+
+        private void SpawnShipChallengeTerminals()
+        {
+            var catalog = challengeCatalog != null ? challengeCatalog : ChallengeCatalogDefinition.CreateRuntimeDefault();
+            var challenges = catalog.Challenges;
+            if (challenges == null || challenges.Count == 0)
+            {
+                return;
+            }
+
+            var spacing = 1.15f;
+            var startX = -(challenges.Count - 1) * spacing * 0.5f;
+            for (var index = 0; index < challenges.Count; index++)
+            {
+                var challenge = challenges[index];
+                AddShipTerminal(
+                    SpaceshipTerminalKind.MissionChallenge,
+                    challenge.ChallengeId,
+                    challenge.DisplayName,
+                    ShipTerminalPosition($"ship_terminal_mission_{index}", new Vector3(startX + index * spacing, 0.45f, 0f)),
+                    MaterialRole.NextBranchPortal);
+            }
+        }
+
+        private void SpawnShipUpgradeTerminals()
+        {
+            var catalog = shipUpgradeCatalog != null ? shipUpgradeCatalog : ShipUpgradeCatalogDefinition.CreateRuntimeDefault();
+            var upgrades = catalog.Upgrades;
+            if (upgrades == null || upgrades.Count == 0)
+            {
+                return;
+            }
+
+            var spacing = 1.25f;
+            var startX = -(upgrades.Count - 1) * spacing * 0.5f;
+            for (var index = 0; index < upgrades.Count; index++)
+            {
+                var upgrade = upgrades[index];
+                AddShipTerminal(
+                    SpaceshipTerminalKind.TechnologyUpgrade,
+                    upgrade.UpgradeId,
+                    $"{upgrade.DisplayName}\n{upgrade.SoulCost} souls",
+                    ShipTerminalPosition($"ship_terminal_upgrade_{index}", new Vector3(startX + index * spacing, 0.45f, 0f)),
+                    MaterialRole.BossKeyPickup);
+            }
+        }
+
+        private Vector3 ShipTerminalPosition(string markerKind, Vector3 fallback)
+        {
+            var marker = currentRoomAsset?.ItemSpawns?.FirstOrDefault(spawn => spawn?.kind == markerKind);
+            return marker?.position?.ToUnityVector3() ?? fallback;
+        }
+
+        private SpaceshipTerminal AddShipTerminal(
+            SpaceshipTerminalKind kind,
+            string payloadId,
+            string displayName,
+            Vector3 localPosition,
+            MaterialRole materialRole)
+        {
+            var terminalObject = AddShipBox($"ShipTerminal_{kind}_{payloadId}", localPosition, new Vector3(0.72f, 0.9f, 0.22f), materialRole);
+            var terminal = terminalObject.GetComponent<SpaceshipTerminal>() ?? terminalObject.AddComponent<SpaceshipTerminal>();
+            terminal.Configure(kind, payloadId, displayName);
+            currentShipTerminals.Add(terminal);
+            AddShipLabel(terminalObject.transform, displayName, new Vector3(0f, 0.72f, 0f), 0.055f, new Color(0.78f, 0.95f, 1f, 0.95f));
+            return terminal;
+        }
+
+        private GameObject AddShipBox(string objectName, Vector3 localPosition, Vector3 localScale, MaterialRole materialRole)
+        {
+            var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            box.name = objectName;
+            box.transform.SetParent(playerController.transform.parent, false);
+            box.transform.localPosition = localPosition;
+            box.transform.localScale = localScale;
+            MaterialResolver.ApplyTo(box, materialRole);
+            if (box.TryGetComponent<Collider>(out var collider))
+            {
+                collider.enabled = false;
+            }
+
+            currentShipObjects.Add(box);
+            return box;
+        }
+
+        private static void AddShipLabel(Transform parent, string label, Vector3 localPosition, float scale, Color color)
+        {
+            var labelObject = new GameObject("Label", typeof(TextMesh));
+            labelObject.transform.SetParent(parent, false);
+            labelObject.transform.localPosition = localPosition;
+            labelObject.transform.localRotation = Quaternion.Euler(70f, 0f, 0f);
+            labelObject.transform.localScale = Vector3.one * scale;
+            var mesh = labelObject.GetComponent<TextMesh>();
+            mesh.anchor = TextAnchor.MiddleCenter;
+            mesh.alignment = TextAlignment.Center;
+            mesh.characterSize = 1f;
+            mesh.fontSize = 40;
+            mesh.text = label;
+            mesh.color = color;
+        }
+
+        private bool TryUseShipTerminal()
+        {
+            if (!IsSpaceshipHub || playerController == null || currentShipTerminals.Count == 0)
+            {
+                return false;
+            }
+
+            var terminal = currentShipTerminals
+                .Where(candidate => candidate != null)
+                .Select(candidate => new
+                {
+                    Terminal = candidate,
+                    Distance = Vector3.Distance(Flat(playerController.transform.localPosition), Flat(candidate.transform.localPosition))
+                })
+                .Where(candidate => candidate.Distance <= BranchTraversalService.DoorInteractionRadiusMeters)
+                .OrderBy(candidate => candidate.Distance)
+                .FirstOrDefault()?.Terminal;
+            if (terminal == null)
+            {
+                return false;
+            }
+
+            return terminal.TerminalKind switch
+            {
+                SpaceshipTerminalKind.SterilizationConsole => TryUnlockSpaceshipQuarantine(),
+                SpaceshipTerminalKind.Departures => TryLaunchNormalExpeditionFromShip(),
+                SpaceshipTerminalKind.MissionChallenge => TryLaunchShipChallenge(terminal.PayloadId),
+                SpaceshipTerminalKind.TechnologyUpgrade => TryPurchaseShipUpgrade(terminal.PayloadId),
+                _ => false
+            };
+        }
+
+        private bool TryUnlockSpaceshipQuarantine()
+        {
+            if (!spaceshipQuarantineRequired)
+            {
+                spaceshipQuarantineUnlocked = true;
+                LastRewardMessage = "Quarantine already clear.";
+                return true;
+            }
+
+            spaceshipQuarantineUnlocked = true;
+            LastRewardMessage = "Sterilization complete.";
+            SaveStatus = "Ship";
+            UpdateDoorVisuals();
+            VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
+            AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
+            return true;
+        }
+
+        private bool TryLaunchNormalExpeditionFromShip()
+        {
+            var host = ProfileSessionHost.Instance;
+            var context = host?.SelectedProfileContext;
+            var selectedProfile = context?.SelectedProfile;
+            if (host?.ProfileStore == null || context == null || selectedProfile == null || selectedProfile.IsEmpty)
+            {
+                LastRewardMessage = "Select a profile before departure.";
+                return false;
+            }
+
+            var slotId = new ProfileSlotId(selectedProfile.SlotIndex);
+            context.SetLaunchMode(RunLaunchMode.NewRun);
+            context.SetSelectedChallengeId(string.Empty);
+            context.SetDeveloperLabRequested(false);
+            context.SetSelectedCharacterId(string.IsNullOrWhiteSpace(context.SelectedCharacterId) ? "balanced" : context.SelectedCharacterId);
+            host.RunSaveStore?.ClearActiveRun(slotId);
+            var updated = host.ProfileStore.MarkRunStarted(slotId);
+            context.UpdateSelectedProfile(updated);
+            LoadAppRoute(PlatformPresentationModeResolver.RouteForPlatform(gameSessionState?.PlatformKind ?? HollowPlatformKind.WindowsStandard3D));
+            return true;
+        }
+
+        private bool TryLaunchShipChallenge(string challengeId)
+        {
+            var catalog = challengeCatalog != null ? challengeCatalog : ChallengeCatalogDefinition.CreateRuntimeDefault();
+            var challenge = catalog.Resolve(challengeId);
+            if (challenge == null)
+            {
+                LastRewardMessage = "Challenge unavailable.";
+                return false;
+            }
+
+            var host = ProfileSessionHost.Instance;
+            var context = host?.SelectedProfileContext;
+            var selectedProfile = context?.SelectedProfile;
+            if (host?.ProfileStore == null || context == null || selectedProfile == null || selectedProfile.IsEmpty)
+            {
+                LastRewardMessage = "Select a profile before mission launch.";
+                return false;
+            }
+
+            var slotId = new ProfileSlotId(selectedProfile.SlotIndex);
+            context.SetLaunchMode(RunLaunchMode.NewRun);
+            context.SetSelectedChallengeId(challenge.ChallengeId);
+            context.SetDeveloperLabRequested(false);
+            context.SetSelectedCharacterId(challenge.SelectedCharacterId);
+            host.RunSaveStore?.ClearActiveRun(slotId);
+            host.ChallengeResultStore?.MarkChallengeAttemptStarted(slotId, challenge.ChallengeId, challenge.FixedRunSeed);
+            var updated = host.ProfileStore.MarkLastPlayed(slotId);
+            context.UpdateSelectedProfile(updated);
+            LoadAppRoute(PlatformPresentationModeResolver.RouteForPlatform(gameSessionState?.PlatformKind ?? HollowPlatformKind.WindowsStandard3D));
+            return true;
+        }
+
+        private bool TryPurchaseShipUpgrade(string upgradeId)
+        {
+            var catalog = shipUpgradeCatalog != null ? shipUpgradeCatalog : ShipUpgradeCatalogDefinition.CreateRuntimeDefault();
+            if (!catalog.TryGetUpgrade(upgradeId, out var upgrade))
+            {
+                LastRewardMessage = "Upgrade unavailable.";
+                return false;
+            }
+
+            var host = ProfileSessionHost.Instance;
+            var context = host?.SelectedProfileContext;
+            var selectedProfile = context?.SelectedProfile;
+            if (host?.ProfileStore is not IShipUpgradeStore store || context == null || selectedProfile == null || selectedProfile.IsEmpty)
+            {
+                LastRewardMessage = "Profile upgrade store unavailable.";
+                return false;
+            }
+
+            if (!ShipMetaProgressionService.TryPurchase(store, new ProfileSlotId(selectedProfile.SlotIndex), upgrade, out var updated, out var error))
+            {
+                LastRewardMessage = error;
+                return false;
+            }
+
+            context.UpdateSelectedProfile(updated);
+            BankedSouls = updated.BankedSouls;
+            LastRewardMessage = $"{upgrade.DisplayName} purchased.";
+            playerRunBuild = new PlayerRunBuild();
+            ApplySelectedCharacterForFreshRun();
+            ApplyRunStatsToPlayer(Mathf.RoundToInt(playerRunBuild.DerivedStats.MaxHealth));
+            DestroyShipTerminals();
+            SpawnSpaceshipTerminalsForCurrentRoom();
+            return true;
         }
 
         private void PopulateDeveloperLabRoomIfNeeded()
@@ -1180,8 +1565,11 @@ namespace Hollow.Branches
                 return true;
             }
 
-            CompleteActiveRunIfPersistent();
-            ReturnToProfileMenu();
+            var soulsBanked = CompleteActiveRunIfPersistent();
+            ReturnToSpaceshipOrProfileMenu(
+                activeChallenge != null ? SpaceshipArrivalReason.ChallengeSuccess : SpaceshipArrivalReason.NormalSuccess,
+                soulsBanked,
+                activeChallenge?.ChallengeId ?? string.Empty);
 
             return true;
         }
@@ -1247,8 +1635,8 @@ namespace Hollow.Branches
             if (choice.Kind == HubPortalKind.FinalExtraction)
             {
                 worldPhase = RunWorldPhase.Completed;
-                CompleteActiveRunIfPersistent();
-                ReturnToProfileMenu();
+                var soulsBanked = CompleteActiveRunIfPersistent();
+                ReturnToSpaceshipOrProfileMenu(SpaceshipArrivalReason.NormalSuccess, soulsBanked);
 
                 return;
             }
@@ -1850,7 +2238,11 @@ namespace Hollow.Branches
 
                 var connectedRoom = State.Graph.TryGetRoom(connectedConnection.ToRoomId, out var room) ? room : null;
                 var visualState = RoomDoorVisualState.Locked;
-                if (connectedConnection.LockKind == BranchConnectionLockKind.BossKey && !bossDoorUnlocked)
+                if (connectedConnection.LockKind == BranchConnectionLockKind.Quarantine && IsSpaceshipHub && !spaceshipQuarantineUnlocked)
+                {
+                    visualState = RoomDoorVisualState.Locked;
+                }
+                else if (connectedConnection.LockKind == BranchConnectionLockKind.BossKey && !bossDoorUnlocked)
                 {
                     visualState = bossKeyState == BossKeyState.Held && State.CurrentRoom.IsCleared
                         ? RoomDoorVisualState.Active
@@ -1871,6 +2263,17 @@ namespace Hollow.Branches
 
         private bool TryResolveConnectionLock(BranchConnection connection)
         {
+            if (connection.LockKind == BranchConnectionLockKind.Quarantine)
+            {
+                if (!IsSpaceshipHub || spaceshipQuarantineUnlocked)
+                {
+                    return true;
+                }
+
+                LastRewardMessage = "Sterilization required.";
+                return false;
+            }
+
             if (connection.LockKind != BranchConnectionLockKind.BossKey || bossDoorUnlocked)
             {
                 return true;
@@ -1890,8 +2293,24 @@ namespace Hollow.Branches
             return true;
         }
 
+        private void DestroyShipTerminals()
+        {
+            foreach (var shipObject in currentShipObjects.ToArray())
+            {
+                if (shipObject != null)
+                {
+                    DestroyRuntimeObject(shipObject);
+                }
+            }
+
+            currentShipObjects.Clear();
+            currentShipTerminals.Clear();
+        }
+
         private void DestroyTransientInteractables()
         {
+            DestroyShipTerminals();
+
             if (currentRewardPickup != null)
             {
                 DestroyRuntimeObject(currentRewardPickup.gameObject);
@@ -2089,6 +2508,146 @@ namespace Hollow.Branches
             }
         }
 
+        private void PrepareSpaceshipSession()
+        {
+            spaceshipArrival = SpaceshipArrivalHandoff.TryConsume(out var snapshot)
+                ? snapshot
+                : new SpaceshipArrivalSnapshot(
+                    SpaceshipArrivalReason.DirectProfile,
+                    gameSessionState?.PlatformKind ?? HollowPlatformKind.WindowsStandard3D,
+                    0,
+                    string.Empty);
+            spaceshipQuarantineRequired = spaceshipArrival.RequiresQuarantine;
+            spaceshipQuarantineUnlocked = !spaceshipQuarantineRequired;
+            LastLaunchedRoute = AppShellRoute.Boot;
+            SaveStatus = spaceshipQuarantineRequired ? "Ship: Quarantine" : "Ship";
+            LastRewardMessage = SpaceshipStatusForArrival(spaceshipArrival);
+        }
+
+        private BranchFloorGraph CreateSpaceshipGraph()
+        {
+            spaceshipRoomAssets.Clear();
+            var importError = string.Empty;
+            if (spaceshipBranchDefinition == null ||
+                !TryImportSpaceshipRooms(spaceshipBranchDefinition, out var importedRooms, out importError))
+            {
+                if (!string.IsNullOrWhiteSpace(importError))
+                {
+                    Debug.LogWarning($"Spaceship branch definition import warning: {importError}");
+                }
+
+                foreach (var roomId in SpaceshipBranchDefinition.RequiredRoomIds)
+                {
+                    spaceshipRoomAssets[roomId] = roomAsset;
+                }
+            }
+            else
+            {
+                foreach (var pair in importedRooms)
+                {
+                    spaceshipRoomAssets[pair.Key] = pair.Value;
+                }
+            }
+
+            var graph = new BranchFloorGraph(SpaceshipBranchDefinition.BranchId, 0);
+            AddSpaceshipRoom(graph, SpaceshipBranchDefinition.ArrivalsRoomId, new Vector2Int(-1, 0), BranchRoomRole.Origin);
+            AddSpaceshipRoom(graph, SpaceshipBranchDefinition.MainHallRoomId, Vector2Int.zero, BranchRoomRole.Combat);
+            AddSpaceshipRoom(graph, SpaceshipBranchDefinition.DeparturesRoomId, new Vector2Int(1, 0), BranchRoomRole.Combat);
+            AddSpaceshipRoom(graph, SpaceshipBranchDefinition.MissionCenterRoomId, new Vector2Int(0, -1), BranchRoomRole.Combat);
+            AddSpaceshipRoom(graph, SpaceshipBranchDefinition.TechnologyLabRoomId, new Vector2Int(0, 1), BranchRoomRole.Combat);
+
+            var arrivals = new BranchRoomId(SpaceshipBranchDefinition.ArrivalsRoomId);
+            var main = new BranchRoomId(SpaceshipBranchDefinition.MainHallRoomId);
+            graph.AddBidirectionalConnection(
+                arrivals,
+                main,
+                "east",
+                "west",
+                "east_0",
+                "west_0",
+                BranchConnectionLockKind.Quarantine);
+            graph.AddBidirectionalConnection(main, new BranchRoomId(SpaceshipBranchDefinition.DeparturesRoomId), "east", "west", "east_0", "west_0");
+            graph.AddBidirectionalConnection(main, new BranchRoomId(SpaceshipBranchDefinition.MissionCenterRoomId), "north", "south", "north_0", "south_0");
+            graph.AddBidirectionalConnection(main, new BranchRoomId(SpaceshipBranchDefinition.TechnologyLabRoomId), "south", "north", "south_0", "north_0");
+            return graph;
+        }
+
+        private static bool TryImportSpaceshipRooms(
+            SpaceshipBranchDefinition definition,
+            out IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> rooms,
+            out string error)
+        {
+            var imported = new Dictionary<string, ImportedRoomRuntimeAsset>(StringComparer.Ordinal);
+            error = string.Empty;
+            foreach (var template in definition.RoomTemplates)
+            {
+                if (!HollowRuntimeV2Importer.TryImport(template.text, out var room, out var importError))
+                {
+                    AppendSpaceshipImportError(ref error, $"{template.name}: {importError}");
+                    continue;
+                }
+
+                if (room == null || string.IsNullOrWhiteSpace(room.Id))
+                {
+                    AppendSpaceshipImportError(ref error, $"{template.name}: missing canonicalRoomId");
+                    continue;
+                }
+
+                imported[room.Id] = room;
+            }
+
+            foreach (var required in SpaceshipBranchDefinition.RequiredRoomIds)
+            {
+                if (!imported.ContainsKey(required))
+                {
+                    AppendSpaceshipImportError(ref error, $"missing ship room '{required}'");
+                }
+            }
+
+            rooms = imported;
+            return string.IsNullOrWhiteSpace(error);
+        }
+
+        private static void AppendSpaceshipImportError(ref string error, string next)
+        {
+            if (string.IsNullOrWhiteSpace(next))
+            {
+                return;
+            }
+
+            error = string.IsNullOrWhiteSpace(error) ? next : $"{error}; {next}";
+        }
+
+        private static string SpaceshipStatusForArrival(SpaceshipArrivalSnapshot arrival)
+        {
+            return arrival.Reason switch
+            {
+                SpaceshipArrivalReason.NormalSuccess => arrival.SoulsBanked > 0
+                    ? $"Arrival confirmed. {arrival.SoulsBanked} souls transferred."
+                    : "Arrival confirmed.",
+                SpaceshipArrivalReason.NormalDeath => "Emergency retrieval complete. No souls recovered.",
+                SpaceshipArrivalReason.ChallengeSuccess => "Challenge complete. Quarantine required.",
+                SpaceshipArrivalReason.ChallengeDeath => "Challenge failed. Quarantine required.",
+                _ => "Spaceship online."
+            };
+        }
+
+        private void AddSpaceshipRoom(BranchFloorGraph graph, string roomId, Vector2Int coordinate, BranchRoomRole role)
+        {
+            var footprint = new RoomInstanceFootprint(coordinate, new[] { coordinate }, new Vector2Int(13, 7));
+            var room = new BranchRoomState(
+                new BranchRoomId(roomId),
+                coordinate,
+                new BranchRoomInstanceId(roomId),
+                roomId,
+                footprint,
+                role);
+            room.MarkVisited();
+            room.MarkCleared();
+            room.MarkRewardUnavailable();
+            graph.AddRoom(room);
+        }
+
         private BranchFloorGraph CreateFreshGraph()
         {
             var seed = currentBranchSeed == 0 ? macroBranchSeed : currentBranchSeed;
@@ -2258,6 +2817,7 @@ namespace Hollow.Branches
         private bool IsWorldLoopRuntime()
         {
             return !IsDeveloperLab &&
+                   !IsSpaceshipHub &&
                    branchContent != null &&
                    branchContent.HasMacroFixturePool &&
                    branchGenerationSettings != null &&
@@ -2453,6 +3013,14 @@ namespace Hollow.Branches
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()
         {
+            if (IsSpaceshipHub &&
+                State?.CurrentRoom != null &&
+                spaceshipRoomAssets.TryGetValue(State.CurrentRoom.RuntimeRoomAssetId, out var spaceshipRoom) &&
+                spaceshipRoom != null)
+            {
+                return spaceshipRoom;
+            }
+
             if (State?.CurrentRoom != null &&
                 branchContent != null &&
                 branchContent.TryGetRoomAsset(State.CurrentRoom.RuntimeRoomAssetId, out var asset))
@@ -2533,6 +3101,7 @@ namespace Hollow.Branches
             }
 
             activeRunCompletedOrFailed = true;
+            RecordChallengeFailureIfNeeded();
             if (canPersist)
             {
                 runSaveStore.ClearActiveRun(activeProfileSlotId);
@@ -2543,6 +3112,13 @@ namespace Hollow.Branches
             if (HollowBootstrap.Instance != null && playerDeathRouteCoroutine == null)
             {
                 playerDeathRouteCoroutine = StartCoroutine(LoadMainMenuAfterPlayerDeathDelay());
+            }
+            else if (HollowBootstrap.Instance == null)
+            {
+                ReturnToSpaceshipOrProfileMenu(
+                    activeChallenge != null ? SpaceshipArrivalReason.ChallengeDeath : SpaceshipArrivalReason.NormalDeath,
+                    0,
+                    activeChallenge?.ChallengeId ?? string.Empty);
             }
         }
 
@@ -2555,7 +3131,10 @@ namespace Hollow.Branches
                 yield break;
             }
 
-            ReturnToProfileMenu();
+            ReturnToSpaceshipOrProfileMenu(
+                activeChallenge != null ? SpaceshipArrivalReason.ChallengeDeath : SpaceshipArrivalReason.NormalDeath,
+                0,
+                activeChallenge?.ChallengeId ?? string.Empty);
         }
 
         private void ReturnToProfileMenu()
@@ -2572,6 +3151,46 @@ namespace Hollow.Branches
             SceneLoaderService.LoadRouteAsync(route);
         }
 
+        private void ReturnToSpaceshipOrProfileMenu(
+            SpaceshipArrivalReason reason,
+            int soulsBanked = 0,
+            string challengeId = "")
+        {
+            if (gameSessionState == null ||
+                !gameSessionState.HasProfile ||
+                gameSessionState.SessionMode == RuntimeSessionMode.DeveloperLab ||
+                gameSessionState.SessionMode == RuntimeSessionMode.TransientArena ||
+                gameSessionState.SessionMode == RuntimeSessionMode.TransientRoomDesignerPlaytest)
+            {
+                ReturnToProfileMenu();
+                return;
+            }
+
+            SpaceshipArrivalHandoff.Set(reason, gameSessionState.PlatformKind, soulsBanked, challengeId);
+            var context = ProfileSessionHost.Instance?.SelectedProfileContext;
+            context?.SetLaunchMode(RunLaunchMode.NewRun);
+            context?.SetSelectedChallengeId(string.Empty);
+            context?.SetDeveloperLabRequested(false);
+            if (HollowBootstrap.Instance == null)
+            {
+                return;
+            }
+
+            var route = PlatformPresentationModeResolver.SpaceshipRouteForPlatform(gameSessionState.PlatformKind);
+            HollowBootstrap.Instance.AppStateMachine.TransitionTo(route);
+            SceneLoaderService.LoadRouteAsync(route);
+        }
+
+        private void LoadAppRoute(AppShellRoute route)
+        {
+            LastLaunchedRoute = route;
+            if (HollowBootstrap.Instance != null)
+            {
+                HollowBootstrap.Instance.AppStateMachine.TransitionTo(route);
+                SceneLoaderService.LoadRouteAsync(route);
+            }
+        }
+
         private void ApplyRunStatsToPlayer(int healAmount)
         {
             playerRunBuild = CreateAppliedCurrentRunBuild(announceActivation: true);
@@ -2583,7 +3202,31 @@ namespace Hollow.Branches
             var selectedCharacterId = activeChallenge?.SelectedCharacterId ?? gameSessionState?.SelectedCharacterId ?? "balanced";
             var character = characterCatalog != null ? characterCatalog.Resolve(selectedCharacterId) : null;
             playerRunBuild.ConfigureCharacter(character);
+            ApplyShipUpgradesForFreshRun();
             ApplyEquipmentAndSynergyModifiers(playerRunBuild, announceActivation: false);
+        }
+
+        private void ApplyShipUpgradesForFreshRun()
+        {
+            if (activeChallenge != null ||
+                gameSessionState == null ||
+                (gameSessionState.SessionMode != RuntimeSessionMode.ProfileBacked &&
+                 gameSessionState.SessionMode != RuntimeSessionMode.SpaceshipHub) ||
+                !gameSessionState.HasProfile)
+            {
+                return;
+            }
+
+            var selectedProfile = ProfileSessionHost.Instance?.SelectedProfileContext?.SelectedProfile;
+            if (selectedProfile == null || selectedProfile.PurchasedShipUpgradeIds.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var modifier in ShipMetaProgressionService.CreatePurchasedModifiers(shipUpgradeCatalog, selectedProfile.PurchasedShipUpgradeIds))
+            {
+                playerRunBuild.AddModifier(modifier);
+            }
         }
 
         private void ApplyReplacementPickupState(ReplacementPickupState state, Vector3 dropPosition)
@@ -2958,7 +3601,7 @@ namespace Hollow.Branches
 
         private void CheckpointActiveRun()
         {
-            if (IsDeveloperLab || suppressCheckpoint || !canPersist || activeRunCompletedOrFailed || runSaveStore == null)
+            if (IsDeveloperLab || IsSpaceshipHub || suppressCheckpoint || !canPersist || activeRunCompletedOrFailed || runSaveStore == null)
             {
                 return;
             }
@@ -3080,15 +3723,16 @@ namespace Hollow.Branches
             return snapshot;
         }
 
-        private void CompleteActiveRunIfPersistent()
+        private int CompleteActiveRunIfPersistent()
         {
             if (activeRunCompletedOrFailed)
             {
-                return;
+                return 0;
             }
 
             activeRunCompletedOrFailed = true;
             RecordChallengeCompletionIfNeeded();
+            var soulsToBank = activeChallenge == null ? runEconomy.RunSouls : 0;
             if (canPersist && activeChallenge == null)
             {
                 MetaProgressionService.CompleteRun(runSaveStore, activeProfileSlotId, runEconomy);
@@ -3102,6 +3746,7 @@ namespace Hollow.Branches
             }
 
             SaveStatus = "Completed";
+            return soulsToBank;
         }
 
         private void RecordChallengeCompletionIfNeeded()
@@ -3114,6 +3759,17 @@ namespace Hollow.Branches
             challengeCompletionRecorded = true;
             var clearSeconds = challengeStartedRealtime > 0f ? Time.realtimeSinceStartup - challengeStartedRealtime : 0f;
             challengeResultStore.CompleteChallengeAttempt(activeProfileSlotId, activeChallenge.ChallengeId, activeChallenge.FixedRunSeed, clearSeconds);
+            RefreshSelectedProfileSummary();
+        }
+
+        private void RecordChallengeFailureIfNeeded()
+        {
+            if (activeChallenge == null || challengeResultStore == null || gameSessionState == null || gameSessionState.ProfileSlotIndex < 0)
+            {
+                return;
+            }
+
+            challengeResultStore.FailChallengeAttempt(activeProfileSlotId, activeChallenge.ChallengeId, activeChallenge.FixedRunSeed);
             RefreshSelectedProfileSummary();
         }
 

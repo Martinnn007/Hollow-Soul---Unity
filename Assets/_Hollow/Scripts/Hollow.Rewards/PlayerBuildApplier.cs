@@ -65,7 +65,7 @@ namespace Hollow.Rewards
                     derived.RangedDamageBonus,
                     derived.MeleeDamageBonus + derived.Strength,
                     derived.MaxStamina,
-                    derived.StaminaRegenPerSecond,
+                    derived.StaminaRegenPerSecond * load.StaminaRegenMultiplier,
                     build.Equipment.MeleeWeaponId,
                     build.Equipment.RangedWeaponId,
                     build.Equipment.ActiveWeaponSlot,

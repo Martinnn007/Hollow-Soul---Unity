@@ -23,6 +23,10 @@ namespace Hollow.UI.Shell
         private Font font;
         private string lastSummary;
 
+        public RectTransform MapPanel => mapPanel;
+
+        public RectTransform ShapeRoot => shapeRoot;
+
         public void Bind(BranchSessionController controller)
         {
             branchSessionController = controller;
@@ -145,10 +149,15 @@ namespace Hollow.UI.Shell
                 DrawOverlayDot(root, layout.PositionFor(node.OccupiedCells.First()), "MiniMapRewardDot", new Color(1f, 0.78f, 0.16f, 1f), 5f);
             }
 
-            var marker = MarkerFor(node.Role);
+            var marker = !string.IsNullOrWhiteSpace(node.DisplayLabel) ? node.DisplayLabel : MarkerFor(node.Role);
             if (!string.IsNullOrEmpty(marker))
             {
-                DrawMarkerText(root, layout.CenterFor(node.OccupiedCells), marker, MarkerColorFor(node.Role));
+                DrawMarkerText(
+                    root,
+                    layout.CenterFor(node.OccupiedCells),
+                    marker,
+                    !string.IsNullOrWhiteSpace(node.DisplayLabel) ? Color.white : MarkerColorFor(node.Role),
+                    marker.Length > 2 ? 9 : 11);
             }
 
             if (node.IsCurrent)
@@ -331,7 +340,7 @@ namespace Hollow.UI.Shell
             textObject.transform.SetParent(root, false);
             var rect = (RectTransform)textObject.transform;
             ConfigureMiniMapRect(rect, position);
-            rect.sizeDelta = new Vector2(20f, 18f);
+            rect.sizeDelta = new Vector2(Mathf.Max(20f, marker.Length * 9f), 18f);
             var text = textObject.GetComponent<Text>();
             text.font = font;
             text.fontSize = fontSize;

@@ -84,6 +84,13 @@ namespace Hollow.Branches
                 return false;
             }
 
+            var validation = RuntimeRoomValidator.Validate(asset);
+            if (!validation.IsValid)
+            {
+                error = $"Approved room '{asset.Id}' failed runtime room validation: {validation.Summary()}";
+                return false;
+            }
+
             return true;
         }
     }

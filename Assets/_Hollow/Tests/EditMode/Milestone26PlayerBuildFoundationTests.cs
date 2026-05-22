@@ -67,7 +67,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(4.25f, derived.SpeedMetersPerSecond, 0.001f);
             Assert.AreEqual(2, derived.Strength);
             Assert.AreEqual(120f, derived.MaxStamina, 0.001f);
-            Assert.AreEqual(21f, derived.StaminaRegenPerSecond, 0.001f);
+            Assert.AreEqual(14f, derived.StaminaRegenPerSecond, 0.001f);
             Assert.AreEqual(2, derived.Defense);
             Assert.AreEqual(1, derived.MeleeDamageBonus);
             Assert.AreEqual(2, derived.RangedDamageBonus);
@@ -136,7 +136,7 @@ namespace Hollow.Tests.EditMode
                     attackCooldownMultiplier = 0.8f
                 });
                 build.Equipment.EquipMeleeWeapon("practice_sword");
-                build.Equipment.EquipRangedWeapon("practice_bow");
+                build.Equipment.EquipRangedWeapon("practice_pistol");
 
                 PlayerBuildApplier.Apply(build, player, healAmount: 1);
 
@@ -145,7 +145,7 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(125f, weapon.MaxStamina, 0.001f);
                 Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
                 Assert.AreEqual("practice_sword", weapon.MeleeWeaponId);
-                Assert.AreEqual("practice_bow", weapon.RangedWeaponId);
+                Assert.AreEqual("practice_pistol", weapon.RangedWeaponId);
                 Assert.AreEqual(0.35f, weapon.MeleeRangeBonusMeters, 0.001f);
                 Assert.AreEqual(1.25f, weapon.RangedRangeBonusMeters, 0.001f);
             }

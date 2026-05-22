@@ -30,6 +30,7 @@ namespace Hollow.Combat
         [SerializeField] private bool autoInitialize = true;
 
         private readonly List<EnemyRuntimeController> enemies = new();
+        private readonly Dictionary<CombatantHealth, EnemyRuntimeController> enemyByHealth = new();
         private readonly List<RoomHazardController> hazards = new();
         private readonly List<DestructibleRoomObjectController> destructibleObjects = new();
         private readonly RoomThreatDirector threatDirector = new();
@@ -49,6 +50,8 @@ namespace Hollow.Combat
         private bool hasLastPlayerFootstepStimulusLocalPosition;
 
         public event Action<RoomCombatController> RoomCleared;
+
+        public event Action<EnemyRuntimeController> EnemyDefeated;
 
         public event Action<RoomInteractiveObjectDestroyedContext> InteractiveObjectDestroyed;
 
@@ -618,6 +621,13 @@ namespace Hollow.Combat
 
             enemy.SpawnedChild -= OnEnemySpawnedChild;
             enemy.SpawnedChild += OnEnemySpawnedChild;
+            if (enemy.Health != null)
+            {
+                enemy.Health.Died -= OnEnemyDied;
+                enemy.Health.Died += OnEnemyDied;
+                enemyByHealth[enemy.Health] = enemy;
+            }
+
             enemy.BindRoomCombatController(this);
             enemy.ConfigureCombatFeel(CombatFeelProfile);
             enemy.SetInspectionMode(inspectionMode);
@@ -675,6 +685,18 @@ namespace Hollow.Combat
             RegisterEnemy(child);
         }
 
+        private void OnEnemyDied(CombatantHealth health)
+        {
+            if (health == null || !enemyByHealth.TryGetValue(health, out var enemy))
+            {
+                return;
+            }
+
+            health.Died -= OnEnemyDied;
+            enemyByHealth.Remove(health);
+            EnemyDefeated?.Invoke(enemy);
+        }
+
         private void ResolveReferences()
         {
             if (roomRuntimeRoot == null)
@@ -730,11 +752,18 @@ namespace Hollow.Combat
             {
                 if (enemy != null)
                 {
+                    enemy.SpawnedChild -= OnEnemySpawnedChild;
+                    if (enemy.Health != null)
+                    {
+                        enemy.Health.Died -= OnEnemyDied;
+                    }
+
                     DestroyRuntimeObject(enemy.gameObject);
                 }
             }
 
             enemies.Clear();
+            enemyByHealth.Clear();
             var parent = playerController != null ? playerController.transform.parent : transform;
             if (parent == null)
             {

@@ -62,6 +62,18 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void AddSoulsIncrementsRunSoulsWithoutClaimingRewardRecord()
+        {
+            var economy = new RunEconomy();
+
+            economy.AddSouls(3);
+            economy.AddSouls(-5);
+
+            Assert.AreEqual(3, economy.RunSouls);
+            Assert.AreEqual(0, economy.CollectedRewards.Count);
+        }
+
+        [Test]
         public void JsonProfileStoreMigratesSchemaOneToSchemaTwoDefaults()
         {
             File.WriteAllText(Path.Combine(tempRoot, "hollow_profiles.json"), "{\"schemaVersion\":1,\"slots\":[{\"slotIndex\":0,\"profileId\":\"abc\",\"displayName\":\"Old Save\",\"createdAtUtcTicks\":1,\"lastPlayedUtcTicks\":2,\"totalRuns\":3,\"hasActiveRun\":true}]}");

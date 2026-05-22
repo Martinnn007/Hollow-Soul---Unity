@@ -79,15 +79,15 @@ namespace Hollow.Data.Definitions
         public static WeaponAttackDefinition DefaultLight(WeaponSlot slot)
         {
             return slot == WeaponSlot.Melee
-                ? new WeaponAttackDefinition(AttackKind.Light, 1, 0.67f, 6f, 0.95f, ImpactForceClass.Medium, 0.55f, 0.06f, 0.08f, 0.1f, 115f)
-                : new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 0f, 6f, ImpactForceClass.Light, 0.3f, 0.06f, 0.03f, 0.08f, 1f);
+                ? new WeaponAttackDefinition(AttackKind.Light, 1, 0.67f, 14f, 0.95f, ImpactForceClass.Medium, 0.55f, 0.06f, 0.08f, 0.1f, 115f)
+                : new WeaponAttackDefinition(AttackKind.Light, 1, 0.5f, 6f, 6.5f, ImpactForceClass.Light, 0.32f, 0.01f, 0.03f, 0.16f, 1f);
         }
 
         public static WeaponAttackDefinition DefaultHeavy(WeaponSlot slot)
         {
             return slot == WeaponSlot.Melee
-                ? new WeaponAttackDefinition(AttackKind.Heavy, 2, 3.5f, 40f, 1.15f, ImpactForceClass.Heavy, 0.85f, 0.22f, 0.14f, 0.34f, 135f)
-                : new WeaponAttackDefinition(AttackKind.Heavy, 2, 10f, 35f, 6f, ImpactForceClass.Medium, 0.55f, 0.28f, 0.04f, 0.36f, 1f);
+                ? new WeaponAttackDefinition(AttackKind.Heavy, 2, 3.5f, 42f, 1.15f, ImpactForceClass.Heavy, 0.85f, 0.22f, 0.14f, 0.34f, 135f)
+                : new WeaponAttackDefinition(AttackKind.Heavy, 2, 8f, 34f, 6.75f, ImpactForceClass.Medium, 0.55f, 0.01f, 0.04f, 0.32f, 1f);
         }
 
         private static float DefaultKnockbackMeters(AttackKind attackKind)

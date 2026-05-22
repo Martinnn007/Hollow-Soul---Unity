@@ -13,8 +13,9 @@ M44 upgrades defense into an active shield loop while keeping armor as run-only 
 - `DamageRequest` now carries `DamageThreatKind`, defaulting legacy calls to `Light`.
 - `Light` threats can be perfect-parried.
 - `Heavy`, `Boss`, and `StrongProjectile` threats can be guard-reduced but not perfect-parried.
-- Perfect parry fully blocks damage, spends `16` stamina, and counter-damages the source for `1`.
-- Normal guard drains `12` stamina per second, spends `12` stamina per guarded hit, reduces damage by `1`, and applies only minimal source push.
+- Perfect parry fully blocks damage, spends `28` stamina, and counter-damages the source for `1`.
+- Holding guard does not drain stamina by itself; stamina regeneration is slowed while guarding.
+- Normal guard spends `22` stamina per guarded hit, reduces damage by `1`, and applies only minimal source push.
 
 ## Presentation
 - `ShieldGuardVisualController` creates a generated non-colliding shield prop while guarding.

@@ -156,9 +156,9 @@ namespace Hollow.Editor.Validation
             }
 
             ValidateWeapon(catalog, "skeletal_sword", WeaponSlot.Melee, BuildTag.Skeletal, failures);
-            ValidateWeapon(catalog, "bone_bow", WeaponSlot.Ranged, BuildTag.Skeletal, failures);
+            ValidateWeapon(catalog, "bone_pistol", WeaponSlot.Ranged, BuildTag.Skeletal, failures);
             ValidateWeapon(catalog, "dragon_fang", WeaponSlot.Melee, BuildTag.Dragon, failures);
-            ValidateWeapon(catalog, "dragon_bow", WeaponSlot.Ranged, BuildTag.Dragon, failures);
+            ValidateWeapon(catalog, "dragon_pistol", WeaponSlot.Ranged, BuildTag.Dragon, failures);
         }
 
         private static void ValidateWeapon(WeaponCatalogDefinition catalog, string weaponId, WeaponSlot slot, BuildTag setTag, List<string> failures)
@@ -166,6 +166,13 @@ namespace Hollow.Editor.Validation
             if (!catalog.TryGetWeapon(weaponId, out var weapon) || weapon.Slot != slot || !weapon.Tags.Contains(setTag))
             {
                 failures.Add($"M30 weapon catalog missing {weaponId} with {setTag} tag and {slot} slot.");
+                return;
+            }
+
+            if (slot == WeaponSlot.Ranged &&
+                (weapon.Category != WeaponCategory.Gun || weapon.RangedFireMode != WeaponRangedFireMode.Instant))
+            {
+                failures.Add($"M30 ranged weapon {weaponId} must be an instant gun.");
             }
         }
 
@@ -184,7 +191,7 @@ namespace Hollow.Editor.Validation
                 .GroupBy(reward => reward.RewardId)
                 .ToDictionary(group => group.Key, group => group.First());
 
-            foreach (var requiredReward in new[] { "skeletal_sword", "bone_bow", "skeletal_armor", "cursed_skull", "bone_totem", "dragon_fang", "dragon_bow", "dragon_scale_armor", "dragon_tooth", "dragon_heart" })
+            foreach (var requiredReward in new[] { "skeletal_sword", "bone_pistol", "skeletal_armor", "cursed_skull", "bone_totem", "dragon_fang", "dragon_pistol", "dragon_scale_armor", "dragon_tooth", "dragon_heart" })
             {
                 if (!rewards.TryGetValue(requiredReward, out var reward) || string.IsNullOrWhiteSpace(reward.DisplayName) || reward.Tags.Count == 0)
                 {

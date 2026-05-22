@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,6 +8,14 @@ namespace Hollow.Branches
     public sealed class BranchMiniMapModel
     {
         public BranchMiniMapModel(BranchSessionState state)
+            : this(state, revealAll: false, labelResolver: null)
+        {
+        }
+
+        public BranchMiniMapModel(
+            BranchSessionState state,
+            bool revealAll,
+            Func<BranchRoomState, string> labelResolver)
         {
             if (state?.Graph == null)
             {
@@ -41,7 +50,8 @@ namespace Hollow.Branches
                     room.IsVisited,
                     room.IsCleared,
                     room.HasPendingReward,
-                    revealedIds.Contains(room.Id) || room.Role == BranchRoomRole.Secret))
+                    revealAll || revealedIds.Contains(room.Id) || room.Role == BranchRoomRole.Secret,
+                    labelResolver?.Invoke(room) ?? string.Empty))
                 .ToList();
             var nodeById = Nodes.ToDictionary(node => node.Id);
             Connections = BuildConnections(graph, nodeById);
@@ -54,7 +64,7 @@ namespace Hollow.Branches
         public string Summary()
         {
             return string.Join("  ", Nodes.Select(node =>
-                $"{node.Id}:{node.Role}:{(node.IsCurrent ? "Current" : node.IsCleared ? "Cleared" : node.IsVisited ? "Visited" : node.IsRevealed ? "Revealed" : "Hidden")}:{node.OccupiedCells.Count}c{(node.HasPendingReward ? "+Reward" : string.Empty)}"));
+                $"{node.Id}:{node.Role}:{(node.IsCurrent ? "Current" : node.IsCleared ? "Cleared" : node.IsVisited ? "Visited" : node.IsRevealed ? "Revealed" : "Hidden")}:{node.OccupiedCells.Count}c:{node.DisplayLabel}{(node.HasPendingReward ? "+Reward" : string.Empty)}"));
         }
 
         private static IReadOnlyCollection<Vector2Int> OccupiedCellsFor(BranchRoomState room)
@@ -146,7 +156,8 @@ namespace Hollow.Branches
             bool isVisited,
             bool isCleared,
             bool hasPendingReward,
-            bool isRevealed)
+            bool isRevealed,
+            string displayLabel = "")
         {
             Id = id;
             Coordinate = coordinate;
@@ -157,6 +168,7 @@ namespace Hollow.Branches
             IsCleared = isCleared;
             HasPendingReward = hasPendingReward;
             IsRevealed = isRevealed;
+            DisplayLabel = displayLabel ?? string.Empty;
         }
 
         public BranchRoomId Id { get; }
@@ -176,6 +188,8 @@ namespace Hollow.Branches
         public bool HasPendingReward { get; }
 
         public bool IsRevealed { get; }
+
+        public string DisplayLabel { get; }
     }
 
     public sealed class BranchMiniMapConnectionVisual

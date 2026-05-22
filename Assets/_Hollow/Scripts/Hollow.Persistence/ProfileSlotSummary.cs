@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hollow.Persistence
 {
@@ -6,7 +8,7 @@ namespace Hollow.Persistence
     public sealed class ProfileSlotSummary
     {
         public ProfileSlotSummary(int slotIndex)
-            : this(slotIndex, string.Empty, string.Empty, 0, 0, 0, false, 0, 0)
+            : this(slotIndex, string.Empty, string.Empty, 0, 0, 0, false, 0, 0, null)
         {
         }
 
@@ -18,7 +20,7 @@ namespace Hollow.Persistence
             long lastPlayedUtcTicks,
             int totalRuns,
             bool hasActiveRun)
-            : this(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun, 0, 0)
+            : this(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun, 0, 0, null)
         {
         }
 
@@ -32,6 +34,21 @@ namespace Hollow.Persistence
             bool hasActiveRun,
             int bankedSouls,
             int completedRuns)
+            : this(slotIndex, profileId, displayName, createdAtUtcTicks, lastPlayedUtcTicks, totalRuns, hasActiveRun, bankedSouls, completedRuns, null)
+        {
+        }
+
+        public ProfileSlotSummary(
+            int slotIndex,
+            string profileId,
+            string displayName,
+            long createdAtUtcTicks,
+            long lastPlayedUtcTicks,
+            int totalRuns,
+            bool hasActiveRun,
+            int bankedSouls,
+            int completedRuns,
+            IEnumerable<string> purchasedShipUpgradeIds)
         {
             SlotIndex = slotIndex;
             ProfileId = profileId ?? string.Empty;
@@ -42,6 +59,10 @@ namespace Hollow.Persistence
             HasActiveRun = hasActiveRun;
             BankedSouls = bankedSouls;
             CompletedRuns = completedRuns;
+            PurchasedShipUpgradeIds = (purchasedShipUpgradeIds ?? Enumerable.Empty<string>())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
         }
 
         public int SlotIndex { get; }
@@ -61,6 +82,8 @@ namespace Hollow.Persistence
         public int BankedSouls { get; }
 
         public int CompletedRuns { get; }
+
+        public IReadOnlyList<string> PurchasedShipUpgradeIds { get; }
 
         public bool IsEmpty => string.IsNullOrWhiteSpace(ProfileId);
 

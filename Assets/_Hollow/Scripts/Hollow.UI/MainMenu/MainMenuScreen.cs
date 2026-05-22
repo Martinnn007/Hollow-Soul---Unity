@@ -58,13 +58,10 @@ namespace Hollow.UI.MainMenu
             {
                 var selected = controller.ViewModel.SelectedProfile;
                 AddText(rootPanel, $"Selected: {selected.DisplayName} | Banked Souls: {selected.BankedSouls}", 18, FontStyle.Bold, new Vector2(0f, -95f), new Vector2(620f, 34f));
-                if (selected.HasActiveRun)
-                {
-                    AddText(rootPanel, "Continue Active Run", 15, FontStyle.Bold, new Vector2(-190f, -138f), new Vector2(280f, 28f), new Color(0.88f, 1f, 0.82f));
-                    AddButton(rootPanel, "Continue Windows", new Vector2(-190f, -175f), controller.LaunchContinueWindows, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
-                    AddButton(rootPanel, "Continue Bounded", new Vector2(-190f, -225f), controller.LaunchContinueVisionOSBounded, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
-                    AddButton(rootPanel, "Continue Immersive", new Vector2(-190f, -275f), controller.LaunchContinueVisionOSImmersive, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
-                }
+                AddText(rootPanel, selected.HasActiveRun ? "Continue Active Run" : "Enter Spaceship", 15, FontStyle.Bold, new Vector2(-190f, -138f), new Vector2(280f, 28f), new Color(0.88f, 1f, 0.82f));
+                AddButton(rootPanel, selected.HasActiveRun ? "Continue Windows" : "Ship Windows", new Vector2(-190f, -175f), controller.LaunchContinueWindows, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
+                AddButton(rootPanel, selected.HasActiveRun ? "Continue Bounded" : "Ship Bounded", new Vector2(-190f, -225f), controller.LaunchContinueVisionOSBounded, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
+                AddButton(rootPanel, selected.HasActiveRun ? "Continue Immersive" : "Ship Immersive", new Vector2(-190f, -275f), controller.LaunchContinueVisionOSImmersive, new Color(0.18f, 0.45f, 0.22f), new Vector2(300f, 40f));
 
                 AddText(rootPanel, "New Run", 15, FontStyle.Bold, new Vector2(190f, -138f), new Vector2(280f, 28f), new Color(1f, 0.91f, 0.72f));
                 AddButton(rootPanel, "New Windows", new Vector2(190f, -175f), controller.LaunchWindows, null, new Vector2(300f, 40f));

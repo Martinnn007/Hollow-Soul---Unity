@@ -36,8 +36,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Melee,
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Fast },
-                new WeaponAttackDefinition(AttackKind.Light, 1, 0.67f, 6f, 0.95f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 2, 3.5f, 40f, 1.15f));
+                new WeaponAttackDefinition(AttackKind.Light, 1, 0.67f, 14f, 0.95f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 2, 3.5f, 42f, 1.15f));
             var starterBolt = SaveWeapon(
                 "Weapon_StarterBolt.asset",
                 "starter_bolt",
@@ -45,17 +45,17 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Ranged,
                 WeaponCategory.Wand,
                 new[] { BuildTag.Ranged, BuildTag.Magic },
-                new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 0f, 6f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 2, 10f, 35f, 6f));
-            var starterBow = SaveWeapon(
-                "Weapon_StarterBow.asset",
-                "starter_bow",
-                "Practice Bow",
+                new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 8f, 6f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 2, 10f, 36f, 6f));
+            var starterPistol = SaveWeapon(
+                "Weapon_StarterPistol.asset",
+                "starter_pistol",
+                "Basic Pistol",
                 WeaponSlot.Ranged,
-                WeaponCategory.Bow,
+                WeaponCategory.Gun,
                 new[] { BuildTag.Ranged, BuildTag.Fast },
-                new WeaponAttackDefinition(AttackKind.Light, 1, 1f, 2f, 6.5f, ImpactForceClass.Light, 0.32f, 0.01f, 0.03f, 0.16f, 1f, 1f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 2, 8f, 28f, 6.75f, ImpactForceClass.Medium, 0.55f, 0.01f, 0.04f, 0.32f, 1f, 1.35f));
+                new WeaponAttackDefinition(AttackKind.Light, 1, 0.5f, 6f, 6.5f, ImpactForceClass.Light, 0.32f, 0.01f, 0.03f, 0.16f, 1f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 2, 8f, 34f, 6.75f, ImpactForceClass.Medium, 0.55f, 0.01f, 0.04f, 0.32f, 1f));
             var ironCleaver = SaveWeapon(
                 "Weapon_IronCleaver.asset",
                 "iron_cleaver",
@@ -63,8 +63,8 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Melee,
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Heavy },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 9f, 1.05f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3.15f, 42f, 1.35f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 18f, 1.05f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3.15f, 50f, 1.35f));
             var emberBolt = SaveWeapon(
                 "Weapon_EmberBolt.asset",
                 "ember_bolt",
@@ -72,10 +72,10 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Ranged,
                 WeaponCategory.Wand,
                 new[] { BuildTag.Ranged, BuildTag.Fire, BuildTag.Magic },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 4f, 6.33f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 38f, 5.67f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 10f, 6.33f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 40f, 5.67f));
 
-            var catalog = SaveCatalog(new[] { starterBlade, starterBolt, starterBow, ironCleaver, emberBolt });
+            var catalog = SaveCatalog(new[] { starterBlade, starterBolt, starterPistol, ironCleaver, emberBolt });
             var weaponRewardPool = SaveWeaponRewardPool(ironCleaver, emberBolt);
             AssignToGameScenes(catalog, weaponRewardPool);
 

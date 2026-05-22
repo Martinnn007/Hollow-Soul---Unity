@@ -44,8 +44,12 @@ namespace Hollow.Rewards
             PickupId = string.IsNullOrWhiteSpace(pickupId) ? Guid.NewGuid().ToString("N") : pickupId;
             RoomId = roomId ?? string.Empty;
             RewardKind = rewardKind;
-            RewardId = rewardId ?? string.Empty;
-            DisplayName = displayName ?? string.Empty;
+            RewardId = rewardKind == RewardKind.Weapon
+                ? WeaponIdAliases.Normalize(rewardId)
+                : rewardId ?? string.Empty;
+            DisplayName = rewardKind == RewardKind.Weapon
+                ? WeaponIdAliases.NormalizeDisplayName(rewardId, displayName)
+                : displayName ?? string.Empty;
             ActiveItemCharges = Math.Max(0, activeItemCharges);
             LocalPosition = localPosition;
         }
@@ -152,9 +156,11 @@ namespace Hollow.Rewards
         private static ReplacementPickupState CaptureWeapon(RewardGrant incomingGrant, PlayerRunBuild build, WeaponCatalogDefinition catalog, Vector3 localPosition)
         {
             var slot = WeaponSlot.Ranged;
+            var incomingWeaponId = WeaponIdAliases.Normalize(incomingGrant.RewardId);
             if (catalog != null && catalog.TryGetWeapon(incomingGrant.RewardId, out var incomingWeapon))
             {
                 slot = incomingWeapon.Slot;
+                incomingWeaponId = incomingWeapon.WeaponId;
             }
             else if (incomingGrant.RewardId.Contains("blade") || incomingGrant.RewardId.Contains("cleaver") || incomingGrant.RewardId.Contains("sword") || incomingGrant.RewardId.Contains("fang"))
             {
@@ -162,7 +168,7 @@ namespace Hollow.Rewards
             }
 
             var oldId = slot == WeaponSlot.Melee ? build.Equipment.MeleeWeaponId : build.Equipment.RangedWeaponId;
-            if (string.IsNullOrWhiteSpace(oldId) || oldId == incomingGrant.RewardId)
+            if (string.IsNullOrWhiteSpace(oldId) || oldId == incomingWeaponId)
             {
                 return null;
             }

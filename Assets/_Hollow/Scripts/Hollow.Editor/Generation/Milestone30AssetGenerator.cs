@@ -45,17 +45,17 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Melee,
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Heavy, BuildTag.Skeletal },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.78f, 8f, 1.05f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3f, 42f, 1.25f));
-            var boneBow = SaveWeapon(
-                "Weapon_BoneBow.asset",
-                "bone_bow",
-                "Bone Bow",
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.78f, 16f, 1.05f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3f, 44f, 1.25f));
+            var bonePistol = SaveWeapon(
+                "Weapon_BonePistol.asset",
+                "bone_pistol",
+                "Bone Pistol",
                 WeaponSlot.Ranged,
-                WeaponCategory.Bow,
+                WeaponCategory.Gun,
                 new[] { BuildTag.Ranged, BuildTag.Fast, BuildTag.Skeletal },
-                new WeaponAttackDefinition(AttackKind.Light, 1, 0.95f, 2f, 6.67f, ImpactForceClass.Light, 0.35f, 0.01f, 0.03f, 0.14f, 1f, 0.9f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 3, 8.5f, 36f, 6.67f, ImpactForceClass.Medium, 0.6f, 0.01f, 0.04f, 0.32f, 1f, 1.25f));
+                new WeaponAttackDefinition(AttackKind.Light, 1, 0.95f, 10f, 6.67f, ImpactForceClass.Light, 0.35f, 0.01f, 0.03f, 0.14f, 1f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 3, 8.5f, 38f, 6.67f, ImpactForceClass.Medium, 0.6f, 0.01f, 0.04f, 0.32f, 1f));
             var dragonFang = SaveWeapon(
                 "Weapon_DragonFang.asset",
                 "dragon_fang",
@@ -63,17 +63,17 @@ namespace Hollow.Editor.Generation
                 WeaponSlot.Melee,
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Fire, BuildTag.Dragon },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.82f, 9f, 1.05f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3f, 42f, 1.3f));
-            var dragonBow = SaveWeapon(
-                "Weapon_DragonBow.asset",
-                "dragon_bow",
-                "Dragon Bow",
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.82f, 18f, 1.05f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3f, 50f, 1.3f));
+            var dragonPistol = SaveWeapon(
+                "Weapon_DragonPistol.asset",
+                "dragon_pistol",
+                "Dragon Pistol",
                 WeaponSlot.Ranged,
-                WeaponCategory.Bow,
+                WeaponCategory.Gun,
                 new[] { BuildTag.Ranged, BuildTag.Fire, BuildTag.Dragon },
-                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 4f, 7f, ImpactForceClass.Light, 0.35f, 0.01f, 0.03f, 0.14f, 1f, 0.8f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 38f, 6.33f, ImpactForceClass.Medium, 0.6f, 0.01f, 0.04f, 0.32f, 1f, 1.2f));
+                new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 12f, 7f, ImpactForceClass.Light, 0.35f, 0.01f, 0.03f, 0.14f, 1f),
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 8f, 42f, 6.33f, ImpactForceClass.Medium, 0.6f, 0.01f, 0.04f, 0.32f, 1f));
 
             var skeletalArmor = SaveArmor(
                 "Armor_SkeletalArmor.asset",
@@ -193,13 +193,13 @@ namespace Hollow.Editor.Generation
                     new CharacterStatModifier(rangedDamage: 1, maxStamina: 10f))
             });
 
-            var weaponCatalog = ExtendWeaponCatalog(new[] { skeletalSword, boneBow, dragonFang, dragonBow });
+            var weaponCatalog = ExtendWeaponCatalog(new[] { skeletalSword, bonePistol, dragonFang, dragonPistol });
             var weaponPool = ExtendWeaponRewardPool(new[]
             {
                 SaveWeaponReward("Reward_SkeletalSword.asset", skeletalSword, RewardRarity.Rare),
-                SaveWeaponReward("Reward_BoneBow.asset", boneBow, RewardRarity.Rare),
+                SaveWeaponReward("Reward_BonePistol.asset", bonePistol, RewardRarity.Rare),
                 SaveWeaponReward("Reward_DragonFang.asset", dragonFang, RewardRarity.Epic),
-                SaveWeaponReward("Reward_DragonBow.asset", dragonBow, RewardRarity.Epic)
+                SaveWeaponReward("Reward_DragonPistol.asset", dragonPistol, RewardRarity.Epic)
             });
             var standardPool = ExtendPool(Milestone28AssetGenerator.StandardRewardPoolPath, "m28_standard_room_rewards", new[]
             {

@@ -19,6 +19,7 @@ Related existing sources:
 - `Docs/Milestone58BetaRewardEconomyChestBalance.md`
 - `Docs/Milestone63BetaContentSelectionLock.md`
 - `Docs/Milestone64VerticalSliceBetaLockGate.md`
+- M69-M78 combat/control/enemy design milestones, especially equipment load, movement intent, enemy attacks, critters, and enemy action bible.
 - `Assets/_Hollow/Scripts/Hollow.Editor/Build/WholeGameAuditRunner.cs`
 
 ## 2. Executive Direction
@@ -277,14 +278,15 @@ Canonical beta rule:
 - Achievements can be designed now but implemented later unless they unlock beta-critical content.
 - Challenge rewards should unlock items/world variants after the base loop is stable.
 
-### 5.14 Art And Pipeline
+### 5.14 Art, Pipeline, And Production Roles
 
-The PDF lists tools, art asset tasks, spatial/model dimension guides, and a need for asset sharing.
+The PDF lists tools, art asset tasks, spatial/model dimension guides, production roles, and a need for asset sharing.
 
 Canonical production rule:
 
 - The current project is Unity-based, even if earlier PDF notes mention RealityKit.
 - Rafal's asset pipeline should remain Blender/Zbrush/Substance -> Unity ArtPass wrapper -> Developer Lab inspection.
+- Martin owns Unity implementation and milestone gate review; Rafal owns authored art assets that pass the Unity intake checks.
 - Generated AI assets can be concept/reference or controlled Meshy imports, never gameplay-authoritative logic.
 - Every visual asset must pass scale, pivot, material, bounds, wrapper, and no-gameplay-script checks.
 
@@ -529,7 +531,7 @@ Canonical production rule:
 | Idea | Current Status | Beta Value | Full-Game Value | Cost | Risk | Recommendation | Target |
 |---|---|---:|---:|---:|---|---|---|
 | Challenges as special runs with modified rules | Existing challenge mode | High | High | Medium | Too many variants | Beta Update | M135 |
-| Strzelec: bow only | Existing challenge style feasible | Medium | High | Low | Needs bow balance | Beta Update | M135 |
+| Strzelec: pistol only | Existing challenge style feasible | Medium | High | Low | Needs pistol balance | Beta Update | M135 |
 | One life, no regeneration | Existing rule feasible | Medium | High | Low | Hard but clear | Beta Update | M135 |
 | Every room mini-boss, boss room has two bosses | Missing | Low | Medium | High | Balance chaos | Post-Beta Backlog | Challenge backlog |
 | Fog of war, hidden minimap, 2x level size | Missing | Medium | High | Medium | UI/map work | Prototype Later | Challenge backlog |

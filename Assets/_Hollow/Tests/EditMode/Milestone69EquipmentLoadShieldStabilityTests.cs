@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Validation;
@@ -42,6 +43,35 @@ namespace Hollow.Tests.EditMode
             }
             finally
             {
+                DestroyCatalogs(weaponCatalog, armorCatalog, shieldCatalog);
+            }
+        }
+
+        [Test]
+        public void PlayerBuildApplierAppliesEquipmentLoadStaminaRegenMultiplier()
+        {
+            var weaponCatalog = CreateWeaponCatalog();
+            var armorCatalog = CreateArmorCatalog();
+            var shieldCatalog = CreateShieldCatalog();
+            var player = new GameObject("M69LoadRegenPlayer");
+            try
+            {
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                var build = new PlayerRunBuild();
+                build.SpendStamina(50f);
+                build.Equipment.EquipMeleeWeapon("iron_cleaver");
+                build.Equipment.EquipRangedWeapon("ember_bolt");
+                build.Equipment.EquipArmor("dragon_scale_armor");
+                build.Equipment.EquipShield("stone_wall_shield");
+
+                PlayerBuildApplier.Apply(build, player, weaponCatalog, armorCatalog, shieldCatalog);
+                InvokeRegenerateStamina(weapon, 1f, 100f);
+
+                Assert.AreEqual(50f + PlayerBaseStats.Default.StaminaRegenPerSecond * 0.90f, weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
                 DestroyCatalogs(weaponCatalog, armorCatalog, shieldCatalog);
             }
         }
@@ -193,6 +223,13 @@ namespace Hollow.Tests.EditMode
 
                 Object.DestroyImmediate(shieldCatalog);
             }
+        }
+
+        private static void InvokeRegenerateStamina(PlayerWeaponController weapon, float deltaTime, float timeSeconds)
+        {
+            var method = typeof(PlayerWeaponController).GetMethod("RegenerateStamina", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+            method.Invoke(weapon, new object[] { deltaTime, timeSeconds });
         }
     }
 }

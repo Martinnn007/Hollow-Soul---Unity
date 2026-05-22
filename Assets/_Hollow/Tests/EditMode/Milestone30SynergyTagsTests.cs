@@ -81,7 +81,7 @@ namespace Hollow.Tests.EditMode
         {
             var build = new PlayerRunBuild();
             build.Equipment.EquipMeleeWeapon("skeletal_sword");
-            build.Equipment.EquipRangedWeapon("bone_bow");
+            build.Equipment.EquipRangedWeapon("bone_pistol");
             build.Equipment.EquipArmor("skeletal_armor");
             build.Inventory.AddPassiveItem("cursed_skull");
             build.Equipment.EquipActiveItem("bone_totem");
@@ -104,7 +104,7 @@ namespace Hollow.Tests.EditMode
         {
             var build = new PlayerRunBuild();
             build.Equipment.EquipMeleeWeapon("dragon_fang");
-            build.Equipment.EquipRangedWeapon("dragon_bow");
+            build.Equipment.EquipRangedWeapon("dragon_pistol");
             build.Equipment.EquipArmor("dragon_scale_armor");
 
             var baseMaxStamina = build.BaseStats.MaxStamina;
@@ -124,8 +124,10 @@ namespace Hollow.Tests.EditMode
             var weapons = LoadWeapons();
             Assert.IsTrue(weapons.TryGetWeapon("skeletal_sword", out var skeletalSword));
             Assert.Contains(BuildTag.Skeletal, (System.Collections.ICollection)skeletalSword.Tags);
-            Assert.IsTrue(weapons.TryGetWeapon("dragon_bow", out var dragonBow));
-            Assert.Contains(BuildTag.Dragon, (System.Collections.ICollection)dragonBow.Tags);
+            Assert.IsTrue(weapons.TryGetWeapon("dragon_pistol", out var dragonPistol));
+            Assert.AreEqual(WeaponCategory.Gun, dragonPistol.Category);
+            Assert.AreEqual(WeaponRangedFireMode.Instant, dragonPistol.RangedFireMode);
+            Assert.Contains(BuildTag.Dragon, (System.Collections.ICollection)dragonPistol.Tags);
 
             var armors = LoadArmors();
             Assert.IsTrue(armors.TryGetArmor("dragon_scale_armor", out var dragonArmor));

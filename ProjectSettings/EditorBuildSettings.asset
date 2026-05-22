@@ -29,6 +29,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Hollow/Scenes/ArenaMode/ArenaMode.unity
     guid: 7f0fc9287e7149329b28fe12c49ff212
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/Spaceship_Windows.unity
+    guid: ec6ceedef59b54db3849f7d954ddb161
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/Spaceship_VisionOS_Bounded.unity
+    guid: 9c8dc80e741a146ea9c085081f8dd40b
+  - enabled: 1
+    path: Assets/_Hollow/Scenes/Spaceship_VisionOS_Immersive.unity
+    guid: 865ee263fd2a24a869931f1b7b25c4ef
   m_configObjects:
     UnityEditor.XR.VisionOS.VisionOSSettings: {fileID: 11400000, guid: 670d6c5ac8e114567ba5dc8c85f3493c, type: 2}
     com.unity.addressableassets: {fileID: 11400000, guid: 3442c961a66a24c709d3d40ec5e89969, type: 2}

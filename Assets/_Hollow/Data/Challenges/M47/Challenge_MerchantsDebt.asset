@@ -33,7 +33,7 @@ MonoBehaviour:
   startingSouls: 22
   loadout:
     meleeWeaponId: starter_blade
-    rangedWeaponId: starter_bow
+    rangedWeaponId: starter_pistol
     armorId: 
     activeItemId: mending_charm
     consumableCardId: mend_card

@@ -5,6 +5,7 @@ using Hollow.Core.App;
 using Hollow.Data.Definitions;
 using Hollow.Persistence;
 using Hollow.Platform;
+using Hollow.World;
 
 namespace Hollow.UI.MainMenu
 {
@@ -187,8 +188,16 @@ namespace Hollow.UI.MainMenu
 
             if (!selectedProfileContext.SelectedProfile.HasActiveRun)
             {
-                SetError("This profile does not have an active run to continue.");
-                return AppShellRoute.MainMenu;
+                State = MainMenuState.Launching;
+                var shipRoute = PlatformPresentationModeResolver.SpaceshipRouteForPlatform(platformKind);
+                selectedProfileContext.SetLaunchMode(RunLaunchMode.NewRun);
+                selectedProfileContext.SetSelectedChallengeId(string.Empty);
+                selectedProfileContext.SetDeveloperLabRequested(false);
+                SpaceshipArrivalHandoff.SetDirectProfile(platformKind);
+                var shipUpdated = profileStore.MarkLastPlayed(new ProfileSlotId(selectedProfileContext.SelectedProfile.SlotIndex));
+                selectedProfileContext.UpdateSelectedProfile(shipUpdated);
+                appStateMachine.TransitionTo(shipRoute);
+                return shipRoute;
             }
 
             State = MainMenuState.Launching;

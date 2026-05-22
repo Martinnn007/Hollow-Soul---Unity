@@ -78,7 +78,7 @@ namespace Hollow.Data.Definitions
             speedMetersPerSecond: 4f,
             strength: 1,
             maxStamina: 100f,
-            staminaRegenPerSecond: 18f,
+            staminaRegenPerSecond: 11f,
             defense: 0,
             meleeDamageBonus: 0,
             rangedDamageBonus: 0,

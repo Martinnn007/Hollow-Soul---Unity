@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="7" result="Passed" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.0653823">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="733" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.065382" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1852" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.059599" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="54917" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1853" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.057550" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1854" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.055939" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1855" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.054276" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1235" name="Milestone1MenuProfileTests" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.044191" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1241" name="ArenaModeHandoffCarriesVisionOSMenuLaunchContext" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.ArenaModeHandoffCarriesVisionOSMenuLaunchContext" methodname="ArenaModeHandoffCarriesVisionOSMenuLaunchContext" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="1831038863" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.009020" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1240" name="ContinueWithoutActiveRunLoadsSpaceshipInsteadOfStartingRun" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.ContinueWithoutActiveRunLoadsSpaceshipInsteadOfStartingRun" methodname="ContinueWithoutActiveRunLoadsSpaceshipInsteadOfStartingRun" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="442011187" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.014705" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1237" name="JsonProfileStorePersistsCreatedProfile" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.JsonProfileStorePersistsCreatedProfile" methodname="JsonProfileStorePersistsCreatedProfile" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="560865462" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.002531" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1236" name="JsonProfileStoreStartsWithThreeEmptySlots" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.JsonProfileStoreStartsWithThreeEmptySlots" methodname="JsonProfileStoreStartsWithThreeEmptySlots" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="955689234" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.001170" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1238" name="MainMenuViewModelCreatesProfileAndLaunchesAfterCharacterSelection" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.MainMenuViewModelCreatesProfileAndLaunchesAfterCharacterSelection" methodname="MainMenuViewModelCreatesProfileAndLaunchesAfterCharacterSelection" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="1229429198" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.004429" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1239" name="MainMenuViewModelVisionOSNormalRunLaunchesBoundedAfterCharacterSelection" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.MainMenuViewModelVisionOSNormalRunLaunchesBoundedAfterCharacterSelection" methodname="MainMenuViewModelVisionOSNormalRunLaunchesBoundedAfterCharacterSelection" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="1941528753" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.003782" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1242" name="PlatformPresentationModeResolverMapsEveryM1Target" fullname="Hollow.Tests.EditMode.Milestone1MenuProfileTests.PlatformPresentationModeResolverMapsEveryM1Target" methodname="PlatformPresentationModeResolverMapsEveryM1Target" classname="Hollow.Tests.EditMode.Milestone1MenuProfileTests" runstate="Runnable" seed="1337824634" result="Passed" start-time="2026-05-20 19:28:19Z" end-time="2026-05-20 19:28:19Z" duration="0.000317" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

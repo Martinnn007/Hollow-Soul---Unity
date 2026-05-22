@@ -151,7 +151,7 @@ namespace Hollow.Editor.Generation
                 ReportPath,
                 "# M44 Shield / Armor Behavior V2\n\n" +
                 $"- Parry window: `{profile.ParryWindowSeconds:0.##}s`; guard cone: `{profile.GuardConeDegrees:0} degrees`.\n" +
-                $"- Guard stamina drain/cost: `{profile.GuardDrainStaminaPerSecond:0}/s` / `{profile.GuardHitStaminaCost:0}`; parry cost: `{profile.ParryStaminaCost:0}`.\n" +
+                $"- Guard hold drain: `{profile.GuardDrainStaminaPerSecond:0}/s`; block cost: `{profile.GuardHitStaminaCost:0}`; parry cost: `{profile.ParryStaminaCost:0}`.\n" +
                 $"- Guard movement multiplier: `x{profile.GuardMoveMultiplier:0.##}`.\n" +
                 $"- Parry counter damage: `{profile.ParryCounterDamage}`; armor remains stat-only in M44.\n" +
                 "- No shield inventory, projectile reflection, hit-stop, or camera shake is generated in this milestone.\n");

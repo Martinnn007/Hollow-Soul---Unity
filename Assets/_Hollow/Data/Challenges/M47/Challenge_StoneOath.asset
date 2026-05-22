@@ -33,7 +33,7 @@ MonoBehaviour:
   startingSouls: 0
   loadout:
     meleeWeaponId: iron_cleaver
-    rangedWeaponId: starter_bow
+    rangedWeaponId: starter_pistol
     armorId: dragon_scale_armor
     activeItemId: mending_charm
     consumableCardId: 

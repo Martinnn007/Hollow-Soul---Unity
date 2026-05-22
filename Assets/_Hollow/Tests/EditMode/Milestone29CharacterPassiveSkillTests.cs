@@ -26,17 +26,20 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(catalog.TryGetCharacter("balanced", out var balanced));
             Assert.AreEqual("Balanced", balanced.DisplayName);
             Assert.AreEqual("starter_blade", balanced.StarterMeleeWeaponId);
-            Assert.AreEqual("starter_bow", balanced.StarterRangedWeaponId);
+            Assert.AreEqual("starter_pistol", balanced.StarterRangedWeaponId);
             Assert.AreEqual(10f, balanced.PassiveSkill.StatModifier.MaxStamina, 0.001f);
             Assert.AreEqual(1f, balanced.PassiveSkill.StatModifier.StaminaRegen, 0.001f);
             Assert.AreEqual(3, balanced.BaseStats.MaxHealth);
+            Assert.AreEqual(100f, balanced.BaseStats.MaxStamina, 0.001f);
+            Assert.AreEqual(11f, balanced.BaseStats.StaminaRegenPerSecond, 0.001f);
 
             Assert.IsTrue(catalog.TryGetCharacter("heavy", out var heavy));
             Assert.AreEqual("Heavy", heavy.DisplayName);
             Assert.AreEqual(5, heavy.BaseStats.MaxHealth);
             Assert.AreEqual(3.15f, heavy.BaseStats.SpeedMetersPerSecond, 0.001f);
             Assert.AreEqual(2, heavy.BaseStats.Strength);
-            Assert.AreEqual(130f, heavy.BaseStats.MaxStamina, 0.001f);
+            Assert.AreEqual(120f, heavy.BaseStats.MaxStamina, 0.001f);
+            Assert.AreEqual(8f, heavy.BaseStats.StaminaRegenPerSecond, 0.001f);
             Assert.AreEqual(2, heavy.BaseStats.Defense);
             Assert.AreEqual(1, heavy.BaseStats.MeleeDamageBonus);
             Assert.AreEqual(1, heavy.PassiveSkill.StatModifier.MeleeDamage);
@@ -53,12 +56,13 @@ namespace Hollow.Tests.EditMode
 
             Assert.AreEqual("heavy", build.SelectedCharacterId);
             Assert.AreEqual("starter_blade", build.Equipment.MeleeWeaponId);
-            Assert.AreEqual("starter_bow", build.Equipment.RangedWeaponId);
+            Assert.AreEqual("starter_pistol", build.Equipment.RangedWeaponId);
             Assert.AreEqual(WeaponSlot.Melee, build.Equipment.ActiveWeaponSlot);
             Assert.AreEqual(5, build.DerivedStats.MaxHealth);
             Assert.AreEqual(3.15f, build.DerivedStats.SpeedMetersPerSecond, 0.001f);
             Assert.AreEqual(2, build.DerivedStats.Strength);
-            Assert.AreEqual(130f, build.DerivedStats.MaxStamina, 0.001f);
+            Assert.AreEqual(120f, build.DerivedStats.MaxStamina, 0.001f);
+            Assert.AreEqual(8f, build.DerivedStats.StaminaRegenPerSecond, 0.001f);
             Assert.AreEqual(2, build.DerivedStats.Defense);
             Assert.AreEqual(2, build.DerivedStats.MeleeDamageBonus);
             Assert.IsTrue(build.Modifiers.Any(modifier => modifier.sourceId == "character:crushing_grip"));

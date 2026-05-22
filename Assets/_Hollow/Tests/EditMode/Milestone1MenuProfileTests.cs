@@ -5,6 +5,7 @@ using Hollow.Combat;
 using Hollow.Persistence;
 using Hollow.Platform;
 using Hollow.UI.MainMenu;
+using Hollow.World;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -95,6 +96,25 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(AppShellRoute.GameVisionOSBounded, appState.CurrentRoute);
             Assert.AreEqual("heavy", selectedContext.SelectedCharacterId);
             Assert.AreEqual(RunLaunchMode.NewRun, selectedContext.LaunchMode);
+        }
+
+        [Test]
+        public void ContinueWithoutActiveRunLoadsSpaceshipInsteadOfStartingRun()
+        {
+            var store = new JsonProfileStore(tempRoot);
+            var selectedContext = new SelectedProfileContext();
+            var appState = new AppStateMachine();
+            var viewModel = new MainMenuViewModel(store, selectedContext, appState);
+
+            viewModel.SelectOrCreateSlot(0);
+            var route = viewModel.LaunchContinueRun(HollowPlatformKind.WindowsStandard3D);
+
+            Assert.AreEqual(AppShellRoute.SpaceshipWindows, route);
+            Assert.AreEqual(AppShellRoute.SpaceshipWindows, appState.CurrentRoute);
+            Assert.AreEqual(RunLaunchMode.NewRun, selectedContext.LaunchMode);
+            Assert.IsFalse(selectedContext.SelectedProfile.HasActiveRun);
+            Assert.IsTrue(SpaceshipArrivalHandoff.TryConsume(out var arrival));
+            Assert.AreEqual(SpaceshipArrivalReason.DirectProfile, arrival.Reason);
         }
 
         [Test]

@@ -10,30 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07b8b845ecac43adb9c21ead73eb0065, type: 3}
-  m_Name: Weapon_DragonBow
+  m_Name: Weapon_DragonPistol
   m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.WeaponDefinition
-  weaponId: dragon_bow
-  displayName: Dragon Bow
+  weaponId: dragon_pistol
+  displayName: Dragon Pistol
   slot: 1
-  category: 1
+  category: 4
   loadClass: 1
-  rangedFireMode: 1
+  rangedFireMode: 0
   tags: 02000000090000000e000000
   lightAttack:
     attackKind: 0
     damage: 2
     cooldownSeconds: 0.85
-    staminaCost: 4
+    staminaCost: 12
     rangeMeters: 7
     impactForceClass: 1
     knockbackMeters: 0.45
-    requiredDrawSeconds: 0.8
+    requiredDrawSeconds: 0
   heavyAttack:
     attackKind: 1
     damage: 4
     cooldownSeconds: 8
-    staminaCost: 38
+    staminaCost: 42
     rangeMeters: 6.33
     impactForceClass: 2
     knockbackMeters: 0.75
-    requiredDrawSeconds: 1.2
+    requiredDrawSeconds: 0

@@ -14,6 +14,11 @@ namespace Hollow.Rewards
 
         public IReadOnlyList<CollectedRewardRecord> CollectedRewards => collectedRewards;
 
+        public void AddSouls(int amount)
+        {
+            RunSouls += System.Math.Max(0, amount);
+        }
+
         public bool ApplyReward(RewardGrant grant)
         {
             if (grant.IsEmpty || collectedRewards.Any(record => record.RoomId == grant.RoomId))

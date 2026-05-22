@@ -11,7 +11,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private string displayName;
         [SerializeField] private PlayerBaseStats baseStats;
         [SerializeField] private string starterMeleeWeaponId = "starter_blade";
-        [SerializeField] private string starterRangedWeaponId = "starter_bow";
+        [SerializeField] private string starterRangedWeaponId = WeaponIdAliases.StarterPistolId;
         [SerializeField] private string starterPassiveRewardId;
         [SerializeField] private CharacterPassiveSkillDefinition passiveSkill;
         [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
@@ -46,7 +46,9 @@ namespace Hollow.Data.Definitions
             displayName = nextDisplayName ?? string.Empty;
             baseStats = nextBaseStats.IsConfigured ? nextBaseStats : PlayerBaseStats.Default;
             starterMeleeWeaponId = string.IsNullOrWhiteSpace(nextStarterMeleeWeaponId) ? "starter_blade" : nextStarterMeleeWeaponId;
-            starterRangedWeaponId = string.IsNullOrWhiteSpace(nextStarterRangedWeaponId) ? "starter_bow" : nextStarterRangedWeaponId;
+            starterRangedWeaponId = string.IsNullOrWhiteSpace(nextStarterRangedWeaponId)
+                ? WeaponIdAliases.StarterPistolId
+                : WeaponIdAliases.Normalize(nextStarterRangedWeaponId);
             passiveSkill = nextPassiveSkill;
             starterPassiveRewardId = nextStarterPassiveRewardId ?? string.Empty;
             tags = (nextTags ?? Enumerable.Empty<BuildTag>())

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="14" result="Passed" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.037678">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="733" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.037678" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1852" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.027690" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="52230" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1853" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.021956" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1854" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.016362" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1855" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="732" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.011068" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1798" name="SpaceshipMetaHubTests" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="2.001683" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1811" name="ArrivalHandoffCarriesReasonAndBankedSoulAmount" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.ArrivalHandoffCarriesReasonAndBankedSoulAmount" methodname="ArrivalHandoffCarriesReasonAndBankedSoulAmount" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="991600860" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:28Z" duration="0.008929" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1803" name="BranchMiniMapRevealsShipRoomsWithFacilityLabels" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.BranchMiniMapRevealsShipRoomsWithFacilityLabels" methodname="BranchMiniMapRevealsShipRoomsWithFacilityLabels" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="268224538" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:28Z" duration="0.507168" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1810" name="ChallengeCompletionRoutesToShipWithoutBankingSouls" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.ChallengeCompletionRoutesToShipWithoutBankingSouls" methodname="ChallengeCompletionRoutesToShipWithoutBankingSouls" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="1087546467" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:28Z" duration="0.013845" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1805" name="DeparturesStartsNormalRunWithoutChallenge" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.DeparturesStartsNormalRunWithoutChallenge" methodname="DeparturesStartsNormalRunWithoutChallenge" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="892262913" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:28Z" duration="0.007608" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1812" name="GeneratedSpaceshipWindowsSceneContainsNormalBranchPresentationStack" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.GeneratedSpaceshipWindowsSceneContainsNormalBranchPresentationStack" methodname="GeneratedSpaceshipWindowsSceneContainsNormalBranchPresentationStack" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="593842689" result="Passed" start-time="2026-05-20 19:20:28Z" end-time="2026-05-20 19:20:30Z" duration="1.358540" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Main Object Name 'ship_upgrade_catalog' does not match filename 'ShipUpgradeCatalog'
+]]></output>
+              </test-case>
+              <test-case id="1804" name="MissionCenterLaunchesChallengeThroughExistingCatalog" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.MissionCenterLaunchesChallengeThroughExistingCatalog" methodname="MissionCenterLaunchesChallengeThroughExistingCatalog" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="460686972" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.043548" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1808" name="NormalRunCompletionBanksSoulsAndRoutesToShipArrival" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.NormalRunCompletionBanksSoulsAndRoutesToShipArrival" methodname="NormalRunCompletionBanksSoulsAndRoutesToShipArrival" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="50968455" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.003253" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1809" name="NormalRunDeathClearsActiveRunWithoutBankingSouls" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.NormalRunDeathClearsActiveRunWithoutBankingSouls" methodname="NormalRunDeathClearsActiveRunWithoutBankingSouls" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="1084994935" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.004627" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1800" name="ReturnArrivalRequiresSterilizationBeforeMainHallDoorTraverses" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.ReturnArrivalRequiresSterilizationBeforeMainHallDoorTraverses" methodname="ReturnArrivalRequiresSterilizationBeforeMainHallDoorTraverses" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="724687197" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.007162" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1801" name="ShipPlayerUsesGameplayStackAndHudShowsBankedSoulsAtFullVitals" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.ShipPlayerUsesGameplayStackAndHudShowsBankedSoulsAtFullVitals" methodname="ShipPlayerUsesGameplayStackAndHudShowsBankedSoulsAtFullVitals" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="690590342" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.008850" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1807" name="ShipUpgradeModifiersCanBeResolvedForNormalRuns" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.ShipUpgradeModifiersCanBeResolvedForNormalRuns" methodname="ShipUpgradeModifiersCanBeResolvedForNormalRuns" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="575692871" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.001823" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1799" name="SpaceshipGraphUsesStandardBranchRoomsAndOpenSpokes" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.SpaceshipGraphUsesStandardBranchRoomsAndOpenSpokes" methodname="SpaceshipGraphUsesStandardBranchRoomsAndOpenSpokes" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="1472374358" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.006406" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1802" name="TechnologyLabPurchaseRefreshesShipHudSoulsAndStats" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.TechnologyLabPurchaseRefreshesShipHudSoulsAndStats" methodname="TechnologyLabPurchaseRefreshesShipHudSoulsAndStats" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="22430319" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.011724" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1806" name="TechnologyLabPurchasesPersistentUpgradeWithBankedSoulsOnly" fullname="Hollow.Tests.EditMode.SpaceshipMetaHubTests.TechnologyLabPurchasesPersistentUpgradeWithBankedSoulsOnly" methodname="TechnologyLabPurchasesPersistentUpgradeWithBankedSoulsOnly" classname="Hollow.Tests.EditMode.SpaceshipMetaHubTests" runstate="Runnable" seed="1491550882" result="Passed" start-time="2026-05-20 19:20:30Z" end-time="2026-05-20 19:20:30Z" duration="0.008779" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

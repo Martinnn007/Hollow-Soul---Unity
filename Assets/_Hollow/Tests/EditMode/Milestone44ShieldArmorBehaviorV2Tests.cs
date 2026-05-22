@@ -17,9 +17,9 @@ namespace Hollow.Tests.EditMode
 
             Assert.AreEqual(0.3f, profile.ParryWindowSeconds, 0.001f);
             Assert.AreEqual(140f, profile.GuardConeDegrees, 0.001f);
-            Assert.AreEqual(12f, profile.GuardDrainStaminaPerSecond, 0.001f);
-            Assert.AreEqual(12f, profile.GuardHitStaminaCost, 0.001f);
-            Assert.AreEqual(16f, profile.ParryStaminaCost, 0.001f);
+            Assert.AreEqual(0f, profile.GuardDrainStaminaPerSecond, 0.001f);
+            Assert.AreEqual(22f, profile.GuardHitStaminaCost, 0.001f);
+            Assert.AreEqual(28f, profile.ParryStaminaCost, 0.001f);
             Assert.AreEqual(1, profile.ParryCounterDamage);
 
             Object.DestroyImmediate(profile);
@@ -64,9 +64,26 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void HoldingGuardDoesNotDrainStamina()
+        {
+            var player = CreatePlayer(out _, out var weapon, out var defense);
+            try
+            {
+                defense.Tick(Snapshot(Vector2.up, Vector2.zero, guardHeld: true), 2f, 4f);
+
+                Assert.IsTrue(defense.IsGuarding);
+                Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
         public void LightThreatInsideConePerfectParriesAndCountersSourceEnemy()
         {
-            var player = CreatePlayer(out var health, out _, out var defense);
+            var player = CreatePlayer(out var health, out var weapon, out var defense);
             var enemyObject = new GameObject("EnemySource");
             try
             {
@@ -81,6 +98,7 @@ namespace Hollow.Tests.EditMode
                 Assert.IsFalse(applied);
                 Assert.AreEqual(6, health.CurrentHealth);
                 Assert.AreEqual(ShieldGuardResult.PerfectParry, defense.LastGuardResult);
+                Assert.AreEqual(100f - 28f, weapon.CurrentStamina, 0.001f);
                 Assert.AreEqual(enemyHealthBefore - 1, enemy.Health.CurrentHealth);
             }
             finally
@@ -116,7 +134,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void HeavyThreatCanBeGuardReducedButNotParried()
         {
-            var player = CreatePlayer(out var health, out _, out var defense);
+            var player = CreatePlayer(out var health, out var weapon, out var defense);
             var source = new GameObject("HeavySource");
             try
             {
@@ -129,6 +147,7 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(5, health.CurrentHealth);
                 Assert.AreEqual(ShieldGuardResult.RejectedThreat, defense.LastGuardResult);
                 Assert.IsTrue(defense.LastHitWasGuarded);
+                Assert.AreEqual(100f - 22f, weapon.CurrentStamina, 0.001f);
             }
             finally
             {

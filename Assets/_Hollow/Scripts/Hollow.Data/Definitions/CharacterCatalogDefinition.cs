@@ -60,7 +60,7 @@ namespace Hollow.Data.Definitions
                             speedMetersPerSecond: 4f,
                             strength: 1,
                             maxStamina: 100f,
-                            staminaRegenPerSecond: 18f,
+                            staminaRegenPerSecond: 11f,
                             defense: 0,
                             meleeDamageBonus: 0,
                             rangedDamageBonus: 0,
@@ -72,8 +72,8 @@ namespace Hollow.Data.Definitions
                             maxHealth: 5,
                             speedMetersPerSecond: 3.15f,
                             strength: 2,
-                            maxStamina: 130f,
-                            staminaRegenPerSecond: 18f,
+                            maxStamina: 120f,
+                            staminaRegenPerSecond: 8f,
                             defense: 2,
                             meleeDamageBonus: 1,
                             rangedDamageBonus: 0,
@@ -85,7 +85,7 @@ namespace Hollow.Data.Definitions
         private static CharacterDefinition CreateRuntimeCharacter(string characterId, string displayName, PlayerBaseStats baseStats)
         {
             var character = CreateInstance<CharacterDefinition>();
-            character.Configure(characterId, displayName, baseStats, "starter_blade", "starter_bow", null);
+            character.Configure(characterId, displayName, baseStats, "starter_blade", WeaponIdAliases.StarterPistolId, null);
             return character;
         }
     }

@@ -194,7 +194,7 @@ MonoBehaviour:
   attackStaminaCostMultiplier: 1
   maxStamina: 100
   currentStamina: 100
-  staminaRegenPerSecond: 18
+  staminaRegenPerSecond: 11
   activeWeaponSlot: 1
   meleeWeaponId: starter_blade
   rangedWeaponId: starter_bolt

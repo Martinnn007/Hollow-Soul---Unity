@@ -264,7 +264,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void ShortSoulsRollTuningUsesReducedTravelAndIFrames()
         {
-            Assert.AreEqual(18f, PlayerWeaponController.RollStaminaCost, 0.0001f);
+            Assert.AreEqual(30f, PlayerWeaponController.RollStaminaCost, 0.0001f);
             Assert.AreEqual(0.04f, PlayerWeaponController.RollStartupSeconds, 0.0001f);
             Assert.AreEqual(0.22f, PlayerWeaponController.RollInvulnerabilitySeconds, 0.0001f);
             Assert.AreEqual(0.18f, PlayerWeaponController.RollRecoverySeconds, 0.0001f);

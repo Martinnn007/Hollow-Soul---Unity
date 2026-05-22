@@ -59,8 +59,20 @@ namespace Hollow.Branches
             string fromPortId,
             string toPortId)
         {
-            connections.Add(new BranchConnection(fromRoomId, toRoomId, fromDirection, toDirection, fromPortId, toPortId));
-            connections.Add(new BranchConnection(toRoomId, fromRoomId, toDirection, fromDirection, toPortId, fromPortId));
+            AddBidirectionalConnection(fromRoomId, toRoomId, fromDirection, toDirection, fromPortId, toPortId, BranchConnectionLockKind.None);
+        }
+
+        public void AddBidirectionalConnection(
+            BranchRoomId fromRoomId,
+            BranchRoomId toRoomId,
+            string fromDirection,
+            string toDirection,
+            string fromPortId,
+            string toPortId,
+            BranchConnectionLockKind lockKind)
+        {
+            connections.Add(new BranchConnection(fromRoomId, toRoomId, fromDirection, toDirection, fromPortId, toPortId, lockKind));
+            connections.Add(new BranchConnection(toRoomId, fromRoomId, toDirection, fromDirection, toPortId, fromPortId, lockKind));
         }
 
         public BranchRoomState GetRoom(BranchRoomId id)

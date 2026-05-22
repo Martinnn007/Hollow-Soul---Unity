@@ -10,9 +10,9 @@ namespace Hollow.Data.Definitions
         [SerializeField] private float parryWindowSeconds = 0.3f;
         [SerializeField] private float guardConeDegrees = 140f;
         [SerializeField] private float guardMoveMultiplier = 0.55f;
-        [SerializeField] private float guardDrainStaminaPerSecond = 12f;
-        [SerializeField] private float guardHitStaminaCost = 12f;
-        [SerializeField] private float parryStaminaCost = 16f;
+        [SerializeField] private float guardDrainStaminaPerSecond;
+        [SerializeField] private float guardHitStaminaCost = 22f;
+        [SerializeField] private float parryStaminaCost = 28f;
         [SerializeField] private int guardDamageReduction = 1;
         [SerializeField] private float guardPushMeters = 0.25f;
         [SerializeField] private int parryCounterDamage = 1;
@@ -38,9 +38,9 @@ namespace Hollow.Data.Definitions
             parryWindowSeconds = 0.3f;
             guardConeDegrees = 140f;
             guardMoveMultiplier = 0.55f;
-            guardDrainStaminaPerSecond = 12f;
-            guardHitStaminaCost = 12f;
-            parryStaminaCost = 16f;
+            guardDrainStaminaPerSecond = 0f;
+            guardHitStaminaCost = 22f;
+            parryStaminaCost = 28f;
             guardDamageReduction = 1;
             guardPushMeters = 0.25f;
             parryCounterDamage = 1;

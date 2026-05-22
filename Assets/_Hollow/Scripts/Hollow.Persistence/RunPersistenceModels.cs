@@ -223,7 +223,7 @@ namespace Hollow.Persistence
     public sealed class RunEquipmentSlotsSaveState
     {
         public string meleeWeaponId = "starter_blade";
-        public string rangedWeaponId = "starter_bow";
+        public string rangedWeaponId = "starter_pistol";
         public string activeWeaponSlot = "Melee";
         public string activeItemId = string.Empty;
         public int activeItemCharges;
@@ -274,7 +274,7 @@ namespace Hollow.Persistence
         public float baseSpeed = 4f;
         public int baseStrength = 1;
         public float baseMaxStamina = 100f;
-        public float baseStaminaRegen = 18f;
+        public float baseStaminaRegen = 11f;
         public int baseDefense;
         public int baseMeleeDamageBonus;
         public int baseRangedDamageBonus;

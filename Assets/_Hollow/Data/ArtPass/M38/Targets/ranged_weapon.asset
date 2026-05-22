@@ -21,7 +21,7 @@ MonoBehaviour:
   owner: Rafal
   sourceFolder: Assets/_Hollow/Art/Intake/Rafal/M38/equipment/ranged_weapon
   prefabPath: Assets/_Hollow/Prefabs/ArtPass/AP_WeaponRanged.prefab
-  goal: Generic visual wrapper for bows/bolts until per-weapon art exists.
+  goal: Generic visual wrapper for pistols/bolts until per-weapon art exists.
   requiredAssets:
   - Low-poly mesh or prefab wrapper
   - Material(s)

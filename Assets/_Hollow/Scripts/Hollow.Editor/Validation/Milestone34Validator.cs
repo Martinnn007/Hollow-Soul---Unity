@@ -53,9 +53,14 @@ namespace Hollow.Editor.Validation
                 failures.Add("M34 guard must reduce incoming damage by at least 1.");
             }
 
-            if (PlayerDefenseController.GuardBlockStaminaCost <= 0f || PlayerDefenseController.GuardDrainStaminaPerSecond <= 0f)
+            if (PlayerDefenseController.GuardBlockStaminaCost <= 0f)
             {
-                failures.Add("M34 guard must have positive stamina block and hold costs.");
+                failures.Add("M34 guard must have a positive stamina block cost.");
+            }
+
+            if (PlayerDefenseController.GuardDrainStaminaPerSecond != 0f)
+            {
+                failures.Add("M34 guard hold must not passively drain stamina.");
             }
 
             if (failures.Count == 0)

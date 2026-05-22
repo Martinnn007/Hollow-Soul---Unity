@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="21" result="Failed(Child)" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.5298594">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="737" result="Failed" site="Child" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.529859" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1856" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="736" result="Failed" site="Child" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.523999" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="42786" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1857" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="736" result="Failed" site="Child" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.521639" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1858" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="736" result="Failed" site="Child" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.519451" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1859" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="736" result="Failed" site="Child" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.517207" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1305" name="Milestone27WeaponModeTests" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" testcasecount="21" result="Failed" site="Child" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.507392" total="21" passed="20" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1316" name="ActiveWeaponSlotPersistsInRunBuildSaveState" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.ActiveWeaponSlotPersistsInRunBuildSaveState" methodname="ActiveWeaponSlotPersistsInRunBuildSaveState" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="1910327663" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.009274" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1308" name="BuildApplierPassesCatalogEquipmentAndActiveSlotToWeaponController" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.BuildApplierPassesCatalogEquipmentAndActiveSlotToWeaponController" methodname="BuildApplierPassesCatalogEquipmentAndActiveSlotToWeaponController" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="811764846" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.003524" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1314" name="DebugLightAttackSpeedDoublesMeleeLightCadenceOnlyAndKeepsStaminaCost" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.DebugLightAttackSpeedDoublesMeleeLightCadenceOnlyAndKeepsStaminaCost" methodname="DebugLightAttackSpeedDoublesMeleeLightCadenceOnlyAndKeepsStaminaCost" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="659807823" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.007518" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1312" name="DebugLightAttackSpeedDoublesRangedLightCadenceOnly" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.DebugLightAttackSpeedDoublesRangedLightCadenceOnly" methodname="DebugLightAttackSpeedDoublesRangedLightCadenceOnly" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="287996000" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.077041" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1313" name="DebugLightAttackSpeedHalvesFinalPassiveAdjustedRangedCooldown" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.DebugLightAttackSpeedHalvesFinalPassiveAdjustedRangedCooldown" methodname="DebugLightAttackSpeedHalvesFinalPassiveAdjustedRangedCooldown" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="2023014943" result="Failed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.001955" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  Expected: False
+  But was:  True
+]]></message>
+                  <stack-trace><![CDATA[at Hollow.Tests.EditMode.Milestone27WeaponModeTests.DebugLightAttackSpeedHalvesFinalPassiveAdjustedRangedCooldown () [0x000bf] in /Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Assets/_Hollow/Tests/EditMode/Milestone27WeaponModeTests.cs:232
+]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="1315" name="DebugSpawnMenuAppliesCurrentRunLightAttackSpeedToggle" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.DebugSpawnMenuAppliesCurrentRunLightAttackSpeedToggle" methodname="DebugSpawnMenuAppliesCurrentRunLightAttackSpeedToggle" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="334423828" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.004815" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1311" name="GameplayDebugHudDefaultsHiddenAndCanToggle" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.GameplayDebugHudDefaultsHiddenAndCanToggle" methodname="GameplayDebugHudDefaultsHiddenAndCanToggle" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="252012801" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.000080" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1323" name="GuardHeldRegenIsSlowedAndGuardHoldDoesNotDrainStamina" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.GuardHeldRegenIsSlowedAndGuardHoldDoesNotDrainStamina" methodname="GuardHeldRegenIsSlowedAndGuardHoldDoesNotDrainStamina" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="588634902" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.003523" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1317" name="LegacyBowWeaponIdsNormalizeToPistolIds" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.LegacyBowWeaponIdsNormalizeToPistolIds" methodname="LegacyBowWeaponIdsNormalizeToPistolIds" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="1850081798" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.001252" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1321" name="LightAttacksConsumeMeaningfulStaminaAndCannotSpamForever" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.LightAttacksConsumeMeaningfulStaminaAndCannotSpamForever" methodname="LightAttacksConsumeMeaningfulStaminaAndCannotSpamForever" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="1197319737" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.000366" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1318" name="MeleeHeavyDoesNotRearmBlockLightAfterRecovery" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.MeleeHeavyDoesNotRearmBlockLightAfterRecovery" methodname="MeleeHeavyDoesNotRearmBlockLightAfterRecovery" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="245185250" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.000275" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1310" name="MeleeSwipePresenterCreatesVisualOnlyRangeBox" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.MeleeSwipePresenterCreatesVisualOnlyRangeBox" methodname="MeleeSwipePresenterCreatesVisualOnlyRangeBox" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="675964627" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:31Z" duration="0.000286" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1326" name="Milestone27ValidatorReportsGeneratedStateValid" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.Milestone27ValidatorReportsGeneratedStateValid" methodname="Milestone27ValidatorReportsGeneratedStateValid" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="2031185417" result="Passed" start-time="2026-05-22 08:09:31Z" end-time="2026-05-22 08:09:33Z" duration="2.385670" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Hollow Milestone 27 validation passed.
+]]></output>
+              </test-case>
+              <test-case id="1309" name="RangeBonusesAffectEffectiveWeaponRanges" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.RangeBonusesAffectEffectiveWeaponRanges" methodname="RangeBonusesAffectEffectiveWeaponRanges" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="1882604537" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000329" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1319" name="RangedHeavyDoesNotRearmBlockLightAfterRecovery" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.RangedHeavyDoesNotRearmBlockLightAfterRecovery" methodname="RangedHeavyDoesNotRearmBlockLightAfterRecovery" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="746632463" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000706" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1320" name="RepeatedRollsExhaustStaminaUntilRegen" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.RepeatedRollsExhaustStaminaUntilRegen" methodname="RepeatedRollsExhaustStaminaUntilRegen" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="141462537" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000190" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1325" name="ShopOffersCanDeterministicallyRollWeaponRewards" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.ShopOffersCanDeterministicallyRollWeaponRewards" methodname="ShopOffersCanDeterministicallyRollWeaponRewards" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="449624515" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.001469" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1322" name="StaminaRegenWaitsForDelayAndClampsToMax" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.StaminaRegenWaitsForDelayAndClampsToMax" methodname="StaminaRegenWaitsForDelayAndClampsToMax" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="1561869578" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000190" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1307" name="StarterWeaponsUseReadableCombatBalance" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.StarterWeaponsUseReadableCombatBalance" methodname="StarterWeaponsUseReadableCombatBalance" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="733628205" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000353" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1306" name="WeaponCatalogContainsStarterAndRareWeapons" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.WeaponCatalogContainsStarterAndRareWeapons" methodname="WeaponCatalogContainsStarterAndRareWeapons" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="549798943" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000731" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1324" name="WeaponRewardPoolContainsRareWeaponRewards" fullname="Hollow.Tests.EditMode.Milestone27WeaponModeTests.WeaponRewardPoolContainsRareWeaponRewards" methodname="WeaponRewardPoolContainsRareWeaponRewards" classname="Hollow.Tests.EditMode.Milestone27WeaponModeTests" runstate="Runnable" seed="920411873" result="Passed" start-time="2026-05-22 08:09:33Z" end-time="2026-05-22 08:09:33Z" duration="0.000161" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

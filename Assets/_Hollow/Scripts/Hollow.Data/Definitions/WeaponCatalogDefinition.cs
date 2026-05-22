@@ -27,7 +27,8 @@ namespace Hollow.Data.Definitions
 
         public bool TryGetWeapon(string weaponId, out WeaponDefinition weapon)
         {
-            weapon = weapons.FirstOrDefault(candidate => candidate != null && candidate.WeaponId == weaponId);
+            var normalizedWeaponId = WeaponIdAliases.Normalize(weaponId);
+            weapon = weapons.FirstOrDefault(candidate => candidate != null && candidate.WeaponId == normalizedWeaponId);
             return weapon != null;
         }
 
@@ -38,7 +39,7 @@ namespace Hollow.Data.Definitions
                 return weapon;
             }
 
-            var starterId = fallbackSlot == WeaponSlot.Melee ? "starter_blade" : "starter_bow";
+            var starterId = fallbackSlot == WeaponSlot.Melee ? "starter_blade" : WeaponIdAliases.StarterPistolId;
             return TryGetWeapon(starterId, out var starter) && starter.Slot == fallbackSlot ? starter : null;
         }
 

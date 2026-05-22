@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07b8b845ecac43adb9c21ead73eb0065, type: 3}
-  m_Name: Weapon_StarterBow
+  m_Name: Weapon_StarterPistol
   m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.WeaponDefinition
-  weaponId: starter_bow
-  displayName: Practice Bow
+  weaponId: starter_pistol
+  displayName: Basic Pistol
   slot: 1
-  category: 1
+  category: 4
   loadClass: 0
-  rangedFireMode: 1
+  rangedFireMode: 0
   tags: 0200000004000000
   lightAttack:
     attackKind: 0
     damage: 1
-    cooldownSeconds: 1
-    staminaCost: 2
+    cooldownSeconds: 0.5
+    staminaCost: 6
     rangeMeters: 6.5
     impactForceClass: 0
     knockbackMeters: 0.32
@@ -31,12 +31,12 @@ MonoBehaviour:
     activeSeconds: 0.03
     recoverySeconds: 0.16
     hitArcDegrees: 1
-    requiredDrawSeconds: 1
+    requiredDrawSeconds: 0
   heavyAttack:
     attackKind: 1
     damage: 2
     cooldownSeconds: 8
-    staminaCost: 28
+    staminaCost: 34
     rangeMeters: 6.75
     impactForceClass: 1
     knockbackMeters: 0.55
@@ -44,4 +44,4 @@ MonoBehaviour:
     activeSeconds: 0.04
     recoverySeconds: 0.32
     hitArcDegrees: 1
-    requiredDrawSeconds: 1.35
+    requiredDrawSeconds: 0

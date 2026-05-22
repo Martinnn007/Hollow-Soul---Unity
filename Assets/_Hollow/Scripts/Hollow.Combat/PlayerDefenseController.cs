@@ -11,12 +11,12 @@ namespace Hollow.Combat
     {
         public const int DefensePerPassiveDamageReduction = 2;
         public const int GuardDamageReduction = 1;
-        public const float GuardDrainStaminaPerSecond = 12f;
-        public const float GuardBlockStaminaCost = 12f;
+        public const float GuardDrainStaminaPerSecond = 0f;
+        public const float GuardBlockStaminaCost = 22f;
         public const float GuardPushMeters = 0.25f;
         public const float ParryWindowSeconds = 0.3f;
         public const float GuardConeDegrees = 140f;
-        public const float ParryStaminaCost = 16f;
+        public const float ParryStaminaCost = 28f;
 
         [SerializeField] private int defense;
         [SerializeField] private int baseStability = 1;
@@ -32,6 +32,7 @@ namespace Hollow.Combat
         private ShieldGuardVisualController visualController;
         private Vector3 guardFacing = Vector3.forward;
         private float parryWindowEndTime;
+        private float lastDefenseTimeSeconds = float.NaN;
         private bool lastGuardHeld;
         private bool parryConsumed;
 
@@ -54,6 +55,8 @@ namespace Hollow.Combat
         public Vector3 GuardFacing => guardFacing.sqrMagnitude < 0.001f ? Vector3.forward : guardFacing.normalized;
 
         public float GuardMoveMultiplier => ShieldGuardProfileDefinition.Resolve(shieldProfile).GuardMoveMultiplier;
+
+        private float CurrentDefenseTime => float.IsNaN(lastDefenseTimeSeconds) ? Time.time : lastDefenseTimeSeconds;
 
         public void Configure(int nextDefense)
         {
@@ -119,6 +122,7 @@ namespace Hollow.Combat
         public void Tick(GameplayInputSnapshot input, float deltaTime, float timeSeconds)
         {
             ResolveReferences();
+            lastDefenseTimeSeconds = timeSeconds;
             UpdateGuardFacing(input, timeSeconds);
             if (weaponController != null && (weaponController.IsAttackCommitted || weaponController.IsRolling))
             {
@@ -146,15 +150,8 @@ namespace Hollow.Combat
             }
 
             lastGuardHeld = true;
-            var drainCost = AdjustGuardStaminaCost(profile.GuardDrainStaminaPerSecond * Mathf.Max(0f, deltaTime));
-            isGuarding = SpendStamina(drainCost);
-            if (!isGuarding)
-            {
-                LastGuardResult = ShieldGuardResult.FailedNoStamina;
-                visualController?.ShowFeedback(LastGuardResult);
-            }
-
-            visualController?.SetState(isGuarding, IsInParryWindowAt(timeSeconds), GuardFacing);
+            isGuarding = true;
+            visualController?.SetState(true, IsInParryWindowAt(timeSeconds), GuardFacing);
         }
 
         public int ModifyIncomingDamage(DamageRequest request, int currentAmount)
@@ -197,9 +194,10 @@ namespace Hollow.Combat
             }
 
             var parryable = request.ThreatKind == DamageThreatKind.Light;
-            if (parryable && IsInParryWindow && !parryConsumed)
+            var defenseTime = CurrentDefenseTime;
+            if (parryable && IsInParryWindowAt(defenseTime) && !parryConsumed)
             {
-                if (SpendStamina(AdjustGuardStaminaCost(profile.ParryStaminaCost)))
+                if (SpendStamina(AdjustGuardStaminaCost(profile.ParryStaminaCost), delaysRegen: true, defenseTime))
                 {
                     parryConsumed = true;
                     LastHitWasGuarded = true;
@@ -213,7 +211,7 @@ namespace Hollow.Combat
                 LastGuardResult = ShieldGuardResult.FailedNoStamina;
             }
 
-            if (SpendStamina(AdjustGuardStaminaCost(profile.GuardHitStaminaCost)))
+            if (SpendStamina(AdjustGuardStaminaCost(profile.GuardHitStaminaCost), delaysRegen: true, defenseTime))
             {
                 var beforeGuard = reducedAmount;
                 reducedAmount = Mathf.Max(0, reducedAmount - profile.GuardDamageReduction);
@@ -235,9 +233,9 @@ namespace Hollow.Combat
             return isGuarding && !parryConsumed && timeSeconds <= parryWindowEndTime;
         }
 
-        private bool SpendStamina(float amount)
+        private bool SpendStamina(float amount, bool delaysRegen, float timeSeconds)
         {
-            return weaponController == null || weaponController.SpendStaminaForDefense(amount);
+            return weaponController == null || weaponController.SpendStaminaForDefense(amount, delaysRegen, timeSeconds);
         }
 
         private float AdjustGuardStaminaCost(float amount)

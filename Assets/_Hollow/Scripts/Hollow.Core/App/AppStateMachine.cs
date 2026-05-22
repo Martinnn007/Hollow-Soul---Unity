@@ -12,7 +12,10 @@ namespace Hollow.Core.App
         RoomDesigner = 5,
         DeveloperSandbox = 6,
         ArenaMode = 7,
-        MainMenuVisionOS = 8
+        MainMenuVisionOS = 8,
+        SpaceshipWindows = 9,
+        SpaceshipVisionOSBounded = 10,
+        SpaceshipVisionOSImmersive = 11
     }
 
     public sealed class AppStateMachine

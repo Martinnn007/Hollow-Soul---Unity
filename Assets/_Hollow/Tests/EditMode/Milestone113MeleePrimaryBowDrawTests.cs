@@ -12,24 +12,26 @@ namespace Hollow.Tests.EditMode
     public sealed class Milestone113MeleePrimaryBowDrawTests
     {
         [Test]
-        public void StarterBowIsDefaultDrawAndReleaseRangedWeapon()
+        public void StarterPistolIsDefaultInstantRangedWeapon()
         {
             var catalog = LoadWeaponCatalog();
 
-            Assert.IsTrue(catalog.TryGetWeapon("starter_bow", out var bow));
-            Assert.AreEqual("Practice Bow", bow.DisplayName);
-            Assert.AreEqual(WeaponSlot.Ranged, bow.Slot);
-            Assert.AreEqual(WeaponCategory.Bow, bow.Category);
-            Assert.AreEqual(WeaponRangedFireMode.DrawAndRelease, bow.RangedFireMode);
-            Assert.AreEqual(1f, bow.LightAttack.RequiredDrawSeconds, 0.001f);
-            Assert.Greater(bow.HeavyAttack.RequiredDrawSeconds, bow.LightAttack.RequiredDrawSeconds);
+            Assert.IsTrue(catalog.TryGetWeapon("starter_pistol", out var pistol));
+            Assert.AreEqual("Basic Pistol", pistol.DisplayName);
+            Assert.AreEqual(WeaponSlot.Ranged, pistol.Slot);
+            Assert.AreEqual(WeaponCategory.Gun, pistol.Category);
+            Assert.AreEqual(WeaponRangedFireMode.Instant, pistol.RangedFireMode);
+            Assert.AreEqual(0.5f, pistol.LightAttack.CooldownSeconds, 0.001f);
+            Assert.AreEqual(6f, pistol.LightAttack.StaminaCost, 0.001f);
+            Assert.AreEqual(0f, pistol.LightAttack.RequiredDrawSeconds, 0.001f);
+            Assert.AreEqual(0f, pistol.HeavyAttack.RequiredDrawSeconds, 0.001f);
 
             Assert.IsTrue(catalog.TryGetWeapon("starter_bolt", out var bolt));
             Assert.AreEqual(WeaponRangedFireMode.Instant, bolt.RangedFireMode);
         }
 
         [Test]
-        public void FreshRunEquipmentStartsMeleePrimaryWithStarterBowFallback()
+        public void FreshRunEquipmentStartsMeleePrimaryWithStarterPistolFallback()
         {
             var build = new PlayerRunBuild();
             var saved = RunEquipmentSlots.FromSaveState(new Hollow.Persistence.RunEquipmentSlotsSaveState
@@ -39,56 +41,29 @@ namespace Hollow.Tests.EditMode
                 activeWeaponSlot = string.Empty
             });
 
-            Assert.AreEqual("starter_bow", build.Equipment.RangedWeaponId);
+            Assert.AreEqual("starter_pistol", build.Equipment.RangedWeaponId);
             Assert.AreEqual(WeaponSlot.Melee, build.Equipment.ActiveWeaponSlot);
-            Assert.AreEqual("starter_bow", saved.RangedWeaponId);
+            Assert.AreEqual("starter_pistol", saved.RangedWeaponId);
             Assert.AreEqual(WeaponSlot.Melee, saved.ActiveWeaponSlot);
         }
 
         [Test]
-        public void BowLightRequiresDrawReleaseAndEarlyReleaseCancelsWithoutCost()
+        public void PistolLightFiresImmediatelyAndDoesNotUseDrawRelease()
         {
-            var rig = CreateWeaponRig("BowDrawEarlyRelease");
+            var rig = CreateWeaponRig("PistolLightImmediate");
             try
             {
                 var weapon = rig.Weapon;
 
                 Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
                 Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
-                Assert.IsTrue(weapon.IsRangedDrawActive);
-                Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
-
-                Assert.IsFalse(weapon.TryReleaseRangedDraw(Vector2.up, 0.5f));
+                Assert.IsFalse(weapon.IsRangedDrawActive);
+                Assert.AreEqual(94f, weapon.CurrentStamina, 0.001f);
+                Assert.IsFalse(weapon.TryReleaseRangedDraw(Vector2.up, 0.02f));
+                weapon.TickAction(0f, 0.02f);
 
                 Assert.IsFalse(weapon.IsRangedDrawActive);
-                Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
-                Assert.AreEqual(0, CountPlayerProjectiles(rig.Parent));
-            }
-            finally
-            {
-                rig.Destroy();
-            }
-        }
-
-        [Test]
-        public void BowLightFiresOnCompletedReleaseUsingReleaseAim()
-        {
-            var rig = CreateWeaponRig("BowDrawRelease");
-            try
-            {
-                var weapon = rig.Weapon;
-
-                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
-                Assert.IsTrue(weapon.TryReleaseRangedDraw(new Vector2(0.6f, 0.8f), 1.01f));
-                weapon.TickAction(0f, 1.03f);
-
-                Assert.IsFalse(weapon.IsRangedDrawActive);
-                Assert.AreEqual(98f, weapon.CurrentStamina, 0.001f);
                 Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
-                var projectile = rig.Parent.transform.Find("PlayerProjectile");
-                Assert.IsNotNull(projectile);
-                Assert.Greater(projectile.localPosition.x, 0f);
-                Assert.Greater(projectile.localPosition.z, 0f);
             }
             finally
             {
@@ -97,23 +72,55 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void BowHeavyUsesItsOwnDrawTiming()
+        public void PistolLightFiresTwoRoundsPerSecond()
         {
-            var rig = CreateWeaponRig("BowHeavyDraw");
+            var rig = CreateWeaponRig("PistolTwoRoundsPerSecond");
+            try
+            {
+                var weapon = rig.Weapon;
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.49f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.5f));
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void PistolHeavyFiresWithoutDrawRelease()
+        {
+            var rig = CreateWeaponRig("PistolHeavyInstant");
             try
             {
                 var weapon = rig.Weapon;
 
                 Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 0f));
-                Assert.IsFalse(weapon.TryReleaseRangedDraw(Vector2.up, 1.1f));
-                Assert.AreEqual(100f, weapon.CurrentStamina, 0.001f);
+                Assert.IsFalse(weapon.IsRangedDrawActive);
+                Assert.IsFalse(weapon.TryReleaseRangedDraw(Vector2.up, 0.1f));
 
-                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 2f));
-                Assert.IsTrue(weapon.TryReleaseRangedDraw(Vector2.up, 3.36f));
-                weapon.TickAction(0f, 3.38f);
-
-                Assert.AreEqual(72f, weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(66f, weapon.CurrentStamina, 0.001f);
                 Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void PistolHeavyDoesNotRearmBlockLightAfterRecovery()
+        {
+            var rig = CreateWeaponRig("PistolHeavyNoRearm");
+            try
+            {
+                var weapon = rig.Weapon;
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Heavy, Vector2.up, 0f));
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.36f));
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0.38f));
             }
             finally
             {
@@ -141,7 +148,7 @@ namespace Hollow.Tests.EditMode
             }
         }
 
-        private static WeaponRig CreateWeaponRig(string name, string rangedWeaponId = "starter_bow")
+        private static WeaponRig CreateWeaponRig(string name, string rangedWeaponId = "starter_pistol")
         {
             var parent = new GameObject(name);
             var player = new GameObject("Player");

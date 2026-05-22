@@ -5,10 +5,10 @@ namespace Hollow.Branches
 {
     public sealed class BranchSessionState
     {
-        private BranchSessionState(BranchFloorGraph graph)
+        private BranchSessionState(BranchFloorGraph graph, BranchRoomId startRoomId)
         {
             Graph = graph;
-            CurrentRoomId = BranchRoomId.Origin;
+            CurrentRoomId = startRoomId;
             CurrentRoom.MarkVisited();
         }
 
@@ -20,7 +20,12 @@ namespace Hollow.Branches
 
         public static BranchSessionState Create(BranchFloorGraph graph)
         {
-            return new BranchSessionState(graph);
+            return new BranchSessionState(graph, BranchRoomId.Origin);
+        }
+
+        public static BranchSessionState Create(BranchFloorGraph graph, BranchRoomId startRoomId)
+        {
+            return new BranchSessionState(graph, startRoomId);
         }
 
         public void EnterRoom(BranchRoomId roomId)

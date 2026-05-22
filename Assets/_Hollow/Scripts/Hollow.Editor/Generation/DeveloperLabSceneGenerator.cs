@@ -411,6 +411,8 @@ namespace Hollow.Editor.Generation
             }
 
             if (pickupId.Contains("bolt", StringComparison.OrdinalIgnoreCase) ||
+                pickupId.Contains("pistol", StringComparison.OrdinalIgnoreCase) ||
+                pickupId.Contains("gun", StringComparison.OrdinalIgnoreCase) ||
                 pickupId.Contains("bow", StringComparison.OrdinalIgnoreCase))
             {
                 return PresentationPrefabRole.WeaponRanged;
@@ -513,12 +515,12 @@ namespace Hollow.Editor.Generation
         private static readonly string[] BuildPickupLabels =
         {
             "starter_blade",
-            "starter_bow",
+            "starter_pistol",
             "starter_bolt",
             "skeletal_sword",
-            "bone_bow",
+            "bone_pistol",
             "dragon_fang",
-            "dragon_bow",
+            "dragon_pistol",
             "skeletal_armor",
             "dragon_scale_armor",
             "mending_charm",

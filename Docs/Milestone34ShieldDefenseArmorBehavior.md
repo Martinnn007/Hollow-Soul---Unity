@@ -5,7 +5,7 @@ M34 turns the existing defense and armor stats into a first playable defensive l
 ## Scope
 
 - Passive defense mitigation reduces incoming player damage by `1` for every `2` defense, while preserving a minimum of `1` damage for unguarded positive hits.
-- Holding guard raises a prototype shield, drains stamina over time, and spends a stamina block cost when a hit lands.
+- Holding guard raises a prototype shield without passively draining stamina, and spends a stamina block cost when a hit lands.
 - A guarded hit reduces damage by an additional `1`; small hits can be fully blocked.
 - Guarded contact hits push the enemy source away from the player.
 - The combat HUD shows current defense and whether the shield is up.

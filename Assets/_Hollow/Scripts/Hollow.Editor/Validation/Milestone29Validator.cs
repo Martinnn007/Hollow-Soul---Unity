@@ -124,9 +124,9 @@ namespace Hollow.Editor.Validation
 
             foreach (var character in catalog.Characters.Where(character => character != null))
             {
-                if (character.StarterMeleeWeaponId != "starter_blade" || character.StarterRangedWeaponId != "starter_bow")
+                if (character.StarterMeleeWeaponId != "starter_blade" || character.StarterRangedWeaponId != "starter_pistol")
                 {
-                    failures.Add($"{character.CharacterId} must use starter_blade and starter_bow in M113.");
+                    failures.Add($"{character.CharacterId} must use starter_blade and starter_pistol in M113.");
                 }
             }
         }

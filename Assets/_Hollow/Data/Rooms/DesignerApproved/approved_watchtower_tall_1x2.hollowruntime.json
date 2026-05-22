@@ -948,7 +948,7 @@
                 "id": "spawn_enemy_3",
                 "kind": "spawnEnemyFast",
                 "position": {
-                    "x": 4.0,
+                    "x": 5.0,
                     "y": 0.0,
                     "z": 5.0
                 }

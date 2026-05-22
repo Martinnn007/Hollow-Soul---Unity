@@ -17,7 +17,7 @@ namespace Hollow.Branches
         {
             new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter", "spawnEnemySpittingPod", "spawnEnemyRat", "spawnEnemySpider", "spawnEnemyHollowBird", "spawnEnemyHollowBeast", "spawnEnemySkeletonSword", "spawnEnemySkeletonSpear", "spawnEnemyKnight", "spawnEnemyGiant", "spawnEnemyHollowArcher", "spawnEnemyPowderGunner", "spawnEnemyKnifeThrower", "spawnEnemyRepeaterTurret", "spawnEnemyClockworkSentry", "spawnEnemyHollowAcolyte", "spawnEnemyWraith", "spawnEnemySoulEater", "spawnEnemyCurseBinder", "spawnEnemyGraveLantern", "spawnEnemyStarforgedOctantSentry", "spawnEnemyCrimsonRailSpider", "spawnEnemyAzureMinigunTurret" }),
             new("Bosses", new[] { "stone_warden", "splinter_saint", "gravel_maw", "cartouche_widow", "iron_reliquary", "mirror_husk", "ash_comet", "choir_of_teeth", "rust_bishop", "hollow_star_larva" }),
-            new("Weapons", new[] { "starter_blade", "starter_bow", "starter_bolt", "skeletal_sword", "bone_bow", "dragon_fang", "dragon_bow" }),
+            new("Weapons", new[] { "starter_blade", "starter_pistol", "starter_bolt", "skeletal_sword", "bone_pistol", "dragon_fang", "dragon_pistol" }),
             new("Armor", new[] { "skeletal_armor", "dragon_scale_armor" }),
             new("Shields", new[] { "starter_buckler", "iron_kite_shield", "stone_wall_shield" }),
             new("Items", new[] { "vital_locket", "iron_stitch", "fleet_pin", "stamina_thread", "cursed_skull", "bone_totem", "dragon_tooth", "dragon_heart", "double_barrel", "triple_shot", "quad_shot", "power_up", "fire_rate_up" }),

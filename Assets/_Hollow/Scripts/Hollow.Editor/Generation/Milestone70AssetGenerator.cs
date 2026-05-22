@@ -64,7 +64,7 @@ namespace Hollow.Editor.Generation
                 ImpactForceClass.Heavy,
                 0.9f);
             RetuneWeapon(
-                $"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_BoneBow.asset",
+                $"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_BonePistol.asset",
                 ImpactForceClass.Light,
                 0.35f,
                 ImpactForceClass.Medium,
@@ -76,7 +76,7 @@ namespace Hollow.Editor.Generation
                 ImpactForceClass.Heavy,
                 1f);
             RetuneWeapon(
-                $"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_DragonBow.asset",
+                $"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_DragonPistol.asset",
                 ImpactForceClass.Medium,
                 0.45f,
                 ImpactForceClass.Heavy,

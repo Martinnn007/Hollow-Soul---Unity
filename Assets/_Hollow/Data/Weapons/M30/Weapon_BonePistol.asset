@@ -10,30 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07b8b845ecac43adb9c21ead73eb0065, type: 3}
-  m_Name: Weapon_BoneBow
+  m_Name: Weapon_BonePistol
   m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.WeaponDefinition
-  weaponId: bone_bow
-  displayName: Bone Bow
+  weaponId: bone_pistol
+  displayName: Bone Pistol
   slot: 1
-  category: 1
+  category: 4
   loadClass: 1
-  rangedFireMode: 1
+  rangedFireMode: 0
   tags: 02000000040000000d000000
   lightAttack:
     attackKind: 0
     damage: 1
     cooldownSeconds: 0.95
-    staminaCost: 2
+    staminaCost: 10
     rangeMeters: 6.67
     impactForceClass: 0
     knockbackMeters: 0.35
-    requiredDrawSeconds: 0.9
+    requiredDrawSeconds: 0
   heavyAttack:
     attackKind: 1
     damage: 3
     cooldownSeconds: 8.5
-    staminaCost: 36
+    staminaCost: 38
     rangeMeters: 6.67
     impactForceClass: 1
     knockbackMeters: 0.6
-    requiredDrawSeconds: 1.25
+    requiredDrawSeconds: 0

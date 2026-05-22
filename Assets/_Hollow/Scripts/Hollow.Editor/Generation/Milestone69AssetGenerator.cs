@@ -170,9 +170,9 @@ namespace Hollow.Editor.Generation
             RetuneWeapon($"{Milestone27AssetGenerator.WeaponDirectory}/Weapon_IronCleaver.asset", EquipmentLoadClass.Heavy);
             RetuneWeapon($"{Milestone27AssetGenerator.WeaponDirectory}/Weapon_EmberBolt.asset", EquipmentLoadClass.Medium);
             RetuneWeapon($"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_SkeletalSword.asset", EquipmentLoadClass.Medium);
-            RetuneWeapon($"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_BoneBow.asset", EquipmentLoadClass.Medium);
+            RetuneWeapon($"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_BonePistol.asset", EquipmentLoadClass.Medium);
             RetuneWeapon($"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_DragonFang.asset", EquipmentLoadClass.Medium);
-            RetuneWeapon($"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_DragonBow.asset", EquipmentLoadClass.Medium);
+            RetuneWeapon($"{Milestone30AssetGenerator.SetWeaponDirectory}/Weapon_DragonPistol.asset", EquipmentLoadClass.Medium);
         }
 
         private static void RetuneWeapon(string path, EquipmentLoadClass loadClass)

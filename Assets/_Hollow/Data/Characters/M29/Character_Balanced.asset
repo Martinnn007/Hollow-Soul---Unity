@@ -19,13 +19,13 @@ MonoBehaviour:
     speedMetersPerSecond: 4
     strength: 1
     maxStamina: 100
-    staminaRegenPerSecond: 18
+    staminaRegenPerSecond: 11
     defense: 0
     meleeDamageBonus: 0
     rangedDamageBonus: 0
     attackCooldownMultiplier: 1
   starterMeleeWeaponId: starter_blade
-  starterRangedWeaponId: starter_bow
+  starterRangedWeaponId: starter_pistol
   starterPassiveRewardId: 
   passiveSkill: {fileID: 11400000, guid: 45e3831152e6044cfba2f3c6ec8c57b8, type: 2}
   tags: 050000000200000001000000

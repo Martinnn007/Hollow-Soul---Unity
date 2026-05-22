@@ -60,6 +60,13 @@ namespace Hollow.World
             sampleRoomRuntimeJson = roomRuntimeJson;
         }
 
+        public void Configure(HollowPlatformKind nextPlatformKind, TextAsset roomRuntimeJson, RuntimeSessionMode nextSessionMode)
+        {
+            platformKind = nextPlatformKind;
+            sampleRoomRuntimeJson = roomRuntimeJson;
+            sessionMode = nextSessionMode;
+        }
+
         private void Awake()
         {
             InitializeSession();
@@ -74,15 +81,22 @@ namespace Hollow.World
             var importedAsset = isDesignerPlaytest ? ImportRoomAsset(playtestJson, "Room Designer Playtest") : ImportRoomAssetIfAvailable();
             var spawnPosition = importedAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             var selectedProfileContext = ProfileSessionHost.Instance?.SelectedProfileContext;
+            var isSpaceshipHubScene = !isDesignerPlaytest && sessionMode == RuntimeSessionMode.SpaceshipHub;
             var selectedProfile = selectedProfileContext?.SelectedProfile;
-            var launchMode = selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
+            var launchMode = isSpaceshipHubScene
+                ? RunLaunchMode.NewRun
+                : selectedProfileContext?.LaunchMode ?? RunLaunchMode.NewRun;
             var selectedCharacterId = isDesignerPlaytest
                 ? playtestCharacterId
                 : selectedProfileContext?.SelectedCharacterId ?? "balanced";
-            var selectedChallengeId = selectedProfileContext?.SelectedChallengeId ?? string.Empty;
-            var developerLabRequested = selectedProfileContext?.DeveloperLabRequested ?? false;
+            var selectedChallengeId = isSpaceshipHubScene
+                ? string.Empty
+                : selectedProfileContext?.SelectedChallengeId ?? string.Empty;
+            var developerLabRequested = !isSpaceshipHubScene && (selectedProfileContext?.DeveloperLabRequested ?? false);
             var effectiveSessionMode = isDesignerPlaytest
                 ? playtestMode
+                : isSpaceshipHubScene
+                    ? RuntimeSessionMode.SpaceshipHub
                 : developerLabRequested
                     ? RuntimeSessionMode.DeveloperLab
                     : !string.IsNullOrWhiteSpace(selectedChallengeId)
@@ -182,6 +196,7 @@ namespace Hollow.World
             var snapshot = CreateCurrentSnapshot();
             if (SessionState?.SessionMode != RuntimeSessionMode.DeveloperLab &&
                 SessionState?.SessionMode != RuntimeSessionMode.TransientArena &&
+                SessionState?.SessionMode != RuntimeSessionMode.SpaceshipHub &&
                 SessionState?.SessionMode != RuntimeSessionMode.TransientRoomDesignerPlaytest &&
                 snapshot != null &&
                 selectedProfile != null &&

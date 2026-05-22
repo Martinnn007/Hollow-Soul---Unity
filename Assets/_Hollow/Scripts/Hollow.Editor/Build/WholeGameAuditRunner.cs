@@ -39,6 +39,9 @@ namespace Hollow.Editor.Build
             { AppShellRoute.GameWindows, "Assets/_Hollow/Scenes/Game_Windows.unity" },
             { AppShellRoute.GameVisionOSBounded, "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity" },
             { AppShellRoute.GameVisionOSImmersive, "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity" },
+            { AppShellRoute.SpaceshipWindows, "Assets/_Hollow/Scenes/Spaceship_Windows.unity" },
+            { AppShellRoute.SpaceshipVisionOSBounded, "Assets/_Hollow/Scenes/Spaceship_VisionOS_Bounded.unity" },
+            { AppShellRoute.SpaceshipVisionOSImmersive, "Assets/_Hollow/Scenes/Spaceship_VisionOS_Immersive.unity" },
             { AppShellRoute.RoomDesigner, "Assets/_Hollow/Scenes/RoomDesigner.unity" },
             { AppShellRoute.ArenaMode, "Assets/_Hollow/Scenes/ArenaMode/ArenaMode.unity" },
             { AppShellRoute.DeveloperSandbox, "Assets/_Hollow/Scenes/DeveloperSandbox.unity" }
@@ -52,6 +55,9 @@ namespace Hollow.Editor.Build
             AppShellRoute.GameWindows,
             AppShellRoute.GameVisionOSBounded,
             AppShellRoute.GameVisionOSImmersive,
+            AppShellRoute.SpaceshipWindows,
+            AppShellRoute.SpaceshipVisionOSBounded,
+            AppShellRoute.SpaceshipVisionOSImmersive,
             AppShellRoute.RoomDesigner,
             AppShellRoute.ArenaMode
         };

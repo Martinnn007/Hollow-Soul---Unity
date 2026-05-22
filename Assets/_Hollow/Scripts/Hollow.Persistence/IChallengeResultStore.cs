@@ -11,5 +11,7 @@ namespace Hollow.Persistence
         ChallengeResultRecord MarkChallengeAttemptStarted(ProfileSlotId slotId, string challengeId, int seed);
 
         ChallengeResultRecord CompleteChallengeAttempt(ProfileSlotId slotId, string challengeId, int seed, float clearTimeSeconds);
+
+        ChallengeResultRecord FailChallengeAttempt(ProfileSlotId slotId, string challengeId, int seed);
     }
 }

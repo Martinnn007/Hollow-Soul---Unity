@@ -215,10 +215,14 @@ namespace Hollow.UI.MainMenu
             }
 
             var hasActiveRun = hasSelection && selected.HasActiveRun;
-            SetButtonVisible(continueRunButton, hasActiveRun);
+            SetButtonVisible(continueRunButton, hasSelection);
+            if (continueRunButton?.Label != null)
+            {
+                continueRunButton.Label.text = hasActiveRun ? "Continue Run" : "Enter Ship";
+            }
             if (normalRunButton != null)
             {
-                normalRunButton.Rect.anchoredPosition = new Vector2(hasActiveRun ? 260f : -260f, 86f);
+                normalRunButton.Rect.anchoredPosition = new Vector2(hasSelection ? 260f : -260f, 86f);
             }
 
             if (challengesButton != null)

@@ -92,9 +92,9 @@ namespace Hollow.Editor.Validation
                 failures.Add("M44 profile must keep guard cone at 140 degrees.");
             }
 
-            if (profile.GuardDrainStaminaPerSecond != 12f || profile.GuardHitStaminaCost != 12f || profile.ParryStaminaCost != 16f)
+            if (profile.GuardDrainStaminaPerSecond != 0f || profile.GuardHitStaminaCost != 22f || profile.ParryStaminaCost != 28f)
             {
-                failures.Add("M44 profile must keep high-cost guard/parry stamina tuning.");
+                failures.Add("M44 profile must keep no passive hold drain and high-cost guard/parry stamina tuning.");
             }
         }
 
@@ -102,7 +102,9 @@ namespace Hollow.Editor.Validation
         {
             if (PlayerDefenseController.ParryWindowSeconds != 0.3f ||
                 PlayerDefenseController.GuardConeDegrees != 140f ||
-                PlayerDefenseController.ParryStaminaCost != 16f)
+                PlayerDefenseController.GuardDrainStaminaPerSecond != 0f ||
+                PlayerDefenseController.GuardBlockStaminaCost != 22f ||
+                PlayerDefenseController.ParryStaminaCost != 28f)
             {
                 failures.Add("M44 PlayerDefenseController constants must match the locked shield tuning.");
             }

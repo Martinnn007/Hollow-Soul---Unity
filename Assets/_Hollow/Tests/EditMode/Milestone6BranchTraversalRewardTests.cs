@@ -187,6 +187,72 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void DefeatingRegisteredEnemiesAwardsSoulsWithoutClaimingRewardsAndSkipsBosses()
+        {
+            var root = CreateBranchHarness(out var branch, out var combat, out var player);
+            try
+            {
+                Assert.IsTrue(branch.TryTraverse("north"));
+                var enemy = combat.Enemies.First(candidate =>
+                    candidate != null &&
+                    candidate.IsAlive &&
+                    candidate.BossDefinition == null &&
+                    candidate.ArchetypeId != EnemyArchetypeId.Boss);
+                var startSouls = branch.RunEconomy.RunSouls;
+                var startClaimedRewards = branch.RewardCounter.ClaimedRewards;
+                var startRewardRecords = branch.RunEconomy.CollectedRewards.Count;
+
+                DamageSystem.ApplyDamage(enemy.Health, new DamageRequest(99, combat.gameObject));
+
+                Assert.AreEqual(startSouls + 1, branch.RunEconomy.RunSouls);
+                Assert.AreEqual(startClaimedRewards, branch.RewardCounter.ClaimedRewards);
+                Assert.AreEqual(startRewardRecords, branch.RunEconomy.CollectedRewards.Count);
+
+                var bossObject = new GameObject("BossEnemy");
+                bossObject.transform.SetParent(player.transform.parent, false);
+                var boss = bossObject.AddComponent<EnemyRuntimeController>();
+                boss.Configure(branch.RuntimeRoomRoot, player, EnemyDefinition.CreateRuntimeBoss(), DifficultyTierDefinition.CreateRuntimeDeveloperSample());
+                combat.RegisterRuntimeEnemy(boss);
+                var soulsBeforeBossDeath = branch.RunEconomy.RunSouls;
+
+                DamageSystem.ApplyDamage(boss.Health, new DamageRequest(99, combat.gameObject));
+
+                Assert.AreEqual(soulsBeforeBossDeath, branch.RunEconomy.RunSouls);
+                Assert.AreEqual(startClaimedRewards, branch.RewardCounter.ClaimedRewards);
+                Assert.AreEqual(startRewardRecords, branch.RunEconomy.CollectedRewards.Count);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void RoomClearDoesNotRestoreSpentStamina()
+        {
+            var root = CreateBranchHarness(out var branch, out var combat, out var player);
+            try
+            {
+                Assert.IsTrue(branch.TryTraverse("north"));
+                var weapon = player.GetComponent<PlayerWeaponController>();
+                Assert.IsNotNull(weapon);
+
+                Assert.IsTrue(weapon.TryRoll(Vector2.up, Vector2.zero, 0f));
+                weapon.TickAction(0f, 0.5f);
+                var staminaBeforeClear = weapon.CurrentStamina;
+
+                ClearCurrentRoom(combat);
+
+                Assert.AreEqual(staminaBeforeClear, weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(staminaBeforeClear, branch.CreatePlayerBuildHudModel().CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void MiniMapModelReportsCurrentVisitedClearedAndPendingReward()
         {
             var root = CreateBranchHarness(out var branch, out var combat, out _);

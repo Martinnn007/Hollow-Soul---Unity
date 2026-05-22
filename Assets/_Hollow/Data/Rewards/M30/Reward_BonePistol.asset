@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e877373aac24042c780314f42e957cb1, type: 3}
-  m_Name: Reward_DragonBow
+  m_Name: Reward_BonePistol
   m_EditorClassIdentifier: Hollow.Rewards::Hollow.Rewards.RewardDefinition
-  rewardId: dragon_bow
-  displayName: Dragon Bow
+  rewardId: bone_pistol
+  displayName: Bone Pistol
   rewardKind: 6
-  rarity: 5
+  rarity: 2
   souls: 0
   coins: 0
-  tags: 02000000090000000e000000
+  tags: 02000000040000000d000000
   effects: []

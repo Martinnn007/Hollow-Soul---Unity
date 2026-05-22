@@ -13,48 +13,12 @@ MonoBehaviour:
   m_Name: RoomNavMeshCatalog
   m_EditorClassIdentifier: Hollow.Rooms::Hollow.Rooms.RoomNavMeshCatalogDefinition
   entries:
-  - roomId: Room_Small_RatRoom_001
-    navMeshData: {fileID: 23800000, guid: a19a41b2e24c1486a96ed9b07260c244, type: 2}
-  - roomId: approved_ambush_l_3cell
-    navMeshData: {fileID: 23800000, guid: 3f1eb4bffdbdb406286bcc391c3b5893, type: 2}
-  - roomId: approved_broken_l_3cell
-    navMeshData: {fileID: 23800000, guid: 9c51bec40fde04a0a982a1ec85ac93eb, type: 2}
-  - roomId: approved_cover_arena_single_1x1
-    navMeshData: {fileID: 23800000, guid: 77ec859edd3244b17a7146ad9b19daf6, type: 2}
-  - roomId: approved_crossroads_single_1x1
-    navMeshData: {fileID: 23800000, guid: 3bff7e55b2b5e43818116d10bb17f937, type: 2}
-  - roomId: approved_hazard_quadrant_block_2x2
-    navMeshData: {fileID: 23800000, guid: 2088e03db89724485aeafdeb3e6f1ff8, type: 2}
-  - roomId: approved_lane_wide_2x1
-    navMeshData: {fileID: 23800000, guid: 18c5b57bbfa574eb5b73c473e2470b1d, type: 2}
-  - roomId: approved_pressure_lane_wide_2x1
-    navMeshData: {fileID: 23800000, guid: 52af35f51bd7a4ba1a8efa9996801940, type: 2}
-  - roomId: approved_quadrant_block_2x2
-    navMeshData: {fileID: 23800000, guid: f9749799472034564babb8240223edf0, type: 2}
-  - roomId: approved_turret_spire_tall_1x2
-    navMeshData: {fileID: 23800000, guid: cfa09b9718ba4435f9d47cd55b6da619, type: 2}
-  - roomId: approved_watchtower_tall_1x2
-    navMeshData: {fileID: 23800000, guid: b203057c2bd934a73ae3ed349ea30057, type: 2}
-  - roomId: boss_arena_blind_deep
-    navMeshData: {fileID: 23800000, guid: d268ac3f5d06041ec884f8d103fa5135, type: 2}
-  - roomId: boss_arena_broken_gateyard
-    navMeshData: {fileID: 23800000, guid: e3f41a04b626b489ebb599cf0648a42e, type: 2}
-  - roomId: boss_arena_charred_crossing
-    navMeshData: {fileID: 23800000, guid: be04a17ae7d504405a7ecf1397237cfd, type: 2}
-  - roomId: boss_arena_cover_maze
-    navMeshData: {fileID: 23800000, guid: 11750b7c101394bac9651551c3c0f0ca, type: 2}
-  - roomId: boss_arena_hell_heaven_dais
-    navMeshData: {fileID: 23800000, guid: af4e01ab5e32146fdad330a1992c44b9, type: 2}
-  - roomId: boss_arena_industrial_cover_grid
-    navMeshData: {fileID: 23800000, guid: 5269b9f784f4d491c90394fe29a6f6e9, type: 2}
-  - roomId: boss_arena_narrow_shrine
-    navMeshData: {fileID: 23800000, guid: 39da68654abb6488cb1a02c96a3c87a9, type: 2}
-  - roomId: boss_arena_open_tomb
-    navMeshData: {fileID: 23800000, guid: 5d9765988d5d54eb989319bdfe2e4722, type: 2}
-  - roomId: boss_arena_sandy_pit_ring
-    navMeshData: {fileID: 23800000, guid: 63b278e4a217e40ffaa8177fe6b86e96, type: 2}
-  - roomId: boss_arena_symmetric_mirror
-    navMeshData: {fileID: 23800000, guid: 9a43d1e685bbb41ab8b9e227c18c369c, type: 2}
+  - roomId: m115_azure_minigun_turret_room
+    navMeshData: {fileID: 23800000, guid: 60109c5225d1642a5bfe6b1714157d4e, type: 2}
+  - roomId: m115_crimson_rail_spider_room
+    navMeshData: {fileID: 23800000, guid: 22a706eb969254b038ece41a6eae2de3, type: 2}
+  - roomId: m115_starforged_octant_sentry_room
+    navMeshData: {fileID: 23800000, guid: 0d62153a0f9d5466e8b8745069438939, type: 2}
   - roomId: m77_rat_showcase
     navMeshData: {fileID: 23800000, guid: d6d51cede4a08461d833a504209a8883, type: 2}
   - roomId: m77_rat_warren_single
@@ -107,3 +71,85 @@ MonoBehaviour:
     navMeshData: {fileID: 23800000, guid: 4c376e1fc837e4b85a05ecf7c3b1c763, type: 2}
   - roomId: m87_wraith_crossing_room
     navMeshData: {fileID: 23800000, guid: f0456452330e8461a96875768d8493fb, type: 2}
+  - roomId: Room_Small_RatRoom_001
+    navMeshData: {fileID: 23800000, guid: a19a41b2e24c1486a96ed9b07260c244, type: 2}
+  - roomId: approved_ambush_l_3cell
+    navMeshData: {fileID: 23800000, guid: 3f1eb4bffdbdb406286bcc391c3b5893, type: 2}
+  - roomId: approved_broken_l_3cell
+    navMeshData: {fileID: 23800000, guid: 9c51bec40fde04a0a982a1ec85ac93eb, type: 2}
+  - roomId: approved_cover_arena_single_1x1
+    navMeshData: {fileID: 23800000, guid: 77ec859edd3244b17a7146ad9b19daf6, type: 2}
+  - roomId: approved_crossroads_single_1x1
+    navMeshData: {fileID: 23800000, guid: 3bff7e55b2b5e43818116d10bb17f937, type: 2}
+  - roomId: approved_hazard_quadrant_block_2x2
+    navMeshData: {fileID: 23800000, guid: 2088e03db89724485aeafdeb3e6f1ff8, type: 2}
+  - roomId: approved_lane_wide_2x1
+    navMeshData: {fileID: 23800000, guid: 18c5b57bbfa574eb5b73c473e2470b1d, type: 2}
+  - roomId: approved_pressure_lane_wide_2x1
+    navMeshData: {fileID: 23800000, guid: 52af35f51bd7a4ba1a8efa9996801940, type: 2}
+  - roomId: approved_quadrant_block_2x2
+    navMeshData: {fileID: 23800000, guid: f9749799472034564babb8240223edf0, type: 2}
+  - roomId: approved_turret_spire_tall_1x2
+    navMeshData: {fileID: 23800000, guid: cfa09b9718ba4435f9d47cd55b6da619, type: 2}
+  - roomId: approved_watchtower_tall_1x2
+    navMeshData: {fileID: 23800000, guid: b203057c2bd934a73ae3ed349ea30057, type: 2}
+  - roomId: boss_arena_blind_deep
+    navMeshData: {fileID: 23800000, guid: d268ac3f5d06041ec884f8d103fa5135, type: 2}
+  - roomId: boss_arena_broken_gateyard
+    navMeshData: {fileID: 23800000, guid: e3f41a04b626b489ebb599cf0648a42e, type: 2}
+  - roomId: boss_arena_charred_crossing
+    navMeshData: {fileID: 23800000, guid: be04a17ae7d504405a7ecf1397237cfd, type: 2}
+  - roomId: boss_arena_cover_maze
+    navMeshData: {fileID: 23800000, guid: 11750b7c101394bac9651551c3c0f0ca, type: 2}
+  - roomId: boss_arena_hell_heaven_dais
+    navMeshData: {fileID: 23800000, guid: af4e01ab5e32146fdad330a1992c44b9, type: 2}
+  - roomId: boss_arena_industrial_cover_grid
+    navMeshData: {fileID: 23800000, guid: 5269b9f784f4d491c90394fe29a6f6e9, type: 2}
+  - roomId: boss_arena_narrow_shrine
+    navMeshData: {fileID: 23800000, guid: 39da68654abb6488cb1a02c96a3c87a9, type: 2}
+  - roomId: boss_arena_open_tomb
+    navMeshData: {fileID: 23800000, guid: 5d9765988d5d54eb989319bdfe2e4722, type: 2}
+  - roomId: boss_arena_sandy_pit_ring
+    navMeshData: {fileID: 23800000, guid: 63b278e4a217e40ffaa8177fe6b86e96, type: 2}
+  - roomId: boss_arena_symmetric_mirror
+    navMeshData: {fileID: 23800000, guid: 9a43d1e685bbb41ab8b9e227c18c369c, type: 2}
+  - roomId: developer_lab_01_environment_basics
+    navMeshData: {fileID: 23800000, guid: a7ab464e03ab84d468bdea9ba2e7af92, type: 2}
+  - roomId: developer_lab_02_economy_sustain
+    navMeshData: {fileID: 23800000, guid: de461e0652c104526b5c589df24e3495, type: 2}
+  - roomId: developer_lab_03_build_pickups
+    navMeshData: {fileID: 23800000, guid: fd0323cdf65b04b3bb0a9e6b62d8570a, type: 2}
+  - roomId: developer_lab_04_enemy_gallery
+    navMeshData: {fileID: 23800000, guid: 6788623077deb47cda819e16911e8738, type: 2}
+  - roomId: developer_lab_05_projectile_vfx_gallery
+    navMeshData: {fileID: 23800000, guid: 60e5b1c4ea186434983b3b4190c368dd, type: 2}
+  - roomId: developer_lab_06_hazard_physics_lane
+    navMeshData: {fileID: 23800000, guid: dddcdc4f5d69a46fda2ee3a7c0b4e4d4, type: 2}
+  - roomId: developer_lab_07_progression_props
+    navMeshData: {fileID: 23800000, guid: 33ef6146502c747ab920fe325563d7f1, type: 2}
+  - roomId: developer_lab_08_world1_boss_gallery
+    navMeshData: {fileID: 23800000, guid: 3b725b2aa50d54c1093ab18f16a5b7e3, type: 2}
+  - roomId: developer_lab_09_world2_boss_gallery
+    navMeshData: {fileID: 23800000, guid: b69066e723f2d45ec89ea46f61ebfb3d, type: 2}
+  - roomId: developer_lab_10_world3_boss_gallery
+    navMeshData: {fileID: 23800000, guid: e85cb50e5e41647708cfd76404b055d4, type: 2}
+  - roomId: combat_macro_block_2x2
+    navMeshData: {fileID: 23800000, guid: 3f0f8842b1fe44566958af7d274f3603, type: 2}
+  - roomId: combat_macro_l_3cell
+    navMeshData: {fileID: 23800000, guid: cf755853a5b5e4a3ab305a0b8d3446de, type: 2}
+  - roomId: combat_macro_single_1x1
+    navMeshData: {fileID: 23800000, guid: f0c7d7497a0024eeeb55239b98dc6bc6, type: 2}
+  - roomId: combat_macro_tall_1x2
+    navMeshData: {fileID: 23800000, guid: e43387643f9344f218dabe916f06b6c4, type: 2}
+  - roomId: combat_macro_wide_2x1
+    navMeshData: {fileID: 23800000, guid: b294b0d54b91148cd82382b7cb3c5c13, type: 2}
+  - roomId: ship_arrivals_quarantine
+    navMeshData: {fileID: 23800000, guid: ccd4a71be5c724bcf98adb60d40ccbdf, type: 2}
+  - roomId: ship_departures
+    navMeshData: {fileID: 23800000, guid: 6dfa20b78b92341d192c18b0bca1ca0b, type: 2}
+  - roomId: ship_main_hall
+    navMeshData: {fileID: 23800000, guid: 19ba054fafa414bd3a31865d5998052b, type: 2}
+  - roomId: ship_mission_center
+    navMeshData: {fileID: 23800000, guid: 7c3215deb8b3d4fa38d3cb62c4c50343, type: 2}
+  - roomId: ship_technology_lab
+    navMeshData: {fileID: 23800000, guid: 24f0614ad64a349d4b51f864fa6e2292, type: 2}

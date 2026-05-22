@@ -3,11 +3,15 @@
   "rootNamespace": "Hollow.World",
   "references": [
     "Hollow.Core",
+    "Hollow.Combat",
+    "Hollow.Data",
     "Hollow.Persistence",
     "Hollow.Platform",
     "Hollow.Presentation",
+    "Hollow.Rewards",
     "Hollow.Rooms",
     "Hollow.Entities",
+    "Hollow.Input",
     "Unity.InputSystem"
   ],
   "includePlatforms": [],

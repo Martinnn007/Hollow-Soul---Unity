@@ -36,6 +36,12 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual("Game_VisionOS_Bounded", SceneLoaderService.SceneNameForRoute(AppShellRoute.GameVisionOSBounded));
             Assert.AreEqual("Game_VisionOS_Immersive", SceneLoaderService.SceneNameForRoute(AppShellRoute.GameVisionOSImmersive));
             Assert.AreEqual("MainMenu_VisionOS", SceneLoaderService.SceneNameForRoute(AppShellRoute.MainMenuVisionOS));
+            Assert.AreEqual("Spaceship_Windows", SceneLoaderService.SceneNameForRoute(AppShellRoute.SpaceshipWindows));
+            Assert.AreEqual("Spaceship_VisionOS_Bounded", SceneLoaderService.SceneNameForRoute(AppShellRoute.SpaceshipVisionOSBounded));
+            Assert.AreEqual("Spaceship_VisionOS_Immersive", SceneLoaderService.SceneNameForRoute(AppShellRoute.SpaceshipVisionOSImmersive));
+            Assert.AreEqual(AppShellRoute.SpaceshipWindows, PlatformPresentationModeResolver.SpaceshipRouteForPlatform(HollowPlatformKind.WindowsStandard3D));
+            Assert.AreEqual(AppShellRoute.SpaceshipVisionOSBounded, PlatformPresentationModeResolver.SpaceshipRouteForPlatform(HollowPlatformKind.VisionOSBoundedTabletop));
+            Assert.AreEqual(AppShellRoute.SpaceshipVisionOSImmersive, PlatformPresentationModeResolver.SpaceshipRouteForPlatform(HollowPlatformKind.VisionOSImmersive));
         }
 
         [Test]

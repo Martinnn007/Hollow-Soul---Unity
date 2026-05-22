@@ -33,7 +33,7 @@ MonoBehaviour:
   startingSouls: 0
   loadout:
     meleeWeaponId: dragon_fang
-    rangedWeaponId: starter_bow
+    rangedWeaponId: starter_pistol
     armorId: 
     activeItemId: echo_burst
     consumableCardId: 
