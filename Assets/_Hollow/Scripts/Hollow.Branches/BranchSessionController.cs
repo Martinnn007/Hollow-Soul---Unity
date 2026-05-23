@@ -736,6 +736,10 @@ namespace Hollow.Branches
                 hudCombatStats.Karma,
                 activeWeaponId,
                 activeWeaponSlot,
+                appliedBuild.Equipment.ActiveItemId,
+                appliedBuild.Equipment.ActiveItemCharges,
+                ActiveItemMaxCharges(appliedBuild.Equipment.ActiveItemId),
+                appliedBuild.Equipment.ConsumableCardId,
                 weapon != null ? $"{weapon.ActiveWeaponSlot} - {weapon.ActiveWeaponDisplayName}" : appliedBuild.Equipment.ActiveWeaponSlot.ToString(),
                 ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.MeleeWeaponId),
                 ResolveRewardName(RewardKind.Weapon, appliedBuild.Equipment.RangedWeaponId),
@@ -3494,7 +3498,17 @@ namespace Hollow.Branches
             }
 
             var displayName = usableItemCatalog != null && usableItemCatalog.TryGet(itemId, out var item) ? item.DisplayName : itemId;
-            return $"{displayName} ({build.Equipment.ActiveItemCharges}/3)";
+            var maxCharges = ActiveItemMaxCharges(itemId);
+            return maxCharges > 0
+                ? $"{displayName} ({build.Equipment.ActiveItemCharges}/{maxCharges})"
+                : $"{displayName} ({build.Equipment.ActiveItemCharges})";
+        }
+
+        private int ActiveItemMaxCharges(string itemId)
+        {
+            return !string.IsNullOrWhiteSpace(itemId) && usableItemCatalog != null && usableItemCatalog.TryGet(itemId, out var item)
+                ? item.MaxCharges
+                : 0;
         }
 
         private string CardSummary()

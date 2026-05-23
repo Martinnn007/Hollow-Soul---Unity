@@ -28,6 +28,9 @@ namespace Hollow.UI.Shell
         private const string KarmaIconSpriteResource = "UI/Hud/KarmaIcon";
         private const string WeaponIconSpriteResourcePrefix = "UI/Hud/Weapons/";
         private const string ActiveWeaponFallbackSpriteResource = "UI/Hud/Weapons/active_weapon_missing";
+        private const string UsableIconSpriteResourcePrefix = "UI/Hud/Usables/";
+        private const string ActiveItemFallbackSpriteResource = "UI/Hud/Usables/active_item_missing";
+        private const string ConsumableCardFallbackSpriteResource = "UI/Hud/Usables/card_missing";
         private const float AvatarSize = 118f;
         private const float HeartSize = 38f;
         private const float HeartPadding = 6f;
@@ -68,13 +71,23 @@ namespace Hollow.UI.Shell
         private const float ActiveWeaponIconWidth = 108f;
         private const float ActiveWeaponIconHeight = 72f;
         private const float ActiveWeaponIconInset = 24f;
+        private const float UsableIconSize = 84f;
+        private const float UsableIconInset = 24f;
+        private const float UsableIconSpacing = 10f;
+        private const float ActiveItemChargesWidth = 48f;
+        private const float ActiveItemChargesHeight = 24f;
+        private const int ActiveItemChargesFontSize = 18;
 
         private IPlayerBuildHudModelProvider hudModelProvider;
         private Text buildText;
         private RectTransform panelRect;
         private RectTransform activeWeaponIconRect;
+        private RectTransform activeItemIconRect;
+        private RectTransform consumableCardIconRect;
         private Image avatarImage;
         private Image activeWeaponIconImage;
+        private Image activeItemIconImage;
+        private Image consumableCardIconImage;
         private RectTransform staminaBarRect;
         private Image staminaFrameImage;
         private Image staminaFillImage;
@@ -91,6 +104,7 @@ namespace Hollow.UI.Shell
         private Text soulsAmountText;
         private Text coinsAmountText;
         private Text keysAmountText;
+        private Text activeItemChargesText;
         private Sprite avatarSprite;
         private Sprite emptyHeartSprite;
         private Sprite fullHeartSprite;
@@ -109,6 +123,8 @@ namespace Hollow.UI.Shell
         private Sprite moveSpeedIconSprite;
         private Sprite karmaIconSprite;
         private Sprite activeWeaponFallbackSprite;
+        private Sprite activeItemFallbackSprite;
+        private Sprite consumableCardFallbackSprite;
         private Font font;
         private int renderedMaxHealth = -1;
         private int renderedFullHeartCount = -1;
@@ -117,12 +133,16 @@ namespace Hollow.UI.Shell
         private int renderedKeys = int.MinValue;
         private bool renderedHasBossKey;
         private string renderedActiveWeaponId = string.Empty;
+        private string renderedActiveItemId = string.Empty;
+        private string renderedConsumableCardId = string.Empty;
+        private string renderedActiveItemChargesText = string.Empty;
         private float renderedStaminaFillAmount = -1f;
         private readonly List<Image> heartImages = new List<Image>();
         private readonly List<Image> statIconImages = new List<Image>();
         private readonly List<Text> statValueTexts = new List<Text>();
         private readonly string[] renderedStatValues = new string[8];
         private readonly Dictionary<string, Sprite> weaponIconSprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, Sprite> usableIconSprites = new Dictionary<string, Sprite>();
 
         public int RenderedHeartCount => heartImages.Count;
         public int RenderedFullHeartCount => renderedFullHeartCount;
@@ -137,7 +157,12 @@ namespace Hollow.UI.Shell
         public bool HasRenderedKeysCounter => keysIconImage != null && keysAmountText != null;
         public bool HasRenderedStatsBlock => statsBlockRect != null && statIconImages.Count == 8 && statValueTexts.Count == 8;
         public bool HasRenderedActiveWeaponIcon => activeWeaponIconImage != null && activeWeaponIconRect != null && activeWeaponIconImage.enabled;
+        public bool HasRenderedActiveItemIcon => activeItemIconImage != null && activeItemIconRect != null && activeItemIconImage.enabled;
+        public bool HasRenderedConsumableCardIcon => consumableCardIconImage != null && consumableCardIconRect != null && consumableCardIconImage.enabled;
         public string RenderedActiveWeaponId => renderedActiveWeaponId ?? string.Empty;
+        public string RenderedActiveItemId => renderedActiveItemId ?? string.Empty;
+        public string RenderedConsumableCardId => renderedConsumableCardId ?? string.Empty;
+        public string RenderedActiveItemChargesText => renderedActiveItemChargesText ?? string.Empty;
 
         public void Bind(BranchSessionController controller)
         {
@@ -204,6 +229,7 @@ namespace Hollow.UI.Shell
             RefreshStamina(model.CurrentStamina, model.MaxStamina);
             RefreshStats(model);
             RefreshActiveWeapon(model.ActiveWeaponId);
+            RefreshUsableSlots(model.ActiveItemId, model.ActiveItemCharges, model.ActiveItemMaxCharges, model.ConsumableCardId);
         }
 
         private void BuildIfNeeded()
@@ -219,6 +245,9 @@ namespace Hollow.UI.Shell
                 keysAmountText != null &&
                 statsBlockRect != null &&
                 activeWeaponIconImage != null &&
+                activeItemIconImage != null &&
+                consumableCardIconImage != null &&
+                activeItemChargesText != null &&
                 statIconImages.Count == 8 &&
                 statValueTexts.Count == 8)
             {
@@ -249,6 +278,54 @@ namespace Hollow.UI.Shell
             activeWeaponIconImage.enabled = activeWeaponFallbackSprite != null;
             activeWeaponIconImage.preserveAspect = true;
             activeWeaponIconImage.raycastTarget = false;
+
+            var activeItemIconObject = new GameObject("PlayerBuildHud.ActiveItemIcon", typeof(RectTransform), typeof(Image));
+            activeItemIconObject.transform.SetParent(transform, false);
+            activeItemIconRect = (RectTransform)activeItemIconObject.transform;
+            activeItemIconRect.anchorMin = new Vector2(1f, 0f);
+            activeItemIconRect.anchorMax = new Vector2(1f, 0f);
+            activeItemIconRect.pivot = new Vector2(1f, 0f);
+            activeItemIconRect.anchoredPosition = new Vector2(-UsableIconInset, UsableIconInset);
+            activeItemIconRect.sizeDelta = new Vector2(UsableIconSize, UsableIconSize);
+            activeItemIconImage = activeItemIconObject.GetComponent<Image>();
+            activeItemIconImage.sprite = activeItemFallbackSprite;
+            activeItemIconImage.enabled = false;
+            activeItemIconImage.preserveAspect = true;
+            activeItemIconImage.raycastTarget = false;
+
+            var activeItemChargesObject = new GameObject("Charges", typeof(RectTransform), typeof(Text), typeof(Outline));
+            activeItemChargesObject.transform.SetParent(activeItemIconObject.transform, false);
+            var activeItemChargesRect = (RectTransform)activeItemChargesObject.transform;
+            activeItemChargesRect.anchorMin = new Vector2(1f, 0f);
+            activeItemChargesRect.anchorMax = new Vector2(1f, 0f);
+            activeItemChargesRect.pivot = new Vector2(1f, 0f);
+            activeItemChargesRect.anchoredPosition = new Vector2(-4f, 3f);
+            activeItemChargesRect.sizeDelta = new Vector2(ActiveItemChargesWidth, ActiveItemChargesHeight);
+            activeItemChargesText = activeItemChargesObject.GetComponent<Text>();
+            activeItemChargesText.font = font;
+            activeItemChargesText.fontSize = ActiveItemChargesFontSize;
+            activeItemChargesText.fontStyle = FontStyle.Bold;
+            activeItemChargesText.alignment = TextAnchor.LowerRight;
+            activeItemChargesText.color = new Color(0.9f, 0.98f, 1f, 1f);
+            activeItemChargesText.raycastTarget = false;
+            activeItemChargesText.text = string.Empty;
+            var activeItemChargesOutline = activeItemChargesObject.GetComponent<Outline>();
+            activeItemChargesOutline.effectColor = new Color(0.02f, 0.04f, 0.08f, 0.95f);
+            activeItemChargesOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var consumableCardIconObject = new GameObject("PlayerBuildHud.ConsumableCardIcon", typeof(RectTransform), typeof(Image));
+            consumableCardIconObject.transform.SetParent(transform, false);
+            consumableCardIconRect = (RectTransform)consumableCardIconObject.transform;
+            consumableCardIconRect.anchorMin = new Vector2(1f, 0f);
+            consumableCardIconRect.anchorMax = new Vector2(1f, 0f);
+            consumableCardIconRect.pivot = new Vector2(1f, 0f);
+            consumableCardIconRect.anchoredPosition = new Vector2(-UsableIconInset, UsableIconInset + UsableIconSize + UsableIconSpacing);
+            consumableCardIconRect.sizeDelta = new Vector2(UsableIconSize, UsableIconSize);
+            consumableCardIconImage = consumableCardIconObject.GetComponent<Image>();
+            consumableCardIconImage.sprite = consumableCardFallbackSprite;
+            consumableCardIconImage.enabled = false;
+            consumableCardIconImage.preserveAspect = true;
+            consumableCardIconImage.raycastTarget = false;
 
             var avatarObject = new GameObject("PlayerBuildHud.Avatar", typeof(RectTransform), typeof(Image));
             avatarObject.transform.SetParent(panel.transform, false);
@@ -507,6 +584,8 @@ namespace Hollow.UI.Shell
             moveSpeedIconSprite ??= Resources.Load<Sprite>(MoveSpeedIconSpriteResource);
             karmaIconSprite ??= Resources.Load<Sprite>(KarmaIconSpriteResource);
             activeWeaponFallbackSprite ??= Resources.Load<Sprite>(ActiveWeaponFallbackSpriteResource);
+            activeItemFallbackSprite ??= Resources.Load<Sprite>(ActiveItemFallbackSpriteResource);
+            consumableCardFallbackSprite ??= Resources.Load<Sprite>(ConsumableCardFallbackSpriteResource);
         }
 
         private void RefreshHealth(int currentHealth, int maxHealth)
@@ -718,6 +797,92 @@ namespace Hollow.UI.Shell
             }
 
             return sprite;
+        }
+
+        private void RefreshUsableSlots(string activeItemId, int activeItemCharges, int activeItemMaxCharges, string consumableCardId)
+        {
+            BuildIfNeeded();
+            RefreshUsableIcon(
+                NormalizeOptionalId(activeItemId),
+                ref renderedActiveItemId,
+                activeItemIconImage,
+                activeItemFallbackSprite);
+            RefreshUsableIcon(
+                NormalizeOptionalId(consumableCardId),
+                ref renderedConsumableCardId,
+                consumableCardIconImage,
+                consumableCardFallbackSprite);
+            RefreshActiveItemCharges(activeItemId, activeItemCharges, activeItemMaxCharges);
+        }
+
+        private void RefreshUsableIcon(string usableId, ref string renderedId, Image targetImage, Sprite fallbackSprite)
+        {
+            if (targetImage == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(usableId))
+            {
+                renderedId = string.Empty;
+                targetImage.sprite = null;
+                targetImage.enabled = false;
+                return;
+            }
+
+            if (renderedId == usableId && targetImage.sprite != null && targetImage.enabled)
+            {
+                return;
+            }
+
+            renderedId = usableId;
+            var sprite = LoadUsableIconSprite(usableId) ?? fallbackSprite;
+            targetImage.sprite = sprite;
+            targetImage.enabled = sprite != null;
+            targetImage.preserveAspect = true;
+        }
+
+        private void RefreshActiveItemCharges(string activeItemId, int activeItemCharges, int activeItemMaxCharges)
+        {
+            if (activeItemChargesText == null)
+            {
+                return;
+            }
+
+            var text = string.IsNullOrWhiteSpace(activeItemId)
+                ? string.Empty
+                : activeItemMaxCharges > 0
+                    ? $"{Mathf.Max(0, activeItemCharges)}/{activeItemMaxCharges}"
+                    : Mathf.Max(0, activeItemCharges).ToString();
+            if (renderedActiveItemChargesText == text)
+            {
+                return;
+            }
+
+            renderedActiveItemChargesText = text;
+            activeItemChargesText.text = text;
+            activeItemChargesText.enabled = !string.IsNullOrWhiteSpace(text);
+        }
+
+        private Sprite LoadUsableIconSprite(string usableId)
+        {
+            if (string.IsNullOrWhiteSpace(usableId))
+            {
+                return null;
+            }
+
+            if (!usableIconSprites.TryGetValue(usableId, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>($"{UsableIconSpriteResourcePrefix}{usableId}");
+                usableIconSprites[usableId] = sprite;
+            }
+
+            return sprite;
+        }
+
+        private static string NormalizeOptionalId(string id)
+        {
+            return string.IsNullOrWhiteSpace(id) ? string.Empty : id.Trim();
         }
 
         private static string FormatKarma(int karma)

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="5" result="Failed(Child)" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.178742">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="740" result="Failed" site="Child" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.178742" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1859" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="739" result="Failed" site="Child" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.172682" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="65217" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1860" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="739" result="Failed" site="Child" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.170117" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1861" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="739" result="Failed" site="Child" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.167820" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1862" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="739" result="Failed" site="Child" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.165477" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1327" name="Milestone28ItemsCardsCoinsTests" fullname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" classname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.155422" total="5" passed="4" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1331" name="ActiveItemChargesSaveRestoreAndRecharge" fullname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests.ActiveItemChargesSaveRestoreAndRecharge" methodname="ActiveItemChargesSaveRestoreAndRecharge" classname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" runstate="Runnable" seed="1396538857" result="Passed" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:17Z" duration="0.009683" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1332" name="Milestone28ValidatorReportsGeneratedStateValid" fullname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests.Milestone28ValidatorReportsGeneratedStateValid" methodname="Milestone28ValidatorReportsGeneratedStateValid" classname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" runstate="Runnable" seed="1551259937" result="Failed" start-time="2026-05-22 20:41:17Z" end-time="2026-05-22 20:41:18Z" duration="1.131490" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[Unhandled log message: '[Error] Assets/_Hollow/Scenes/Game_Windows.unity BranchSessionController is not wired to M28-compatible reward pools/catalog.'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                  <stack-trace><![CDATA[Hollow.Editor.Validation.Milestone28Validator:Validate (bool) (at Assets/_Hollow/Scripts/Hollow.Editor/Validation/Milestone28Validator.cs:84)
+Hollow.Editor.Validation.Milestone28Validator:Validate () (at Assets/_Hollow/Scripts/Hollow.Editor/Validation/Milestone28Validator.cs:47)
+Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests/<>c:<Milestone28ValidatorReportsGeneratedStateValid>b__4_0 () (at Assets/_Hollow/Tests/EditMode/Milestone28ItemsCardsCoinsTests.cs:104)
+NUnit.Framework.Constraints.ThrowsConstraint/VoidInvocationDescriptor:Invoke ()
+NUnit.Framework.Constraints.ThrowsConstraint/ExceptionInterceptor:Intercept (object)
+NUnit.Framework.Constraints.ThrowsNothingConstraint:ApplyTo (object)
+NUnit.Framework.Assert:That<object> (object,NUnit.Framework.Constraints.IResolveConstraint,string,object[])
+NUnit.Framework.Assert:That (NUnit.Framework.TestDelegate,NUnit.Framework.Constraints.IResolveConstraint,string,object[])
+NUnit.Framework.Assert:DoesNotThrow (NUnit.Framework.TestDelegate,string,object[])
+NUnit.Framework.Assert:DoesNotThrow (NUnit.Framework.TestDelegate)
+Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests:Milestone28ValidatorReportsGeneratedStateValid () (at Assets/_Hollow/Tests/EditMode/Milestone28ItemsCardsCoinsTests.cs:104)
+System.Reflection.MethodBase:Invoke (object,object[])
+NUnit.Framework.Internal.Reflect:InvokeMethod (System.Reflection.MethodInfo,object,object[])
+NUnit.Framework.Internal.MethodWrapper:Invoke (object,object[])
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunNonAsyncTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[Assets/_Hollow/Scenes/Game_Windows.unity BranchSessionController is not wired to M28-compatible reward pools/catalog.
+Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity BranchSessionController is not wired to M28-compatible reward pools/catalog.
+Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity BranchSessionController is not wired to M28-compatible reward pools/catalog.
+]]></output>
+              </test-case>
+              <test-case id="1328" name="RewardApplicationRoutesEveryM28RewardKind" fullname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests.RewardApplicationRoutesEveryM28RewardKind" methodname="RewardApplicationRoutesEveryM28RewardKind" classname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" runstate="Runnable" seed="1447364875" result="Passed" start-time="2026-05-22 20:41:18Z" end-time="2026-05-22 20:41:18Z" duration="0.004049" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1329" name="ShopOffersUseCoinsForStandardRewardsAndSoulsForWeapons" fullname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests.ShopOffersUseCoinsForStandardRewardsAndSoulsForWeapons" methodname="ShopOffersUseCoinsForStandardRewardsAndSoulsForWeapons" classname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" runstate="Runnable" seed="719873467" result="Passed" start-time="2026-05-22 20:41:18Z" end-time="2026-05-22 20:41:18Z" duration="0.001012" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1330" name="UsableCatalogAndRewardPoolsContainM28Content" fullname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests.UsableCatalogAndRewardPoolsContainM28Content" methodname="UsableCatalogAndRewardPoolsContainM28Content" classname="Hollow.Tests.EditMode.Milestone28ItemsCardsCoinsTests" runstate="Runnable" seed="669796879" result="Passed" start-time="2026-05-22 20:41:18Z" end-time="2026-05-22 20:41:18Z" duration="0.001414" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

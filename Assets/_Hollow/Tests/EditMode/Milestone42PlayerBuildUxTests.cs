@@ -48,6 +48,26 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(model.BodyText.Contains("Karma 0"));
             Assert.AreEqual("starter_blade", model.ActiveWeaponId);
             Assert.AreEqual(WeaponSlot.Melee, model.ActiveWeaponSlot);
+            Assert.AreEqual(string.Empty, model.ActiveItemId);
+            Assert.AreEqual(0, model.ActiveItemCharges);
+            Assert.AreEqual(string.Empty, model.ConsumableCardId);
+        }
+
+        [Test]
+        public void PlayerBuildHudModelPreservesUsableIdsAndClampsCharges()
+        {
+            var model = CreateHudModel(
+                currentStamina: 80f,
+                maxStamina: 100f,
+                activeItemId: " mending_charm ",
+                activeItemCharges: -2,
+                activeItemMaxCharges: 3,
+                consumableCardId: " mend_card ");
+
+            Assert.AreEqual("mending_charm", model.ActiveItemId);
+            Assert.AreEqual(0, model.ActiveItemCharges);
+            Assert.AreEqual(3, model.ActiveItemMaxCharges);
+            Assert.AreEqual("mend_card", model.ConsumableCardId);
         }
 
         [Test]
@@ -57,7 +77,15 @@ namespace Hollow.Tests.EditMode
             try
             {
                 var controller = canvasObject.GetComponent<PlayerBuildHudController>();
-                var model = CreateHudModel(currentStamina: 80f, maxStamina: 100f, souls: 14, coins: 9);
+                var model = CreateHudModel(
+                    currentStamina: 80f,
+                    maxStamina: 100f,
+                    souls: 14,
+                    coins: 9,
+                    activeItemId: "mending_charm",
+                    activeItemCharges: 2,
+                    activeItemMaxCharges: 3,
+                    consumableCardId: "mend_card");
 
                 controller.RefreshFromModel(model);
 
@@ -84,6 +112,8 @@ namespace Hollow.Tests.EditMode
                 var soulsAmount = canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.SoulsAmount");
                 var statsBlock = canvasObject.transform.Find("PlayerBuildHud.Panel/PlayerBuildHud.StatsBlock");
                 var activeWeaponIcon = canvasObject.transform.Find("PlayerBuildHud.ActiveWeaponIcon");
+                var activeItemIcon = canvasObject.transform.Find("PlayerBuildHud.ActiveItemIcon");
+                var consumableCardIcon = canvasObject.transform.Find("PlayerBuildHud.ConsumableCardIcon");
                 Assert.IsNotNull(coinsIcon);
                 Assert.IsNotNull(coinsAmount);
                 Assert.IsNotNull(keysIcon);
@@ -92,14 +122,24 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(soulsAmount);
                 Assert.IsNotNull(statsBlock);
                 Assert.IsNotNull(activeWeaponIcon);
+                Assert.IsNotNull(activeItemIcon);
+                Assert.IsNotNull(consumableCardIcon);
                 Assert.IsTrue(controller.HasRenderedStatsBlock);
                 Assert.IsTrue(controller.HasRenderedActiveWeaponIcon);
+                Assert.IsTrue(controller.HasRenderedActiveItemIcon);
+                Assert.IsTrue(controller.HasRenderedConsumableCardIcon);
                 Assert.IsNotNull(coinsIcon.GetComponent<Image>().sprite);
                 Assert.IsNotNull(keysIcon.GetComponent<Image>().sprite);
                 Assert.IsNotNull(soulsIcon.GetComponent<Image>().sprite);
+                Assert.IsNotNull(activeItemIcon.GetComponent<Image>().sprite);
+                Assert.IsNotNull(consumableCardIcon.GetComponent<Image>().sprite);
                 Assert.AreEqual("9", coinsAmount.GetComponent<Text>().text);
                 Assert.AreEqual("0", keysAmount.GetComponent<Text>().text);
                 Assert.AreEqual("14", soulsAmount.GetComponent<Text>().text);
+                Assert.AreEqual("mending_charm", controller.RenderedActiveItemId);
+                Assert.AreEqual("mend_card", controller.RenderedConsumableCardId);
+                Assert.AreEqual("2/3", controller.RenderedActiveItemChargesText);
+                Assert.AreEqual("2/3", activeItemIcon.Find("Charges").GetComponent<Text>().text);
                 AssertStatRow(statsBlock, "MeleeDamage", "3/4");
                 AssertStatRow(statsBlock, "MeleeSpeed", "1.5/s");
                 AssertStatRow(statsBlock, "RangedDamage", "1/2");
@@ -117,6 +157,8 @@ namespace Hollow.Tests.EditMode
                 var iconRect = (RectTransform)soulsIcon;
                 var amountRect = (RectTransform)soulsAmount;
                 var activeWeaponIconRect = (RectTransform)activeWeaponIcon;
+                var activeItemIconRect = (RectTransform)activeItemIcon;
+                var consumableCardIconRect = (RectTransform)consumableCardIcon;
                 Assert.LessOrEqual(coinIconRect.sizeDelta.x, heartRect.sizeDelta.x);
                 Assert.LessOrEqual(coinIconRect.sizeDelta.y, heartRect.sizeDelta.y);
                 Assert.LessOrEqual(keyIconRect.sizeDelta.x, heartRect.sizeDelta.x);
@@ -137,6 +179,17 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(1.5f, activeWeaponIconRect.sizeDelta.x / activeWeaponIconRect.sizeDelta.y, 0.001f);
                 Assert.Greater(activeWeaponIconRect.sizeDelta.y, ((RectTransform)statsBlock.Find("PlayerBuildHud.Stat.MeleeDamage/Icon")).sizeDelta.y);
                 Assert.IsNotNull(activeWeaponIcon.GetComponent<Image>().sprite);
+                Assert.AreEqual(new Vector2(1f, 0f), activeItemIconRect.anchorMin);
+                Assert.AreEqual(new Vector2(1f, 0f), activeItemIconRect.anchorMax);
+                Assert.AreEqual(new Vector2(1f, 0f), activeItemIconRect.pivot);
+                Assert.AreEqual(-24f, activeItemIconRect.anchoredPosition.x, 0.001f);
+                Assert.AreEqual(24f, activeItemIconRect.anchoredPosition.y, 0.001f);
+                Assert.AreEqual(84f, activeItemIconRect.sizeDelta.x, 0.001f);
+                Assert.AreEqual(84f, activeItemIconRect.sizeDelta.y, 0.001f);
+                Assert.AreEqual(activeItemIconRect.anchoredPosition.x, consumableCardIconRect.anchoredPosition.x, 0.001f);
+                Assert.Greater(consumableCardIconRect.anchoredPosition.y, activeItemIconRect.anchoredPosition.y);
+                Assert.AreEqual(activeItemIconRect.sizeDelta, consumableCardIconRect.sizeDelta);
+                Assert.Greater(activeItemIconRect.sizeDelta.y, ((RectTransform)statsBlock.Find("PlayerBuildHud.Stat.MeleeDamage/Icon")).sizeDelta.y);
                 Assert.Less(keyIconRect.anchoredPosition.y, coinIconRect.anchoredPosition.y);
                 var keyBottomY = keyIconRect.anchoredPosition.y - keyIconRect.sizeDelta.y * 0.5f;
                 var statsRect = (RectTransform)statsBlock;
@@ -226,6 +279,70 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void PlayerBuildHudUsableIconsRefreshAndHideWithoutRebuildingVitals()
+        {
+            var canvasObject = new GameObject("HudCanvas", typeof(Canvas), typeof(PlayerBuildHudController));
+            try
+            {
+                var controller = canvasObject.GetComponent<PlayerBuildHudController>();
+                controller.RefreshFromModel(CreateHudModel(
+                    currentStamina: 80f,
+                    maxStamina: 100f,
+                    activeItemId: "mending_charm",
+                    activeItemCharges: 2,
+                    activeItemMaxCharges: 3,
+                    consumableCardId: "mend_card"));
+                var activeItemIcon = canvasObject.transform
+                    .Find("PlayerBuildHud.ActiveItemIcon")
+                    .GetComponent<Image>();
+                var consumableCardIcon = canvasObject.transform
+                    .Find("PlayerBuildHud.ConsumableCardIcon")
+                    .GetComponent<Image>();
+                var charges = activeItemIcon.transform.Find("Charges").GetComponent<Text>();
+                var activeItemSprite = activeItemIcon.sprite;
+                var consumableCardSprite = consumableCardIcon.sprite;
+                var renderedHeartCount = controller.RenderedHeartCount;
+                var renderedStaminaFill = controller.RenderedStaminaFillAmount;
+
+                controller.RefreshFromModel(CreateHudModel(
+                    currentStamina: 80f,
+                    maxStamina: 100f,
+                    activeItemId: "echo_burst",
+                    activeItemCharges: 1,
+                    activeItemMaxCharges: 0,
+                    consumableCardId: "swift_card"));
+
+                Assert.AreEqual("echo_burst", controller.RenderedActiveItemId);
+                Assert.AreEqual("swift_card", controller.RenderedConsumableCardId);
+                Assert.AreEqual("1", controller.RenderedActiveItemChargesText);
+                Assert.AreEqual("1", charges.text);
+                Assert.IsTrue(activeItemIcon.enabled);
+                Assert.IsTrue(consumableCardIcon.enabled);
+                Assert.AreNotSame(activeItemSprite, activeItemIcon.sprite);
+                Assert.AreNotSame(consumableCardSprite, consumableCardIcon.sprite);
+                Assert.AreEqual(renderedHeartCount, controller.RenderedHeartCount);
+                Assert.AreEqual(renderedStaminaFill, controller.RenderedStaminaFillAmount, 0.001f);
+
+                controller.RefreshFromModel(CreateHudModel(currentStamina: 80f, maxStamina: 100f));
+
+                Assert.IsFalse(controller.HasRenderedActiveItemIcon);
+                Assert.IsFalse(controller.HasRenderedConsumableCardIcon);
+                Assert.AreEqual(string.Empty, controller.RenderedActiveItemId);
+                Assert.AreEqual(string.Empty, controller.RenderedConsumableCardId);
+                Assert.AreEqual(string.Empty, controller.RenderedActiveItemChargesText);
+                Assert.AreEqual(string.Empty, charges.text);
+                Assert.IsFalse(activeItemIcon.enabled);
+                Assert.IsFalse(consumableCardIcon.enabled);
+                Assert.AreEqual(renderedHeartCount, controller.RenderedHeartCount);
+                Assert.AreEqual(renderedStaminaFill, controller.RenderedStaminaFillAmount, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasObject);
+            }
+        }
+
+        [Test]
         public void PlayerBuildHudWeaponIconResourcesCoverWeaponCatalog()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<WeaponCatalogDefinition>("Assets/_Hollow/Data/Weapons/M27/WeaponCatalog_M27.asset");
@@ -236,6 +353,25 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(weapon);
                 var sprite = Resources.Load<Sprite>($"UI/Hud/Weapons/{weapon.WeaponId}");
                 Assert.IsNotNull(sprite, $"Missing HUD weapon icon for {weapon.WeaponId}");
+            }
+        }
+
+        [Test]
+        public void PlayerBuildHudUsableIconResourcesCoverUsableCatalog()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<UsableItemCatalogDefinition>("Assets/_Hollow/Data/Rewards/M28/UsableItemCatalog_M28.asset");
+            Assert.IsNotNull(catalog);
+
+            foreach (var usable in catalog.Items)
+            {
+                Assert.IsNotNull(usable);
+                if (usable.RewardKind is not (RewardKind.ActiveItem or RewardKind.ConsumableCard))
+                {
+                    continue;
+                }
+
+                var sprite = Resources.Load<Sprite>($"UI/Hud/Usables/{usable.ItemId}");
+                Assert.IsNotNull(sprite, $"Missing HUD usable icon for {usable.ItemId}");
             }
         }
 
@@ -443,7 +579,11 @@ namespace Hollow.Tests.EditMode
             float moveSpeedMetersPerSecond = 4f,
             int karma = 0,
             string activeWeaponId = "starter_blade",
-            WeaponSlot activeWeaponSlot = WeaponSlot.Melee)
+            WeaponSlot activeWeaponSlot = WeaponSlot.Melee,
+            string activeItemId = "",
+            int activeItemCharges = 0,
+            int activeItemMaxCharges = 0,
+            string consumableCardId = "")
         {
             return new PlayerBuildHudModel(
                 "Balanced",
@@ -477,6 +617,10 @@ namespace Hollow.Tests.EditMode
                 karma,
                 activeWeaponId,
                 activeWeaponSlot,
+                activeItemId,
+                activeItemCharges,
+                activeItemMaxCharges,
+                consumableCardId,
                 "Melee - Practice Blade",
                 "Practice Blade",
                 "Basic Pistol",

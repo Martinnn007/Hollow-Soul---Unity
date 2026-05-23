@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="14" result="Passed" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.2052801">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="740" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.205280" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1859" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="739" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.191375" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="63289" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1860" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="739" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.182051" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1861" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="739" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.170372" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1862" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="739" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.155951" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1410" name="Milestone42PlayerBuildUxTests" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.119410" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1424" name="PickupRevealModelIncludesReplacementLine" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PickupRevealModelIncludesReplacementLine" methodname="PickupRevealModelIncludesReplacementLine" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="203559487" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.007168" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1414" name="PlayerBuildHudActiveWeaponIconRefreshesWithoutRebuildingVitals" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudActiveWeaponIconRefreshesWithoutRebuildingVitals" methodname="PlayerBuildHudActiveWeaponIconRefreshesWithoutRebuildingVitals" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="611882431" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.049364" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1418" name="PlayerBuildHudCurrencyAmountsRefreshFromRunModel" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudCurrencyAmountsRefreshFromRunModel" methodname="PlayerBuildHudCurrencyAmountsRefreshFromRunModel" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="806499121" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.004121" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1412" name="PlayerBuildHudModelPreservesUsableIdsAndClampsCharges" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudModelPreservesUsableIdsAndClampsCharges" methodname="PlayerBuildHudModelPreservesUsableIdsAndClampsCharges" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="2081378134" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.000205" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1411" name="PlayerBuildHudModelShowsCoreBuildLines" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudModelShowsCoreBuildLines" methodname="PlayerBuildHudModelShowsCoreBuildLines" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="319121793" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.000997" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1413" name="PlayerBuildHudRendersAvatarAndHeartContainers" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudRendersAvatarAndHeartContainers" methodname="PlayerBuildHudRendersAvatarAndHeartContainers" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="679067013" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.011174" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1419" name="PlayerBuildHudStaminaFillClampsToCurrentStaminaRatio" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudStaminaFillClampsToCurrentStaminaRatio" methodname="PlayerBuildHudStaminaFillClampsToCurrentStaminaRatio" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="1206309598" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.003658" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1421" name="PlayerBuildHudStatCalculatorUsesWeaponBasesBuildBonusesAndProjectileFireRate" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudStatCalculatorUsesWeaponBasesBuildBonusesAndProjectileFireRate" methodname="PlayerBuildHudStatCalculatorUsesWeaponBasesBuildBonusesAndProjectileFireRate" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="1538116427" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.008622" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1417" name="PlayerBuildHudUsableIconResourcesCoverUsableCatalog" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudUsableIconResourcesCoverUsableCatalog" methodname="PlayerBuildHudUsableIconResourcesCoverUsableCatalog" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="881880179" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.005641" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1415" name="PlayerBuildHudUsableIconsRefreshAndHideWithoutRebuildingVitals" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudUsableIconsRefreshAndHideWithoutRebuildingVitals" methodname="PlayerBuildHudUsableIconsRefreshAndHideWithoutRebuildingVitals" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="1899982343" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.004562" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1416" name="PlayerBuildHudWeaponIconResourcesCoverWeaponCatalog" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.PlayerBuildHudWeaponIconResourcesCoverWeaponCatalog" methodname="PlayerBuildHudWeaponIconResourcesCoverWeaponCatalog" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="851903259" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.005664" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1420" name="ReplacementDetectorCapturesOldWeaponForSwapDrop" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.ReplacementDetectorCapturesOldWeaponForSwapDrop" methodname="ReplacementDetectorCapturesOldWeaponForSwapDrop" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="1037760759" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.001520" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1422" name="ReplacementPickupSaveStateRoundTrips" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.ReplacementPickupSaveStateRoundTrips" methodname="ReplacementPickupSaveStateRoundTrips" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="471500789" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.000538" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1423" name="RunSnapshotStoresDroppedReplacementPickups" fullname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests.RunSnapshotStoresDroppedReplacementPickups" methodname="RunSnapshotStoresDroppedReplacementPickups" classname="Hollow.Tests.EditMode.Milestone42PlayerBuildUxTests" runstate="Runnable" seed="1136482426" result="Passed" start-time="2026-05-22 20:29:11Z" end-time="2026-05-22 20:29:11Z" duration="0.001278" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/DefaultCompany/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
