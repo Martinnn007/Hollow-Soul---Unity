@@ -1,4 +1,5 @@
 using Hollow.Data.Definitions;
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Presentation
@@ -16,15 +17,15 @@ namespace Hollow.Presentation
             GameObject instance = null;
             if (definition.Prefab != null)
             {
-                instance = Object.Instantiate(definition.Prefab, parent);
+                instance = HollowRuntimePool.Rent(definition.Prefab, parent);
             }
             else if (definition.CreateDebugPrimitive)
             {
-                instance = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                instance = HollowRuntimePool.RentPrimitive($"VFX.{cue}.DebugPrimitive", PrimitiveType.Sphere, parent);
                 instance.transform.SetParent(parent, worldPositionStays: false);
                 instance.transform.localScale = Vector3.one * definition.DebugScale;
                 var renderer = instance.GetComponent<Renderer>();
-                if (renderer != null)
+                if (renderer != null && renderer.sharedMaterial == null)
                 {
                     renderer.sharedMaterial = MaterialResolver.CreateRuntimeMaterial(definition.DebugColor);
                 }
@@ -52,7 +53,7 @@ namespace Hollow.Presentation
             instance.transform.position = position;
             if (Application.isPlaying)
             {
-                Object.Destroy(instance, 0.35f);
+                HollowRuntimePool.ReturnAfter(instance, 0.35f);
             }
 
             return instance;
@@ -65,14 +66,14 @@ namespace Hollow.Presentation
                 return null;
             }
 
-            var instance = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            var instance = HollowRuntimePool.RentPrimitive($"VFX.{cue}.Fallback", PrimitiveType.Sphere, parent);
             instance.name = $"VFX.{cue}.Fallback";
             instance.transform.SetParent(parent, worldPositionStays: false);
             instance.transform.position = position;
             instance.transform.localScale = Vector3.one * scale;
 
             var renderer = instance.GetComponent<Renderer>();
-            if (renderer != null)
+            if (renderer != null && renderer.sharedMaterial == null)
             {
                 renderer.sharedMaterial = MaterialResolver.CreateRuntimeMaterial(color);
             }
@@ -92,7 +93,7 @@ namespace Hollow.Presentation
 
             if (Application.isPlaying)
             {
-                Object.Destroy(instance, 0.35f);
+                HollowRuntimePool.ReturnAfter(instance, 0.35f);
             }
 
             return instance;

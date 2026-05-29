@@ -1,4 +1,5 @@
 using Hollow.Branches;
+using Hollow.Core.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -15,17 +16,24 @@ namespace Hollow.UI.Shell
         private const float DefaultMapCellStep = 34f;
         private const float DefaultMapCellSize = 33f;
         private const float DefaultMapCellGap = DefaultMapCellStep - DefaultMapCellSize;
-        private const string MiniMapPanelBackgroundResource = "UI/Minimap/CosmicMiniMapPanel";
 
         private BranchSessionController branchSessionController;
         private RectTransform mapPanel;
         private RectTransform shapeRoot;
+        private RectTransform locationLabelRect;
+        private Text locationLabelText;
         private Font font;
         private string lastSummary;
+        private float nextModelRefreshTime;
+        private float nextProviderSearchTime;
 
         public RectTransform MapPanel => mapPanel;
 
         public RectTransform ShapeRoot => shapeRoot;
+
+        public Text LocationLabelText => locationLabelText;
+
+        public string CurrentLocationLabel => locationLabelText != null ? locationLabelText.text : string.Empty;
 
         public void Bind(BranchSessionController controller)
         {
@@ -43,7 +51,12 @@ namespace Hollow.UI.Shell
         {
             if (branchSessionController == null)
             {
-                branchSessionController = FindAnyObjectByType<BranchSessionController>();
+                var now = Time.unscaledTime;
+                if (now >= nextProviderSearchTime)
+                {
+                    branchSessionController = FindAnyObjectByType<BranchSessionController>();
+                    nextProviderSearchTime = now + 0.5f;
+                }
             }
 
             Refresh(force: false);
@@ -57,7 +70,16 @@ namespace Hollow.UI.Shell
                 return;
             }
 
+            var now = Time.unscaledTime;
+            if (!force && now < nextModelRefreshTime)
+            {
+                RefreshLocationLabel();
+                return;
+            }
+
+            M136PerformanceOperationCounters.ReportMiniMapModelBuild();
             var model = branchSessionController.CreateMiniMapModel();
+            nextModelRefreshTime = now + M137PerformanceComfortPolicy.MiniMapModelMinRefreshIntervalSeconds;
             var summary = model.Summary();
             var activeSeed = branchSessionController.CurrentBranchSeed != 0
                 ? branchSessionController.CurrentBranchSeed
@@ -65,38 +87,58 @@ namespace Hollow.UI.Shell
             var displayState = $"{summary}|{branchSessionController.RewardCounter.ClaimedRewards}|{branchSessionController.LastRewardMessage}|{branchSessionController.SaveStatus}|{activeSeed}|{branchSessionController.RunSeed}|{branchSessionController.WorldIndex}|{branchSessionController.WorldPhase}";
             if (!force && displayState == lastSummary)
             {
+                RefreshLocationLabel();
                 return;
             }
 
             lastSummary = displayState;
             RebuildShapeMap(model);
+            RefreshLocationLabel();
         }
 
         public void RebuildShapeMap(BranchMiniMapModel model)
         {
-            ClearShapeMap();
-            if (model?.Nodes == null || shapeRoot == null)
+            using (M137PerformanceProfilerMarkers.MiniMapRebuild.Auto())
             {
-                return;
-            }
+                M136PerformanceOperationCounters.ReportMiniMapRebuild();
+                ClearShapeMap();
+                if (model?.Nodes == null || shapeRoot == null)
+                {
+                    return;
+                }
 
-            var visibleNodes = model.Nodes.Where(node => node.IsRevealed).ToList();
-            if (visibleNodes.Count == 0)
-            {
-                return;
-            }
+                var visibleNodes = new List<BranchMiniMapNode>();
+                BranchMiniMapNode currentNode = null;
+                for (var index = 0; index < model.Nodes.Count; index++)
+                {
+                    var node = model.Nodes[index];
+                    if (node.IsRevealed)
+                    {
+                        visibleNodes.Add(node);
+                    }
 
-            var currentNode = model.Nodes.FirstOrDefault(node => node.IsCurrent);
-            var layout = MiniMapLayout.Create(model.Nodes, shapeRoot.rect.size, currentNode);
-            var contentRoot = CreateContentRoot(shapeRoot);
-            foreach (var connection in model.Connections)
-            {
-                DrawConnection(connection, contentRoot, layout);
-            }
+                    if (node.IsCurrent)
+                    {
+                        currentNode = node;
+                    }
+                }
 
-            foreach (var node in visibleNodes)
-            {
-                DrawRoomNode(node, contentRoot, layout);
+                if (visibleNodes.Count == 0)
+                {
+                    return;
+                }
+
+                var layout = MiniMapLayout.Create(model.Nodes, shapeRoot.rect.size, currentNode);
+                var contentRoot = CreateContentRoot(shapeRoot);
+                foreach (var connection in model.Connections)
+                {
+                    DrawConnection(connection, contentRoot, layout);
+                }
+
+                foreach (var node in visibleNodes)
+                {
+                    DrawRoomNode(node, contentRoot, layout);
+                }
             }
         }
 
@@ -146,7 +188,7 @@ namespace Hollow.UI.Shell
 
             if (node.HasPendingReward)
             {
-                DrawOverlayDot(root, layout.PositionFor(node.OccupiedCells.First()), "MiniMapRewardDot", new Color(1f, 0.78f, 0.16f, 1f), 5f);
+                DrawOverlayDot(root, layout.PositionFor(FirstCell(node.OccupiedCells)), "MiniMapRewardDot", new Color(1f, 0.78f, 0.16f, 1f), 5f);
             }
 
             var marker = !string.IsNullOrWhiteSpace(node.DisplayLabel) ? node.DisplayLabel : MarkerFor(node.Role);
@@ -200,21 +242,41 @@ namespace Hollow.UI.Shell
             return contentRoot;
         }
 
+        private static Vector2Int FirstCell(IReadOnlyCollection<Vector2Int> cells)
+        {
+            if (cells == null)
+            {
+                return Vector2Int.zero;
+            }
+
+            foreach (var cell in cells)
+            {
+                return cell;
+            }
+
+            return Vector2Int.zero;
+        }
+
         private void BuildIfNeeded()
         {
-            if (mapPanel != null && shapeRoot != null)
+            if (mapPanel != null && shapeRoot != null && locationLabelText != null)
             {
                 return;
             }
 
             font ??= Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            mapPanel = AddMiniMapPanel();
-            shapeRoot = new GameObject("BranchMiniMap.ShapeRoot", typeof(RectTransform), typeof(RectMask2D)).GetComponent<RectTransform>();
-            shapeRoot.transform.SetParent(mapPanel, false);
-            shapeRoot.anchorMin = Vector2.zero;
-            shapeRoot.anchorMax = Vector2.one;
-            shapeRoot.offsetMin = new Vector2(44f, 34f);
-            shapeRoot.offsetMax = new Vector2(-44f, -34f);
+            mapPanel ??= AddMiniMapPanel();
+            if (shapeRoot == null)
+            {
+                shapeRoot = new GameObject("BranchMiniMap.ShapeRoot", typeof(RectTransform), typeof(RectMask2D)).GetComponent<RectTransform>();
+                shapeRoot.transform.SetParent(mapPanel, false);
+                shapeRoot.anchorMin = Vector2.zero;
+                shapeRoot.anchorMax = Vector2.one;
+                shapeRoot.offsetMin = new Vector2(44f, 34f);
+                shapeRoot.offsetMax = new Vector2(-44f, -34f);
+            }
+
+            locationLabelText ??= AddLocationLabel();
         }
 
         private RectTransform AddMiniMapPanel()
@@ -229,32 +291,43 @@ namespace Hollow.UI.Shell
             panelRect.sizeDelta = new Vector2(420f, 250f);
 
             var image = panel.GetComponent<Image>();
-            image.sprite = LoadMiniMapBackgroundSprite();
-            image.color = image.sprite != null ? Color.white : new Color(0f, 0f, 0f, 0.18f);
+            image.sprite = null;
+            image.color = new Color(0.015f, 0.018f, 0.024f, 0.72f);
             image.preserveAspect = false;
             image.raycastTarget = false;
             return panelRect;
         }
 
-        private static Sprite LoadMiniMapBackgroundSprite()
+        private Text AddLocationLabel()
         {
-            var sprite = Resources.Load<Sprite>(MiniMapPanelBackgroundResource);
-            if (sprite != null)
+            var labelObject = new GameObject("BranchMiniMap.LocationLabel", typeof(RectTransform), typeof(Text));
+            labelObject.transform.SetParent(transform, false);
+            locationLabelRect = (RectTransform)labelObject.transform;
+            locationLabelRect.anchorMin = new Vector2(1f, 1f);
+            locationLabelRect.anchorMax = new Vector2(1f, 1f);
+            locationLabelRect.pivot = new Vector2(1f, 1f);
+            locationLabelRect.anchoredPosition = new Vector2(-32f, -290f);
+            locationLabelRect.sizeDelta = new Vector2(420f, 24f);
+
+            var text = labelObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = 14;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.UpperRight;
+            text.color = new Color(0.78f, 0.86f, 0.92f, 0.92f);
+            text.raycastTarget = false;
+            text.text = string.Empty;
+            return text;
+        }
+
+        private void RefreshLocationLabel()
+        {
+            if (locationLabelText == null || branchSessionController == null)
             {
-                return sprite;
+                return;
             }
 
-            var texture = Resources.Load<Texture2D>(MiniMapPanelBackgroundResource);
-            if (texture == null)
-            {
-                return null;
-            }
-
-            return Sprite.Create(
-                texture,
-                new Rect(0f, 0f, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f),
-                100f);
+            locationLabelText.text = branchSessionController.CreateLocationLabel();
         }
 
         private static Color FillColorFor(BranchMiniMapNode node)
@@ -290,6 +363,9 @@ namespace Hollow.UI.Shell
             {
                 BranchRoomRole.Boss => new Color(0.95f, 0.25f, 0.22f, 0.95f),
                 BranchRoomRole.Secret => new Color(0.72f, 0.42f, 1f, 0.95f),
+                BranchRoomRole.CorruptedChest => new Color(0.78f, 0.24f, 0.88f, 0.95f),
+                BranchRoomRole.Wave => new Color(0.28f, 0.74f, 1f, 0.95f),
+                BranchRoomRole.SpecialEncounter => new Color(0.42f, 0.82f, 1f, 0.95f),
                 BranchRoomRole.Treasure or BranchRoomRole.Reward => new Color(1f, 0.78f, 0.22f, 0.95f),
                 _ => new Color(0.72f, 0.72f, 0.68f, 0.8f)
             };
@@ -301,6 +377,9 @@ namespace Hollow.UI.Shell
             {
                 BranchRoomRole.Boss => "B",
                 BranchRoomRole.Secret => "?",
+                BranchRoomRole.CorruptedChest => "!",
+                BranchRoomRole.Wave => "W",
+                BranchRoomRole.SpecialEncounter => "S",
                 BranchRoomRole.Treasure => "$",
                 BranchRoomRole.Reward => "R",
                 BranchRoomRole.Origin => "O",
@@ -314,6 +393,9 @@ namespace Hollow.UI.Shell
             {
                 BranchRoomRole.Boss => new Color(1f, 0.22f, 0.18f, 1f),
                 BranchRoomRole.Secret => new Color(0.86f, 0.55f, 1f, 1f),
+                BranchRoomRole.CorruptedChest => new Color(1f, 0.48f, 1f, 1f),
+                BranchRoomRole.Wave => new Color(0.55f, 0.9f, 1f, 1f),
+                BranchRoomRole.SpecialEncounter => new Color(0.62f, 0.95f, 1f, 1f),
                 BranchRoomRole.Treasure or BranchRoomRole.Reward => new Color(1f, 0.83f, 0.22f, 1f),
                 _ => Color.white
             };

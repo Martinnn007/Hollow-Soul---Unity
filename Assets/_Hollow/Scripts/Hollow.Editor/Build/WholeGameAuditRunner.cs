@@ -669,7 +669,7 @@ namespace Hollow.Editor.Build
                     "Fix the prefab marker/material/component safety issue or regenerate the ArtPass asset from the approved generator.");
             }
 
-            foreach (var role in new[] { PresentationPrefabRole.RoomObstacleRock, PresentationPrefabRole.ChestNormal })
+            foreach (var role in new[] { PresentationPrefabRole.RoomObstacleRock, PresentationPrefabRole.ChestNormal, PresentationPrefabRole.ChestCorrupted })
             {
                 var target = artReport.targets?.FirstOrDefault(record => string.Equals(record.role, role.ToString(), StringComparison.Ordinal));
                 if (target == null || target.status == ArtPassProductionStatus.PrototypeFallback)

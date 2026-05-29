@@ -50,9 +50,12 @@ namespace Hollow.Branches
                 return;
             }
 
-            var baseScale = Kind == ChestKind.Golden
-                ? new Vector3(0.78f, 0.5f, 0.62f)
-                : new Vector3(0.72f, 0.46f, 0.58f);
+            var baseScale = Kind switch
+            {
+                ChestKind.Golden => new Vector3(0.78f, 0.5f, 0.62f),
+                ChestKind.Corrupted => new Vector3(0.82f, 0.54f, 0.66f),
+                _ => new Vector3(0.72f, 0.46f, 0.58f)
+            };
             transform.localScale = State == ChestState.Opened
                 ? new Vector3(baseScale.x, baseScale.y * 0.72f, baseScale.z)
                 : baseScale;
@@ -79,9 +82,12 @@ namespace Hollow.Branches
                 return;
             }
 
-            var targetSize = Kind == ChestKind.Golden
-                ? new Vector3(0.88f, 0.58f, 0.7f)
-                : new Vector3(0.78f, 0.52f, 0.64f);
+            var targetSize = Kind switch
+            {
+                ChestKind.Golden => new Vector3(0.88f, 0.58f, 0.7f),
+                ChestKind.Corrupted => new Vector3(0.9f, 0.6f, 0.72f),
+                _ => new Vector3(0.78f, 0.52f, 0.64f)
+            };
 
             visualRoot.localPosition = Vector3.zero;
             visualRoot.localRotation = Quaternion.identity;

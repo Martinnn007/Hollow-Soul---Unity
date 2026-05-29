@@ -6,6 +6,25 @@ namespace Hollow.Combat
     public static class RoomLocalCollision
     {
         public const float MinimumRadiusMeters = CombatFeelTuning.MinimumCollisionRadiusMeters;
+        private static readonly Vector3[] NearestOccupiableSearchDirections =
+        {
+            Vector3.forward,
+            Vector3.back,
+            Vector3.left,
+            Vector3.right,
+            (Vector3.forward + Vector3.left).normalized,
+            (Vector3.forward + Vector3.right).normalized,
+            (Vector3.back + Vector3.left).normalized,
+            (Vector3.back + Vector3.right).normalized,
+            new Vector3(0.38f, 0f, 0.92f).normalized,
+            new Vector3(-0.38f, 0f, 0.92f).normalized,
+            new Vector3(0.38f, 0f, -0.92f).normalized,
+            new Vector3(-0.38f, 0f, -0.92f).normalized,
+            new Vector3(0.92f, 0f, 0.38f).normalized,
+            new Vector3(-0.92f, 0f, 0.38f).normalized,
+            new Vector3(0.92f, 0f, -0.38f).normalized,
+            new Vector3(-0.92f, 0f, -0.38f).normalized
+        };
 
         public static Vector3 ResolveMove(RoomRuntimeRoot room, Vector3 currentLocal, Vector3 desiredLocal, float radius)
         {
@@ -96,17 +115,7 @@ namespace Hollow.Combat
 
             var best = clampedPreferred;
             var bestScore = float.PositiveInfinity;
-            var directions = new[]
-            {
-                Vector3.forward,
-                Vector3.back,
-                Vector3.left,
-                Vector3.right,
-                (Vector3.forward + Vector3.left).normalized,
-                (Vector3.forward + Vector3.right).normalized,
-                (Vector3.back + Vector3.left).normalized,
-                (Vector3.back + Vector3.right).normalized
-            };
+            var directions = NearestOccupiableSearchDirections;
 
             for (var ring = 1; ring <= 14; ring++)
             {

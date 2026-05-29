@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using UnityEngine;
@@ -15,6 +16,10 @@ namespace Hollow.Rooms
         [SerializeField] private Rect roomLocalBounds;
         [SerializeField] private bool hasRoomLocalBounds;
         [SerializeField] private string biomeId = RoomBiomeIds.HollowThreshold;
+        private Camera cachedCamera;
+        private Vector3 lastCameraForward;
+        private bool hasLastCameraForward;
+        private float nextScheduledRefreshTime;
 
         public IReadOnlyList<WallBinding> WallBindings => wallBindings;
 
@@ -60,16 +65,79 @@ namespace Hollow.Rooms
 
         private void LateUpdate()
         {
-            ApplyVisibility(Camera.main);
+            var camera = ResolveCamera();
+            if (camera == null)
+            {
+                return;
+            }
+
+            var now = Time.unscaledTime;
+            if (ShouldRefresh(camera, now))
+            {
+                ApplyVisibility(camera, now);
+            }
         }
 
         public RoomWallSide ApplyVisibility(Camera camera)
         {
-            var sides = camera != null
-                ? DetermineTransparentSides(camera)
-                : new[] { RoomWallSide.North };
-            ApplyVisibility(sides);
-            return CurrentTransparentSide;
+            return ApplyVisibility(camera, Time.unscaledTime);
+        }
+
+        public bool ShouldRefresh(Camera camera, float unscaledTime)
+        {
+            if (camera == null)
+            {
+                return false;
+            }
+
+            if (cachedCamera != camera || !hasLastCameraForward)
+            {
+                return true;
+            }
+
+            var currentForward = camera.transform.forward.normalized;
+            if (Vector3.Dot(lastCameraForward, currentForward) < M137PerformanceComfortPolicy.WallVisibilityCameraForwardDotThreshold)
+            {
+                return true;
+            }
+
+            return unscaledTime >= nextScheduledRefreshTime;
+        }
+
+        private RoomWallSide ApplyVisibility(Camera camera, float unscaledTime)
+        {
+            using (M137PerformanceProfilerMarkers.WallVisibilityRefresh.Auto())
+            {
+                M136PerformanceOperationCounters.ReportWallVisibilityUpdate();
+                cachedCamera = camera;
+                if (camera != null)
+                {
+                    lastCameraForward = camera.transform.forward.normalized;
+                    hasLastCameraForward = true;
+                }
+                else
+                {
+                    hasLastCameraForward = false;
+                }
+
+                nextScheduledRefreshTime = unscaledTime + M137PerformanceComfortPolicy.WallVisibilityMinRefreshIntervalSeconds;
+                var sides = camera != null
+                    ? DetermineTransparentSides(camera)
+                    : new[] { RoomWallSide.North };
+                ApplyVisibility(sides);
+                return CurrentTransparentSide;
+            }
+        }
+
+        private Camera ResolveCamera()
+        {
+            if (cachedCamera != null)
+            {
+                return cachedCamera;
+            }
+
+            cachedCamera = Camera.main;
+            return cachedCamera;
         }
 
         public IReadOnlyList<RoomWallSide> DetermineTransparentSides(Camera camera)

@@ -248,7 +248,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void HeldWeaponVisualAttachesMeleeToHandSocketAndClearsItForRanged()
+        public void HeldWeaponVisualSwapsActiveAndHolsteredWeaponsWithoutDuplicates()
         {
             var player = new GameObject("PlayerCharacter");
             var rightHand = new GameObject("RightHand");
@@ -264,20 +264,152 @@ namespace Hollow.Tests.EditMode
 
                 Assert.IsTrue(heldWeaponVisual.IsUsingHandAttachedMeleeVisual);
                 Assert.AreSame(socket.transform, heldWeaponVisual.MeleeHandSocket);
+                Assert.IsNotNull(heldWeaponVisual.ActiveWeaponVisual);
+                Assert.IsNotNull(heldWeaponVisual.HolsteredRangedVisual);
                 Assert.AreEqual(1, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
 
                 Assert.IsFalse(heldWeaponVisual.IsUsingHandAttachedMeleeVisual);
+                Assert.IsNotNull(heldWeaponVisual.ActiveWeaponVisual);
+                Assert.IsNotNull(heldWeaponVisual.HolsteredMeleeVisual);
+                Assert.IsNull(heldWeaponVisual.HolsteredRangedVisual);
                 Assert.AreEqual(0, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+
+                weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                Assert.AreSame(heldWeaponVisual.RangedHandSocket, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
             }
             finally
             {
                 Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void HeldWeaponVisualAlignsActiveWeaponToCombatAimDirections()
+        {
+            var root = new GameObject("WeaponVisualAimHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                var rightHand = new GameObject("RightHand");
+                var socket = new GameObject(PlayerHeldWeaponVisualController.MeleeHandSocketName);
+                player.transform.SetParent(root.transform, false);
+                rightHand.transform.SetParent(player.transform, false);
+                socket.transform.SetParent(rightHand.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.ConfigureBuildStats(
+                    1f,
+                    0,
+                    1,
+                    10000f,
+                    1000f,
+                    "starter_blade",
+                    WeaponIdAliases.StarterPistolId,
+                    WeaponSlot.Melee,
+                    10000f);
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.BindMeleeHandSocket(socket.transform);
+                heldWeaponVisual.Bind(weapon);
+
+                var directions = new[]
+                {
+                    Vector2.up,
+                    Vector2.down,
+                    Vector2.left,
+                    Vector2.right,
+                    new Vector2(1f, 1f).normalized,
+                    new Vector2(-1f, 1f).normalized,
+                    new Vector2(1f, -1f).normalized,
+                    new Vector2(-1f, -1f).normalized
+                };
+                var time = 0f;
+                foreach (var slot in new[] { WeaponSlot.Melee, WeaponSlot.Ranged })
+                {
+                    weapon.SetActiveWeaponSlot(slot);
+                    foreach (var direction in directions)
+                    {
+                        Assert.IsTrue(weapon.TryAttack(AttackKind.Light, direction, time));
+                        var expected = PlayerWeaponVisualPosePolicy.PlanarForward(direction);
+                        Assert.IsNotNull(heldWeaponVisual.ActiveWeaponVisual);
+                        Assert.Greater(
+                            Vector3.Dot(heldWeaponVisual.ActiveWeaponVisual.transform.forward, expected),
+                            0.98f,
+                            $"Expected active {slot} visual to face {direction}.");
+                        if (slot == WeaponSlot.Ranged)
+                        {
+                            Assert.IsNotNull(heldWeaponVisual.ActiveMuzzleTransform);
+                            Assert.Greater(
+                                Vector3.Dot(heldWeaponVisual.ActiveMuzzleTransform.forward, expected),
+                                0.98f,
+                                $"Expected active ranged muzzle to face {direction}.");
+                        }
+
+                        time += 3f;
+                        weapon.TickAction(3f, time);
+                    }
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void WeaponAimCommitmentKeepsVisualFacingWhileStrafing()
+        {
+            var root = new GameObject("WeaponAimCommitmentHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                var visualRoot = new GameObject(VisualRootName);
+                player.transform.SetParent(root.transform, false);
+                visualRoot.transform.SetParent(player.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                var locomotionAnimator = player.AddComponent<PlayerLocomotionAnimator>();
+                locomotionAnimator.Bind(null, visualRoot.transform);
+                locomotionAnimator.BindGameplay(weapon, null);
+                locomotionAnimator.Configure(0.05f, 3600f, PlayerMovementController.DefaultSpeedMetersPerSecond, 100f);
+                locomotionAnimator.ResetTracking();
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                player.transform.position = new Vector3(0.4f, 0f, 0f);
+                locomotionAnimator.Sample(0.1f);
+
+                Assert.IsTrue(locomotionAnimator.IsTargetLockedForLocomotion);
+                Assert.Greater(Vector3.Dot(visualRoot.transform.forward, Vector3.forward), 0.99f);
+                Assert.Greater(locomotionAnimator.LockedRelativeMove.x, 0.95f);
+                Assert.Less(Mathf.Abs(locomotionAnimator.LockedRelativeMove.y), 0.15f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
             }
         }
 
@@ -387,11 +519,31 @@ namespace Hollow.Tests.EditMode
                 .Count(child => child.name == VisualRootName));
             Assert.AreEqual(0, prefab.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                 .Count(marker => marker.Role == PresentationPrefabRole.Player));
-            var sockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+            var meleeSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
                 .Where(child => child.name == PlayerHeldWeaponVisualController.MeleeHandSocketName)
                 .ToArray();
-            Assert.AreEqual(1, sockets.Length);
-            Assert.AreEqual("RightHand", sockets[0].parent.name);
+            var rangedHandSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(child => child.name == PlayerHeldWeaponVisualController.RangedHandSocketName)
+                .ToArray();
+            var meleeHolsterSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(child => child.name == PlayerHeldWeaponVisualController.MeleeHolsterSocketName)
+                .ToArray();
+            var rangedHolsterSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(child => child.name == PlayerHeldWeaponVisualController.RangedHolsterSocketName)
+                .ToArray();
+            var rangedMuzzleSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(child => child.name == PlayerHeldWeaponVisualController.RangedMuzzleSocketName)
+                .ToArray();
+            Assert.AreEqual(1, meleeSockets.Length);
+            Assert.AreEqual(1, rangedHandSockets.Length);
+            Assert.AreEqual(1, meleeHolsterSockets.Length);
+            Assert.AreEqual(1, rangedHolsterSockets.Length);
+            Assert.AreEqual(1, rangedMuzzleSockets.Length);
+            Assert.AreEqual("RightHand", meleeSockets[0].parent.name);
+            Assert.AreSame(visualRoot, rangedHandSockets[0].parent);
+            Assert.AreSame(visualRoot, meleeHolsterSockets[0].parent);
+            Assert.AreSame(visualRoot, rangedHolsterSockets[0].parent);
+            Assert.AreSame(rangedHandSockets[0], rangedMuzzleSockets[0].parent);
 
             var locomotionAnimator = prefab.GetComponent<PlayerLocomotionAnimator>();
             var heldWeaponVisual = prefab.GetComponent<PlayerHeldWeaponVisualController>();
@@ -400,7 +552,11 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(locomotionAnimator);
             Assert.IsNotNull(heldWeaponVisual);
             Assert.IsNotNull(aimLockController);
-            Assert.AreSame(sockets[0], heldWeaponVisual.MeleeHandSocket);
+            Assert.AreSame(meleeSockets[0], heldWeaponVisual.MeleeHandSocket);
+            Assert.AreSame(rangedHandSockets[0], heldWeaponVisual.RangedHandSocket);
+            Assert.AreSame(meleeHolsterSockets[0], heldWeaponVisual.MeleeHolsterSocket);
+            Assert.AreSame(rangedHolsterSockets[0], heldWeaponVisual.RangedHolsterSocket);
+            Assert.AreSame(rangedMuzzleSockets[0], heldWeaponVisual.ActiveMuzzleTransform);
             Assert.IsNotNull(animator);
             Assert.IsFalse(animator.applyRootMotion);
             var aimLockField = typeof(PlayerLocomotionAnimator).GetField(

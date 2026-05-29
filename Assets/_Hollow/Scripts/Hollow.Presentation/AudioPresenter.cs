@@ -1,4 +1,5 @@
 using Hollow.Data.Definitions;
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Presentation
@@ -13,16 +14,17 @@ namespace Hollow.Presentation
                 return null;
             }
 
-            var audioObject = new GameObject($"Audio.{cue}", typeof(AudioSource));
+            var audioObject = HollowRuntimePool.RentGenerated($"Audio.{cue}", null, () => new GameObject($"Audio.{cue}", typeof(AudioSource)));
             audioObject.transform.position = position;
             var source = audioObject.GetComponent<AudioSource>();
+            source.Stop();
             source.clip = definition.Clip;
             source.volume = definition.Volume;
             source.spatialBlend = definition.SpatialBlend;
             source.Play();
             if (Application.isPlaying)
             {
-                Object.Destroy(audioObject, definition.Clip.length + 0.1f);
+                HollowRuntimePool.ReturnAfter(audioObject, definition.Clip.length + 0.1f);
             }
 
             return source;

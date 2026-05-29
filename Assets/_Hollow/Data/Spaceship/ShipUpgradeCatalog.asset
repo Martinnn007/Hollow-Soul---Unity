@@ -15,7 +15,7 @@ MonoBehaviour:
   catalogId: ship_upgrade_catalog
   upgrades:
   - upgradeId: reinforced_vitals
-    displayName: Reinforced Vitals
+    displayName: Vitals Module
     soulCost: 5
     statModifier:
       maxHealth: 1
@@ -31,7 +31,7 @@ MonoBehaviour:
       meleeRangeBonusMeters: 0
       rangedRangeBonusMeters: 0
   - upgradeId: stamina_cell
-    displayName: Stamina Cell
+    displayName: Stamina Module
     soulCost: 5
     statModifier:
       maxHealth: 0
@@ -47,7 +47,7 @@ MonoBehaviour:
       meleeRangeBonusMeters: 0
       rangedRangeBonusMeters: 0
   - upgradeId: reactor_tuning
-    displayName: Reactor Tuning
+    displayName: Reactor Module
     soulCost: 6
     statModifier:
       maxHealth: 0
@@ -63,7 +63,7 @@ MonoBehaviour:
       meleeRangeBonusMeters: 0
       rangedRangeBonusMeters: 0
   - upgradeId: combat_calibration
-    displayName: Combat Calibration
+    displayName: Combat Module
     soulCost: 8
     statModifier:
       maxHealth: 0

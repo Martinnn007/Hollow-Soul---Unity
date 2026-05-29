@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using UnityEngine;
 
@@ -5,26 +8,66 @@ namespace Hollow.Presentation
 {
     public static class RoomBiomePresentationResolver
     {
-        private static readonly System.Collections.Generic.Dictionary<MaterialRole, Material> VerdantRuntimeMaterials = new();
+        private static readonly Dictionary<MaterialRole, Material> VerdantRuntimeMaterials = new();
+        private static readonly Dictionary<string, BiomeCacheEntry> BiomeEntries = new(System.StringComparer.Ordinal);
+        private static readonly MaterialRole[] PrewarmMaterialRoles =
+        {
+            MaterialRole.RoomFloor,
+            MaterialRole.RoomWall,
+            MaterialRole.RoomWallTransparent,
+            MaterialRole.RoomObstacleRock,
+            MaterialRole.DoorActive,
+            MaterialRole.DoorCleared,
+            MaterialRole.DoorLocked,
+            MaterialRole.DoorUnavailable,
+            MaterialRole.DecorGrassTuft,
+            MaterialRole.DecorCrystalCluster,
+            MaterialRole.DecorSmallTree,
+            MaterialRole.DecorStoneRuin
+        };
+        private static readonly PresentationPrefabRole[] PrewarmPrefabRoles =
+        {
+            PresentationPrefabRole.RoomFloor,
+            PresentationPrefabRole.RoomObstacleRock,
+            PresentationPrefabRole.DoorActive,
+            PresentationPrefabRole.DoorCleared,
+            PresentationPrefabRole.DoorLocked,
+            PresentationPrefabRole.DoorUnavailable,
+            PresentationPrefabRole.DecorGrassTuft,
+            PresentationPrefabRole.DecorCrystalCluster,
+            PresentationPrefabRole.DecorSmallTree,
+            PresentationPrefabRole.DecorStoneRuin,
+            PresentationPrefabRole.RoomHazardSpike,
+            PresentationPrefabRole.StandardBarrel,
+            PresentationPrefabRole.ExplosiveBarrel
+        };
+        private static RoomBiomeCatalogDefinition cachedCatalog;
 
         public static Material ResolveMaterial(string biomeId, MaterialRole role)
         {
-            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
-            if (catalog != null &&
-                catalog.TryGetBiome(biomeId, out var definition) &&
-                definition != null &&
-                definition.TryResolve(role, out var material) &&
+            var entry = EntryFor(biomeId);
+            if (entry.Materials.TryGetValue(role, out var cached) && cached != null)
+            {
+                return cached;
+            }
+
+            if (entry.Definition != null &&
+                entry.Definition.TryResolve(role, out var material) &&
                 material != null)
             {
+                entry.Materials[role] = material;
                 return material;
             }
 
-            if (RoomBiomeIds.Matches(biomeId, RoomBiomeIds.VerdantRuins) && TryCreateVerdantRuntimeMaterial(role, out var verdant))
+            if (RoomBiomeIds.Matches(entry.BiomeId, RoomBiomeIds.VerdantRuins) && TryCreateVerdantRuntimeMaterial(role, out var verdant))
             {
+                entry.Materials[role] = verdant;
                 return verdant;
             }
 
-            return MaterialResolver.Resolve(role);
+            var fallback = MaterialResolver.Resolve(role);
+            entry.Materials[role] = fallback;
+            return fallback;
         }
 
         public static void ApplyTo(string biomeId, GameObject target, MaterialRole role)
@@ -49,17 +92,24 @@ namespace Hollow.Presentation
 
         public static GameObject ResolvePrefab(string biomeId, PresentationPrefabRole role)
         {
-            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
-            if (catalog != null &&
-                catalog.TryGetBiome(biomeId, out var definition) &&
-                definition != null &&
-                definition.TryResolve(role, out var prefab) &&
+            var entry = EntryFor(biomeId);
+            if (entry.Prefabs.TryGetValue(role, out var cached) && cached != null)
+            {
+                return cached;
+            }
+
+            if (entry.Definition != null &&
+                entry.Definition.TryResolve(role, out var prefab) &&
                 prefab != null)
             {
+                PresentationPrefabResolver.PrewarmPrefab(prefab);
+                entry.Prefabs[role] = prefab;
                 return prefab;
             }
 
-            return PresentationPrefabResolver.Resolve(role);
+            var fallback = PresentationPrefabResolver.Resolve(role);
+            entry.Prefabs[role] = fallback;
+            return fallback;
         }
 
         public static GameObject InstantiateVisual(
@@ -69,15 +119,9 @@ namespace Hollow.Presentation
             Vector3 localPosition,
             Vector3 localScale)
         {
-            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
-            GameObject overridePrefab = null;
-            if (catalog != null &&
-                catalog.TryGetBiome(biomeId, out var definition) &&
-                definition != null)
-            {
-                definition.TryResolve(role, out overridePrefab);
-            }
-
+            var fallbackPrefab = PresentationPrefabResolver.Resolve(role);
+            var resolvedPrefab = ResolvePrefab(biomeId, role);
+            var overridePrefab = resolvedPrefab != fallbackPrefab ? resolvedPrefab : null;
             var visual = PresentationPrefabResolver.InstantiateVisual(role, overridePrefab, parent, localPosition, localScale);
             if (visual != null && TryMaterialRoleFor(role, out var materialRole))
             {
@@ -96,16 +140,80 @@ namespace Hollow.Presentation
 
         public static bool TryResolveDecorPrefabRole(string biomeId, string decorKind, out PresentationPrefabRole role)
         {
-            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
-            if (catalog != null &&
-                catalog.TryGetBiome(biomeId, out var definition) &&
-                definition != null &&
-                definition.TryResolveDecorRole(decorKind, out role))
+            var entry = EntryFor(biomeId);
+            var normalizedKind = RoomBiomeDecorKinds.Normalize(decorKind);
+            if (entry.DecorRoles.TryGetValue(normalizedKind, out role))
             {
                 return true;
             }
 
-            return RoomBiomeDecorKinds.TryResolveDefaultPrefabRole(decorKind, out role);
+            if (entry.Definition != null &&
+                entry.Definition.TryResolveDecorRole(normalizedKind, out role))
+            {
+                entry.DecorRoles[normalizedKind] = role;
+                return true;
+            }
+
+            if (RoomBiomeDecorKinds.TryResolveDefaultPrefabRole(normalizedKind, out role))
+            {
+                entry.DecorRoles[normalizedKind] = role;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static void Prewarm(string biomeId)
+        {
+            foreach (var materialRole in PrewarmMaterialRoles)
+            {
+                ResolveMaterial(biomeId, materialRole);
+            }
+
+            foreach (var prefabRole in PrewarmPrefabRoles)
+            {
+                ResolvePrefab(biomeId, prefabRole);
+            }
+
+            TryResolveDecorPrefabRole(biomeId, RoomBiomeDecorKinds.GrassTuft, out _);
+            TryResolveDecorPrefabRole(biomeId, RoomBiomeDecorKinds.CrystalCluster, out _);
+            TryResolveDecorPrefabRole(biomeId, RoomBiomeDecorKinds.SmallTree, out _);
+            TryResolveDecorPrefabRole(biomeId, RoomBiomeDecorKinds.StoneRuin, out _);
+        }
+
+        internal static void ClearCache()
+        {
+            BiomeEntries.Clear();
+            cachedCatalog = null;
+            VerdantRuntimeMaterials.Clear();
+        }
+
+        private static BiomeCacheEntry EntryFor(string biomeId)
+        {
+            var catalog = RoomBiomeCatalogDefinition.LoadDefault();
+            if (cachedCatalog != catalog)
+            {
+                BiomeEntries.Clear();
+                cachedCatalog = catalog;
+            }
+
+            var normalized = RoomBiomeIds.Normalize(biomeId);
+            if (BiomeEntries.TryGetValue(normalized, out var cached))
+            {
+                M136PerformanceOperationCounters.ReportPresentationBiomeCacheHit();
+                return cached;
+            }
+
+            M136PerformanceOperationCounters.ReportPresentationBiomeCacheMiss();
+            RoomBiomeDefinition definition = null;
+            if (catalog != null)
+            {
+                catalog.TryGetBiome(normalized, out definition);
+            }
+
+            var entry = new BiomeCacheEntry(normalized, definition);
+            BiomeEntries[normalized] = entry;
+            return entry;
         }
 
         private static bool TryCreateVerdantRuntimeMaterial(MaterialRole role, out Material material)
@@ -179,6 +287,9 @@ namespace Hollow.Presentation
                 case PresentationPrefabRole.DoorUnavailable:
                     materialRole = MaterialRole.DoorUnavailable;
                     return true;
+                case PresentationPrefabRole.NextBranchPortal:
+                    materialRole = MaterialRole.NextBranchPortal;
+                    return true;
                 case PresentationPrefabRole.DecorGrassTuft:
                     materialRole = MaterialRole.DecorGrassTuft;
                     return true;
@@ -194,6 +305,63 @@ namespace Hollow.Presentation
                 default:
                     materialRole = default;
                     return false;
+            }
+        }
+
+        private sealed class BiomeCacheEntry
+        {
+            public BiomeCacheEntry(string biomeId, RoomBiomeDefinition definition)
+            {
+                BiomeId = RoomBiomeIds.Normalize(biomeId);
+                Definition = definition;
+                PrimeDefinitionMappings();
+            }
+
+            public string BiomeId { get; }
+
+            public RoomBiomeDefinition Definition { get; }
+
+            public Dictionary<MaterialRole, Material> Materials { get; } = new();
+
+            public Dictionary<PresentationPrefabRole, GameObject> Prefabs { get; } = new();
+
+            public Dictionary<string, PresentationPrefabRole> DecorRoles { get; } = new(StringComparer.Ordinal);
+
+            private void PrimeDefinitionMappings()
+            {
+                foreach (var binding in RoomBiomeCatalogDefinition.DefaultDecorBindings())
+                {
+                    DecorRoles[RoomBiomeDecorKinds.Normalize(binding.DecorKind)] = binding.PrefabRole;
+                }
+
+                if (Definition == null)
+                {
+                    return;
+                }
+
+                foreach (var binding in Definition.MaterialOverrides)
+                {
+                    if (binding.Material != null && !Materials.ContainsKey(binding.Role))
+                    {
+                        Materials.Add(binding.Role, binding.Material);
+                    }
+                }
+
+                foreach (var binding in Definition.PrefabOverrides)
+                {
+                    if (binding.Prefab == null || Prefabs.ContainsKey(binding.Role))
+                    {
+                        continue;
+                    }
+
+                    PresentationPrefabResolver.PrewarmPrefab(binding.Prefab);
+                    Prefabs.Add(binding.Role, binding.Prefab);
+                }
+
+                foreach (var binding in Definition.DecorPrefabBindings)
+                {
+                    DecorRoles[RoomBiomeDecorKinds.Normalize(binding.DecorKind)] = binding.PrefabRole;
+                }
             }
         }
     }

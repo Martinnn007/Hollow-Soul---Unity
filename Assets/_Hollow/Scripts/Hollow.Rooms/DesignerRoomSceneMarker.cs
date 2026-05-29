@@ -85,7 +85,13 @@ namespace Hollow.Rooms
                     DesignerRoomSceneMarkerKind.DoorPort => $"Door {DoorDirectionLabel()}_{DoorLaneIndex}",
                     DesignerRoomSceneMarkerKind.SafeStart => "Safe Start",
                     DesignerRoomSceneMarkerKind.EnemySpawn => EnemyDisplayName(runtimeKind),
-                    DesignerRoomSceneMarkerKind.ItemSpawn => runtimeKind == "spawn_point_chest" ? "Chest" : "Room Reward",
+                    DesignerRoomSceneMarkerKind.ItemSpawn => runtimeKind switch
+                    {
+                        "spawn_point_chest" => "Chest",
+                        "spawn_point_goldenChest" => "Golden Chest",
+                        "spawn_point_corruptedChest" => "Corrupted Chest",
+                        _ => "Room Reward"
+                    },
                     DesignerRoomSceneMarkerKind.Obstacle => "Rock",
                     DesignerRoomSceneMarkerKind.Hazard => "Spike",
                     DesignerRoomSceneMarkerKind.InteractiveObject => runtimeKind == "barrelExplosive" ? "Explosive Barrel" : "Barrel",
@@ -274,6 +280,7 @@ namespace Hollow.Rooms
                 "spawnEnemyClockworkSentry" => "Clockwork Sentry",
                 "spawnEnemyHollowAcolyte" => "Hollow Acolyte",
                 "spawnEnemyWraith" => "Wraith",
+                "spawnEnemyEscapist" => "Escapist",
                 "spawnEnemySoulEater" => "Soul Eater",
                 "spawnEnemyCurseBinder" => "Curse Binder",
                 "spawnEnemyGraveLantern" => "Grave Lantern",

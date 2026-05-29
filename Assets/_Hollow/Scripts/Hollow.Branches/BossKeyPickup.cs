@@ -1,8 +1,9 @@
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Branches
 {
-    public sealed class BossKeyPickup : MonoBehaviour
+    public sealed class BossKeyPickup : MonoBehaviour, IPooledRuntimeObject
     {
         [SerializeField] private string roomId;
         [SerializeField] private bool claimed;
@@ -26,6 +27,18 @@ namespace Hollow.Branches
 
             claimed = true;
             return true;
+        }
+
+        public void OnRentFromPool()
+        {
+            claimed = false;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            roomId = string.Empty;
+            claimed = false;
         }
     }
 }

@@ -1,3 +1,4 @@
+using Hollow.Core.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,11 @@ namespace Hollow.Combat
         private Text statusText;
         private Image fillImage;
         private Font font;
+        private bool lastVisible;
+        private string lastTitle = string.Empty;
+        private string lastStatus = string.Empty;
+        private float lastFillAmount = -1f;
+        private float nextRefreshTime;
 
         public void Bind(RoomCombatController controller)
         {
@@ -21,12 +27,23 @@ namespace Hollow.Combat
 
         private void Update()
         {
-            Refresh();
+            Refresh(force: false);
         }
 
         private void Refresh()
         {
+            Refresh(force: true);
+        }
+
+        private void Refresh(bool force)
+        {
             if (panel == null)
+            {
+                return;
+            }
+
+            var now = Time.unscaledTime;
+            if (!force && now < nextRefreshTime)
             {
                 return;
             }
@@ -34,15 +51,37 @@ namespace Hollow.Combat
             var boss = combatController != null ? combatController.ActiveBoss : null;
             var health = boss != null ? boss.Health : null;
             var visible = boss != null && health != null && health.IsAlive && boss.BossDefinition != null;
-            panel.gameObject.SetActive(visible);
-            if (!visible)
+            var title = visible ? boss.BossDefinition.DisplayName : string.Empty;
+            var status = visible ? boss.BossStatusText : string.Empty;
+            var fill = visible && health.MaxHealth > 0 ? Mathf.Clamp01((float)health.CurrentHealth / health.MaxHealth) : 0f;
+            if (!force &&
+                visible == lastVisible &&
+                string.Equals(title, lastTitle, System.StringComparison.Ordinal) &&
+                string.Equals(status, lastStatus, System.StringComparison.Ordinal) &&
+                Mathf.Abs(fill - lastFillAmount) < 0.001f &&
+                now < nextRefreshTime)
             {
                 return;
             }
 
-            titleText.text = boss.BossDefinition.DisplayName;
-            statusText.text = boss.BossStatusText;
-            fillImage.fillAmount = health.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)health.CurrentHealth / health.MaxHealth);
+            using (M137PerformanceProfilerMarkers.BossHudRefresh.Auto())
+            {
+                panel.gameObject.SetActive(visible);
+                lastVisible = visible;
+                lastTitle = title;
+                lastStatus = status;
+                lastFillAmount = fill;
+                nextRefreshTime = now + M137PerformanceComfortPolicy.BossHudMinRefreshIntervalSeconds;
+
+                if (!visible)
+                {
+                    return;
+                }
+
+                titleText.text = title;
+                statusText.text = status;
+                fillImage.fillAmount = fill;
+            }
         }
 
         private void BuildIfNeeded()

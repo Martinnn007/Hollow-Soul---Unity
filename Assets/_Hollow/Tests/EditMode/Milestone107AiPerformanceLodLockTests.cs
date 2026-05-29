@@ -1,5 +1,6 @@
 using System.IO;
 using Hollow.Combat;
+using Hollow.Core.Diagnostics;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
 using NUnit.Framework;
@@ -67,7 +68,7 @@ namespace Hollow.Tests.EditMode
                 pendingPathCount: 14,
                 protectResponsiveness: false);
 
-            Assert.That(protectedFull, Is.EqualTo(0.16f).Within(0.001f));
+            Assert.That(protectedFull, Is.EqualTo(M137PerformanceComfortPolicy.M3FullThreatMaxThinkIntervalSeconds).Within(0.001f));
             Assert.Greater(loadedFull, protectedFull);
             Assert.Greater(loadedReduced, 0.48f);
             Assert.LessOrEqual(loadedReduced, 0.82f);

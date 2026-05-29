@@ -1,0 +1,189 @@
+{
+  "hollowRuntime": {
+    "schemaVersion": 2,
+    "sourceProjectId": "wave_room_single_1x1",
+    "canonicalRoomId": "wave_room_single_1x1",
+    "biomeId": "hollow_threshold",
+    "displayName": "Wave Room Endpoint 1x1",
+    "roomType": "wave",
+    "rewardType": "golden-chest",
+    "prototypeStatus": "m131-special",
+    "tileSizeMeters": 1.0,
+    "dimensions": {
+      "widthTiles": 13,
+      "heightTiles": 7,
+      "bounds": {
+        "minX": -6.5,
+        "maxX": 6.5,
+        "minZ": -3.5,
+        "maxZ": 3.5
+      }
+    },
+    "footprint": {
+      "primaryCell": {
+        "x": 0,
+        "z": 0
+      },
+      "occupiedBranchCells": [
+        {
+          "x": 0,
+          "z": 0
+        }
+      ],
+      "chunkBasisTiles": {
+        "width": 13,
+        "height": 7
+      }
+    },
+    "walkableTiles": [
+      { "x": -3, "z": -2 },
+      { "x": -2, "z": -2 },
+      { "x": -1, "z": -2 },
+      { "x": 0, "z": -2 },
+      { "x": 1, "z": -2 },
+      { "x": 2, "z": -2 },
+      { "x": 3, "z": -2 },
+      { "x": -3, "z": -1 },
+      { "x": -2, "z": -1 },
+      { "x": -1, "z": -1 },
+      { "x": 0, "z": -1 },
+      { "x": 1, "z": -1 },
+      { "x": 2, "z": -1 },
+      { "x": 3, "z": -1 },
+      { "x": -3, "z": 0 },
+      { "x": -2, "z": 0 },
+      { "x": -1, "z": 0 },
+      { "x": 0, "z": 0 },
+      { "x": 1, "z": 0 },
+      { "x": 2, "z": 0 },
+      { "x": 3, "z": 0 },
+      { "x": -3, "z": 1 },
+      { "x": -2, "z": 1 },
+      { "x": -1, "z": 1 },
+      { "x": 0, "z": 1 },
+      { "x": 1, "z": 1 },
+      { "x": 2, "z": 1 },
+      { "x": 3, "z": 1 },
+      { "x": -3, "z": 2 },
+      { "x": -2, "z": 2 },
+      { "x": -1, "z": 2 },
+      { "x": 0, "z": 2 },
+      { "x": 1, "z": 2 },
+      { "x": 2, "z": 2 },
+      { "x": 3, "z": 2 }
+    ],
+    "holeTiles": [],
+    "floorRegions": [
+      {
+        "id": "wave_room_floor",
+        "center": { "x": 0, "y": 0, "z": 0 },
+        "halfSize": { "x": 6.5, "z": 3.5 }
+      }
+    ],
+    "doorPorts": [
+      {
+        "id": "north_0",
+        "direction": "north",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": 0, "z": -3.5 },
+        "positionMeters": { "x": 0, "y": 0, "z": -3.5 },
+        "kind": "normal"
+      },
+      {
+        "id": "south_0",
+        "direction": "south",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": 0, "z": 3.5 },
+        "positionMeters": { "x": 0, "y": 0, "z": 3.5 },
+        "kind": "normal"
+      },
+      {
+        "id": "east_0",
+        "direction": "east",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": 6.5, "z": 0 },
+        "positionMeters": { "x": 6.5, "y": 0, "z": 0 },
+        "kind": "normal"
+      },
+      {
+        "id": "west_0",
+        "direction": "west",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": -6.5, "z": 0 },
+        "positionMeters": { "x": -6.5, "y": 0, "z": 0 },
+        "kind": "normal"
+      }
+    ],
+    "playerSafeStart": {
+      "x": 0,
+      "y": 0,
+      "z": 1.65
+    },
+    "enemySpawns": [
+      {
+        "id": "wave_spawn_northwest",
+        "kind": "spawnEnemyNormal",
+        "position": { "x": -2.25, "y": 0, "z": -1.45 }
+      },
+      {
+        "id": "wave_spawn_northeast",
+        "kind": "spawnEnemyFast",
+        "position": { "x": 2.25, "y": 0, "z": -1.45 }
+      },
+      {
+        "id": "wave_spawn_west",
+        "kind": "spawnEnemyFlying",
+        "position": { "x": -2.75, "y": 0, "z": 0.35 }
+      },
+      {
+        "id": "wave_spawn_east",
+        "kind": "spawnEnemyNormal",
+        "position": { "x": 2.75, "y": 0, "z": 0.35 }
+      }
+    ],
+    "itemSpawns": [
+      {
+        "id": "wave_golden_chest_reward",
+        "kind": "spawn_point_goldenChest",
+        "position": { "x": 0, "y": 0, "z": -0.15 }
+      },
+      {
+        "id": "wave_room_reward",
+        "kind": "spawn_point_roomReward",
+        "position": { "x": 0, "y": 0, "z": -0.15 }
+      }
+    ],
+    "obstacles": [
+      {
+        "id": "wave_pillar_west",
+        "kind": "rock",
+        "center": { "x": -4.5, "y": 0.5, "z": 0 },
+        "size": { "x": 1, "y": 1, "z": 1 },
+        "blocksProjectiles": true
+      },
+      {
+        "id": "wave_pillar_east",
+        "kind": "rock",
+        "center": { "x": 4.5, "y": 0.5, "z": 0 },
+        "size": { "x": 1, "y": 1, "z": 1 },
+        "blocksProjectiles": true
+      }
+    ],
+    "hazards": [],
+    "interactiveObjects": [],
+    "decor": [
+      {
+        "id": "wave_ring_back",
+        "kind": "decorStoneCluster",
+        "center": { "x": 0, "y": 0.25, "z": -2.65 },
+        "size": { "x": 2.2, "y": 0.5, "z": 0.45 },
+        "blocking": false,
+        "blocksProjectiles": false
+      }
+    ]
+  }
+}

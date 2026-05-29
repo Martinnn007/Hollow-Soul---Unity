@@ -144,6 +144,16 @@ namespace Hollow.Tests.EditMode
                 new Vector3(2f, 0f, 0f));
             DesignerRoomSceneAuthoringUtility.CreateMarker(
                 root,
+                DesignerRoomSceneMarkerKind.ItemSpawn,
+                RoomDesignerMarkerKinds.RoomReward,
+                new Vector3(3f, 0f, 0f));
+            DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
+                DesignerRoomSceneMarkerKind.ItemSpawn,
+                RoomDesignerMarkerKinds.ChestSpawn,
+                new Vector3(4f, 0f, 0f));
+            var obstacle = DesignerRoomSceneAuthoringUtility.CreateMarker(
+                root,
                 DesignerRoomSceneMarkerKind.Obstacle,
                 RoomDesignerCellKinds.Rock,
                 new Vector3(-2f, 0f, 0f));
@@ -161,8 +171,13 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(preview.transform.Find("Floor"));
             Assert.IsNotNull(preview.transform.Find("Obstacles"));
             Assert.IsNotNull(preview.transform.Find("Doors"));
-            Assert.IsNotNull(preview.transform.Find("Spawns/Enemies"));
+            Assert.IsNotNull(preview.transform.Find("Spawns/Items"));
+            Assert.IsFalse(HasPreviewChildContaining(preview, "SafeStart."));
+            Assert.IsFalse(HasPreviewChildContaining(preview, "Skeleton Spear."));
+            Assert.IsFalse(HasPreviewChildContaining(preview, "Room Reward."));
+            Assert.IsTrue(HasPreviewChildContaining(preview, "Chest."));
             Assert.GreaterOrEqual(preview.GetComponentsInChildren<Light>(true).Length, 2);
+            Assert.IsFalse(obstacle.GetComponent<Renderer>().enabled);
 
             var project = DesignerRoomSceneAuthoringUtility.BuildRoomDesignerProject(SceneManager.GetActiveScene());
             Assert.IsTrue(project.markers.Any(marker => marker.kind == RoomDesignerMarkerKinds.EnemySkeletonSpear));
@@ -172,7 +187,7 @@ namespace Hollow.Tests.EditMode
         public void VisualPreviewCanBeCleared()
         {
             var root = CreateRoot();
-            DesignerRoomSceneAuthoringUtility.CreateMarker(
+            var safeStart = DesignerRoomSceneAuthoringUtility.CreateMarker(
                 root,
                 DesignerRoomSceneMarkerKind.SafeStart,
                 RoomDesignerMarkerKinds.SafeStart,
@@ -180,10 +195,12 @@ namespace Hollow.Tests.EditMode
 
             DesignerRoomSceneVisualPreviewBuilder.BuildPreview(SceneManager.GetActiveScene());
             Assert.IsTrue(DesignerRoomSceneVisualPreviewBuilder.HasPreview(SceneManager.GetActiveScene()));
+            Assert.IsFalse(safeStart.GetComponent<Renderer>().enabled);
 
             DesignerRoomSceneVisualPreviewBuilder.ClearPreview(SceneManager.GetActiveScene());
 
             Assert.IsFalse(DesignerRoomSceneVisualPreviewBuilder.HasPreview(SceneManager.GetActiveScene()));
+            Assert.IsTrue(safeStart.GetComponent<Renderer>().enabled);
         }
 
         [Test]
@@ -252,6 +269,12 @@ namespace Hollow.Tests.EditMode
                 true,
                 0.5f);
             return root;
+        }
+
+        private static bool HasPreviewChildContaining(GameObject preview, string text)
+        {
+            return preview.GetComponentsInChildren<Transform>(true)
+                .Any(transform => transform.name.IndexOf(text, System.StringComparison.Ordinal) >= 0);
         }
     }
 }

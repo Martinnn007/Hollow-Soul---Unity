@@ -114,6 +114,9 @@ namespace Hollow.Combat
             var wraith = EnemyDefinition.CreateRuntime("spawnEnemyWraith", "Wraith", EnemyArchetypeId.Flying, EnemyMovementMode.Flying, 3, 1.75f, 0, new Color(0.66f, 0.88f, 1f, 0.92f));
             wraith.Configure("spawnEnemyWraith", "Wraith", EnemyArchetypeId.Flying, EnemyBehaviorId.Wraith, EnemyMovementMode.Flying, 3, 1.75f, 0, 1f, 0.28f, 6.4f, 1.2f, 1, 5.2f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Light, EnemyIntelligenceLevel.Tactical, EnemyInstinctDisposition.Predator, 2.2f, 5.2f, new Color(0.66f, 0.88f, 1f, 0.92f));
             wraith.ConfigureSenseAndLunge(8.8f, 300f, 7f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
+            var escapist = EnemyDefinition.CreateRuntime("spawnEnemyEscapist", "Escapist", EnemyArchetypeId.Flying, EnemyMovementMode.Flying, 3, 2.9f, 0, new Color(0.72f, 0.96f, 1f, 0.92f));
+            escapist.Configure("spawnEnemyEscapist", "Escapist", EnemyArchetypeId.Flying, EnemyBehaviorId.Wraith, EnemyMovementMode.Flying, 3, 2.9f, 0, 1f, 0.24f, 8.2f, 1.1f, 0, 0.1f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Light, EnemyIntelligenceLevel.Basic, EnemyInstinctDisposition.Prey, 3.2f, 7.5f, new Color(0.72f, 0.96f, 1f, 0.92f));
+            escapist.ConfigureSenseAndLunge(9f, 360f, 8f, false, 1.4f, 0.12f, 0.1f, 0.35f, 0.9f);
             var soulEater = EnemyDefinition.CreateRuntime("spawnEnemySoulEater", "Soul Eater", EnemyArchetypeId.Heavy, EnemyMovementMode.Grounded, 7, 1.2f, 0, new Color(0.12f, 0.34f, 0.38f, 1f));
             soulEater.Configure("spawnEnemySoulEater", "Soul Eater", EnemyArchetypeId.Heavy, EnemyBehaviorId.SoulEater, EnemyMovementMode.Grounded, 7, 1.2f, 0, 1f, 0.38f, 5.8f, 1.6f, 1, 4.6f, 0f, 1f, "spawnEnemyNormal", 0, EnemyBodyClass.Heavy, EnemyIntelligenceLevel.Trained, EnemyInstinctDisposition.Predator, 2.4f, 4.8f, new Color(0.12f, 0.34f, 0.38f, 1f));
             soulEater.ConfigureSenseAndLunge(7.6f, 170f, 6f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
@@ -134,7 +137,7 @@ namespace Hollow.Combat
             azure.ConfigureSenseAndLunge(9.5f, 300f, 5.5f, false, 1.4f, 0.22f, 0.18f, 0.75f, 1.15f);
 
             var catalog = CreateInstance<EnemyCatalog>();
-            catalog.Configure(new[] { normal, flying, fast, heavy, boss, charger, turret, splitter, pod, rat, spider, hollowBird, hollowBeast, skeletonSword, skeletonSpear, knight, giant, archer, gunner, thrower, repeater, clockwork, acolyte, wraith, soulEater, curseBinder, lantern, starforged, railSpider, azure }, normal);
+            catalog.Configure(new[] { normal, flying, fast, heavy, boss, charger, turret, splitter, pod, rat, spider, hollowBird, hollowBeast, skeletonSword, skeletonSpear, knight, giant, archer, gunner, thrower, repeater, clockwork, acolyte, wraith, escapist, soulEater, curseBinder, lantern, starforged, railSpider, azure }, normal);
             return catalog;
         }
     }

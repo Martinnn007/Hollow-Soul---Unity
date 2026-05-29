@@ -158,12 +158,12 @@ namespace Hollow.RoomDesigner
                         position = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z }
                     });
                 }
-                else if (marker.kind == RoomDesignerMarkerKinds.ChestSpawn)
+                else if (RoomDesignerMarkerKinds.IsChest(marker.kind))
                 {
                     runtime.itemSpawns.Add(new ImportedSpawnPoint
                     {
                         id = string.IsNullOrWhiteSpace(marker.id) ? $"chestSpawn_{rewardIndex++}" : marker.id,
-                        kind = RoomDesignerMarkerKinds.ChestSpawn,
+                        kind = marker.kind,
                         position = new ImportedVector3 { x = marker.x, y = marker.y, z = marker.z }
                     });
                 }

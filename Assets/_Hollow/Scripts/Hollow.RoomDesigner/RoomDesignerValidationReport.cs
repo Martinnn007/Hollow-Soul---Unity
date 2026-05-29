@@ -134,7 +134,7 @@ namespace Hollow.RoomDesigner
                     }
                 }
 
-                if (marker.kind == RoomDesignerMarkerKinds.ChestSpawn &&
+                if (RoomDesignerMarkerKinds.IsChest(marker.kind) &&
                     markers.Any(candidate =>
                         candidate != null &&
                         candidate != marker &&
@@ -142,6 +142,7 @@ namespace Hollow.RoomDesigner
                         Mathf.RoundToInt(candidate.z) == Mathf.RoundToInt(marker.z) &&
                         (candidate.kind == RoomDesignerMarkerKinds.SafeStart ||
                          candidate.kind == RoomDesignerMarkerKinds.RoomReward ||
+                         RoomDesignerMarkerKinds.IsChest(candidate.kind) ||
                          RoomDesignerMarkerKinds.IsEnemy(candidate.kind) ||
                          RoomDesignerMarkerKinds.IsInteractiveObject(candidate.kind))))
                 {

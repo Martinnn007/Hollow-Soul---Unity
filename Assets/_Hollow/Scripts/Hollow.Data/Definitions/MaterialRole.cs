@@ -93,6 +93,7 @@ namespace Hollow.Data.Definitions
         DecorGrassTuft,
         DecorCrystalCluster,
         DecorSmallTree,
-        DecorStoneRuin
+        DecorStoneRuin,
+        ChestCorrupted
     }
 }

@@ -483,6 +483,11 @@ namespace Hollow.Input
             return ReadAnyKeyboard(keyboard => keyboard.f3Key.wasPressedThisFrame);
         }
 
+        public static bool ReadDebugSpawnMenuTogglePressed()
+        {
+            return ReadAnyKeyboard(keyboard => keyboard.f10Key.wasPressedThisFrame);
+        }
+
         private static bool HasAnyKeyboardDevice()
         {
             if (Keyboard.current != null)

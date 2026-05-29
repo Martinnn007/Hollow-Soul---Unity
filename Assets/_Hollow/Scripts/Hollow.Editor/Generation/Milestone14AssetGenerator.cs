@@ -12,6 +12,7 @@ namespace Hollow.Editor.Generation
     {
         public const string BranchDataDirectory = "Assets/_Hollow/Data/Branches";
         public const string CatalogPath = BranchDataDirectory + "/BranchRoomTemplateCatalog_MacroFixtures.asset";
+        public const string CorruptedChestEndpointRoomId = "corrupted_chest_single_1x1";
 
         private static readonly string[] GameScenes =
         {
@@ -47,7 +48,9 @@ namespace Hollow.Editor.Generation
                 LoadFixture("combat_macro_tall_1x2"),
                 LoadFixture("combat_macro_block_2x2"),
                 LoadFixture("combat_macro_l_3cell"),
-                BranchGenerator.DefaultMacroFixtureSeed);
+                BranchGenerator.DefaultMacroFixtureSeed,
+                System.Array.Empty<TextAsset>(),
+                LoadOptionalFixture(CorruptedChestEndpointRoomId));
             EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -62,6 +65,12 @@ namespace Hollow.Editor.Generation
             }
 
             return fixture;
+        }
+
+        private static TextAsset LoadOptionalFixture(string roomId)
+        {
+            var path = $"{Milestone13AssetGenerator.MacroFixtureDirectory}/{roomId}.hollowruntime.json";
+            return AssetDatabase.LoadAssetAtPath<TextAsset>(path);
         }
 
         private static void AssignCatalogToGameScenes(BranchRoomTemplateCatalogDefinition catalog)

@@ -1,11 +1,12 @@
 using Hollow.Data.Definitions;
+using Hollow.Core;
 using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
 
 namespace Hollow.Combat
 {
-    public sealed class ProjectileController : MonoBehaviour
+    public sealed class ProjectileController : MonoBehaviour, IPooledRuntimeObject
     {
         public const float DefaultSpeedMetersPerSecond = 9f;
         public const float DefaultLifetimeSeconds = 1.5f;
@@ -26,6 +27,7 @@ namespace Hollow.Combat
         private ImpactForceClass impactForceClass = ImpactForceClass.Light;
         private float knockbackMeters;
         private GameObject sourceOwner;
+        private GameObject presentationVisual;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
@@ -53,7 +55,14 @@ namespace Hollow.Combat
             speedMetersPerSecond = Mathf.Max(0.1f, nextSpeedMetersPerSecond);
             lifetimeSeconds = Mathf.Max(0.1f, nextLifetimeSeconds);
             ageSeconds = 0f;
-            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Projectile, transform, Vector3.zero, Vector3.one);
+            if (presentationVisual == null)
+            {
+                presentationVisual = PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.Projectile, transform, Vector3.zero, Vector3.one);
+            }
+            else
+            {
+                presentationVisual.SetActive(true);
+            }
         }
 
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile, bool isHeavyAttackProjectile)
@@ -164,11 +173,33 @@ namespace Hollow.Combat
             diagnostics?.RecordProjectileDespawn(reason);
             if (Application.isPlaying)
             {
-                Destroy(gameObject);
+                HollowRuntimePool.Return(gameObject);
             }
             else
             {
                 DestroyImmediate(gameObject);
+            }
+        }
+
+        public void OnRentFromPool()
+        {
+            ageSeconds = 0f;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            roomRuntimeRoot = null;
+            combatController = null;
+            diagnostics = null;
+            sourceOwner = null;
+            ageSeconds = 0f;
+            heavyAttackProjectile = false;
+            impactForceClass = ImpactForceClass.Light;
+            knockbackMeters = 0f;
+            if (presentationVisual != null)
+            {
+                presentationVisual.SetActive(false);
             }
         }
     }

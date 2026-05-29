@@ -49,6 +49,9 @@ namespace Hollow.RoomDesigner
         DecorGrassTuft = 44,
         DecorCrystalCluster = 45,
         DecorSmallTree = 46,
-        DecorStoneRuin = 47
+        DecorStoneRuin = 47,
+        CorruptedChestSpawn = 48,
+        GoldenChestSpawn = 49,
+        EnemyEscapist = 50
     }
 }

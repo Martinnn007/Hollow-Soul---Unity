@@ -44,6 +44,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.EnemyAzureMinigunTurret => "Minigun",
                 RoomDesignerTool.EnemyHollowAcolyte => "Acolyte",
                 RoomDesignerTool.EnemyWraith => "Wraith",
+                RoomDesignerTool.EnemyEscapist => "Escapist",
                 RoomDesignerTool.EnemySoulEater => "Soul Eater",
                 RoomDesignerTool.EnemyCurseBinder => "Curse Binder",
                 RoomDesignerTool.EnemyGraveLantern => "Lantern",
@@ -56,6 +57,8 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.StandardBarrel => "Barrel",
                 RoomDesignerTool.ExplosiveBarrel => "Boom",
                 RoomDesignerTool.ChestSpawn => "Chest",
+                RoomDesignerTool.GoldenChestSpawn => "Golden",
+                RoomDesignerTool.CorruptedChestSpawn => "Corrupted",
                 _ => tool.ToString()
             };
         }
@@ -100,6 +103,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.EnemyAzureMinigunTurret => "MIN",
                 RoomDesignerTool.EnemyHollowAcolyte => "ACO",
                 RoomDesignerTool.EnemyWraith => "WTH",
+                RoomDesignerTool.EnemyEscapist => "ESC",
                 RoomDesignerTool.EnemySoulEater => "SOL",
                 RoomDesignerTool.EnemyCurseBinder => "CRS",
                 RoomDesignerTool.EnemyGraveLantern => "LAN",
@@ -112,6 +116,8 @@ namespace Hollow.RoomDesigner
                 RoomDesignerTool.StandardBarrel => "BRL",
                 RoomDesignerTool.ExplosiveBarrel => "XPL",
                 RoomDesignerTool.ChestSpawn => "CHS",
+                RoomDesignerTool.GoldenChestSpawn => "GLD",
+                RoomDesignerTool.CorruptedChestSpawn => "CRP",
                 _ => tool.ToString().Substring(0, Math.Min(3, tool.ToString().Length)).ToUpperInvariant()
             };
         }
@@ -161,12 +167,15 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => "Minigun",
                 RoomDesignerMarkerKinds.EnemyHollowAcolyte => "Acolyte",
                 RoomDesignerMarkerKinds.EnemyWraith => "Wraith",
+                RoomDesignerMarkerKinds.EnemyEscapist => "Escapist",
                 RoomDesignerMarkerKinds.EnemySoulEater => "Soul Eater",
                 RoomDesignerMarkerKinds.EnemyCurseBinder => "Curse Binder",
                 RoomDesignerMarkerKinds.EnemyGraveLantern => "Lantern",
                 RoomDesignerMarkerKinds.StandardBarrel => "Barrel",
                 RoomDesignerMarkerKinds.ExplosiveBarrel => "Boom",
                 RoomDesignerMarkerKinds.ChestSpawn => "Chest",
+                RoomDesignerMarkerKinds.GoldenChestSpawn => "Golden",
+                RoomDesignerMarkerKinds.CorruptedChestSpawn => "Corrupt",
                 RoomDesignerMarkerKinds.DecorGrassTuft => "Grass",
                 RoomDesignerMarkerKinds.DecorCrystalCluster => "Crystal",
                 RoomDesignerMarkerKinds.DecorSmallTree => "Tree",

@@ -345,6 +345,9 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(projectile);
                 Assert.Greater(projectile.localPosition.x, 0.2f);
                 Assert.Greater(projectile.localPosition.z, 0.05f);
+                Assert.Greater(
+                    Vector3.Dot(projectile.forward, new Vector3(arbitraryAim.x, 0f, arbitraryAim.y)),
+                    0.99f);
                 Assert.AreEqual(arbitraryAim.x, weapon.LastAimDirection.x, 0.001f);
                 Assert.AreEqual(arbitraryAim.y, weapon.LastAimDirection.y, 0.001f);
 

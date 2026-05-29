@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d671946eac3cf4098b61a44a76aee8fe, type: 3}
+  m_Name: Biome_CorruptedAshenShrine
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RoomBiomeDefinition
+  biomeId: corrupted_ashen_shrine
+  displayName: Ashen Shrine
+  biomeTags: 08000000090000000a0000000e000000
+  roomTemplates: []
+  materialOverrides:
+  - role: 0
+    material: {fileID: 2100000, guid: 7675365e1bd74fc38a22bcd4d1b6ab87, type: 2}
+  - role: 86
+    material: {fileID: 2100000, guid: 4517dabd4d1d45fcbad6926b2c0a6f42, type: 2}
+  - role: 87
+    material: {fileID: 2100000, guid: b3a52b90e4d14b51a02ba0a9c66336ba, type: 2}
+  - role: 2
+    material: {fileID: 2100000, guid: fe5cd413053b4d69947f1f8238d61e36, type: 2}
+  - role: 4
+    material: {fileID: 2100000, guid: ba2746dc7aa246b486a8ee16fb1f08d2, type: 2}
+  - role: 5
+    material: {fileID: 2100000, guid: 4d1e6e661a7746adaffc228a3c49bcad, type: 2}
+  - role: 3
+    material: {fileID: 2100000, guid: d509e94199b74388870fa8ccd0009052, type: 2}
+  - role: 6
+    material: {fileID: 2100000, guid: a4e9e487115146fb83ea0c8624e67017, type: 2}
+  - role: 88
+    material: {fileID: 2100000, guid: bf87b62df5d543f28287d7b0533f8327, type: 2}
+  - role: 89
+    material: {fileID: 2100000, guid: c6bcd7068ae04658aabab0c770283c8b, type: 2}
+  - role: 90
+    material: {fileID: 2100000, guid: 39bf4b4e7b854c32b89fca97cd73653e, type: 2}
+  - role: 91
+    material: {fileID: 2100000, guid: 5dc61a23d9824b29bfba1b769f1e18ea, type: 2}
+  prefabOverrides:
+  - role: 70
+    prefab: {fileID: 7761968158216945197, guid: d6d76851f8594369b395c68325d724e8, type: 3}
+  - role: 71
+    prefab: {fileID: 8901252871527791470, guid: 6a62b8050a70425b829094dedb9c258f, type: 3}
+  - role: 72
+    prefab: {fileID: 4554965912670301397, guid: 252e7fac2cb140bda07f8ed5a155eca6, type: 3}
+  - role: 73
+    prefab: {fileID: 7761968158216945197, guid: f8e5ebe2f525431196dbb2329e43110c, type: 3}
+  decorPrefabBindings:
+  - decorKind: decorGrassTuft
+    prefabRole: 70
+  - decorKind: decorCrystalCluster
+    prefabRole: 71
+  - decorKind: decorSmallTree
+    prefabRole: 72
+  - decorKind: decorStoneRuin
+    prefabRole: 73

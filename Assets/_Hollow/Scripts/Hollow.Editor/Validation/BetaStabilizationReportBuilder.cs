@@ -346,7 +346,7 @@ namespace Hollow.Editor.Validation
                 PresentationPrefabRole.EnemyBoss => "Bosses",
                 PresentationPrefabRole.RoomFloor or PresentationPrefabRole.RoomObstacleRock or PresentationPrefabRole.RoomHazardSpike => "Rooms",
                 PresentationPrefabRole.StandardBarrel or PresentationPrefabRole.ExplosiveBarrel => "Hazards",
-                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden => "Chests",
+                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden or PresentationPrefabRole.ChestCorrupted => "Chests",
                 PresentationPrefabRole.CoinCopper or PresentationPrefabRole.CoinSilver or PresentationPrefabRole.CoinGold or PresentationPrefabRole.HazardCoinDrop => "Coins",
                 PresentationPrefabRole.DoorLocked or PresentationPrefabRole.DoorActive or PresentationPrefabRole.DoorCleared or
                     PresentationPrefabRole.DoorUnavailable or PresentationPrefabRole.SecretDoorDebug => "Doors",

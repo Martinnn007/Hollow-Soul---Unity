@@ -43,10 +43,10 @@ namespace Hollow.Data.Definitions
             var catalog = CreateInstance<ShipUpgradeCatalogDefinition>();
             catalog.Configure("ship_upgrade_catalog_default", new[]
             {
-                Upgrade("reinforced_vitals", "Reinforced Vitals", 5, new CharacterStatModifier(maxHealth: 1)),
-                Upgrade("stamina_cell", "Stamina Cell", 5, new CharacterStatModifier(maxStamina: 10f)),
-                Upgrade("reactor_tuning", "Reactor Tuning", 6, new CharacterStatModifier(staminaRegen: 1f)),
-                Upgrade("combat_calibration", "Combat Calibration", 8, new CharacterStatModifier(meleeDamage: 1, rangedDamage: 1))
+                Upgrade("reinforced_vitals", "Vitals Module", 5, new CharacterStatModifier(maxHealth: 1)),
+                Upgrade("stamina_cell", "Stamina Module", 5, new CharacterStatModifier(maxStamina: 10f)),
+                Upgrade("reactor_tuning", "Reactor Module", 6, new CharacterStatModifier(staminaRegen: 1f)),
+                Upgrade("combat_calibration", "Combat Module", 8, new CharacterStatModifier(meleeDamage: 1, rangedDamage: 1))
             });
             return catalog;
         }

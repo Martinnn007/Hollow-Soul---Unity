@@ -1,0 +1,169 @@
+{
+  "hollowRuntime": {
+    "schemaVersion": 2,
+    "sourceProjectId": "special_soul_eater_single_1x1",
+    "canonicalRoomId": "special_soul_eater_single_1x1",
+    "biomeId": "hollow_threshold",
+    "displayName": "Soul Eater Special Encounter 1x1",
+    "roomType": "special-encounter",
+    "rewardType": "soul-eater-offer",
+    "prototypeStatus": "m133-special",
+    "tileSizeMeters": 1.0,
+    "dimensions": {
+      "widthTiles": 13,
+      "heightTiles": 7,
+      "bounds": {
+        "minX": -6.5,
+        "maxX": 6.5,
+        "minZ": -3.5,
+        "maxZ": 3.5
+      }
+    },
+    "footprint": {
+      "primaryCell": {
+        "x": 0,
+        "z": 0
+      },
+      "occupiedBranchCells": [
+        {
+          "x": 0,
+          "z": 0
+        }
+      ],
+      "chunkBasisTiles": {
+        "width": 13,
+        "height": 7
+      }
+    },
+    "walkableTiles": [
+      { "x": -3, "z": -2 },
+      { "x": -2, "z": -2 },
+      { "x": -1, "z": -2 },
+      { "x": 0, "z": -2 },
+      { "x": 1, "z": -2 },
+      { "x": 2, "z": -2 },
+      { "x": 3, "z": -2 },
+      { "x": -3, "z": -1 },
+      { "x": -2, "z": -1 },
+      { "x": -1, "z": -1 },
+      { "x": 0, "z": -1 },
+      { "x": 1, "z": -1 },
+      { "x": 2, "z": -1 },
+      { "x": 3, "z": -1 },
+      { "x": -3, "z": 0 },
+      { "x": -2, "z": 0 },
+      { "x": -1, "z": 0 },
+      { "x": 0, "z": 0 },
+      { "x": 1, "z": 0 },
+      { "x": 2, "z": 0 },
+      { "x": 3, "z": 0 },
+      { "x": -3, "z": 1 },
+      { "x": -2, "z": 1 },
+      { "x": -1, "z": 1 },
+      { "x": 0, "z": 1 },
+      { "x": 1, "z": 1 },
+      { "x": 2, "z": 1 },
+      { "x": 3, "z": 1 },
+      { "x": -3, "z": 2 },
+      { "x": -2, "z": 2 },
+      { "x": -1, "z": 2 },
+      { "x": 0, "z": 2 },
+      { "x": 1, "z": 2 },
+      { "x": 2, "z": 2 },
+      { "x": 3, "z": 2 }
+    ],
+    "holeTiles": [],
+    "floorRegions": [
+      {
+        "id": "soul_eater_floor",
+        "center": { "x": 0, "y": 0, "z": 0 },
+        "halfSize": { "x": 6.5, "z": 3.5 }
+      }
+    ],
+    "doorPorts": [
+      {
+        "id": "north_0",
+        "direction": "north",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": 0, "z": -3.5 },
+        "positionMeters": { "x": 0, "y": 0, "z": -3.5 },
+        "kind": "normal"
+      },
+      {
+        "id": "south_0",
+        "direction": "south",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": 0, "z": 3.5 },
+        "positionMeters": { "x": 0, "y": 0, "z": 3.5 },
+        "kind": "normal"
+      },
+      {
+        "id": "east_0",
+        "direction": "east",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": 6.5, "z": 0 },
+        "positionMeters": { "x": 6.5, "y": 0, "z": 0 },
+        "kind": "normal"
+      },
+      {
+        "id": "west_0",
+        "direction": "west",
+        "laneIndex": 0,
+        "hostCell": { "x": 0, "z": 0 },
+        "gridEdgeCenter": { "x": -6.5, "z": 0 },
+        "positionMeters": { "x": -6.5, "y": 0, "z": 0 },
+        "kind": "normal"
+      }
+    ],
+    "playerSafeStart": {
+      "x": 0,
+      "y": 0,
+      "z": 1.65
+    },
+    "enemySpawns": [
+      {
+        "id": "soul_eater_npc",
+        "kind": "spawnEnemySoulEater",
+        "position": { "x": 0, "y": 0, "z": -1.25 }
+      }
+    ],
+    "itemSpawns": [
+      {
+        "id": "soul_eater_offer",
+        "kind": "spawn_point_roomReward",
+        "position": { "x": 0, "y": 0, "z": -0.15 }
+      }
+    ],
+    "obstacles": [
+      {
+        "id": "offering_altar_west",
+        "kind": "rock",
+        "center": { "x": -1.1, "y": 0.35, "z": -0.55 },
+        "size": { "x": 0.8, "y": 0.7, "z": 0.8 },
+        "blocksProjectiles": true
+      },
+      {
+        "id": "offering_altar_east",
+        "kind": "rock",
+        "center": { "x": 1.1, "y": 0.35, "z": -0.55 },
+        "size": { "x": 0.8, "y": 0.7, "z": 0.8 },
+        "blocksProjectiles": true
+      }
+    ],
+    "hazards": [],
+    "interactiveObjects": [],
+    "decor": [
+      {
+        "id": "black_market_altar",
+        "kind": "decorStoneCluster",
+        "center": { "x": 0, "y": 0.25, "z": -0.55 },
+        "size": { "x": 1.2, "y": 0.5, "z": 0.6 },
+        "blocking": false,
+        "blocksProjectiles": false
+      }
+    ]
+  }
+}

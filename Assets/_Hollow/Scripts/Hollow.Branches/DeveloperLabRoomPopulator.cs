@@ -487,7 +487,12 @@ namespace Hollow.Branches
 
         private static void AddChest(Transform root, ChestKind kind, Vector3 localPosition)
         {
-            var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            var role = kind switch
+            {
+                ChestKind.Golden => PresentationPrefabRole.ChestGolden,
+                ChestKind.Corrupted => PresentationPrefabRole.ChestCorrupted,
+                _ => PresentationPrefabRole.ChestNormal
+            };
             localPosition.y = 0f;
             var chest = AddArtPassDisplay(root, $"{kind} chest", localPosition, role);
             var controller = chest.AddComponent<RoomChestController>();

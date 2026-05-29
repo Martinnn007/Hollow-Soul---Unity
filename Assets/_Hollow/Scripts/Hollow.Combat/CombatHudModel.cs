@@ -57,11 +57,28 @@ namespace Hollow.Combat
             PlayerDefenseController defenseController,
             RoomCombatEncounterContext encounterContext,
             PlayerWeaponController weaponController)
+            : this(playerHealth, playerMaxHealth, enemiesRemaining, roomState, difficultyName, archetypeSummary, projectileSummary, defenseController, encounterContext, weaponController, string.Empty)
+        {
+        }
+
+        public CombatHudModel(
+            int playerHealth,
+            int playerMaxHealth,
+            int enemiesRemaining,
+            RoomObjectiveState roomState,
+            string difficultyName,
+            string archetypeSummary,
+            string projectileSummary,
+            PlayerDefenseController defenseController,
+            RoomCombatEncounterContext encounterContext,
+            PlayerWeaponController weaponController,
+            string statusOverride)
         {
             PlayerHealth = playerHealth;
             PlayerMaxHealth = playerMaxHealth;
             EnemiesRemaining = enemiesRemaining;
             RoomState = roomState;
+            StatusOverride = string.IsNullOrWhiteSpace(statusOverride) ? string.Empty : statusOverride;
             DifficultyName = difficultyName;
             ArchetypeSummary = archetypeSummary;
             ProjectileSummary = projectileSummary;
@@ -82,6 +99,8 @@ namespace Hollow.Combat
         public int EnemiesRemaining { get; }
 
         public RoomObjectiveState RoomState { get; }
+
+        public string StatusOverride { get; }
 
         public string DifficultyName { get; }
 
@@ -105,7 +124,9 @@ namespace Hollow.Combat
 
         public string RangedDrawDebugLine { get; }
 
-        public string StatusText => RoomState == RoomObjectiveState.Cleared ? "Room Clear" : "In Combat";
+        public bool HasStatusOverride => !string.IsNullOrWhiteSpace(StatusOverride);
+
+        public string StatusText => HasStatusOverride ? StatusOverride : RoomState == RoomObjectiveState.Cleared ? "Room Clear" : "In Combat";
 
         public string DefenseSummary
         {

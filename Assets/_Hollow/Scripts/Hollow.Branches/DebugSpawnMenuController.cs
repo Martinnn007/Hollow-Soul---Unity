@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
+using Hollow.Input;
 using Hollow.Presentation;
 using Hollow.Rewards;
 using UnityEngine;
@@ -15,7 +16,7 @@ namespace Hollow.Branches
 
         private static readonly DebugSpawnGroup[] Groups =
         {
-            new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter", "spawnEnemySpittingPod", "spawnEnemyRat", "spawnEnemySpider", "spawnEnemyHollowBird", "spawnEnemyHollowBeast", "spawnEnemySkeletonSword", "spawnEnemySkeletonSpear", "spawnEnemyKnight", "spawnEnemyGiant", "spawnEnemyHollowArcher", "spawnEnemyPowderGunner", "spawnEnemyKnifeThrower", "spawnEnemyRepeaterTurret", "spawnEnemyClockworkSentry", "spawnEnemyHollowAcolyte", "spawnEnemyWraith", "spawnEnemySoulEater", "spawnEnemyCurseBinder", "spawnEnemyGraveLantern", "spawnEnemyStarforgedOctantSentry", "spawnEnemyCrimsonRailSpider", "spawnEnemyAzureMinigunTurret" }),
+            new("Enemies", new[] { "spawnEnemyNormal", "spawnEnemyFlying", "spawnEnemyFast", "spawnEnemyHeavy", "spawnEnemyCharger", "spawnEnemyTurret", "spawnEnemySplitter", "spawnEnemySpittingPod", "spawnEnemyRat", "spawnEnemySpider", "spawnEnemyHollowBird", "spawnEnemyHollowBeast", "spawnEnemySkeletonSword", "spawnEnemySkeletonSpear", "spawnEnemyKnight", "spawnEnemyGiant", "spawnEnemyHollowArcher", "spawnEnemyPowderGunner", "spawnEnemyKnifeThrower", "spawnEnemyRepeaterTurret", "spawnEnemyClockworkSentry", "spawnEnemyHollowAcolyte", "spawnEnemyWraith", "spawnEnemyEscapist", "spawnEnemySoulEater", "spawnEnemyCurseBinder", "spawnEnemyGraveLantern", "spawnEnemyStarforgedOctantSentry", "spawnEnemyCrimsonRailSpider", "spawnEnemyAzureMinigunTurret" }),
             new("Bosses", new[] { "stone_warden", "splinter_saint", "gravel_maw", "cartouche_widow", "iron_reliquary", "mirror_husk", "ash_comet", "choir_of_teeth", "rust_bishop", "hollow_star_larva" }),
             new("Weapons", new[] { "starter_blade", "starter_pistol", "starter_bolt", "skeletal_sword", "bone_pistol", "dragon_fang", "dragon_pistol" }),
             new("Armor", new[] { "skeletal_armor", "dragon_scale_armor" }),
@@ -51,6 +52,8 @@ namespace Hollow.Branches
         public bool DebugEnemyTacticalOverlayEnabled => debugEnemyTacticalOverlayEnabled;
 
         public bool DebugEnemyDesignerDebugEnabled => debugEnemyDesignerDebugEnabled;
+
+        public bool IsVisible => visible;
 
         public void Bind(BranchSessionController controller)
         {
@@ -116,6 +119,11 @@ namespace Hollow.Branches
                 return;
             }
 
+            if (GameplayInputReader.ReadDebugSpawnMenuTogglePressed())
+            {
+                visible = !visible;
+            }
+
             ApplyDebugLightAttackSpeedToPlayer();
         }
 
@@ -135,7 +143,6 @@ namespace Hollow.Branches
                 return;
             }
 
-            DrawToggleButton();
             if (!visible)
             {
                 return;
@@ -144,34 +151,11 @@ namespace Hollow.Branches
             windowRect = GUILayout.Window(WindowId, windowRect, DrawWindow, "Developer Spawn Menu");
         }
 
-        private void DrawToggleButton()
-        {
-            const float width = 168f;
-            const float height = 42f;
-            const float margin = 22f;
-            var rect = new Rect(
-                Mathf.Max(margin, Screen.width - width - margin),
-                Mathf.Max(margin, Screen.height - height - margin),
-                width,
-                height);
-
-            var previous = GUI.backgroundColor;
-            GUI.backgroundColor = visible
-                ? new Color(0.42f, 0.18f, 0.12f, 0.95f)
-                : new Color(0.12f, 0.36f, 0.24f, 0.95f);
-            if (GUI.Button(rect, visible ? "Close Debug" : "Debug Spawn"))
-            {
-                visible = !visible;
-            }
-
-            GUI.backgroundColor = previous;
-        }
-
         private void DrawWindow(int id)
         {
             var group = CurrentGroup();
             GUILayout.Label("Editor/development only. Spawns are non-authoritative and never count for room clear.");
-            GUILayout.Label("Use the bottom-right button to open or close this menu.");
+            GUILayout.Label("Press F10 in editor/development builds to open or close this menu.");
             GUILayout.Space(6f);
             GUILayout.Label($"Group: {group.Name}");
             GUILayout.Label($"Entity: {CurrentEntity()}");
@@ -321,7 +305,12 @@ namespace Hollow.Branches
         private void SpawnChest(string entity, Vector3 position)
         {
             var kind = entity.Contains("golden", StringComparison.OrdinalIgnoreCase) ? ChestKind.Golden : ChestKind.Normal;
-            var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            var role = kind switch
+            {
+                ChestKind.Golden => PresentationPrefabRole.ChestGolden,
+                ChestKind.Corrupted => PresentationPrefabRole.ChestCorrupted,
+                _ => PresentationPrefabRole.ChestNormal
+            };
             var chest = CreateArtPassHost($"DebugChest.{kind}", position, role);
             chest.AddComponent<RoomChestController>().Configure("debug_spawn", Guid.NewGuid().ToString("N"), kind, ChestState.Unopened);
             AddLabel(chest.transform, $"{kind} chest");

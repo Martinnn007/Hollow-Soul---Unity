@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Core.Diagnostics;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -96,6 +97,12 @@ namespace Hollow.Combat
             get
             {
                 RefreshFrame();
+                if (!BlackboardEnabled)
+                {
+                    return "AI blackboard: disabled";
+                }
+
+                M136PerformanceOperationCounters.ReportDebugOverlayTick(true);
                 var stats = PerformanceStats;
                 var perf = $"perf brain/s {stats.BrainThinksPerSecond} reuse/s {stats.CommandReusesPerSecond} scorer/s {stats.ScorerCallsPerSecond} UB/s {stats.BehaviorGraphTicksPerSecond} stuck {stats.StuckAgents} pressure avg/max {stats.AveragePressurePenalty:0.00}/{stats.MaxPressurePenalty:0.00}";
                 if (ActiveBlackboards.Count == 0)
@@ -149,6 +156,11 @@ namespace Hollow.Combat
 
         public static void ReportBlackboard(int instanceId, EnemyAiBlackboard blackboard)
         {
+            if (!BlackboardEnabled)
+            {
+                return;
+            }
+
             RefreshFrame();
             ActiveBlackboards[instanceId] = blackboard;
             ReportBrainAgent(instanceId, blackboard.LodTier);
@@ -189,6 +201,7 @@ namespace Hollow.Combat
             RefreshRollingWindow(Time.unscaledTime);
             ReportBrainAgent(instanceId, tier);
             commandReusesThisWindow++;
+            M136PerformanceOperationCounters.ReportAiCommandReuse();
         }
 
         public static void RecordScorerCall(int candidateCount)
@@ -196,12 +209,14 @@ namespace Hollow.Combat
             RefreshRollingWindow(Time.unscaledTime);
             scorerCallsThisWindow++;
             scorerCandidatesThisWindow += Mathf.Max(0, candidateCount);
+            M136PerformanceOperationCounters.ReportAiScorerCall(candidateCount);
         }
 
         public static void RecordBehaviorGraphTick(bool usedEmergencyFallback)
         {
             RefreshRollingWindow(Time.unscaledTime);
             behaviorGraphTicksThisWindow++;
+            M136PerformanceOperationCounters.ReportAiBehaviorGraphTick();
             if (usedEmergencyFallback)
             {
                 behaviorGraphFallbacksThisWindow++;

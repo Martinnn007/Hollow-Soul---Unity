@@ -18,6 +18,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private int targetFrameRate = 90;
         [SerializeField] private int vSyncCount;
         [SerializeField] private float renderScale = 1f;
+        [SerializeField] private HollowRenderProfileDefinition renderProfile;
         [SerializeField] private bool useComfortVignette;
         [SerializeField] private float comfortVignetteRadius = 0.82f;
         [SerializeField] private float comfortVignetteOpacity = 0.18f;
@@ -47,6 +48,8 @@ namespace Hollow.Data.Definitions
         public int VSyncCount => vSyncCount;
 
         public float RenderScale => renderScale;
+
+        public HollowRenderProfileDefinition RenderProfile => renderProfile;
 
         public bool UseComfortVignette => useComfortVignette;
 
@@ -124,6 +127,11 @@ namespace Hollow.Data.Definitions
             useComfortVignette = nextUseComfortVignette;
             comfortVignetteRadius = Mathf.Clamp01(nextComfortVignetteRadius);
             comfortVignetteOpacity = Mathf.Clamp01(nextComfortVignetteOpacity);
+        }
+
+        public void ConfigureRenderProfile(HollowRenderProfileDefinition nextRenderProfile)
+        {
+            renderProfile = nextRenderProfile;
         }
     }
 }

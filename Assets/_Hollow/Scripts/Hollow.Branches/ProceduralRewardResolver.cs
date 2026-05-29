@@ -7,6 +7,7 @@ namespace Hollow.Branches
     public static class ProceduralRewardResolver
     {
         public const string PreBetaStandardPoolId = "m51_standard_room_rewards";
+        public const string RewardRoomCacheRollId = "m134_reward_room_cache";
 
         private static readonly (string rewardId, string displayName, RewardKind rewardKind)[] RewardPool =
         {
@@ -41,6 +42,31 @@ namespace Hollow.Branches
                 if (room.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret)
                 {
                     rewards.Add(new RewardGrant(room.Id.Value, "treasure_cache", "Treasure Cache", RewardKind.Currency, 15));
+                    continue;
+                }
+
+                if (room.Role == BranchRoomRole.CorruptedChest)
+                {
+                    rewards.Add(CorruptedChestGrant(room.Id.Value));
+                    continue;
+                }
+
+                if (room.Role == BranchRoomRole.Wave)
+                {
+                    rewards.Add(GoldenChestGrant(room.Id.Value));
+                    continue;
+                }
+
+                if (room.Role == BranchRoomRole.SpecialEncounter &&
+                    SpecialEncounterResolver.KindForRoomAssetId(room.RuntimeRoomAssetId) == SpecialEncounterKind.Escapist)
+                {
+                    rewards.Add(GoldenChestGrant(room.Id.Value));
+                    continue;
+                }
+
+                if (room.Role == BranchRoomRole.SpecialEncounter)
+                {
+                    rewards.Add(new RewardGrant(room.Id.Value, string.Empty, string.Empty, RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>()));
                     continue;
                 }
 
@@ -98,9 +124,31 @@ namespace Hollow.Branches
                 return weaponGrant;
             }
 
+            if (IsPreBetaBalanceActive(standardRoomPool) && room.Role == BranchRoomRole.Reward)
+            {
+                return RollM134RewardRoomCacheReward(room.Id.Value, graph.BranchId, graph.Seed);
+            }
+
             if (IsPreBetaBalanceActive(standardRoomPool) && IsStandardRewardRoom(room))
             {
                 return RollPreBetaStandardReward(room.Id.Value, graph.BranchId, graph.Seed);
+            }
+
+            if (room.Role == BranchRoomRole.CorruptedChest)
+            {
+                return CorruptedChestGrant(room.Id.Value);
+            }
+
+            if (room.Role == BranchRoomRole.Wave)
+            {
+                return GoldenChestGrant(room.Id.Value);
+            }
+
+            if (room.Role == BranchRoomRole.SpecialEncounter)
+            {
+                return SpecialEncounterResolver.KindForRoomAssetId(room.RuntimeRoomAssetId) == SpecialEncounterKind.Escapist
+                    ? GoldenChestGrant(room.Id.Value)
+                    : new RewardGrant(room.Id.Value, string.Empty, string.Empty, RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
             }
 
             var pool = room.Role switch
@@ -108,6 +156,9 @@ namespace Hollow.Branches
                 BranchRoomRole.Boss => bossRoomPool,
                 BranchRoomRole.Treasure => treasureRoomPool,
                 BranchRoomRole.Secret => treasureRoomPool,
+                BranchRoomRole.CorruptedChest => null,
+                BranchRoomRole.Wave => null,
+                BranchRoomRole.SpecialEncounter => null,
                 _ => standardRoomPool
             };
 
@@ -120,6 +171,11 @@ namespace Hollow.Branches
             {
                 BranchRoomRole.Boss => new RewardGrant(room.Id.Value, "boss_sigil", "Boss Sigil", RewardKind.PassiveItem, 25),
                 BranchRoomRole.Treasure or BranchRoomRole.Secret => new RewardGrant(room.Id.Value, "treasure_cache", "Treasure Cache", RewardKind.Currency, 15),
+                BranchRoomRole.CorruptedChest => CorruptedChestGrant(room.Id.Value),
+                BranchRoomRole.Wave => GoldenChestGrant(room.Id.Value),
+                BranchRoomRole.SpecialEncounter => SpecialEncounterResolver.KindForRoomAssetId(room.RuntimeRoomAssetId) == SpecialEncounterKind.Escapist
+                    ? GoldenChestGrant(room.Id.Value)
+                    : new RewardGrant(room.Id.Value, string.Empty, string.Empty, RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>()),
                 _ => IsPreBetaBalanceActive(standardRoomPool)
                     ? RollPreBetaStandardReward(room.Id.Value, graph.BranchId, graph.Seed)
                     : FallbackStandardReward(room.Id.Value, graph.BranchId, graph.Seed)
@@ -133,7 +189,31 @@ namespace Hollow.Branches
 
         private static bool IsStandardRewardRoom(BranchRoomState room)
         {
-            return room.Role is not BranchRoomRole.Origin and not BranchRoomRole.Boss and not BranchRoomRole.Treasure and not BranchRoomRole.Secret;
+            return room.Role == BranchRoomRole.Combat;
+        }
+
+        private static RewardGrant CorruptedChestGrant(string roomId)
+        {
+            return new RewardGrant(
+                roomId,
+                ChestRewardResolver.CorruptedChestRewardId,
+                "Corrupted Chest",
+                RewardKind.Currency,
+                0,
+                0,
+                System.Array.Empty<RewardEffect>());
+        }
+
+        private static RewardGrant GoldenChestGrant(string roomId)
+        {
+            return new RewardGrant(
+                roomId,
+                ChestRewardResolver.GoldenChestRewardId,
+                "Golden Chest",
+                RewardKind.Currency,
+                0,
+                0,
+                System.Array.Empty<RewardEffect>());
         }
 
         private static RewardGrant RollPreBetaStandardReward(string roomId, string branchId, int seed)
@@ -156,6 +236,33 @@ namespace Hollow.Branches
             }
 
             if (roll < 76)
+            {
+                return ChestRewardResolver.HpRefillGrant(roomId);
+            }
+
+            return new RewardGrant(roomId, string.Empty, string.Empty, RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
+        }
+
+        public static RewardGrant RollM134RewardRoomCacheReward(string roomId, string branchId, int seed)
+        {
+            var roll = StableHash($"{branchId}|{seed}|{roomId}|{RewardRoomCacheRollId}") % 100;
+            if (roll < 2)
+            {
+                return new RewardGrant(roomId, ChestRewardResolver.GoldenChestRewardId, "Golden Chest", RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
+            }
+
+            if (roll < 32)
+            {
+                return new RewardGrant(roomId, ChestRewardResolver.NormalChestRewardId, "Normal Chest", RewardKind.Currency, 0, 0, System.Array.Empty<RewardEffect>());
+            }
+
+            if (roll < 66)
+            {
+                var coins = 5 + StableHash($"{branchId}|{seed}|{roomId}|m134_reward_room_loose_coin_amount") % 4;
+                return new RewardGrant(roomId, ChestRewardResolver.SmallCoinPouchRewardId, "Loose Coins", RewardKind.Currency, 0, coins, System.Array.Empty<RewardEffect>());
+            }
+
+            if (roll < 90)
             {
                 return ChestRewardResolver.HpRefillGrant(roomId);
             }

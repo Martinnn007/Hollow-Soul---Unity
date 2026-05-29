@@ -3,6 +3,7 @@ namespace Hollow.Rewards
     public enum ChestKind
     {
         Normal,
-        Golden
+        Golden,
+        Corrupted
     }
 }

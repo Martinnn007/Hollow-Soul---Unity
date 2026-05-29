@@ -25,7 +25,7 @@ MonoBehaviour:
   farClipPlane: 95
   cameraBackgroundColor: {r: 0.018, g: 0.023, b: 0.034, a: 1}
   ambientLightColor: {r: 0.64, g: 0.7, b: 0.82, a: 1}
-  targetFrameRate: 120
+  targetFrameRate: 60
   vSyncCount: 0
   renderScale: 1
   useComfortVignette: 0

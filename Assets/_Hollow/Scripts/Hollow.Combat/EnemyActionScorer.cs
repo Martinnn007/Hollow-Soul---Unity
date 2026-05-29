@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -25,9 +23,14 @@ namespace Hollow.Combat
                 return false;
             }
 
-            var candidates = new List<EnemyAiActionScore>();
             var actions = enemy.Definition.ActionProfiles;
             EnemyAiDebugOverlay.RecordScorerCall(actions.Count);
+            var hasCandidate = false;
+            var emitDebugScores = EnemyAiDebugOverlay.BlackboardEnabled;
+            var top1 = default(EnemyAiActionScore);
+            var top2 = default(EnemyAiActionScore);
+            var top3 = default(EnemyAiActionScore);
+            var topCount = 0;
             for (var index = 0; index < actions.Count; index++)
             {
                 var action = actions[index];
@@ -36,22 +39,88 @@ namespace Hollow.Combat
                     continue;
                 }
 
-                candidates.Add(score);
+                if (!hasCandidate || IsBetterScore(score, best))
+                {
+                    best = score;
+                    hasCandidate = true;
+                }
+
+                if (emitDebugScores)
+                {
+                    InsertDebugTopScore(score, ref top1, ref top2, ref top3, ref topCount);
+                }
             }
 
-            if (candidates.Count == 0)
+            if (!hasCandidate)
             {
-                topScores = "no_valid_action";
+                topScores = emitDebugScores ? "no_valid_action" : string.Empty;
                 return false;
             }
 
-            var ordered = candidates
-                .OrderByDescending(candidate => candidate.Score)
-                .ThenBy(candidate => candidate.ActionId, StringComparer.Ordinal)
-                .ToArray();
-            best = ordered[0];
-            topScores = string.Join(", ", ordered.Take(3).Select(score => $"{score.ActionId}:{score.Score:0.00}"));
+            if (emitDebugScores)
+            {
+                topScores = FormatDebugTopScores(top1, top2, top3, topCount);
+            }
+
             return true;
+        }
+
+        private static bool IsBetterScore(EnemyAiActionScore candidate, EnemyAiActionScore current)
+        {
+            if (candidate.Score > current.Score)
+            {
+                return true;
+            }
+
+            return Mathf.Approximately(candidate.Score, current.Score) &&
+                string.Compare(candidate.ActionId, current.ActionId, StringComparison.Ordinal) < 0;
+        }
+
+        private static void InsertDebugTopScore(
+            EnemyAiActionScore score,
+            ref EnemyAiActionScore top1,
+            ref EnemyAiActionScore top2,
+            ref EnemyAiActionScore top3,
+            ref int topCount)
+        {
+            if (topCount == 0 || IsBetterScore(score, top1))
+            {
+                top3 = top2;
+                top2 = top1;
+                top1 = score;
+                topCount = Mathf.Min(3, topCount + 1);
+                return;
+            }
+
+            if (topCount == 1 || IsBetterScore(score, top2))
+            {
+                top3 = top2;
+                top2 = score;
+                topCount = Mathf.Min(3, topCount + 1);
+                return;
+            }
+
+            if (topCount == 2 || IsBetterScore(score, top3))
+            {
+                top3 = score;
+                topCount = Mathf.Min(3, topCount + 1);
+            }
+        }
+
+        private static string FormatDebugTopScores(EnemyAiActionScore top1, EnemyAiActionScore top2, EnemyAiActionScore top3, int topCount)
+        {
+            var line = $"{top1.ActionId}:{top1.Score:0.00}";
+            if (topCount >= 2)
+            {
+                line += $", {top2.ActionId}:{top2.Score:0.00}";
+            }
+
+            if (topCount >= 3)
+            {
+                line += $", {top3.ActionId}:{top3.Score:0.00}";
+            }
+
+            return line;
         }
 
         public static bool TryScoreAction(

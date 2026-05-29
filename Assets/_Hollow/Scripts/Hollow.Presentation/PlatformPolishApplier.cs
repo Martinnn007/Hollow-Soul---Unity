@@ -6,12 +6,20 @@ namespace Hollow.Presentation
     public sealed class PlatformPolishApplier : MonoBehaviour
     {
         [SerializeField] private PlatformPolishProfileDefinition profile;
+        [SerializeField] private HollowRenderProfileDefinition renderProfileOverride;
 
         public PlatformPolishProfileDefinition Profile => profile;
+
+        public HollowRenderProfileDefinition RenderProfileOverride => renderProfileOverride;
 
         public void Configure(PlatformPolishProfileDefinition nextProfile)
         {
             profile = nextProfile;
+        }
+
+        public void ConfigureRenderProfileOverride(HollowRenderProfileDefinition nextRenderProfileOverride)
+        {
+            renderProfileOverride = nextRenderProfileOverride;
         }
 
         private void Awake()
@@ -60,6 +68,13 @@ namespace Hollow.Presentation
 
         private void ApplyPerformance()
         {
+            var renderProfile = renderProfileOverride != null ? renderProfileOverride : profile.RenderProfile;
+            if (renderProfile != null)
+            {
+                RenderProfileApplier.Apply(renderProfile);
+                return;
+            }
+
             Application.targetFrameRate = profile.TargetFrameRate;
             QualitySettings.vSyncCount = profile.VSyncCount;
         }

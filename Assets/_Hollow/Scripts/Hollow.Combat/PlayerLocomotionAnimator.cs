@@ -372,13 +372,17 @@ namespace Hollow.Combat
             Vector2 direction,
             float actionDurationSeconds)
         {
-            if (isDead || slot != WeaponSlot.Melee)
+            if (isDead)
             {
                 return;
             }
 
             actionSpeed = ClipSpeedForDuration(slashClipDurationSeconds, actionDurationSeconds);
-            pendingSlashTrigger = true;
+            if (slot == WeaponSlot.Melee)
+            {
+                pendingSlashTrigger = true;
+            }
+
             SetActionFacing(direction, actionDurationSeconds);
             ApplyAnimatorParameters();
         }
@@ -437,9 +441,10 @@ namespace Hollow.Combat
         private bool UpdateLockedFacing(Vector3 planarDelta, float deltaTime, bool rotateVisual)
         {
             var lockedDirection = Vector2.zero;
-            var hasLockedDirection = !isDead &&
-                aimLockController != null &&
-                aimLockController.TryGetLockedTargetDirection(out lockedDirection);
+            var hasLockedDirection = !isDead && (
+                TryGetWeaponAimCommitment(out lockedDirection) ||
+                (aimLockController != null && aimLockController.TryGetLockedTargetDirection(out lockedDirection)) ||
+                TryGetManualAimDirection(out lockedDirection));
             isTargetLockedForLocomotion = hasLockedDirection;
             if (!hasLockedDirection)
             {
@@ -455,6 +460,30 @@ namespace Hollow.Combat
             }
 
             return true;
+        }
+
+        private bool TryGetWeaponAimCommitment(out Vector2 direction)
+        {
+            direction = Vector2.zero;
+            if (weaponController == null || !weaponController.HasVisualAimCommitment)
+            {
+                return false;
+            }
+
+            direction = weaponController.VisualAimDirection;
+            return direction.sqrMagnitude > 0.001f;
+        }
+
+        private bool TryGetManualAimDirection(out Vector2 direction)
+        {
+            direction = Vector2.zero;
+            if (aimLockController == null || !aimLockController.HasManualAimOverride)
+            {
+                return false;
+            }
+
+            direction = aimLockController.AttackDirection;
+            return direction.sqrMagnitude > 0.001f;
         }
 
         private Vector2 CalculateLockedRelativeMove(Vector3 planarDelta, Vector3 forward, float deltaTime)

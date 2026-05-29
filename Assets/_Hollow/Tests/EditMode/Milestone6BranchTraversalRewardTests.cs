@@ -301,8 +301,9 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(shapeRoot.GetComponent<RectMask2D>());
                 var mapPanel = canvasObject.GetComponentsInChildren<Image>(true)
                     .Single(image => image.name == "BranchMiniMap.MapPanel");
-                Assert.IsNotNull(mapPanel.sprite);
+                Assert.IsNull(mapPanel.sprite);
                 Assert.IsFalse(mapPanel.preserveAspect);
+                Assert.Greater(mapPanel.color.a, 0.5f);
 
                 var legacyCells = shapeRoot.GetComponentsInChildren<Image>(true)
                     .Where(image => image.name.StartsWith("MiniMapRoomCell_"))
@@ -335,7 +336,8 @@ namespace Hollow.Tests.EditMode
                     .Any(text => text.name == "BranchMiniMap.MapPanel.Text"));
 
                 Assert.IsFalse(canvasObject.GetComponentsInChildren<Text>(true)
-                    .Any(text => text.name.StartsWith("BranchMiniMap.") || text.text.Contains("Seed:")));
+                    .Any(text => (text.name.StartsWith("BranchMiniMap.") && text.name != "BranchMiniMap.LocationLabel") || text.text.Contains("Seed:")));
+                Assert.IsNotNull(canvasObject.transform.Find("BranchMiniMap.LocationLabel"));
             }
             finally
             {

@@ -1,4 +1,5 @@
 using System;
+using Hollow.Core;
 using Hollow.Input;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
@@ -19,15 +20,15 @@ namespace Hollow.Combat
     {
         public const float DefaultCooldownSeconds = 0.22f;
         public const float AttackMovementMultiplier = 0.55f;
-        public const float RollStaminaCost = 30f;
-        public const float StaminaRegenDelaySeconds = 0.65f;
+        public const float RollStaminaCost = M135CombatReadinessPolicy.LockedRollStaminaCost;
+        public const float StaminaRegenDelaySeconds = M135CombatReadinessPolicy.LockedStaminaRegenDelaySeconds;
         public const float GuardHeldStaminaRegenMultiplier = 0.25f;
-        public const float RollStartupSeconds = 0.04f;
-        public const float RollInvulnerabilitySeconds = 0.22f;
-        public const float RollRecoverySeconds = 0.18f;
+        public const float RollStartupSeconds = M135CombatReadinessPolicy.LockedRollStartupSeconds;
+        public const float RollInvulnerabilitySeconds = M135CombatReadinessPolicy.LockedRollInvulnerabilitySeconds;
+        public const float RollRecoverySeconds = M135CombatReadinessPolicy.LockedRollRecoverySeconds;
         public const float RollDurationSeconds = RollStartupSeconds + RollInvulnerabilitySeconds + RollRecoverySeconds;
         public const float RollTravelSeconds = RollStartupSeconds + RollInvulnerabilitySeconds;
-        public const float RollDistanceMeters = 1.25f;
+        public const float RollDistanceMeters = M135CombatReadinessPolicy.LockedRollDistanceMeters;
 
         private enum PlayerAttackExecutionState
         {
@@ -118,6 +119,30 @@ namespace Hollow.Combat
             attackExecutionState is PlayerAttackExecutionState.Windup
             or PlayerAttackExecutionState.Active
             or PlayerAttackExecutionState.Recovery;
+
+        public bool HasVisualAimCommitment => IsAttackCommitted;
+
+        public Vector2 VisualAimDirection
+        {
+            get
+            {
+                if (rangedDrawActive)
+                {
+                    return rangedDrawDirection.sqrMagnitude > 0.001f ? rangedDrawDirection.normalized : LastAimDirection;
+                }
+
+                if (attackExecutionState is PlayerAttackExecutionState.Windup
+                    or PlayerAttackExecutionState.Active
+                    or PlayerAttackExecutionState.Recovery)
+                {
+                    return pendingAttackDirection.sqrMagnitude > 0.001f
+                        ? pendingAttackDirection.normalized
+                        : LastAimDirection;
+                }
+
+                return LastAimDirection;
+            }
+        }
 
         public bool IsRangedDrawActive => rangedDrawActive;
 
@@ -602,6 +627,11 @@ namespace Hollow.Combat
         private void HandleRangedDrawInput(GameplayInputSnapshot input, float timeSeconds)
         {
             lastAimDirection = CurrentAim(input);
+            if (lastAimDirection.sqrMagnitude > 0.001f)
+            {
+                rangedDrawDirection = lastAimDirection.normalized;
+            }
+
             if (input.SwapWeaponPressed || input.RollPressed || input.GuardHeld)
             {
                 CancelRangedDraw();
@@ -680,13 +710,14 @@ namespace Hollow.Combat
         {
             var direction = shot.Direction.sqrMagnitude > 0.001f ? shot.Direction.normalized : Vector2.up;
             var side = new Vector2(-direction.y, direction.x);
-            var projectileObject = Instantiate(projectilePrefab, transform.parent);
+            var projectileObject = HollowRuntimePool.Rent(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
             projectileObject.transform.localPosition =
                 transform.localPosition +
                 new Vector3(direction.x, 0f, direction.y) * 0.42f +
                 new Vector3(side.x, 0f, side.y) * shot.LateralOffsetMeters +
                 new Vector3(0f, 0.45f, 0f);
+            projectileObject.transform.localRotation = PlayerWeaponVisualPosePolicy.AimRotation(direction);
             MaterialResolver.ApplyTo(
                 projectileObject,
                 projectilePassiveState.VisualStyle == ProjectileVisualStyle.RedPower

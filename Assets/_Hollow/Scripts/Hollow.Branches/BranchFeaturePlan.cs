@@ -51,7 +51,17 @@ namespace Hollow.Branches
                 return Empty;
             }
 
-            var distances = DistancesFromOrigin(graph);
+            return Create(graph, BranchRoomDistanceMap.Create(graph));
+        }
+
+        public static BranchFeaturePlan Create(BranchFloorGraph graph, BranchRoomDistanceMap distanceMap)
+        {
+            if (graph == null)
+            {
+                return Empty;
+            }
+
+            var distances = distanceMap ?? BranchRoomDistanceMap.Create(graph);
             var bossRoom = graph.Rooms.FirstOrDefault(room => room.Role == BranchRoomRole.Boss);
             var secretRoom = graph.Rooms.FirstOrDefault(room => room.Role == BranchRoomRole.Secret);
             var bossConnection = bossRoom != null
@@ -59,7 +69,7 @@ namespace Hollow.Branches
                 : null;
             var bossKeyRoom = graph.Rooms
                 .Where(room => room.Id != BranchRoomId.Origin)
-                .Where(room => room.Role != BranchRoomRole.Boss && room.Role != BranchRoomRole.Secret && room.Role != BranchRoomRole.Treasure)
+                .Where(room => room.Role == BranchRoomRole.Combat)
                 .OrderByDescending(room => distances.TryGetValue(room.Id.Value, out var distance) ? distance : 0)
                 .ThenBy(room => room.Id.Value, StringComparer.Ordinal)
                 .FirstOrDefault();
@@ -70,31 +80,6 @@ namespace Hollow.Branches
                 bossKeyRoom?.Id.Value ?? string.Empty,
                 bossConnection?.FromRoomId.Value ?? string.Empty,
                 bossConnection?.FromPortId ?? string.Empty);
-        }
-
-        private static Dictionary<string, int> DistancesFromOrigin(BranchFloorGraph graph)
-        {
-            var distances = new Dictionary<string, int>();
-            var queue = new Queue<BranchRoomId>();
-            distances[BranchRoomId.Origin.Value] = 0;
-            queue.Enqueue(BranchRoomId.Origin);
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                var nextDistance = distances[current.Value] + 1;
-                foreach (var connection in graph.ConnectionsFrom(current))
-                {
-                    if (distances.ContainsKey(connection.ToRoomId.Value))
-                    {
-                        continue;
-                    }
-
-                    distances[connection.ToRoomId.Value] = nextDistance;
-                    queue.Enqueue(connection.ToRoomId);
-                }
-            }
-
-            return distances;
         }
     }
 }

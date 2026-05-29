@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d671946eac3cf4098b61a44a76aee8fe, type: 3}
+  m_Name: Biome_RustChoir
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RoomBiomeDefinition
+  biomeId: rust_choir
+  displayName: The Rust Choir
+  biomeTags: 0500000008000000
+  roomTemplates:
+  - {fileID: 4900000, guid: f33a31bb0c7b1def10dfbd5dc2dbef1b, type: 3}
+  - {fileID: 4900000, guid: d4b8ccefdcec9b8c7dec85ea70f0ebd6, type: 3}
+  - {fileID: 4900000, guid: 6e13271dbc187629093dab8d70697c37, type: 3}
+  - {fileID: 4900000, guid: 3589ef13a03a08fb7671ac62d26dbca6, type: 3}
+  - {fileID: 4900000, guid: 8b4bde768083f72a915fc3824d10798f, type: 3}
+  materialOverrides:
+  - role: 0
+    material: {fileID: 2100000, guid: 6913f28941e3e1c345f64a52d556db35, type: 2}
+  - role: 86
+    material: {fileID: 2100000, guid: 0bb82a8ba268e9f358393c5905eefe35, type: 2}
+  - role: 87
+    material: {fileID: 2100000, guid: 991626849e2fed0356bad21431b992e3, type: 2}
+  - role: 2
+    material: {fileID: 2100000, guid: 7c0025ac703c2d9afc6e3a3cc26e54dc, type: 2}
+  - role: 4
+    material: {fileID: 2100000, guid: cf0011bc27e34fb7183aef186aaa97e0, type: 2}
+  - role: 5
+    material: {fileID: 2100000, guid: 727374cd77c7e5014f31e25ddebb45e7, type: 2}
+  - role: 3
+    material: {fileID: 2100000, guid: a607b72fd1aea5e839ce4a38ee0b36be, type: 2}
+  - role: 6
+    material: {fileID: 2100000, guid: b95bb123ff41070b87b5c68c84d4045c, type: 2}
+  - role: 88
+    material: {fileID: 2100000, guid: d9b49b4e255d56631b12047a29c5f45f, type: 2}
+  - role: 89
+    material: {fileID: 2100000, guid: d7f563324f8b983db45b9bb1fba116c8, type: 2}
+  - role: 90
+    material: {fileID: 2100000, guid: 9c7c968064895436b9b1789f786801a7, type: 2}
+  - role: 91
+    material: {fileID: 2100000, guid: 492aaa2319e1ce55d4155013a4572e94, type: 2}
+  - role: 31
+    material: {fileID: 2100000, guid: 5dab1df0fd7fd82b485ac8a9fe476322, type: 2}
+  prefabOverrides: []
+  decorPrefabBindings:
+  - decorKind: decorGrassTuft
+    prefabRole: 70
+  - decorKind: decorCrystalCluster
+    prefabRole: 71
+  - decorKind: decorSmallTree
+    prefabRole: 72
+  - decorKind: decorStoneRuin
+    prefabRole: 73

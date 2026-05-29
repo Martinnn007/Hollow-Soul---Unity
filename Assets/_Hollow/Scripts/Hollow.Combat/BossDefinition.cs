@@ -491,9 +491,15 @@ namespace Hollow.Combat
             {
                 BossBehaviorId.StoneWarden => new[]
                 {
-                    new BossAttackDefinition(BossAttackKind.Charge, 3.2f, 0.5f, 1),
-                    new BossAttackDefinition(BossAttackKind.Stomp, 4.5f, 0.55f, 2),
-                    new BossAttackDefinition(BossAttackKind.RadialBurst, 5f, 0.65f, 1, 4)
+                    new BossAttackDefinition(BossAttackKind.Charge, 3.4f, 0.58f, 1),
+                    new BossAttackDefinition(BossAttackKind.Stomp, 5.0f, 0.72f, 2),
+                    new BossAttackDefinition(BossAttackKind.RadialBurst, 4.4f, 0.62f, 1, 4)
+                },
+                BossBehaviorId.CartoucheWidow => new[]
+                {
+                    new BossAttackDefinition(BossAttackKind.FallingProjectiles, 2.6f, 0.55f, 1, 5),
+                    new BossAttackDefinition(BossAttackKind.CoverShot, 3.2f, 0.58f, 1, 3),
+                    new BossAttackDefinition(BossAttackKind.Mine, 5.2f, 0.7f, 1, 4)
                 },
                 BossBehaviorId.GravelMaw => new[]
                 {
@@ -507,8 +513,9 @@ namespace Hollow.Combat
                 },
                 BossBehaviorId.ChoirOfTeeth => new[]
                 {
-                    new BossAttackDefinition(BossAttackKind.RadialBurst, 2.3f, 0.45f, 1, 12),
-                    new BossAttackDefinition(BossAttackKind.DesperationBurst, 3.5f, 0.65f, 2, 16)
+                    new BossAttackDefinition(BossAttackKind.RadialBurst, 3.0f, 0.6f, 1, 12),
+                    new BossAttackDefinition(BossAttackKind.Beam, 4.0f, 0.78f, 1),
+                    new BossAttackDefinition(BossAttackKind.DesperationBurst, 5.2f, 0.82f, 2, 16)
                 },
                 _ => new[]
                 {

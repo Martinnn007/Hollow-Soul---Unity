@@ -1,4 +1,5 @@
 using UnityEngine;
+using Hollow.Core.Diagnostics;
 
 namespace Hollow.Combat
 {
@@ -28,7 +29,7 @@ namespace Hollow.Combat
             out EnemyBehaviorCommand command)
         {
             command = EnemyBehaviorCommand.None("ai_no_cached_command");
-            LodTier = ResolveLodTier(enemy, distanceToPlayer);
+            SetLodTier(ResolveLodTier(enemy, distanceToPlayer));
             if (enemy != null)
             {
                 EnemyAiDebugOverlay.ReportBrainAgent(enemy.GetInstanceID(), LodTier);
@@ -56,12 +57,13 @@ namespace Hollow.Combat
             float distanceToPlayer,
             RoomThreatDirector threatDirector)
         {
-            LodTier = ResolveLodTier(enemy, distanceToPlayer);
+            SetLodTier(ResolveLodTier(enemy, distanceToPlayer));
             var thinkInterval = ThinkInterval(enemy, LodTier);
             nextThinkTime = timeSeconds + thinkInterval + ThinkJitter(enemy);
             if (enemy != null)
             {
                 EnemyAiDebugOverlay.RecordBrainThink(enemy.GetInstanceID(), LodTier, thinkInterval);
+                M136PerformanceOperationCounters.ReportAiThink((int)LodTier);
             }
 
             var chosen = SimplifyForLod(treeCommand, enemy);
@@ -95,21 +97,35 @@ namespace Hollow.Combat
 
         public static EnemyAiLodTier ResolveLodTier(EnemyRuntimeController enemy, float distanceToPlayer)
         {
-            if (enemy == null || !enemy.IsAlive || enemy.BossDefinition != null)
+            if (enemy == null || !enemy.IsAlive)
             {
                 return EnemyAiLodTier.Background;
             }
 
-            if (enemy.ReadabilityState != EnemyReadabilityState.Idle ||
-                enemy.IsEndangeredNow ||
-                distanceToPlayer <= 5.5f)
+            if (enemy.BossDefinition != null)
             {
                 return EnemyAiLodTier.Full;
             }
 
+            if (enemy.ReadabilityState != EnemyReadabilityState.Idle ||
+                enemy.IsEndangeredNow ||
+                enemy.LastTacticalIntent.Role == EnemyTacticalRole.ActiveThreat ||
+                distanceToPlayer <= 4.75f)
+            {
+                return EnemyAiLodTier.Full;
+            }
+
+            if (!enemy.IsVisibleToCamera &&
+                distanceToPlayer > 8f &&
+                enemy.LastTacticalIntent.Role is EnemyTacticalRole.Waiting or EnemyTacticalRole.Hold or EnemyTacticalRole.StationarySentinel or EnemyTacticalRole.None)
+            {
+                return EnemyAiLodTier.Background;
+            }
+
             if (enemy.AwarenessState == EnemyAwarenessState.Engaged ||
                 enemy.AwarenessState is EnemyAwarenessState.Alerted or EnemyAwarenessState.Suspicious ||
-                distanceToPlayer <= 10f)
+                enemy.LastTacticalIntent.Role is EnemyTacticalRole.SupportPressure or EnemyTacticalRole.Reposition or EnemyTacticalRole.Investigate ||
+                distanceToPlayer <= 11f)
             {
                 return EnemyAiLodTier.Reduced;
             }
@@ -194,16 +210,30 @@ namespace Hollow.Combat
         {
             return tier switch
             {
-                EnemyAiLodTier.Full => intelligence is EnemyIntelligenceLevel.Tactical or EnemyIntelligenceLevel.Cunning ? 0.11f : 0.16f,
-                EnemyAiLodTier.Reduced => intelligence is EnemyIntelligenceLevel.Tactical or EnemyIntelligenceLevel.Cunning ? 0.34f : 0.48f,
-                _ => 0.95f
+                EnemyAiLodTier.Full => intelligence is EnemyIntelligenceLevel.Tactical or EnemyIntelligenceLevel.Cunning
+                    ? M137PerformanceComfortPolicy.M3FullThreatMinThinkIntervalSeconds
+                    : M137PerformanceComfortPolicy.M3FullThreatMaxThinkIntervalSeconds,
+                EnemyAiLodTier.Reduced => intelligence is EnemyIntelligenceLevel.Tactical or EnemyIntelligenceLevel.Cunning
+                    ? M137PerformanceComfortPolicy.M3ReducedThreatMinThinkIntervalSeconds
+                    : M137PerformanceComfortPolicy.M3ReducedThreatMaxThinkIntervalSeconds,
+                _ => M137PerformanceComfortPolicy.M3BackgroundMaxThinkIntervalSeconds
             };
         }
 
         private static float ThinkJitter(EnemyRuntimeController enemy)
         {
             var seed = Mathf.Abs(enemy != null ? enemy.SpawnIndex : 0);
-            return (seed % 7) * 0.018f;
+            return (seed % 11) * 0.011f;
+        }
+
+        private void SetLodTier(EnemyAiLodTier nextTier)
+        {
+            if (LodTier != nextTier)
+            {
+                M136PerformanceOperationCounters.ReportAiLodTransition();
+            }
+
+            LodTier = nextTier;
         }
 
         private void UpdateBlackboard(

@@ -20,6 +20,10 @@ MonoBehaviour:
   tall1x2: {fileID: 4900000, guid: 531eb5c6fae914b0c9151034cd96828f, type: 3}
   block2x2: {fileID: 4900000, guid: 17abfebaa175c498bae028f31af8d92d, type: 3}
   l3Cell: {fileID: 4900000, guid: 4aaf4479fb1ad40f39a1af10e8544a93, type: 3}
+  corruptedChestEndpoint: {fileID: 4900000, guid: 9dfe1e6336d24f78b883c36c67ad746f, type: 3}
+  waveRoomEndpoint: {fileID: 4900000, guid: 7e5fb6e9a8b2479aa8ac5286f0e7b131, type: 3}
+  specialSoulEaterEndpoint: {fileID: 4900000, guid: f2c11fd5922d4d0aa7ce8c787021f33c, type: 3}
+  specialEscapistEndpoint: {fileID: 4900000, guid: a56db14982a14c93af76db8635e14c21, type: 3}
   additionalTemplates:
   - {fileID: 4900000, guid: 590ab94da36694cab81ea4c50660f0da, type: 3}
   - {fileID: 4900000, guid: 6692d75fbf35640448bcd637489e208b, type: 3}

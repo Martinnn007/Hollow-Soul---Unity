@@ -2,6 +2,7 @@ using System.Linq;
 using Hollow.Branches;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Validation;
+using Hollow.Presentation;
 using Hollow.Rewards;
 using Hollow.RoomDesigner;
 using NUnit.Framework;
@@ -99,9 +100,27 @@ namespace Hollow.Tests.EditMode
         {
             var project = RoomDesignerProject.CreateDefault(RoomDesignerFootprintPreset.Single1x1, "M52 Test");
             project.markers.Add(new RoomDesignerMarker("spawn_chest_test", RoomDesignerMarkerKinds.ChestSpawn, 1, 0f, 0));
+            project.markers.Add(new RoomDesignerMarker("spawn_golden_chest_test", RoomDesignerMarkerKinds.GoldenChestSpawn, -1, 0f, 0));
             var asset = RoomDesignerCompiler.Compile(project);
 
             Assert.IsTrue(asset.ItemSpawns.Any(spawn => spawn.kind == RoomDesignerMarkerKinds.ChestSpawn));
+            Assert.IsTrue(asset.ItemSpawns.Any(spawn => spawn.kind == RoomDesignerMarkerKinds.GoldenChestSpawn));
+            Assert.AreEqual(PresentationPrefabRole.ChestGolden, RoomDesignerScenePreviewBuilder.PrefabRoleForMarker(RoomDesignerMarkerKinds.GoldenChestSpawn));
+        }
+
+        [Test]
+        public void GoldenChestUsesDedicatedArtPassPrefabAndMaterial()
+        {
+            PresentationContentProvider.Reset();
+            var normal = PresentationPrefabResolver.Resolve(PresentationPrefabRole.ChestNormal);
+            var golden = PresentationPrefabResolver.Resolve(PresentationPrefabRole.ChestGolden);
+
+            Assert.IsNotNull(normal);
+            Assert.IsNotNull(golden);
+            Assert.AreNotSame(normal, golden);
+            StringAssert.Contains("AP_ChestGolden", golden.name);
+            Assert.IsTrue(golden.GetComponentsInChildren<Renderer>(true)
+                .Any(renderer => renderer.sharedMaterials.Any(material => material != null && material.name.Contains("AP_M_ChestGolden"))));
         }
 
         [Test]

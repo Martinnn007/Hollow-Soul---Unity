@@ -31,23 +31,24 @@ namespace Hollow.Editor.DesignerRooms
                 throw new InvalidOperationException("Active scene is missing a DesignerRoom root marker.");
             }
 
-            ClearPreview(scene);
-
+            ClearPreview(scene, restoreMarkerRenderers: true);
             var project = DesignerRoomSceneAuthoringUtility.BuildRoomDesignerProject(scene);
             var asset = RoomDesignerCompiler.Compile(project);
+            var biomeId = RoomBiomeIds.Normalize(asset.BiomeId);
+            SetAuthoringMarkerRenderersVisible(scene, visible: false);
             var previewRoot = CreatePreviewObject(PreviewRootName, roomRoot.transform);
             previewRoot.transform.localPosition = Vector3.zero;
             previewRoot.transform.localRotation = Quaternion.identity;
             previewRoot.transform.localScale = Vector3.one;
 
-            BuildFloor(previewRoot.transform, asset.Layout);
-            BuildPerimeterWalls(previewRoot.transform, asset.Layout, asset.DoorPorts);
+            BuildFloor(previewRoot.transform, asset.Layout, biomeId);
+            BuildPerimeterWalls(previewRoot.transform, asset.Layout, asset.DoorPorts, biomeId);
             BuildHoles(previewRoot.transform, asset.Layout);
-            BuildObstacles(previewRoot.transform, asset.Layout);
-            BuildHazards(previewRoot.transform, asset);
-            BuildInteractiveObjects(previewRoot.transform, asset);
-            BuildDoors(previewRoot.transform, asset);
-            BuildSpawns(previewRoot.transform, asset);
+            BuildObstacles(previewRoot.transform, asset.Layout, biomeId);
+            BuildHazards(previewRoot.transform, asset, biomeId);
+            BuildInteractiveObjects(previewRoot.transform, asset, biomeId);
+            BuildDoors(previewRoot.transform, asset, biomeId);
+            BuildSpawns(previewRoot.transform, asset, biomeId);
 
             if (includeLighting)
             {
@@ -68,10 +69,20 @@ namespace Hollow.Editor.DesignerRooms
 
         public static bool ClearPreview(Scene scene)
         {
+            return ClearPreview(scene, restoreMarkerRenderers: true);
+        }
+
+        private static bool ClearPreview(Scene scene, bool restoreMarkerRenderers)
+        {
             var cleared = false;
             foreach (var root in scene.GetRootGameObjects())
             {
                 cleared |= ClearPreviewUnder(root.transform);
+            }
+
+            if (restoreMarkerRenderers)
+            {
+                cleared |= SetAuthoringMarkerRenderersVisible(scene, visible: true);
             }
 
             if (cleared)
@@ -135,15 +146,40 @@ namespace Hollow.Editor.DesignerRooms
             return null;
         }
 
-        private static void BuildFloor(Transform previewRoot, RoomLayout layout)
+        private static bool SetAuthoringMarkerRenderersVisible(Scene scene, bool visible)
+        {
+            var changed = false;
+            foreach (var marker in DesignerRoomSceneAuthoringUtility.MarkersInScene(scene))
+            {
+                if (marker == null || marker.MarkerKind == DesignerRoomSceneMarkerKind.Folder)
+                {
+                    continue;
+                }
+
+                var renderer = marker.GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    changed |= renderer.enabled != visible;
+                    renderer.enabled = visible;
+                }
+            }
+
+            return changed;
+        }
+
+        private static void BuildFloor(Transform previewRoot, RoomLayout layout, string biomeId)
         {
             var parent = CreatePreviewObject("Floor", previewRoot).transform;
             foreach (var region in layout.FloorRegions)
             {
-                var anchor = CreatePreviewObject($"Floor.{region.Id}", parent).transform;
-                anchor.localPosition = new Vector3(region.Center.x, -0.05f, region.Center.z);
-                var scale = new Vector3(region.HalfSize.x * 2f, 0.1f, region.HalfSize.y * 2f);
-                InstantiateVisual(PresentationPrefabRole.RoomFloor, anchor, Vector3.zero, scale);
+                var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                floor.name = $"Floor.{region.Id}";
+                floor.hideFlags = PreviewHideFlags;
+                floor.transform.SetParent(parent, false);
+                floor.transform.localPosition = new Vector3(region.Center.x, -0.05f, region.Center.z);
+                floor.transform.localScale = new Vector3(region.HalfSize.x * 2f, 0.1f, region.HalfSize.y * 2f);
+                RoomBiomePresentationResolver.ApplyTo(biomeId, floor, MaterialRole.RoomFloor);
+                InstantiateVisual(PresentationPrefabRole.RoomFloor, floor.transform, Vector3.zero, Vector3.one, biomeId);
             }
 
             var origin = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -154,7 +190,11 @@ namespace Hollow.Editor.DesignerRooms
             MaterialResolver.ApplyTo(origin, MaterialRole.RoomOriginMarker);
         }
 
-        private static void BuildPerimeterWalls(Transform previewRoot, RoomLayout layout, IReadOnlyList<RoomDoorPort> doorPorts)
+        private static void BuildPerimeterWalls(
+            Transform previewRoot,
+            RoomLayout layout,
+            IReadOnlyList<RoomDoorPort> doorPorts,
+            string biomeId)
         {
             if (layout == null)
             {
@@ -171,7 +211,8 @@ namespace Hollow.Editor.DesignerRooms
                     edge.AxisMax,
                     OffsetWallCoordinate(edge.Side, edge.FixedCoordinate),
                     edge.HorizontalOnX,
-                    DoorGapsForSide(edge.Side, doorPorts));
+                    DoorGapsForSide(edge.Side, doorPorts),
+                    biomeId);
             }
         }
 
@@ -189,7 +230,8 @@ namespace Hollow.Editor.DesignerRooms
             float axisMax,
             float fixedCoordinate,
             bool horizontalOnX,
-            List<Vector2> gaps)
+            List<Vector2> gaps,
+            string biomeId)
         {
             gaps.Sort((left, right) => left.x.CompareTo(right.x));
             var cursor = axisMin;
@@ -203,11 +245,27 @@ namespace Hollow.Editor.DesignerRooms
                     continue;
                 }
 
-                segmentIndex = CreateWallSegment(parent, side, segmentIndex, cursor, Mathf.Max(cursor, clampedStart), fixedCoordinate, horizontalOnX);
+                segmentIndex = CreateWallSegment(
+                    parent,
+                    side,
+                    segmentIndex,
+                    cursor,
+                    Mathf.Max(cursor, clampedStart),
+                    fixedCoordinate,
+                    horizontalOnX,
+                    biomeId);
                 cursor = Mathf.Max(cursor, clampedEnd);
             }
 
-            CreateWallSegment(parent, side, segmentIndex, cursor, axisMax, fixedCoordinate, horizontalOnX);
+            CreateWallSegment(
+                parent,
+                side,
+                segmentIndex,
+                cursor,
+                axisMax,
+                fixedCoordinate,
+                horizontalOnX,
+                biomeId);
         }
 
         private static int CreateWallSegment(
@@ -217,7 +275,8 @@ namespace Hollow.Editor.DesignerRooms
             float axisStart,
             float axisEnd,
             float fixedCoordinate,
-            bool horizontalOnX)
+            bool horizontalOnX,
+            string biomeId)
         {
             var length = axisEnd - axisStart;
             if (length < 0.08f)
@@ -243,7 +302,7 @@ namespace Hollow.Editor.DesignerRooms
                 parent,
                 localPosition,
                 localScale,
-                MaterialResolver.Resolve(MaterialRole.RoomWall));
+                RoomBiomePresentationResolver.ResolveMaterial(biomeId, MaterialRole.RoomWall));
             return segmentIndex + 1;
         }
 
@@ -304,18 +363,18 @@ namespace Hollow.Editor.DesignerRooms
             }
         }
 
-        private static void BuildObstacles(Transform previewRoot, RoomLayout layout)
+        private static void BuildObstacles(Transform previewRoot, RoomLayout layout, string biomeId)
         {
             var parent = CreatePreviewObject("Obstacles", previewRoot).transform;
             foreach (var obstacle in layout.Obstacles)
             {
                 var anchor = CreatePreviewObject($"{obstacle.Kind}.{obstacle.Id}", parent).transform;
                 anchor.localPosition = obstacle.Center;
-                InstantiateVisual(PresentationPrefabRole.RoomObstacleRock, anchor, Vector3.zero, obstacle.Size);
+                InstantiateVisual(PresentationPrefabRole.RoomObstacleRock, anchor, Vector3.zero, obstacle.Size, biomeId);
             }
         }
 
-        private static void BuildHazards(Transform previewRoot, ImportedRoomRuntimeAsset asset)
+        private static void BuildHazards(Transform previewRoot, ImportedRoomRuntimeAsset asset, string biomeId)
         {
             var parent = CreatePreviewObject("Hazards", previewRoot).transform;
             foreach (var hazard in asset.Hazards ?? Array.Empty<ImportedRoomHazard>())
@@ -328,11 +387,11 @@ namespace Hollow.Editor.DesignerRooms
                 var position = hazard.center?.ToUnityVector3() ?? Vector3.zero;
                 var anchor = CreatePreviewObject($"{hazard.kind}.{hazard.id}", parent).transform;
                 anchor.localPosition = new Vector3(position.x, 0.05f, position.z);
-                InstantiateVisual(PresentationPrefabRole.RoomHazardSpike, anchor, Vector3.zero, Vector3.one);
+                InstantiateVisual(PresentationPrefabRole.RoomHazardSpike, anchor, Vector3.zero, Vector3.one, biomeId);
             }
         }
 
-        private static void BuildInteractiveObjects(Transform previewRoot, ImportedRoomRuntimeAsset asset)
+        private static void BuildInteractiveObjects(Transform previewRoot, ImportedRoomRuntimeAsset asset, string biomeId)
         {
             var parent = CreatePreviewObject("InteractiveObjects", previewRoot).transform;
             foreach (var roomObject in asset.InteractiveObjects ?? Array.Empty<ImportedRoomInteractiveObject>())
@@ -347,11 +406,11 @@ namespace Hollow.Editor.DesignerRooms
                     : PresentationPrefabRole.StandardBarrel;
                 var anchor = CreatePreviewObject($"{roomObject.kind}.{roomObject.id}", parent).transform;
                 anchor.localPosition = roomObject.center?.ToUnityVector3() ?? Vector3.zero;
-                InstantiateVisual(role, anchor, Vector3.zero, roomObject.size?.ToUnityVector3() ?? Vector3.one);
+                InstantiateVisual(role, anchor, Vector3.zero, roomObject.size?.ToUnityVector3() ?? Vector3.one, biomeId);
             }
         }
 
-        private static void BuildDoors(Transform previewRoot, ImportedRoomRuntimeAsset asset)
+        private static void BuildDoors(Transform previewRoot, ImportedRoomRuntimeAsset asset, string biomeId)
         {
             var parent = CreatePreviewObject("Doors", previewRoot).transform;
             foreach (var port in asset.DoorPorts)
@@ -360,46 +419,32 @@ namespace Hollow.Editor.DesignerRooms
                 var anchor = CreatePreviewObject($"Door.{port.Id}.{port.Direction}", parent).transform;
                 anchor.localPosition = new Vector3(port.Position.x, 0.65f, port.Position.z);
                 anchor.localRotation = DoorRotationFor(port.Direction);
-                InstantiateVisual(role, anchor, Vector3.zero, DoorScaleFor(port.Direction));
+                InstantiateVisual(role, anchor, Vector3.zero, DoorScaleFor(port.Direction), biomeId);
             }
         }
 
-        private static void BuildSpawns(Transform previewRoot, ImportedRoomRuntimeAsset asset)
+        private static void BuildSpawns(Transform previewRoot, ImportedRoomRuntimeAsset asset, string biomeId)
         {
             var parent = CreatePreviewObject("Spawns", previewRoot).transform;
-            if (asset.SafeStart != null)
-            {
-                var anchor = CreatePreviewObject($"SafeStart.{asset.SafeStart.id}", parent).transform;
-                anchor.localPosition = SpawnPosition(asset.SafeStart.position?.ToUnityVector3() ?? Vector3.zero);
-                InstantiateVisual(PresentationPrefabRole.Player, anchor, Vector3.zero, Vector3.one * 0.7f);
-            }
-
-            var enemies = CreatePreviewObject("Enemies", parent).transform;
-            foreach (var spawn in asset.EnemySpawns ?? Array.Empty<ImportedSpawnPoint>())
-            {
-                if (spawn == null)
-                {
-                    continue;
-                }
-
-                var role = RoomDesignerScenePreviewBuilder.PrefabRoleForMarker(spawn.kind);
-                var anchor = CreatePreviewObject($"{DesignerRoomSceneAuthoringUtility.DisplayNameForRuntimeKind(spawn.kind)}.{spawn.id}", enemies).transform;
-                anchor.localPosition = SpawnPosition(spawn.position?.ToUnityVector3() ?? Vector3.zero);
-                InstantiateVisual(role, anchor, Vector3.zero, EnemyScaleFor(spawn.kind));
-            }
-
+            CreatePreviewObject("SafeStart", parent);
+            CreatePreviewObject("Enemies", parent);
             var items = CreatePreviewObject("Items", parent).transform;
             foreach (var spawn in asset.ItemSpawns ?? Array.Empty<ImportedSpawnPoint>())
             {
-                if (spawn == null)
+                if (spawn == null ||
+                    !RoomDesignerScenePreviewBuilder.ShouldRenderMarkerInPresentationPreview(spawn.kind))
                 {
                     continue;
                 }
 
                 var role = RoomDesignerScenePreviewBuilder.PrefabRoleForMarker(spawn.kind);
                 var anchor = CreatePreviewObject($"{DesignerRoomSceneAuthoringUtility.DisplayNameForRuntimeKind(spawn.kind)}.{spawn.id}", items).transform;
-                anchor.localPosition = SpawnPosition(spawn.position?.ToUnityVector3() ?? Vector3.zero);
-                InstantiateVisual(role, anchor, Vector3.zero, Vector3.one * 0.8f);
+                var spawnPosition = spawn.position?.ToUnityVector3() ?? Vector3.zero;
+                anchor.localPosition = RoomDesignerMarkerKinds.IsChest(spawn.kind)
+                    ? FloorPosition(spawnPosition)
+                    : SpawnPosition(spawnPosition);
+                var scale = RoomDesignerMarkerKinds.IsChest(spawn.kind) ? Vector3.one : Vector3.one * 0.8f;
+                InstantiateVisual(role, anchor, Vector3.zero, scale, biomeId);
             }
         }
 
@@ -458,9 +503,14 @@ namespace Hollow.Editor.DesignerRooms
             return go;
         }
 
-        private static void InstantiateVisual(PresentationPrefabRole role, Transform parent, Vector3 localPosition, Vector3 localScale)
+        private static void InstantiateVisual(
+            PresentationPrefabRole role,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            string biomeId)
         {
-            var visual = PresentationPrefabResolver.InstantiateVisual(role, parent, localPosition, localScale);
+            var visual = RoomBiomePresentationResolver.InstantiateVisual(biomeId, role, parent, localPosition, localScale);
             if (visual == null)
             {
                 return;
@@ -527,40 +577,10 @@ namespace Hollow.Editor.DesignerRooms
             return new Vector3(position.x, Mathf.Max(0.18f, position.y + 0.25f), position.z);
         }
 
-        private static Vector3 EnemyScaleFor(string spawnKind)
+        private static Vector3 FloorPosition(Vector3 position)
         {
-            return spawnKind switch
-            {
-                RoomDesignerMarkerKinds.EnemySpittingPod => new Vector3(0.78f, 0.58f, 0.78f),
-                RoomDesignerMarkerKinds.EnemyRat => new Vector3(0.46f, 0.22f, 0.28f),
-                RoomDesignerMarkerKinds.EnemySpider => new Vector3(0.5f, 0.2f, 0.5f),
-                RoomDesignerMarkerKinds.EnemyHollowBird => new Vector3(0.48f, 0.28f, 0.58f),
-                RoomDesignerMarkerKinds.EnemyHollowBeast => new Vector3(0.68f, 0.42f, 0.52f),
-                RoomDesignerMarkerKinds.EnemySkeletonSword => new Vector3(0.54f, 0.78f, 0.42f),
-                RoomDesignerMarkerKinds.EnemySkeletonSpear => new Vector3(0.54f, 0.78f, 0.5f),
-                RoomDesignerMarkerKinds.EnemyKnight => new Vector3(0.68f, 0.98f, 0.52f),
-                RoomDesignerMarkerKinds.EnemyGiant => new Vector3(1.05f, 1.35f, 0.82f),
-                RoomDesignerMarkerKinds.EnemyHollowArcher => new Vector3(0.52f, 0.82f, 0.42f),
-                RoomDesignerMarkerKinds.EnemyPowderGunner => new Vector3(0.62f, 0.86f, 0.5f),
-                RoomDesignerMarkerKinds.EnemyKnifeThrower => new Vector3(0.5f, 0.72f, 0.42f),
-                RoomDesignerMarkerKinds.EnemyRepeaterTurret => new Vector3(0.78f, 0.66f, 0.78f),
-                RoomDesignerMarkerKinds.EnemyClockworkSentry => new Vector3(0.82f, 0.92f, 0.72f),
-                RoomDesignerMarkerKinds.EnemyStarforgedOctantSentry => new Vector3(0.92f, 0.86f, 0.92f),
-                RoomDesignerMarkerKinds.EnemyCrimsonRailSpider => new Vector3(0.9f, 0.72f, 1.05f),
-                RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => new Vector3(0.94f, 0.78f, 0.94f),
-                RoomDesignerMarkerKinds.EnemyHollowAcolyte => new Vector3(0.56f, 0.78f, 0.44f),
-                RoomDesignerMarkerKinds.EnemyWraith => new Vector3(0.5f, 0.86f, 0.46f),
-                RoomDesignerMarkerKinds.EnemySoulEater => new Vector3(0.74f, 0.96f, 0.62f),
-                RoomDesignerMarkerKinds.EnemyCurseBinder => new Vector3(0.58f, 0.82f, 0.48f),
-                RoomDesignerMarkerKinds.EnemyGraveLantern => new Vector3(0.72f, 0.9f, 0.72f),
-                RoomDesignerMarkerKinds.EnemyFlying => new Vector3(0.56f, 0.36f, 0.56f),
-                RoomDesignerMarkerKinds.EnemyFast => new Vector3(0.52f, 0.38f, 0.52f),
-                RoomDesignerMarkerKinds.EnemyHeavy => new Vector3(0.78f, 0.58f, 0.78f),
-                RoomDesignerMarkerKinds.EnemyCharger => new Vector3(0.7f, 0.46f, 0.62f),
-                RoomDesignerMarkerKinds.EnemyTurret => new Vector3(0.74f, 0.62f, 0.74f),
-                RoomDesignerMarkerKinds.EnemySplitter => new Vector3(0.62f, 0.44f, 0.62f),
-                _ => new Vector3(0.6f, 0.42f, 0.6f)
-            };
+            return new Vector3(position.x, 0f, position.z);
         }
+
     }
 }

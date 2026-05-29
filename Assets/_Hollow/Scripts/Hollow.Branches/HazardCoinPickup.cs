@@ -1,8 +1,9 @@
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Branches
 {
-    public sealed class HazardCoinPickup : MonoBehaviour
+    public sealed class HazardCoinPickup : MonoBehaviour, IPooledRuntimeObject
     {
         [SerializeField] private string roomId = string.Empty;
         [SerializeField] private string objectId = string.Empty;
@@ -34,6 +35,20 @@ namespace Hollow.Branches
 
             claimed = true;
             return true;
+        }
+
+        public void OnRentFromPool()
+        {
+            claimed = false;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            roomId = string.Empty;
+            objectId = string.Empty;
+            coinAmount = 1;
+            claimed = false;
         }
     }
 }

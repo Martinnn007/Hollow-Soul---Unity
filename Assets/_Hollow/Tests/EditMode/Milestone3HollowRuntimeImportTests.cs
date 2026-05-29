@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Hollow.Entities;
 using Hollow.Rooms;
 using NUnit.Framework;
 using UnityEngine;
@@ -65,9 +66,17 @@ namespace Hollow.Tests.EditMode
                 room.BuildFrom(asset);
 
                 Assert.IsNotNull(FindChild(room.transform, "tileGround.floor_full_13x7"));
+                Assert.IsNull(FindChild(room.transform, "originMarker_0_0"));
                 Assert.AreEqual(4, CountChildrenWithPrefix(room.transform, "doorAnchorActive."));
                 Assert.AreEqual(16, CountChildrenWithPrefix(room.transform, "rockTile."));
-                Assert.AreEqual(5, room.GetComponentsInChildren<Collider>().Count(collider => collider.enabled == false && collider.name.Contains("spawn")));
+                var spawnAnchors = room.transform
+                    .Cast<Transform>()
+                    .Where(child => child.name.IndexOf("spawn", StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToArray();
+                Assert.AreEqual(5, spawnAnchors.Length);
+                Assert.AreEqual(0, spawnAnchors.SelectMany(anchor => anchor.GetComponentsInChildren<Renderer>(true)).Count());
+                Assert.AreEqual(0, spawnAnchors.SelectMany(anchor => anchor.GetComponentsInChildren<Collider>(true)).Count());
+                Assert.IsNotNull(rootObject.GetComponentInChildren<PlayerSpawnPoint>());
 
                 var floor = FindChild(room.transform, "tileGround.floor_full_13x7");
                 Assert.AreEqual(0f, floor.localPosition.y + (floor.localScale.y * 0.5f), 0.0001f);

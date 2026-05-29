@@ -391,8 +391,11 @@ namespace Hollow.Tests.EditMode
                     PresentationContentProvider.Configure(catalog);
                 }
 
+                var project = RoomDesignerProject.CreateDefault();
+                project.markers.Add(new RoomDesignerMarker("spawn_chest_scene_preview", RoomDesignerMarkerKinds.ChestSpawn, 1f, 0f, 1f));
+
                 var controller = root.AddComponent<RoomDesignerController>();
-                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), RoomDesignerProject.CreateDefault());
+                controller.InitializeForTest(new RoomDesignerStore(tempRoot), new ProfileSlotId(0), project);
 
                 Assert.AreEqual(RoomDesignerPreviewMode.Graybox, controller.PreviewMode);
 
@@ -403,9 +406,10 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(GameObject.Find("RoomDesignerPreviewModeButton"));
                 AssertVisualMarker(root, PresentationPrefabRole.RoomFloor);
                 AssertVisualMarker(root, PresentationPrefabRole.RoomObstacleRock);
-                AssertVisualMarker(root, PresentationPrefabRole.Player);
-                AssertVisualMarker(root, PresentationPrefabRole.EnemyNormal);
-                AssertVisualMarker(root, PresentationPrefabRole.RewardPickup);
+                AssertVisualMarker(root, PresentationPrefabRole.ChestNormal);
+                AssertNoVisualMarker(root, PresentationPrefabRole.Player);
+                AssertNoVisualMarker(root, PresentationPrefabRole.EnemyNormal);
+                AssertNoVisualMarker(root, PresentationPrefabRole.RewardPickup);
                 Assert.AreEqual(0, root.GetComponentsInChildren<PresentationVisualMarker>(true)
                     .SelectMany(marker => marker.GetComponentsInChildren<Collider>(true))
                     .Count());
@@ -594,6 +598,12 @@ namespace Hollow.Tests.EditMode
         {
             Assert.IsTrue(root.GetComponentsInChildren<PresentationVisualMarker>(true)
                 .Any(marker => marker.Role == role), $"Missing scene preview visual for {role}");
+        }
+
+        private static void AssertNoVisualMarker(GameObject root, PresentationPrefabRole role)
+        {
+            Assert.IsFalse(root.GetComponentsInChildren<PresentationVisualMarker>(true)
+                .Any(marker => marker.Role == role), $"Unexpected scene preview visual for {role}");
         }
     }
 }

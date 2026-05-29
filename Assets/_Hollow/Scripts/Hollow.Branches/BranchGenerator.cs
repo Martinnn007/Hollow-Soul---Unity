@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hollow.Data.Definitions;
+using Hollow.Rewards;
 using Hollow.Rooms;
 using UnityEngine;
 
@@ -16,8 +17,22 @@ namespace Hollow.Branches
         public const string EnemyEncounterBranchId = "m19_enemy_encounter_content_v1";
         public const string BranchFeaturesId = "m20_branch_features_v1";
         public const string DirectedEncounterBranchId = "m46_encounter_director_curve_v1";
+        public const string CorruptedChestRoomAssetId = "corrupted_chest_single_1x1";
+        public const string WaveRoomAssetId = "wave_room_single_1x1";
+        public const string SpecialSoulEaterRoomAssetId = SpecialEncounterResolver.SoulEaterRoomAssetId;
+        public const string SpecialEscapistRoomAssetId = SpecialEncounterResolver.EscapistRoomAssetId;
         public const int DefaultMacroFixtureSeed = 14001;
         public const int DefaultSeededMacroSeed = 15001;
+
+        public static bool ShouldRollCorruptedChestLeaf(string branchId, int seed)
+        {
+            return StableBranchHash($"{branchId}|{seed}|m130_corrupted_chest") % 100 < ChestRewardResolver.CorruptedChestRollPercent;
+        }
+
+        public static bool ShouldRollSpecialEncounterLeaf(string branchId, int seed)
+        {
+            return SpecialEncounterResolver.ShouldRollSpecialEncounterLeaf(branchId, seed);
+        }
 
         public static BranchFloorGraph CreateFiveRoomCross(ImportedRoomRuntimeAsset roomAsset)
         {
@@ -129,6 +144,21 @@ namespace Hollow.Branches
 
         public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId)
         {
+            return CreateSeededBranchFeatures(content, settings, seed, biomeId, enableCorruptedChestLeaf: false);
+        }
+
+        public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId, bool enableCorruptedChestLeaf)
+        {
+            return CreateSeededBranchFeatures(content, settings, seed, biomeId, enableCorruptedChestLeaf, enableWaveRoomLeaf: false);
+        }
+
+        public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId, bool enableCorruptedChestLeaf, bool enableWaveRoomLeaf)
+        {
+            return CreateSeededBranchFeatures(content, settings, seed, biomeId, enableCorruptedChestLeaf, enableWaveRoomLeaf, enableSpecialEncounterLeaf: false);
+        }
+
+        public static BranchFloorGraph CreateSeededBranchFeatures(BranchSessionContent content, BranchGenerationSettingsDefinition settings, int seed, string biomeId, bool enableCorruptedChestLeaf, bool enableWaveRoomLeaf, bool enableSpecialEncounterLeaf)
+        {
             if (content == null || !content.HasMacroFixturePool)
             {
                 throw new InvalidOperationException("M20 branch feature generation requires a complete macro room pool.");
@@ -140,7 +170,21 @@ namespace Hollow.Branches
                 throw new InvalidOperationException("M20 branch feature generation does not support loops.");
             }
 
-            var graph = CreateSeededBranch(content, settings, seed, BranchFeaturesId, enableTreasureLeaf: true, milestoneLabel: "M20", activeRoomPool: ActivePoolFor(content, biomeId));
+            var graph = CreateSeededBranch(
+                content,
+                settings,
+                seed,
+                BranchFeaturesId,
+                enableTreasureLeaf: true,
+                milestoneLabel: "M20",
+                activeRoomPool: ActivePoolFor(content, biomeId),
+                enableCorruptedChestLeaf: enableCorruptedChestLeaf,
+                corruptedChestRoomAsset: content.CorruptedChestRoomAsset,
+                enableWaveRoomLeaf: enableWaveRoomLeaf,
+                waveRoomAsset: content.WaveRoomAsset,
+                enableSpecialEncounterLeaf: enableSpecialEncounterLeaf,
+                specialSoulEaterRoomAsset: content.SpecialSoulEaterRoomAsset,
+                specialEscapistRoomAsset: content.SpecialEscapistRoomAsset);
             ApplyBossKeyLock(graph);
             return graph;
         }
@@ -175,6 +219,48 @@ namespace Hollow.Branches
             string bossRoomAssetId,
             string biomeId)
         {
+            return CreateDirectedEncounterBranch(content, settings, directorProfile, worldIndex, seed, bossRoomAssetId, biomeId, enableCorruptedChestLeaf: false);
+        }
+
+        public static BranchFloorGraph CreateDirectedEncounterBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            EncounterDirectorProfileDefinition directorProfile,
+            int worldIndex,
+            int seed,
+            string bossRoomAssetId,
+            string biomeId,
+            bool enableCorruptedChestLeaf)
+        {
+            return CreateDirectedEncounterBranch(content, settings, directorProfile, worldIndex, seed, bossRoomAssetId, biomeId, enableCorruptedChestLeaf, enableWaveRoomLeaf: false);
+        }
+
+        public static BranchFloorGraph CreateDirectedEncounterBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            EncounterDirectorProfileDefinition directorProfile,
+            int worldIndex,
+            int seed,
+            string bossRoomAssetId,
+            string biomeId,
+            bool enableCorruptedChestLeaf,
+            bool enableWaveRoomLeaf)
+        {
+            return CreateDirectedEncounterBranch(content, settings, directorProfile, worldIndex, seed, bossRoomAssetId, biomeId, enableCorruptedChestLeaf, enableWaveRoomLeaf, enableSpecialEncounterLeaf: false);
+        }
+
+        public static BranchFloorGraph CreateDirectedEncounterBranch(
+            BranchSessionContent content,
+            BranchGenerationSettingsDefinition settings,
+            EncounterDirectorProfileDefinition directorProfile,
+            int worldIndex,
+            int seed,
+            string bossRoomAssetId,
+            string biomeId,
+            bool enableCorruptedChestLeaf,
+            bool enableWaveRoomLeaf,
+            bool enableSpecialEncounterLeaf)
+        {
             if (content == null || !content.HasMacroFixturePool)
             {
                 throw new InvalidOperationException("M46 directed encounter branch generation requires a complete macro room pool.");
@@ -197,7 +283,14 @@ namespace Hollow.Branches
                 milestoneLabel: "M46",
                 targetRoomCountOverride: targetRooms,
                 bossRoomAssetId: bossRoomAssetId,
-                activeRoomPool: ActivePoolFor(content, biomeId));
+                activeRoomPool: ActivePoolFor(content, biomeId),
+                enableCorruptedChestLeaf: enableCorruptedChestLeaf,
+                corruptedChestRoomAsset: content.CorruptedChestRoomAsset,
+                enableWaveRoomLeaf: enableWaveRoomLeaf,
+                waveRoomAsset: content.WaveRoomAsset,
+                enableSpecialEncounterLeaf: enableSpecialEncounterLeaf,
+                specialSoulEaterRoomAsset: content.SpecialSoulEaterRoomAsset,
+                specialEscapistRoomAsset: content.SpecialEscapistRoomAsset);
             ApplyBossKeyLock(graph);
             return graph;
         }
@@ -211,7 +304,14 @@ namespace Hollow.Branches
             string milestoneLabel,
             int targetRoomCountOverride = 0,
             string bossRoomAssetId = "",
-            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> activeRoomPool = null)
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> activeRoomPool = null,
+            bool enableCorruptedChestLeaf = false,
+            ImportedRoomRuntimeAsset corruptedChestRoomAsset = null,
+            bool enableWaveRoomLeaf = false,
+            ImportedRoomRuntimeAsset waveRoomAsset = null,
+            bool enableSpecialEncounterLeaf = false,
+            ImportedRoomRuntimeAsset specialSoulEaterRoomAsset = null,
+            ImportedRoomRuntimeAsset specialEscapistRoomAsset = null)
         {
             var resolvedSeed = seed == 0 ? settings.DefaultSeed : seed;
             var random = new System.Random(resolvedSeed);
@@ -244,7 +344,9 @@ namespace Hollow.Branches
 
             var requiresBossRoom = settings.EnableBossLeaf;
             var requiresSecretRoom = branchId == BranchFeaturesId || branchId == DirectedEncounterBranchId;
-            var reservedRoomCount = (requiresBossRoom ? 1 : 0) + (requiresSecretRoom ? 1 : 0);
+            var reservedRoomCount = (requiresBossRoom ? 1 : 0) +
+                                    (requiresSecretRoom ? 1 : 0) +
+                                    (enableWaveRoomLeaf ? 1 : 0);
             var normalPlacementTarget = Mathf.Max(0, targetRoomCount - 1 - reservedRoomCount);
 
             for (var tempIndex = 1; tempIndex <= normalPlacementTarget; tempIndex++)
@@ -277,15 +379,80 @@ namespace Hollow.Branches
                 secretTempIndex = secretRecord.TempIndex;
             }
 
+            var waveTempIndex = -1;
+            if (enableWaveRoomLeaf)
+            {
+                var waveTempCandidate = records.Count;
+                var excludedWaveParents = new HashSet<int>();
+                if (secretTempIndex >= 0)
+                {
+                    excludedWaveParents.Add(secretTempIndex);
+                }
+
+                var waveFixturePool = roomPool;
+                var waveCandidatesByShape = candidatesByShape;
+                var waveFixtureIds = new[] { "combat_macro_single_1x1" };
+                var exactWaveFixtureId = false;
+                if (waveRoomAsset != null && !string.IsNullOrWhiteSpace(waveRoomAsset.Id))
+                {
+                    var poolWithWaveRoom = new Dictionary<string, ImportedRoomRuntimeAsset>(roomPool)
+                    {
+                        [waveRoomAsset.Id] = waveRoomAsset
+                    };
+                    waveFixturePool = poolWithWaveRoom;
+                    waveCandidatesByShape = BuildCandidatesByShape(poolWithWaveRoom.Values);
+                    waveFixtureIds = new[] { waveRoomAsset.Id };
+                    exactWaveFixtureId = true;
+                }
+
+                if (!TryPlaceEndpointRecord(
+                        records,
+                        usedPortsByTempIndex,
+                        occupiedCells,
+                        waveFixturePool,
+                        waveCandidatesByShape,
+                        waveFixtureIds,
+                        random,
+                        settings.MaxPlacementAttempts,
+                        waveTempCandidate,
+                        requireSingleRoom: true,
+                        excludedParentTempIndices: excludedWaveParents,
+                        out var waveRecord,
+                        exactFixtureIds: exactWaveFixtureId))
+                {
+                    throw new InvalidOperationException($"{milestoneLabel} seeded branch generation failed to place a terminal wave room after {settings.MaxPlacementAttempts} attempts.");
+                }
+
+                records.Add(waveRecord);
+                usedPortsByTempIndex[waveRecord.TempIndex] = new HashSet<string> { waveRecord.ToPortId };
+                usedPortsByTempIndex[waveRecord.ParentTempIndex].Add(waveRecord.FromPortId);
+                RegisterCells(occupiedCells, waveRecord.Footprint);
+                waveTempIndex = waveRecord.TempIndex;
+            }
+
             var bossTempIndex = -1;
             if (requiresBossRoom)
             {
                 var bossTempCandidate = records.Count;
-                var excludedBossParents = secretTempIndex >= 0 ? new HashSet<int> { secretTempIndex } : null;
-                IReadOnlyList<string> bossFixtureIds = !string.IsNullOrWhiteSpace(bossRoomAssetId) && roomPool.ContainsKey(bossRoomAssetId)
+                var excludedBossParents = new HashSet<int>();
+                if (secretTempIndex >= 0)
+                {
+                    excludedBossParents.Add(secretTempIndex);
+                }
+
+                if (waveTempIndex >= 0)
+                {
+                    excludedBossParents.Add(waveTempIndex);
+                }
+
+                var hasExactBossRoomAsset = !string.IsNullOrWhiteSpace(bossRoomAssetId) &&
+                                            roomPool.ContainsKey(bossRoomAssetId);
+                IReadOnlyList<string> bossFixtureIds = hasExactBossRoomAsset
                     ? new[] { bossRoomAssetId }
                     : fixtureIds;
-                if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, roomPool, candidatesByShape, bossFixtureIds, random, settings.MaxPlacementAttempts, bossTempCandidate, requireSingleRoom: false, excludedParentTempIndices: excludedBossParents, out var bossRecord, exactFixtureIds: !string.IsNullOrWhiteSpace(bossRoomAssetId)))
+                var exactBossRoom = hasExactBossRoomAsset;
+                var bossFixturePool = exactBossRoom ? roomPool : fixturePool;
+                if (!TryPlaceEndpointRecord(records, usedPortsByTempIndex, occupiedCells, bossFixturePool, candidatesByShape, bossFixtureIds, random, settings.MaxPlacementAttempts, bossTempCandidate, requireSingleRoom: false, excludedParentTempIndices: excludedBossParents, out var bossRecord, exactFixtureIds: exactBossRoom))
                 {
                     throw new InvalidOperationException($"{milestoneLabel} seeded branch generation failed to place a terminal boss room after {settings.MaxPlacementAttempts} attempts.");
                 }
@@ -298,6 +465,142 @@ namespace Hollow.Branches
             }
 
             var treasureTempIndex = enableTreasureLeaf && !requiresSecretRoom ? SelectTreasureLeaf(records, bossTempIndex) : -1;
+            var corruptedTempIndex = -1;
+            if (enableCorruptedChestLeaf &&
+                ShouldRollCorruptedChestLeaf(branchId, resolvedSeed))
+            {
+                var corruptedTempCandidate = records.Count;
+                var excludedCorruptedParents = new HashSet<int>();
+                if (secretTempIndex >= 0)
+                {
+                    excludedCorruptedParents.Add(secretTempIndex);
+                }
+
+                if (bossTempIndex >= 0)
+                {
+                    excludedCorruptedParents.Add(bossTempIndex);
+                }
+
+                if (treasureTempIndex >= 0)
+                {
+                    excludedCorruptedParents.Add(treasureTempIndex);
+                }
+
+                if (waveTempIndex >= 0)
+                {
+                    excludedCorruptedParents.Add(waveTempIndex);
+                }
+
+                var corruptedFixturePool = roomPool;
+                var corruptedCandidatesByShape = candidatesByShape;
+                var corruptedFixtureIds = new[] { "combat_macro_single_1x1" };
+                var exactCorruptedFixtureId = false;
+                if (corruptedChestRoomAsset != null && !string.IsNullOrWhiteSpace(corruptedChestRoomAsset.Id))
+                {
+                    var poolWithCorruptedRoom = new Dictionary<string, ImportedRoomRuntimeAsset>(roomPool)
+                    {
+                        [corruptedChestRoomAsset.Id] = corruptedChestRoomAsset
+                    };
+                    corruptedFixturePool = poolWithCorruptedRoom;
+                    corruptedCandidatesByShape = BuildCandidatesByShape(poolWithCorruptedRoom.Values);
+                    corruptedFixtureIds = new[] { corruptedChestRoomAsset.Id };
+                    exactCorruptedFixtureId = true;
+                }
+
+                if (TryPlaceEndpointRecord(
+                        records,
+                        usedPortsByTempIndex,
+                        occupiedCells,
+                        corruptedFixturePool,
+                        corruptedCandidatesByShape,
+                        corruptedFixtureIds,
+                        random,
+                        settings.MaxPlacementAttempts,
+                        corruptedTempCandidate,
+                        requireSingleRoom: true,
+                        excludedParentTempIndices: excludedCorruptedParents,
+                        out var corruptedRecord,
+                        exactFixtureIds: exactCorruptedFixtureId))
+                {
+                    records.Add(corruptedRecord);
+                    usedPortsByTempIndex[corruptedRecord.TempIndex] = new HashSet<string> { corruptedRecord.ToPortId };
+                    usedPortsByTempIndex[corruptedRecord.ParentTempIndex].Add(corruptedRecord.FromPortId);
+                    RegisterCells(occupiedCells, corruptedRecord.Footprint);
+                    corruptedTempIndex = corruptedRecord.TempIndex;
+                }
+            }
+
+            var specialTempIndex = -1;
+            if (enableSpecialEncounterLeaf &&
+                ShouldRollSpecialEncounterLeaf(branchId, resolvedSeed))
+            {
+                var specialTempCandidate = records.Count;
+                var excludedSpecialParents = new HashSet<int>();
+                if (secretTempIndex >= 0)
+                {
+                    excludedSpecialParents.Add(secretTempIndex);
+                }
+
+                if (bossTempIndex >= 0)
+                {
+                    excludedSpecialParents.Add(bossTempIndex);
+                }
+
+                if (treasureTempIndex >= 0)
+                {
+                    excludedSpecialParents.Add(treasureTempIndex);
+                }
+
+                if (corruptedTempIndex >= 0)
+                {
+                    excludedSpecialParents.Add(corruptedTempIndex);
+                }
+
+                if (waveTempIndex >= 0)
+                {
+                    excludedSpecialParents.Add(waveTempIndex);
+                }
+
+                var specialKind = SpecialEncounterResolver.ResolveKind(branchId, resolvedSeed);
+                var specialRoomAsset = specialKind == SpecialEncounterKind.SoulEater
+                    ? specialSoulEaterRoomAsset
+                    : specialEscapistRoomAsset;
+                if (specialRoomAsset != null && !string.IsNullOrWhiteSpace(specialRoomAsset.Id))
+                {
+                    var poolWithSpecialRoom = new Dictionary<string, ImportedRoomRuntimeAsset>(roomPool)
+                    {
+                        [specialRoomAsset.Id] = specialRoomAsset
+                    };
+                    if (TryPlaceEndpointRecord(
+                            records,
+                            usedPortsByTempIndex,
+                            occupiedCells,
+                            poolWithSpecialRoom,
+                            BuildCandidatesByShape(poolWithSpecialRoom.Values),
+                            new[] { specialRoomAsset.Id },
+                            random,
+                            settings.MaxPlacementAttempts,
+                            specialTempCandidate,
+                            requireSingleRoom: true,
+                            excludedParentTempIndices: excludedSpecialParents,
+                            out var specialRecord,
+                            exactFixtureIds: true))
+                    {
+                        records.Add(specialRecord);
+                        usedPortsByTempIndex[specialRecord.TempIndex] = new HashSet<string> { specialRecord.ToPortId };
+                        usedPortsByTempIndex[specialRecord.ParentTempIndex].Add(specialRecord.FromPortId);
+                        RegisterCells(occupiedCells, specialRecord.Footprint);
+                        specialTempIndex = specialRecord.TempIndex;
+                    }
+                }
+            }
+
+            var rewardTempIndices = SelectRewardRoomTempIndices(
+                records,
+                bossTempIndex,
+                new[] { secretTempIndex, treasureTempIndex, corruptedTempIndex, waveTempIndex, specialTempIndex },
+                branchId,
+                resolvedSeed);
             var idByTempIndex = AssignRoomIds(records, bossTempIndex);
             var graph = new BranchFloorGraph(branchId, resolvedSeed);
 
@@ -310,9 +613,15 @@ namespace Hollow.Branches
                         ? BranchRoomRole.Boss
                         : record.TempIndex == secretTempIndex
                             ? BranchRoomRole.Secret
+                            : record.TempIndex == corruptedTempIndex
+                            ? BranchRoomRole.CorruptedChest
+                            : record.TempIndex == waveTempIndex
+                            ? BranchRoomRole.Wave
+                            : record.TempIndex == specialTempIndex
+                            ? BranchRoomRole.SpecialEncounter
                             : record.TempIndex == treasureTempIndex
-                            ? BranchRoomRole.Treasure
-                            : RoomNumber(roomId) % 2 == 0 ? BranchRoomRole.Combat : BranchRoomRole.Reward;
+                                ? BranchRoomRole.Treasure
+                                : rewardTempIndices.Contains(record.TempIndex) ? BranchRoomRole.Reward : BranchRoomRole.Combat;
                 graph.AddRoom(new BranchRoomState(
                     roomId,
                     record.PrimaryCell,
@@ -369,7 +678,7 @@ namespace Hollow.Branches
                 }
 
                 var parentPort = parentPorts[random.Next(parentPorts.Count)];
-                var childFallback = fixturePool[fixtureIds[random.Next(fixtureIds.Count)]];
+                var childFallback = fixturePool[ChooseBodyFixtureId(fixturePool, fixtureIds, random)];
                 var childAsset = ChooseCandidateForShape(candidatesByShape, childFallback, random);
                 var childPorts = childAsset.DoorPorts
                     .Where(port => IsNormalConnectablePort(port) && port.Direction == Opposite(parentPort.Direction))
@@ -404,6 +713,44 @@ namespace Hollow.Branches
 
             record = null;
             return false;
+        }
+
+        private static string ChooseBodyFixtureId(
+            IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> fixturePool,
+            IReadOnlyList<string> fixtureIds,
+            System.Random random)
+        {
+            if (fixturePool == null || fixtureIds == null || fixtureIds.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var weighted = fixtureIds
+                .Where(id => !string.IsNullOrWhiteSpace(id) && fixturePool.ContainsKey(id))
+                .Select(id => new
+                {
+                    Id = id,
+                    Weight = BranchPacingPolicy.WeightForShape(RoomFootprintShapeUtility.Classify(fixturePool[id].Footprint))
+                })
+                .Where(candidate => candidate.Weight > 0)
+                .OrderBy(candidate => candidate.Id)
+                .ToArray();
+            if (weighted.Length == 0)
+            {
+                return fixtureIds[random.Next(fixtureIds.Count)];
+            }
+
+            var roll = random.Next(weighted.Sum(candidate => candidate.Weight));
+            foreach (var candidate in weighted)
+            {
+                roll -= candidate.Weight;
+                if (roll < 0)
+                {
+                    return candidate.Id;
+                }
+            }
+
+            return weighted[weighted.Length - 1].Id;
         }
 
         private static bool TryPlaceEndpointRecord(
@@ -633,6 +980,90 @@ namespace Hollow.Branches
                 return false;
             }
 
+            var corruptedRooms = graph.Rooms.Where(room => room.Role == BranchRoomRole.CorruptedChest).ToArray();
+            if (corruptedRooms.Length > 1)
+            {
+                error = "More than one corrupted chest room exists.";
+                return false;
+            }
+
+            if (corruptedRooms.Length == 1)
+            {
+                var corrupted = corruptedRooms[0];
+                var corruptedNeighbors = graph.ConnectionsFrom(corrupted.Id)
+                    .Select(connection => connection.ToRoomId)
+                    .Distinct()
+                    .ToArray();
+                if (corruptedNeighbors.Length != 1)
+                {
+                    error = $"Corrupted chest room '{corrupted.Id}' must be a terminal leaf.";
+                    return false;
+                }
+
+                if (!graph.TryGetRoom(corruptedNeighbors[0], out var parent) ||
+                    parent.Role is BranchRoomRole.Boss or BranchRoomRole.Secret or BranchRoomRole.Treasure)
+                {
+                    error = $"Corrupted chest room '{corrupted.Id}' must not attach to boss, secret, or treasure endpoints.";
+                    return false;
+                }
+            }
+
+            var waveRooms = graph.Rooms.Where(room => room.Role == BranchRoomRole.Wave).ToArray();
+            if (waveRooms.Length > 1)
+            {
+                error = "More than one wave room exists.";
+                return false;
+            }
+
+            if (waveRooms.Length == 1)
+            {
+                var wave = waveRooms[0];
+                var waveNeighbors = graph.ConnectionsFrom(wave.Id)
+                    .Select(connection => connection.ToRoomId)
+                    .Distinct()
+                    .ToArray();
+                if (waveNeighbors.Length != 1)
+                {
+                    error = $"Wave room '{wave.Id}' must be a terminal leaf.";
+                    return false;
+                }
+
+                if (!graph.TryGetRoom(waveNeighbors[0], out var parent) ||
+                    parent.Role is BranchRoomRole.Boss or BranchRoomRole.Secret or BranchRoomRole.Treasure or BranchRoomRole.CorruptedChest)
+                {
+                    error = $"Wave room '{wave.Id}' must not attach to boss, secret, treasure, or corrupted endpoints.";
+                    return false;
+                }
+            }
+
+            var specialRooms = graph.Rooms.Where(room => room.Role == BranchRoomRole.SpecialEncounter).ToArray();
+            if (specialRooms.Length > 1)
+            {
+                error = "More than one special encounter room exists.";
+                return false;
+            }
+
+            if (specialRooms.Length == 1)
+            {
+                var special = specialRooms[0];
+                var specialNeighbors = graph.ConnectionsFrom(special.Id)
+                    .Select(connection => connection.ToRoomId)
+                    .Distinct()
+                    .ToArray();
+                if (specialNeighbors.Length != 1)
+                {
+                    error = $"Special encounter room '{special.Id}' must be a terminal leaf.";
+                    return false;
+                }
+
+                if (!graph.TryGetRoom(specialNeighbors[0], out var parent) ||
+                    parent.Role is BranchRoomRole.Boss or BranchRoomRole.Secret or BranchRoomRole.Treasure or BranchRoomRole.CorruptedChest or BranchRoomRole.Wave)
+                {
+                    error = $"Special encounter room '{special.Id}' must not attach to boss, secret, treasure, corrupted, or wave endpoints.";
+                    return false;
+                }
+            }
+
             error = string.Empty;
             return true;
         }
@@ -667,8 +1098,8 @@ namespace Hollow.Branches
                 }
             }
 
-            return adjacentRooms.Count == 1 &&
-                   adjacentFaceCount == 1 &&
+            return adjacentRooms.Count >= 1 &&
+                   adjacentFaceCount >= 1 &&
                    CountCompatibleAdjacentPortPairs(asset, primaryCell, placedRecords) == 1;
         }
 
@@ -715,6 +1146,62 @@ namespace Hollow.Branches
             }
 
             return candidates.Count == 1 ? candidates[0] : candidates[random.Next(candidates.Count)];
+        }
+
+        private static HashSet<int> SelectRewardRoomTempIndices(
+            IReadOnlyList<PlacementRecord> records,
+            int bossTempIndex,
+            IEnumerable<int> excludedTempIndices,
+            string branchId,
+            int seed)
+        {
+            var selected = new HashSet<int>();
+            if (records == null || records.Count == 0 || bossTempIndex < 0)
+            {
+                return selected;
+            }
+
+            var excluded = new HashSet<int>((excludedTempIndices ?? Array.Empty<int>()).Where(index => index >= 0))
+            {
+                0,
+                bossTempIndex
+            };
+            var recordsByTempIndex = records.ToDictionary(record => record.TempIndex);
+            var path = new List<PlacementRecord>();
+            var cursor = bossTempIndex;
+            while (recordsByTempIndex.TryGetValue(cursor, out var record))
+            {
+                cursor = record.ParentTempIndex;
+                if (cursor <= 0)
+                {
+                    break;
+                }
+
+                if (recordsByTempIndex.TryGetValue(cursor, out var pathRecord) &&
+                    !excluded.Contains(pathRecord.TempIndex))
+                {
+                    path.Add(pathRecord);
+                }
+            }
+
+            if (path.Count == 0)
+            {
+                path = records
+                    .Where(record => !excluded.Contains(record.TempIndex))
+                    .ToList();
+            }
+
+            var desiredCount = BranchPacingPolicy.RewardRoomCount(branchId, seed);
+            foreach (var candidate in path
+                         .OrderBy(record => BranchPacingPolicy.RewardRoomShapePreference(RoomFootprintShapeUtility.Classify(record.Footprint)))
+                         .ThenBy(record => StableBranchHash($"{branchId}|{seed}|m134_reward_room|{record.TempIndex}"))
+                         .ThenByDescending(record => record.Depth)
+                         .Take(desiredCount))
+            {
+                selected.Add(candidate.TempIndex);
+            }
+
+            return selected;
         }
 
         private static Dictionary<int, BranchRoomId> AssignRoomIds(IReadOnlyList<PlacementRecord> records, int bossTempIndex)
@@ -814,14 +1301,6 @@ namespace Hollow.Branches
             }
 
             return 0;
-        }
-
-        private static int RoomNumber(BranchRoomId roomId)
-        {
-            var value = roomId.Value ?? string.Empty;
-            return value.StartsWith("room_", StringComparison.Ordinal) && int.TryParse(value.Substring(5), out var number)
-                ? number
-                : 0;
         }
 
         private static BranchRoomState CreateRoom(BranchRoomId id, Vector2Int primaryCell, ImportedRoomRuntimeAsset asset, BranchRoomRole role)
@@ -947,7 +1426,8 @@ namespace Hollow.Branches
         private static bool IsNormalConnectablePort(RoomDoorPort port)
         {
             return string.Equals(port?.Kind, "available", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(port?.Kind, "door", StringComparison.OrdinalIgnoreCase);
+                   string.Equals(port?.Kind, "door", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(port?.Kind, "normal", StringComparison.OrdinalIgnoreCase);
         }
 
         private sealed class AutoConnectRoomRecord
@@ -992,6 +1472,79 @@ namespace Hollow.Branches
             public string FromPortId { get; set; } = string.Empty;
 
             public string ToPortId { get; set; } = string.Empty;
+        }
+
+        private static int StableBranchHash(string value)
+        {
+            unchecked
+            {
+                var hash = 2166136261u;
+                foreach (var character in value ?? string.Empty)
+                {
+                    hash ^= character;
+                    hash *= 16777619u;
+                }
+
+                return (int)(hash & 0x7fffffff);
+            }
+        }
+    }
+
+    public static class BranchPacingPolicy
+    {
+        public const int RewardRoomGuaranteedCount = 1;
+        public const int RewardRoomSecondRollPercent = 50;
+        public const int Single1x1Weight = 30;
+        public const int Wide2x1Weight = 25;
+        public const int Tall1x2Weight = 20;
+        public const int Block2x2Weight = 15;
+        public const int L3CellWeight = 10;
+
+        public static int RewardRoomCount(string branchId, int seed)
+        {
+            return RewardRoomGuaranteedCount +
+                   (StableBranchHash($"{branchId}|{seed}|m134_reward_room_second") % 100 < RewardRoomSecondRollPercent ? 1 : 0);
+        }
+
+        public static int WeightForShape(RoomFootprintShape shape)
+        {
+            return shape switch
+            {
+                RoomFootprintShape.Single1x1 => Single1x1Weight,
+                RoomFootprintShape.Wide2x1 => Wide2x1Weight,
+                RoomFootprintShape.Tall1x2 => Tall1x2Weight,
+                RoomFootprintShape.Block2x2 => Block2x2Weight,
+                RoomFootprintShape.L3Cell => L3CellWeight,
+                _ => 1
+            };
+        }
+
+        public static int RewardRoomShapePreference(RoomFootprintShape shape)
+        {
+            return shape switch
+            {
+                RoomFootprintShape.Single1x1 => 0,
+                RoomFootprintShape.Wide2x1 => 1,
+                RoomFootprintShape.Tall1x2 => 2,
+                RoomFootprintShape.Block2x2 => 3,
+                RoomFootprintShape.L3Cell => 4,
+                _ => 5
+            };
+        }
+
+        private static int StableBranchHash(string value)
+        {
+            unchecked
+            {
+                var hash = 2166136261u;
+                foreach (var character in value ?? string.Empty)
+                {
+                    hash ^= character;
+                    hash *= 16777619u;
+                }
+
+                return (int)(hash & 0x7fffffff);
+            }
         }
     }
 }

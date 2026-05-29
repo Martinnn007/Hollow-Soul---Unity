@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Hollow.Core;
+using Hollow.Core.Diagnostics;
 using Hollow.Combat;
 using Hollow.Core.App;
 using Hollow.Data.Definitions;
@@ -15,6 +16,7 @@ using Hollow.Rewards;
 using Hollow.Rooms;
 using Hollow.World;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Hollow.Branches
 {
@@ -28,8 +30,15 @@ namespace Hollow.Branches
         private const string HubReplacementContextId = "__hub__";
         private const string RuntimeRewardMarkerKind = "spawn_point_roomReward";
         private const string RuntimeChestMarkerKind = "spawn_point_chest";
+        private const string RuntimeGoldenChestMarkerKind = "spawn_point_goldenChest";
+        private const string RuntimeCorruptedChestMarkerKind = "spawn_point_corruptedChest";
         private const float PlayerDeathMainMenuDelaySeconds = 1.1f;
         private const int EnemyKillSoulReward = 1;
+        public const string PortalEngineDisplayName = "Portal Engine";
+        public const string ShipLogDisplayName = "Ship Log";
+        public const string ShipLogMessage = "Portal Engine online. Banked Souls are safe aboard ship. Souls collected during a run bank only after final return.";
+        public const string CorruptedChestWarningMessage = "Open Corrupted Chest? Gain a rare reward. Lose 1 max HP for this run. Interact again to confirm.";
+        public const string CorruptedChestCurseSourcePrefix = "m130_corrupted_chest:";
 
         [SerializeField] private RoomRuntimeRoot roomRuntimeRoot;
         [SerializeField] private PlaceholderPlayerController playerController;
@@ -113,7 +122,19 @@ namespace Hollow.Branches
         private bool challengeCompletionRecorded;
         private PickupRevealModel latestPickupReveal = PickupRevealModel.Empty;
         private int pickupRevealSequence;
+        private string armedCorruptedChestId = string.Empty;
+        private GameObject currentSoulEaterEncounter;
+        private GameObject currentSoulEaterAltar;
+        private EnemyRuntimeController currentEscapistTarget;
+        private float currentEscapistEscapeEndsAt;
+        private bool currentEscapistActive;
         private Coroutine playerDeathRouteCoroutine;
+        private Coroutine roomTransitionCoroutine;
+        private Coroutine branchPreloadCoroutine;
+        private readonly BranchRuntimeCache branchRuntimeCache = new();
+        private GameObject transitionCurtainRoot;
+        private bool roomTransitionActive;
+        private int branchPreloadVersion;
         private SpaceshipArrivalSnapshot spaceshipArrival;
         private bool spaceshipQuarantineRequired;
         private bool spaceshipQuarantineUnlocked;
@@ -262,6 +283,8 @@ namespace Hollow.Branches
 
         public RoomRuntimeRoot RuntimeRoomRoot => roomRuntimeRoot;
 
+        public string BranchRuntimeCacheSummary => branchRuntimeCache.CreateDebugSummary();
+
         public void Configure(GameObject nextRewardPickupPrefab, GameObject nextHubReturnPortalPrefab)
         {
             rewardPickupPrefab = nextRewardPickupPrefab;
@@ -390,6 +413,20 @@ namespace Hollow.Branches
 
             if (canPersist && gameSessionState.LaunchMode == Hollow.Core.RunLaunchMode.ContinueRun && runSaveStore.TryLoadActiveRun(activeProfileSlotId, out var snapshot))
             {
+                if (ShouldDiscardLegacyWorldLoopSnapshotForBeta(
+                    snapshot,
+                    gameSessionState.SessionMode,
+                    HasBetaBranchRuntime(),
+                    IsSpaceshipHub,
+                    IsDeveloperLab))
+                {
+                    Debug.LogWarning(
+                        $"Discarding incompatible active run snapshot '{snapshot.branchId}' for the beta world loop. Starting a fresh run instead.");
+                    runSaveStore.ClearActiveRun(activeProfileSlotId);
+                    InitializeFresh(roomAsset, gameSessionState);
+                    return;
+                }
+
                 InitializeFromSnapshot(roomAsset, gameSessionState, snapshot);
                 return;
             }
@@ -416,6 +453,7 @@ namespace Hollow.Branches
             currentCoinPickups.Clear();
             roomChestStates.Clear();
             looseCoinPickupStates.Clear();
+            armedCorruptedChestId = string.Empty;
             latestPickupReveal = PickupRevealModel.Empty;
             pickupRevealSequence = 0;
             activeChallenge = IsDeveloperLab || IsSpaceshipHub ? null : ResolveActiveChallenge();
@@ -460,7 +498,7 @@ namespace Hollow.Branches
             {
                 State = BranchSessionState.Create(CreateFreshGraph());
             }
-            branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
+            branchFeaturePlan = CreateBranchFeaturePlanForGraph(State.Graph);
             proceduralRewardPlan = IsSpaceshipHub
                 ? ProceduralRewardPlan.Empty
                 : CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
@@ -510,6 +548,7 @@ namespace Hollow.Branches
             {
                 looseCoinPickupStates.AddRange(snapshot.looseCoinPickups);
             }
+            armedCorruptedChestId = string.Empty;
             activeChallenge = ResolveActiveChallenge(snapshot?.challengeId);
             proceduralRewardPlan = ProceduralRewardPlan.FromSaveState(snapshot?.proceduralRewardPlan);
             encounterPlan = EncounterPlan.FromSaveState(snapshot?.encounterPlan);
@@ -539,7 +578,7 @@ namespace Hollow.Branches
             bossKeyState = Enum.TryParse(snapshot?.bossKeyState, out BossKeyState parsedBossKeyState) ? parsedBossKeyState : BossKeyState.None;
             bossDoorUnlocked = snapshot?.bossDoorUnlocked ?? false;
             State = BranchSessionState.Create(CreateGraphForSnapshot(snapshot));
-            branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
+            branchFeaturePlan = CreateBranchFeaturePlanForGraph(State.Graph);
             interBranchHubState = InterBranchHubState.FromSaveState(snapshot?.interBranchHub, currentBranchSeed, branchDepth, standardRewardPool, weaponRewardPool, treasureRewardPool);
             if (IsProceduralRewardBranch(State.Graph.BranchId) && !proceduralRewardPlan.Rewards.Any())
             {
@@ -573,6 +612,19 @@ namespace Hollow.Branches
 
         private void OnDestroy()
         {
+            if (roomTransitionCoroutine != null)
+            {
+                StopCoroutine(roomTransitionCoroutine);
+                roomTransitionCoroutine = null;
+            }
+
+            if (branchPreloadCoroutine != null)
+            {
+                StopCoroutine(branchPreloadCoroutine);
+                branchPreloadCoroutine = null;
+            }
+
+            HideTransitionCurtain();
             if (playerDeathRouteCoroutine != null)
             {
                 StopCoroutine(playerDeathRouteCoroutine);
@@ -593,12 +645,13 @@ namespace Hollow.Branches
 
         private void Update()
         {
-            if (State == null || GameplayPauseState.IsPaused)
+            if (State == null || GameplayPauseState.IsPaused || roomTransitionActive)
             {
                 return;
             }
 
             TryCollectCoinPickupsByProximity();
+            TickEscapistEncounter();
             var input = GameplayInputReader.ReadCurrent();
             if (input.UseActiveItemPressed)
             {
@@ -629,6 +682,7 @@ namespace Hollow.Branches
                    TryClaimReward() ||
                    TryClaimHazardCoinPickup() ||
                    TryClaimReplacementPickup() ||
+                   TryUseSoulEaterOffer() ||
                    TryHandleNearestShopCard() ||
                    TryUseNextBranchPortal() ||
                    TryUseHubReturnPortal() ||
@@ -649,6 +703,38 @@ namespace Hollow.Branches
                 bossRoomActive);
         }
 
+        public string CreateLocationLabel()
+        {
+            return RunLocationLabelFormatter.Format(new RunLocationLabelContext(
+                IsSpaceshipHub,
+                IsDeveloperLab,
+                IsInInterBranchHub,
+                WorldIndex,
+                CurrentWorldBranchNumber(),
+                worldPhase,
+                CreateRunFramingSnapshot(runFramingCatalog)));
+        }
+
+        private int CurrentWorldBranchNumber()
+        {
+            if (worldPhase == RunWorldPhase.Prologue)
+            {
+                return 1;
+            }
+
+            if (!string.IsNullOrWhiteSpace(activeHubPortalId))
+            {
+                var choice = interBranchHubState.NextBranchChoices
+                    .FirstOrDefault(candidate => candidate.ChoiceId == activeHubPortalId);
+                if (choice != null)
+                {
+                    return choice.SlotIndex + 1;
+                }
+            }
+
+            return Mathf.Max(1, branchDepth + 1);
+        }
+
         private string ResolveBiomeIdForWorld(int nextWorldIndex)
         {
             var definition = RunWorldItineraryService.Resolve(runFramingCatalog, RunSeed, nextWorldIndex <= 0 ? 1 : nextWorldIndex);
@@ -667,7 +753,7 @@ namespace Hollow.Branches
 
         private bool TryTraverse(BranchConnection connection)
         {
-            if (State == null || connection == null || !State.CurrentRoom.IsCleared)
+            if (roomTransitionActive || State == null || connection == null || !State.CurrentRoom.IsCleared)
             {
                 return false;
             }
@@ -677,20 +763,47 @@ namespace Hollow.Branches
                 return false;
             }
 
+            roomTransitionCoroutine = StartCoroutine(TraverseStagedRoutine(connection));
+            return true;
+        }
+
+        private IEnumerator TraverseStagedRoutine(BranchConnection connection)
+        {
+            roomTransitionActive = true;
+            ShowTransitionCurtain();
+            var previousRoomId = State.CurrentRoomId;
             var preservedHealth = CaptureCurrentPlayerHealth();
             playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
-            State.EnterRoom(connection.ToRoomId);
-            LoadCurrentRoom(entryConnection: connection);
+            var succeeded = false;
+            using (M137PerformanceProfilerMarkers.RoomTransitionLoad.Auto())
+            {
+                State.EnterRoom(connection.ToRoomId);
+                yield return RunTransitionStage(LoadCurrentRoomStaged(entryConnection: connection));
+                succeeded = roomRuntimeRoot != null && roomRuntimeRoot.HasNavMeshBake;
+            }
+
+            if (!succeeded)
+            {
+                Debug.LogError($"Room transition to '{connection.ToRoomId.Value}' failed; restoring '{previousRoomId.Value}'.", this);
+                State.EnterRoom(previousRoomId);
+                LoadCurrentRoom();
+            }
+
+            M136PerformanceOperationCounters.ReportRoomTransition();
             RestoreCurrentPlayerHealth(preservedHealth);
             CheckpointActiveRun();
-            return true;
+            HideTransitionCurtain();
+            roomTransitionActive = false;
+            roomTransitionCoroutine = null;
         }
 
         public BranchMiniMapModel CreateMiniMapModel()
         {
             return IsSpaceshipHub
                 ? new BranchMiniMapModel(State, revealAll: true, room => SpaceshipBranchDefinition.LabelForRoom(room.Id.Value))
-                : new BranchMiniMapModel(State);
+                : new BranchMiniMapModel(State, revealAll: false, room => room.Role == BranchRoomRole.SpecialEncounter
+                    ? SpecialEncounterResolver.DisplayNameForAssetId(room.RuntimeRoomAssetId)
+                    : string.Empty);
         }
 
         public PlayerBuildHudModel CreatePlayerBuildHudModel()
@@ -836,10 +949,20 @@ namespace Hollow.Branches
                 State.CurrentRoom.MarkCleared();
             }
 
-            if (!IsSpaceshipHub && State.CurrentRoom.Role is BranchRoomRole.Treasure or BranchRoomRole.Secret && !State.CurrentRoom.IsCleared)
+            if (!IsSpaceshipHub && State.CurrentRoom.Role is BranchRoomRole.Reward or BranchRoomRole.Treasure or BranchRoomRole.Secret or BranchRoomRole.CorruptedChest && !State.CurrentRoom.IsCleared)
             {
                 State.CurrentRoom.MarkCleared();
                 State.CurrentRoom.MarkRewardPending();
+            }
+
+            var currentSpecialKind = CurrentSpecialEncounterKind();
+            if (!IsSpaceshipHub &&
+                State.CurrentRoom.Role == BranchRoomRole.SpecialEncounter &&
+                currentSpecialKind == SpecialEncounterKind.SoulEater &&
+                !State.CurrentRoom.IsCleared)
+            {
+                State.CurrentRoom.MarkCleared();
+                State.CurrentRoom.MarkRewardUnavailable();
             }
 
             roomCombatController.ConfigureInspectionMode(IsDeveloperLab ? InspectionEntityMode.FrozenRuntime : InspectionEntityMode.LiveRuntime, IsDeveloperLab);
@@ -847,12 +970,17 @@ namespace Hollow.Branches
                 roomRuntimeRoot,
                 playerController,
                 State.CurrentRoom.IsCleared || IsSpaceshipHub,
-                State.CurrentRoom.Role == BranchRoomRole.Boss ? RoomCombatEncounterKind.Boss : RoomCombatEncounterKind.Standard,
+                State.CurrentRoom.Role == BranchRoomRole.Boss
+                    ? RoomCombatEncounterKind.Boss
+                    : State.CurrentRoom.Role == BranchRoomRole.Wave
+                        ? RoomCombatEncounterKind.Wave
+                        : RoomCombatEncounterKind.Standard,
                 CreateEncounterContextForCurrentRoom());
             ApplyRunStatsToPlayer(healAmount: 0);
             SubscribePlayerDeath();
             UpdateDoorVisuals();
             SpawnSpaceshipTerminalsForCurrentRoom();
+            SpawnSpecialEncounterIfNeeded();
             playerController.transform.localPosition = RoomLocalCollision.ResolveNearestOccupiablePosition(
                 roomRuntimeRoot,
                 playerController.transform.localPosition,
@@ -874,7 +1002,324 @@ namespace Hollow.Branches
                 EnsureDebugSpawnMenu();
                 SpawnHubPortalIfReady();
             }
+
+            ScheduleBranchPreload();
             CheckpointActiveRun();
+        }
+
+        private IEnumerator LoadCurrentRoomStaged(Vector3? requestedPlayerLocalPosition = null, BranchConnection entryConnection = null)
+        {
+            yield return RunTransitionAction(DestroyTransientInteractables);
+            currentRoomAsset = ResolveCurrentRoomAsset();
+            yield return RunTransitionStage(roomRuntimeRoot.BuildFromStaged(currentRoomAsset, RoomNavMeshRuntimeFallbackMode.RequireCatalogBake));
+            if (!IsSpaceshipHub && State.CurrentRoom.Role == BranchRoomRole.Origin)
+            {
+                yield return RunTransitionAction(roomRuntimeRoot.ClearHazardsAndInteractiveObjects);
+            }
+
+            yield return RunTransitionAction(() => roomRuntimeRoot.ApplyInteractiveObjectState(DestroyedObjectIdsForCurrentRoom()));
+            var entryBiasDirection = entryConnection != null
+                ? BranchTraversalService.EntryInsetDirectionFor(entryConnection.ToDirection)
+                : Vector3.zero;
+            var playerLocalPosition = entryConnection != null
+                ? BranchTraversalService.EntryPositionFor(roomRuntimeRoot, entryConnection)
+                : requestedPlayerLocalPosition ?? currentRoomAsset.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
+            playerLocalPosition = RoomLocalCollision.ResolveNearestOccupiablePosition(
+                roomRuntimeRoot,
+                playerLocalPosition,
+                Hollow.Entities.PlaceholderPlayerController.DefaultRadiusMeters,
+                entryBiasDirection);
+            playerController.transform.localPosition = playerLocalPosition;
+            State.CurrentRoom.MarkVisited();
+            if (!IsSpaceshipHub && State.CurrentRoom.Role == BranchRoomRole.Origin && !State.CurrentRoom.IsCleared)
+            {
+                State.CurrentRoom.MarkCleared();
+            }
+
+            if (!IsSpaceshipHub && State.CurrentRoom.Role is BranchRoomRole.Reward or BranchRoomRole.Treasure or BranchRoomRole.Secret or BranchRoomRole.CorruptedChest && !State.CurrentRoom.IsCleared)
+            {
+                State.CurrentRoom.MarkCleared();
+                State.CurrentRoom.MarkRewardPending();
+            }
+
+            var currentSpecialKind = CurrentSpecialEncounterKind();
+            if (!IsSpaceshipHub &&
+                State.CurrentRoom.Role == BranchRoomRole.SpecialEncounter &&
+                currentSpecialKind == SpecialEncounterKind.SoulEater &&
+                !State.CurrentRoom.IsCleared)
+            {
+                State.CurrentRoom.MarkCleared();
+                State.CurrentRoom.MarkRewardUnavailable();
+            }
+
+            yield return WarmTransitionPools();
+            roomCombatController.ConfigureInspectionMode(IsDeveloperLab ? InspectionEntityMode.FrozenRuntime : InspectionEntityMode.LiveRuntime, IsDeveloperLab);
+            yield return RunTransitionStage(roomCombatController.BeginRoomStaged(
+                roomRuntimeRoot,
+                playerController,
+                State.CurrentRoom.IsCleared || IsSpaceshipHub,
+                State.CurrentRoom.Role == BranchRoomRole.Boss
+                    ? RoomCombatEncounterKind.Boss
+                    : State.CurrentRoom.Role == BranchRoomRole.Wave
+                        ? RoomCombatEncounterKind.Wave
+                        : RoomCombatEncounterKind.Standard,
+                CreateEncounterContextForCurrentRoom()));
+            yield return RunTransitionAction(() => ApplyRunStatsToPlayer(healAmount: 0));
+            yield return RunTransitionAction(SubscribePlayerDeath);
+            yield return RunTransitionAction(UpdateDoorVisuals);
+            yield return RunTransitionAction(SpawnSpaceshipTerminalsForCurrentRoom);
+            yield return RunTransitionAction(SpawnSpecialEncounterIfNeeded);
+            playerController.transform.localPosition = RoomLocalCollision.ResolveNearestOccupiablePosition(
+                roomRuntimeRoot,
+                playerController.transform.localPosition,
+                Hollow.Entities.PlaceholderPlayerController.DefaultRadiusMeters,
+                entryBiasDirection,
+                2.5f);
+            RewardApplicationService.RechargeActiveItem(playerRunBuild, usableItemCatalog);
+            ApplyRunStatsToPlayer(healAmount: 0);
+            VfxPresenter.Play(VfxCueId.DoorUnlock, roomRuntimeRoot.transform.position, roomRuntimeRoot.transform);
+            AudioPresenter.Play(AudioCueId.DoorUnlock, roomRuntimeRoot.transform.position);
+            yield return null;
+            if (!IsSpaceshipHub)
+            {
+                yield return RunTransitionAction(SpawnRewardIfNeeded);
+                yield return RunTransitionAction(SpawnHazardCoinPickupsForCurrentRoom);
+                yield return RunTransitionAction(SpawnSavedChestsForCurrentRoom);
+                yield return RunTransitionAction(SpawnLooseCoinPickupsForCurrentRoom);
+                yield return RunTransitionAction(SpawnReplacementPickupsForCurrentContext);
+                yield return RunTransitionAction(PopulateDeveloperLabRoomIfNeeded);
+                yield return RunTransitionAction(EnsureDebugSpawnMenu);
+                yield return RunTransitionAction(SpawnHubPortalIfReady);
+            }
+
+            ScheduleBranchPreload();
+        }
+
+        private IEnumerator WarmTransitionPools()
+        {
+            if (!Application.isPlaying)
+            {
+                yield break;
+            }
+
+            if (roomCombatController != null)
+            {
+                if (roomCombatController.ProjectilePrefab != null)
+                {
+                    yield return HollowRuntimePool.WarmPrefabPool(roomCombatController.ProjectilePrefab, 24, 4);
+                    yield return HollowRuntimePool.WarmPrefabPool(roomCombatController.ProjectilePrefab, 48, 4);
+                }
+
+                yield return HollowRuntimePool.WarmGeneratedPool("MeleeSwipe", 8, () => new GameObject("MeleeSwipe", typeof(MeshFilter), typeof(MeshRenderer)), 2);
+            }
+
+            if (rewardPickupPrefab != null)
+            {
+                yield return HollowRuntimePool.WarmPrefabPool(rewardPickupPrefab, 16, 4);
+            }
+
+            if (bossKeyPickupPrefab != null)
+            {
+                yield return HollowRuntimePool.WarmPrefabPool(bossKeyPickupPrefab, 4, 2);
+            }
+
+            if (nextBranchPortalPrefab != null)
+            {
+                yield return HollowRuntimePool.WarmPrefabPool(nextBranchPortalPrefab, 2, 1);
+            }
+
+            yield return HollowRuntimePool.WarmPrimitivePool("VFX.DoorUnlock.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool("Pickup.Coin.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmGeneratedPool("Audio.DoorUnlock", 12, () => new GameObject("Audio.DoorUnlock", typeof(AudioSource)), 4);
+        }
+
+        private void ScheduleBranchPreload()
+        {
+            if (!Application.isPlaying || !isActiveAndEnabled || State == null)
+            {
+                return;
+            }
+
+            branchPreloadVersion++;
+            if (branchPreloadCoroutine != null)
+            {
+                StopCoroutine(branchPreloadCoroutine);
+                branchPreloadCoroutine = null;
+            }
+
+            branchPreloadCoroutine = StartCoroutine(PreloadBranchCandidatesRoutine(branchPreloadVersion));
+        }
+
+        private IEnumerator PreloadBranchCandidatesRoutine(int version)
+        {
+            M136PerformanceOperationCounters.ReportBranchPreloadWarmRequest();
+            var rooms = BuildPreloadRoomList();
+            for (var index = 0; index < rooms.Count; index++)
+            {
+                if (version != branchPreloadVersion)
+                {
+                    M136PerformanceOperationCounters.ReportBranchPreloadSkippedStale();
+                    yield break;
+                }
+
+                PreloadRoomCaches(rooms[index]);
+                yield return null;
+            }
+
+            if (version != branchPreloadVersion)
+            {
+                M136PerformanceOperationCounters.ReportBranchPreloadSkippedStale();
+                yield break;
+            }
+
+            yield return WarmTransitionPools();
+            if (version == branchPreloadVersion)
+            {
+                M136PerformanceOperationCounters.ReportBranchPreloadWarmCompletion();
+            }
+            else
+            {
+                M136PerformanceOperationCounters.ReportBranchPreloadSkippedStale();
+            }
+
+            branchPreloadCoroutine = null;
+        }
+
+        private List<BranchRoomState> BuildPreloadRoomList()
+        {
+            return BranchPreloadPlanner.BuildPreloadRoomList(State, branchRuntimeCache.Policy.MaxPredictivePreloadRooms);
+        }
+
+        private void PreloadRoomCaches(BranchRoomState room)
+        {
+            var asset = ResolveRoomAssetForState(room);
+            if (asset == null)
+            {
+                return;
+            }
+
+            RoomRuntimeDescriptorCache.GetOrCreate(asset);
+            RoomBiomePresentationResolver.Prewarm(asset.BiomeId);
+            var catalog = RoomNavMeshCatalogDefinition.LoadDefault();
+            if (catalog != null)
+            {
+                catalog.TryGetNavMeshData(asset.Id, out _, out _);
+            }
+
+            if (room != null && encounterPlan.TryResolve(room.Id.Value, out var assignment))
+            {
+                PrewarmEncounterPresentation(assignment);
+            }
+        }
+
+        private static void PrewarmEncounterPresentation(RoomEncounterAssignment assignment)
+        {
+            if (assignment == null || assignment.EnemySpawnKinds == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < assignment.EnemySpawnKinds.Count; index++)
+            {
+                var role = EnemyPresentationRoleForSpawnKind(assignment.EnemySpawnKinds[index]);
+                PresentationPrefabResolver.Resolve(role);
+                MaterialResolver.Resolve(EnemyMaterialRoleForSpawnKind(assignment.EnemySpawnKinds[index]));
+            }
+        }
+
+        private static PresentationPrefabRole EnemyPresentationRoleForSpawnKind(string spawnKind)
+        {
+            return spawnKind switch
+            {
+                "spawnEnemyFlying" => PresentationPrefabRole.EnemyFlying,
+                "spawnEnemyFast" => PresentationPrefabRole.EnemyFast,
+                "spawnEnemyHeavy" => PresentationPrefabRole.EnemyHeavy,
+                "spawnEnemyCharger" => PresentationPrefabRole.EnemyCharger,
+                "spawnEnemyTurret" => PresentationPrefabRole.EnemyTurret,
+                "spawnEnemySplitter" => PresentationPrefabRole.EnemySplitter,
+                "spawnEnemyRat" => PresentationPrefabRole.EnemyRat,
+                "spawnEnemySpider" => PresentationPrefabRole.EnemySpider,
+                "spawnEnemySoulEater" => PresentationPrefabRole.EnemySoulEater,
+                _ => PresentationPrefabRole.EnemyNormal
+            };
+        }
+
+        private static MaterialRole EnemyMaterialRoleForSpawnKind(string spawnKind)
+        {
+            return spawnKind switch
+            {
+                "spawnEnemyFlying" => MaterialRole.EnemyFlying,
+                "spawnEnemyFast" => MaterialRole.EnemyFast,
+                "spawnEnemyHeavy" => MaterialRole.EnemyHeavy,
+                "spawnEnemyCharger" => MaterialRole.EnemyCharger,
+                "spawnEnemyTurret" => MaterialRole.EnemyTurret,
+                "spawnEnemySplitter" => MaterialRole.EnemySplitter,
+                "spawnEnemyRat" => MaterialRole.EnemyRat,
+                "spawnEnemySpider" => MaterialRole.EnemySpider,
+                "spawnEnemySoulEater" => MaterialRole.EnemySoulEater,
+                _ => MaterialRole.EnemyNormal
+            };
+        }
+
+        private static IEnumerator RunTransitionAction(Action action)
+        {
+            var started = Time.realtimeSinceStartup;
+            var startingGc = GC.GetTotalMemory(false);
+            action?.Invoke();
+            M136PerformanceOperationCounters.ReportTransitionStage(
+                (Time.realtimeSinceStartup - started) * 1000f,
+                Math.Max(0L, GC.GetTotalMemory(false) - startingGc));
+            yield return null;
+        }
+
+        private static IEnumerator RunTransitionStage(IEnumerator stage)
+        {
+            while (stage != null)
+            {
+                var started = Time.realtimeSinceStartup;
+                var startingGc = GC.GetTotalMemory(false);
+                if (!stage.MoveNext())
+                {
+                    yield break;
+                }
+
+                M136PerformanceOperationCounters.ReportTransitionStage(
+                    (Time.realtimeSinceStartup - started) * 1000f,
+                    Math.Max(0L, GC.GetTotalMemory(false) - startingGc));
+                yield return stage.Current;
+            }
+        }
+
+        private void ShowTransitionCurtain()
+        {
+            if (transitionCurtainRoot != null)
+            {
+                transitionCurtainRoot.SetActive(true);
+                return;
+            }
+
+            transitionCurtainRoot = new GameObject("RoomTransitionCurtain", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(Image));
+            var canvas = transitionCurtainRoot.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 5000;
+            var scaler = transitionCurtainRoot.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            var rect = transitionCurtainRoot.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var image = transitionCurtainRoot.GetComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0.82f);
+        }
+
+        private void HideTransitionCurtain()
+        {
+            if (transitionCurtainRoot != null)
+            {
+                transitionCurtainRoot.SetActive(false);
+            }
         }
 
         private void OnRoomCleared(RoomCombatController _)
@@ -886,6 +1331,29 @@ namespace Hollow.Branches
 
             State.CurrentRoom.MarkCleared();
             RewardApplicationService.RechargeActiveItem(playerRunBuild, usableItemCatalog);
+            if (State.CurrentRoom.Role == BranchRoomRole.SpecialEncounter)
+            {
+                var specialKind = CurrentSpecialEncounterKind();
+                if (specialKind == SpecialEncounterKind.Escapist)
+                {
+                    currentEscapistActive = false;
+                    currentEscapistTarget = null;
+                    roomCombatController?.ClearRuntimeStatusOverride();
+                    State.CurrentRoom.MarkRewardPending();
+                }
+                else
+                {
+                    State.CurrentRoom.MarkRewardUnavailable();
+                }
+
+                UpdateDoorVisuals();
+                SpawnRewardIfNeeded();
+                SpawnHubPortalIfReady();
+                ScheduleBranchPreload();
+                CheckpointActiveRun();
+                return;
+            }
+
             if (State.CurrentRoom.Id != BranchRoomId.Origin)
             {
                 State.CurrentRoom.MarkRewardPending();
@@ -894,18 +1362,169 @@ namespace Hollow.Branches
             UpdateDoorVisuals();
             SpawnRewardIfNeeded();
             SpawnHubPortalIfReady();
+            ScheduleBranchPreload();
         }
 
         private void OnEnemyDefeated(EnemyRuntimeController enemy)
         {
             if (enemy == null ||
                 enemy.BossDefinition != null ||
-                enemy.ArchetypeId == EnemyArchetypeId.Boss)
+                enemy.ArchetypeId == EnemyArchetypeId.Boss ||
+                SpecialEncounterResolver.IsEscapistSpawnKind(enemy.Definition?.SpawnKind))
             {
                 return;
             }
 
             runEconomy.AddSouls(EnemyKillSoulReward);
+            CheckpointActiveRun();
+        }
+
+        private SpecialEncounterKind CurrentSpecialEncounterKind()
+        {
+            return State?.CurrentRoom?.Role == BranchRoomRole.SpecialEncounter
+                ? SpecialEncounterResolver.KindForRoomAssetId(State.CurrentRoom.RuntimeRoomAssetId)
+                : SpecialEncounterKind.None;
+        }
+
+        private void SpawnSpecialEncounterIfNeeded()
+        {
+            if (IsSpaceshipHub || State?.CurrentRoom == null || State.CurrentRoom.Role != BranchRoomRole.SpecialEncounter)
+            {
+                return;
+            }
+
+            var kind = CurrentSpecialEncounterKind();
+            if (kind == SpecialEncounterKind.SoulEater)
+            {
+                SpawnSoulEaterEncounter();
+            }
+            else if (kind == SpecialEncounterKind.Escapist && !State.CurrentRoom.IsCleared)
+            {
+                StartEscapistEncounter();
+            }
+        }
+
+        private void SpawnSoulEaterEncounter()
+        {
+            if (playerController == null || currentSoulEaterEncounter != null)
+            {
+                return;
+            }
+
+            var spawn = currentRoomAsset?.EnemySpawns?.FirstOrDefault(candidate => candidate != null && candidate.kind == "spawnEnemySoulEater");
+            var localPosition = spawn?.position?.ToUnityVector3() ?? new Vector3(0f, 0f, -1.25f);
+            var parent = playerController.transform.parent;
+            currentSoulEaterEncounter = new GameObject("SoulEaterSpecialEncounter");
+            currentSoulEaterEncounter.transform.SetParent(parent, false);
+            currentSoulEaterEncounter.transform.localPosition = new Vector3(localPosition.x, 0f, localPosition.z);
+            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemySoulEater, currentSoulEaterEncounter.transform, Vector3.zero, Vector3.one);
+
+            AddShipLabel(
+                currentSoulEaterEncounter.transform,
+                $"Soul Eater\n{SpecialEncounterResolver.SoulEaterSoulPrice} Souls",
+                new Vector3(0f, 1.15f, 0f),
+                0.055f,
+                new Color(0.86f, 0.66f, 1f, 0.96f));
+
+            currentSoulEaterAltar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            currentSoulEaterAltar.name = "SoulEaterOfferingAltar";
+            currentSoulEaterAltar.transform.SetParent(parent, false);
+            currentSoulEaterAltar.transform.localPosition = new Vector3(localPosition.x, 0.13f, localPosition.z + 0.78f);
+            currentSoulEaterAltar.transform.localScale = new Vector3(1.15f, 0.26f, 0.72f);
+            MaterialResolver.ApplyTo(currentSoulEaterAltar, MaterialRole.SecretDoorDebug);
+            if (currentSoulEaterAltar.TryGetComponent<Collider>(out var collider))
+            {
+                collider.enabled = false;
+            }
+
+            var glow = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            glow.name = "SoulEaterOfferingGlow";
+            glow.transform.SetParent(currentSoulEaterAltar.transform, false);
+            glow.transform.localPosition = new Vector3(0f, 0.82f, 0f);
+            glow.transform.localScale = Vector3.one * 0.28f;
+            MaterialResolver.ApplyTo(glow, MaterialRole.RewardPickup);
+            if (glow.TryGetComponent<Collider>(out var glowCollider))
+            {
+                glowCollider.enabled = false;
+            }
+        }
+
+        private void StartEscapistEncounter()
+        {
+            if (roomCombatController == null)
+            {
+                return;
+            }
+
+            currentEscapistTarget = roomCombatController.Enemies
+                .FirstOrDefault(enemy => enemy != null && enemy.IsAlive && SpecialEncounterResolver.IsEscapistSpawnKind(enemy.Definition?.SpawnKind));
+            if (currentEscapistTarget == null)
+            {
+                currentEscapistActive = false;
+                roomCombatController.ClearRuntimeStatusOverride();
+                State.CurrentRoom.MarkCleared();
+                State.CurrentRoom.MarkRewardUnavailable();
+                LastRewardMessage = "Escapist escaped";
+                UpdateDoorVisuals();
+                CheckpointActiveRun();
+                return;
+            }
+
+            currentEscapistActive = true;
+            currentEscapistEscapeEndsAt = Time.time + SpecialEncounterResolver.EscapistTimerSeconds;
+            roomCombatController.SetRuntimeStatusOverride($"Escapist {Mathf.CeilToInt(SpecialEncounterResolver.EscapistTimerSeconds)}s");
+        }
+
+        private void TickEscapistEncounter()
+        {
+            if (!currentEscapistActive || State?.CurrentRoom == null)
+            {
+                return;
+            }
+
+            if (State.CurrentRoom.Role != BranchRoomRole.SpecialEncounter ||
+                CurrentSpecialEncounterKind() != SpecialEncounterKind.Escapist ||
+                State.CurrentRoom.IsCleared)
+            {
+                currentEscapistActive = false;
+                currentEscapistTarget = null;
+                roomCombatController?.ClearRuntimeStatusOverride();
+                return;
+            }
+
+            if (currentEscapistTarget == null || !currentEscapistTarget.IsAlive)
+            {
+                currentEscapistActive = false;
+                currentEscapistTarget = null;
+                roomCombatController?.ClearRuntimeStatusOverride();
+                return;
+            }
+
+            var remaining = Mathf.Max(0f, currentEscapistEscapeEndsAt - Time.time);
+            roomCombatController?.SetRuntimeStatusOverride($"Escapist {Mathf.CeilToInt(remaining)}s");
+            if (remaining > 0f)
+            {
+                return;
+            }
+
+            ResolveEscapistTimeout();
+        }
+
+        private void ResolveEscapistTimeout()
+        {
+            currentEscapistActive = false;
+            currentEscapistTarget = null;
+            roomCombatController?.ForceClearRoomWithoutReward();
+            if (State?.CurrentRoom != null)
+            {
+                State.CurrentRoom.MarkCleared();
+                State.CurrentRoom.MarkRewardUnavailable();
+            }
+
+            LastRewardMessage = "Escapist escaped. No reward.";
+            ShowStatusReveal("Escapist", LastRewardMessage, new Color(0.56f, 0.9f, 1f, 1f));
+            UpdateDoorVisuals();
+            SpawnHubPortalIfReady();
             CheckpointActiveRun();
         }
 
@@ -927,11 +1546,19 @@ namespace Hollow.Branches
                         ShipTerminalPosition("ship_terminal_sterilization", new Vector3(-2.6f, 0.45f, -1.85f)),
                         MaterialRole.SecretDoorDebug);
                     break;
+                case SpaceshipBranchDefinition.MainHallRoomId:
+                    AddShipTerminal(
+                        SpaceshipTerminalKind.ShipLog,
+                        "ship_log",
+                        ShipLogDisplayName,
+                        ShipTerminalPosition("ship_terminal_log", new Vector3(-2.4f, 0.45f, -1.2f)),
+                        MaterialRole.SecretDoorDebug);
+                    break;
                 case SpaceshipBranchDefinition.DeparturesRoomId:
                     AddShipTerminal(
                         SpaceshipTerminalKind.Departures,
                         "normal_expedition",
-                        "Departures",
+                        PortalEngineDisplayName,
                         ShipTerminalPosition("ship_terminal_departures", new Vector3(0f, 0.45f, 0f)),
                         MaterialRole.HubReturnPortal);
                     AddShipBox("ShipTeleportPlatform", new Vector3(1.2f, 0.08f, 0f), new Vector3(1.6f, 0.16f, 1.6f), MaterialRole.HubReturnPortal);
@@ -985,7 +1612,7 @@ namespace Hollow.Branches
                 AddShipTerminal(
                     SpaceshipTerminalKind.TechnologyUpgrade,
                     upgrade.UpgradeId,
-                    $"{upgrade.DisplayName}\n{upgrade.SoulCost} souls",
+                    $"{upgrade.DisplayName}\n{upgrade.SoulCost} Banked Souls",
                     ShipTerminalPosition($"ship_terminal_upgrade_{index}", new Vector3(startX + index * spacing, 0.45f, 0f)),
                     MaterialRole.BossKeyPickup);
             }
@@ -1073,8 +1700,16 @@ namespace Hollow.Branches
                 SpaceshipTerminalKind.Departures => TryLaunchNormalExpeditionFromShip(),
                 SpaceshipTerminalKind.MissionChallenge => TryLaunchShipChallenge(terminal.PayloadId),
                 SpaceshipTerminalKind.TechnologyUpgrade => TryPurchaseShipUpgrade(terminal.PayloadId),
+                SpaceshipTerminalKind.ShipLog => TryReadShipLog(),
                 _ => false
             };
+        }
+
+        private bool TryReadShipLog()
+        {
+            LastRewardMessage = ShipLogMessage;
+            SaveStatus = ShipLogDisplayName;
+            return true;
         }
 
         private bool TryUnlockSpaceshipQuarantine()
@@ -1176,7 +1811,7 @@ namespace Hollow.Branches
 
             context.UpdateSelectedProfile(updated);
             BankedSouls = updated.BankedSouls;
-            LastRewardMessage = $"{upgrade.DisplayName} purchased.";
+            LastRewardMessage = $"{upgrade.DisplayName} installed.";
             playerRunBuild = new PlayerRunBuild();
             ApplySelectedCharacterForFreshRun();
             ApplyRunStatsToPlayer(Mathf.RoundToInt(playerRunBuild.DerivedStats.MaxHealth));
@@ -1283,6 +1918,55 @@ namespace Hollow.Branches
             return true;
         }
 
+        private bool TryUseSoulEaterOffer()
+        {
+            if (State?.CurrentRoom == null ||
+                State.CurrentRoom.Role != BranchRoomRole.SpecialEncounter ||
+                CurrentSpecialEncounterKind() != SpecialEncounterKind.SoulEater ||
+                playerController == null ||
+                currentSoulEaterEncounter == null)
+            {
+                return false;
+            }
+
+            if (Vector3.Distance(Flat(playerController.transform.localPosition), Flat(currentSoulEaterEncounter.transform.localPosition)) > RewardInteractionRadiusMeters)
+            {
+                return false;
+            }
+
+            var offerRoomId = SpecialEncounterResolver.SoulEaterRewardContextId(State.CurrentRoomId.Value);
+            if (runEconomy.HasCollectedRoomReward(offerRoomId))
+            {
+                LastRewardMessage = "Soul Eater offer claimed";
+                ShowStatusReveal("Soul Eater", "Offer claimed.", new Color(0.72f, 0.38f, 1f, 1f));
+                return true;
+            }
+
+            if (runEconomy.RunSouls < SpecialEncounterResolver.SoulEaterSoulPrice)
+            {
+                LastRewardMessage = $"Need {SpecialEncounterResolver.SoulEaterSoulPrice} Souls";
+                ShowStatusReveal("Soul Eater", LastRewardMessage, new Color(0.72f, 0.38f, 1f, 1f));
+                return true;
+            }
+
+            var grant = SpecialEncounterResolver.ResolveSoulEaterOffer(State.Graph.BranchId, State.Graph.Seed, State.CurrentRoomId.Value);
+            if (!runEconomy.SpendSouls(SpecialEncounterResolver.SoulEaterSoulPrice))
+            {
+                LastRewardMessage = $"Need {SpecialEncounterResolver.SoulEaterSoulPrice} Souls";
+                ShowStatusReveal("Soul Eater", LastRewardMessage, new Color(0.72f, 0.38f, 1f, 1f));
+                return true;
+            }
+
+            var result = ApplyRewardGrant(grant);
+            LastRewardMessage = result.Applied
+                ? $"Soul Eater: {grant.DisplayName} gained. -{SpecialEncounterResolver.SoulEaterSoulPrice} Souls."
+                : "Soul Eater offer unavailable";
+            ShowStatusReveal("Soul Eater", LastRewardMessage, new Color(0.72f, 0.38f, 1f, 1f));
+            State.CurrentRoom.MarkRewardUnavailable();
+            CheckpointActiveRun();
+            return true;
+        }
+
         private bool TryOpenNearestChest()
         {
             if (playerController == null || State == null || currentRoomChests.Count == 0)
@@ -1290,19 +1974,50 @@ namespace Hollow.Branches
                 return false;
             }
 
-            var nearest = currentRoomChests
-                .Where(chest => chest != null && !chest.IsOpened)
-                .OrderBy(chest => Vector3.Distance(Flat(playerController.transform.localPosition), Flat(chest.transform.localPosition)))
-                .FirstOrDefault();
+            var playerFlatPosition = Flat(playerController.transform.localPosition);
+            RoomChestController nearest = null;
+            var nearestDistance = float.PositiveInfinity;
+            for (var index = 0; index < currentRoomChests.Count; index++)
+            {
+                var chest = currentRoomChests[index];
+                if (chest == null || chest.IsOpened)
+                {
+                    continue;
+                }
+
+                var distance = Vector3.Distance(playerFlatPosition, Flat(chest.transform.localPosition));
+                if (distance >= nearestDistance)
+                {
+                    continue;
+                }
+
+                nearest = chest;
+                nearestDistance = distance;
+            }
+
             if (nearest == null ||
-                Vector3.Distance(Flat(playerController.transform.localPosition), Flat(nearest.transform.localPosition)) > RewardInteractionRadiusMeters ||
-                !nearest.Open())
+                nearestDistance > RewardInteractionRadiusMeters)
             {
                 return false;
             }
 
             var state = FindChestState(nearest.RoomId, nearest.ChestId);
             if (state == null)
+            {
+                return false;
+            }
+
+            if (nearest.Kind == ChestKind.Corrupted &&
+                !string.Equals(armedCorruptedChestId, nearest.ChestId, StringComparison.Ordinal))
+            {
+                armedCorruptedChestId = nearest.ChestId;
+                LastRewardMessage = CorruptedChestWarningMessage;
+                ShowStatusReveal("Corrupted Chest", CorruptedChestWarningMessage, new Color(0.8f, 0.22f, 0.92f, 1f));
+                return true;
+            }
+
+            armedCorruptedChestId = string.Empty;
+            if (!nearest.Open())
             {
                 return false;
             }
@@ -1326,9 +2041,12 @@ namespace Hollow.Branches
             }
 
             var collectedAny = false;
-            foreach (var pickup in currentCoinPickups.Where(pickup => pickup != null && !pickup.IsCollected).ToArray())
+            var playerFlatPosition = Flat(playerController.transform.localPosition);
+            for (var index = currentCoinPickups.Count - 1; index >= 0; index--)
             {
-                if (Vector3.Distance(Flat(playerController.transform.localPosition), Flat(pickup.transform.localPosition)) > CoinPickupRadiusMeters ||
+                var pickup = currentCoinPickups[index];
+                if (pickup == null || pickup.IsCollected ||
+                    Vector3.Distance(playerFlatPosition, Flat(pickup.transform.localPosition)) > CoinPickupRadiusMeters ||
                     !pickup.Collect())
                 {
                     continue;
@@ -1349,7 +2067,7 @@ namespace Hollow.Branches
                     ShowPickupReveal(grant, null);
                 }
 
-                currentCoinPickups.Remove(pickup);
+                currentCoinPickups.RemoveAt(index);
                 DestroyRuntimeObject(pickup.gameObject);
                 VfxPresenter.Play(VfxCueId.CoinPickup, playerController.transform.position, playerController.transform.parent);
                 AudioPresenter.Play(AudioCueId.CoinPickup, playerController.transform.position);
@@ -1371,12 +2089,29 @@ namespace Hollow.Branches
                 return false;
             }
 
-            var nearest = currentReplacementPickups
-                .Where(pickup => pickup != null)
-                .OrderBy(pickup => Vector3.Distance(Flat(playerController.transform.localPosition), Flat(pickup.transform.localPosition)))
-                .FirstOrDefault();
+            var playerFlatPosition = Flat(playerController.transform.localPosition);
+            ReplacementPickup nearest = null;
+            var nearestDistance = float.PositiveInfinity;
+            for (var index = 0; index < currentReplacementPickups.Count; index++)
+            {
+                var pickup = currentReplacementPickups[index];
+                if (pickup == null)
+                {
+                    continue;
+                }
+
+                var distance = Vector3.Distance(playerFlatPosition, Flat(pickup.transform.localPosition));
+                if (distance >= nearestDistance)
+                {
+                    continue;
+                }
+
+                nearest = pickup;
+                nearestDistance = distance;
+            }
+
             if (nearest == null ||
-                Vector3.Distance(Flat(playerController.transform.localPosition), Flat(nearest.transform.localPosition)) > RewardInteractionRadiusMeters ||
+                nearestDistance > RewardInteractionRadiusMeters ||
                 !nearest.Claim())
             {
                 return false;
@@ -1408,12 +2143,29 @@ namespace Hollow.Branches
                 return false;
             }
 
-            var nearest = currentHazardCoinPickups
-                .Where(pickup => pickup != null && !pickup.IsClaimed)
-                .OrderBy(pickup => Vector3.Distance(Flat(playerController.transform.localPosition), Flat(pickup.transform.localPosition)))
-                .FirstOrDefault();
+            var playerFlatPosition = Flat(playerController.transform.localPosition);
+            HazardCoinPickup nearest = null;
+            var nearestDistance = float.PositiveInfinity;
+            for (var index = 0; index < currentHazardCoinPickups.Count; index++)
+            {
+                var pickup = currentHazardCoinPickups[index];
+                if (pickup == null || pickup.IsClaimed)
+                {
+                    continue;
+                }
+
+                var distance = Vector3.Distance(playerFlatPosition, Flat(pickup.transform.localPosition));
+                if (distance >= nearestDistance)
+                {
+                    continue;
+                }
+
+                nearest = pickup;
+                nearestDistance = distance;
+            }
+
             if (nearest == null ||
-                Vector3.Distance(Flat(playerController.transform.localPosition), Flat(nearest.transform.localPosition)) > RewardInteractionRadiusMeters ||
+                nearestDistance > RewardInteractionRadiusMeters ||
                 !nearest.Claim())
             {
                 return false;
@@ -1676,7 +2428,7 @@ namespace Hollow.Branches
             }
             HubReturnRequested = false;
             State = BranchSessionState.Create(CreateWorldLoopGraph(currentBranchSeed));
-            branchFeaturePlan = BranchFeaturePlan.Create(State.Graph);
+            branchFeaturePlan = CreateBranchFeaturePlanForGraph(State.Graph);
             proceduralRewardPlan = CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
             encounterPlan = CreateEncounterPlanForGraph(State.Graph);
             LoadCurrentRoom();
@@ -1759,7 +2511,9 @@ namespace Hollow.Branches
             }
 
             SpawnChest(state);
-            LastRewardMessage = state.kind == ChestKind.Golden.ToString() ? "Golden chest appeared" : "Chest appeared";
+            LastRewardMessage = state.kind == ChestKind.Corrupted.ToString()
+                ? "Corrupted chest appeared"
+                : state.kind == ChestKind.Golden.ToString() ? "Golden chest appeared" : "Chest appeared";
             CheckpointActiveRun();
         }
 
@@ -1769,7 +2523,7 @@ namespace Hollow.Branches
             var kind = ChestRewardResolver.KindForGrant(grant);
             var contents = ChestRewardResolver.ResolveContents(State.Graph.BranchId, State.Graph.Seed, roomId, kind);
             var contentGrant = contents.RewardGrant;
-            var position = CurrentRewardSpawnPosition(preferChestMarker: true);
+            var position = CurrentRewardSpawnPosition(preferChestMarker: true, kind);
             return new RunChestStateSave
             {
                 roomId = roomId,
@@ -1809,7 +2563,7 @@ namespace Hollow.Branches
 
             var kind = Enum.TryParse(state.kind, out ChestKind parsedKind) ? parsedKind : ChestKind.Normal;
             var chestState = Enum.TryParse(state.state, out ChestState parsedState) ? parsedState : ChestState.Unopened;
-            var role = kind == ChestKind.Golden ? PresentationPrefabRole.ChestGolden : PresentationPrefabRole.ChestNormal;
+            var role = PresentationRoleForChest(kind);
             var chestObject = new GameObject($"Chest_{kind}_{state.chestId}");
             chestObject.transform.SetParent(playerController.transform.parent, false);
             chestObject.transform.localPosition = new Vector3(state.localX, 0f, state.localZ);
@@ -1819,6 +2573,16 @@ namespace Hollow.Branches
             currentRoomChests.Add(chest);
         }
 
+        private static PresentationPrefabRole PresentationRoleForChest(ChestKind kind)
+        {
+            return kind switch
+            {
+                ChestKind.Golden => PresentationPrefabRole.ChestGolden,
+                ChestKind.Corrupted => PresentationPrefabRole.ChestCorrupted,
+                _ => PresentationPrefabRole.ChestNormal
+            };
+        }
+
         private void ApplyChestContents(RunChestStateSave state, Vector3 chestPosition)
         {
             if (state == null)
@@ -1826,6 +2590,7 @@ namespace Hollow.Branches
                 return;
             }
 
+            var isCorrupted = string.Equals(state.kind, ChestKind.Corrupted.ToString(), StringComparison.Ordinal);
             if (state.contentCoins > 0)
             {
                 SpawnCoinsForValue(
@@ -1854,6 +2619,30 @@ namespace Hollow.Branches
             {
                 LastRewardMessage = "Chest was empty";
             }
+
+            if (isCorrupted)
+            {
+                ApplyCorruptedChestCurse(state);
+            }
+        }
+
+        private void ApplyCorruptedChestCurse(RunChestStateSave state)
+        {
+            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+            var sourceId = $"{CorruptedChestCurseSourcePrefix}{State?.Graph?.BranchId}:{State?.Graph?.Seed ?? 0}:{state.chestId}";
+            if (!playerRunBuild.Modifiers.Any(modifier => string.Equals(modifier.sourceId, sourceId, StringComparison.Ordinal)))
+            {
+                playerRunBuild.AddModifier(new PlayerStatModifier
+                {
+                    sourceId = sourceId,
+                    maxHealth = -1
+                });
+            }
+
+            ApplyRunStatsToPlayer(0);
+            var rewardName = string.IsNullOrWhiteSpace(state.contentDisplayName) ? "Rare reward" : state.contentDisplayName;
+            LastRewardMessage = $"Corrupted Chest: {rewardName} gained. -1 max HP for this run.";
+            ShowStatusReveal("Corrupted Chest", $"{rewardName} gained. -1 max HP for this run.", new Color(0.8f, 0.22f, 0.92f, 1f));
         }
 
         private RewardGrant RewardGrantFromChestState(RunChestStateSave state)
@@ -1884,12 +2673,13 @@ namespace Hollow.Branches
             return roomChestStates.FirstOrDefault(candidate => candidate != null && candidate.roomId == roomId && candidate.chestId == chestId);
         }
 
-        private Vector3 CurrentRewardSpawnPosition(bool preferChestMarker)
+        private Vector3 CurrentRewardSpawnPosition(bool preferChestMarker, ChestKind chestKind = ChestKind.Normal)
         {
             if (currentRoomAsset?.ItemSpawns != null)
             {
                 var marker = preferChestMarker
-                    ? currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeChestMarkerKind)
+                    ? PreferredChestMarker(chestKind) ??
+                      currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeChestMarkerKind)
                     : null;
                 marker ??= currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeRewardMarkerKind);
                 if (marker?.position != null)
@@ -1900,6 +2690,21 @@ namespace Hollow.Branches
 
             var safeStart = currentRoomAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             return new Vector3(Mathf.Clamp(safeStart.x + 1.2f, -2.5f, 2.5f), 0.35f, Mathf.Clamp(safeStart.z + 0.8f, -1.5f, 1.5f));
+        }
+
+        private ImportedSpawnPoint PreferredChestMarker(ChestKind chestKind)
+        {
+            if (currentRoomAsset?.ItemSpawns == null)
+            {
+                return null;
+            }
+
+            return chestKind switch
+            {
+                ChestKind.Golden => currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeGoldenChestMarkerKind),
+                ChestKind.Corrupted => currentRoomAsset.ItemSpawns.FirstOrDefault(spawn => spawn?.kind == RuntimeCorruptedChestMarkerKind),
+                _ => null
+            };
         }
 
         private void SpawnReplacementPickupsForCurrentContext()
@@ -2314,6 +3119,22 @@ namespace Hollow.Branches
         private void DestroyTransientInteractables()
         {
             DestroyShipTerminals();
+            armedCorruptedChestId = string.Empty;
+            currentEscapistActive = false;
+            currentEscapistTarget = null;
+            roomCombatController?.ClearRuntimeStatusOverride();
+
+            if (currentSoulEaterEncounter != null)
+            {
+                DestroyRuntimeObject(currentSoulEaterEncounter);
+                currentSoulEaterEncounter = null;
+            }
+
+            if (currentSoulEaterAltar != null)
+            {
+                DestroyRuntimeObject(currentSoulEaterAltar);
+                currentSoulEaterAltar = null;
+            }
 
             if (currentRewardPickup != null)
             {
@@ -2418,11 +3239,26 @@ namespace Hollow.Branches
                 portalObject.transform.localScale = choice.Kind == HubPortalKind.Branch && choice.State == HubBranchPortalState.Defeated
                     ? new Vector3(0.36f, 0.035f, 0.36f)
                     : choice.Kind == HubPortalKind.Branch ? new Vector3(0.42f, 0.08f, 0.42f) : new Vector3(0.55f, 0.1f, 0.55f);
-                PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.NextBranchPortal, portalObject.transform, Vector3.zero, Vector3.one);
                 var portal = portalObject.GetComponent<NextBranchPortal>() ?? portalObject.AddComponent<NextBranchPortal>();
-                portal.Configure(choice, DisplayNameForHubChoice(choice));
+                portal.Configure(choice, DisplayNameForHubChoice(choice), BiomeIdForHubChoice(choice));
                 currentNextBranchPortals.Add(portal);
             }
+        }
+
+        private string BiomeIdForHubChoice(NextBranchChoice choice)
+        {
+            if (choice == null)
+            {
+                return ActiveBiomeId;
+            }
+
+            if (choice.Kind == HubPortalKind.Branch || choice.Kind == HubPortalKind.NextWorld)
+            {
+                var nextWorld = RunWorldItineraryService.Resolve(runFramingCatalog, RunSeed, choice.WorldIndex);
+                return nextWorld != null ? nextWorld.BiomeId : ActiveBiomeId;
+            }
+
+            return ActiveBiomeId;
         }
 
         private string DisplayNameForHubChoice(NextBranchChoice choice)
@@ -2446,7 +3282,7 @@ namespace Hollow.Branches
 
             if (choice.Kind == HubPortalKind.FinalExtraction)
             {
-                return "Temporary Extraction";
+                return "Return to Ship";
             }
 
             return choice.DisplayName;
@@ -2505,7 +3341,7 @@ namespace Hollow.Branches
 
         private void ResolveBranchContent()
         {
-            branchContent = BranchSessionContent.Create(roomAsset, branchRoomTemplateCatalog, macroBranchSeed, out var error);
+            branchContent = branchRuntimeCache.GetOrCreateContent(roomAsset, branchRoomTemplateCatalog, macroBranchSeed, out var error);
             if (!string.IsNullOrWhiteSpace(error))
             {
                 Debug.LogWarning($"Branch template catalog import warning: {error}");
@@ -2657,7 +3493,9 @@ namespace Hollow.Branches
             var seed = currentBranchSeed == 0 ? macroBranchSeed : currentBranchSeed;
             if (IsDeveloperLab && branchContent != null)
             {
-                return DeveloperInspectionBranchBuilder.CreateGraph(branchContent, DeveloperLabDefinition.Seed);
+                return branchRuntimeCache.GetOrCreateGraph(
+                    BranchGraphCacheKey("developer_lab", DeveloperLabDefinition.Seed, worldIndex),
+                    () => DeveloperInspectionBranchBuilder.CreateGraph(branchContent, DeveloperLabDefinition.Seed));
             }
 
             if (branchContent != null && branchContent.HasMacroFixturePool)
@@ -2672,21 +3510,41 @@ namespace Hollow.Branches
                         }
 
                         return branchGenerationSettings.EnableTreasureLeaf
-                            ? BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, seed, ActiveBiomeId)
-                            : BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, seed, ActiveBiomeId);
+                            ? branchRuntimeCache.GetOrCreateGraph(
+                                BranchGraphCacheKey("m17_feature", seed, worldIndex),
+                                () => BranchGenerator.CreateSeededFeatureBranch(branchContent, branchGenerationSettings, seed, ActiveBiomeId))
+                            : branchRuntimeCache.GetOrCreateGraph(
+                                BranchGraphCacheKey("m15_seeded_macro", seed, worldIndex),
+                                () => BranchGenerator.CreateSeededMacroBranch(branchContent, branchGenerationSettings, seed, ActiveBiomeId));
                     }
                     catch (Exception error)
                     {
-                        Debug.LogWarning($"Seeded macro branch generation failed; falling back to M14 fixed macro branch. {error.Message}");
+                        Debug.LogWarning($"Seeded macro branch generation failed. {error.Message}");
+                        if (IsWorldLoopRuntime())
+                        {
+                            try
+                            {
+                                Debug.LogWarning("World-loop directed branch generation failed; falling back to M20 feature branch instead of legacy reward-only branch.");
+                                return CreateM20Graph(seed);
+                            }
+                            catch (Exception fallbackError)
+                            {
+                                Debug.LogWarning($"World-loop M20 fallback branch generation also failed; falling back to M14 fixed macro branch. {fallbackError.Message}");
+                            }
+                        }
                     }
                 }
 
-                return BranchGenerator.CreateMacroFixtureBranch(
-                    branchContent.ResolveRoomPoolForBiome(ActiveBiomeId, out _),
-                    seed == 0 ? branchContent.BranchSeed : seed);
+                return branchRuntimeCache.GetOrCreateGraph(
+                    BranchGraphCacheKey("m14_macro_fixture", seed == 0 ? branchContent.BranchSeed : seed, worldIndex),
+                    () => BranchGenerator.CreateMacroFixtureBranch(
+                        branchContent.ResolveRoomPoolForBiome(ActiveBiomeId, out _),
+                        seed == 0 ? branchContent.BranchSeed : seed));
             }
 
-            return BranchGenerator.CreateFiveRoomCross(roomAsset);
+            return branchRuntimeCache.GetOrCreateGraph(
+                BranchGraphCacheKey("legacy_five_room", 0, worldIndex),
+                () => BranchGenerator.CreateFiveRoomCross(roomAsset));
         }
 
         private bool ShouldUseRandomFreshRunSeed()
@@ -2796,7 +3654,7 @@ namespace Hollow.Branches
         {
             if (IsDeveloperLab)
             {
-                return $"Developer Lab: M55 inspection branch | Debug Spawn button | Seed {DeveloperLabDefinition.Seed}\n";
+                return $"Developer Lab: M55 inspection branch | Debug Spawn F10 | Seed {DeveloperLabDefinition.Seed}\n";
             }
 
             if (activeChallenge == null)
@@ -2820,12 +3678,82 @@ namespace Hollow.Branches
 
         private bool IsWorldLoopRuntime()
         {
+            return HasBetaBranchRuntime() &&
+                   encounterCatalog != null;
+        }
+
+        private bool HasBetaBranchRuntime()
+        {
             return !IsDeveloperLab &&
                    !IsSpaceshipHub &&
                    branchContent != null &&
                    branchContent.HasMacroFixturePool &&
-                   branchGenerationSettings != null &&
-                   encounterCatalog != null;
+                   branchGenerationSettings != null;
+        }
+
+        public static bool ShouldDiscardLegacyWorldLoopSnapshotForBeta(
+            RunSaveSnapshot snapshot,
+            RuntimeSessionMode sessionMode,
+            bool hasBetaBranchRuntime,
+            bool isSpaceshipHub,
+            bool isDeveloperLab)
+        {
+            if (snapshot == null ||
+                !hasBetaBranchRuntime ||
+                isSpaceshipHub ||
+                isDeveloperLab ||
+                sessionMode != RuntimeSessionMode.ProfileBacked ||
+                !string.IsNullOrWhiteSpace(snapshot.challengeId))
+            {
+                return false;
+            }
+
+            return !string.Equals(snapshot.branchId, BranchGenerator.DirectedEncounterBranchId, StringComparison.Ordinal);
+        }
+
+        private bool ShouldEnableCorruptedChestLeaf()
+        {
+            return !IsDeveloperLab &&
+                   !IsSpaceshipHub &&
+                   activeChallenge == null &&
+                   gameSessionState != null &&
+                   gameSessionState.SessionMode == RuntimeSessionMode.ProfileBacked &&
+                   branchContent != null &&
+                   branchContent.HasMacroFixturePool &&
+                   branchGenerationSettings != null;
+        }
+
+        private bool ShouldEnableWaveRoomLeaf()
+        {
+            return ShouldEnableCorruptedChestLeaf();
+        }
+
+        private bool ShouldEnableSpecialEncounterLeaf()
+        {
+            return ShouldEnableCorruptedChestLeaf();
+        }
+
+        private string BranchGraphCacheKey(string mode, int seed, int nextWorldIndex)
+        {
+            return string.Join(
+                "|",
+                "graph",
+                mode ?? string.Empty,
+                $"seed:{seed}",
+                $"run:{RunSeed}",
+                $"world:{(nextWorldIndex <= 0 ? worldIndex : nextWorldIndex)}",
+                $"phase:{worldPhase}",
+                $"biome:{ActiveBiomeId}",
+                $"content:{branchRuntimeCache.ActiveContentKey}",
+                $"settings:{BranchRuntimeCache.DefinitionKey(branchGenerationSettings)}",
+                $"encounters:{BranchRuntimeCache.DefinitionKey(encounterCatalog)}",
+                $"director:{BranchRuntimeCache.DefinitionKey(encounterDirectorProfile)}",
+                $"boss:{BranchRuntimeCache.DefinitionKey(bossCatalog)}",
+                $"challenge:{activeChallenge?.ChallengeId ?? string.Empty}",
+                $"corrupt:{ShouldEnableCorruptedChestLeaf()}",
+                $"wave:{ShouldEnableWaveRoomLeaf()}",
+                $"special:{ShouldEnableSpecialEncounterLeaf()}",
+                $"room:{roomAsset?.Id ?? string.Empty}");
         }
 
         private BranchFloorGraph CreateGraphForSnapshot(RunSaveSnapshot snapshot)
@@ -2853,11 +3781,14 @@ namespace Hollow.Branches
                 branchContent != null &&
                 branchContent.HasMacroFixturePool)
             {
-                return BranchGenerator.CreateSeededEncounterBranch(
-                    branchContent,
-                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed,
-                    ActiveBiomeId);
+                var seed = snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed;
+                return branchRuntimeCache.GetOrCreateGraph(
+                    BranchGraphCacheKey("m19_enemy_encounter_snapshot", seed, worldIndex),
+                    () => BranchGenerator.CreateSeededEncounterBranch(
+                        branchContent,
+                        branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                        seed,
+                        ActiveBiomeId));
             }
 
             if (snapshot != null &&
@@ -2865,11 +3796,14 @@ namespace Hollow.Branches
                 branchContent != null &&
                 branchContent.HasMacroFixturePool)
             {
-                return BranchGenerator.CreateSeededFeatureBranch(
-                    branchContent,
-                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed,
-                    ActiveBiomeId);
+                var seed = snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed;
+                return branchRuntimeCache.GetOrCreateGraph(
+                    BranchGraphCacheKey("m17_feature_snapshot", seed, worldIndex),
+                    () => BranchGenerator.CreateSeededFeatureBranch(
+                        branchContent,
+                        branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                        seed,
+                        ActiveBiomeId));
             }
 
             if (snapshot != null &&
@@ -2877,11 +3811,14 @@ namespace Hollow.Branches
                 branchContent != null &&
                 branchContent.HasMacroFixturePool)
             {
-                return BranchGenerator.CreateSeededMacroBranch(
-                    branchContent,
-                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed,
-                    ActiveBiomeId);
+                var seed = snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed;
+                return branchRuntimeCache.GetOrCreateGraph(
+                    BranchGraphCacheKey("m15_seeded_macro_snapshot", seed, worldIndex),
+                    () => BranchGenerator.CreateSeededMacroBranch(
+                        branchContent,
+                        branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                        seed,
+                        ActiveBiomeId));
             }
 
             if (snapshot != null &&
@@ -2889,21 +3826,32 @@ namespace Hollow.Branches
                 branchContent != null &&
                 branchContent.HasMacroFixturePool)
             {
-                return BranchGenerator.CreateMacroFixtureBranch(
-                    branchContent.ResolveRoomPoolForBiome(ActiveBiomeId, out _),
-                    snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed);
+                var seed = snapshot.branchSeed == 0 ? branchContent.BranchSeed : snapshot.branchSeed;
+                return branchRuntimeCache.GetOrCreateGraph(
+                    BranchGraphCacheKey("m14_macro_fixture_snapshot", seed, worldIndex),
+                    () => BranchGenerator.CreateMacroFixtureBranch(
+                        branchContent.ResolveRoomPoolForBiome(ActiveBiomeId, out _),
+                        seed));
             }
 
-            return BranchGenerator.CreateFiveRoomCross(roomAsset);
+            return branchRuntimeCache.GetOrCreateGraph(
+                BranchGraphCacheKey("legacy_five_room_snapshot", snapshot?.branchSeed ?? 0, worldIndex),
+                () => BranchGenerator.CreateFiveRoomCross(roomAsset));
         }
 
         private BranchFloorGraph CreateM20Graph(int seed)
         {
-            return BranchGenerator.CreateSeededBranchFeatures(
-                branchContent,
-                branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                seed == 0 ? macroBranchSeed : seed,
-                ActiveBiomeId);
+            var resolvedSeed = seed == 0 ? macroBranchSeed : seed;
+            return branchRuntimeCache.GetOrCreateGraph(
+                BranchGraphCacheKey("m20_features", resolvedSeed, worldIndex),
+                () => BranchGenerator.CreateSeededBranchFeatures(
+                    branchContent,
+                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                    resolvedSeed,
+                    ActiveBiomeId,
+                    ShouldEnableCorruptedChestLeaf(),
+                    ShouldEnableWaveRoomLeaf(),
+                    ShouldEnableSpecialEncounterLeaf()));
         }
 
         private BranchFloorGraph CreateM46Graph(int seed, int nextWorldIndex)
@@ -2917,14 +3865,20 @@ namespace Hollow.Branches
                 resolvedWorldIndex,
                 "boss_01",
                 BranchGenerator.DirectedEncounterBranchId);
-            return BranchGenerator.CreateDirectedEncounterBranch(
-                branchContent,
-                branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
-                encounterDirectorProfile,
-                resolvedWorldIndex,
-                resolvedSeed,
-                selectedBoss != null ? selectedBoss.Arena.arenaId : string.Empty,
-                ActiveBiomeId);
+            var bossArenaId = selectedBoss != null ? selectedBoss.Arena.arenaId : string.Empty;
+            return branchRuntimeCache.GetOrCreateGraph(
+                BranchGraphCacheKey($"m46_directed:{bossArenaId}", resolvedSeed, resolvedWorldIndex),
+                () => BranchGenerator.CreateDirectedEncounterBranch(
+                    branchContent,
+                    branchGenerationSettings != null ? branchGenerationSettings : BranchGenerationSettingsDefinition.CreateRuntimeDefault(),
+                    encounterDirectorProfile,
+                    resolvedWorldIndex,
+                    resolvedSeed,
+                    bossArenaId,
+                    ActiveBiomeId,
+                    ShouldEnableCorruptedChestLeaf(),
+                    ShouldEnableWaveRoomLeaf(),
+                    ShouldEnableSpecialEncounterLeaf()));
         }
 
         private BranchFloorGraph CreateWorldLoopGraph(int seed)
@@ -2943,6 +3897,13 @@ namespace Hollow.Branches
                    branchId == BranchGenerator.DirectedEncounterBranchId;
         }
 
+        private BranchFeaturePlan CreateBranchFeaturePlanForGraph(BranchFloorGraph graph)
+        {
+            return branchRuntimeCache.GetOrCreateFeaturePlan(
+                graph,
+                () => BranchFeaturePlan.Create(graph, branchRuntimeCache.GetOrCreateRoomDistanceMap(graph)));
+        }
+
         private ProceduralRewardPlan CreateRewardPlanForGraph(BranchFloorGraph graph, bool legacyFallback)
         {
             if (graph == null || !IsProceduralRewardBranch(graph.BranchId))
@@ -2950,9 +3911,12 @@ namespace Hollow.Branches
                 return ProceduralRewardPlan.Empty;
             }
 
-            return legacyFallback
-                ? ProceduralRewardResolver.CreatePlan(graph)
-                : ProceduralRewardResolver.CreateSeededPlan(graph, standardRewardPool, treasureRewardPool, bossRewardPool, weaponRewardPool);
+            var cacheKey = $"reward|legacy:{legacyFallback}|{BranchRuntimeCache.GraphSignature(graph)}|standard:{BranchRuntimeCache.DefinitionKey(standardRewardPool)}|treasure:{BranchRuntimeCache.DefinitionKey(treasureRewardPool)}|boss:{BranchRuntimeCache.DefinitionKey(bossRewardPool)}|weapon:{BranchRuntimeCache.DefinitionKey(weaponRewardPool)}";
+            return branchRuntimeCache.GetOrCreateRewardPlan(
+                cacheKey,
+                () => legacyFallback
+                    ? ProceduralRewardResolver.CreatePlan(graph)
+                    : ProceduralRewardResolver.CreateSeededPlan(graph, standardRewardPool, treasureRewardPool, bossRewardPool, weaponRewardPool));
         }
 
         private EncounterPlan CreateEncounterPlanForGraph(BranchFloorGraph graph)
@@ -2964,19 +3928,33 @@ namespace Hollow.Branches
 
             if (graph.BranchId == BranchGenerator.DirectedEncounterBranchId)
             {
-                return EncounterResolver.CreateDirectedSeededPlan(
-                    graph,
-                    encounterCatalog,
-                    graph.Seed,
-                    worldIndex,
-                    encounterDirectorProfile,
-                    ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus),
-                    bossCatalog,
-                    ChallengeAllowedNonBossSpawnKinds());
+                var cacheKey = $"encounter|directed|{BranchRuntimeCache.GraphSignature(graph)}|world:{worldIndex}|encounter:{BranchRuntimeCache.DefinitionKey(encounterCatalog)}|profile:{BranchRuntimeCache.DefinitionKey(encounterDirectorProfile)}|boss:{BranchRuntimeCache.DefinitionKey(bossCatalog)}|pressure:{ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus)}|spawns:{string.Join(",", ChallengeAllowedNonBossSpawnKinds())}|challenge:{activeChallenge?.ChallengeId ?? string.Empty}";
+                return branchRuntimeCache.GetOrCreateEncounterPlan(
+                    cacheKey,
+                    () =>
+                    {
+                        var distanceMap = branchRuntimeCache.GetOrCreateRoomDistanceMap(graph);
+                        return EncounterResolver.CreateDirectedSeededPlan(
+                            graph,
+                            encounterCatalog,
+                            graph.Seed,
+                            worldIndex,
+                            encounterDirectorProfile,
+                            ChallengeRuleIntValue(ChallengeRuleKind.EncounterPressureBonus),
+                            bossCatalog,
+                            ChallengeAllowedNonBossSpawnKinds(),
+                            distanceMap);
+                    });
             }
 
             return graph.BranchId == BranchGenerator.EnemyEncounterBranchId || graph.BranchId == BranchGenerator.BranchFeaturesId
-                ? EncounterResolver.CreateSeededPlan(graph, encounterCatalog, graph.Seed, ChallengeAllowedNonBossSpawnKinds())
+                ? branchRuntimeCache.GetOrCreateEncounterPlan(
+                    $"encounter|seeded|{BranchRuntimeCache.GraphSignature(graph)}|encounter:{BranchRuntimeCache.DefinitionKey(encounterCatalog)}|spawns:{string.Join(",", ChallengeAllowedNonBossSpawnKinds())}|challenge:{activeChallenge?.ChallengeId ?? string.Empty}",
+                    () =>
+                    {
+                        var distanceMap = branchRuntimeCache.GetOrCreateRoomDistanceMap(graph);
+                        return EncounterResolver.CreateSeededPlan(graph, encounterCatalog, graph.Seed, ChallengeAllowedNonBossSpawnKinds(), distanceMap);
+                    })
                 : EncounterPlan.Empty;
         }
 
@@ -3017,19 +3995,32 @@ namespace Hollow.Branches
 
         private ImportedRoomRuntimeAsset ResolveCurrentRoomAsset()
         {
+            return ResolveRoomAssetForState(State?.CurrentRoom);
+        }
+
+        private ImportedRoomRuntimeAsset ResolveRoomAssetForState(BranchRoomState room)
+        {
+            var roomAssetId = room?.RuntimeRoomAssetId ?? string.Empty;
+            var roomId = room?.Id.Value ?? string.Empty;
+            var cacheKey = $"roomAsset|ship:{IsSpaceshipHub}|room:{roomId}|asset:{roomAssetId}|biome:{ActiveBiomeId}|content:{branchRuntimeCache.ActiveContentKey}";
             if (IsSpaceshipHub &&
-                State?.CurrentRoom != null &&
-                spaceshipRoomAssets.TryGetValue(State.CurrentRoom.RuntimeRoomAssetId, out var spaceshipRoom) &&
-                spaceshipRoom != null)
+                room != null)
             {
-                return spaceshipRoom;
+                return branchRuntimeCache.GetOrCreateRoomAsset(
+                    cacheKey,
+                    () => spaceshipRoomAssets.TryGetValue(room.RuntimeRoomAssetId, out var spaceshipRoom) && spaceshipRoom != null
+                        ? spaceshipRoom
+                        : roomAsset);
             }
 
-            if (State?.CurrentRoom != null &&
-                branchContent != null &&
-                branchContent.TryGetRoomAsset(State.CurrentRoom.RuntimeRoomAssetId, out var asset))
+            if (room != null &&
+                branchContent != null)
             {
-                return asset;
+                return branchRuntimeCache.GetOrCreateRoomAsset(
+                    cacheKey,
+                    () => branchContent.TryGetRoomAsset(room.RuntimeRoomAssetId, ActiveBiomeId, out var asset)
+                        ? asset
+                        : roomAsset);
             }
 
             return roomAsset;
@@ -3916,7 +4907,13 @@ namespace Hollow.Branches
 
         private static GameObject InstantiateOrCreate(GameObject prefab, string objectName, PrimitiveType primitiveType, MaterialRole role)
         {
-            var instance = prefab != null ? Instantiate(prefab) : GameObject.CreatePrimitive(primitiveType);
+            var instance = ShouldPoolRuntimePickup(role)
+                ? prefab != null
+                    ? HollowRuntimePool.Rent(prefab, null)
+                    : HollowRuntimePool.RentPrimitive($"Pickup.{role}.Fallback", primitiveType, null)
+                : prefab != null
+                    ? Instantiate(prefab)
+                    : GameObject.CreatePrimitive(primitiveType);
             instance.name = objectName;
             MaterialResolver.ApplyTo(instance, role);
             var collider = instance.GetComponent<Collider>();
@@ -3926,6 +4923,16 @@ namespace Hollow.Branches
             }
 
             return instance;
+        }
+
+        private static bool ShouldPoolRuntimePickup(MaterialRole role)
+        {
+            return role is MaterialRole.RewardPickup or
+                MaterialRole.BossKeyPickup or
+                MaterialRole.HazardCoinDrop or
+                MaterialRole.CoinCopper or
+                MaterialRole.CoinSilver or
+                MaterialRole.CoinGold;
         }
 
         private static Vector3 Flat(Vector3 value)
@@ -3957,6 +4964,16 @@ namespace Hollow.Branches
 
             if (Application.isPlaying)
             {
+                if (target.GetComponent<RoomRewardPickup>() != null ||
+                    target.GetComponent<ReplacementPickup>() != null ||
+                    target.GetComponent<CoinPickupController>() != null ||
+                    target.GetComponent<HazardCoinPickup>() != null ||
+                    target.GetComponent<BossKeyPickup>() != null)
+                {
+                    HollowRuntimePool.Return(target);
+                    return;
+                }
+
                 Destroy(target);
             }
             else

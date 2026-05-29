@@ -1,0 +1,317 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Hollow.Core.Diagnostics;
+using UnityEngine;
+
+namespace Hollow.Core
+{
+    public interface IPooledRuntimeObject
+    {
+        void OnRentFromPool();
+
+        void OnReturnToPool();
+    }
+
+    public static class HollowRuntimePool
+    {
+        private sealed class RuntimePoolRunner : MonoBehaviour
+        {
+        }
+
+        private static readonly Dictionary<GameObject, Stack<GameObject>> PrefabPools = new();
+        private static readonly Dictionary<string, Stack<GameObject>> GeneratedPools = new(StringComparer.Ordinal);
+        private static readonly Dictionary<GameObject, GameObject> PrefabByInstance = new();
+        private static readonly Dictionary<GameObject, string> GeneratedKeyByInstance = new();
+        private static RuntimePoolRunner runner;
+
+        public static GameObject Rent(GameObject prefab, Transform parent)
+        {
+            if (prefab == null)
+            {
+                return null;
+            }
+
+            if (!Application.isPlaying)
+            {
+                M136PerformanceOperationCounters.ReportRuntimePoolHardInstantiate();
+                return UnityEngine.Object.Instantiate(prefab, parent);
+            }
+
+            if (!PrefabPools.TryGetValue(prefab, out var pool))
+            {
+                pool = new Stack<GameObject>();
+                PrefabPools[prefab] = pool;
+            }
+
+            GameObject instance = null;
+            while (pool.Count > 0 && instance == null)
+            {
+                instance = pool.Pop();
+            }
+
+            if (instance == null)
+            {
+                instance = UnityEngine.Object.Instantiate(prefab, parent);
+                PrefabByInstance[instance] = prefab;
+                M136PerformanceOperationCounters.ReportRuntimePoolMiss();
+                M136PerformanceOperationCounters.ReportRuntimePoolHardInstantiate();
+            }
+            else
+            {
+                instance.transform.SetParent(parent, worldPositionStays: false);
+            }
+
+            PrepareRentedInstance(instance);
+            return instance;
+        }
+
+        public static GameObject RentGenerated(string key, Transform parent, Func<GameObject> factory)
+        {
+            if (string.IsNullOrWhiteSpace(key) || factory == null)
+            {
+                return null;
+            }
+
+            if (!Application.isPlaying)
+            {
+                M136PerformanceOperationCounters.ReportRuntimePoolHardInstantiate();
+                var immediate = factory();
+                immediate?.transform.SetParent(parent, worldPositionStays: false);
+                return immediate;
+            }
+
+            if (!GeneratedPools.TryGetValue(key, out var pool))
+            {
+                pool = new Stack<GameObject>();
+                GeneratedPools[key] = pool;
+            }
+
+            GameObject instance = null;
+            while (pool.Count > 0 && instance == null)
+            {
+                instance = pool.Pop();
+            }
+
+            if (instance == null)
+            {
+                instance = factory();
+                if (instance == null)
+                {
+                    return null;
+                }
+
+                GeneratedKeyByInstance[instance] = key;
+                M136PerformanceOperationCounters.ReportRuntimePoolMiss();
+                M136PerformanceOperationCounters.ReportRuntimePoolHardInstantiate();
+            }
+
+            instance.transform.SetParent(parent, worldPositionStays: false);
+            PrepareRentedInstance(instance);
+            return instance;
+        }
+
+        public static GameObject RentPrimitive(string key, PrimitiveType primitiveType, Transform parent)
+        {
+            return RentGenerated(key, parent, () => GameObject.CreatePrimitive(primitiveType));
+        }
+
+        public static IEnumerator WarmPrefabPool(GameObject prefab, int count, int perFrame = 4)
+        {
+            if (prefab == null || count <= 0 || !Application.isPlaying)
+            {
+                yield break;
+            }
+
+            M136PerformanceOperationCounters.ReportRuntimePoolWarmRequest();
+            var warmed = 0;
+            var budget = Mathf.Max(1, perFrame);
+            var rented = new List<GameObject>(count);
+            while (warmed < count)
+            {
+                var slice = Mathf.Min(budget, count - warmed);
+                for (var index = 0; index < slice; index++)
+                {
+                    var instance = Rent(prefab, null);
+                    if (instance != null)
+                    {
+                        rented.Add(instance);
+                    }
+
+                    warmed++;
+                }
+
+                yield return null;
+            }
+
+            for (var index = 0; index < rented.Count; index++)
+            {
+                Return(rented[index]);
+                if ((index + 1) % budget == 0)
+                {
+                    yield return null;
+                }
+            }
+
+            M136PerformanceOperationCounters.ReportRuntimePoolWarmCompletion();
+        }
+
+        public static IEnumerator WarmGeneratedPool(string key, int count, Func<GameObject> factory, int perFrame = 4)
+        {
+            if (string.IsNullOrWhiteSpace(key) || factory == null || count <= 0 || !Application.isPlaying)
+            {
+                yield break;
+            }
+
+            M136PerformanceOperationCounters.ReportRuntimePoolWarmRequest();
+            var warmed = 0;
+            var budget = Mathf.Max(1, perFrame);
+            var rented = new List<GameObject>(count);
+            while (warmed < count)
+            {
+                var slice = Mathf.Min(budget, count - warmed);
+                for (var index = 0; index < slice; index++)
+                {
+                    var instance = RentGenerated(key, null, factory);
+                    if (instance != null)
+                    {
+                        rented.Add(instance);
+                    }
+
+                    warmed++;
+                }
+
+                yield return null;
+            }
+
+            for (var index = 0; index < rented.Count; index++)
+            {
+                Return(rented[index]);
+                if ((index + 1) % budget == 0)
+                {
+                    yield return null;
+                }
+            }
+
+            M136PerformanceOperationCounters.ReportRuntimePoolWarmCompletion();
+        }
+
+        public static IEnumerator WarmPrimitivePool(string key, PrimitiveType primitiveType, int count, int perFrame = 4)
+        {
+            yield return WarmGeneratedPool(key, count, () => GameObject.CreatePrimitive(primitiveType), perFrame);
+        }
+
+        public static void Return(GameObject instance)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            if (!Application.isPlaying)
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+                return;
+            }
+
+            NotifyReturn(instance);
+            instance.SetActive(false);
+            instance.transform.SetParent(null, worldPositionStays: false);
+            if (PrefabByInstance.TryGetValue(instance, out var prefab) && prefab != null)
+            {
+                PushPrefab(instance, prefab);
+                return;
+            }
+
+            if (GeneratedKeyByInstance.TryGetValue(instance, out var key))
+            {
+                PushGenerated(instance, key);
+                return;
+            }
+
+            UnityEngine.Object.Destroy(instance);
+        }
+
+        public static void ReturnAfter(GameObject instance, float delaySeconds)
+        {
+            if (instance == null || !Application.isPlaying)
+            {
+                return;
+            }
+
+            Runner().StartCoroutine(ReturnAfterRoutine(instance, Mathf.Max(0f, delaySeconds)));
+        }
+
+        private static IEnumerator ReturnAfterRoutine(GameObject instance, float delaySeconds)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+            Return(instance);
+        }
+
+        private static void PushPrefab(GameObject instance, GameObject prefab)
+        {
+            if (!PrefabPools.TryGetValue(prefab, out var pool))
+            {
+                pool = new Stack<GameObject>();
+                PrefabPools[prefab] = pool;
+            }
+
+            pool.Push(instance);
+            M136PerformanceOperationCounters.ReportRuntimePoolReturn();
+        }
+
+        private static void PushGenerated(GameObject instance, string key)
+        {
+            if (!GeneratedPools.TryGetValue(key, out var pool))
+            {
+                pool = new Stack<GameObject>();
+                GeneratedPools[key] = pool;
+            }
+
+            pool.Push(instance);
+            M136PerformanceOperationCounters.ReportRuntimePoolReturn();
+        }
+
+        private static void PrepareRentedInstance(GameObject instance)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            instance.SetActive(true);
+            M136PerformanceOperationCounters.ReportRuntimePoolRent();
+            foreach (var behaviour in instance.GetComponents<MonoBehaviour>())
+            {
+                if (behaviour is IPooledRuntimeObject pooled)
+                {
+                    pooled.OnRentFromPool();
+                }
+            }
+        }
+
+        private static void NotifyReturn(GameObject instance)
+        {
+            foreach (var behaviour in instance.GetComponents<MonoBehaviour>())
+            {
+                if (behaviour is IPooledRuntimeObject pooled)
+                {
+                    pooled.OnReturnToPool();
+                }
+            }
+        }
+
+        private static RuntimePoolRunner Runner()
+        {
+            if (runner != null)
+            {
+                return runner;
+            }
+
+            var runnerObject = new GameObject("HollowRuntimePool");
+            UnityEngine.Object.DontDestroyOnLoad(runnerObject);
+            runner = runnerObject.AddComponent<RuntimePoolRunner>();
+            return runner;
+        }
+    }
+}

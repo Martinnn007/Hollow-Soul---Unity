@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_sunken_cartouche
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 2
+  identityId: sunken_cartouche
+  biomeId: sunken_cartouche
+  displayName: The Sunken Cartouche
+  subtitle: A drowned royal afterlife, rewritten by impossible tides.
+  biomeTags: 030000000a0000000b000000
+  paletteHint: lapis, sand-gold, oxidized teal, black river silt
+  lightingHint: sun shafts through dust and water that should not be there
+  materialNotes: carved stone, wet papyrus, cracked gold leaf, ritual ink
+  prologueLine: A name is sealed in every wall, and none of them are yours.
+  branchLine: Branches open like tomb texts read in the wrong century.
+  hubLine: The anchor is a dry island in a drowned burial spell.
+  bossLine: The warden kneels before a crown the Star has already eaten.
+  extractionLine: The cartouche closes. The name inside keeps scratching.
+  branchEchoNames:
+  - Silt Throne
+  - Lapis Teeth
+  - False Nile
+  - Mummy Sun

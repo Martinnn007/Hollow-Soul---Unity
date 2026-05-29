@@ -1,4 +1,5 @@
 using Hollow.Rooms;
+using Hollow.Core.Diagnostics;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -76,7 +77,7 @@ namespace Hollow.Combat
                 agent.acceleration = Mathf.Max(8f, agent.speed * 8f);
                 agent.angularSpeed = 720f;
                 agent.stoppingDistance = EnemyNavigationAdapter.DefaultReachedToleranceMeters;
-                agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
                 agent.avoidancePriority = Mathf.Clamp(50 + Mathf.RoundToInt(radiusMeters * 20f), 5, 95);
                 agent.enabled = enabledForGroundedNavigation && room != null && room.HasNavMeshBake;
             }
@@ -203,6 +204,7 @@ namespace Hollow.Combat
             var desiredSpeed = request.DesiredSpeedMetersPerSecond > 0f ? request.DesiredSpeedMetersPerSecond : agent.speed;
             agent.speed = Mathf.Max(0.05f, desiredSpeed);
             agent.acceleration = Mathf.Max(8f, agent.speed * 8f);
+            ApplyAvoidanceTier(request);
             agent.nextPosition = transform.position;
             ClaimOwnership(EnemyLocomotionOwnership.UnityNavMeshAgent, $"movement:{request.Intent}");
 
@@ -214,11 +216,27 @@ namespace Hollow.Combat
 
             var shouldRepath = !hasDestination ||
                 Vector3.Distance(Flat(lastDestinationWorld), Flat(destinationWorld)) > DestinationRefreshToleranceMeters ||
-                Time.time - lastRepathTime >= RepathIntervalFor(request.Intelligence) ||
+                Time.time - lastRepathTime >= EnemyNavigationBudget.RepathIntervalFor(request) ||
                 agent.pathStatus == NavMeshPathStatus.PathInvalid;
 
             if (shouldRepath)
             {
+                var highPriority = EnemyNavigationBudget.IsHighPriority(request);
+                if (!hasDestination &&
+                    !highPriority &&
+                    Time.time < EnemyNavigationBudget.InitialRepathOffsetSeconds(request.PathSeed))
+                {
+                    EnemyNavigationDebugOverlay.RecordBudgetDeferred($"m3_initial_stagger:{request.AiLodTier}:{request.TacticalRole}");
+                    agent.isStopped = false;
+                    return localResult;
+                }
+
+                if (!EnemyNavigationBudget.TryAcquirePathSolve(request, highPriority))
+                {
+                    agent.isStopped = false;
+                    return localResult;
+                }
+
                 reusablePath ??= new NavMeshPath();
                 var started = Time.realtimeSinceStartup;
                 if (!agent.CalculatePath(destinationWorld, reusablePath) || reusablePath.status == NavMeshPathStatus.PathInvalid)
@@ -477,23 +495,39 @@ namespace Hollow.Combat
             };
         }
 
-        private static float RepathIntervalFor(EnemyIntelligenceLevel intelligence)
-        {
-            return intelligence switch
-            {
-                EnemyIntelligenceLevel.Cunning => 0.16f,
-                EnemyIntelligenceLevel.Tactical => 0.2f,
-                EnemyIntelligenceLevel.Trained => 0.28f,
-                EnemyIntelligenceLevel.Basic => 0.34f,
-                EnemyIntelligenceLevel.Simple => 0.45f,
-                _ => 0.55f
-            };
-        }
-
         private static Vector3 Flat(Vector3 value)
         {
             value.y = 0f;
             return value;
+        }
+
+        private void ApplyAvoidanceTier(in EnemyNavigationRequest request)
+        {
+            if (agent == null)
+            {
+                return;
+            }
+
+            if (request.AiLodTier == EnemyAiLodTier.Full &&
+                request.TacticalRole == EnemyTacticalRole.ActiveThreat)
+            {
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+                agent.avoidancePriority = Mathf.Clamp(30 + Mathf.Abs(request.PathSeed % 18), 5, 45);
+                M136PerformanceOperationCounters.ReportAvoidanceTier((int)EnemyAiLodTier.Full);
+                return;
+            }
+
+            if (request.AiLodTier == EnemyAiLodTier.Reduced)
+            {
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
+                agent.avoidancePriority = Mathf.Clamp(55 + Mathf.Abs(request.PathSeed % 20), 45, 78);
+                M136PerformanceOperationCounters.ReportAvoidanceTier((int)EnemyAiLodTier.Reduced);
+                return;
+            }
+
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            agent.avoidancePriority = Mathf.Clamp(82 + Mathf.Abs(request.PathSeed % 12), 78, 95);
+            M136PerformanceOperationCounters.ReportAvoidanceTier((int)EnemyAiLodTier.Background);
         }
 
         private void ClaimOwnership(EnemyLocomotionOwnership ownership, string reason)

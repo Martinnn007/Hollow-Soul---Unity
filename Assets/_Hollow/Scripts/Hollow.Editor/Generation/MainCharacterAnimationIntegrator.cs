@@ -43,9 +43,6 @@ namespace Hollow.Editor.Generation
         private const string ModelInstanceName = "MainCharacter_MeshyModel";
         private const string LegacyCapsuleName = "PlayerHeight_1_78m";
         private const string RightHandBoneName = "RightHand";
-        private static readonly Vector3 MeleeSocketLocalPosition = new(0.03f, 0f, 0.02f);
-        private static readonly Vector3 MeleeSocketLocalEuler = new(90f, 0f, 0f);
-        private static readonly Vector3 MeleeSocketLocalScale = new(0.75f, 0.75f, 0.75f);
         private static readonly HashSet<string> RollRootLikeBindingNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "Armature",
@@ -669,6 +666,30 @@ namespace Hollow.Editor.Generation
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                 var meleeHandSocket = EnsureMeleeHandSocket(modelInstance.transform);
+                var rangedHandSocket = EnsureSocket(
+                    visualRoot.transform,
+                    PlayerHeldWeaponVisualController.RangedHandSocketName,
+                    PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalScale);
+                var meleeHolsterSocket = EnsureSocket(
+                    visualRoot.transform,
+                    PlayerHeldWeaponVisualController.MeleeHolsterSocketName,
+                    PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalScale);
+                var rangedHolsterSocket = EnsureSocket(
+                    visualRoot.transform,
+                    PlayerHeldWeaponVisualController.RangedHolsterSocketName,
+                    PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalScale);
+                var rangedMuzzleSocket = EnsureSocket(
+                    rangedHandSocket,
+                    PlayerHeldWeaponVisualController.RangedMuzzleSocketName,
+                    PlayerWeaponVisualPosePolicy.MuzzleLocalPosition(),
+                    Vector3.zero,
+                    Vector3.one);
 
                 var locomotionAnimator = prefabRoot.GetComponent<PlayerLocomotionAnimator>() ??
                     prefabRoot.AddComponent<PlayerLocomotionAnimator>();
@@ -689,7 +710,12 @@ namespace Hollow.Editor.Generation
 
                 var heldWeaponVisual = prefabRoot.GetComponent<PlayerHeldWeaponVisualController>() ??
                     prefabRoot.AddComponent<PlayerHeldWeaponVisualController>();
-                heldWeaponVisual.BindMeleeHandSocket(meleeHandSocket);
+                heldWeaponVisual.BindWeaponSockets(
+                    meleeHandSocket,
+                    rangedHandSocket,
+                    meleeHolsterSocket,
+                    rangedHolsterSocket,
+                    rangedMuzzleSocket);
                 EditorUtility.SetDirty(heldWeaponVisual);
 
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, PlayerPrefabPath);
@@ -769,9 +795,35 @@ namespace Hollow.Editor.Generation
                 socket = socketObject.transform;
             }
 
-            socket.localPosition = MeleeSocketLocalPosition;
-            socket.localRotation = Quaternion.Euler(MeleeSocketLocalEuler);
-            socket.localScale = MeleeSocketLocalScale;
+            socket.localPosition = PlayerHeldWeaponVisualController.DefaultMeleeSocketLocalPosition;
+            socket.localRotation = Quaternion.Euler(PlayerHeldWeaponVisualController.DefaultMeleeSocketLocalEuler);
+            socket.localScale = PlayerHeldWeaponVisualController.DefaultMeleeSocketLocalScale;
+            return socket;
+        }
+
+        private static Transform EnsureSocket(
+            Transform parent,
+            string socketName,
+            Vector3 localPosition,
+            Vector3 localEuler,
+            Vector3 localScale)
+        {
+            if (parent == null)
+            {
+                throw new InvalidOperationException($"Cannot create {socketName} without a parent transform.");
+            }
+
+            var socket = parent.Find(socketName);
+            if (socket == null)
+            {
+                var socketObject = new GameObject(socketName);
+                socketObject.transform.SetParent(parent, false);
+                socket = socketObject.transform;
+            }
+
+            socket.localPosition = localPosition;
+            socket.localRotation = Quaternion.Euler(localEuler);
+            socket.localScale = localScale;
             return socket;
         }
 

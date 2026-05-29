@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Hollow.Entities;
 using Hollow.Rooms;
 using UnityEngine;
@@ -15,9 +14,13 @@ namespace Hollow.Combat
 
         private readonly Dictionary<int, EnemyTacticalIntent> intents = new();
         private readonly List<Vector3> reservedPositions = new();
+        private readonly List<EnemyRuntimeController> livingEnemies = new();
+        private readonly List<EnemyRuntimeController> activeCandidates = new();
+        private readonly HashSet<int> activeThreatIds = new();
         private int activeThreatCount;
         private int waitingCount;
         private float lastTickTime = float.NegativeInfinity;
+        private static readonly float[] ReservationAngleOffsets = { 0f, -28f, 28f, -56f, 56f, 92f, -92f, 180f };
 
         public int ActiveThreatCount => activeThreatCount;
 
@@ -42,6 +45,9 @@ namespace Hollow.Combat
         {
             intents.Clear();
             reservedPositions.Clear();
+            livingEnemies.Clear();
+            activeCandidates.Clear();
+            activeThreatIds.Clear();
             activeThreatCount = 0;
             waitingCount = 0;
             lastTickTime = timeSeconds;
@@ -52,25 +58,34 @@ namespace Hollow.Combat
                 return;
             }
 
-            var living = enemies
-                .Where(enemy => enemy != null && enemy.IsAlive && enemy.BossDefinition == null && enemy.ArchetypeId != EnemyArchetypeId.Boss)
-                .ToArray();
-            var activeCandidates = living
-                .Where(CanBeTacticalThreat)
-                .OrderByDescending(enemy => ThreatScore(enemy))
-                .ThenBy(enemy => enemy.SpawnIndex)
-                .ToArray();
-            var activeLimit = ResolveActiveThreatLimit(activeCandidates.Length, living.Length);
-            var activeSet = new HashSet<int>();
-            for (var index = 0; index < activeCandidates.Length && index < activeLimit; index++)
+            for (var index = 0; index < enemies.Count; index++)
             {
-                activeSet.Add(activeCandidates[index].GetInstanceID());
+                var enemy = enemies[index];
+                if (enemy == null || !enemy.IsAlive || enemy.BossDefinition != null || enemy.ArchetypeId == EnemyArchetypeId.Boss)
+                {
+                    continue;
+                }
+
+                livingEnemies.Add(enemy);
+                if (CanBeTacticalThreat(enemy))
+                {
+                    activeCandidates.Add(enemy);
+                }
+            }
+
+            activeCandidates.Sort(CompareThreatCandidates);
+            livingEnemies.Sort(CompareSpawnOrder);
+            var activeLimit = ResolveActiveThreatLimit(activeCandidates.Count, livingEnemies.Count);
+            for (var index = 0; index < activeCandidates.Count && index < activeLimit; index++)
+            {
+                activeThreatIds.Add(activeCandidates[index].GetInstanceID());
             }
 
             var activeSlot = 0;
-            foreach (var enemy in living.OrderBy(enemy => enemy.SpawnIndex < 0 ? enemy.GetInstanceID() : enemy.SpawnIndex))
+            for (var index = 0; index < livingEnemies.Count; index++)
             {
-                var isActive = activeSet.Contains(enemy.GetInstanceID());
+                var enemy = livingEnemies[index];
+                var isActive = activeThreatIds.Contains(enemy.GetInstanceID());
                 var role = ResolveRole(enemy, isActive);
                 var commitPolicy = ResolveCommitPolicy(role);
                 var slotIndex = isActive ? activeSlot : -1;
@@ -149,6 +164,19 @@ namespace Hollow.Combat
             }
 
             EnemyTacticalDebugOverlay.ReportRoomState(activeThreatCount, waitingCount);
+        }
+
+        private static int CompareThreatCandidates(EnemyRuntimeController left, EnemyRuntimeController right)
+        {
+            var scoreCompare = ThreatScore(right).CompareTo(ThreatScore(left));
+            return scoreCompare != 0 ? scoreCompare : left.SpawnIndex.CompareTo(right.SpawnIndex);
+        }
+
+        private static int CompareSpawnOrder(EnemyRuntimeController left, EnemyRuntimeController right)
+        {
+            var leftKey = left.SpawnIndex < 0 ? left.GetInstanceID() : left.SpawnIndex;
+            var rightKey = right.SpawnIndex < 0 ? right.GetInstanceID() : right.SpawnIndex;
+            return leftKey.CompareTo(rightKey);
         }
 
         public EnemyBehaviorCommand PlanCommand(
@@ -401,22 +429,26 @@ namespace Hollow.Combat
             var primaryAngle = role == EnemyTacticalRole.ActiveThreat
                 ? Mathf.LerpAngle(currentAngle, slotAngle, 0.55f)
                 : slotAngle;
-            var angleOffsets = new[] { 0f, -28f, 28f, -56f, 56f, 92f, -92f, 180f };
-            var distances = new[] { desiredDistance, desiredDistance + 0.45f, Mathf.Max(0.35f, desiredDistance - 0.35f), desiredDistance + 0.9f };
-
             var bestScore = float.NegativeInfinity;
             var best = reserved;
             var bestPathStatus = EnemyPathStatus.NotRequested;
             var bestCornerCount = 0;
             var bestPathLength = 0f;
             var bestReason = string.Empty;
-            for (var distanceIndex = 0; distanceIndex < distances.Length; distanceIndex++)
+            for (var distanceIndex = 0; distanceIndex < 4; distanceIndex++)
             {
-                for (var angleIndex = 0; angleIndex < angleOffsets.Length; angleIndex++)
+                var candidateDistance = distanceIndex switch
                 {
-                    var angle = primaryAngle + angleOffsets[angleIndex];
+                    1 => desiredDistance + 0.45f,
+                    2 => Mathf.Max(0.35f, desiredDistance - 0.35f),
+                    3 => desiredDistance + 0.9f,
+                    _ => desiredDistance
+                };
+                for (var angleIndex = 0; angleIndex < ReservationAngleOffsets.Length; angleIndex++)
+                {
+                    var angle = primaryAngle + ReservationAngleOffsets[angleIndex];
                     var direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
-                    var candidate = anchor + direction.normalized * distances[distanceIndex];
+                    var candidate = anchor + direction.normalized * candidateDistance;
                     candidate.y = enemy.transform.localPosition.y;
                     if (!TryResolveReachableReservation(
                             room,
@@ -446,7 +478,7 @@ namespace Hollow.Combat
                     }
 
                     var score = ClearanceScore(room, reachableCandidate, enemy.RadiusMeters) * 0.35f
-                        - Mathf.Abs(distances[distanceIndex] - desiredDistance) * 0.75f
+                        - Mathf.Abs(candidateDistance - desiredDistance) * 0.75f
                         - Vector3.Distance(Flat(reachableCandidate), Flat(enemy.transform.localPosition)) * 0.04f
                         - pathLength * 0.025f
                         - angleIndex * 0.02f

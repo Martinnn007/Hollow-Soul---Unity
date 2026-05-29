@@ -1,6 +1,8 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using UnityEngine.AI;
@@ -81,14 +83,16 @@ namespace Hollow.Rooms
 
         public void BuildFrom(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode)
         {
-            if (asset == null)
+            var descriptor = RoomRuntimeDescriptorCache.GetOrCreate(asset);
+            if (descriptor == null)
             {
                 Debug.LogError("Cannot build room runtime from a null imported asset.");
                 return;
             }
 
+            asset = descriptor.Asset;
             LastBuiltAsset = asset;
-            roomSizeMeters = new Vector2(asset.Layout.WidthTiles, asset.Layout.HeightTiles);
+            roomSizeMeters = new Vector2(descriptor.Layout.WidthTiles, descriptor.Layout.HeightTiles);
             ClearChildren();
             perimeterWallsRoot = null;
             doorRenderersByDirection.Clear();
@@ -97,7 +101,7 @@ namespace Hollow.Rooms
             doorNavigationByPortId.Clear();
             doorDirectionByPortId.Clear();
             openDoorPortIds.Clear();
-            foreach (var port in asset.DoorPorts)
+            foreach (var port in descriptor.DoorPorts)
             {
                 openDoorPortIds.Add(port.Id);
             }
@@ -105,18 +109,56 @@ namespace Hollow.Rooms
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
             dynamicNavigationObjects.Clear();
-            var biomeId = RoomBiomeIds.Normalize(asset.BiomeId);
-            BuildFloor(asset.Layout, biomeId);
-            BuildPerimeterWalls(asset.Layout, asset.DoorPorts, biomeId);
-            BuildHoleMarkers(asset.Layout);
-            BuildObstacles(asset.Layout, biomeId);
-            BuildHazards(asset);
-            BuildInteractiveObjects(asset);
-            BuildDecor(asset, biomeId);
-            BuildDoors(asset, biomeId);
-            BuildSpawnMarkers(asset);
+            var biomeId = descriptor.BiomeId;
+            BuildFloor(descriptor.Layout, biomeId);
+            BuildPerimeterWalls(descriptor.Layout, descriptor.DoorPorts, biomeId);
+            BuildHoleMarkers(descriptor.Layout);
+            BuildObstacles(descriptor.Layout, biomeId);
+            BuildHazards(descriptor);
+            BuildInteractiveObjects(descriptor);
+            BuildDecor(descriptor, biomeId);
+            BuildDoors(descriptor, biomeId);
+            BuildSpawnMarkers(descriptor);
             AttachNavMesh(asset, fallbackMode);
             ConfigureCarvingObstacles();
+        }
+
+        public IEnumerator BuildFromStaged(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode)
+        {
+            var descriptor = RoomRuntimeDescriptorCache.GetOrCreate(asset);
+            if (descriptor == null)
+            {
+                Debug.LogError("Cannot build room runtime from a null imported asset.");
+                yield break;
+            }
+
+            asset = descriptor.Asset;
+            LastBuiltAsset = asset;
+            roomSizeMeters = new Vector2(descriptor.Layout.WidthTiles, descriptor.Layout.HeightTiles);
+            yield return ClearChildrenStaged();
+            ResetRuntimeCollectionsForBuild(descriptor);
+            yield return ReportBuildStageAndYield();
+
+            var biomeId = descriptor.BiomeId;
+            BuildFloor(descriptor.Layout, biomeId);
+            yield return ReportBuildStageAndYield();
+            BuildPerimeterWalls(descriptor.Layout, descriptor.DoorPorts, biomeId);
+            yield return ReportBuildStageAndYield();
+            BuildHoleMarkers(descriptor.Layout);
+            BuildObstacles(descriptor.Layout, biomeId);
+            yield return ReportBuildStageAndYield();
+            BuildHazards(descriptor);
+            BuildInteractiveObjects(descriptor);
+            yield return ReportBuildStageAndYield();
+            BuildDecor(descriptor, biomeId);
+            yield return ReportBuildStageAndYield();
+            BuildDoors(descriptor, biomeId);
+            BuildSpawnMarkers(descriptor);
+            yield return ReportBuildStageAndYield();
+            AttachNavMesh(asset, fallbackMode);
+            yield return ReportBuildStageAndYield();
+            ConfigureCarvingObstacles();
+            yield return ReportBuildStageAndYield();
         }
 
         public void ClearRuntime()
@@ -320,6 +362,62 @@ namespace Hollow.Rooms
             }
         }
 
+        private IEnumerator ClearChildrenStaged()
+        {
+            const int destroyBudgetPerFrame = 24;
+            var destroyedThisFrame = 0;
+            for (var index = transform.childCount - 1; index >= 0; index--)
+            {
+                var child = transform.GetChild(index).gameObject;
+                child.SetActive(false);
+                if (Application.isPlaying)
+                {
+                    Destroy(child);
+                }
+                else
+                {
+                    DestroyImmediate(child);
+                }
+
+                destroyedThisFrame++;
+                if (destroyedThisFrame >= destroyBudgetPerFrame)
+                {
+                    M136PerformanceOperationCounters.ReportTransitionDestroyedObjects(destroyedThisFrame);
+                    M136PerformanceOperationCounters.ReportRoomBuildStage();
+                    destroyedThisFrame = 0;
+                    yield return null;
+                }
+            }
+
+            M136PerformanceOperationCounters.ReportTransitionDestroyedObjects(destroyedThisFrame);
+        }
+
+        private void ResetRuntimeCollectionsForBuild(RoomRuntimeBuildDescriptor descriptor)
+        {
+            ReleaseNavMesh();
+            perimeterWallsRoot = null;
+            doorRenderersByDirection.Clear();
+            doorRenderersByPortId.Clear();
+            doorMarkersByPortId.Clear();
+            doorNavigationByPortId.Clear();
+            doorDirectionByPortId.Clear();
+            openDoorPortIds.Clear();
+            foreach (var port in descriptor.DoorPorts)
+            {
+                openDoorPortIds.Add(port.Id);
+            }
+
+            hazardMarkers.Clear();
+            interactiveObjectMarkers.Clear();
+            dynamicNavigationObjects.Clear();
+        }
+
+        private static IEnumerator ReportBuildStageAndYield()
+        {
+            M136PerformanceOperationCounters.ReportRoomBuildStage();
+            yield return null;
+        }
+
         private void BuildFloor(RoomLayout layout, string biomeId)
         {
             foreach (var region in layout.FloorRegions)
@@ -333,12 +431,6 @@ namespace Hollow.Rooms
                 RoomBiomePresentationResolver.InstantiateVisual(biomeId, PresentationPrefabRole.RoomFloor, floor.transform, Vector3.zero, Vector3.one);
             }
 
-            var origin = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            origin.name = "originMarker_0_0";
-            origin.transform.SetParent(transform, false);
-            origin.transform.localPosition = new Vector3(0f, 0.012f, 0f);
-            origin.transform.localScale = new Vector3(0.28f, 0.024f, 0.28f);
-            MaterialResolver.ApplyTo(origin, MaterialRole.RoomOriginMarker);
         }
 
         private void BuildPerimeterWalls(RoomLayout layout, IReadOnlyList<RoomDoorPort> doorPorts, string biomeId)
@@ -628,9 +720,9 @@ namespace Hollow.Rooms
             }
         }
 
-        private void BuildHazards(ImportedRoomRuntimeAsset asset)
+        private void BuildHazards(RoomRuntimeBuildDescriptor descriptor)
         {
-            foreach (var hazard in asset.Hazards ?? System.Array.Empty<ImportedRoomHazard>())
+            foreach (var hazard in descriptor.Hazards)
             {
                 if (hazard == null)
                 {
@@ -657,9 +749,9 @@ namespace Hollow.Rooms
             }
         }
 
-        private void BuildInteractiveObjects(ImportedRoomRuntimeAsset asset)
+        private void BuildInteractiveObjects(RoomRuntimeBuildDescriptor descriptor)
         {
-            foreach (var roomObject in asset.InteractiveObjects ?? System.Array.Empty<ImportedRoomInteractiveObject>())
+            foreach (var roomObject in descriptor.InteractiveObjects)
             {
                 if (roomObject == null)
                 {
@@ -713,9 +805,9 @@ namespace Hollow.Rooms
             }
         }
 
-        private void BuildDecor(ImportedRoomRuntimeAsset asset, string biomeId)
+        private void BuildDecor(RoomRuntimeBuildDescriptor descriptor, string biomeId)
         {
-            foreach (var decor in asset.Decor ?? System.Array.Empty<ImportedRoomDecor>())
+            foreach (var decor in descriptor.Decor)
             {
                 if (decor == null ||
                     !RoomBiomePresentationResolver.TryResolveDecorPrefabRole(biomeId, decor.kind, out var prefabRole))
@@ -740,9 +832,15 @@ namespace Hollow.Rooms
             navMeshBakeSource = string.Empty;
             var roomId = asset?.Id ?? string.Empty;
             var catalog = RoomNavMeshCatalogDefinition.LoadDefault();
-            if (catalog != null && catalog.TryGetNavMeshData(roomId, out activeNavMeshData) && activeNavMeshData != null)
+            if (catalog != null &&
+                catalog.TryGetNavMeshData(roomId, out activeNavMeshData, out var resolvedBakeRoomId) &&
+                activeNavMeshData != null)
             {
-                AttachResolvedNavMeshData(roomId, runtimeBuilt: false, source: "catalog");
+                var source = string.Equals(resolvedBakeRoomId, roomId, System.StringComparison.Ordinal)
+                    ? "catalog"
+                    : $"catalog-shared:{resolvedBakeRoomId}";
+                M136PerformanceOperationCounters.ReportNavMeshCatalogAttach();
+                AttachResolvedNavMeshData(roomId, runtimeBuilt: false, source: source);
                 return;
             }
 
@@ -754,6 +852,7 @@ namespace Hollow.Rooms
                 activeNavMeshData = RoomNavMeshBuildUtility.BuildRoom(asset, "NavMesh.DevRuntime", out var runtimeBuildError);
                 if (activeNavMeshData != null)
                 {
+                    M136PerformanceOperationCounters.ReportRuntimeNavMeshFallback();
                     Debug.LogWarning(
                         $"Room '{roomId}' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run {RoomNavMeshCatalogDefinition.PreferredBakeMenuPath} before shipping or locking QA. Missing bake: {navMeshBakeError}",
                         this);
@@ -847,9 +946,9 @@ namespace Hollow.Rooms
                 reason: "interactive_blocker_refreshed");
         }
 
-        private void BuildDoors(ImportedRoomRuntimeAsset asset, string biomeId)
+        private void BuildDoors(RoomRuntimeBuildDescriptor descriptor, string biomeId)
         {
-            foreach (var port in asset.DoorPorts)
+            foreach (var port in descriptor.DoorPorts)
             {
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 marker.name = $"doorAnchorActive.{port.Id}";
@@ -907,35 +1006,31 @@ namespace Hollow.Rooms
             };
         }
 
-        private void BuildSpawnMarkers(ImportedRoomRuntimeAsset asset)
+        private void BuildSpawnMarkers(RoomRuntimeBuildDescriptor descriptor)
         {
-            CreateSpawnMarker(asset.SafeStart.id, asset.SafeStart.kind, asset.SafeStart.position.ToUnityVector3(), MaterialRole.SpawnSafeStart, addPlayerSpawnComponent: true);
-
-            foreach (var spawn in asset.EnemySpawns)
+            if (descriptor.SafeStart != null)
             {
-                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), MaterialRole.SpawnEnemy, addPlayerSpawnComponent: false);
+                CreateSpawnMarker(descriptor.SafeStart.id, descriptor.SafeStart.kind, descriptor.SafeStart.position.ToUnityVector3(), addPlayerSpawnComponent: true);
             }
 
-            foreach (var spawn in asset.ItemSpawns)
+            foreach (var spawn in descriptor.EnemySpawns)
             {
-                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), MaterialRole.SpawnReward, addPlayerSpawnComponent: false);
+                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), addPlayerSpawnComponent: false);
+            }
+
+            foreach (var spawn in descriptor.ItemSpawns)
+            {
+                CreateSpawnMarker(spawn.id, spawn.kind, spawn.position.ToUnityVector3(), addPlayerSpawnComponent: false);
             }
         }
 
-        private void CreateSpawnMarker(string id, string kind, Vector3 position, MaterialRole role, bool addPlayerSpawnComponent)
+        private void CreateSpawnMarker(string id, string kind, Vector3 position, bool addPlayerSpawnComponent)
         {
-            var marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            marker.name = $"{kind}.{id}";
+            var marker = new GameObject($"{kind}.{id}");
             marker.transform.SetParent(transform, false);
-            marker.transform.localPosition = new Vector3(position.x, 0.16f, position.z);
-            marker.transform.localScale = Vector3.one * 0.32f;
-            MaterialResolver.ApplyTo(marker, role);
-
-            var collider = marker.GetComponent<Collider>();
-            if (collider != null)
-            {
-                collider.enabled = false;
-            }
+            marker.transform.localPosition = position;
+            marker.transform.localRotation = Quaternion.identity;
+            marker.transform.localScale = Vector3.one;
 
             if (addPlayerSpawnComponent)
             {

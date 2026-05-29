@@ -1,0 +1,629 @@
+{
+    "hollowRuntime": {
+        "schemaVersion": 2,
+        "sourceProjectId": "corrupted_chest_single_1x1",
+        "canonicalRoomId": "corrupted_chest_single_1x1",
+        "biomeId": "corrupted_ashen_shrine",
+        "displayName": "Corrupted Chest Endpoint 1x1",
+        "roomType": "reward",
+        "rewardType": "corrupted-chest",
+        "prototypeStatus": "m130-special",
+        "tileSizeMeters": 1.0,
+        "dimensions": {
+            "widthTiles": 13,
+            "heightTiles": 7,
+            "bounds": {
+                "minX": -6.5,
+                "maxX": 6.5,
+                "minZ": -3.5,
+                "maxZ": 3.5
+            }
+        },
+        "footprint": {
+            "primaryCell": {
+                "x": 0,
+                "z": 0
+            },
+            "occupiedBranchCells": [
+                {
+                    "x": 0,
+                    "z": 0
+                }
+            ],
+            "chunkBasisTiles": {
+                "width": 13,
+                "height": 7
+            }
+        },
+        "walkableTiles": [
+            {
+                "x": -6,
+                "z": -3
+            },
+            {
+                "x": -5,
+                "z": -3
+            },
+            {
+                "x": -4,
+                "z": -3
+            },
+            {
+                "x": -3,
+                "z": -3
+            },
+            {
+                "x": -2,
+                "z": -3
+            },
+            {
+                "x": -1,
+                "z": -3
+            },
+            {
+                "x": 0,
+                "z": -3
+            },
+            {
+                "x": 1,
+                "z": -3
+            },
+            {
+                "x": 2,
+                "z": -3
+            },
+            {
+                "x": 3,
+                "z": -3
+            },
+            {
+                "x": 4,
+                "z": -3
+            },
+            {
+                "x": 5,
+                "z": -3
+            },
+            {
+                "x": 6,
+                "z": -3
+            },
+            {
+                "x": -6,
+                "z": -2
+            },
+            {
+                "x": -5,
+                "z": -2
+            },
+            {
+                "x": -4,
+                "z": -2
+            },
+            {
+                "x": -3,
+                "z": -2
+            },
+            {
+                "x": -2,
+                "z": -2
+            },
+            {
+                "x": -1,
+                "z": -2
+            },
+            {
+                "x": 0,
+                "z": -2
+            },
+            {
+                "x": 1,
+                "z": -2
+            },
+            {
+                "x": 2,
+                "z": -2
+            },
+            {
+                "x": 3,
+                "z": -2
+            },
+            {
+                "x": 4,
+                "z": -2
+            },
+            {
+                "x": 5,
+                "z": -2
+            },
+            {
+                "x": 6,
+                "z": -2
+            },
+            {
+                "x": -6,
+                "z": -1
+            },
+            {
+                "x": -5,
+                "z": -1
+            },
+            {
+                "x": -4,
+                "z": -1
+            },
+            {
+                "x": -3,
+                "z": -1
+            },
+            {
+                "x": -2,
+                "z": -1
+            },
+            {
+                "x": -1,
+                "z": -1
+            },
+            {
+                "x": 0,
+                "z": -1
+            },
+            {
+                "x": 1,
+                "z": -1
+            },
+            {
+                "x": 2,
+                "z": -1
+            },
+            {
+                "x": 3,
+                "z": -1
+            },
+            {
+                "x": 4,
+                "z": -1
+            },
+            {
+                "x": 5,
+                "z": -1
+            },
+            {
+                "x": 6,
+                "z": -1
+            },
+            {
+                "x": -6,
+                "z": 0
+            },
+            {
+                "x": -5,
+                "z": 0
+            },
+            {
+                "x": -4,
+                "z": 0
+            },
+            {
+                "x": -3,
+                "z": 0
+            },
+            {
+                "x": -2,
+                "z": 0
+            },
+            {
+                "x": -1,
+                "z": 0
+            },
+            {
+                "x": 0,
+                "z": 0
+            },
+            {
+                "x": 1,
+                "z": 0
+            },
+            {
+                "x": 2,
+                "z": 0
+            },
+            {
+                "x": 3,
+                "z": 0
+            },
+            {
+                "x": 4,
+                "z": 0
+            },
+            {
+                "x": 5,
+                "z": 0
+            },
+            {
+                "x": 6,
+                "z": 0
+            },
+            {
+                "x": -6,
+                "z": 1
+            },
+            {
+                "x": -5,
+                "z": 1
+            },
+            {
+                "x": -4,
+                "z": 1
+            },
+            {
+                "x": -3,
+                "z": 1
+            },
+            {
+                "x": -2,
+                "z": 1
+            },
+            {
+                "x": -1,
+                "z": 1
+            },
+            {
+                "x": 0,
+                "z": 1
+            },
+            {
+                "x": 1,
+                "z": 1
+            },
+            {
+                "x": 2,
+                "z": 1
+            },
+            {
+                "x": 3,
+                "z": 1
+            },
+            {
+                "x": 4,
+                "z": 1
+            },
+            {
+                "x": 5,
+                "z": 1
+            },
+            {
+                "x": 6,
+                "z": 1
+            },
+            {
+                "x": -6,
+                "z": 2
+            },
+            {
+                "x": -5,
+                "z": 2
+            },
+            {
+                "x": -4,
+                "z": 2
+            },
+            {
+                "x": -3,
+                "z": 2
+            },
+            {
+                "x": -2,
+                "z": 2
+            },
+            {
+                "x": -1,
+                "z": 2
+            },
+            {
+                "x": 0,
+                "z": 2
+            },
+            {
+                "x": 1,
+                "z": 2
+            },
+            {
+                "x": 2,
+                "z": 2
+            },
+            {
+                "x": 3,
+                "z": 2
+            },
+            {
+                "x": 4,
+                "z": 2
+            },
+            {
+                "x": 5,
+                "z": 2
+            },
+            {
+                "x": 6,
+                "z": 2
+            },
+            {
+                "x": -6,
+                "z": 3
+            },
+            {
+                "x": -5,
+                "z": 3
+            },
+            {
+                "x": -4,
+                "z": 3
+            },
+            {
+                "x": -3,
+                "z": 3
+            },
+            {
+                "x": -2,
+                "z": 3
+            },
+            {
+                "x": -1,
+                "z": 3
+            },
+            {
+                "x": 0,
+                "z": 3
+            },
+            {
+                "x": 1,
+                "z": 3
+            },
+            {
+                "x": 2,
+                "z": 3
+            },
+            {
+                "x": 3,
+                "z": 3
+            },
+            {
+                "x": 4,
+                "z": 3
+            },
+            {
+                "x": 5,
+                "z": 3
+            },
+            {
+                "x": 6,
+                "z": 3
+            }
+        ],
+        "holeTiles": [],
+        "floorRegions": [
+            {
+                "id": "designer_floor_cell_0_0",
+                "center": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "halfSize": {
+                    "x": 6.5,
+                    "z": 3.5
+                }
+            }
+        ],
+        "doorPorts": [
+            {
+                "id": "north_0",
+                "direction": "north",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 0.0,
+                    "z": -3.5
+                },
+                "positionMeters": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": -3.5
+                },
+                "kind": "available"
+            },
+            {
+                "id": "south_0",
+                "direction": "south",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 0.0,
+                    "z": 3.5
+                },
+                "positionMeters": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 3.5
+                },
+                "kind": "available"
+            },
+            {
+                "id": "east_0",
+                "direction": "east",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": 6.5,
+                    "z": 0.0
+                },
+                "positionMeters": {
+                    "x": 6.5,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "kind": "available"
+            },
+            {
+                "id": "west_0",
+                "direction": "west",
+                "laneIndex": 0,
+                "hostCell": {
+                    "x": 0,
+                    "z": 0
+                },
+                "gridEdgeCenter": {
+                    "x": -6.5,
+                    "z": 0.0
+                },
+                "positionMeters": {
+                    "x": -6.5,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "kind": "available"
+            }
+        ],
+        "playerSafeStart": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -2.0
+        },
+        "enemySpawns": [],
+        "itemSpawns": [
+            {
+                "id": "spawn_corrupted_chest_0",
+                "kind": "spawn_point_corruptedChest",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            }
+        ],
+        "obstacles": [
+            {
+                "id": "altar_rock_south_west",
+                "kind": "rockTile",
+                "center": {
+                    "x": -4.0,
+                    "y": 0.5,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "altar_rock_south_east",
+                "kind": "rockTile",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.5,
+                    "z": -2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "altar_rock_north_west",
+                "kind": "rockTile",
+                "center": {
+                    "x": -4.0,
+                    "y": 0.5,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            },
+            {
+                "id": "altar_rock_north_east",
+                "kind": "rockTile",
+                "center": {
+                    "x": 4.0,
+                    "y": 0.5,
+                    "z": 2.0
+                },
+                "size": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "blocksProjectiles": true
+            }
+        ],
+        "hazards": [],
+        "interactiveObjects": [],
+        "decor": [
+            {
+                "id": "corrupt_crystal_west",
+                "kind": "decorCrystalCluster",
+                "center": {
+                    "x": -1.600000023841858,
+                    "y": 0.3100000023841858,
+                    "z": 0.949999988079071
+                },
+                "size": {
+                    "x": 0.5600000023841858,
+                    "y": 0.6200000047683716,
+                    "z": 0.5600000023841858
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            },
+            {
+                "id": "corrupt_crystal_east",
+                "kind": "decorCrystalCluster",
+                "center": {
+                    "x": 1.600000023841858,
+                    "y": 0.3100000023841858,
+                    "z": 0.949999988079071
+                },
+                "size": {
+                    "x": 0.5600000023841858,
+                    "y": 0.6200000047683716,
+                    "z": 0.5600000023841858
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            },
+            {
+                "id": "corrupt_ruin_backdrop",
+                "kind": "decorStoneRuin",
+                "center": {
+                    "x": 0.0,
+                    "y": 0.3100000023841858,
+                    "z": 1.75
+                },
+                "size": {
+                    "x": 0.8999999761581421,
+                    "y": 0.6200000047683716,
+                    "z": 0.5799999833106995
+                },
+                "blocking": false,
+                "blocksProjectiles": false
+            }
+        ]
+    }
+}

@@ -16,3 +16,7 @@ MonoBehaviour:
   biomes:
   - {fileID: 11400000, guid: 49c8d1dcbb4694da8972959828fc8628, type: 2}
   - {fileID: 11400000, guid: 0c7d2c4ee31ef40ae9b7039a6c8a272c, type: 2}
+  - {fileID: 11400000, guid: 7235faa09b584c34bcaf3dfbb4075dba, type: 2}
+  - {fileID: 11400000, guid: 13200000000000000000000000000101, type: 2}
+  - {fileID: 11400000, guid: 13200000000000000000000000000102, type: 2}
+  - {fileID: 11400000, guid: 13200000000000000000000000000103, type: 2}

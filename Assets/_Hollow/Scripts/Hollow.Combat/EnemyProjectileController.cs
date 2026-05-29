@@ -1,4 +1,5 @@
 using Hollow.Data.Definitions;
+using Hollow.Core;
 using Hollow.Entities;
 using Hollow.Presentation;
 using Hollow.Rooms;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace Hollow.Combat
 {
-    public sealed class EnemyProjectileController : MonoBehaviour
+    public sealed class EnemyProjectileController : MonoBehaviour, IPooledRuntimeObject
     {
         private RoomRuntimeRoot roomRuntimeRoot;
         private PlaceholderPlayerController playerController;
@@ -30,6 +31,7 @@ namespace Hollow.Combat
         private float ballisticArcHeightMeters = 1.35f;
         private float ballisticSplashRadiusMeters = 0.55f;
         private GameObject ballisticShadow;
+        private GameObject presentationVisual;
 
         public int Damage => damage;
 
@@ -65,8 +67,22 @@ namespace Hollow.Combat
             damageClassification = DamageClassification.PhysicalProjectile(ImpactForceClass.Light);
             knockbackMeters = 0f;
             guardKnockbackMultiplier = 0f;
+            destroyed = false;
+            ballistic = false;
             MaterialResolver.ApplyTo(gameObject, MaterialRole.EnemyProjectile);
-            PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyProjectile, transform, Vector3.zero, Vector3.one);
+            if (presentationVisual == null)
+            {
+                presentationVisual = PresentationPrefabResolver.InstantiateVisual(PresentationPrefabRole.EnemyProjectile, transform, Vector3.zero, Vector3.one);
+            }
+            else
+            {
+                presentationVisual.SetActive(true);
+            }
+
+            if (ballisticShadow != null)
+            {
+                ballisticShadow.SetActive(false);
+            }
         }
 
         public void ConfigureBallisticLanding(Vector3 targetLocalPosition, float travelSeconds, float arcHeightMeters, float splashRadiusMeters)
@@ -315,11 +331,41 @@ namespace Hollow.Combat
             destroyed = true;
             if (Application.isPlaying)
             {
-                Destroy(gameObject);
+                HollowRuntimePool.Return(gameObject);
             }
             else
             {
                 DestroyImmediate(gameObject);
+            }
+        }
+
+        public void OnRentFromPool()
+        {
+            destroyed = false;
+            ageSeconds = 0f;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            roomRuntimeRoot = null;
+            playerController = null;
+            playerHealth = null;
+            ageSeconds = 0f;
+            destroyed = true;
+            ballistic = false;
+            knockbackMeters = 0f;
+            guardKnockbackMultiplier = 0f;
+            threatKind = DamageThreatKind.Light;
+            damageClassification = DamageClassification.PhysicalProjectile(ImpactForceClass.Light);
+            if (presentationVisual != null)
+            {
+                presentationVisual.SetActive(false);
+            }
+
+            if (ballisticShadow != null)
+            {
+                ballisticShadow.SetActive(false);
             }
         }
     }

@@ -13,6 +13,7 @@ namespace Hollow.Editor.Navigation
     {
         public const string ApprovedRoomsRoot = "Assets/_Hollow/Data/Rooms/DesignerApproved";
         public const string MacroFixturesRoot = "Assets/_Hollow/Data/Rooms/MacroFixtures";
+        public const string BiomeRoomsRoot = "Assets/_Hollow/Data/Rooms/Biomes";
         public const string DeveloperLabRoomsRoot = "Assets/_Hollow/Data/Rooms/DeveloperLab";
         public const string SpaceshipRoomsRoot = "Assets/_Hollow/Data/Rooms/Spaceship";
         public const string OutputFolder = "Assets/_Hollow/Data/NavMesh/Rooms";
@@ -23,6 +24,7 @@ namespace Hollow.Editor.Navigation
         {
             ApprovedRoomsRoot,
             MacroFixturesRoot,
+            BiomeRoomsRoot,
             DeveloperLabRoomsRoot,
             SpaceshipRoomsRoot
         };

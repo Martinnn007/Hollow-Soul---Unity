@@ -42,17 +42,15 @@ namespace Hollow.Tests.EditMode
                 var plan = EncounterResolver.CreateDirectedSeededPlan(graph, catalog, 46001, 3, profile);
 
                 Assert.IsFalse(plan.TryResolve("origin", out _), "Starter/origin rooms must stay no-combat.");
+                Assert.IsFalse(plan.TryResolve("reward_01", out _), "M134 Reward rooms stay no-combat.");
                 Assert.IsFalse(plan.TryResolve("treasure_01", out _), "Treasure rooms stay no-combat.");
                 Assert.IsFalse(plan.TryResolve("secret_01", out _), "Secret rooms stay no-combat.");
                 Assert.IsTrue(plan.TryResolve("combat_01", out var combat));
-                Assert.IsTrue(plan.TryResolve("reward_01", out var reward));
                 Assert.IsTrue(plan.TryResolve("boss_01", out var boss));
 
                 Assert.AreEqual(3, combat.WorldIndex);
                 Assert.AreEqual(3, combat.DifficultyBand);
                 Assert.LessOrEqual(combat.EnemySpawnKinds.Count, 6);
-                Assert.AreEqual(4, reward.DifficultyBand);
-                Assert.LessOrEqual(reward.EnemySpawnKinds.Count, 6);
                 Assert.AreEqual("stone_warden_boss", boss.EncounterId);
                 Assert.AreEqual(1, boss.EnemySpawnKinds.Count);
             }

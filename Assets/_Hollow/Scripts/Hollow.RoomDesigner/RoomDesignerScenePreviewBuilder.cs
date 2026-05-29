@@ -70,6 +70,13 @@ namespace Hollow.RoomDesigner
             return attached;
         }
 
+        public static bool ShouldRenderMarkerInPresentationPreview(string markerKind)
+        {
+            return RoomDesignerMarkerKinds.IsChest(markerKind) ||
+                   RoomDesignerMarkerKinds.IsInteractiveObject(markerKind) ||
+                   RoomDesignerMarkerKinds.IsDecor(markerKind);
+        }
+
         public static PresentationPrefabRole PrefabRoleForMarker(string markerKind)
         {
             return markerKind switch
@@ -77,6 +84,8 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.SafeStart => PresentationPrefabRole.Player,
                 RoomDesignerMarkerKinds.RoomReward => PresentationPrefabRole.RewardPickup,
                 RoomDesignerMarkerKinds.ChestSpawn => PresentationPrefabRole.ChestNormal,
+                RoomDesignerMarkerKinds.GoldenChestSpawn => PresentationPrefabRole.ChestGolden,
+                RoomDesignerMarkerKinds.CorruptedChestSpawn => PresentationPrefabRole.ChestCorrupted,
                 RoomDesignerMarkerKinds.StandardBarrel => PresentationPrefabRole.StandardBarrel,
                 RoomDesignerMarkerKinds.ExplosiveBarrel => PresentationPrefabRole.ExplosiveBarrel,
                 RoomDesignerMarkerKinds.DecorGrassTuft => PresentationPrefabRole.DecorGrassTuft,
@@ -108,6 +117,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => PresentationPrefabRole.EnemyAzureMinigunTurret,
                 RoomDesignerMarkerKinds.EnemyHollowAcolyte => PresentationPrefabRole.EnemyHollowAcolyte,
                 RoomDesignerMarkerKinds.EnemyWraith => PresentationPrefabRole.EnemyWraith,
+                RoomDesignerMarkerKinds.EnemyEscapist => PresentationPrefabRole.EnemyWraith,
                 RoomDesignerMarkerKinds.EnemySoulEater => PresentationPrefabRole.EnemySoulEater,
                 RoomDesignerMarkerKinds.EnemyCurseBinder => PresentationPrefabRole.EnemyCurseBinder,
                 RoomDesignerMarkerKinds.EnemyGraveLantern => PresentationPrefabRole.EnemyGraveLantern,

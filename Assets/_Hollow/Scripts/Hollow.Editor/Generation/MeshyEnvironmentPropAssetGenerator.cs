@@ -40,6 +40,7 @@ namespace Hollow.Editor.Generation
                     RockVisualYawCorrectionDegrees,
                     false,
                     new Color(0.22f, 0.21f, 0.18f, 1f),
+                    Color.white,
                     0.08f,
                     0.38f),
                 new MeshyEnvironmentPropSpec(
@@ -57,7 +58,44 @@ namespace Hollow.Editor.Generation
                     0f,
                     false,
                     new Color(0.43f, 0.28f, 0.14f, 1f),
+                    Color.white,
                     0.24f,
+                    0.46f),
+                new MeshyEnvironmentPropSpec(
+                    "Emberbound Golden Chest",
+                    PresentationPrefabRole.ChestGolden,
+                    MaterialRole.ChestGolden,
+                    "Assets/_Hollow/Prefabs/ArtPass/AP_ChestGolden.prefab",
+                    "AP_ChestGolden",
+                    "Assets/_Hollow/Art/Materials/ArtPass/AP_M_ChestGolden.mat",
+                    "MeshyEmberboundGoldenChestModel",
+                    "Assets/MeshyImports/Meshy_Model_20260525_122209/Meshy_AI_Emberbound_Chest_0525112156_texture",
+                    new Vector3(0.88f, 0.58f, 0.7f),
+                    0f,
+                    MeshyModelLocalEuler,
+                    0f,
+                    false,
+                    new Color(1f, 0.76f, 0.18f, 1f),
+                    Color.white,
+                    0.48f,
+                    0.64f),
+                new MeshyEnvironmentPropSpec(
+                    "Sigilbound Corrupted Chest",
+                    PresentationPrefabRole.ChestCorrupted,
+                    MaterialRole.ChestCorrupted,
+                    "Assets/_Hollow/Prefabs/ArtPass/AP_ChestCorrupted.prefab",
+                    "AP_ChestCorrupted",
+                    "Assets/_Hollow/Art/Materials/ArtPass/AP_M_ChestCorrupted.mat",
+                    "MeshySigilboundCorruptedChestModel",
+                    "Assets/MeshyImports/Meshy_Model_20260524_192736/Meshy_AI_Sigilbound_Chest_0524182705_texture",
+                    new Vector3(0.9f, 0.6f, 0.72f),
+                    0f,
+                    MeshyModelLocalEuler,
+                    0f,
+                    false,
+                    new Color(0.25f, 0.08f, 0.28f, 1f),
+                    Color.white,
+                    0.28f,
                     0.46f)
             };
         }
@@ -112,8 +150,8 @@ namespace Hollow.Editor.Generation
 
             material.name = Path.GetFileNameWithoutExtension(spec.MaterialPath);
             material.shader = Shader.Find("Universal Render Pipeline/Lit") ?? material.shader;
-            SetColor(material, "_BaseColor", Color.white);
-            SetColor(material, "_Color", Color.white);
+            SetColor(material, "_BaseColor", spec.MaterialTint);
+            SetColor(material, "_Color", spec.MaterialTint);
             SetTexture(material, "_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(spec.AlbedoPath));
             SetTexture(material, "_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(spec.AlbedoPath));
             SetTexture(material, "_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(spec.NormalPath));
@@ -468,6 +506,7 @@ namespace Hollow.Editor.Generation
                 float modelYawCorrectionDegrees,
                 bool straightenFootprintYaw,
                 Color fallbackColor,
+                Color materialTint,
                 float metallic,
                 float smoothness)
             {
@@ -485,6 +524,7 @@ namespace Hollow.Editor.Generation
                 ModelYawCorrectionDegrees = modelYawCorrectionDegrees;
                 StraightenFootprintYaw = straightenFootprintYaw;
                 FallbackColor = fallbackColor;
+                MaterialTint = materialTint;
                 Metallic = metallic;
                 Smoothness = smoothness;
             }
@@ -503,11 +543,19 @@ namespace Hollow.Editor.Generation
             public float ModelYawCorrectionDegrees { get; }
             public bool StraightenFootprintYaw { get; }
             public Color FallbackColor { get; }
+            public Color MaterialTint { get; }
             public float Metallic { get; }
             public float Smoothness { get; }
             public string FbxPath => $"{AssetStem}.fbx";
             public string AlbedoPath => $"{AssetStem}.png";
-            public string EmissionPath => $"{AssetStem}_emission.png";
+            public string EmissionPath
+            {
+                get
+                {
+                    var standardPath = $"{AssetStem}_emission.png";
+                    return File.Exists(standardPath) ? standardPath : $"{AssetStem}_emit.png";
+                }
+            }
             public string MetallicPath => $"{AssetStem}_metallic.png";
             public string NormalPath => $"{AssetStem}_normal.png";
             public string RoughnessPath => $"{AssetStem}_roughness.png";

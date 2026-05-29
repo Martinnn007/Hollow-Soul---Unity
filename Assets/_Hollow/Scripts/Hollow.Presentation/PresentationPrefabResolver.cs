@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using UnityEngine;
 
@@ -7,16 +8,37 @@ namespace Hollow.Presentation
     public static class PresentationPrefabResolver
     {
         private static readonly Dictionary<PresentationPrefabRole, GameObject> FallbackPrefabs = new();
+        private static readonly Dictionary<PresentationPrefabRole, GameObject> ResolvedPrefabs = new();
+        private static readonly Dictionary<int, bool> PrefabRequiresColliderStrip = new();
+        private static PresentationContentCatalog cachedCatalog;
 
         public static GameObject Resolve(PresentationPrefabRole role)
         {
             var catalog = PresentationContentProvider.ActiveCatalog;
+            if (cachedCatalog != catalog)
+            {
+                ResolvedPrefabs.Clear();
+                PrefabRequiresColliderStrip.Clear();
+                cachedCatalog = catalog;
+            }
+
+            if (ResolvedPrefabs.TryGetValue(role, out var cached) && cached != null)
+            {
+                M136PerformanceOperationCounters.ReportPresentationPrefabCacheHit();
+                return cached;
+            }
+
+            M136PerformanceOperationCounters.ReportPresentationPrefabCacheMiss();
             if (catalog != null && catalog.TryGetPrefab(role, out var prefab) && prefab != null)
             {
+                PrewarmPrefab(prefab);
+                ResolvedPrefabs[role] = prefab;
                 return prefab;
             }
 
-            return FallbackPrefabFor(role);
+            var fallback = FallbackPrefabFor(role);
+            ResolvedPrefabs[role] = fallback;
+            return fallback;
         }
 
         public static GameObject InstantiateVisual(PresentationPrefabRole role, Transform parent, Vector3 localPosition, Vector3 localScale)
@@ -45,8 +67,17 @@ namespace Hollow.Presentation
             visual.transform.localScale = localScale;
             visual.SetActive(true);
             EnsureMarker(visual, role, prefab.TryGetComponent<PresentationVisualMarker>(out var marker) && marker.IsFallback);
-            StripColliders(visual);
+            if (RequiresColliderStrip(prefab))
+            {
+                StripColliders(visual);
+            }
+
             return visual;
+        }
+
+        internal static void PrewarmPrefab(GameObject prefab)
+        {
+            CacheColliderStripRequirement(prefab);
         }
 
         internal static void ClearCache()
@@ -69,6 +100,9 @@ namespace Hollow.Presentation
             }
 
             FallbackPrefabs.Clear();
+            ResolvedPrefabs.Clear();
+            PrefabRequiresColliderStrip.Clear();
+            cachedCatalog = null;
         }
 
         private static GameObject FallbackPrefabFor(PresentationPrefabRole role)
@@ -87,6 +121,7 @@ namespace Hollow.Presentation
             StripColliders(fallback);
             EnsureMarker(fallback, role, isFallback: true);
             FallbackPrefabs[role] = fallback;
+            PrefabRequiresColliderStrip[fallback.GetInstanceID()] = false;
             return fallback;
         }
 
@@ -130,7 +165,14 @@ namespace Hollow.Presentation
                 return;
             }
 
-            foreach (var collider in visual.GetComponentsInChildren<Collider>(includeInactive: true))
+            var colliders = visual.GetComponentsInChildren<Collider>(includeInactive: true);
+            if (colliders.Length == 0)
+            {
+                return;
+            }
+
+            M136PerformanceOperationCounters.ReportPresentationColliderStripPass();
+            foreach (var collider in colliders)
             {
                 if (Application.isPlaying)
                 {
@@ -141,6 +183,29 @@ namespace Hollow.Presentation
                     Object.DestroyImmediate(collider);
                 }
             }
+        }
+
+        private static bool RequiresColliderStrip(GameObject prefab)
+        {
+            return CacheColliderStripRequirement(prefab);
+        }
+
+        private static bool CacheColliderStripRequirement(GameObject prefab)
+        {
+            if (prefab == null)
+            {
+                return false;
+            }
+
+            var key = prefab.GetInstanceID();
+            if (PrefabRequiresColliderStrip.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+
+            var hasColliders = prefab.GetComponentsInChildren<Collider>(includeInactive: true).Length > 0;
+            PrefabRequiresColliderStrip[key] = hasColliders;
+            return hasColliders;
         }
 
         private static PrimitiveType PrimitiveFor(PresentationPrefabRole role)
@@ -196,7 +261,7 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.RoomHazardSpike => new Vector3(0.72f, 0.08f, 0.72f),
                 PresentationPrefabRole.StandardBarrel or PresentationPrefabRole.ExplosiveBarrel => new Vector3(0.82f, 1f, 0.82f),
                 PresentationPrefabRole.HazardCoinDrop or PresentationPrefabRole.CoinCopper or PresentationPrefabRole.CoinSilver or PresentationPrefabRole.CoinGold => Vector3.one * 0.22f,
-                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden => new Vector3(0.75f, 0.5f, 0.6f),
+                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden or PresentationPrefabRole.ChestCorrupted => new Vector3(0.75f, 0.5f, 0.6f),
                 _ => Vector3.one
             };
         }
@@ -264,6 +329,7 @@ namespace Hollow.Presentation
                 PresentationPrefabRole.HazardCoinDrop => MaterialRole.HazardCoinDrop,
                 PresentationPrefabRole.ChestNormal => MaterialRole.ChestNormal,
                 PresentationPrefabRole.ChestGolden => MaterialRole.ChestGolden,
+                PresentationPrefabRole.ChestCorrupted => MaterialRole.ChestCorrupted,
                 PresentationPrefabRole.CoinCopper => MaterialRole.CoinCopper,
                 PresentationPrefabRole.CoinSilver => MaterialRole.CoinSilver,
                 PresentationPrefabRole.CoinGold => MaterialRole.CoinGold,

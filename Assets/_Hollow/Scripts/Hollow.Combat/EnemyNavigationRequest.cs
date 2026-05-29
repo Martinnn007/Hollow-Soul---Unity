@@ -26,7 +26,9 @@ namespace Hollow.Combat
             float actionEnvelopeMinDistanceMeters = 0f,
             float actionEnvelopeMaxDistanceMeters = 0f,
             EnemyNavMeshAgentBridge navMeshAgentBridge = null,
-            float desiredSpeedMetersPerSecond = 0f)
+            float desiredSpeedMetersPerSecond = 0f,
+            EnemyAiLodTier aiLodTier = EnemyAiLodTier.Full,
+            EnemyTacticalRole tacticalRole = EnemyTacticalRole.None)
         {
             Room = room;
             CurrentLocalPosition = currentLocalPosition;
@@ -49,6 +51,8 @@ namespace Hollow.Combat
             ActionEnvelopeMaxDistanceMeters = Mathf.Max(ActionEnvelopeMinDistanceMeters, actionEnvelopeMaxDistanceMeters);
             NavMeshAgentBridge = navMeshAgentBridge;
             DesiredSpeedMetersPerSecond = Mathf.Max(0f, desiredSpeedMetersPerSecond);
+            AiLodTier = aiLodTier;
+            TacticalRole = tacticalRole;
         }
 
         public RoomRuntimeRoot Room { get; }
@@ -92,5 +96,9 @@ namespace Hollow.Combat
         public EnemyNavMeshAgentBridge NavMeshAgentBridge { get; }
 
         public float DesiredSpeedMetersPerSecond { get; }
+
+        public EnemyAiLodTier AiLodTier { get; }
+
+        public EnemyTacticalRole TacticalRole { get; }
     }
 }

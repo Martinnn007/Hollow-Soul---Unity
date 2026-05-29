@@ -125,15 +125,19 @@ namespace Hollow.Combat
             if (timeSeconds >= nextSecondaryTime)
             {
                 statusText = "Stomp burst";
-                FireRadial(8, Profile("stone_stomp_burst"), 0f);
-                nextSecondaryTime = timeSeconds + Profile("stone_stomp_burst").CooldownSeconds;
+                var profile = Profile("stone_stomp_burst");
+                PlayBossPatternCue(profile);
+                FireRadial(8, profile, 0f);
+                nextSecondaryTime = timeSeconds + profile.CooldownSeconds;
             }
 
             if (HealthPercent() <= 0.5f && timeSeconds >= nextSpecialTime)
             {
                 statusText = "Four-way burst";
-                FireCardinal(Profile("stone_four_way_burst"));
-                nextSpecialTime = timeSeconds + Profile("stone_four_way_burst").CooldownSeconds;
+                var profile = Profile("stone_four_way_burst");
+                PlayBossPatternCue(profile);
+                FireCardinal(profile);
+                nextSpecialTime = timeSeconds + profile.CooldownSeconds;
             }
         }
 
@@ -171,8 +175,29 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Falling marks";
-                FireFanAtPlayer(5, 42f, Profile("cartouche_falling_marks"));
-                nextPrimaryTime = timeSeconds + Profile("cartouche_falling_marks").CooldownSeconds;
+                var profile = Profile("cartouche_falling_marks");
+                PlayBossPatternCue(profile);
+                FireFanAtPlayer(5, 42f, profile);
+                nextPrimaryTime = timeSeconds + profile.CooldownSeconds;
+            }
+
+            if (timeSeconds >= nextSecondaryTime)
+            {
+                statusText = "Lapis volley";
+                var profile = Profile("cartouche_lapis_volley");
+                PlayBossPatternCue(profile);
+                FireFanAtPlayer(3, 26f, profile);
+                nextSecondaryTime = timeSeconds + profile.CooldownSeconds;
+            }
+
+            if (HealthPercent() <= 0.45f && timeSeconds >= nextSpecialTime)
+            {
+                statusText = "Sigil mines";
+                var profile = Profile("cartouche_sigil_mines");
+                PlayBossPatternCue(profile);
+                FireRadial(4, profile, rotationAngle);
+                rotationAngle += 37f;
+                nextSpecialTime = timeSeconds + profile.CooldownSeconds;
             }
         }
 
@@ -240,16 +265,20 @@ namespace Hollow.Combat
             if (timeSeconds >= nextPrimaryTime)
             {
                 statusText = "Rotating hymn";
-                FireRadial(12, Profile("choir_rotating_hymn"), rotationAngle);
+                var profile = Profile("choir_rotating_hymn");
+                PlayBossPatternCue(profile);
+                FireRadial(12, profile, rotationAngle);
                 rotationAngle += 17f;
-                nextPrimaryTime = timeSeconds + Profile("choir_rotating_hymn").CooldownSeconds;
+                nextPrimaryTime = timeSeconds + profile.CooldownSeconds;
             }
 
             if (HealthPercent() <= 0.35f && timeSeconds >= nextSpecialTime)
             {
                 statusText = "Tooth storm";
-                FireRadial(16, Profile("choir_tooth_storm"), rotationAngle * 0.5f);
-                nextSpecialTime = timeSeconds + Profile("choir_tooth_storm").CooldownSeconds;
+                var profile = Profile("choir_tooth_storm");
+                PlayBossPatternCue(profile);
+                FireRadial(16, profile, rotationAngle * 0.5f);
+                nextSpecialTime = timeSeconds + profile.CooldownSeconds;
             }
         }
 
@@ -391,8 +420,8 @@ namespace Hollow.Combat
             }
 
             var projectileObject = projectilePrefab != null
-                ? Instantiate(projectilePrefab, owner.transform.parent)
-                : GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                ? Hollow.Core.HollowRuntimePool.Rent(projectilePrefab, owner.transform.parent)
+                : Hollow.Core.HollowRuntimePool.RentPrimitive("EnemyProjectile.Boss.Fallback", PrimitiveType.Sphere, owner.transform.parent);
             projectileObject.name = $"EnemyProjectile.Boss.{definition.BossId}";
             projectileObject.transform.SetParent(owner.transform.parent, worldPositionStays: false);
             projectileObject.transform.localPosition = owner.transform.localPosition + direction.normalized * (owner.RadiusMeters + 0.32f) + new Vector3(0f, 0.42f, 0f);
@@ -427,6 +456,12 @@ namespace Hollow.Combat
                 projectile.ConfigureThreat(DamageThreatKind.Light);
             }
             activeProjectiles.Add(projectile);
+        }
+
+        private void PlayBossPatternCue(EnemyAttackProfileDefinition profile)
+        {
+            VfxPresenter.Play(VfxCueId.EnemyWindup, owner.transform.position, owner.transform.parent);
+            AudioPresenter.Play(AudioCueId.EnemyWindup, owner.transform.position);
         }
 
         private EnemyAttackProfileDefinition Profile(string attackId)

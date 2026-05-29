@@ -1,9 +1,10 @@
 using Hollow.Data.Definitions;
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Combat
 {
-    public sealed class MeleeSwipePresenter : MonoBehaviour
+    public sealed class MeleeSwipePresenter : MonoBehaviour, IPooledRuntimeObject
     {
         private const float LightDurationSeconds = 0.12f;
         private const float HeavyDurationSeconds = 0.18f;
@@ -25,7 +26,7 @@ namespace Hollow.Combat
         {
             var safeRange = Mathf.Max(0.1f, rangeMeters);
             var safeDirection = direction.sqrMagnitude < 0.001f ? Vector3.forward : direction.normalized;
-            var swipe = new GameObject("MeleeSwipe", typeof(MeshFilter), typeof(MeshRenderer));
+            var swipe = HollowRuntimePool.RentGenerated("MeleeSwipe", parent, () => new GameObject("MeleeSwipe", typeof(MeshFilter), typeof(MeshRenderer)));
             swipe.name = attackKind == AttackKind.Heavy ? "MeleeSwipe.Heavy" : "MeleeSwipe.Light";
             swipe.transform.SetParent(parent, false);
             swipe.transform.localPosition = localOrigin +
@@ -34,9 +35,7 @@ namespace Hollow.Combat
             swipe.transform.localRotation = Quaternion.LookRotation(safeDirection, Vector3.up);
             var width = attackKind == AttackKind.Heavy ? HeavyWidthMeters : LightWidthMeters;
             swipe.transform.localScale = new Vector3(width, 1f, safeRange);
-            swipe.GetComponent<MeshFilter>().sharedMesh = CreateSwipeMesh();
-
-            var presenter = swipe.AddComponent<MeleeSwipePresenter>();
+            var presenter = swipe.GetComponent<MeleeSwipePresenter>() ?? swipe.AddComponent<MeleeSwipePresenter>();
             presenter.Configure(attackKind);
             return swipe;
         }
@@ -70,10 +69,17 @@ namespace Hollow.Combat
         private void Configure(AttackKind attackKind)
         {
             durationSeconds = attackKind == AttackKind.Heavy ? HeavyDurationSeconds : LightDurationSeconds;
+            ageSeconds = 0f;
             startColor = attackKind == AttackKind.Heavy
                 ? new Color(1f, 0.78f, 0.25f, 0.62f)
                 : new Color(0.6f, 0.95f, 1f, 0.48f);
-            swipeMesh = GetComponent<MeshFilter>()?.sharedMesh;
+            var meshFilter = GetComponent<MeshFilter>();
+            if (meshFilter != null && meshFilter.sharedMesh == null)
+            {
+                meshFilter.sharedMesh = CreateSwipeMesh();
+            }
+
+            swipeMesh = meshFilter != null ? meshFilter.sharedMesh : null;
             swipeRenderer = GetComponent<Renderer>();
             if (swipeRenderer == null)
             {
@@ -88,10 +94,12 @@ namespace Hollow.Combat
                 return;
             }
 
-            swipeRenderer.sharedMaterial = new Material(shader)
+            if (swipeRenderer.sharedMaterial == null)
             {
-                color = startColor
-            };
+                swipeRenderer.sharedMaterial = new Material(shader);
+            }
+
+            swipeRenderer.sharedMaterial.color = startColor;
         }
 
         private void Update()
@@ -117,7 +125,7 @@ namespace Hollow.Combat
 
             if (Application.isPlaying)
             {
-                Destroy(gameObject);
+                HollowRuntimePool.Return(gameObject);
             }
             else
             {
@@ -154,6 +162,17 @@ namespace Hollow.Combat
                     DestroyImmediate(swipeMesh);
                 }
             }
+        }
+
+        public void OnRentFromPool()
+        {
+            ageSeconds = 0f;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            ageSeconds = 0f;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using UnityEngine;
 
@@ -7,14 +8,30 @@ namespace Hollow.Presentation
     public static class MaterialResolver
     {
         private static readonly Dictionary<MaterialRole, Material> FallbackMaterials = new();
+        private static readonly Dictionary<MaterialRole, Material> ResolvedMaterials = new();
+        private static MaterialPaletteDefinition cachedPalette;
 
         public static Material Resolve(MaterialRole role)
         {
             var palette = PresentationContentProvider.ActiveCatalog != null
                 ? PresentationContentProvider.ActiveCatalog.MaterialPalette
                 : null;
+            if (cachedPalette != palette)
+            {
+                ResolvedMaterials.Clear();
+                cachedPalette = palette;
+            }
+
+            if (ResolvedMaterials.TryGetValue(role, out var cached) && cached != null)
+            {
+                M136PerformanceOperationCounters.ReportPresentationMaterialCacheHit();
+                return cached;
+            }
+
+            M136PerformanceOperationCounters.ReportPresentationMaterialCacheMiss();
             if (palette != null && palette.TryResolve(role, out var material) && material != null)
             {
+                ResolvedMaterials[role] = material;
                 return material;
             }
 
@@ -25,6 +42,7 @@ namespace Hollow.Presentation
                 FallbackMaterials[role] = fallback;
             }
 
+            ResolvedMaterials[role] = fallback;
             return fallback;
         }
 
@@ -147,6 +165,7 @@ namespace Hollow.Presentation
                 MaterialRole.HazardCoinDrop => new Color(1f, 0.78f, 0.12f, 1f),
                 MaterialRole.ChestNormal => new Color(0.54f, 0.31f, 0.13f, 1f),
                 MaterialRole.ChestGolden => new Color(1f, 0.76f, 0.18f, 1f),
+                MaterialRole.ChestCorrupted => new Color(0.25f, 0.08f, 0.28f, 1f),
                 MaterialRole.CoinCopper => new Color(0.82f, 0.42f, 0.2f, 1f),
                 MaterialRole.CoinSilver => new Color(0.78f, 0.82f, 0.86f, 1f),
                 MaterialRole.CoinGold => new Color(1f, 0.82f, 0.18f, 1f),
@@ -179,7 +198,10 @@ namespace Hollow.Presentation
         internal static void ClearCache()
         {
             FallbackMaterials.Clear();
+            ResolvedMaterials.Clear();
+            cachedPalette = null;
             PresentationPrefabResolver.ClearCache();
+            RoomBiomePresentationResolver.ClearCache();
         }
 
         private static bool IsDoubleSidedFallback(MaterialRole role)

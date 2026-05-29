@@ -10,6 +10,7 @@ namespace Hollow.Branches
         private const string LabelName = "NextBranchPortal_Label";
 
         private string displayLabel;
+        private string branchBiomeId = RoomBiomeIds.HollowThreshold;
         private TextMesh labelMesh;
 
         public NextBranchChoice Choice { get; private set; }
@@ -18,15 +19,23 @@ namespace Hollow.Branches
 
         public string DisplayLabel => string.IsNullOrWhiteSpace(displayLabel) ? Choice?.DisplayName ?? string.Empty : displayLabel;
 
+        public string BranchBiomeId => RoomBiomeIds.Normalize(branchBiomeId);
+
         public void Configure(NextBranchChoice choice)
         {
-            Configure(choice, null);
+            Configure(choice, null, null);
         }
 
         public void Configure(NextBranchChoice choice, string displayNameOverride)
         {
+            Configure(choice, displayNameOverride, null);
+        }
+
+        public void Configure(NextBranchChoice choice, string displayNameOverride, string biomeId)
+        {
             Choice = choice;
             displayLabel = string.IsNullOrWhiteSpace(displayNameOverride) ? choice?.DisplayName ?? string.Empty : displayNameOverride;
+            branchBiomeId = RoomBiomeIds.Normalize(biomeId);
             name = choice != null ? $"NextBranchPortal_{choice.Index}_{choice.Kind}_{choice.State}" : "NextBranchPortal";
             ApplyVisualState();
             ApplyLabel();
@@ -47,7 +56,9 @@ namespace Hollow.Branches
                 HubPortalKind.FinalExtraction => MaterialRole.BossKeyPickup,
                 _ => Choice.State == HubBranchPortalState.Defeated ? MaterialRole.DoorUnavailable : MaterialRole.NextBranchPortal
             };
-            renderer.sharedMaterial = MaterialResolver.Resolve(role);
+            renderer.sharedMaterial = Choice.Kind == HubPortalKind.Branch
+                ? RoomBiomePresentationResolver.ResolveMaterial(BranchBiomeId, role)
+                : MaterialResolver.Resolve(role);
 
             ClearArtPassVisualChildren();
             var prefabRole = Choice.Kind switch
@@ -56,7 +67,14 @@ namespace Hollow.Branches
                 HubPortalKind.FinalExtraction => PresentationPrefabRole.BossKeyPickup,
                 _ => PresentationPrefabRole.NextBranchPortal
             };
-            PresentationPrefabResolver.InstantiateVisual(prefabRole, transform, Vector3.zero, Vector3.one);
+            if (Choice.Kind == HubPortalKind.Branch)
+            {
+                RoomBiomePresentationResolver.InstantiateVisual(BranchBiomeId, prefabRole, transform, Vector3.zero, Vector3.one);
+            }
+            else
+            {
+                PresentationPrefabResolver.InstantiateVisual(prefabRole, transform, Vector3.zero, Vector3.one);
+            }
         }
 
         private void ApplyLabel()

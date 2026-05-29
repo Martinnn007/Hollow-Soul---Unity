@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
+using Hollow.Core.Diagnostics;
 
 namespace Hollow.Combat
 {
@@ -17,17 +17,42 @@ namespace Hollow.Combat
             get
             {
                 RefreshFrame();
+                if (!Enabled)
+                {
+                    return $"Tactics active/wait {activeThreats}/{waitingEnemies} | disabled";
+                }
+
+                M136PerformanceOperationCounters.ReportDebugOverlayTick(true);
                 if (ActiveIntents.Count == 0)
                 {
                     return $"Tactics active/wait {activeThreats}/{waitingEnemies} | no enemy intents";
                 }
 
-                var active = ActiveIntents.Values.Count(intent => intent.Role == EnemyTacticalRole.ActiveThreat);
-                var support = ActiveIntents.Values.Count(intent => intent.Role is EnemyTacticalRole.SupportPressure or EnemyTacticalRole.Reposition);
-                var hold = ActiveIntents.Values.Count(intent => intent.Role is EnemyTacticalRole.Hold or EnemyTacticalRole.Waiting or EnemyTacticalRole.StationarySentinel);
-                var sample = ActiveIntents.Values
-                    .OrderByDescending(intent => intent.Score)
-                    .FirstOrDefault();
+                var active = 0;
+                var support = 0;
+                var hold = 0;
+                var sample = EnemyTacticalIntent.Empty;
+                foreach (var intent in ActiveIntents.Values)
+                {
+                    if (intent.Role == EnemyTacticalRole.ActiveThreat)
+                    {
+                        active++;
+                    }
+                    else if (intent.Role is EnemyTacticalRole.SupportPressure or EnemyTacticalRole.Reposition)
+                    {
+                        support++;
+                    }
+                    else if (intent.Role is EnemyTacticalRole.Hold or EnemyTacticalRole.Waiting or EnemyTacticalRole.StationarySentinel)
+                    {
+                        hold++;
+                    }
+
+                    if (intent.Score > sample.Score)
+                    {
+                        sample = intent;
+                    }
+                }
+
                 return $"Tactics active/support/hold {active}/{support}/{hold} | room active/wait {activeThreats}/{waitingEnemies} | top {sample.Role}:{sample.ActionId} slot {sample.ActiveSlotIndex}";
             }
         }
@@ -53,6 +78,11 @@ namespace Hollow.Combat
 
         public static void ReportIntent(int instanceId, EnemyTacticalIntent intent)
         {
+            if (!Enabled)
+            {
+                return;
+            }
+
             RefreshFrame();
             if (intent.Role == EnemyTacticalRole.None)
             {

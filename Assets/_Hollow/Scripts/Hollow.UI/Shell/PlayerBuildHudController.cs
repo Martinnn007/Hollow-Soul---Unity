@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Hollow.Branches;
+using Hollow.Core.Diagnostics;
 using Hollow.Rewards;
 using UnityEngine;
 using UnityEngine.UI;
@@ -143,6 +144,7 @@ namespace Hollow.UI.Shell
         private readonly string[] renderedStatValues = new string[8];
         private readonly Dictionary<string, Sprite> weaponIconSprites = new Dictionary<string, Sprite>();
         private readonly Dictionary<string, Sprite> usableIconSprites = new Dictionary<string, Sprite>();
+        private float nextProviderRefreshTime;
 
         public int RenderedHeartCount => heartImages.Count;
         public int RenderedFullHeartCount => renderedFullHeartCount;
@@ -186,6 +188,11 @@ namespace Hollow.UI.Shell
         {
             hudModelProvider ??= FindHudModelProvider();
 
+            if (Time.unscaledTime < nextProviderRefreshTime)
+            {
+                return;
+            }
+
             Refresh(force: false);
         }
 
@@ -197,8 +204,16 @@ namespace Hollow.UI.Shell
                 return;
             }
 
+            var now = Time.unscaledTime;
+            if (!force && now < nextProviderRefreshTime)
+            {
+                return;
+            }
+
+            M136PerformanceOperationCounters.ReportPlayerBuildHudModelBuild();
             var model = hudModelProvider.CreatePlayerBuildHudModel();
             RefreshFromModel(model);
+            nextProviderRefreshTime = now + M137PerformanceComfortPolicy.PlayerBuildHudMinRefreshIntervalSeconds;
         }
 
         private static IPlayerBuildHudModelProvider FindHudModelProvider()

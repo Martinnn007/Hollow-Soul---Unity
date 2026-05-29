@@ -193,11 +193,14 @@ namespace Hollow.RoomDesigner
         public const string EnemyAzureMinigunTurret = "spawnEnemyAzureMinigunTurret";
         public const string EnemyHollowAcolyte = "spawnEnemyHollowAcolyte";
         public const string EnemyWraith = "spawnEnemyWraith";
+        public const string EnemyEscapist = "spawnEnemyEscapist";
         public const string EnemySoulEater = "spawnEnemySoulEater";
         public const string EnemyCurseBinder = "spawnEnemyCurseBinder";
         public const string EnemyGraveLantern = "spawnEnemyGraveLantern";
         public const string RoomReward = "spawn_point_roomReward";
         public const string ChestSpawn = "spawn_point_chest";
+        public const string GoldenChestSpawn = "spawn_point_goldenChest";
+        public const string CorruptedChestSpawn = "spawn_point_corruptedChest";
         public const string StandardBarrel = "barrelStandard";
         public const string ExplosiveBarrel = "barrelExplosive";
         public const string DecorGrassTuft = RoomBiomeDecorKinds.GrassTuft;
@@ -234,6 +237,7 @@ namespace Hollow.RoomDesigner
             EnemyAzureMinigunTurret,
             EnemyHollowAcolyte,
             EnemyWraith,
+            EnemyEscapist,
             EnemySoulEater,
             EnemyCurseBinder,
             EnemyGraveLantern
@@ -242,6 +246,11 @@ namespace Hollow.RoomDesigner
         public static bool IsEnemy(string kind)
         {
             return System.Array.IndexOf(EnemyKinds, kind) >= 0;
+        }
+
+        public static bool IsChest(string kind)
+        {
+            return kind == ChestSpawn || kind == GoldenChestSpawn || kind == CorruptedChestSpawn;
         }
 
         public static bool IsInteractiveObject(string kind)
@@ -256,7 +265,7 @@ namespace Hollow.RoomDesigner
 
         public static bool IsPlacementMarker(string kind)
         {
-            return kind == RoomReward || kind == ChestSpawn || IsEnemy(kind) || IsInteractiveObject(kind) || IsDecor(kind);
+            return kind == RoomReward || IsChest(kind) || IsEnemy(kind) || IsInteractiveObject(kind) || IsDecor(kind);
         }
 
         public static string RuntimeEnemyKind(string kind)

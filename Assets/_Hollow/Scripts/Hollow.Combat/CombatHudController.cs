@@ -1,3 +1,4 @@
+using Hollow.Core.Diagnostics;
 using Hollow.Input;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,7 +13,13 @@ namespace Hollow.Combat
         private RectTransform debugPanel;
         private Font font;
         private RoomObjectiveState lastRoomState = (RoomObjectiveState)(-1);
+        private string lastStatusText = string.Empty;
+        private CombatHudModel lastModel;
+        private string lastDebugText = string.Empty;
+        private bool hasLastModel;
+        private bool lastDebugVisible;
         private float roomStateHideTime;
+        private float nextRefreshTime;
 
         public void Bind(RoomCombatController controller)
         {
@@ -23,31 +30,72 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            var forceRefresh = false;
             if (GameplayInputReader.ReadDebugHudTogglePressed())
             {
                 GameplayDebugHudState.Toggle();
+                forceRefresh = true;
             }
 
-            Refresh();
+            Refresh(forceRefresh);
         }
 
         public void Refresh()
+        {
+            Refresh(force: true);
+        }
+
+        private void Refresh(bool force)
         {
             if (combatController == null || roomStateText == null)
             {
                 return;
             }
 
-            var model = combatController.CreateHudModel();
-            RefreshRoomStateBadge(model);
-            if (debugPanel != null)
+            var now = Time.unscaledTime;
+            var debugVisible = GameplayDebugHudState.IsVisible;
+            if (!force &&
+                hasLastModel &&
+                debugVisible == lastDebugVisible &&
+                now < nextRefreshTime)
             {
-                debugPanel.gameObject.SetActive(GameplayDebugHudState.IsVisible);
+                HideExpiredRoomStateBadge(now);
+                return;
             }
 
-            if (debugText != null)
+            var model = combatController.CreateHudModel();
+            if (!force &&
+                hasLastModel &&
+                debugVisible == lastDebugVisible &&
+                ModelsEquivalent(lastModel, model) &&
+                now < nextRefreshTime)
             {
-                debugText.text =
+                HideExpiredRoomStateBadge(now);
+                return;
+            }
+
+            using (M137PerformanceProfilerMarkers.CombatHudRefresh.Auto())
+            {
+                M136PerformanceOperationCounters.ReportCombatHudRefresh();
+                RefreshRoomStateBadge(model, now);
+                RefreshDebugPanel(model, debugVisible);
+                lastModel = model;
+                hasLastModel = true;
+                lastDebugVisible = debugVisible;
+                nextRefreshTime = now + M137PerformanceComfortPolicy.CombatHudMinRefreshIntervalSeconds;
+            }
+        }
+
+        private void RefreshDebugPanel(CombatHudModel model, bool debugVisible)
+        {
+            if (debugPanel != null)
+            {
+                debugPanel.gameObject.SetActive(debugVisible);
+            }
+
+            if (debugText != null && debugVisible)
+            {
+                var debugLine =
                     $"COMBAT DEBUG (F3)\n" +
                     $"HP {model.PlayerHealth}/{model.PlayerMaxHealth} | {model.DefenseSummary}\n" +
                     $"Enemies {model.EnemiesRemaining}\n" +
@@ -57,6 +105,11 @@ namespace Hollow.Combat
                     $"Types {model.ArchetypeSummary}\n" +
                     $"{model.ProjectileSummary}\n" +
                     $"{model.DirectorDebugLine}";
+                if (debugLine != lastDebugText)
+                {
+                    debugText.text = debugLine;
+                    lastDebugText = debugLine;
+                }
             }
         }
 
@@ -75,30 +128,56 @@ namespace Hollow.Combat
             debugPanel.gameObject.SetActive(GameplayDebugHudState.IsVisible);
         }
 
-        private void RefreshRoomStateBadge(CombatHudModel model)
+        private void RefreshRoomStateBadge(CombatHudModel model, float now)
         {
             if (roomStateText == null)
             {
                 return;
             }
 
-            if (model.RoomState != lastRoomState)
+            if (model.RoomState != lastRoomState || model.StatusText != lastStatusText)
             {
                 lastRoomState = model.RoomState;
+                lastStatusText = model.StatusText;
                 roomStateText.text = model.StatusText;
                 roomStateText.color = model.RoomState == RoomObjectiveState.Cleared
                     ? new Color(0.25f, 1f, 0.45f)
-                    : Color.white;
-                var shouldShow = model.RoomState == RoomObjectiveState.Cleared;
+                    : model.HasStatusOverride ? new Color(0.75f, 0.9f, 1f) : Color.white;
+                var shouldShow = model.RoomState == RoomObjectiveState.Cleared || model.HasStatusOverride;
                 roomStateText.gameObject.SetActive(shouldShow);
-                roomStateHideTime = shouldShow && Application.isPlaying ? Time.unscaledTime + 2.25f : 0f;
+                roomStateHideTime = shouldShow && !model.HasStatusOverride && Application.isPlaying ? now + 2.25f : 0f;
             }
 
-            if (roomStateText.gameObject.activeSelf && roomStateHideTime > 0f && Time.unscaledTime >= roomStateHideTime)
+            HideExpiredRoomStateBadge(now);
+        }
+
+        private void HideExpiredRoomStateBadge(float now)
+        {
+            if (roomStateText != null && roomStateText.gameObject.activeSelf && roomStateHideTime > 0f && now >= roomStateHideTime)
             {
                 roomStateText.gameObject.SetActive(false);
                 roomStateHideTime = 0f;
             }
+        }
+
+        private static bool ModelsEquivalent(CombatHudModel left, CombatHudModel right)
+        {
+            return left.PlayerHealth == right.PlayerHealth &&
+                left.PlayerMaxHealth == right.PlayerMaxHealth &&
+                left.EnemiesRemaining == right.EnemiesRemaining &&
+                left.RoomState == right.RoomState &&
+                string.Equals(left.StatusOverride, right.StatusOverride, System.StringComparison.Ordinal) &&
+                string.Equals(left.DifficultyName, right.DifficultyName, System.StringComparison.Ordinal) &&
+                string.Equals(left.ArchetypeSummary, right.ArchetypeSummary, System.StringComparison.Ordinal) &&
+                string.Equals(left.ProjectileSummary, right.ProjectileSummary, System.StringComparison.Ordinal) &&
+                left.Defense == right.Defense &&
+                left.IsGuarding == right.IsGuarding &&
+                left.IsInParryWindow == right.IsInParryWindow &&
+                left.LastGuardResult == right.LastGuardResult &&
+                left.LastDamageReduction == right.LastDamageReduction &&
+                string.Equals(left.DirectorDebugLine, right.DirectorDebugLine, System.StringComparison.Ordinal) &&
+                string.Equals(left.RollDebugLine, right.RollDebugLine, System.StringComparison.Ordinal) &&
+                string.Equals(left.RangedDrawDebugLine, right.RangedDrawDebugLine, System.StringComparison.Ordinal);
         }
 
         private Text AddText(

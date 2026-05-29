@@ -45,7 +45,13 @@ namespace Hollow.Rooms
 
         public bool TryGetNavMeshData(string roomId, out NavMeshData navMeshData)
         {
+            return TryGetNavMeshData(roomId, out navMeshData, out _);
+        }
+
+        public bool TryGetNavMeshData(string roomId, out NavMeshData navMeshData, out string resolvedRoomId)
+        {
             navMeshData = null;
+            resolvedRoomId = string.Empty;
             if (string.IsNullOrWhiteSpace(roomId))
             {
                 return false;
@@ -66,10 +72,65 @@ namespace Hollow.Rooms
                 }
 
                 navMeshData = entry.NavMeshData;
+                resolvedRoomId = entry.RoomId;
+                return true;
+            }
+
+            if (!TryResolveSharedBakeRoomId(roomId, out var sharedRoomId) ||
+                string.Equals(sharedRoomId, roomId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            foreach (var entry in entries)
+            {
+                if (entry == null ||
+                    entry.NavMeshData == null ||
+                    !string.Equals(entry.RoomId, sharedRoomId, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                navMeshData = entry.NavMeshData;
+                resolvedRoomId = entry.RoomId;
                 return true;
             }
 
             return false;
+        }
+
+        public static bool TryResolveSharedBakeRoomId(string roomId, out string sharedRoomId)
+        {
+            sharedRoomId = string.Empty;
+            if (string.IsNullOrWhiteSpace(roomId))
+            {
+                return false;
+            }
+
+            if (roomId is "corrupted_chest_single_1x1" or
+                "wave_room_single_1x1" or
+                "special_soul_eater_single_1x1" or
+                "special_escapist_single_1x1")
+            {
+                sharedRoomId = "combat_macro_single_1x1";
+                return true;
+            }
+
+            return TryResolveBetaBiomeMacroBake(roomId, "before_teeth_macro_", out sharedRoomId) ||
+                   TryResolveBetaBiomeMacroBake(roomId, "sunken_cartouche_macro_", out sharedRoomId) ||
+                   TryResolveBetaBiomeMacroBake(roomId, "rust_choir_macro_", out sharedRoomId);
+        }
+
+        private static bool TryResolveBetaBiomeMacroBake(string roomId, string prefix, out string sharedRoomId)
+        {
+            sharedRoomId = string.Empty;
+            if (!roomId.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            sharedRoomId = "combat_macro_" + roomId.Substring(prefix.Length);
+            return true;
         }
 
         public void Configure(IEnumerable<RoomNavMeshCatalogEntry> nextEntries)

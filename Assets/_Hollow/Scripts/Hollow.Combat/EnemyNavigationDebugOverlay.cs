@@ -1,5 +1,7 @@
 namespace Hollow.Combat
 {
+    using Hollow.Core.Diagnostics;
+
     public static class EnemyNavigationDebugOverlay
     {
         private const float RollingWindowSeconds = 1f;
@@ -53,6 +55,12 @@ namespace Hollow.Combat
         {
             get
             {
+                if (!PathTracingEnabled)
+                {
+                    return "NavMesh debug: disabled";
+                }
+
+                M136PerformanceOperationCounters.ReportDebugOverlayTick(true);
                 var stats = Stats;
                 return $"NavMesh users {stats.ActivePathUsers} | pending {stats.PendingPathUsers} | stuck {stats.StuckAgents} | req/s {stats.RequestsPerSecond} | paths/s {stats.FreshSolvesPerSecond} | deferred/s {stats.BudgetDeferredPerSecond} | invalid/s {stats.FallbacksPerSecond} | budget {stats.BudgetUsedThisFrame}/{stats.BudgetLimitPerFrame} | avg {stats.AverageSolveMilliseconds:0.00}ms max {stats.MaxSolveMilliseconds:0.00}ms | last {stats.LastFallbackReason}";
             }
@@ -91,6 +99,11 @@ namespace Hollow.Combat
 
         public static void ReportActivePathUser(int instanceId, bool pathPending, bool stuck, string reason)
         {
+            if (!PathTracingEnabled)
+            {
+                return;
+            }
+
             RefreshActivePathUserFrame();
             ActivePathUserIds.Add(instanceId);
             if (pathPending)
@@ -110,6 +123,7 @@ namespace Hollow.Combat
         {
             RefreshRollingWindow(UnityEngine.Time.unscaledTime);
             requestsThisWindow++;
+            M136PerformanceOperationCounters.ReportNavPathRequest();
         }
 
         public static void RecordFreshPathSolve(float milliseconds)
@@ -118,6 +132,7 @@ namespace Hollow.Combat
             freshSolvesThisWindow++;
             solveMillisecondsThisWindow += UnityEngine.Mathf.Max(0f, milliseconds);
             maxSolveMillisecondsThisWindow = UnityEngine.Mathf.Max(maxSolveMillisecondsThisWindow, milliseconds);
+            M136PerformanceOperationCounters.ReportNavPathSolve(milliseconds);
         }
 
         public static void RecordCacheHit()
@@ -137,6 +152,7 @@ namespace Hollow.Combat
             RefreshRollingWindow(UnityEngine.Time.unscaledTime);
             budgetDeferredThisWindow++;
             lastFallbackReason = string.IsNullOrWhiteSpace(reason) ? "budget_deferred" : reason;
+            M136PerformanceOperationCounters.ReportNavPathDeferred();
         }
 
         public static void RecordFallback(string reason)
@@ -144,6 +160,7 @@ namespace Hollow.Combat
             RefreshRollingWindow(UnityEngine.Time.unscaledTime);
             fallbacksThisWindow++;
             lastFallbackReason = string.IsNullOrWhiteSpace(reason) ? "fallback" : reason;
+            M136PerformanceOperationCounters.ReportNavPathFallback();
         }
 
         public static void RecordBudgetUsage(int usedThisFrame, int limitPerFrame)

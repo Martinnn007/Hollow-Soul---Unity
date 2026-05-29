@@ -2,6 +2,7 @@
   "name": "Hollow.Rewards",
   "rootNamespace": "Hollow.Rewards",
   "references": [
+    "Hollow.Core",
     "Hollow.Combat",
     "Hollow.Data",
     "Hollow.Persistence"

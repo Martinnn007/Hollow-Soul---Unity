@@ -12,7 +12,8 @@
     "Hollow.Presentation",
     "Hollow.Rewards",
     "Hollow.Rooms",
-    "Hollow.World"
+    "Hollow.World",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

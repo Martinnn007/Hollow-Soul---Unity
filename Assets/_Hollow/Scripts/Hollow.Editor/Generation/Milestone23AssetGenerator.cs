@@ -259,6 +259,7 @@ namespace Hollow.Editor.Generation
                     break;
                 case PresentationPrefabRole.ChestNormal:
                 case PresentationPrefabRole.ChestGolden:
+                case PresentationPrefabRole.ChestCorrupted:
                     AddPrimitive(parent, PrimitiveType.Cube, "chest_body", new Vector3(0f, 0.26f, 0f), new Vector3(0.78f, 0.42f, 0.58f), role);
                     AddPrimitive(parent, PrimitiveType.Cube, "chest_lid", new Vector3(0f, 0.54f, -0.04f), new Vector3(0.84f, 0.16f, 0.62f), role, alpha: 0.88f);
                     AddPrimitive(parent, PrimitiveType.Cube, "chest_clasp", new Vector3(0f, 0.42f, -0.34f), new Vector3(0.18f, 0.18f, 0.06f), role, alpha: 0.96f);
@@ -595,6 +596,7 @@ namespace Hollow.Editor.Generation
                 PresentationPrefabRole.HazardCoinDrop => MaterialRole.HazardCoinDrop,
                 PresentationPrefabRole.ChestNormal => MaterialRole.ChestNormal,
                 PresentationPrefabRole.ChestGolden => MaterialRole.ChestGolden,
+                PresentationPrefabRole.ChestCorrupted => MaterialRole.ChestCorrupted,
                 PresentationPrefabRole.CoinCopper => MaterialRole.CoinCopper,
                 PresentationPrefabRole.CoinSilver => MaterialRole.CoinSilver,
                 PresentationPrefabRole.CoinGold => MaterialRole.CoinGold,

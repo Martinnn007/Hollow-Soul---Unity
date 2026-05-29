@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Hollow.Data.Definitions;
 using Hollow.Rooms;
+using UnityEngine;
 
 namespace Hollow.Branches
 {
@@ -13,6 +14,10 @@ namespace Hollow.Branches
             IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> approvedRoomPool,
             IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> macroRoomPool,
             IReadOnlyDictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>> biomeRoomPools,
+            ImportedRoomRuntimeAsset corruptedChestRoomAsset,
+            ImportedRoomRuntimeAsset waveRoomAsset,
+            ImportedRoomRuntimeAsset specialSoulEaterRoomAsset,
+            ImportedRoomRuntimeAsset specialEscapistRoomAsset,
             int branchSeed)
         {
             LegacySampleRoomAsset = legacySampleRoomAsset;
@@ -20,6 +25,10 @@ namespace Hollow.Branches
             ApprovedRoomPool = approvedRoomPool ?? new Dictionary<string, ImportedRoomRuntimeAsset>();
             MacroRoomPool = macroRoomPool ?? new Dictionary<string, ImportedRoomRuntimeAsset>();
             BiomeRoomPools = biomeRoomPools ?? new Dictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>>();
+            CorruptedChestRoomAsset = corruptedChestRoomAsset;
+            WaveRoomAsset = waveRoomAsset;
+            SpecialSoulEaterRoomAsset = specialSoulEaterRoomAsset;
+            SpecialEscapistRoomAsset = specialEscapistRoomAsset;
             BranchSeed = branchSeed == 0 ? BranchGenerator.DefaultMacroFixtureSeed : branchSeed;
         }
 
@@ -33,6 +42,14 @@ namespace Hollow.Branches
 
         public IReadOnlyDictionary<string, IReadOnlyDictionary<string, ImportedRoomRuntimeAsset>> BiomeRoomPools { get; }
 
+        public ImportedRoomRuntimeAsset CorruptedChestRoomAsset { get; }
+
+        public ImportedRoomRuntimeAsset WaveRoomAsset { get; }
+
+        public ImportedRoomRuntimeAsset SpecialSoulEaterRoomAsset { get; }
+
+        public ImportedRoomRuntimeAsset SpecialEscapistRoomAsset { get; }
+
         public int BranchSeed { get; }
 
         public bool HasMacroFixturePool =>
@@ -44,6 +61,38 @@ namespace Hollow.Branches
 
         public bool TryGetRoomAsset(string roomAssetId, out ImportedRoomRuntimeAsset asset)
         {
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                CorruptedChestRoomAsset != null &&
+                CorruptedChestRoomAsset.Id == roomAssetId)
+            {
+                asset = CorruptedChestRoomAsset;
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                WaveRoomAsset != null &&
+                WaveRoomAsset.Id == roomAssetId)
+            {
+                asset = WaveRoomAsset;
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                SpecialSoulEaterRoomAsset != null &&
+                SpecialSoulEaterRoomAsset.Id == roomAssetId)
+            {
+                asset = SpecialSoulEaterRoomAsset;
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                SpecialEscapistRoomAsset != null &&
+                SpecialEscapistRoomAsset.Id == roomAssetId)
+            {
+                asset = SpecialEscapistRoomAsset;
+                return true;
+            }
+
             if (!string.IsNullOrWhiteSpace(roomAssetId) && MacroRoomPool.TryGetValue(roomAssetId, out asset))
             {
                 return true;
@@ -62,6 +111,35 @@ namespace Hollow.Branches
 
             asset = LegacySampleRoomAsset;
             return asset != null;
+        }
+
+        public bool TryGetRoomAsset(string roomAssetId, string biomeId, out ImportedRoomRuntimeAsset asset)
+        {
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                WaveRoomAsset != null &&
+                WaveRoomAsset.Id == roomAssetId)
+            {
+                asset = WithBiome(WaveRoomAsset, biomeId);
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                SpecialSoulEaterRoomAsset != null &&
+                SpecialSoulEaterRoomAsset.Id == roomAssetId)
+            {
+                asset = WithBiome(SpecialSoulEaterRoomAsset, biomeId);
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(roomAssetId) &&
+                SpecialEscapistRoomAsset != null &&
+                SpecialEscapistRoomAsset.Id == roomAssetId)
+            {
+                asset = WithBiome(SpecialEscapistRoomAsset, biomeId);
+                return true;
+            }
+
+            return TryGetRoomAsset(roomAssetId, out asset);
         }
 
         public IReadOnlyDictionary<string, ImportedRoomRuntimeAsset> ResolveRoomPoolForBiome(string biomeId, out bool usedFallback)
@@ -140,6 +218,35 @@ namespace Hollow.Branches
                 }
             }
 
+            ImportedRoomRuntimeAsset corruptedChestRoomAsset = null;
+            if (catalog?.CorruptedChestEndpoint != null)
+            {
+                if (HollowRuntimeV2Importer.TryImport(catalog.CorruptedChestEndpoint.text, out var asset, out var importError))
+                {
+                    corruptedChestRoomAsset = asset;
+                }
+                else
+                {
+                    AppendError(ref error, $"Corrupted chest endpoint template '{catalog.CorruptedChestEndpoint.name}' import failed: {importError}");
+                }
+            }
+
+            ImportedRoomRuntimeAsset waveRoomAsset = null;
+            if (catalog?.WaveRoomEndpoint != null)
+            {
+                if (HollowRuntimeV2Importer.TryImport(catalog.WaveRoomEndpoint.text, out var asset, out var importError))
+                {
+                    waveRoomAsset = asset;
+                }
+                else
+                {
+                    AppendError(ref error, $"Wave room endpoint template '{catalog.WaveRoomEndpoint.name}' import failed: {importError}");
+                }
+            }
+
+            var specialSoulEaterRoomAsset = ImportEndpoint(catalog?.SpecialSoulEaterEndpoint, "Soul Eater special encounter", ref error);
+            var specialEscapistRoomAsset = ImportEndpoint(catalog?.SpecialEscapistEndpoint, "Escapist special encounter", ref error);
+
             var biomeCatalog = RoomBiomeCatalogDefinition.LoadDefault();
             if (biomeCatalog != null)
             {
@@ -164,7 +271,56 @@ namespace Hollow.Branches
                 approvedPool,
                 roomPool,
                 biomePools,
+                corruptedChestRoomAsset,
+                waveRoomAsset,
+                specialSoulEaterRoomAsset,
+                specialEscapistRoomAsset,
                 seed == 0 ? catalog?.DefaultSeed ?? BranchGenerator.DefaultMacroFixtureSeed : seed);
+        }
+
+        private static ImportedRoomRuntimeAsset ImportEndpoint(TextAsset template, string label, ref string error)
+        {
+            if (template == null)
+            {
+                return null;
+            }
+
+            if (HollowRuntimeV2Importer.TryImport(template.text, out var asset, out var importError))
+            {
+                return asset;
+            }
+
+            AppendError(ref error, $"{label} endpoint template '{template.name}' import failed: {importError}");
+            return null;
+        }
+
+        private static ImportedRoomRuntimeAsset WithBiome(ImportedRoomRuntimeAsset source, string biomeId)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            var normalizedBiomeId = RoomBiomeIds.Normalize(biomeId);
+            if (RoomBiomeIds.Matches(source.BiomeId, normalizedBiomeId))
+            {
+                return source;
+            }
+
+            return new ImportedRoomRuntimeAsset(
+                source.Id,
+                source.DisplayName,
+                normalizedBiomeId,
+                source.Layout,
+                source.Footprint,
+                source.DoorPorts,
+                source.EnemySpawns,
+                source.ItemSpawns,
+                source.SafeStart,
+                source.Hazards,
+                source.InteractiveObjects,
+                source.Decor,
+                source.SourceManifest);
         }
 
         private static Dictionary<string, ImportedRoomRuntimeAsset> ImportBiomePool(RoomBiomeDefinition biome, ref string error)

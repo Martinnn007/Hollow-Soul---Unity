@@ -1,9 +1,10 @@
 using Hollow.Rewards;
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Branches
 {
-    public sealed class CoinPickupController : MonoBehaviour
+    public sealed class CoinPickupController : MonoBehaviour, IPooledRuntimeObject
     {
         public string RoomId { get; private set; } = string.Empty;
 
@@ -34,6 +35,20 @@ namespace Hollow.Branches
 
             IsCollected = true;
             return true;
+        }
+
+        public void OnRentFromPool()
+        {
+            IsCollected = false;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            RoomId = string.Empty;
+            PickupId = string.Empty;
+            Value = 1;
+            IsCollected = false;
         }
     }
 }

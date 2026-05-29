@@ -1,11 +1,12 @@
 using System;
+using Hollow.Core;
 using Hollow.Data.Definitions;
 using Hollow.Persistence;
 using UnityEngine;
 
 namespace Hollow.Rewards
 {
-    public sealed class ReplacementPickup : MonoBehaviour
+    public sealed class ReplacementPickup : MonoBehaviour, IPooledRuntimeObject
     {
         [SerializeField] private string pickupId;
         [SerializeField] private bool claimed;
@@ -27,6 +28,18 @@ namespace Hollow.Rewards
 
             claimed = true;
             return true;
+        }
+
+        public void OnRentFromPool()
+        {
+            claimed = false;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            pickupId = string.Empty;
+            claimed = false;
         }
     }
 

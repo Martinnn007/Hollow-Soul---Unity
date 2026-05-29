@@ -115,7 +115,7 @@ namespace Hollow.Branches
         {
             return new NextBranchChoice(
                 $"world_{Math.Max(1, worldIndex)}_final_extraction",
-                "Final Extraction",
+                "Return to Ship",
                 RunSeedDeriver.ShopSeed(runSeed, worldIndex, 99),
                 3,
                 Math.Max(1, worldIndex),

@@ -8,7 +8,8 @@ namespace Hollow.World
         MissionChallenge = 1,
         TechnologyUpgrade = 2,
         SterilizationConsole = 3,
-        QuarantineDoorButton = 4
+        QuarantineDoorButton = 4,
+        ShipLog = 5
     }
 
     public sealed class SpaceshipTerminal : MonoBehaviour

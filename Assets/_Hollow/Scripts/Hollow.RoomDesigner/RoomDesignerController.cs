@@ -38,10 +38,10 @@ namespace Hollow.RoomDesigner
             new RoomDesignerToolGroup("Terrain", RoomDesignerTool.Ground, RoomDesignerTool.Hole),
             new RoomDesignerToolGroup("Structure", RoomDesignerTool.Rock, RoomDesignerTool.Spike),
             new RoomDesignerToolGroup("Doors", RoomDesignerTool.ActiveDoor, RoomDesignerTool.SecretDoor, RoomDesignerTool.InactiveDoor),
-            new RoomDesignerToolGroup("Objects", RoomDesignerTool.SafeStart, RoomDesignerTool.RewardSpawn, RoomDesignerTool.ChestSpawn, RoomDesignerTool.StandardBarrel, RoomDesignerTool.ExplosiveBarrel),
+            new RoomDesignerToolGroup("Objects", RoomDesignerTool.SafeStart, RoomDesignerTool.RewardSpawn, RoomDesignerTool.ChestSpawn, RoomDesignerTool.GoldenChestSpawn, RoomDesignerTool.CorruptedChestSpawn, RoomDesignerTool.StandardBarrel, RoomDesignerTool.ExplosiveBarrel),
             new RoomDesignerToolGroup("Enemies Basic", RoomDesignerTool.EnemySpawn, RoomDesignerTool.EnemyNormal, RoomDesignerTool.EnemyFlying, RoomDesignerTool.EnemyFast, RoomDesignerTool.EnemyHeavy, RoomDesignerTool.EnemyCharger, RoomDesignerTool.EnemyTurret, RoomDesignerTool.EnemySplitter, RoomDesignerTool.EnemySpittingPod, RoomDesignerTool.EnemyRat, RoomDesignerTool.EnemySpider),
             new RoomDesignerToolGroup("Enemies Martial", RoomDesignerTool.EnemySkeletonSword, RoomDesignerTool.EnemySkeletonSpear, RoomDesignerTool.EnemyKnight, RoomDesignerTool.EnemyGiant, RoomDesignerTool.EnemyHollowBird, RoomDesignerTool.EnemyHollowBeast, RoomDesignerTool.EnemyHollowArcher, RoomDesignerTool.EnemyPowderGunner, RoomDesignerTool.EnemyKnifeThrower, RoomDesignerTool.EnemyRepeaterTurret, RoomDesignerTool.EnemyClockworkSentry),
-            new RoomDesignerToolGroup("Enemies Occult", RoomDesignerTool.EnemyHollowAcolyte, RoomDesignerTool.EnemyWraith, RoomDesignerTool.EnemySoulEater, RoomDesignerTool.EnemyCurseBinder, RoomDesignerTool.EnemyGraveLantern, RoomDesignerTool.EnemyStarforgedOctantSentry, RoomDesignerTool.EnemyCrimsonRailSpider, RoomDesignerTool.EnemyAzureMinigunTurret),
+            new RoomDesignerToolGroup("Enemies Occult", RoomDesignerTool.EnemyHollowAcolyte, RoomDesignerTool.EnemyWraith, RoomDesignerTool.EnemyEscapist, RoomDesignerTool.EnemySoulEater, RoomDesignerTool.EnemyCurseBinder, RoomDesignerTool.EnemyGraveLantern, RoomDesignerTool.EnemyStarforgedOctantSentry, RoomDesignerTool.EnemyCrimsonRailSpider, RoomDesignerTool.EnemyAzureMinigunTurret),
             new RoomDesignerToolGroup("Decor", RoomDesignerTool.DecorGrassTuft, RoomDesignerTool.DecorCrystalCluster, RoomDesignerTool.DecorSmallTree, RoomDesignerTool.DecorStoneRuin),
             new RoomDesignerToolGroup("Utility", RoomDesignerTool.Erase, RoomDesignerTool.Eyedropper)
         };
@@ -902,6 +902,9 @@ namespace Hollow.RoomDesigner
                 case RoomDesignerTool.EnemyWraith:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyWraith, "spawn_enemy_wraith");
                     break;
+                case RoomDesignerTool.EnemyEscapist:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemyEscapist, "spawn_enemy_escapist");
+                    break;
                 case RoomDesignerTool.EnemySoulEater:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.EnemySoulEater, "spawn_enemy_soul_eater");
                     break;
@@ -919,6 +922,12 @@ namespace Hollow.RoomDesigner
                     break;
                 case RoomDesignerTool.ChestSpawn:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.ChestSpawn, "spawn_chest");
+                    break;
+                case RoomDesignerTool.GoldenChestSpawn:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.GoldenChestSpawn, "spawn_golden_chest");
+                    break;
+                case RoomDesignerTool.CorruptedChestSpawn:
+                    AddOrReplaceMarker(RoomDesignerMarkerKinds.CorruptedChestSpawn, "spawn_corrupted_chest");
                     break;
                 case RoomDesignerTool.DecorGrassTuft:
                     AddOrReplaceMarker(RoomDesignerMarkerKinds.DecorGrassTuft, "decor_grass_tuft");
@@ -1042,6 +1051,18 @@ namespace Hollow.RoomDesigner
                 return;
             }
 
+            if (marker?.kind == RoomDesignerMarkerKinds.GoldenChestSpawn)
+            {
+                SetCurrentTool(RoomDesignerTool.GoldenChestSpawn);
+                return;
+            }
+
+            if (marker?.kind == RoomDesignerMarkerKinds.CorruptedChestSpawn)
+            {
+                SetCurrentTool(RoomDesignerTool.CorruptedChestSpawn);
+                return;
+            }
+
             var cell = currentProject.cells.LastOrDefault(candidate => candidate.x == CursorX && candidate.z == CursorZ && candidate.layer == CursorLayer);
             SetCurrentTool(cell?.kind switch
             {
@@ -1081,6 +1102,7 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => RoomDesignerTool.EnemyAzureMinigunTurret,
                 RoomDesignerMarkerKinds.EnemyHollowAcolyte => RoomDesignerTool.EnemyHollowAcolyte,
                 RoomDesignerMarkerKinds.EnemyWraith => RoomDesignerTool.EnemyWraith,
+                RoomDesignerMarkerKinds.EnemyEscapist => RoomDesignerTool.EnemyEscapist,
                 RoomDesignerMarkerKinds.EnemySoulEater => RoomDesignerTool.EnemySoulEater,
                 RoomDesignerMarkerKinds.EnemyCurseBinder => RoomDesignerTool.EnemyCurseBinder,
                 RoomDesignerMarkerKinds.EnemyGraveLantern => RoomDesignerTool.EnemyGraveLantern,
@@ -1276,14 +1298,30 @@ namespace Hollow.RoomDesigner
 
         private void BuildMarker(RoomDesignerMarker marker)
         {
-            var markerObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            if (PreviewMode == RoomDesignerPreviewMode.Scene &&
+                !RoomDesignerScenePreviewBuilder.ShouldRenderMarkerInPresentationPreview(marker.kind))
+            {
+                return;
+            }
+
+            var markerObject = PreviewMode == RoomDesignerPreviewMode.Scene
+                ? new GameObject($"{marker.kind}_{marker.id}")
+                : GameObject.CreatePrimitive(PrimitiveType.Sphere);
             markerObject.name = $"{marker.kind}_{marker.id}";
             markerObject.transform.SetParent(previewRoot, false);
-            markerObject.transform.localPosition = new Vector3(marker.x, marker.y + 0.2f, marker.z);
-            markerObject.transform.localScale = Vector3.one * 0.36f;
-            MaterialResolver.ApplyTo(markerObject, RoleForMarker(marker.kind));
+            markerObject.transform.localPosition = PreviewMode == RoomDesignerPreviewMode.Scene
+                ? new Vector3(marker.x, marker.y, marker.z)
+                : new Vector3(marker.x, marker.y + 0.2f, marker.z);
+            markerObject.transform.localScale = PreviewMode == RoomDesignerPreviewMode.Scene
+                ? Vector3.one
+                : Vector3.one * 0.36f;
+            if (PreviewMode != RoomDesignerPreviewMode.Scene)
+            {
+                MaterialResolver.ApplyTo(markerObject, RoleForMarker(marker.kind));
+            }
+
             AttachSceneMarkerVisual(markerObject, marker);
-            if (LabelsVisible)
+            if (LabelsVisible && PreviewMode != RoomDesignerPreviewMode.Scene)
             {
                 BuildLabel(RoomDesignerDisplayNames.ForMarkerKind(marker.kind), new Vector3(marker.x, marker.y + 0.72f, marker.z));
             }
@@ -1357,6 +1395,8 @@ namespace Hollow.RoomDesigner
                 RoomDesignerMarkerKinds.StandardBarrel => MaterialRole.DesignerBarrel,
                 RoomDesignerMarkerKinds.ExplosiveBarrel => MaterialRole.DesignerExplosiveBarrel,
                 RoomDesignerMarkerKinds.ChestSpawn => MaterialRole.DesignerChest,
+                RoomDesignerMarkerKinds.GoldenChestSpawn => MaterialRole.ChestGolden,
+                RoomDesignerMarkerKinds.CorruptedChestSpawn => MaterialRole.ChestCorrupted,
                 RoomDesignerMarkerKinds.DecorGrassTuft => MaterialRole.DecorGrassTuft,
                 RoomDesignerMarkerKinds.DecorCrystalCluster => MaterialRole.DecorCrystalCluster,
                 RoomDesignerMarkerKinds.DecorSmallTree => MaterialRole.DecorSmallTree,

@@ -173,6 +173,7 @@ namespace Hollow.Combat
         private Vector3[] cachedPathWaypointsLocalPositions = Array.Empty<Vector3>();
         private LineRenderer navigationDebugLine;
         private TextMesh aiDebugText;
+        private Renderer[] cachedVisibilityRenderers = Array.Empty<Renderer>();
         private float nextAllowedAllyAlertTime;
         private float lastAllyAlertSharedTime = float.NegativeInfinity;
         private int lastAllyAlertRecipientCount;
@@ -342,6 +343,23 @@ namespace Hollow.Combat
         public EnemyTacticalIntent LastTacticalIntent => lastTacticalIntent;
 
         public EnemyNavMeshAgentBridge NavMeshAgentBridge => navMeshAgentBridge;
+
+        public bool IsVisibleToCamera
+        {
+            get
+            {
+                for (var index = 0; index < cachedVisibilityRenderers.Length; index++)
+                {
+                    var renderer = cachedVisibilityRenderers[index];
+                    if (renderer != null && renderer.enabled && renderer.isVisible)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
 
         public GameObject PlayerGameObject => playerController != null ? playerController.gameObject : null;
 
@@ -684,6 +702,7 @@ namespace Hollow.Combat
             Health.Died += OnDied;
             ApplyDefinitionPresentation(Definition);
             InstantiateOptionalEnemyVisuals(Definition);
+            RefreshVisibilityRenderers();
             ConfigureCombatFeel(null);
         }
 
@@ -794,6 +813,7 @@ namespace Hollow.Combat
             Health.Configure(bossDefinition.MaxHealth);
             PresentationPrefabResolver.InstantiateVisual(bossDefinition.PresentationPrefabRole, transform, Vector3.zero, Vector3.one);
             InstantiateOptionalBossVisuals(bossDefinition);
+            RefreshVisibilityRenderers();
             bossRuntime = GetComponent<BossRuntimeController>() ?? gameObject.AddComponent<BossRuntimeController>();
             bossRuntime.Configure(this, bossDefinition, roomRuntimeRoot, playerController, enemyProjectilePrefab, combatFeelProfile);
             ConfigureCombatFeel(combatFeelProfile);
@@ -4392,7 +4412,9 @@ namespace Hollow.Combat
                 actionEnvelopeMin,
                 actionEnvelopeMax,
                 navMeshAgentBridge,
-                desiredSpeedMetersPerSecond);
+                desiredSpeedMetersPerSecond,
+                aiBrain.LodTier,
+                lastTacticalIntent.Role);
             lastNavigationResult = locomotionAgent.Resolve(request, lastTacticalIntent);
             lastNavigationMoveRequiresAgentSync = !allowPathfinding || lastNavigationResult.Backend != EnemyNavigationBackend.UnityNavMesh;
             UpdatePathCacheAfterResult(lastNavigationResult, finalGoal, intent, allowPathfinding);
@@ -5297,8 +5319,8 @@ namespace Hollow.Combat
         private void FireProjectile(Vector3 direction, EnemyAttackProfileDefinition profile)
         {
             var projectileObject = enemyProjectilePrefab != null
-                ? Instantiate(enemyProjectilePrefab, transform.parent)
-                : GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                ? Hollow.Core.HollowRuntimePool.Rent(enemyProjectilePrefab, transform.parent)
+                : Hollow.Core.HollowRuntimePool.RentPrimitive("EnemyProjectile.Fallback", PrimitiveType.Sphere, transform.parent);
             projectileObject.name = $"EnemyProjectile.{Definition.SpawnKind}";
             projectileObject.transform.SetParent(transform.parent, worldPositionStays: false);
             projectileObject.transform.localPosition = transform.localPosition + direction.normalized * (radiusMeters + 0.22f) + new Vector3(0f, 0.35f, 0f);
@@ -5784,6 +5806,11 @@ namespace Hollow.Combat
             var prefabRole = PrefabRoleForDefinition(definition);
             var visual = PresentationPrefabResolver.InstantiateVisual(prefabRole, transform, Vector3.zero, Vector3.one);
             SetGameplayPlaceholderRenderersVisible(!ShouldHideGameplayPlaceholder(prefabRole, visual));
+        }
+
+        private void RefreshVisibilityRenderers()
+        {
+            cachedVisibilityRenderers = GetComponentsInChildren<Renderer>(includeInactive: true);
         }
 
         private static bool ShouldHideGameplayPlaceholder(PresentationPrefabRole role, GameObject visual)

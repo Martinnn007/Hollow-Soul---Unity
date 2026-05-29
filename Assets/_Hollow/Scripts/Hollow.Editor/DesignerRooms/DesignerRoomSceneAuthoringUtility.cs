@@ -62,7 +62,9 @@ namespace Hollow.Editor.DesignerRooms
         private static readonly string[] ItemKinds =
         {
             RoomDesignerMarkerKinds.RoomReward,
-            RoomDesignerMarkerKinds.ChestSpawn
+            RoomDesignerMarkerKinds.ChestSpawn,
+            RoomDesignerMarkerKinds.GoldenChestSpawn,
+            RoomDesignerMarkerKinds.CorruptedChestSpawn
         };
 
         private static readonly string[] InteractiveKinds =
@@ -140,12 +142,15 @@ namespace Hollow.Editor.DesignerRooms
                 RoomDesignerMarkerKinds.EnemyAzureMinigunTurret => "Azure Minigun Turret",
                 RoomDesignerMarkerKinds.EnemyHollowAcolyte => "Hollow Acolyte",
                 RoomDesignerMarkerKinds.EnemyWraith => "Wraith",
+                RoomDesignerMarkerKinds.EnemyEscapist => "Escapist",
                 RoomDesignerMarkerKinds.EnemySoulEater => "Soul Eater",
                 RoomDesignerMarkerKinds.EnemyCurseBinder => "Curse Binder",
                 RoomDesignerMarkerKinds.EnemyGraveLantern => "Grave Lantern",
                 RoomDesignerMarkerKinds.SafeStart => "Safe Start",
                 RoomDesignerMarkerKinds.RoomReward => "Room Reward",
                 RoomDesignerMarkerKinds.ChestSpawn => "Chest",
+                RoomDesignerMarkerKinds.GoldenChestSpawn => "Golden Chest",
+                RoomDesignerMarkerKinds.CorruptedChestSpawn => "Corrupted Chest",
                 RoomDesignerMarkerKinds.StandardBarrel => "Standard Barrel",
                 RoomDesignerMarkerKinds.ExplosiveBarrel => "Explosive Barrel",
                 RoomDesignerCellKinds.Ground => "Ground",

@@ -4,6 +4,10 @@ namespace Hollow.Data.Definitions
     {
         public const string HollowThreshold = "hollow_threshold";
         public const string VerdantRuins = "verdant_ruins";
+        public const string CorruptedAshenShrine = "corrupted_ashen_shrine";
+        public const string BeforeTeeth = "before_teeth";
+        public const string SunkenCartouche = "sunken_cartouche";
+        public const string RustChoir = "rust_choir";
 
         public static string Normalize(string biomeId)
         {

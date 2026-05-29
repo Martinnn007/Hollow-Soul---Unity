@@ -44,6 +44,7 @@ namespace Hollow.Editor.Validation
             PresentationPrefabRole.Player,
             PresentationPrefabRole.RewardPickup,
             PresentationPrefabRole.ChestNormal,
+            PresentationPrefabRole.ChestCorrupted,
             PresentationPrefabRole.StandardBarrel,
             PresentationPrefabRole.ExplosiveBarrel,
             PresentationPrefabRole.EnemyNormal,
@@ -368,7 +369,7 @@ namespace Hollow.Editor.Validation
                 PresentationPrefabRole.ActiveItemPickup or PresentationPrefabRole.ConsumableCardPickup => "Items",
                 PresentationPrefabRole.RoomHazardSpike or PresentationPrefabRole.StandardBarrel or
                     PresentationPrefabRole.ExplosiveBarrel or PresentationPrefabRole.HazardCoinDrop => "Hazards",
-                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden => "Chests",
+                PresentationPrefabRole.ChestNormal or PresentationPrefabRole.ChestGolden or PresentationPrefabRole.ChestCorrupted => "Chests",
                 PresentationPrefabRole.CoinCopper or PresentationPrefabRole.CoinSilver or PresentationPrefabRole.CoinGold => "Coins",
                 _ when role.ToString().StartsWith("Vfx", StringComparison.Ordinal) => "VFX",
                 _ => "Other"

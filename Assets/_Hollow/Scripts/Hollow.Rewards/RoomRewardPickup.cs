@@ -1,8 +1,9 @@
+using Hollow.Core;
 using UnityEngine;
 
 namespace Hollow.Rewards
 {
-    public sealed class RoomRewardPickup : MonoBehaviour
+    public sealed class RoomRewardPickup : MonoBehaviour, IPooledRuntimeObject
     {
         [SerializeField] private string roomId;
         [SerializeField] private bool claimed;
@@ -26,6 +27,18 @@ namespace Hollow.Rewards
 
             claimed = true;
             return true;
+        }
+
+        public void OnRentFromPool()
+        {
+            claimed = false;
+            gameObject.SetActive(true);
+        }
+
+        public void OnReturnToPool()
+        {
+            roomId = string.Empty;
+            claimed = false;
         }
     }
 }

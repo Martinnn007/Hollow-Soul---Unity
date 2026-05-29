@@ -266,10 +266,10 @@ namespace Hollow.Tests.EditMode
         {
             Assert.AreEqual(30f, PlayerWeaponController.RollStaminaCost, 0.0001f);
             Assert.AreEqual(0.04f, PlayerWeaponController.RollStartupSeconds, 0.0001f);
-            Assert.AreEqual(0.22f, PlayerWeaponController.RollInvulnerabilitySeconds, 0.0001f);
-            Assert.AreEqual(0.18f, PlayerWeaponController.RollRecoverySeconds, 0.0001f);
-            Assert.AreEqual(1.25f, PlayerWeaponController.RollDistanceMeters, 0.0001f);
-            Assert.AreEqual(0.44f, PlayerWeaponController.RollDurationSeconds, 0.0001f);
+            Assert.AreEqual(0.26f, PlayerWeaponController.RollInvulnerabilitySeconds, 0.0001f);
+            Assert.AreEqual(0.16f, PlayerWeaponController.RollRecoverySeconds, 0.0001f);
+            Assert.AreEqual(1.35f, PlayerWeaponController.RollDistanceMeters, 0.0001f);
+            Assert.AreEqual(0.46f, PlayerWeaponController.RollDurationSeconds, 0.0001f);
             Assert.AreEqual(0.32f, PlayerEnemyBodyCollision.TangentSlideMultiplier, 0.0001f);
             Assert.AreEqual(0.004f, PlayerEnemyBodyCollision.LightWalkShoveMaxMeters, 0.0001f);
             Assert.AreEqual(0.008f, PlayerEnemyBodyCollision.LightRollShoveMaxMeters, 0.0001f);

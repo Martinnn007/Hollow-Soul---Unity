@@ -1,4 +1,5 @@
 using Hollow.Branches;
+using Hollow.Core.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,6 +18,8 @@ namespace Hollow.UI.Shell
         private Font font;
         private int displayedSequence;
         private float hideAtTime;
+        private float nextRefreshTime;
+        private float nextProviderSearchTime;
 
         public void Bind(BranchSessionController controller)
         {
@@ -35,10 +38,19 @@ namespace Hollow.UI.Shell
         {
             if (branchSessionController == null)
             {
-                branchSessionController = FindAnyObjectByType<BranchSessionController>();
+                var now = Time.unscaledTime;
+                if (now >= nextProviderSearchTime)
+                {
+                    branchSessionController = FindAnyObjectByType<BranchSessionController>();
+                    nextProviderSearchTime = now + 0.5f;
+                }
             }
 
-            Refresh();
+            if (Time.unscaledTime >= nextRefreshTime)
+            {
+                Refresh();
+            }
+
             if (panelRect != null && panelRect.gameObject.activeSelf && Time.time > hideAtTime)
             {
                 Hide();
@@ -53,6 +65,7 @@ namespace Hollow.UI.Shell
                 return;
             }
 
+            nextRefreshTime = Time.unscaledTime + M137PerformanceComfortPolicy.PickupRevealMinRefreshIntervalSeconds;
             var model = branchSessionController.LatestPickupReveal;
             if (model.IsEmpty || model.Sequence == displayedSequence)
             {

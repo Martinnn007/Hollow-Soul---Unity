@@ -15,6 +15,9 @@ namespace Hollow.Data.Definitions
         [SerializeField] private RoomBiomeMaterialOverride[] materialOverrides = Array.Empty<RoomBiomeMaterialOverride>();
         [SerializeField] private RoomBiomePrefabOverride[] prefabOverrides = Array.Empty<RoomBiomePrefabOverride>();
         [SerializeField] private RoomBiomeDecorBinding[] decorPrefabBindings = Array.Empty<RoomBiomeDecorBinding>();
+        [NonSerialized] private Dictionary<MaterialRole, Material> materialLookup;
+        [NonSerialized] private Dictionary<PresentationPrefabRole, GameObject> prefabLookup;
+        [NonSerialized] private Dictionary<string, PresentationPrefabRole> decorLookup;
 
         public string BiomeId => RoomBiomeIds.Normalize(biomeId);
 
@@ -32,49 +35,22 @@ namespace Hollow.Data.Definitions
 
         public bool TryResolve(MaterialRole role, out Material material)
         {
-            foreach (var binding in materialOverrides ?? Array.Empty<RoomBiomeMaterialOverride>())
-            {
-                if (binding.Role != role || binding.Material == null)
-                {
-                    continue;
-                }
-
-                material = binding.Material;
-                return true;
-            }
-
-            material = null;
-            return false;
+            EnsureLookupCache();
+            return materialLookup.TryGetValue(role, out material) && material != null;
         }
 
         public bool TryResolve(PresentationPrefabRole role, out GameObject prefab)
         {
-            foreach (var binding in prefabOverrides ?? Array.Empty<RoomBiomePrefabOverride>())
-            {
-                if (binding.Role != role || binding.Prefab == null)
-                {
-                    continue;
-                }
-
-                prefab = binding.Prefab;
-                return true;
-            }
-
-            prefab = null;
-            return false;
+            EnsureLookupCache();
+            return prefabLookup.TryGetValue(role, out prefab) && prefab != null;
         }
 
         public bool TryResolveDecorRole(string decorKind, out PresentationPrefabRole role)
         {
+            EnsureLookupCache();
             var normalizedKind = RoomBiomeDecorKinds.Normalize(decorKind);
-            foreach (var binding in decorPrefabBindings ?? Array.Empty<RoomBiomeDecorBinding>())
+            if (decorLookup.TryGetValue(normalizedKind, out role))
             {
-                if (RoomBiomeDecorKinds.Normalize(binding.DecorKind) != normalizedKind)
-                {
-                    continue;
-                }
-
-                role = binding.PrefabRole;
                 return true;
             }
 
@@ -97,6 +73,55 @@ namespace Hollow.Data.Definitions
             materialOverrides = (nextMaterialOverrides ?? Array.Empty<RoomBiomeMaterialOverride>()).ToArray();
             prefabOverrides = (nextPrefabOverrides ?? Array.Empty<RoomBiomePrefabOverride>()).ToArray();
             decorPrefabBindings = (nextDecorPrefabBindings ?? Array.Empty<RoomBiomeDecorBinding>()).ToArray();
+            ClearLookupCache();
+        }
+
+        private void OnEnable()
+        {
+            ClearLookupCache();
+        }
+
+        private void ClearLookupCache()
+        {
+            materialLookup = null;
+            prefabLookup = null;
+            decorLookup = null;
+        }
+
+        private void EnsureLookupCache()
+        {
+            if (materialLookup != null && prefabLookup != null && decorLookup != null)
+            {
+                return;
+            }
+
+            materialLookup = new Dictionary<MaterialRole, Material>();
+            foreach (var binding in materialOverrides ?? Array.Empty<RoomBiomeMaterialOverride>())
+            {
+                if (binding.Material != null && !materialLookup.ContainsKey(binding.Role))
+                {
+                    materialLookup.Add(binding.Role, binding.Material);
+                }
+            }
+
+            prefabLookup = new Dictionary<PresentationPrefabRole, GameObject>();
+            foreach (var binding in prefabOverrides ?? Array.Empty<RoomBiomePrefabOverride>())
+            {
+                if (binding.Prefab != null && !prefabLookup.ContainsKey(binding.Role))
+                {
+                    prefabLookup.Add(binding.Role, binding.Prefab);
+                }
+            }
+
+            decorLookup = new Dictionary<string, PresentationPrefabRole>(StringComparer.Ordinal);
+            foreach (var binding in decorPrefabBindings ?? Array.Empty<RoomBiomeDecorBinding>())
+            {
+                var normalizedKind = RoomBiomeDecorKinds.Normalize(binding.DecorKind);
+                if (!decorLookup.ContainsKey(normalizedKind))
+                {
+                    decorLookup.Add(normalizedKind, binding.PrefabRole);
+                }
+            }
         }
     }
 

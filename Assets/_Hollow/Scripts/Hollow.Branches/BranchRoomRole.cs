@@ -7,6 +7,9 @@ namespace Hollow.Branches
         Reward = 2,
         Boss = 3,
         Treasure = 4,
-        Secret = 5
+        Secret = 5,
+        CorruptedChest = 6,
+        Wave = 7,
+        SpecialEncounter = 8
     }
 }

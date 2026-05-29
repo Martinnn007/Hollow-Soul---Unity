@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68daba7d23a624f8b9743678efbda2eb, type: 3}
+  m_Name: RunFraming_rust_choir
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.RunFramingDefinition
+  worldIndex: 3
+  identityId: rust_choir
+  biomeId: rust_choir
+  displayName: The Rust Choir
+  subtitle: A fallen future still singing through broken machines.
+  biomeTags: 0500000008000000
+  paletteHint: rust orange, oil black, warning yellow, dead cyan
+  lightingHint: failing neon under dust-heavy industrial haze
+  materialNotes: corroded alloy, cracked screens, cable nests, coolant stains
+  prologueLine: The future has died already. Its alarms keep practicing.
+  branchLine: Branches route power through rooms that forgot their purpose.
+  hubLine: The anchor hums like a generator under a battlefield.
+  bossLine: The warden is old code wearing stone like a uniform.
+  extractionLine: The choir cuts out. Something beneath it keeps tone.
+  branchEchoNames:
+  - Static Nave
+  - Oil Psalm
+  - Battery Grave
+  - Redline Atrium

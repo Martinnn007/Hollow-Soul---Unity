@@ -20,6 +20,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace Hollow.Tests.EditMode
@@ -31,6 +32,7 @@ namespace Hollow.Tests.EditMode
         private const string DeparturesRoomPath = "Assets/_Hollow/Data/Rooms/Spaceship/ship_departures.hollowruntime.json";
         private const string MissionRoomPath = "Assets/_Hollow/Data/Rooms/Spaceship/ship_mission_center.hollowruntime.json";
         private const string LabRoomPath = "Assets/_Hollow/Data/Rooms/Spaceship/ship_technology_lab.hollowruntime.json";
+        private const string SampleRoomPath = "Assets/_Hollow/Data/Rooms/Templates/combat_single_sample.hollowruntime.json";
         private const string PlayerPrefabPath = "Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab";
         private const string ProjectilePrefabPath = "Assets/_Hollow/Prefabs/Combat/ProjectileBase.prefab";
 
@@ -212,6 +214,15 @@ namespace Hollow.Tests.EditMode
             var before = branch.CreatePlayerBuildHudModel();
 
             EnterTechnologyLab(branch);
+            var moduleLabels = Object.FindObjectsByType<SpaceshipTerminal>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(terminal => terminal.TerminalKind == SpaceshipTerminalKind.TechnologyUpgrade)
+                .Select(terminal => terminal.DisplayName)
+                .ToArray();
+            CollectionAssert.Contains(moduleLabels, "Vitals Module\n5 Banked Souls");
+            CollectionAssert.Contains(moduleLabels, "Stamina Module\n5 Banked Souls");
+            CollectionAssert.Contains(moduleLabels, "Reactor Module\n6 Banked Souls");
+            CollectionAssert.Contains(moduleLabels, "Combat Module\n8 Banked Souls");
+
             branch.PlayerController.transform.localPosition = new Vector3(-2.1f, 0f, 0.55f);
             Assert.IsTrue(branch.TryInteract());
 
@@ -219,6 +230,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(5, after.Souls);
             Assert.AreEqual(before.MaxHealth + 1, after.MaxHealth);
             Assert.AreEqual(after.MaxHealth, after.CurrentHealth);
+            Assert.AreEqual("Vitals Module installed.", branch.LastRewardMessage);
         }
 
         [Test]
@@ -281,6 +293,10 @@ namespace Hollow.Tests.EditMode
                 HollowPlatformKind.WindowsStandard3D,
                 0,
                 string.Empty));
+            var terminal = Object.FindObjectsByType<SpaceshipTerminal>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Single(candidate => candidate.TerminalKind == SpaceshipTerminalKind.Departures);
+
+            Assert.AreEqual(BranchSessionController.PortalEngineDisplayName, terminal.DisplayName);
 
             Assert.IsTrue((bool)InvokePrivate(branch, "TryLaunchNormalExpeditionFromShip"));
 
@@ -289,6 +305,26 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(string.Empty, selectedContext.SelectedChallengeId);
             Assert.AreEqual("heavy", selectedContext.SelectedCharacterId);
             Assert.IsTrue(selectedContext.SelectedProfile.HasActiveRun || selectedContext.SelectedProfile.TotalRuns == 1);
+        }
+
+        [Test]
+        public void MainHallShipLogPanelReportsShipSoulRule()
+        {
+            var branch = CreateShipBranch(new SpaceshipArrivalSnapshot(
+                SpaceshipArrivalReason.DirectProfile,
+                HollowPlatformKind.WindowsStandard3D,
+                0,
+                string.Empty));
+
+            Assert.IsTrue(branch.TryTraverse("west"));
+            Assert.AreEqual(SpaceshipBranchDefinition.MainHallRoomId, branch.State.CurrentRoomId.Value);
+            var terminal = Object.FindObjectsByType<SpaceshipTerminal>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Single(candidate => candidate.TerminalKind == SpaceshipTerminalKind.ShipLog);
+
+            Assert.AreEqual(BranchSessionController.ShipLogDisplayName, terminal.DisplayName);
+            branch.PlayerController.transform.localPosition = terminal.transform.localPosition;
+            Assert.IsTrue(branch.TryInteract());
+            Assert.AreEqual(BranchSessionController.ShipLogMessage, branch.LastRewardMessage);
         }
 
         [Test]
@@ -397,6 +433,65 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void WorldLoopBranchReturnEntersInterBranchHubWithoutBankingSouls()
+        {
+            var store = CreateProfileHostWithSelectedProfile(out var selectedContext);
+            var slotId = new ProfileSlotId(0);
+            store.MarkRunStarted(slotId);
+            selectedContext.UpdateSelectedProfile(store.LoadSlotSummaries()[0]);
+            var branch = CreateBranchReturnHarness(store, selectedContext, runSouls: 7);
+            var content = CreateWorldLoopContent(out var settings);
+            var hub = InterBranchHubState.CreateWorldHub(12345, 1, 0, null);
+            var choice = hub.NextBranchChoices.First(candidate => candidate.Kind == HubPortalKind.Branch);
+            var graph = BranchGenerator.CreateSeededBranchFeatures(content, settings, choice.Seed);
+
+            SetPrivate(branch, "branchContent", content);
+            SetPrivate(branch, "branchGenerationSettings", settings);
+            SetPrivate(branch, "encounterCatalog", AssetDatabase.LoadAssetAtPath<EncounterCatalogDefinition>(Milestone19AssetGenerator.EncounterCatalogPath));
+            SetPrivate(branch, "interBranchHubState", hub);
+            SetPrivate(branch, "worldPhase", RunWorldPhase.Branch);
+            SetPrivate(branch, "worldIndex", 1);
+            SetPrivate(branch, "runSeed", 12345);
+            SetPrivate(branch, "currentBranchSeed", choice.Seed);
+            SetPrivate(branch, "activeHubPortalId", choice.ChoiceId);
+            SetPrivate(branch, "branchFeaturePlan", BranchFeaturePlan.Create(graph));
+            SetPrivateProperty(branch, "State", BranchSessionState.Create(graph));
+            AttachReturnPortalHarness(branch);
+
+            Assert.IsTrue((bool)InvokePrivate(branch, "TryUseHubReturnPortal"));
+
+            var summary = store.LoadSlotSummaries()[0];
+            Assert.AreEqual(0, summary.BankedSouls);
+            Assert.IsTrue(branch.IsInInterBranchHub);
+            Assert.AreEqual(RunWorldPhase.Hub, branch.WorldPhase);
+            Assert.AreEqual(
+                HubBranchPortalState.Defeated,
+                branch.InterBranchHubState.NextBranchChoices.Single(candidate => candidate.ChoiceId == choice.ChoiceId).State);
+            Assert.IsFalse(SpaceshipArrivalHandoff.TryConsume(out _));
+        }
+
+        [Test]
+        public void WorldLoopFinalReturnToShipBanksSoulsAndRoutesToArrival()
+        {
+            var store = CreateProfileHostWithSelectedProfile(out var selectedContext);
+            var slotId = new ProfileSlotId(0);
+            store.MarkRunStarted(slotId);
+            selectedContext.UpdateSelectedProfile(store.LoadSlotSummaries()[0]);
+            var branch = CreateBranchReturnHarness(store, selectedContext, runSouls: 7);
+            var finalReturn = NextBranchChoice.CreateFinalExtraction(12345, 3);
+
+            Assert.AreEqual("Return to Ship", finalReturn.DisplayName);
+            branch.StartNextBranch(finalReturn);
+
+            var summary = store.LoadSlotSummaries()[0];
+            Assert.AreEqual(7, summary.BankedSouls);
+            Assert.IsFalse(summary.HasActiveRun);
+            Assert.IsTrue(SpaceshipArrivalHandoff.TryConsume(out var arrival));
+            Assert.AreEqual(SpaceshipArrivalReason.NormalSuccess, arrival.Reason);
+            Assert.AreEqual(7, arrival.SoulsBanked);
+        }
+
+        [Test]
         public void ArrivalHandoffCarriesReasonAndBankedSoulAmount()
         {
             SpaceshipArrivalHandoff.Set(
@@ -414,11 +509,13 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void GeneratedSpaceshipWindowsSceneContainsNormalBranchPresentationStack()
         {
-            SpaceshipHubSceneGenerator.GenerateScenesForTests();
-            Assert.IsTrue(File.Exists(SpaceshipHubSceneGenerator.SpaceshipWindowsScenePath));
-            EditorSceneManager.OpenScene(SpaceshipHubSceneGenerator.SpaceshipWindowsScenePath, OpenSceneMode.Single);
+            var previousLogAssertState = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = true;
             try
             {
+                SpaceshipHubSceneGenerator.GenerateScenesForTests();
+                Assert.IsTrue(File.Exists(SpaceshipHubSceneGenerator.SpaceshipWindowsScenePath));
+                EditorSceneManager.OpenScene(SpaceshipHubSceneGenerator.SpaceshipWindowsScenePath, OpenSceneMode.Single);
                 var game = Object.FindFirstObjectByType<GameSessionController>();
                 var branch = Object.FindFirstObjectByType<BranchSessionController>();
                 Assert.IsNotNull(game);
@@ -444,6 +541,7 @@ namespace Hollow.Tests.EditMode
             }
             finally
             {
+                LogAssert.ignoreFailingMessages = previousLogAssertState;
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             }
         }
@@ -544,6 +642,34 @@ namespace Hollow.Tests.EditMode
             return branch;
         }
 
+        private static BranchSessionContent CreateWorldLoopContent(out BranchGenerationSettingsDefinition settings)
+        {
+            settings = AssetDatabase.LoadAssetAtPath<BranchGenerationSettingsDefinition>(Milestone15AssetGenerator.SettingsPath);
+            var catalog = AssetDatabase.LoadAssetAtPath<BranchRoomTemplateCatalogDefinition>(Milestone14AssetGenerator.CatalogPath);
+            var sample = HollowRuntimeV2Importer.Import(File.ReadAllText(SampleRoomPath));
+            var content = BranchSessionContent.Create(sample, catalog, settings.DefaultSeed, out var error);
+            Assert.IsTrue(string.IsNullOrWhiteSpace(error), error);
+            return content;
+        }
+
+        private static void AttachReturnPortalHarness(BranchSessionController branch)
+        {
+            var presentation = new GameObject("WorldLoopReturnHarness");
+            presentation.transform.SetParent(branch.transform, false);
+            var room = new GameObject("RoomRuntimeRoot", typeof(RoomRuntimeRoot));
+            room.transform.SetParent(presentation.transform, false);
+            var player = new GameObject("PlayerCharacter", typeof(PlaceholderPlayerController));
+            player.transform.SetParent(presentation.transform, false);
+            var portal = new GameObject("HubReturnPortal", typeof(HubReturnPortal));
+            portal.transform.SetParent(presentation.transform, false);
+
+            player.transform.localPosition = Vector3.zero;
+            portal.transform.localPosition = Vector3.zero;
+            SetPrivate(branch, "roomRuntimeRoot", room.GetComponent<RoomRuntimeRoot>());
+            SetPrivate(branch, "playerController", player.GetComponent<PlaceholderPlayerController>());
+            SetPrivate(branch, "currentHubPortal", portal.GetComponent<HubReturnPortal>());
+        }
+
         private JsonProfileStore CreateProfileHostWithSelectedProfile(out SelectedProfileContext selectedContext)
         {
             var store = new JsonProfileStore(tempRoot);
@@ -568,6 +694,15 @@ namespace Hollow.Tests.EditMode
             var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field, fieldName);
             field.SetValue(target, value);
+        }
+
+        private static void SetPrivateProperty(object target, string propertyName, object value)
+        {
+            var property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.IsNotNull(property, propertyName);
+            var setter = property.GetSetMethod(nonPublic: true);
+            Assert.IsNotNull(setter, propertyName);
+            setter.Invoke(target, new[] { value });
         }
 
         private static void ClearProfileSessionHostInstance()

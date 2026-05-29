@@ -338,7 +338,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6751d41158bc94e72a59019b71e2949c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Hollow.UI::Hollow.UI.Shell.RunFramingHudController
-  catalog: {fileID: 11400000, guid: 50f00000000000000000000000000050, type: 2}
+  catalog: {fileID: 11400000, guid: 13200000000000000000000000000050, type: 2}
 --- !u!114 &600839886
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -597,7 +597,7 @@ MonoBehaviour:
   encounterCatalog: {fileID: 11400000, guid: 578ef8ee4bdaa45c887f6863a8c9bef3, type: 2}
   bossCatalog: {fileID: 11400000, guid: 67ade33a5fcd542808b8338e6ca3d41f, type: 2}
   encounterDirectorProfile: {fileID: 11400000, guid: 2302e95f4b74746ae84752fee5b230cc, type: 2}
-  runFramingCatalog: {fileID: 11400000, guid: 50f00000000000000000000000000050, type: 2}
+  runFramingCatalog: {fileID: 11400000, guid: 13200000000000000000000000000050, type: 2}
   developerLabContentDefinition: {fileID: 0}
   macroBranchSeed: 14001
 --- !u!114 &1248658197

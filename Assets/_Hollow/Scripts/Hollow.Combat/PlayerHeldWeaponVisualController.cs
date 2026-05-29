@@ -7,29 +7,45 @@ namespace Hollow.Combat
     public sealed class PlayerHeldWeaponVisualController : MonoBehaviour
     {
         public const string MeleeHandSocketName = "MainCharacter_RightHandWeaponSocket";
+        public const string RangedHandSocketName = "MainCharacter_RangedHandWeaponSocket";
+        public const string MeleeHolsterSocketName = "MainCharacter_BackMeleeHolsterSocket";
+        public const string RangedHolsterSocketName = "MainCharacter_HipRangedHolsterSocket";
+        public const string RangedMuzzleSocketName = "MainCharacter_RangedMuzzleSocket";
+
+        public static readonly Vector3 DefaultMeleeSocketLocalPosition = new(0.03f, 0f, 0.02f);
+        public static readonly Vector3 DefaultMeleeSocketLocalEuler = new(90f, 0f, 0f);
+        public static readonly Vector3 DefaultMeleeSocketLocalScale = new(0.75f, 0.75f, 0.75f);
+        public static readonly Vector3 DefaultRangedHandSocketLocalPosition = new(0.28f, 0.74f, 0.44f);
+        public static readonly Vector3 DefaultRangedHandSocketLocalEuler = Vector3.zero;
+        public static readonly Vector3 DefaultRangedHandSocketLocalScale = Vector3.one;
+        public static readonly Vector3 DefaultMeleeHolsterSocketLocalPosition = new(-0.22f, 0.98f, -0.18f);
+        public static readonly Vector3 DefaultMeleeHolsterSocketLocalEuler = new(35f, -35f, 145f);
+        public static readonly Vector3 DefaultMeleeHolsterSocketLocalScale = new(0.72f, 0.72f, 0.72f);
+        public static readonly Vector3 DefaultRangedHolsterSocketLocalPosition = new(0.32f, 0.72f, -0.18f);
+        public static readonly Vector3 DefaultRangedHolsterSocketLocalEuler = new(0f, 90f, 18f);
+        public static readonly Vector3 DefaultRangedHolsterSocketLocalScale = new(0.78f, 0.78f, 0.78f);
 
         private const string MeshyVisualRootName = "MainCharacter_VisualRoot";
         private const string MeshyModelName = "MainCharacter_MeshyModel";
         private const string RightHandBoneName = "RightHand";
-        private const float MeleeHeightMeters = 0.78f;
-        private const float RangedHeightMeters = 0.74f;
-        private const float MeleeForwardOffsetMeters = 0.34f;
-        private const float RangedForwardOffsetMeters = 0.44f;
-        private const float MeleeSideOffsetMeters = 0.24f;
-        private const float RangedSideOffsetMeters = 0.28f;
         private const float LightAttackDurationSeconds = 0.14f;
         private const float HeavyAttackDurationSeconds = 0.22f;
         private const float MuzzleFlashDurationSeconds = 0.1f;
 
         [SerializeField] private PlayerWeaponController weaponController;
         [SerializeField] private Transform meleeHandSocket;
-        [SerializeField] private Vector3 meleeSocketLocalPosition = new(0.03f, 0f, 0.02f);
-        [SerializeField] private Vector3 meleeSocketLocalEuler = new(90f, 0f, 0f);
-        [SerializeField] private Vector3 meleeSocketLocalScale = new(0.75f, 0.75f, 0.75f);
+        [SerializeField] private Transform rangedHandSocket;
+        [SerializeField] private Transform meleeHolsterSocket;
+        [SerializeField] private Transform rangedHolsterSocket;
+        [SerializeField] private Transform rangedMuzzleSocket;
+        [SerializeField] private Vector3 meleeSocketLocalPosition = DefaultMeleeSocketLocalPosition;
+        [SerializeField] private Vector3 meleeSocketLocalEuler = DefaultMeleeSocketLocalEuler;
+        [SerializeField] private Vector3 meleeSocketLocalScale = DefaultMeleeSocketLocalScale;
 
         private Transform heldRoot;
-        private Transform motionPivot;
         private GameObject activeVisual;
+        private GameObject holsteredMeleeVisual;
+        private GameObject holsteredRangedVisual;
         private GameObject muzzleFlash;
         private WeaponSlot visibleSlot;
         private bool hasVisibleSlot;
@@ -42,6 +58,20 @@ namespace Hollow.Combat
         private float muzzleFlashAgeSeconds;
 
         public Transform MeleeHandSocket => meleeHandSocket;
+
+        public Transform RangedHandSocket => rangedHandSocket;
+
+        public Transform MeleeHolsterSocket => meleeHolsterSocket;
+
+        public Transform RangedHolsterSocket => rangedHolsterSocket;
+
+        public Transform ActiveMuzzleTransform => rangedMuzzleSocket;
+
+        public GameObject ActiveWeaponVisual => activeVisual;
+
+        public GameObject HolsteredMeleeVisual => holsteredMeleeVisual;
+
+        public GameObject HolsteredRangedVisual => holsteredRangedVisual;
 
         public bool IsUsingHandAttachedMeleeVisual =>
             visibleSlot == WeaponSlot.Melee &&
@@ -62,8 +92,9 @@ namespace Hollow.Combat
             if (weaponController != null)
             {
                 weaponController.ActiveWeaponSlotChanged += HandleActiveWeaponSlotChanged;
+                weaponController.WeaponActionAnimationRequested += HandleWeaponActionAnimationRequested;
                 weaponController.WeaponAttackVisualRequested += HandleWeaponAttackVisualRequested;
-                currentFacing = SafeAim(weaponController.LastAimDirection);
+                currentFacing = PlayerWeaponVisualPosePolicy.SafeAim(weaponController.LastAimDirection);
             }
 
             RefreshVisual(force: true);
@@ -72,8 +103,27 @@ namespace Hollow.Combat
         public void BindMeleeHandSocket(Transform socket)
         {
             meleeHandSocket = socket;
-            ApplyMeleeSocketDefaults();
-            if (hasVisibleSlot || activeVisual != null)
+            ApplySocketDefaults(meleeHandSocket, meleeSocketLocalPosition, meleeSocketLocalEuler, meleeSocketLocalScale);
+            if (weaponController != null || hasVisibleSlot || activeVisual != null)
+            {
+                RefreshVisual(force: true);
+            }
+        }
+
+        public void BindWeaponSockets(
+            Transform nextMeleeHandSocket,
+            Transform nextRangedHandSocket,
+            Transform nextMeleeHolsterSocket,
+            Transform nextRangedHolsterSocket,
+            Transform nextRangedMuzzleSocket)
+        {
+            meleeHandSocket = nextMeleeHandSocket;
+            rangedHandSocket = nextRangedHandSocket;
+            meleeHolsterSocket = nextMeleeHolsterSocket;
+            rangedHolsterSocket = nextRangedHolsterSocket;
+            rangedMuzzleSocket = nextRangedMuzzleSocket;
+            ApplyKnownSocketDefaults();
+            if (weaponController != null || hasVisibleSlot || activeVisual != null)
             {
                 RefreshVisual(force: true);
             }
@@ -81,20 +131,7 @@ namespace Hollow.Combat
 
         private void OnValidate()
         {
-            if (Mathf.Abs(meleeSocketLocalScale.x) < 0.0001f)
-            {
-                meleeSocketLocalScale.x = 0.75f;
-            }
-
-            if (Mathf.Abs(meleeSocketLocalScale.y) < 0.0001f)
-            {
-                meleeSocketLocalScale.y = 0.75f;
-            }
-
-            if (Mathf.Abs(meleeSocketLocalScale.z) < 0.0001f)
-            {
-                meleeSocketLocalScale.z = 0.75f;
-            }
+            meleeSocketLocalScale = ValidScale(meleeSocketLocalScale, DefaultMeleeSocketLocalScale);
         }
 
         private void OnDestroy()
@@ -119,7 +156,7 @@ namespace Hollow.Combat
             }
 
             RefreshVisual(force: false);
-            currentFacing = SafeAim(weaponController.LastAimDirection);
+            currentFacing = ResolveVisualFacing();
             TickAttack(Time.deltaTime);
             TickMuzzleFlash(Time.deltaTime);
             ApplyPose();
@@ -130,13 +167,22 @@ namespace Hollow.Combat
             RefreshVisual(force: true);
         }
 
+        private void HandleWeaponActionAnimationRequested(
+            WeaponSlot slot,
+            AttackKind kind,
+            Vector2 direction,
+            float actionDurationSeconds)
+        {
+            BeginAttackPose(slot, kind, direction, actionDurationSeconds);
+        }
+
         private void HandleWeaponAttackVisualRequested(WeaponSlot slot, AttackKind kind, Vector2 direction)
         {
-            attackSlot = slot;
-            attackKind = kind;
-            attackFacing = SafeAim(direction);
-            attackAgeSeconds = 0f;
-            attackDurationSeconds = kind == AttackKind.Heavy ? HeavyAttackDurationSeconds : LightAttackDurationSeconds;
+            BeginAttackPose(
+                slot,
+                kind,
+                direction,
+                kind == AttackKind.Heavy ? HeavyAttackDurationSeconds : LightAttackDurationSeconds);
 
             if (slot == WeaponSlot.Ranged)
             {
@@ -144,34 +190,59 @@ namespace Hollow.Combat
             }
         }
 
+        private void BeginAttackPose(WeaponSlot slot, AttackKind kind, Vector2 direction, float durationSeconds)
+        {
+            attackSlot = slot;
+            attackKind = kind;
+            attackFacing = PlayerWeaponVisualPosePolicy.SafeAim(direction);
+            currentFacing = attackFacing;
+            attackAgeSeconds = 0f;
+            attackDurationSeconds = Mathf.Max(0.01f, durationSeconds);
+            ApplyPose();
+        }
+
         private void RefreshVisual(bool force)
         {
             EnsureRoot();
+            EnsureSockets();
             var nextSlot = weaponController != null ? weaponController.ActiveWeaponSlot : WeaponSlot.Ranged;
-            var parent = ParentFor(nextSlot);
-            if (parent == null)
+            var nextParent = ActiveParentFor(nextSlot);
+            if (nextParent == null)
             {
                 return;
             }
 
-            if (!force &&
-                hasVisibleSlot &&
-                visibleSlot == nextSlot &&
-                activeVisual != null &&
-                activeVisual.transform.parent == parent)
+            var needsRebuild = force ||
+                !hasVisibleSlot ||
+                visibleSlot != nextSlot ||
+                activeVisual == null ||
+                activeVisual.transform.parent != nextParent ||
+                (nextSlot == WeaponSlot.Melee && holsteredRangedVisual == null) ||
+                (nextSlot == WeaponSlot.Ranged && holsteredMeleeVisual == null);
+
+            if (!needsRebuild)
             {
                 return;
             }
 
-            ClearVisual();
+            ClearVisuals();
             visibleSlot = nextSlot;
             hasVisibleSlot = true;
-            activeVisual = PresentationPrefabResolver.InstantiateVisual(RoleFor(nextSlot), parent, Vector3.zero, Vector3.one);
-            if (activeVisual != null)
+            activeVisual = CreateWeaponVisual(nextSlot, nextParent, $"Active{nextSlot}WeaponVisual");
+
+            if (nextSlot == WeaponSlot.Melee)
             {
-                activeVisual.transform.localPosition = Vector3.zero;
-                activeVisual.transform.localRotation = Quaternion.identity;
-                activeVisual.transform.localScale = Vector3.one;
+                holsteredRangedVisual = CreateWeaponVisual(
+                    WeaponSlot.Ranged,
+                    rangedHolsterSocket,
+                    "HolsteredRangedWeaponVisual");
+            }
+            else
+            {
+                holsteredMeleeVisual = CreateWeaponVisual(
+                    WeaponSlot.Melee,
+                    meleeHolsterSocket,
+                    "HolsteredMeleeWeaponVisual");
             }
 
             ApplyPose();
@@ -179,115 +250,162 @@ namespace Hollow.Combat
 
         private void EnsureRoot()
         {
-            if (heldRoot == null)
-            {
-                var root = new GameObject("HeldWeaponRoot");
-                root.transform.SetParent(transform, false);
-                heldRoot = root.transform;
-            }
-
-            if (motionPivot == null)
-            {
-                var pivot = new GameObject("HeldWeaponMotionPivot");
-                pivot.transform.SetParent(heldRoot, false);
-                motionPivot = pivot.transform;
-            }
-        }
-
-        private void ClearVisual()
-        {
-            if (muzzleFlash != null)
-            {
-                if (Application.isPlaying)
-                {
-                    Destroy(muzzleFlash);
-                }
-                else
-                {
-                    DestroyImmediate(muzzleFlash);
-                }
-
-                muzzleFlash = null;
-            }
-
-            var visualToDestroy = activeVisual;
-            activeVisual = null;
-            DestroyVisual(visualToDestroy);
-
-            if (motionPivot == null)
+            if (heldRoot != null)
             {
                 return;
             }
 
-            for (var index = motionPivot.childCount - 1; index >= 0; index--)
-            {
-                var child = motionPivot.GetChild(index);
-                if (child.gameObject == visualToDestroy)
-                {
-                    continue;
-                }
+            var root = new GameObject("HeldWeaponRoot");
+            root.transform.SetParent(transform, false);
+            heldRoot = root.transform;
+        }
 
-                DestroyVisual(child.gameObject);
+        private void EnsureSockets()
+        {
+            EnsureRoot();
+            meleeHandSocket ??= FindDescendant(transform, MeleeHandSocketName);
+            if (meleeHandSocket == null)
+            {
+                var rightHand = FindRightHandBone();
+                meleeHandSocket = CreateSocket(rightHand != null ? rightHand : heldRoot, MeleeHandSocketName);
             }
 
+            rangedHandSocket ??= FindDescendant(transform, RangedHandSocketName);
+            rangedHandSocket ??= CreateSocket(heldRoot, RangedHandSocketName);
+
+            var visualRoot = FindDescendant(transform, MeshyVisualRootName) ?? transform;
+            meleeHolsterSocket ??= FindDescendant(transform, MeleeHolsterSocketName);
+            meleeHolsterSocket ??= CreateSocket(visualRoot, MeleeHolsterSocketName);
+            rangedHolsterSocket ??= FindDescendant(transform, RangedHolsterSocketName);
+            rangedHolsterSocket ??= CreateSocket(visualRoot, RangedHolsterSocketName);
+
+            rangedMuzzleSocket ??= FindDescendant(transform, RangedMuzzleSocketName);
+            if (rangedMuzzleSocket == null)
+            {
+                rangedMuzzleSocket = CreateSocket(rangedHandSocket, RangedMuzzleSocketName);
+            }
+
+            if (rangedMuzzleSocket.parent != rangedHandSocket)
+            {
+                rangedMuzzleSocket.SetParent(rangedHandSocket, false);
+            }
+
+            ApplyKnownSocketDefaults();
+        }
+
+        private void ApplyKnownSocketDefaults()
+        {
+            ApplySocketDefaults(meleeHandSocket, meleeSocketLocalPosition, meleeSocketLocalEuler, meleeSocketLocalScale);
+            ApplySocketDefaults(
+                meleeHolsterSocket,
+                DefaultMeleeHolsterSocketLocalPosition,
+                DefaultMeleeHolsterSocketLocalEuler,
+                DefaultMeleeHolsterSocketLocalScale);
+            ApplySocketDefaults(
+                rangedHolsterSocket,
+                DefaultRangedHolsterSocketLocalPosition,
+                DefaultRangedHolsterSocketLocalEuler,
+                DefaultRangedHolsterSocketLocalScale);
+
+            if (rangedHandSocket != null && rangedHandSocket.parent == heldRoot)
+            {
+                ApplySocketDefaults(
+                    rangedHandSocket,
+                    DefaultRangedHandSocketLocalPosition,
+                    DefaultRangedHandSocketLocalEuler,
+                    DefaultRangedHandSocketLocalScale);
+            }
+
+            if (rangedMuzzleSocket != null)
+            {
+                rangedMuzzleSocket.localPosition = PlayerWeaponVisualPosePolicy.MuzzleLocalPosition();
+                rangedMuzzleSocket.localRotation = Quaternion.identity;
+                rangedMuzzleSocket.localScale = Vector3.one;
+            }
+        }
+
+        private void ClearVisuals()
+        {
+            DestroyVisual(muzzleFlash);
             muzzleFlash = null;
+
+            DestroyVisual(activeVisual);
+            DestroyVisual(holsteredMeleeVisual);
+            DestroyVisual(holsteredRangedVisual);
+            activeVisual = null;
+            holsteredMeleeVisual = null;
+            holsteredRangedVisual = null;
         }
 
         private void ApplyPose()
         {
-            if (heldRoot == null || motionPivot == null)
+            if (!hasVisibleSlot || activeVisual == null)
             {
                 return;
             }
 
-            var slot = hasVisibleSlot ? visibleSlot : WeaponSlot.Ranged;
-            if (slot == WeaponSlot.Melee && IsUsingHandAttachedMeleeVisual)
+            EnsureSockets();
+            var slot = visibleSlot;
+            var direction2 = ActiveAttackProgress > 0f && attackSlot == slot
+                ? attackFacing
+                : currentFacing;
+            direction2 = PlayerWeaponVisualPosePolicy.SafeAim(direction2);
+            var attackProgress = ActiveAttackProgress > 0f && attackSlot == slot ? ActiveAttackProgress : 0f;
+            var attackPositionOffset = PlayerWeaponVisualPosePolicy.AttackLocalPositionOffset(
+                slot,
+                attackKind,
+                direction2,
+                attackProgress);
+            var attackRotationOffset = PlayerWeaponVisualPosePolicy.AttackLocalRotationOffset(
+                slot,
+                attackKind,
+                attackProgress);
+            var aimRotation = PlayerWeaponVisualPosePolicy.AimRotation(direction2) * attackRotationOffset;
+
+            if (slot == WeaponSlot.Ranged && rangedHandSocket != null)
             {
-                heldRoot.localPosition = Vector3.zero;
-                heldRoot.localRotation = Quaternion.identity;
-                heldRoot.localScale = Vector3.one;
-                motionPivot.localPosition = Vector3.zero;
-                motionPivot.localRotation = Quaternion.identity;
-                motionPivot.localScale = Vector3.one;
+                SetPlayerSpacePose(
+                    rangedHandSocket,
+                    PlayerWeaponVisualPosePolicy.HeldLocalPosition(slot, direction2) + attackPositionOffset,
+                    aimRotation);
+                activeVisual.transform.localPosition = Vector3.zero;
+                activeVisual.transform.localRotation = Quaternion.identity;
+                activeVisual.transform.localScale = Vector3.one;
                 return;
             }
 
-            var direction2 = ActiveAttackProgress > 0f ? attackFacing : currentFacing;
-            direction2 = SafeAim(direction2);
-            var direction = new Vector3(direction2.x, 0f, direction2.y).normalized;
-            var side = new Vector3(-direction.z, 0f, direction.x);
-            var height = slot == WeaponSlot.Melee ? MeleeHeightMeters : RangedHeightMeters;
-            var forward = slot == WeaponSlot.Melee ? MeleeForwardOffsetMeters : RangedForwardOffsetMeters;
-            var sideOffset = slot == WeaponSlot.Melee ? MeleeSideOffsetMeters : RangedSideOffsetMeters;
-            var basePosition = direction * forward + side * sideOffset + Vector3.up * height;
-            var baseRotation = Quaternion.LookRotation(direction, Vector3.up);
-
-            var progress = ActiveAttackProgress;
-            if (progress > 0f && attackSlot == slot)
+            var parent = activeVisual.transform.parent;
+            if (parent == null)
             {
-                var punch = Mathf.Sin(progress * Mathf.PI);
-                if (slot == WeaponSlot.Melee)
-                {
-                    var arcDegrees = attackKind == AttackKind.Heavy ? 92f : 62f;
-                    var startDegrees = attackKind == AttackKind.Heavy ? -54f : -34f;
-                    var yaw = startDegrees + arcDegrees * EaseOut(progress);
-                    var thrust = direction * (attackKind == AttackKind.Heavy ? 0.22f : 0.13f) * punch;
-                    basePosition += thrust;
-                    baseRotation *= Quaternion.Euler(0f, yaw, 0f);
-                }
-                else
-                {
-                    var recoil = attackKind == AttackKind.Heavy ? 0.18f : 0.09f;
-                    basePosition -= direction * recoil * punch;
-                    baseRotation *= Quaternion.Euler(attackKind == AttackKind.Heavy ? -9f * punch : -5f * punch, 0f, 0f);
-                }
+                return;
             }
 
-            heldRoot.localPosition = basePosition;
-            heldRoot.localRotation = baseRotation;
-            motionPivot.localPosition = Vector3.zero;
-            motionPivot.localRotation = Quaternion.identity;
-            motionPivot.localScale = Vector3.one;
+            var worldPosition = parent.position + transform.TransformDirection(attackPositionOffset);
+            var worldRotation = transform.rotation * aimRotation;
+            activeVisual.transform.position = worldPosition;
+            activeVisual.transform.rotation = worldRotation;
+            activeVisual.transform.localScale = Vector3.one;
+        }
+
+        private void SetPlayerSpacePose(Transform target, Vector3 localPosition, Quaternion localRotation)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            var worldPosition = transform.TransformPoint(localPosition);
+            var worldRotation = transform.rotation * localRotation;
+            if (target.parent == null)
+            {
+                target.position = worldPosition;
+                target.rotation = worldRotation;
+                return;
+            }
+
+            target.localPosition = target.parent.InverseTransformPoint(worldPosition);
+            target.localRotation = Quaternion.Inverse(target.parent.rotation) * worldRotation;
+            target.localScale = DefaultRangedHandSocketLocalScale;
         }
 
         private void TickAttack(float deltaTime)
@@ -315,41 +433,27 @@ namespace Hollow.Combat
                 return;
             }
 
-            if (Application.isPlaying)
-            {
-                Destroy(muzzleFlash);
-            }
-            else
-            {
-                DestroyImmediate(muzzleFlash);
-            }
-
+            DestroyVisual(muzzleFlash);
             muzzleFlash = null;
         }
 
         private void SpawnMuzzleFlash(AttackKind kind)
         {
-            if (heldRoot == null)
+            EnsureSockets();
+            DestroyVisual(muzzleFlash);
+            muzzleFlash = null;
+
+            var parent = ActiveMuzzleTransform != null ? ActiveMuzzleTransform : rangedHandSocket != null ? rangedHandSocket : heldRoot;
+            if (parent == null)
             {
                 return;
             }
 
-            if (muzzleFlash != null)
-            {
-                if (Application.isPlaying)
-                {
-                    Destroy(muzzleFlash);
-                }
-                else
-                {
-                    DestroyImmediate(muzzleFlash);
-                }
-            }
-
             muzzleFlash = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             muzzleFlash.name = kind == AttackKind.Heavy ? "HeldWeaponMuzzleFlash.Heavy" : "HeldWeaponMuzzleFlash.Light";
-            muzzleFlash.transform.SetParent(heldRoot, false);
-            muzzleFlash.transform.localPosition = new Vector3(0f, 0f, 0.44f);
+            muzzleFlash.transform.SetParent(parent, false);
+            muzzleFlash.transform.localPosition = Vector3.zero;
+            muzzleFlash.transform.localRotation = Quaternion.identity;
             muzzleFlash.transform.localScale = Vector3.one * (kind == AttackKind.Heavy ? 0.18f : 0.12f);
             MaterialResolver.ApplyTo(muzzleFlash, MaterialRole.Projectile);
             var collider = muzzleFlash.GetComponent<Collider>();
@@ -368,6 +472,48 @@ namespace Hollow.Combat
             muzzleFlashAgeSeconds = 0f;
         }
 
+        private GameObject CreateWeaponVisual(WeaponSlot slot, Transform parent, string name)
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            var wrapper = new GameObject(name);
+            wrapper.transform.SetParent(parent, false);
+            wrapper.transform.localPosition = Vector3.zero;
+            wrapper.transform.localRotation = Quaternion.identity;
+            wrapper.transform.localScale = Vector3.one;
+
+            var model = PresentationPrefabResolver.InstantiateVisual(RoleFor(slot), wrapper.transform, Vector3.zero, Vector3.one);
+            if (model != null)
+            {
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localRotation = PlayerWeaponVisualPosePolicy.ModelCanonicalLocalRotation(slot);
+                model.transform.localScale = Vector3.one;
+            }
+
+            return wrapper;
+        }
+
+        private Transform ActiveParentFor(WeaponSlot slot)
+        {
+            EnsureSockets();
+            return slot == WeaponSlot.Melee ? meleeHandSocket : rangedHandSocket;
+        }
+
+        private Vector2 ResolveVisualFacing()
+        {
+            if (weaponController == null)
+            {
+                return currentFacing;
+            }
+
+            return weaponController.HasVisualAimCommitment
+                ? PlayerWeaponVisualPosePolicy.SafeAim(weaponController.VisualAimDirection)
+                : PlayerWeaponVisualPosePolicy.SafeAim(weaponController.LastAimDirection);
+        }
+
         private void Unsubscribe()
         {
             if (weaponController == null)
@@ -376,6 +522,7 @@ namespace Hollow.Combat
             }
 
             weaponController.ActiveWeaponSlotChanged -= HandleActiveWeaponSlotChanged;
+            weaponController.WeaponActionAnimationRequested -= HandleWeaponActionAnimationRequested;
             weaponController.WeaponAttackVisualRequested -= HandleWeaponAttackVisualRequested;
         }
 
@@ -383,55 +530,9 @@ namespace Hollow.Combat
             ? Mathf.Clamp01(attackAgeSeconds / attackDurationSeconds)
             : 0f;
 
-        private static float EaseOut(float value)
-        {
-            value = Mathf.Clamp01(value);
-            return 1f - (1f - value) * (1f - value);
-        }
-
         private static PresentationPrefabRole RoleFor(WeaponSlot slot)
         {
             return slot == WeaponSlot.Melee ? PresentationPrefabRole.WeaponMelee : PresentationPrefabRole.WeaponRanged;
-        }
-
-        private Transform ParentFor(WeaponSlot slot)
-        {
-            if (slot == WeaponSlot.Melee)
-            {
-                var socket = ResolveMeleeHandSocket();
-                if (socket != null)
-                {
-                    return socket;
-                }
-            }
-
-            return motionPivot;
-        }
-
-        private Transform ResolveMeleeHandSocket()
-        {
-            if (meleeHandSocket != null)
-            {
-                return meleeHandSocket;
-            }
-
-            meleeHandSocket = FindDescendant(transform, MeleeHandSocketName);
-            if (meleeHandSocket != null)
-            {
-                return meleeHandSocket;
-            }
-
-            var rightHand = FindRightHandBone();
-            if (rightHand == null)
-            {
-                return null;
-            }
-
-            var socketObject = new GameObject(MeleeHandSocketName);
-            socketObject.transform.SetParent(rightHand, false);
-            meleeHandSocket = socketObject.transform;
-            ApplyMeleeSocketDefaults();
-            return meleeHandSocket;
         }
 
         private Transform FindRightHandBone()
@@ -442,16 +543,40 @@ namespace Hollow.Combat
             return FindDescendant(searchRoot, RightHandBoneName);
         }
 
-        private void ApplyMeleeSocketDefaults()
+        private static Transform CreateSocket(Transform parent, string socketName)
         {
-            if (meleeHandSocket == null)
+            if (parent == null)
+            {
+                return null;
+            }
+
+            var socketObject = new GameObject(socketName);
+            socketObject.transform.SetParent(parent, false);
+            return socketObject.transform;
+        }
+
+        private static void ApplySocketDefaults(
+            Transform socket,
+            Vector3 localPosition,
+            Vector3 localEuler,
+            Vector3 localScale)
+        {
+            if (socket == null)
             {
                 return;
             }
 
-            meleeHandSocket.localPosition = meleeSocketLocalPosition;
-            meleeHandSocket.localRotation = Quaternion.Euler(meleeSocketLocalEuler);
-            meleeHandSocket.localScale = meleeSocketLocalScale;
+            socket.localPosition = localPosition;
+            socket.localRotation = Quaternion.Euler(localEuler);
+            socket.localScale = localScale;
+        }
+
+        private static Vector3 ValidScale(Vector3 value, Vector3 fallback)
+        {
+            return new Vector3(
+                Mathf.Abs(value.x) < 0.0001f ? fallback.x : value.x,
+                Mathf.Abs(value.y) < 0.0001f ? fallback.y : value.y,
+                Mathf.Abs(value.z) < 0.0001f ? fallback.z : value.z);
         }
 
         private static Transform FindDescendant(Transform root, string childName)
@@ -487,11 +612,6 @@ namespace Hollow.Combat
             {
                 DestroyImmediate(visual);
             }
-        }
-
-        private static Vector2 SafeAim(Vector2 direction)
-        {
-            return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up;
         }
     }
 }

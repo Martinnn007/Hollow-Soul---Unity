@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hollow.Rewards
 {
@@ -6,8 +8,10 @@ namespace Hollow.Rewards
     {
         public const string NormalChestRewardId = "standard_treasure_chest";
         public const string GoldenChestRewardId = "golden_treasure_chest";
+        public const string CorruptedChestRewardId = "corrupted_treasure_chest";
         public const string SmallCoinPouchRewardId = "small_coin_pouch";
         public const string HpRefillRewardId = "hp_refill";
+        public const int CorruptedChestRollPercent = 10;
 
         private static readonly (string id, string displayName, RewardKind kind, RewardEffect[] effects)[] GoldenCardRewards =
         {
@@ -22,16 +26,56 @@ namespace Hollow.Rewards
             ("mend_card", "Mend Card", RewardKind.ConsumableCard, Array.Empty<RewardEffect>())
         };
 
+        private static readonly (string id, string displayName, RewardKind kind, RewardEffect[] effects)[] CorruptedRareRewards =
+        {
+            ("vital_locket", "Vital Locket", RewardKind.PassiveItem, new[]
+            {
+                new RewardEffect(RewardEffectKind.MaxHealthBonus, intValue: 1),
+                new RewardEffect(RewardEffectKind.Heal, intValue: 1)
+            }),
+            ("iron_stitch", "Iron Stitch", RewardKind.PassiveItem, new[] { new RewardEffect(RewardEffectKind.DefenseBonus, intValue: 1) }),
+            ("fleet_pin", "Fleet Pin", RewardKind.PassiveItem, new[] { new RewardEffect(RewardEffectKind.MoveSpeedBonus, floatValue: 0.35f) }),
+            ("stamina_thread", "Stamina Thread", RewardKind.PassiveItem, new[]
+            {
+                new RewardEffect(RewardEffectKind.MaxStaminaBonus, floatValue: 20f),
+                new RewardEffect(RewardEffectKind.StaminaRegenBonus, floatValue: 2f)
+            }),
+            ("blade_lesson", "Blade Lesson", RewardKind.PassiveCard, new[] { new RewardEffect(RewardEffectKind.MeleeDamageBonus, intValue: 1) }),
+            ("bolt_lesson", "Bolt Lesson", RewardKind.PassiveCard, new[]
+            {
+                new RewardEffect(RewardEffectKind.RangedDamageBonus, intValue: 1),
+                new RewardEffect(RewardEffectKind.AttackCooldownMultiplier, floatValue: 0.97f)
+            }),
+            ("mending_charm", "Mending Charm", RewardKind.ActiveItem, Array.Empty<RewardEffect>()),
+            ("echo_burst", "Echo Burst", RewardKind.ActiveItem, Array.Empty<RewardEffect>()),
+            ("mend_card", "Mend Card", RewardKind.ConsumableCard, Array.Empty<RewardEffect>())
+        };
+
+        public static IReadOnlyList<string> CorruptedRareRewardIds => CorruptedRareRewards.Select(reward => reward.id).ToArray();
+
+        public static RewardGrant ResolveCuratedRareReward(string branchId, int seed, string roomId, string contextSuffix)
+        {
+            var context = $"{branchId}|{seed}|{roomId}|{contextSuffix}";
+            var reward = CorruptedRareRewards[StableHash($"{context}|rare_reward") % CorruptedRareRewards.Length];
+            return new RewardGrant(roomId, reward.id, reward.displayName, reward.kind, 0, 0, reward.effects);
+        }
+
         public static bool IsChestReward(RewardGrant grant)
         {
             return string.Equals(grant.RewardId, NormalChestRewardId, StringComparison.Ordinal) ||
-                   string.Equals(grant.RewardId, GoldenChestRewardId, StringComparison.Ordinal);
+                   string.Equals(grant.RewardId, GoldenChestRewardId, StringComparison.Ordinal) ||
+                   string.Equals(grant.RewardId, CorruptedChestRewardId, StringComparison.Ordinal);
         }
 
         public static ChestKind KindForGrant(RewardGrant grant)
         {
-            return string.Equals(grant.RewardId, GoldenChestRewardId, StringComparison.Ordinal)
-                ? ChestKind.Golden
+            if (string.Equals(grant.RewardId, GoldenChestRewardId, StringComparison.Ordinal))
+            {
+                return ChestKind.Golden;
+            }
+
+            return string.Equals(grant.RewardId, CorruptedChestRewardId, StringComparison.Ordinal)
+                ? ChestKind.Corrupted
                 : ChestKind.Normal;
         }
 
@@ -47,6 +91,14 @@ namespace Hollow.Rewards
                 }
 
                 return new ChestRewardContents(0, HpRefillGrant($"{roomId}:normal_chest"));
+            }
+
+            if (kind == ChestKind.Corrupted)
+            {
+                var corruptedReward = CorruptedRareRewards[StableHash($"{context}|corrupted_reward") % CorruptedRareRewards.Length];
+                return new ChestRewardContents(
+                    8 + StableHash($"{context}|corrupted_coins") % 5,
+                    new RewardGrant($"{roomId}:corrupted_chest", corruptedReward.id, corruptedReward.displayName, corruptedReward.kind, 0, 0, corruptedReward.effects));
             }
 
             if (roll < 55)

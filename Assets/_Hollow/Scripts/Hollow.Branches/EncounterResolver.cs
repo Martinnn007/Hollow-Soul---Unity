@@ -20,7 +20,8 @@ namespace Hollow.Branches
             BranchFloorGraph graph,
             EncounterCatalogDefinition catalog,
             int seed,
-            IEnumerable<string> allowedNonBossSpawnKinds)
+            IEnumerable<string> allowedNonBossSpawnKinds,
+            BranchRoomDistanceMap distanceMap = null)
         {
             if (graph == null || catalog == null)
             {
@@ -28,11 +29,11 @@ namespace Hollow.Branches
             }
 
             var allowedSpawns = NormalizeAllowedNonBossSpawnKinds(allowedNonBossSpawnKinds);
-            var distances = DistancesFromOrigin(graph);
+            var distances = distanceMap ?? BranchRoomDistanceMap.Create(graph);
             var assignments = new List<RoomEncounterAssignment>();
             foreach (var room in graph.Rooms.OrderBy(room => room.Id.Value, StringComparer.Ordinal))
             {
-                if (room.Role is BranchRoomRole.Origin or BranchRoomRole.Treasure or BranchRoomRole.Secret)
+                if (room.Role is BranchRoomRole.Origin or BranchRoomRole.Reward or BranchRoomRole.Treasure or BranchRoomRole.Secret or BranchRoomRole.CorruptedChest)
                 {
                     continue;
                 }
@@ -85,7 +86,8 @@ namespace Hollow.Branches
             EncounterDirectorProfileDefinition profile,
             int difficultyBandBonus,
             BossCatalogDefinition bossCatalog,
-            IEnumerable<string> allowedNonBossSpawnKinds)
+            IEnumerable<string> allowedNonBossSpawnKinds,
+            BranchRoomDistanceMap distanceMap = null)
         {
             if (graph == null || catalog == null)
             {
@@ -94,11 +96,11 @@ namespace Hollow.Branches
 
             var context = new EncounterDirectorContext(graph, seed, worldIndex, profile);
             var allowedSpawns = NormalizeAllowedNonBossSpawnKinds(allowedNonBossSpawnKinds);
-            var distances = DistancesFromOrigin(graph);
+            var distances = distanceMap ?? BranchRoomDistanceMap.Create(graph);
             var assignments = new List<RoomEncounterAssignment>();
             foreach (var room in graph.Rooms.OrderBy(room => room.Id.Value, StringComparer.Ordinal))
             {
-                if (room.Role is BranchRoomRole.Origin or BranchRoomRole.Treasure or BranchRoomRole.Secret)
+                if (room.Role is BranchRoomRole.Origin or BranchRoomRole.Reward or BranchRoomRole.Treasure or BranchRoomRole.Secret or BranchRoomRole.CorruptedChest)
                 {
                     continue;
                 }
@@ -185,13 +187,6 @@ namespace Hollow.Branches
             var candidates = catalog.Encounters
                 .Where(encounter => encounter != null && encounter.Supports(room.Role, difficultyBand, footprintCells))
                 .ToList();
-            if (candidates.Count == 0 && room.Role == BranchRoomRole.Reward)
-            {
-                candidates = catalog.Encounters
-                    .Where(encounter => encounter != null && encounter.Supports(BranchRoomRole.Combat, difficultyBand, footprintCells))
-                    .ToList();
-            }
-
             if (candidates.Count == 0 && room.Role != BranchRoomRole.Origin)
             {
                 candidates = catalog.Encounters
@@ -228,13 +223,6 @@ namespace Hollow.Branches
             var candidates = catalog.Encounters
                 .Where(encounter => encounter != null && encounter.Supports(room.Role, difficultyBand, footprintCells))
                 .ToList();
-            if (candidates.Count == 0 && room.Role == BranchRoomRole.Reward)
-            {
-                candidates = catalog.Encounters
-                    .Where(encounter => encounter != null && encounter.Supports(BranchRoomRole.Combat, difficultyBand, footprintCells))
-                    .ToList();
-            }
-
             if (candidates.Count == 0 && room.Role != BranchRoomRole.Origin)
             {
                 candidates = catalog.Encounters
@@ -285,31 +273,6 @@ namespace Hollow.Branches
         private static int DirectorPressureFor(EncounterDirectorContext context, EncounterDefinition encounter, int difficultyBand)
         {
             return difficultyBand + Math.Max(0, encounter?.MinDifficultyBand ?? 0) + Math.Max(0, context?.WorldConfig?.DifficultyOffset ?? 0);
-        }
-
-        private static Dictionary<string, int> DistancesFromOrigin(BranchFloorGraph graph)
-        {
-            var distances = new Dictionary<string, int>();
-            var queue = new Queue<BranchRoomId>();
-            queue.Enqueue(BranchRoomId.Origin);
-            distances[BranchRoomId.Origin.Value] = 0;
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                var nextDistance = distances[current.Value] + 1;
-                foreach (var connection in graph.ConnectionsFrom(current))
-                {
-                    if (distances.ContainsKey(connection.ToRoomId.Value))
-                    {
-                        continue;
-                    }
-
-                    distances[connection.ToRoomId.Value] = nextDistance;
-                    queue.Enqueue(connection.ToRoomId);
-                }
-            }
-
-            return distances;
         }
 
         private static int StableHash(string value)
