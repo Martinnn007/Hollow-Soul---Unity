@@ -6,6 +6,7 @@ using System.Reflection;
 using Hollow.Core.Diagnostics;
 using Hollow.Diagnostics;
 using Hollow.Editor.Generation;
+using Hollow.Performance;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -96,6 +97,9 @@ namespace Hollow.Editor
                 DrawActiveCapture();
                 DrawCaptureButtons();
                 DrawLatestCaptures();
+                DrawLatestM138StressSummary();
+                DrawLatestM139SoakSummary();
+                DrawLatestM140BuildRealSummary();
             }
         }
 
@@ -350,7 +354,12 @@ namespace Hollow.Editor
             EditorGUILayout.LabelField("Objects", $"enemies={snapshot.activeEnemies}, projectiles={snapshot.activeProjectiles}, vfx={snapshot.activeVfx}, renderers={snapshot.activeRenderers}");
             var operations = M136PerformanceOperationCounters.Snapshot();
             EditorGUILayout.LabelField("Events", $"transitions={operations.RoomTransitionEvents}, navmeshFallbacks={operations.RuntimeNavMeshFallbacks}");
+            EditorGUILayout.LabelField("Transition Curtain", $"shows={operations.TransitionCurtainShows}, hides={operations.TransitionCurtainHides}, maxVisibleMs={operations.TransitionCurtainMaxVisibleMilliseconds:0.#}, afterReadyFrames={operations.TransitionCurtainMaxFramesAfterReady}, lockMs={operations.TransitionLockMaxMilliseconds:0.#}, orphans={operations.TransitionOrphanCurtainsRemoved}");
             EditorGUILayout.LabelField("Branch Cache", $"hits={operations.BranchRuntimeCacheHits}, misses={operations.BranchRuntimeCacheMisses}, graphs={operations.BranchGraphBuilds}, distances={operations.BranchRoomDistanceMapBuilds}, rooms={operations.BranchRoomAssetResolves}, descriptors={operations.RoomDescriptorBuilds}");
+            EditorGUILayout.LabelField("Branch Loading", $"branch={operations.BranchLoadingStarts}/{operations.BranchLoadingCompletions} maxMs={operations.BranchLoadingMaxMilliseconds:0.#}, boss={operations.BossLoadingStarts}/{operations.BossLoadingCompletions} maxMs={operations.BossLoadingMaxMilliseconds:0.#}, preloadRooms={operations.FullBranchPreloadRooms}, coldMisses={operations.TraversalColdCacheMisses}");
+            EditorGUILayout.LabelField("Enemy Pool", $"warm={operations.EnemyPoolWarmRequests}/{operations.EnemyPoolWarmCompletions}, rents={operations.EnemyPoolRents}, returns={operations.EnemyPoolReturns}, misses={operations.EnemyPoolMisses}, hard={operations.EnemyPoolHardInstantiates}");
+            EditorGUILayout.LabelField("M139 Soak", $"staleEnemy={operations.M139StaleEnemyStateFailures}, stalePool={operations.M139StaleRuntimePoolStateFailures}, leaks={operations.M139PoolActiveLeaks}, cacheWindows={operations.M139CacheHitRateWindows}/{operations.M139CacheHitRateWindowFailures}, firstUseMiss={operations.M139ShaderMaterialFirstUseMissesAfterLoad}, drift={operations.M139ManagedMemoryDriftMaxMb:0.#}/{operations.M139GraphicsMemoryDriftMaxMb:0.#}MB");
+            EditorGUILayout.LabelField("Boot Loading", $"boot={operations.BootLoadingStarts}/{operations.BootLoadingCompletions}, fail={operations.BootLoadingFailures}, maxMs={operations.BootLoadingMaxMilliseconds:0.#}, stages={operations.BootLoadingStageCount}, resources={operations.BootPreloadResourceLoads}, warm={operations.BootPreloadWarmRequests}/{operations.BootPreloadWarmCompletions}, shaders={operations.BootPreloadShaderWarmSuccesses}/{operations.BootPreloadShaderWarmAttempts}, shaderMiss={operations.BootPreloadShaderWarmMisses}, shaderMaxMs={operations.BootPreloadShaderWarmMaxMilliseconds:0.#}");
         }
 
         private void RefreshLatestCaptures()
@@ -360,6 +369,86 @@ namespace Hollow.Editor
                 .Select(group => group.Last())
                 .OrderBy(manifest => manifest.scenarioId, StringComparer.Ordinal)
                 .ToArray();
+        }
+
+        private static void DrawLatestM138StressSummary()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("M138 Combat Scale Stress", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Scenarios", string.Join(", ", M138CombatScaleStressScenarioPolicy.StressManifest.Select(scenario => scenario.id)));
+            if (!File.Exists(M138CombatScaleStressReportGenerator.DefaultJsonReportPath))
+            {
+                EditorGUILayout.HelpBox("No M138 automated stress report has been generated yet.", MessageType.None);
+                return;
+            }
+
+            try
+            {
+                var report = JsonUtility.FromJson<M138CombatScaleStressReport>(File.ReadAllText(M138CombatScaleStressReportGenerator.DefaultJsonReportPath));
+                EditorGUILayout.LabelField("Latest Report", report != null && report.passed ? "PASS" : "FAIL");
+                EditorGUILayout.LabelField("Coverage", $"{report?.scenarioCount ?? 0}/{M138CombatScaleStressScenarioPolicy.StressManifest.Length}");
+                if (report?.failures != null && report.failures.Length > 0)
+                {
+                    EditorGUILayout.HelpBox(report.failures[0], MessageType.Warning);
+                }
+            }
+            catch (Exception exception)
+            {
+                EditorGUILayout.HelpBox($"Could not read M138 report: {exception.Message}", MessageType.Warning);
+            }
+        }
+
+        private static void DrawLatestM139SoakSummary()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("M139 Long-Run Soak", EditorStyles.boldLabel);
+            if (!File.Exists(M139LongRunSoakReportGenerator.DefaultJsonReportPath))
+            {
+                EditorGUILayout.HelpBox("No M139 long-run soak report has been generated yet.", MessageType.None);
+                return;
+            }
+
+            try
+            {
+                var report = JsonUtility.FromJson<M139LongRunSoakReport>(File.ReadAllText(M139LongRunSoakReportGenerator.DefaultJsonReportPath));
+                EditorGUILayout.LabelField("Latest Report", report != null && report.passed ? "PASS" : "FAIL");
+                EditorGUILayout.LabelField("Coverage", $"{report?.scenarioCount ?? 0}/{M139LongRunSoakReportGenerator.ScenarioIds.Length}");
+                if (report?.failures != null && report.failures.Length > 0)
+                {
+                    EditorGUILayout.HelpBox(report.failures[0], MessageType.Warning);
+                }
+            }
+            catch (Exception exception)
+            {
+                EditorGUILayout.HelpBox($"Could not read M139 report: {exception.Message}", MessageType.Warning);
+            }
+        }
+
+        private static void DrawLatestM140BuildRealSummary()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("M140 Build-Real Gate", EditorStyles.boldLabel);
+            var path = Path.Combine("output/reports/m140", Hollow.Editor.Build.M140BuildRealGateRunner.LatestEditorJsonFileName);
+            if (!File.Exists(path))
+            {
+                EditorGUILayout.HelpBox("No M140 built-player gate report has been generated yet.", MessageType.None);
+                return;
+            }
+
+            try
+            {
+                var report = JsonUtility.FromJson<Hollow.Editor.Build.M140BuildRealGateEditorReport>(File.ReadAllText(path));
+                EditorGUILayout.LabelField("Latest Report", report?.result ?? "Unknown");
+                EditorGUILayout.LabelField("Targets", (report?.targets?.Count ?? 0).ToString());
+                if (report?.failures != null && report.failures.Length > 0)
+                {
+                    EditorGUILayout.HelpBox(report.failures[0], MessageType.Warning);
+                }
+            }
+            catch (Exception exception)
+            {
+                EditorGUILayout.HelpBox($"Could not read M140 report: {exception.Message}", MessageType.Warning);
+            }
         }
 
         private void DestroyRuntimeDriver()

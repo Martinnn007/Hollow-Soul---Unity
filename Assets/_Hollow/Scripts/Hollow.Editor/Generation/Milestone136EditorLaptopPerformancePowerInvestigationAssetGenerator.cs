@@ -239,7 +239,7 @@ namespace Hollow.Editor.Generation
                 }
 
                 builder.AppendLine($"- Note: {scenario.note}");
-                builder.AppendLine($"- Operations: minimap rebuilds {scenario.operations?.miniMapRebuilds ?? 0}, wall updates {scenario.operations?.wallVisibilityUpdates ?? 0}, combat HUD refreshes {scenario.operations?.combatHudRefreshes ?? 0}, runtime NavMesh fallbacks {scenario.operations?.runtimeNavMeshFallbacks ?? 0}");
+                builder.AppendLine($"- Operations: minimap rebuilds {scenario.operations?.miniMapRebuilds ?? 0}, wall updates {scenario.operations?.wallVisibilityUpdates ?? 0}, combat HUD refreshes {scenario.operations?.combatHudRefreshes ?? 0}, runtime NavMesh fallbacks {scenario.operations?.runtimeNavMeshFallbacks ?? 0}, curtain after-ready max frames {scenario.operations?.transitionCurtainMaxFramesAfterReady ?? 0}, transition lock max {scenario.operations?.transitionLockMaxMilliseconds ?? 0f:0.#} ms");
                 builder.AppendLine($"- Object peaks: enemies {scenario.objectCounts?.peakEnemies ?? 0}, projectiles {scenario.objectCounts?.peakProjectiles ?? 0}, VFX {scenario.objectCounts?.peakVfx ?? 0}, canvases {scenario.objectCounts?.peakUiCanvases ?? 0}, renderers {scenario.objectCounts?.peakRenderers ?? 0}");
                 foreach (var metric in scenario.metrics ?? Array.Empty<M136PerformanceMetricSummary>())
                 {
@@ -321,7 +321,7 @@ namespace Hollow.Editor.Generation
                 "- GPU frame timing is marked unsupported when the current Editor/Metal context does not expose it.\n" +
                 "- Profiler traces are saved beside each capture when Unity exposes trace export in the current Editor context.\n" +
                 "- GC allocation, managed memory, graphics memory, object-count snapshots, and runtime operation counters.\n" +
-                "- Operation counters include minimap rebuilds, wall-visibility updates, combat HUD refreshes, and runtime NavMesh fallbacks.\n\n" +
+                "- Operation counters include minimap rebuilds, wall-visibility updates, combat HUD refreshes, runtime NavMesh fallbacks, and transition curtain/lock readiness.\n\n" +
                 "## Capture Comparison\n" +
                 "- Reports compare the two latest live captures per scenario when before/after data exists.\n" +
                 "- Comparison highlights p95 frame-time and p50 FPS movement so optimization passes can prove actual improvement.\n\n" +
@@ -613,6 +613,8 @@ namespace Hollow.Editor.Generation
                 "ReportWallVisibilityUpdate",
                 "ReportCombatHudRefresh",
                 "ReportRuntimeNavMeshFallback",
+                "ReportTransitionCurtainHide",
+                "ReportTransitionLock",
                 "Conditional(\"UNITY_EDITOR\")",
                 "Conditional(\"DEVELOPMENT_BUILD\")"
             });

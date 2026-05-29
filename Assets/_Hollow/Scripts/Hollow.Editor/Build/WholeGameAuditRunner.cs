@@ -11,6 +11,7 @@ using Hollow.Editor.Validation;
 using Hollow.Input;
 using Hollow.Persistence;
 using Hollow.Platform;
+using Hollow.Performance;
 using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEditor;
@@ -739,6 +740,380 @@ namespace Hollow.Editor.Build
                     "Assets/_Hollow/Tests/EditMode/Milestone24PlatformBuildQaTests.cs",
                     "Restore or replace the M24 platform QA tests and include the whole-game audit in the final gate."));
             }
+
+            AuditBootLoadingStartupSafety(report);
+            AuditRoomTransitionDimmingSafety(report);
+            AuditM138CombatScaleStressGate(report);
+            AuditM139LongRunSoakGate(report);
+            AuditM140BuildRealReleaseGate(report);
+        }
+
+        private static void AuditBootLoadingStartupSafety(WholeGameAuditReport report)
+        {
+            const string bootControllerPath = "Assets/_Hollow/Scripts/Hollow.Core/App/BootSceneController.cs";
+            const string bootScreenPath = "Assets/_Hollow/Scripts/Hollow.Core/App/BootLoadingScreenController.cs";
+            const string bootPreloadPath = "Assets/_Hollow/Scripts/Hollow.Core/App/BootPreloadService.cs";
+            const string shaderWarmupProfileScriptPath = "Assets/_Hollow/Scripts/Hollow.Core/App/HollowShaderWarmupProfile.cs";
+            const string bootShaderWarmupProfilePath = "Assets/_Hollow/Resources/Hollow/HollowBootShaderWarmupProfile.asset";
+            const string bootShaderVariantCollectionPath = "Assets/_Hollow/Shaders/HollowBootShaderVariants.shadervariants";
+            const string counterPath = "Assets/_Hollow/Scripts/Hollow.Core/M136PerformanceOperationCounters.cs";
+            const string projectSettingsPath = "ProjectSettings/ProjectSettings.asset";
+            var bootController = File.Exists(ToAbsolutePath(bootControllerPath))
+                ? File.ReadAllText(ToAbsolutePath(bootControllerPath))
+                : string.Empty;
+            var bootPreload = File.Exists(ToAbsolutePath(bootPreloadPath))
+                ? File.ReadAllText(ToAbsolutePath(bootPreloadPath))
+                : string.Empty;
+            var counters = File.Exists(ToAbsolutePath(counterPath))
+                ? File.ReadAllText(ToAbsolutePath(counterPath))
+                : string.Empty;
+            var projectSettings = File.Exists(ToAbsolutePath(projectSettingsPath))
+                ? File.ReadAllText(ToAbsolutePath(projectSettingsPath))
+                : string.Empty;
+
+            if (!AssetPathExists(bootScreenPath) ||
+                !AssetPathExists(bootPreloadPath) ||
+                !bootController.Contains("BootRoutine", StringComparison.Ordinal) ||
+                !bootController.Contains("BootPreloadService", StringComparison.Ordinal) ||
+                !bootController.Contains("EffectiveMinimumVisibleSeconds", StringComparison.Ordinal) ||
+                !bootController.Contains("ShowFailure", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "BootLoading",
+                    "Pre-main-menu boot loading safeguards are incomplete",
+                    "Boot should show a branded loading screen, preload global immutable resources, keep a fast editor minimum, and surface startup failures before routing to the menu.",
+                    bootControllerPath,
+                    "Restore the boot loading pipeline and rerun the boot-to-menu PlayMode smoke test."));
+            }
+
+            if (!AssetPathExists(shaderWarmupProfileScriptPath) ||
+                !AssetPathExists(bootShaderWarmupProfilePath) ||
+                !AssetPathExists(bootShaderVariantCollectionPath) ||
+                bootPreload.Contains("Warmup" + "AllShaders", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "ShaderWarmup",
+                    "Curated boot shader warmup safeguards are incomplete",
+                    "Boot should warm assigned ShaderVariantCollection assets only; blanket shader warmup is forbidden because it can touch invalid URP/package keyword spaces.",
+                    bootPreloadPath,
+                    "Generate the boot shader warmup profile/collection and keep normal boot on curated collection warmup."));
+            }
+
+            if (bootPreload.Contains("BranchEnemyPool", StringComparison.Ordinal) ||
+                bootPreload.Contains("RoomRuntimeBuildDescriptor", StringComparison.Ordinal) ||
+                bootPreload.Contains("RoomNavMeshRuntimeFallback", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "BootPreload",
+                    "Boot preload includes branch-specific mutable data",
+                    "Boot preload should stay global; branch descriptors, branch enemy pools, and NavMesh attach/fallback work belong behind branch loading.",
+                    bootPreloadPath,
+                    "Move branch-specific preload back into BranchSessionController branch loading."));
+            }
+
+            if (!counters.Contains("ReportBootLoadingStart", StringComparison.Ordinal) ||
+                !counters.Contains("ReportBootLoadingCompletion", StringComparison.Ordinal) ||
+                !counters.Contains("ReportBootPreloadResourceLoad", StringComparison.Ordinal) ||
+                !counters.Contains("ReportBootPreloadWarmRequest", StringComparison.Ordinal) ||
+                !counters.Contains("ReportBootPreloadShaderWarmSuccess", StringComparison.Ordinal) ||
+                !counters.Contains("ReportBootPreloadShaderWarmMiss", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "Telemetry",
+                    "Boot loading telemetry is missing",
+                    "M136/M137 summaries should include boot loading duration, failures, stages, global resource loads, and warm requests.",
+                    counterPath,
+                    "Restore the boot loading counters before accepting startup visual QA."));
+            }
+
+            if (!projectSettings.Contains("companyName: CineFit Studio", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "Branding",
+                    "Project company name is not set to CineFit Studio",
+                    "PlayerSettings should carry the studio name used by the boot splash and build metadata.",
+                    projectSettingsPath,
+                    "Set PlayerSettings companyName to CineFit Studio."));
+            }
+        }
+
+        private static void AuditRoomTransitionDimmingSafety(WholeGameAuditReport report)
+        {
+            const string branchSessionPath = "Assets/_Hollow/Scripts/Hollow.Branches/BranchSessionController.cs";
+            const string inputLockPath = "Assets/_Hollow/Scripts/Hollow.Input/GameplayTransitionState.cs";
+            const string loadingScreenPath = "Assets/_Hollow/Scripts/Hollow.Branches/BranchLoadingScreenController.cs";
+            const string enemyPoolPath = "Assets/_Hollow/Scripts/Hollow.Combat/EnemyRuntimePool.cs";
+            const string counterPath = "Assets/_Hollow/Scripts/Hollow.Core/M136PerformanceOperationCounters.cs";
+            var branchSession = File.Exists(ToAbsolutePath(branchSessionPath))
+                ? File.ReadAllText(ToAbsolutePath(branchSessionPath))
+                : string.Empty;
+            var counters = File.Exists(ToAbsolutePath(counterPath))
+                ? File.ReadAllText(ToAbsolutePath(counterPath))
+                : string.Empty;
+            var traversalRoutine = ExtractMethodBlock(branchSession, "private IEnumerator TraverseStagedRoutine");
+
+            if (!AssetPathExists(inputLockPath) ||
+                !AssetPathExists(loadingScreenPath) ||
+                !AssetPathExists(enemyPoolPath) ||
+                !branchSession.Contains("GameplayTransitionState.AcquireLock", StringComparison.Ordinal) ||
+                !branchSession.Contains("LoadCurrentBranchWithLoading", StringComparison.Ordinal) ||
+                !branchSession.Contains("PreloadFullBranchForLoadingRoutine", StringComparison.Ordinal) ||
+                !branchSession.Contains("ShowBranchLoadingScreen", StringComparison.Ordinal) ||
+                !branchSession.Contains("ShouldShowBossLoading", StringComparison.Ordinal) ||
+                !branchSession.Contains("SetTransitionSuspended", StringComparison.Ordinal) ||
+                !branchSession.Contains("EnemyRuntimePool", StringComparison.Ordinal) ||
+                traversalRoutine.Contains("ShowTransitionCurtain(", StringComparison.Ordinal) ||
+                traversalRoutine.Contains("HideTransitionCurtain(", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "BranchLoading",
+                    "Branch-level loading and seamless traversal safeguards are incomplete",
+                    "Branch entry and boss rooms should use the loading screen, while normal room traversal must avoid the old visual curtain and rely on preloaded descriptors, lookups, and pools.",
+                    branchSessionPath,
+                    "Restore the branch-level loading path and rerun branch entry, boss, and normal traversal captures."));
+            }
+
+            if (!counters.Contains("ReportBranchLoadingStart", StringComparison.Ordinal) ||
+                !counters.Contains("ReportBossLoadingStart", StringComparison.Ordinal) ||
+                !counters.Contains("ReportFullBranchPreloadRoom", StringComparison.Ordinal) ||
+                !counters.Contains("ReportTraversalColdCacheMiss", StringComparison.Ordinal) ||
+                !counters.Contains("ReportEnemyPoolRent", StringComparison.Ordinal) ||
+                !counters.Contains("ReportTransitionLock", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    125,
+                    "Telemetry",
+                    "Branch loading telemetry is missing",
+                    "M136/M137 reports should include branch loading, boss loading, full-preload, cold-cache-miss, enemy-pool, and transition-lock counters.",
+                    counterPath,
+                    "Restore the branch loading counters before accepting traversal visual QA."));
+            }
+        }
+
+        private static void AuditM138CombatScaleStressGate(WholeGameAuditReport report)
+        {
+            const string runnerPath = "Assets/_Hollow/Scripts/Hollow.Performance/M138CombatScaleStressRunner.cs";
+            const string reportPath = "Assets/_Hollow/Scripts/Hollow.Performance/M138CombatScaleStressReport.cs";
+            const string editorMenuPath = "Assets/_Hollow/Scripts/Hollow.Editor/Generation/Milestone138CombatScaleStressGateAssetGenerator.cs";
+            const string editModeTestPath = "Assets/_Hollow/Tests/EditMode/Milestone138CombatAiNavigationScaleTests.cs";
+            const string playModeTestPath = "Assets/_Hollow/Tests/PlayMode/M138AutomatedStressSmokeTests.cs";
+            var reportSource = File.Exists(ToAbsolutePath(reportPath))
+                ? File.ReadAllText(ToAbsolutePath(reportPath))
+                : string.Empty;
+            var runnerSource = File.Exists(ToAbsolutePath(runnerPath))
+                ? File.ReadAllText(ToAbsolutePath(runnerPath))
+                : string.Empty;
+
+            if (!AssetPathExists(runnerPath) ||
+                !AssetPathExists(reportPath) ||
+                !AssetPathExists(editorMenuPath) ||
+                !runnerSource.Contains("RunAllScenarios", StringComparison.Ordinal) ||
+                !runnerSource.Contains("M136LivePerformanceCaptureSession", StringComparison.Ordinal) ||
+                !runnerSource.Contains("M138CombatScaleStressScenarioPolicy.StressManifest", StringComparison.Ordinal) ||
+                !reportSource.Contains("maxPathSolvesInFrame", StringComparison.Ordinal) ||
+                !reportSource.Contains("bossFullLodObserved", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    138,
+                    "PerformanceGate",
+                    "M138 automated combat scale stress gate is incomplete",
+                    "M138 should build deterministic temporary combat rooms, reuse M136/M137 telemetry, and report AI/Nav burst and boss/add LOD gates without manual gameplay.",
+                    runnerPath,
+                    "Restore the M138 runner, report generator, and editor menu integration."));
+            }
+
+            if (!AssetPathExists(editModeTestPath) ||
+                !AssetPathExists(playModeTestPath))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    138,
+                    "Tests",
+                    "M138 automated tests are missing",
+                    "M138 needs EditMode report logic tests and a PlayMode smoke gate that writes the stress report.",
+                    playModeTestPath,
+                    "Restore the M138 EditMode and PlayMode test coverage."));
+            }
+
+            if (!File.Exists(ToAbsolutePath(M138CombatScaleStressReportGenerator.DefaultJsonReportPath)))
+            {
+                AddFinding(
+                    report,
+                    138,
+                    WholeGameAuditSeverity.Info,
+                    "Evidence",
+                    "M138 stress report has not been generated in this workspace",
+                    "The automated gate code is present, but no latest `output/reports/m138_combat_scale_stress.json` artifact exists yet.",
+                    M138CombatScaleStressReportGenerator.DefaultJsonReportPath,
+                    "Run the M138 PlayMode stress gate before using this audit as release evidence.");
+            }
+        }
+
+        private static void AuditM139LongRunSoakGate(WholeGameAuditReport report)
+        {
+            const string runnerPath = "Assets/_Hollow/Scripts/Hollow.Performance/M139LongRunSoakRunner.cs";
+            const string reportPath = "Assets/_Hollow/Scripts/Hollow.Performance/M139LongRunSoakReport.cs";
+            const string editorMenuPath = "Assets/_Hollow/Scripts/Hollow.Editor/Generation/Milestone139LongRunSoakGateAssetGenerator.cs";
+            const string editModeTestPath = "Assets/_Hollow/Tests/EditMode/Milestone139LongRunSoakTests.cs";
+            const string playModeTestPath = "Assets/_Hollow/Tests/PlayMode/M139LongRunSoakSmokeTests.cs";
+            var reportSource = File.Exists(ToAbsolutePath(reportPath))
+                ? File.ReadAllText(ToAbsolutePath(reportPath))
+                : string.Empty;
+            var runnerSource = File.Exists(ToAbsolutePath(runnerPath))
+                ? File.ReadAllText(ToAbsolutePath(runnerPath))
+                : string.Empty;
+
+            if (!AssetPathExists(runnerPath) ||
+                !AssetPathExists(reportPath) ||
+                !AssetPathExists(editorMenuPath) ||
+                !runnerSource.Contains("BranchSessionController", StringComparison.Ordinal) ||
+                !runnerSource.Contains("RunAllScenarios", StringComparison.Ordinal) ||
+                !runnerSource.Contains("StartNextBranch", StringComparison.Ordinal) ||
+                !reportSource.Contains("managedMemoryDriftMb", StringComparison.Ordinal) ||
+                !reportSource.Contains("normalTraversalColdCacheMissesAfterLoad", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    139,
+                    "PerformanceGate",
+                    "M139 long-run cache/pool soak gate is incomplete",
+                    "M139 should run real BranchSessionController branch loads/traversals, save/restore, boss loading, next-branch transitions, and export deterministic cache/pool/memory gates.",
+                    runnerPath,
+                    "Restore the M139 runner, report generator, and editor menu integration."));
+            }
+
+            if (!AssetPathExists(editModeTestPath) ||
+                !AssetPathExists(playModeTestPath))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    139,
+                    "Tests",
+                    "M139 automated tests are missing",
+                    "M139 needs EditMode report/snapshot tests and a PlayMode smoke gate that writes the long-run soak report.",
+                    playModeTestPath,
+                    "Restore the M139 EditMode and PlayMode test coverage."));
+            }
+
+            if (!File.Exists(ToAbsolutePath(M139LongRunSoakReportGenerator.DefaultJsonReportPath)))
+            {
+                AddFinding(
+                    report,
+                    139,
+                    WholeGameAuditSeverity.Info,
+                    "Evidence",
+                    "M139 soak report has not been generated in this workspace",
+                    "The automated gate code is present, but no latest `output/reports/m139_long_run_soak.json` artifact exists yet.",
+                    M139LongRunSoakReportGenerator.DefaultJsonReportPath,
+                    "Run the M139 PlayMode soak gate before using this audit as release evidence.");
+            }
+        }
+
+        private static void AuditM140BuildRealReleaseGate(WholeGameAuditReport report)
+        {
+            const string reportPath = "Assets/_Hollow/Scripts/Hollow.Performance/M140BuildRealGateReport.cs";
+            const string runnerPath = "Assets/_Hollow/Scripts/Hollow.Performance/M140BuiltPlayerCaptureRunner.cs";
+            const string editorRunnerPath = "Assets/_Hollow/Scripts/Hollow.Editor/Build/M140BuildRealGateRunner.cs";
+            const string profilePath = "Assets/_Hollow/Scripts/Hollow.Data/Definitions/M140BuildRealGateProfileDefinition.cs";
+            const string editModeTestPath = "Assets/_Hollow/Tests/EditMode/Milestone140BuildRealGateTests.cs";
+            var reportSource = File.Exists(ToAbsolutePath(reportPath))
+                ? File.ReadAllText(ToAbsolutePath(reportPath))
+                : string.Empty;
+            var runnerSource = File.Exists(ToAbsolutePath(runnerPath))
+                ? File.ReadAllText(ToAbsolutePath(runnerPath))
+                : string.Empty;
+            var editorSource = File.Exists(ToAbsolutePath(editorRunnerPath))
+                ? File.ReadAllText(ToAbsolutePath(editorRunnerPath))
+                : string.Empty;
+
+            if (!AssetPathExists(reportPath) ||
+                !AssetPathExists(runnerPath) ||
+                !AssetPathExists(editorRunnerPath) ||
+                !AssetPathExists(profilePath) ||
+                !reportSource.Contains("M140VisualScreenshotValidator", StringComparison.Ordinal) ||
+                !reportSource.Contains("M140PlayerLogValidator", StringComparison.Ordinal) ||
+                !runnerSource.Contains("--hollow-m140-capture", StringComparison.Ordinal) ||
+                !runnerSource.Contains("M138CombatScaleStressRunner", StringComparison.Ordinal) ||
+                !runnerSource.Contains("M139LongRunSoakRunner", StringComparison.Ordinal) ||
+                !editorSource.Contains("BuildTarget.StandaloneOSX", StringComparison.Ordinal) ||
+                !editorSource.Contains("StandaloneWindows64", StringComparison.Ordinal) ||
+                !editorSource.Contains("ImportWindowsArtifacts", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    140,
+                    "BuildRealGate",
+                    "M140 built-player release gate is incomplete",
+                    "M140 should build/run macOS Apple silicon and Windows player artifacts, execute command-line runtime captures, validate screenshots/logs/shaders, and report honest blocked environment status for unavailable Windows runtime captures.",
+                    editorRunnerPath,
+                    "Restore the M140 profile, runtime harness, editor runner, report generator, and artifact importer."));
+            }
+
+            if (!AssetPathExists(editModeTestPath))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    140,
+                    "Tests",
+                    "M140 EditMode coverage is missing",
+                    "M140 needs synthetic report, parser, screenshot, player-log, and artifact-import tests before trusting built-player gate output.",
+                    editModeTestPath,
+                    "Restore Milestone140BuildRealGateTests."));
+            }
+
+            var latestReportPath = Path.Combine("output/reports/m140", M140BuildRealGateRunner.LatestEditorJsonFileName);
+            if (!File.Exists(ToAbsolutePath(latestReportPath)))
+            {
+                AddFinding(
+                    report,
+                    140,
+                    WholeGameAuditSeverity.Info,
+                    "Evidence",
+                    "M140 built-player gate report has not been generated in this workspace",
+                    "The gate code is present, but no latest M140 built-player orchestration report exists yet.",
+                    latestReportPath,
+                    "Run Hollow/Performance/Run M140 macOS Apple Silicon Gate, then import or run Windows artifacts before release signoff.");
+            }
+        }
+
+        private static string ExtractMethodBlock(string source, string methodSignature)
+        {
+            if (string.IsNullOrEmpty(source))
+            {
+                return string.Empty;
+            }
+
+            var start = source.IndexOf(methodSignature, StringComparison.Ordinal);
+            if (start < 0)
+            {
+                return string.Empty;
+            }
+
+            var braceStart = source.IndexOf('{', start);
+            if (braceStart < 0)
+            {
+                return string.Empty;
+            }
+
+            var depth = 0;
+            for (var index = braceStart; index < source.Length; index++)
+            {
+                if (source[index] == '{')
+                {
+                    depth++;
+                }
+                else if (source[index] == '}')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        return source.Substring(start, index - start + 1);
+                    }
+                }
+            }
+
+            return string.Empty;
         }
 
         private static void AddFinding(

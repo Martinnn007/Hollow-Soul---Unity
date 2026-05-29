@@ -40,6 +40,12 @@ namespace Hollow.Core.Diagnostics
             int transitionStageCount,
             float transitionMaxStageMilliseconds,
             long transitionGcMaxBytes,
+            int transitionCurtainShows,
+            int transitionCurtainHides,
+            float transitionCurtainMaxVisibleMilliseconds,
+            int transitionCurtainMaxFramesAfterReady,
+            float transitionLockMaxMilliseconds,
+            int transitionOrphanCurtainsRemoved,
             int roomBuildStageCount,
             int transitionDestroyedObjectMaxPerFrame,
             int enemySpawnSlices,
@@ -67,7 +73,43 @@ namespace Hollow.Core.Diagnostics
             int presentationPrefabCacheMisses,
             int presentationBiomeCacheHits,
             int presentationBiomeCacheMisses,
-            int presentationColliderStripPasses)
+            int presentationColliderStripPasses,
+            int branchLoadingStarts,
+            int branchLoadingCompletions,
+            int bossLoadingStarts,
+            int bossLoadingCompletions,
+            float branchLoadingMaxMilliseconds,
+            float bossLoadingMaxMilliseconds,
+            int fullBranchPreloadRooms,
+            int traversalColdCacheMisses,
+            int enemyPoolWarmRequests,
+            int enemyPoolWarmCompletions,
+            int enemyPoolRents,
+            int enemyPoolReturns,
+            int enemyPoolMisses,
+            int enemyPoolHardInstantiates,
+            int bootLoadingStarts,
+            int bootLoadingCompletions,
+            int bootLoadingFailures,
+            int bootLoadingStageCount,
+            float bootLoadingMaxStageMilliseconds,
+            float bootLoadingMaxMilliseconds,
+            int bootPreloadResourceLoads,
+            int bootPreloadWarmRequests,
+            int bootPreloadWarmCompletions,
+            int bootPreloadShaderWarmAttempts,
+            int bootPreloadShaderWarmCollections,
+            int bootPreloadShaderWarmSuccesses,
+            int bootPreloadShaderWarmMisses,
+            float bootPreloadShaderWarmMaxMilliseconds,
+            int m139StaleEnemyStateFailures,
+            int m139StaleRuntimePoolStateFailures,
+            int m139PoolActiveLeaks,
+            int m139CacheHitRateWindows,
+            int m139CacheHitRateWindowFailures,
+            int m139ShaderMaterialFirstUseMissesAfterLoad,
+            float m139ManagedMemoryDriftMaxMb,
+            float m139GraphicsMemoryDriftMaxMb)
         {
             MiniMapRebuilds = miniMapRebuilds;
             MiniMapModelBuilds = miniMapModelBuilds;
@@ -104,6 +146,12 @@ namespace Hollow.Core.Diagnostics
             TransitionStageCount = transitionStageCount;
             TransitionMaxStageMilliseconds = transitionMaxStageMilliseconds;
             TransitionGcMaxBytes = transitionGcMaxBytes;
+            TransitionCurtainShows = transitionCurtainShows;
+            TransitionCurtainHides = transitionCurtainHides;
+            TransitionCurtainMaxVisibleMilliseconds = transitionCurtainMaxVisibleMilliseconds;
+            TransitionCurtainMaxFramesAfterReady = transitionCurtainMaxFramesAfterReady;
+            TransitionLockMaxMilliseconds = transitionLockMaxMilliseconds;
+            TransitionOrphanCurtainsRemoved = transitionOrphanCurtainsRemoved;
             RoomBuildStageCount = roomBuildStageCount;
             TransitionDestroyedObjectMaxPerFrame = transitionDestroyedObjectMaxPerFrame;
             EnemySpawnSlices = enemySpawnSlices;
@@ -132,6 +180,42 @@ namespace Hollow.Core.Diagnostics
             PresentationBiomeCacheHits = presentationBiomeCacheHits;
             PresentationBiomeCacheMisses = presentationBiomeCacheMisses;
             PresentationColliderStripPasses = presentationColliderStripPasses;
+            BranchLoadingStarts = branchLoadingStarts;
+            BranchLoadingCompletions = branchLoadingCompletions;
+            BossLoadingStarts = bossLoadingStarts;
+            BossLoadingCompletions = bossLoadingCompletions;
+            BranchLoadingMaxMilliseconds = branchLoadingMaxMilliseconds;
+            BossLoadingMaxMilliseconds = bossLoadingMaxMilliseconds;
+            FullBranchPreloadRooms = fullBranchPreloadRooms;
+            TraversalColdCacheMisses = traversalColdCacheMisses;
+            EnemyPoolWarmRequests = enemyPoolWarmRequests;
+            EnemyPoolWarmCompletions = enemyPoolWarmCompletions;
+            EnemyPoolRents = enemyPoolRents;
+            EnemyPoolReturns = enemyPoolReturns;
+            EnemyPoolMisses = enemyPoolMisses;
+            EnemyPoolHardInstantiates = enemyPoolHardInstantiates;
+            BootLoadingStarts = bootLoadingStarts;
+            BootLoadingCompletions = bootLoadingCompletions;
+            BootLoadingFailures = bootLoadingFailures;
+            BootLoadingStageCount = bootLoadingStageCount;
+            BootLoadingMaxStageMilliseconds = bootLoadingMaxStageMilliseconds;
+            BootLoadingMaxMilliseconds = bootLoadingMaxMilliseconds;
+            BootPreloadResourceLoads = bootPreloadResourceLoads;
+            BootPreloadWarmRequests = bootPreloadWarmRequests;
+            BootPreloadWarmCompletions = bootPreloadWarmCompletions;
+            BootPreloadShaderWarmAttempts = bootPreloadShaderWarmAttempts;
+            BootPreloadShaderWarmCollections = bootPreloadShaderWarmCollections;
+            BootPreloadShaderWarmSuccesses = bootPreloadShaderWarmSuccesses;
+            BootPreloadShaderWarmMisses = bootPreloadShaderWarmMisses;
+            BootPreloadShaderWarmMaxMilliseconds = bootPreloadShaderWarmMaxMilliseconds;
+            M139StaleEnemyStateFailures = m139StaleEnemyStateFailures;
+            M139StaleRuntimePoolStateFailures = m139StaleRuntimePoolStateFailures;
+            M139PoolActiveLeaks = m139PoolActiveLeaks;
+            M139CacheHitRateWindows = m139CacheHitRateWindows;
+            M139CacheHitRateWindowFailures = m139CacheHitRateWindowFailures;
+            M139ShaderMaterialFirstUseMissesAfterLoad = m139ShaderMaterialFirstUseMissesAfterLoad;
+            M139ManagedMemoryDriftMaxMb = m139ManagedMemoryDriftMaxMb;
+            M139GraphicsMemoryDriftMaxMb = m139GraphicsMemoryDriftMaxMb;
         }
 
         public int MiniMapRebuilds { get; }
@@ -204,6 +288,18 @@ namespace Hollow.Core.Diagnostics
 
         public long TransitionGcMaxBytes { get; }
 
+        public int TransitionCurtainShows { get; }
+
+        public int TransitionCurtainHides { get; }
+
+        public float TransitionCurtainMaxVisibleMilliseconds { get; }
+
+        public int TransitionCurtainMaxFramesAfterReady { get; }
+
+        public float TransitionLockMaxMilliseconds { get; }
+
+        public int TransitionOrphanCurtainsRemoved { get; }
+
         public int RoomBuildStageCount { get; }
 
         public int TransitionDestroyedObjectMaxPerFrame { get; }
@@ -259,6 +355,78 @@ namespace Hollow.Core.Diagnostics
         public int PresentationBiomeCacheMisses { get; }
 
         public int PresentationColliderStripPasses { get; }
+
+        public int BranchLoadingStarts { get; }
+
+        public int BranchLoadingCompletions { get; }
+
+        public int BossLoadingStarts { get; }
+
+        public int BossLoadingCompletions { get; }
+
+        public float BranchLoadingMaxMilliseconds { get; }
+
+        public float BossLoadingMaxMilliseconds { get; }
+
+        public int FullBranchPreloadRooms { get; }
+
+        public int TraversalColdCacheMisses { get; }
+
+        public int EnemyPoolWarmRequests { get; }
+
+        public int EnemyPoolWarmCompletions { get; }
+
+        public int EnemyPoolRents { get; }
+
+        public int EnemyPoolReturns { get; }
+
+        public int EnemyPoolMisses { get; }
+
+        public int EnemyPoolHardInstantiates { get; }
+
+        public int BootLoadingStarts { get; }
+
+        public int BootLoadingCompletions { get; }
+
+        public int BootLoadingFailures { get; }
+
+        public int BootLoadingStageCount { get; }
+
+        public float BootLoadingMaxStageMilliseconds { get; }
+
+        public float BootLoadingMaxMilliseconds { get; }
+
+        public int BootPreloadResourceLoads { get; }
+
+        public int BootPreloadWarmRequests { get; }
+
+        public int BootPreloadWarmCompletions { get; }
+
+        public int BootPreloadShaderWarmAttempts { get; }
+
+        public int BootPreloadShaderWarmCollections { get; }
+
+        public int BootPreloadShaderWarmSuccesses { get; }
+
+        public int BootPreloadShaderWarmMisses { get; }
+
+        public float BootPreloadShaderWarmMaxMilliseconds { get; }
+
+        public int M139StaleEnemyStateFailures { get; }
+
+        public int M139StaleRuntimePoolStateFailures { get; }
+
+        public int M139PoolActiveLeaks { get; }
+
+        public int M139CacheHitRateWindows { get; }
+
+        public int M139CacheHitRateWindowFailures { get; }
+
+        public int M139ShaderMaterialFirstUseMissesAfterLoad { get; }
+
+        public float M139ManagedMemoryDriftMaxMb { get; }
+
+        public float M139GraphicsMemoryDriftMaxMb { get; }
     }
 
     public static class M136PerformanceOperationCounters
@@ -298,6 +466,12 @@ namespace Hollow.Core.Diagnostics
         private static int transitionStageCount;
         private static float transitionMaxStageMilliseconds;
         private static long transitionGcMaxBytes;
+        private static int transitionCurtainShows;
+        private static int transitionCurtainHides;
+        private static float transitionCurtainMaxVisibleMilliseconds;
+        private static int transitionCurtainMaxFramesAfterReady;
+        private static float transitionLockMaxMilliseconds;
+        private static int transitionOrphanCurtainsRemoved;
         private static int roomBuildStageCount;
         private static int transitionDestroyedObjectMaxPerFrame;
         private static int enemySpawnSlices;
@@ -326,6 +500,42 @@ namespace Hollow.Core.Diagnostics
         private static int presentationBiomeCacheHits;
         private static int presentationBiomeCacheMisses;
         private static int presentationColliderStripPasses;
+        private static int branchLoadingStarts;
+        private static int branchLoadingCompletions;
+        private static int bossLoadingStarts;
+        private static int bossLoadingCompletions;
+        private static float branchLoadingMaxMilliseconds;
+        private static float bossLoadingMaxMilliseconds;
+        private static int fullBranchPreloadRooms;
+        private static int traversalColdCacheMisses;
+        private static int enemyPoolWarmRequests;
+        private static int enemyPoolWarmCompletions;
+        private static int enemyPoolRents;
+        private static int enemyPoolReturns;
+        private static int enemyPoolMisses;
+        private static int enemyPoolHardInstantiates;
+        private static int bootLoadingStarts;
+        private static int bootLoadingCompletions;
+        private static int bootLoadingFailures;
+        private static int bootLoadingStageCount;
+        private static float bootLoadingMaxStageMilliseconds;
+        private static float bootLoadingMaxMilliseconds;
+        private static int bootPreloadResourceLoads;
+        private static int bootPreloadWarmRequests;
+        private static int bootPreloadWarmCompletions;
+        private static int bootPreloadShaderWarmAttempts;
+        private static int bootPreloadShaderWarmCollections;
+        private static int bootPreloadShaderWarmSuccesses;
+        private static int bootPreloadShaderWarmMisses;
+        private static float bootPreloadShaderWarmMaxMilliseconds;
+        private static int m139StaleEnemyStateFailures;
+        private static int m139StaleRuntimePoolStateFailures;
+        private static int m139PoolActiveLeaks;
+        private static int m139CacheHitRateWindows;
+        private static int m139CacheHitRateWindowFailures;
+        private static int m139ShaderMaterialFirstUseMissesAfterLoad;
+        private static float m139ManagedMemoryDriftMaxMb;
+        private static float m139GraphicsMemoryDriftMaxMb;
 
         [Conditional("UNITY_EDITOR")]
         [Conditional("DEVELOPMENT_BUILD")]
@@ -609,6 +819,290 @@ namespace Hollow.Core.Diagnostics
 
         [Conditional("UNITY_EDITOR")]
         [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTransitionCurtainShow()
+        {
+            transitionCurtainShows++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTransitionCurtainHide(float visibleMilliseconds, int framesAfterReady)
+        {
+            transitionCurtainHides++;
+            if (visibleMilliseconds > transitionCurtainMaxVisibleMilliseconds)
+            {
+                transitionCurtainMaxVisibleMilliseconds = visibleMilliseconds;
+            }
+
+            if (framesAfterReady > transitionCurtainMaxFramesAfterReady)
+            {
+                transitionCurtainMaxFramesAfterReady = framesAfterReady;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTransitionLock(float milliseconds)
+        {
+            if (milliseconds > transitionLockMaxMilliseconds)
+            {
+                transitionLockMaxMilliseconds = milliseconds;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTransitionOrphanCurtainsRemoved(int count)
+        {
+            if (count > 0)
+            {
+                transitionOrphanCurtainsRemoved += count;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBranchLoadingStart()
+        {
+            branchLoadingStarts++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBranchLoadingCompletion(float milliseconds)
+        {
+            branchLoadingCompletions++;
+            if (milliseconds > branchLoadingMaxMilliseconds)
+            {
+                branchLoadingMaxMilliseconds = milliseconds;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBossLoadingStart()
+        {
+            bossLoadingStarts++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBossLoadingCompletion(float milliseconds)
+        {
+            bossLoadingCompletions++;
+            if (milliseconds > bossLoadingMaxMilliseconds)
+            {
+                bossLoadingMaxMilliseconds = milliseconds;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportFullBranchPreloadRoom()
+        {
+            fullBranchPreloadRooms++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTraversalColdCacheMiss()
+        {
+            traversalColdCacheMisses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportEnemyPoolWarmRequest()
+        {
+            enemyPoolWarmRequests++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportEnemyPoolWarmCompletion()
+        {
+            enemyPoolWarmCompletions++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportEnemyPoolRent()
+        {
+            enemyPoolRents++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportEnemyPoolReturn()
+        {
+            enemyPoolReturns++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportEnemyPoolMiss()
+        {
+            enemyPoolMisses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportEnemyPoolHardInstantiate()
+        {
+            enemyPoolHardInstantiates++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportM139StaleEnemyStateFailure()
+        {
+            m139StaleEnemyStateFailures++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportM139StaleRuntimePoolStateFailure()
+        {
+            m139StaleRuntimePoolStateFailures++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportM139PoolActiveLeak(int leakedCount = 1)
+        {
+            m139PoolActiveLeaks += leakedCount <= 0 ? 1 : leakedCount;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportM139CacheHitRateWindow(bool failed)
+        {
+            m139CacheHitRateWindows++;
+            if (failed)
+            {
+                m139CacheHitRateWindowFailures++;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportM139ShaderMaterialFirstUseMissAfterLoad()
+        {
+            m139ShaderMaterialFirstUseMissesAfterLoad++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportM139MemoryDrift(float managedMb, float graphicsMb)
+        {
+            if (managedMb > m139ManagedMemoryDriftMaxMb)
+            {
+                m139ManagedMemoryDriftMaxMb = managedMb;
+            }
+
+            if (graphicsMb > m139GraphicsMemoryDriftMaxMb)
+            {
+                m139GraphicsMemoryDriftMaxMb = graphicsMb;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootLoadingStart()
+        {
+            bootLoadingStarts++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootLoadingCompletion(float milliseconds)
+        {
+            bootLoadingCompletions++;
+            if (milliseconds > bootLoadingMaxMilliseconds)
+            {
+                bootLoadingMaxMilliseconds = milliseconds;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootLoadingFailure()
+        {
+            bootLoadingFailures++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootLoadingStage(float milliseconds)
+        {
+            bootLoadingStageCount++;
+            if (milliseconds > bootLoadingMaxStageMilliseconds)
+            {
+                bootLoadingMaxStageMilliseconds = milliseconds;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadResourceLoad(int count)
+        {
+            if (count > 0)
+            {
+                bootPreloadResourceLoads += count;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadWarmRequest()
+        {
+            bootPreloadWarmRequests++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadWarmCompletion()
+        {
+            bootPreloadWarmCompletions++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadShaderWarmAttempt()
+        {
+            bootPreloadShaderWarmAttempts++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadShaderWarmCollectionCount(int count)
+        {
+            if (count > 0)
+            {
+                bootPreloadShaderWarmCollections += count;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadShaderWarmSuccess(float milliseconds)
+        {
+            bootPreloadShaderWarmSuccesses++;
+            if (milliseconds > bootPreloadShaderWarmMaxMilliseconds)
+            {
+                bootPreloadShaderWarmMaxMilliseconds = milliseconds;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBootPreloadShaderWarmMiss()
+        {
+            bootPreloadShaderWarmMisses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportBranchRuntimeCacheHit()
         {
             branchRuntimeCacheHits++;
@@ -792,6 +1286,12 @@ namespace Hollow.Core.Diagnostics
                 transitionStageCount,
                 transitionMaxStageMilliseconds,
                 transitionGcMaxBytes,
+                transitionCurtainShows,
+                transitionCurtainHides,
+                transitionCurtainMaxVisibleMilliseconds,
+                transitionCurtainMaxFramesAfterReady,
+                transitionLockMaxMilliseconds,
+                transitionOrphanCurtainsRemoved,
                 roomBuildStageCount,
                 transitionDestroyedObjectMaxPerFrame,
                 enemySpawnSlices,
@@ -819,7 +1319,43 @@ namespace Hollow.Core.Diagnostics
                 presentationPrefabCacheMisses,
                 presentationBiomeCacheHits,
                 presentationBiomeCacheMisses,
-                presentationColliderStripPasses);
+                presentationColliderStripPasses,
+                branchLoadingStarts,
+                branchLoadingCompletions,
+                bossLoadingStarts,
+                bossLoadingCompletions,
+                branchLoadingMaxMilliseconds,
+                bossLoadingMaxMilliseconds,
+                fullBranchPreloadRooms,
+                traversalColdCacheMisses,
+                enemyPoolWarmRequests,
+                enemyPoolWarmCompletions,
+                enemyPoolRents,
+                enemyPoolReturns,
+                enemyPoolMisses,
+                enemyPoolHardInstantiates,
+                bootLoadingStarts,
+                bootLoadingCompletions,
+                bootLoadingFailures,
+                bootLoadingStageCount,
+                bootLoadingMaxStageMilliseconds,
+                bootLoadingMaxMilliseconds,
+                bootPreloadResourceLoads,
+                bootPreloadWarmRequests,
+                bootPreloadWarmCompletions,
+                bootPreloadShaderWarmAttempts,
+                bootPreloadShaderWarmCollections,
+                bootPreloadShaderWarmSuccesses,
+                bootPreloadShaderWarmMisses,
+                bootPreloadShaderWarmMaxMilliseconds,
+                m139StaleEnemyStateFailures,
+                m139StaleRuntimePoolStateFailures,
+                m139PoolActiveLeaks,
+                m139CacheHitRateWindows,
+                m139CacheHitRateWindowFailures,
+                m139ShaderMaterialFirstUseMissesAfterLoad,
+                m139ManagedMemoryDriftMaxMb,
+                m139GraphicsMemoryDriftMaxMb);
             if (reset)
             {
                 Reset();
@@ -865,6 +1401,12 @@ namespace Hollow.Core.Diagnostics
             transitionStageCount = 0;
             transitionMaxStageMilliseconds = 0f;
             transitionGcMaxBytes = 0;
+            transitionCurtainShows = 0;
+            transitionCurtainHides = 0;
+            transitionCurtainMaxVisibleMilliseconds = 0f;
+            transitionCurtainMaxFramesAfterReady = 0;
+            transitionLockMaxMilliseconds = 0f;
+            transitionOrphanCurtainsRemoved = 0;
             roomBuildStageCount = 0;
             transitionDestroyedObjectMaxPerFrame = 0;
             enemySpawnSlices = 0;
@@ -893,6 +1435,42 @@ namespace Hollow.Core.Diagnostics
             presentationBiomeCacheHits = 0;
             presentationBiomeCacheMisses = 0;
             presentationColliderStripPasses = 0;
+            branchLoadingStarts = 0;
+            branchLoadingCompletions = 0;
+            bossLoadingStarts = 0;
+            bossLoadingCompletions = 0;
+            branchLoadingMaxMilliseconds = 0f;
+            bossLoadingMaxMilliseconds = 0f;
+            fullBranchPreloadRooms = 0;
+            traversalColdCacheMisses = 0;
+            enemyPoolWarmRequests = 0;
+            enemyPoolWarmCompletions = 0;
+            enemyPoolRents = 0;
+            enemyPoolReturns = 0;
+            enemyPoolMisses = 0;
+            enemyPoolHardInstantiates = 0;
+            bootLoadingStarts = 0;
+            bootLoadingCompletions = 0;
+            bootLoadingFailures = 0;
+            bootLoadingStageCount = 0;
+            bootLoadingMaxStageMilliseconds = 0f;
+            bootLoadingMaxMilliseconds = 0f;
+            bootPreloadResourceLoads = 0;
+            bootPreloadWarmRequests = 0;
+            bootPreloadWarmCompletions = 0;
+            bootPreloadShaderWarmAttempts = 0;
+            bootPreloadShaderWarmCollections = 0;
+            bootPreloadShaderWarmSuccesses = 0;
+            bootPreloadShaderWarmMisses = 0;
+            bootPreloadShaderWarmMaxMilliseconds = 0f;
+            m139StaleEnemyStateFailures = 0;
+            m139StaleRuntimePoolStateFailures = 0;
+            m139PoolActiveLeaks = 0;
+            m139CacheHitRateWindows = 0;
+            m139CacheHitRateWindowFailures = 0;
+            m139ShaderMaterialFirstUseMissesAfterLoad = 0;
+            m139ManagedMemoryDriftMaxMb = 0f;
+            m139GraphicsMemoryDriftMaxMb = 0f;
         }
     }
 }

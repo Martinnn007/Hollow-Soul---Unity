@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d3d9c26c9b4de8a75a9e6fd653d1a9, type: 3}
+  m_Name: HollowBootShaderWarmupProfile
+  m_EditorClassIdentifier: Hollow.Core::Hollow.Core.App.HollowShaderWarmupProfile
+  profileName: Boot Shader Warmup
+  enabledForBoot: 1
+  targetRenderProfileLabel: Boot/Global
+  collections:
+  - {fileID: 20000000, guid: 8d29bd2324df94bbca4681dac9d24031, type: 2}
+  maxExpectedWarmupMilliseconds: 100
+  notes: 'Generated from project materials and common URP/UI shaders. Initial variant
+    count: 4.'

@@ -1,0 +1,28 @@
+{
+  "name": "Hollow.Performance",
+  "rootNamespace": "Hollow.Performance",
+  "references": [
+    "Hollow.Core",
+    "Hollow.Data",
+    "Hollow.Entities",
+    "Hollow.Rooms",
+    "Hollow.Combat",
+    "Hollow.Diagnostics",
+    "Hollow.Presentation",
+    "Hollow.Branches",
+    "Hollow.World",
+    "Hollow.Persistence",
+    "Hollow.Platform",
+    "Hollow.Rewards",
+    "UnityEngine.AIModule"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

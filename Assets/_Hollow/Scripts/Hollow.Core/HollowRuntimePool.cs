@@ -6,6 +6,22 @@ using UnityEngine;
 
 namespace Hollow.Core
 {
+    [Serializable]
+    public sealed class HollowRuntimePoolSnapshot
+    {
+        public int prefabPoolCount;
+        public int generatedPoolCount;
+        public int pooledInactiveCount;
+        public int activeTrackedCount;
+        public int activeLeakCount;
+        public int rents;
+        public int returns;
+        public int misses;
+        public int hardInstantiates;
+        public int warmRequests;
+        public int warmCompletions;
+    }
+
     public interface IPooledRuntimeObject
     {
         void OnRentFromPool();
@@ -23,6 +39,7 @@ namespace Hollow.Core
         private static readonly Dictionary<string, Stack<GameObject>> GeneratedPools = new(StringComparer.Ordinal);
         private static readonly Dictionary<GameObject, GameObject> PrefabByInstance = new();
         private static readonly Dictionary<GameObject, string> GeneratedKeyByInstance = new();
+        private static readonly HashSet<GameObject> ActiveInstances = new();
         private static RuntimePoolRunner runner;
 
         public static GameObject Rent(GameObject prefab, Transform parent)
@@ -215,6 +232,7 @@ namespace Hollow.Core
             }
 
             NotifyReturn(instance);
+            ActiveInstances.Remove(instance);
             instance.SetActive(false);
             instance.transform.SetParent(null, worldPositionStays: false);
             if (PrefabByInstance.TryGetValue(instance, out var prefab) && prefab != null)
@@ -280,6 +298,7 @@ namespace Hollow.Core
             }
 
             instance.SetActive(true);
+            ActiveInstances.Add(instance);
             M136PerformanceOperationCounters.ReportRuntimePoolRent();
             foreach (var behaviour in instance.GetComponents<MonoBehaviour>())
             {
@@ -299,6 +318,66 @@ namespace Hollow.Core
                     pooled.OnReturnToPool();
                 }
             }
+        }
+
+        public static HollowRuntimePoolSnapshot Snapshot()
+        {
+            var inactive = 0;
+            foreach (var pool in PrefabPools.Values)
+            {
+                inactive += CountLive(pool);
+            }
+
+            foreach (var pool in GeneratedPools.Values)
+            {
+                inactive += CountLive(pool);
+            }
+
+            var active = 0;
+            foreach (var instance in ActiveInstances)
+            {
+                if (instance == null)
+                {
+                    continue;
+                }
+
+                active++;
+            }
+
+            var counters = M136PerformanceOperationCounters.Snapshot();
+            return new HollowRuntimePoolSnapshot
+            {
+                prefabPoolCount = PrefabPools.Count,
+                generatedPoolCount = GeneratedPools.Count,
+                pooledInactiveCount = inactive,
+                activeTrackedCount = active,
+                activeLeakCount = 0,
+                rents = counters.RuntimePoolRents,
+                returns = counters.RuntimePoolReturns,
+                misses = counters.RuntimePoolMisses,
+                hardInstantiates = counters.RuntimePoolHardInstantiates,
+                warmRequests = counters.RuntimePoolWarmRequests,
+                warmCompletions = counters.RuntimePoolWarmCompletions
+            };
+        }
+
+        private static int CountLive(Stack<GameObject> pool)
+        {
+            if (pool == null || pool.Count == 0)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            foreach (var instance in pool)
+            {
+                if (instance != null)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private static RuntimePoolRunner Runner()

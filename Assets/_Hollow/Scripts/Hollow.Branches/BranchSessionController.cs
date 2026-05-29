@@ -32,6 +32,7 @@ namespace Hollow.Branches
         private const string RuntimeChestMarkerKind = "spawn_point_chest";
         private const string RuntimeGoldenChestMarkerKind = "spawn_point_goldenChest";
         private const string RuntimeCorruptedChestMarkerKind = "spawn_point_corruptedChest";
+        private const string TransitionCurtainObjectName = "RoomTransitionCurtain";
         private const float PlayerDeathMainMenuDelaySeconds = 1.1f;
         private const int EnemyKillSoulReward = 1;
         public const string PortalEngineDisplayName = "Portal Engine";
@@ -131,10 +132,21 @@ namespace Hollow.Branches
         private Coroutine playerDeathRouteCoroutine;
         private Coroutine roomTransitionCoroutine;
         private Coroutine branchPreloadCoroutine;
+        private Coroutine branchLoadingCoroutine;
         private readonly BranchRuntimeCache branchRuntimeCache = new();
         private GameObject transitionCurtainRoot;
+        private BranchLoadingScreenController branchLoadingScreen;
         private bool roomTransitionActive;
+        private bool branchLoadingActive;
+        private bool transitionCurtainVisible;
+        private float transitionCurtainShownRealtime;
+        private int transitionRoomReadyFrame = -1;
+        private IDisposable roomTransitionLock;
+        private IDisposable branchLoadingLock;
+        private float roomTransitionLockStartedRealtime;
+        private float branchLoadingStartedRealtime;
         private int branchPreloadVersion;
+        private string activeBranchEnemyPoolKey = string.Empty;
         private SpaceshipArrivalSnapshot spaceshipArrival;
         private bool spaceshipQuarantineRequired;
         private bool spaceshipQuarantineUnlocked;
@@ -284,6 +296,18 @@ namespace Hollow.Branches
         public RoomRuntimeRoot RuntimeRoomRoot => roomRuntimeRoot;
 
         public string BranchRuntimeCacheSummary => branchRuntimeCache.CreateDebugSummary();
+
+        public BranchRuntimeCacheSnapshot BranchRuntimeCacheSnapshot => branchRuntimeCache.Snapshot();
+
+        public string ActiveBranchEnemyPoolKey => activeBranchEnemyPoolKey ?? string.Empty;
+
+        public bool RoomTransitionActive => roomTransitionActive;
+
+        public bool BranchLoadingActive => branchLoadingActive || (branchLoadingScreen != null && branchLoadingScreen.IsVisible);
+
+        public string BranchLoadingStage => branchLoadingScreen != null ? branchLoadingScreen.CurrentStage : string.Empty;
+
+        public float BranchLoadingProgress01 => branchLoadingScreen != null ? branchLoadingScreen.CurrentProgress01 : 0f;
 
         public void Configure(GameObject nextRewardPickupPrefab, GameObject nextHubReturnPortalPrefab)
         {
@@ -505,8 +529,7 @@ namespace Hollow.Branches
             encounterPlan = IsSpaceshipHub
                 ? EncounterPlan.Empty
                 : CreateEncounterPlanForGraph(State.Graph);
-            LoadCurrentRoom();
-            CheckpointActiveRun();
+            LoadCurrentBranchWithLoading("Entering Branch", CheckpointActiveRun);
         }
 
         public void InitializeFromSnapshot(ImportedRoomRuntimeAsset nextRoomAsset, GameSessionState nextSessionState, RunSaveSnapshot snapshot)
@@ -599,15 +622,21 @@ namespace Hollow.Branches
             if (interBranchHubState.IsActive && (worldPhase == RunWorldPhase.Hub || worldPhase == RunWorldPhase.Legacy))
             {
                 EnterInterBranchHub(restoreExistingState: true);
+                RestorePlayerHealth(snapshot);
+                ApplyRunStatsToPlayer(healAmount: 0);
+                suppressCheckpoint = false;
+                CheckpointActiveRun();
             }
             else
             {
-                LoadCurrentRoom();
+                LoadCurrentBranchWithLoading("Restoring Branch", () =>
+                {
+                    RestorePlayerHealth(snapshot);
+                    ApplyRunStatsToPlayer(healAmount: 0);
+                    suppressCheckpoint = false;
+                    CheckpointActiveRun();
+                });
             }
-            RestorePlayerHealth(snapshot);
-            ApplyRunStatsToPlayer(healAmount: 0);
-            suppressCheckpoint = false;
-            CheckpointActiveRun();
         }
 
         private void OnDestroy()
@@ -624,7 +653,22 @@ namespace Hollow.Branches
                 branchPreloadCoroutine = null;
             }
 
-            HideTransitionCurtain();
+            if (branchLoadingCoroutine != null)
+            {
+                StopCoroutine(branchLoadingCoroutine);
+                branchLoadingCoroutine = null;
+            }
+
+            roomCombatController?.SetTransitionSuspended(false);
+            roomTransitionLock?.Dispose();
+            roomTransitionLock = null;
+            branchLoadingLock?.Dispose();
+            branchLoadingLock = null;
+            roomTransitionActive = false;
+            branchLoadingActive = false;
+            DestroyTransitionCurtain();
+            DestroyBranchLoadingScreen();
+            EnemyRuntimePool.ClearBranch(activeBranchEnemyPoolKey);
             if (playerDeathRouteCoroutine != null)
             {
                 StopCoroutine(playerDeathRouteCoroutine);
@@ -645,7 +689,7 @@ namespace Hollow.Branches
 
         private void Update()
         {
-            if (State == null || GameplayPauseState.IsPaused || roomTransitionActive)
+            if (State == null || GameplayPauseState.IsPaused || roomTransitionActive || branchLoadingActive)
             {
                 return;
             }
@@ -753,7 +797,7 @@ namespace Hollow.Branches
 
         private bool TryTraverse(BranchConnection connection)
         {
-            if (roomTransitionActive || State == null || connection == null || !State.CurrentRoom.IsCleared)
+            if (roomTransitionActive || branchLoadingActive || State == null || connection == null || !State.CurrentRoom.IsCleared)
             {
                 return false;
             }
@@ -770,31 +814,72 @@ namespace Hollow.Branches
         private IEnumerator TraverseStagedRoutine(BranchConnection connection)
         {
             roomTransitionActive = true;
-            ShowTransitionCurtain();
-            var previousRoomId = State.CurrentRoomId;
-            var preservedHealth = CaptureCurrentPlayerHealth();
-            playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
-            var succeeded = false;
-            using (M137PerformanceProfilerMarkers.RoomTransitionLoad.Auto())
+            transitionRoomReadyFrame = -1;
+            roomTransitionLock?.Dispose();
+            roomTransitionLockStartedRealtime = Time.realtimeSinceStartup;
+            roomTransitionLock = GameplayTransitionState.AcquireLock();
+            roomCombatController?.SetTransitionSuspended(true);
+            var showBossLoading = ShouldShowBossLoading(connection);
+            var bossLoadingStartedRealtime = Time.realtimeSinceStartup;
+            try
             {
-                State.EnterRoom(connection.ToRoomId);
-                yield return RunTransitionStage(LoadCurrentRoomStaged(entryConnection: connection));
-                succeeded = roomRuntimeRoot != null && roomRuntimeRoot.HasNavMeshBake;
-            }
+                if (showBossLoading)
+                {
+                    M136PerformanceOperationCounters.ReportBossLoadingStart();
+                    ShowBranchLoadingScreen("Boss Room", "Preparing boss chamber", 0f);
+                    yield return PreloadBossRoomForLoadingRoutine(connection.ToRoomId);
+                }
 
-            if (!succeeded)
+                var previousRoomId = State.CurrentRoomId;
+                var preservedHealth = CaptureCurrentPlayerHealth();
+                playerRunBuild = CreateCurrentRunBuild(captureRuntimeStamina: true);
+                var succeeded = false;
+                using (M137PerformanceProfilerMarkers.RoomTransitionLoad.Auto())
+                {
+                    State.EnterRoom(connection.ToRoomId);
+                    var cacheBefore = M136PerformanceOperationCounters.Snapshot();
+                    yield return RunTransitionStage(LoadCurrentRoomStaged(entryConnection: connection));
+                    var cacheAfter = M136PerformanceOperationCounters.Snapshot();
+                    if (!showBossLoading &&
+                        (cacheAfter.BranchRuntimeCacheMisses > cacheBefore.BranchRuntimeCacheMisses ||
+                         cacheAfter.RoomDescriptorBuilds > cacheBefore.RoomDescriptorBuilds ||
+                         cacheAfter.PresentationMaterialCacheMisses > cacheBefore.PresentationMaterialCacheMisses ||
+                         cacheAfter.PresentationPrefabCacheMisses > cacheBefore.PresentationPrefabCacheMisses ||
+                         cacheAfter.PresentationBiomeCacheMisses > cacheBefore.PresentationBiomeCacheMisses))
+                    {
+                        M136PerformanceOperationCounters.ReportTraversalColdCacheMiss();
+                    }
+
+                    succeeded = roomRuntimeRoot != null && roomRuntimeRoot.HasNavMeshBake;
+                }
+
+                if (!succeeded)
+                {
+                    Debug.LogError($"Room transition to '{connection.ToRoomId.Value}' failed; restoring '{previousRoomId.Value}'.", this);
+                    State.EnterRoom(previousRoomId);
+                    LoadCurrentRoom();
+                }
+
+                M136PerformanceOperationCounters.ReportRoomTransition();
+                RestoreCurrentPlayerHealth(preservedHealth);
+                CheckpointActiveRun();
+            }
+            finally
             {
-                Debug.LogError($"Room transition to '{connection.ToRoomId.Value}' failed; restoring '{previousRoomId.Value}'.", this);
-                State.EnterRoom(previousRoomId);
-                LoadCurrentRoom();
-            }
+                if (showBossLoading)
+                {
+                    M136PerformanceOperationCounters.ReportBossLoadingCompletion((Time.realtimeSinceStartup - bossLoadingStartedRealtime) * 1000f);
+                    HideBranchLoadingScreen();
+                }
 
-            M136PerformanceOperationCounters.ReportRoomTransition();
-            RestoreCurrentPlayerHealth(preservedHealth);
-            CheckpointActiveRun();
-            HideTransitionCurtain();
-            roomTransitionActive = false;
-            roomTransitionCoroutine = null;
+                M136PerformanceOperationCounters.ReportTransitionLock(
+                    (Time.realtimeSinceStartup - roomTransitionLockStartedRealtime) * 1000f);
+                roomTransitionLock?.Dispose();
+                roomTransitionLock = null;
+                roomCombatController?.SetTransitionSuspended(false);
+                roomTransitionActive = false;
+                roomTransitionCoroutine = null;
+            }
         }
 
         public BranchMiniMapModel CreateMiniMapModel()
@@ -965,6 +1050,7 @@ namespace Hollow.Branches
                 State.CurrentRoom.MarkRewardUnavailable();
             }
 
+            roomCombatController.ConfigureBranchEnemyPool(activeBranchEnemyPoolKey);
             roomCombatController.ConfigureInspectionMode(IsDeveloperLab ? InspectionEntityMode.FrozenRuntime : InspectionEntityMode.LiveRuntime, IsDeveloperLab);
             roomCombatController.BeginRoom(
                 roomRuntimeRoot,
@@ -1053,6 +1139,7 @@ namespace Hollow.Branches
             }
 
             yield return WarmTransitionPools();
+            roomCombatController.ConfigureBranchEnemyPool(activeBranchEnemyPoolKey);
             roomCombatController.ConfigureInspectionMode(IsDeveloperLab ? InspectionEntityMode.FrozenRuntime : InspectionEntityMode.LiveRuntime, IsDeveloperLab);
             yield return RunTransitionStage(roomCombatController.BeginRoomStaged(
                 roomRuntimeRoot,
@@ -1093,6 +1180,236 @@ namespace Hollow.Branches
             }
 
             ScheduleBranchPreload();
+        }
+
+        private void LoadCurrentBranchWithLoading(string title, Action afterLoad)
+        {
+            var nextPoolKey = CreateActiveBranchEnemyPoolKey();
+            if (!string.Equals(activeBranchEnemyPoolKey, nextPoolKey, StringComparison.Ordinal))
+            {
+                EnemyRuntimePool.ClearBranch(activeBranchEnemyPoolKey);
+            }
+
+            activeBranchEnemyPoolKey = nextPoolKey;
+            roomCombatController?.ConfigureBranchEnemyPool(activeBranchEnemyPoolKey);
+            if (!Application.isPlaying || !isActiveAndEnabled || IsSpaceshipHub)
+            {
+                PreloadFullBranchImmediate();
+                LoadCurrentRoom();
+                afterLoad?.Invoke();
+                return;
+            }
+
+            if (branchLoadingCoroutine != null)
+            {
+                StopCoroutine(branchLoadingCoroutine);
+                branchLoadingCoroutine = null;
+            }
+
+            branchLoadingCoroutine = StartCoroutine(LoadCurrentBranchRoutine(title, afterLoad));
+        }
+
+        private IEnumerator LoadCurrentBranchRoutine(string title, Action afterLoad)
+        {
+            branchLoadingActive = true;
+            branchLoadingStartedRealtime = Time.realtimeSinceStartup;
+            branchLoadingLock?.Dispose();
+            branchLoadingLock = GameplayTransitionState.AcquireLock();
+            roomCombatController?.SetTransitionSuspended(true);
+            M136PerformanceOperationCounters.ReportBranchLoadingStart();
+            ShowBranchLoadingScreen(title, "Preparing branch", 0f);
+            try
+            {
+                yield return PreloadFullBranchForLoadingRoutine();
+                SetBranchLoadingStage("Building current room", 0.9f);
+                yield return RunTransitionStage(LoadCurrentRoomStaged());
+                SetBranchLoadingStage("Finalizing", 0.98f);
+                afterLoad?.Invoke();
+                M136PerformanceOperationCounters.ReportBranchLoadingCompletion((Time.realtimeSinceStartup - branchLoadingStartedRealtime) * 1000f);
+            }
+            finally
+            {
+                HideBranchLoadingScreen();
+                branchLoadingLock?.Dispose();
+                branchLoadingLock = null;
+                roomCombatController?.SetTransitionSuspended(false);
+                branchLoadingActive = false;
+                branchLoadingCoroutine = null;
+            }
+        }
+
+        private void PreloadFullBranchImmediate()
+        {
+            var rooms = BuildFullBranchPreloadRoomList();
+            for (var index = 0; index < rooms.Count; index++)
+            {
+                PreloadRoomCaches(rooms[index]);
+            }
+        }
+
+        private IEnumerator PreloadFullBranchForLoadingRoutine()
+        {
+            M136PerformanceOperationCounters.ReportBranchPreloadWarmRequest();
+            var rooms = BuildFullBranchPreloadRoomList();
+            var totalSteps = Mathf.Max(1, rooms.Count + 2);
+            for (var index = 0; index < rooms.Count; index++)
+            {
+                var room = rooms[index];
+                SetBranchLoadingStage($"Preparing {RoomLoadingLabel(room)}", Mathf.Clamp01((index + 1) / (float)totalSteps));
+                PreloadRoomCaches(room);
+                M136PerformanceOperationCounters.ReportFullBranchPreloadRoom();
+                yield return null;
+            }
+
+            SetBranchLoadingStage("Warming enemies", Mathf.Clamp01((rooms.Count + 1) / (float)totalSteps));
+            yield return WarmBranchEnemyPools(rooms);
+            SetBranchLoadingStage("Warming combat effects", 0.84f);
+            yield return WarmTransitionPools();
+            M136PerformanceOperationCounters.ReportBranchPreloadWarmCompletion();
+        }
+
+        private IEnumerator PreloadBossRoomForLoadingRoutine(BranchRoomId roomId)
+        {
+            if (State?.Graph == null || !State.Graph.TryGetRoom(roomId, out var room))
+            {
+                yield break;
+            }
+
+            SetBranchLoadingStage("Preparing boss room", 0.15f);
+            PreloadRoomCaches(room);
+            yield return null;
+            SetBranchLoadingStage("Warming boss effects", 0.55f);
+            yield return WarmTransitionPools();
+            SetBranchLoadingStage("Opening boss chamber", 0.85f);
+        }
+
+        private List<BranchRoomState> BuildFullBranchPreloadRoomList()
+        {
+            var rooms = new List<BranchRoomState>();
+            if (State?.Graph == null)
+            {
+                return rooms;
+            }
+
+            var distanceMap = branchRuntimeCache.GetOrCreateRoomDistanceMap(State.Graph);
+            var currentRoomId = State.CurrentRoomId.Value;
+            rooms.AddRange(State.Graph.Rooms
+                .OrderBy(room => FullBranchPreloadPriority(room, currentRoomId))
+                .ThenBy(room => distanceMap.TryGetValue(room.Id.Value, out var distance) ? distance : int.MaxValue)
+                .ThenBy(room => room.Id.Value, StringComparer.Ordinal));
+            return rooms;
+        }
+
+        private static int FullBranchPreloadPriority(BranchRoomState room, string currentRoomId)
+        {
+            if (room == null)
+            {
+                return 99;
+            }
+
+            if (string.Equals(room.Id.Value, currentRoomId, StringComparison.Ordinal))
+            {
+                return 0;
+            }
+
+            return room.Role switch
+            {
+                BranchRoomRole.Boss => 1,
+                BranchRoomRole.Wave => 2,
+                BranchRoomRole.Reward or BranchRoomRole.Treasure or BranchRoomRole.Secret or BranchRoomRole.CorruptedChest or BranchRoomRole.SpecialEncounter => 3,
+                _ => 4
+            };
+        }
+
+        private IEnumerator WarmBranchEnemyPools(IReadOnlyList<BranchRoomState> rooms)
+        {
+            if (roomCombatController == null || roomCombatController.EnemyPrefab == null || rooms == null || string.IsNullOrWhiteSpace(activeBranchEnemyPoolKey))
+            {
+                yield break;
+            }
+
+            var counts = BuildBranchEnemyPoolCounts(rooms);
+            foreach (var pair in counts)
+            {
+                var key = EnemyRuntimePool.KeyFor(activeBranchEnemyPoolKey, roomCombatController.EnemyPrefab, pair.Key, roomCombatController.DifficultyTier);
+                yield return EnemyRuntimePool.Warm(key, roomCombatController.EnemyPrefab, pair.Value, perFrame: 3);
+            }
+        }
+
+        private Dictionary<string, int> BuildBranchEnemyPoolCounts(IReadOnlyList<BranchRoomState> rooms)
+        {
+            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            var catalog = roomCombatController != null && roomCombatController.EnemyCatalog != null
+                ? roomCombatController.EnemyCatalog
+                : EnemyCatalog.CreateRuntimeDefault();
+            for (var roomIndex = 0; roomIndex < rooms.Count; roomIndex++)
+            {
+                var room = rooms[roomIndex];
+                var asset = ResolveRoomAssetForState(room);
+                var spawnKinds = PlannedSpawnKindsForRoom(room, asset);
+                var multiplier = room != null && room.Role == BranchRoomRole.Wave ? 2 : 1;
+                for (var index = 0; index < spawnKinds.Count; index++)
+                {
+                    var definition = EnemyDefinitionResolver.Resolve(catalog, spawnKinds[index], out _);
+                    if (definition == null || definition.ArchetypeId == EnemyArchetypeId.Boss || IsBossSpawnKind(definition.SpawnKind))
+                    {
+                        continue;
+                    }
+
+                    var key = definition.SpawnKind;
+                    counts.TryGetValue(key, out var count);
+                    counts[key] = count + multiplier;
+                }
+            }
+
+            var keys = counts.Keys.ToArray();
+            for (var index = 0; index < keys.Length; index++)
+            {
+                counts[keys[index]] += 2;
+            }
+
+            return counts;
+        }
+
+        private IReadOnlyList<string> PlannedSpawnKindsForRoom(BranchRoomState room, ImportedRoomRuntimeAsset asset)
+        {
+            if (room != null && encounterPlan.TryResolve(room.Id.Value, out var assignment) && assignment.EnemySpawnKinds.Count > 0)
+            {
+                return assignment.EnemySpawnKinds;
+            }
+
+            if (asset?.EnemySpawns == null || asset.EnemySpawns.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var kinds = new List<string>(asset.EnemySpawns.Count);
+            for (var index = 0; index < asset.EnemySpawns.Count; index++)
+            {
+                var kind = asset.EnemySpawns[index]?.kind;
+                if (!string.IsNullOrWhiteSpace(kind))
+                {
+                    kinds.Add(kind);
+                }
+            }
+
+            return kinds;
+        }
+
+        private static bool IsBossSpawnKind(string spawnKind)
+        {
+            return string.Equals(spawnKind, "spawnEnemyBoss", StringComparison.Ordinal);
+        }
+
+        private string CreateActiveBranchEnemyPoolKey()
+        {
+            var graph = State?.Graph;
+            return $"branchEnemyPool|run:{RunSeed}|branch:{currentBranchSeed}|world:{worldIndex}|phase:{worldPhase}|depth:{branchDepth}|biome:{ActiveBiomeId}|graph:{graph?.BranchId ?? string.Empty}:{graph?.Seed ?? 0}";
+        }
+
+        private static string RoomLoadingLabel(BranchRoomState room)
+        {
+            return room == null ? "room" : $"{room.Role} {room.Id.Value}";
         }
 
         private IEnumerator WarmTransitionPools()
@@ -1292,26 +1609,47 @@ namespace Hollow.Branches
 
         private void ShowTransitionCurtain()
         {
+            RemoveOrphanTransitionCurtains();
             if (transitionCurtainRoot != null)
             {
+                ConfigureTransitionCurtain(transitionCurtainRoot);
                 transitionCurtainRoot.SetActive(true);
+                transitionCurtainVisible = true;
+                transitionCurtainShownRealtime = Time.realtimeSinceStartup;
+                transitionRoomReadyFrame = -1;
+                M136PerformanceOperationCounters.ReportTransitionCurtainShow();
                 return;
             }
 
-            transitionCurtainRoot = new GameObject("RoomTransitionCurtain", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(Image));
-            var canvas = transitionCurtainRoot.GetComponent<Canvas>();
+            transitionCurtainRoot = new GameObject(TransitionCurtainObjectName, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(Image));
+            ConfigureTransitionCurtain(transitionCurtainRoot);
+            transitionCurtainVisible = true;
+            transitionCurtainShownRealtime = Time.realtimeSinceStartup;
+            transitionRoomReadyFrame = -1;
+            M136PerformanceOperationCounters.ReportTransitionCurtainShow();
+        }
+
+        private void ConfigureTransitionCurtain(GameObject curtain)
+        {
+            if (curtain == null)
+            {
+                return;
+            }
+
+            curtain.transform.SetParent(transform, false);
+            var canvas = curtain.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 5000;
-            var scaler = transitionCurtainRoot.GetComponent<CanvasScaler>();
+            var scaler = curtain.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            var rect = transitionCurtainRoot.GetComponent<RectTransform>();
+            var rect = curtain.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-            var image = transitionCurtainRoot.GetComponent<Image>();
-            image.color = new Color(0f, 0f, 0f, 0.82f);
+            var image = curtain.GetComponent<Image>();
+            image.color = Color.black;
         }
 
         private void HideTransitionCurtain()
@@ -1320,6 +1658,128 @@ namespace Hollow.Branches
             {
                 transitionCurtainRoot.SetActive(false);
             }
+
+            if (!transitionCurtainVisible)
+            {
+                return;
+            }
+
+            var visibleMilliseconds = Mathf.Max(0f, (Time.realtimeSinceStartup - transitionCurtainShownRealtime) * 1000f);
+            var framesAfterReady = transitionRoomReadyFrame >= 0
+                ? Mathf.Max(0, Time.frameCount - transitionRoomReadyFrame)
+                : 0;
+            M136PerformanceOperationCounters.ReportTransitionCurtainHide(visibleMilliseconds, framesAfterReady);
+            transitionCurtainVisible = false;
+            transitionRoomReadyFrame = -1;
+        }
+
+        private void DestroyTransitionCurtain()
+        {
+            HideTransitionCurtain();
+            if (transitionCurtainRoot == null)
+            {
+                return;
+            }
+
+            var curtain = transitionCurtainRoot;
+            transitionCurtainRoot = null;
+            if (Application.isPlaying)
+            {
+                Destroy(curtain);
+            }
+            else
+            {
+                DestroyImmediate(curtain);
+            }
+        }
+
+        private void MarkTransitionRoomReadyForReveal()
+        {
+            transitionRoomReadyFrame = Time.frameCount;
+        }
+
+        private void RemoveOrphanTransitionCurtains()
+        {
+            var removed = 0;
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Include))
+            {
+                if (canvas == null ||
+                    canvas.gameObject == transitionCurtainRoot ||
+                    canvas.gameObject.name != TransitionCurtainObjectName ||
+                    canvas.transform.IsChildOf(transform))
+                {
+                    continue;
+                }
+
+                canvas.gameObject.SetActive(false);
+                if (Application.isPlaying)
+                {
+                    Destroy(canvas.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(canvas.gameObject);
+                }
+
+                removed++;
+            }
+
+            M136PerformanceOperationCounters.ReportTransitionOrphanCurtainsRemoved(removed);
+        }
+
+        private void ShowBranchLoadingScreen(string title, string stage, float progress01)
+        {
+            EnsureBranchLoadingScreen();
+            branchLoadingScreen?.Show(title, stage, progress01);
+        }
+
+        private void SetBranchLoadingStage(string stage, float progress01)
+        {
+            branchLoadingScreen?.SetStage(stage, progress01);
+        }
+
+        private void HideBranchLoadingScreen()
+        {
+            branchLoadingScreen?.Hide();
+        }
+
+        private void EnsureBranchLoadingScreen()
+        {
+            if (branchLoadingScreen != null)
+            {
+                return;
+            }
+
+            branchLoadingScreen = BranchLoadingScreenController.Create(transform);
+        }
+
+        private void DestroyBranchLoadingScreen()
+        {
+            if (branchLoadingScreen == null)
+            {
+                return;
+            }
+
+            var target = branchLoadingScreen.gameObject;
+            branchLoadingScreen = null;
+            if (Application.isPlaying)
+            {
+                Destroy(target);
+            }
+            else
+            {
+                DestroyImmediate(target);
+            }
+        }
+
+        private bool ShouldShowBossLoading(BranchConnection connection)
+        {
+            return connection != null &&
+                   State?.Graph != null &&
+                   State.Graph.TryGetRoom(connection.ToRoomId, out var targetRoom) &&
+                   targetRoom != null &&
+                   targetRoom.Role == BranchRoomRole.Boss &&
+                   Application.isPlaying;
         }
 
         private void OnRoomCleared(RoomCombatController _)
@@ -2431,14 +2891,16 @@ namespace Hollow.Branches
             branchFeaturePlan = CreateBranchFeaturePlanForGraph(State.Graph);
             proceduralRewardPlan = CreateRewardPlanForGraph(State.Graph, legacyFallback: false);
             encounterPlan = CreateEncounterPlanForGraph(State.Graph);
-            LoadCurrentRoom();
-            if (roomCombatController?.PlayerHealth != null)
+            LoadCurrentBranchWithLoading("Entering Branch", () =>
             {
-                roomCombatController.PlayerHealth.Restore(CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth, preservedHealth);
-            }
+                if (roomCombatController?.PlayerHealth != null)
+                {
+                    roomCombatController.PlayerHealth.Restore(CreateAppliedCurrentRunBuild().DerivedStats.MaxHealth, preservedHealth);
+                }
 
-            ApplyRunStatsToPlayer(healAmount: 0);
-            CheckpointActiveRun();
+                ApplyRunStatsToPlayer(healAmount: 0);
+                CheckpointActiveRun();
+            });
         }
 
         private void SpawnRewardIfNeeded()

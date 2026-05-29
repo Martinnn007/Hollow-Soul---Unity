@@ -36,7 +36,8 @@ namespace Hollow.Combat
             DifficultyTierDefinition difficultyTier,
             CombatDiagnosticsModel diagnostics,
             RoomCombatEncounterContext encounterContext,
-            IReadOnlyList<ImportedSpawnPoint> spawnAnchors)
+            IReadOnlyList<ImportedSpawnPoint> spawnAnchors,
+            string branchPoolKey = "")
         {
             Room = room;
             Parent = parent;
@@ -48,6 +49,7 @@ namespace Hollow.Combat
             Diagnostics = diagnostics;
             EncounterContext = encounterContext ?? RoomCombatEncounterContext.Empty;
             SpawnAnchors = spawnAnchors;
+            BranchPoolKey = branchPoolKey ?? string.Empty;
         }
 
         public RoomRuntimeRoot Room { get; }
@@ -69,5 +71,7 @@ namespace Hollow.Combat
         public RoomCombatEncounterContext EncounterContext { get; }
 
         public IReadOnlyList<ImportedSpawnPoint> SpawnAnchors { get; }
+
+        public string BranchPoolKey { get; }
     }
 }

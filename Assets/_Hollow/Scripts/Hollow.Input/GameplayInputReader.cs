@@ -29,7 +29,7 @@ namespace Hollow.Input
         public static GameplayInputSnapshot ReadCurrent(Transform gameplayRoot)
         {
             var pausePressed = ReadPausePressed();
-            if (GameplayPauseState.IsPaused)
+            if (GameplayPauseState.IsPaused || GameplayTransitionState.IsLocked)
             {
                 return new GameplayInputSnapshot(
                     Vector2.zero,

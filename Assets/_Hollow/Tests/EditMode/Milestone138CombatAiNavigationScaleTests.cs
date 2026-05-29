@@ -3,6 +3,7 @@ using Hollow.Combat;
 using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using Hollow.Diagnostics;
+using Hollow.Performance;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -128,6 +129,95 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void StressManifestConvertsIntoM136CaptureScenarios()
+        {
+            var scenarios = M138CombatScaleStressScenarioPolicy.StressManifest;
+            for (var index = 0; index < scenarios.Length; index++)
+            {
+                var converted = M138CombatScaleStressReportGenerator.ToM136ScenarioDefinition(scenarios[index]);
+                Assert.AreEqual(scenarios[index].id, converted.id);
+                Assert.AreEqual(scenarios[index].displayName, converted.displayName);
+                Assert.AreEqual(M138CombatScaleStressScenarioPolicy.FixedWarmupSeconds, converted.warmupSeconds);
+                Assert.AreEqual(M138CombatScaleStressScenarioPolicy.FixedSampleSeconds, converted.sampleSeconds);
+            }
+        }
+
+        [Test]
+        public void M138ReportPassesSyntheticValidStressResults()
+        {
+            var scenarios = M138CombatScaleStressScenarioPolicy.StressManifest;
+            var summaries = new M138CombatScaleStressScenarioSummary[scenarios.Length];
+            for (var index = 0; index < scenarios.Length; index++)
+            {
+                var scenario = scenarios[index];
+                var result = SyntheticResult(
+                    scenario,
+                    peakEnemies: scenario.targetEnemyCount + (scenario.includesBoss ? 1 : 0),
+                    peakProjectiles: scenario.projectileHeavy ? 12 : 0,
+                    observedBoss: scenario.includesBoss,
+                    aiThinkReduced: scenario.targetEnemyCount >= 20 || scenario.includesBoss ? 8 : 1,
+                    aiCommandReuses: scenario.targetEnemyCount >= 20 ? 18 : 3);
+                summaries[index] = M138CombatScaleStressReportGenerator.BuildScenarioSummary(
+                    scenario,
+                    result,
+                    SyntheticFrameBudget(maxAiThinks: 3, maxPathSolves: M137PerformanceComfortPolicy.M3NavMeshPathSolveBudgetPerFrame),
+                    bossFullLodObserved: scenario.includesBoss,
+                    reducedOrBackgroundAddObserved: scenario.targetEnemyCount >= 20 || scenario.includesBoss,
+                    enforceFrameTimingWhenTrusted: true);
+                Assert.IsTrue(summaries[index].passed, string.Join("; ", summaries[index].failures));
+            }
+
+            var report = M138CombatScaleStressReportGenerator.BuildReport(summaries);
+            Assert.IsTrue(report.passed, string.Join("; ", report.failures));
+            Assert.AreEqual(M138CombatScaleStressScenarioPolicy.LockId, report.lockId);
+            Assert.AreEqual(6, report.scenarioCount);
+        }
+
+        [Test]
+        public void M138ReportDetectsSynchronizedAiAndNavBursts()
+        {
+            var scenario = System.Array.Find(M138CombatScaleStressScenarioPolicy.StressManifest, item => item.id == "enemy_stress_30");
+            var result = SyntheticResult(scenario, peakEnemies: 30, peakProjectiles: 0, observedBoss: false, aiThinkReduced: 12, aiCommandReuses: 20);
+            var summary = M138CombatScaleStressReportGenerator.BuildScenarioSummary(
+                scenario,
+                result,
+                SyntheticFrameBudget(maxAiThinks: 30, maxPathSolves: M137PerformanceComfortPolicy.M3NavMeshPathSolveBudgetPerFrame + 1, activeThinkFrames: 1),
+                bossFullLodObserved: false,
+                reducedOrBackgroundAddObserved: true,
+                enforceFrameTimingWhenTrusted: true);
+
+            Assert.IsFalse(summary.passed);
+            Assert.That(string.Join("\n", summary.failures), Does.Contain("Max path solves"));
+            Assert.That(string.Join("\n", summary.failures), Does.Contain("clustered"));
+        }
+
+        [Test]
+        public void M138ReportDetectsMissingBossAndProjectileContent()
+        {
+            var scenario = System.Array.Find(M138CombatScaleStressScenarioPolicy.StressManifest, item => item.id == "boss_plus_projectile_adds");
+            var result = SyntheticResult(
+                scenario,
+                peakEnemies: scenario.targetEnemyCount,
+                peakProjectiles: 0,
+                observedBoss: false,
+                aiThinkReduced: 6,
+                aiCommandReuses: 10);
+            var summary = M138CombatScaleStressReportGenerator.BuildScenarioSummary(
+                scenario,
+                result,
+                SyntheticFrameBudget(maxAiThinks: 3, maxPathSolves: 2),
+                bossFullLodObserved: false,
+                reducedOrBackgroundAddObserved: true,
+                enforceFrameTimingWhenTrusted: true);
+
+            Assert.IsFalse(summary.passed);
+            var failures = string.Join("\n", summary.failures);
+            Assert.That(failures, Does.Contain("Projectile-heavy"));
+            Assert.That(failures, Does.Contain("active boss"));
+            Assert.That(failures, Does.Contain("Full AI LOD"));
+        }
+
+        [Test]
         public void MilestoneThreeCountersCaptureAiNavigationAndAvoidanceSignals()
         {
             M136PerformanceOperationCounters.Reset();
@@ -166,6 +256,92 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(1, snapshot.AvoidanceHigh);
             Assert.AreEqual(1, snapshot.AvoidanceReduced);
             Assert.AreEqual(1, snapshot.AvoidanceBackground);
+        }
+
+        private static M136PerformanceScenarioResult SyntheticResult(
+            M138CombatScaleStressScenarioDefinition scenario,
+            int peakEnemies,
+            int peakProjectiles,
+            bool observedBoss,
+            int aiThinkReduced,
+            int aiCommandReuses)
+        {
+            return new M136PerformanceScenarioResult
+            {
+                scenarioId = scenario.id,
+                displayName = scenario.displayName,
+                samplingSource = M136FrameCadencePolicy.RuntimeUpdateSamplingSource,
+                frameCadenceConfidence = M136FrameCadencePolicy.Trusted,
+                rawSampleCount = 1800,
+                sampleRateHz = 60d,
+                metrics = new[]
+                {
+                    new M136PerformanceMetricSummary
+                    {
+                        id = "frame_time_ms",
+                        supported = true,
+                        sampleCount = 1800,
+                        p50 = 10d,
+                        p95 = 12d,
+                        max = 15d
+                    },
+                    new M136PerformanceMetricSummary
+                    {
+                        id = "gc_allocated_bytes",
+                        supported = true,
+                        sampleCount = 1800,
+                        p50 = 0d,
+                        p95 = 0d,
+                        max = 0d
+                    }
+                },
+                operations = new M136RuntimeOperationSummary
+                {
+                    activeEnemyMax = peakEnemies,
+                    aiThinkFull = 30,
+                    aiThinkReduced = aiThinkReduced,
+                    aiThinkBackground = 2,
+                    aiCommandReuses = aiCommandReuses,
+                    aiScorerCalls = 14,
+                    aiBehaviorGraphTicks = 36,
+                    aiLodTransitions = 3,
+                    navPathRequests = 24,
+                    navPathSolves = 18,
+                    navPathDeferred = 6,
+                    navPathFallbacks = 0,
+                    runtimeNavMeshFallbacks = 0,
+                    navPathMaxSolveMilliseconds = 0.75f,
+                    avoidanceHigh = 12,
+                    avoidanceReduced = 8,
+                    avoidanceBackground = 4
+                },
+                objectCounts = new M136LiveObjectCountSummary
+                {
+                    sampleCount = 1800,
+                    peakEnemies = peakEnemies,
+                    peakProjectiles = peakProjectiles,
+                    observedCombatController = true,
+                    observedActiveCombat = true,
+                    observedBoss = observedBoss,
+                    source = "m138-synthetic"
+                }
+            };
+        }
+
+        private static M138CombatScaleStressFrameBudgetSummary SyntheticFrameBudget(int maxAiThinks, int maxPathSolves, int activeThinkFrames = 24)
+        {
+            return new M138CombatScaleStressFrameBudgetSummary
+            {
+                sampleFrameCount = 1800,
+                aiThinkActiveFrameCount = activeThinkFrames,
+                navSolveActiveFrameCount = 18,
+                maxAiThinksInFrame = maxAiThinks,
+                maxPathSolvesInFrame = maxPathSolves,
+                maxPathRequestsInFrame = maxPathSolves + 1,
+                maxPathDeferredInFrame = 2,
+                maxScorerCallsInFrame = 2,
+                maxBehaviorGraphTicksInFrame = 3
+            };
         }
 
         private static EnemyNavigationRequest NavigationRequest(

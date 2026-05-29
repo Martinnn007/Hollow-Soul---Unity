@@ -66,6 +66,12 @@ namespace Hollow.Diagnostics
         public int transitionStageCount;
         public float transitionMaxStageMilliseconds;
         public long transitionGcMaxBytes;
+        public int transitionCurtainShows;
+        public int transitionCurtainHides;
+        public float transitionCurtainMaxVisibleMilliseconds;
+        public int transitionCurtainMaxFramesAfterReady;
+        public float transitionLockMaxMilliseconds;
+        public int transitionOrphanCurtainsRemoved;
         public int roomBuildStageCount;
         public int transitionDestroyedObjectMaxPerFrame;
         public int enemySpawnSlices;
@@ -92,6 +98,42 @@ namespace Hollow.Diagnostics
         public int presentationBiomeCacheHits;
         public int presentationBiomeCacheMisses;
         public int presentationColliderStripPasses;
+        public int branchLoadingStarts;
+        public int branchLoadingCompletions;
+        public int bossLoadingStarts;
+        public int bossLoadingCompletions;
+        public float branchLoadingMaxMilliseconds;
+        public float bossLoadingMaxMilliseconds;
+        public int fullBranchPreloadRooms;
+        public int traversalColdCacheMisses;
+        public int enemyPoolWarmRequests;
+        public int enemyPoolWarmCompletions;
+        public int enemyPoolRents;
+        public int enemyPoolReturns;
+        public int enemyPoolMisses;
+        public int enemyPoolHardInstantiates;
+        public int bootLoadingStarts;
+        public int bootLoadingCompletions;
+        public int bootLoadingFailures;
+        public int bootLoadingStageCount;
+        public float bootLoadingMaxStageMilliseconds;
+        public float bootLoadingMaxMilliseconds;
+        public int bootPreloadResourceLoads;
+        public int bootPreloadWarmRequests;
+        public int bootPreloadWarmCompletions;
+        public int bootPreloadShaderWarmAttempts;
+        public int bootPreloadShaderWarmCollections;
+        public int bootPreloadShaderWarmSuccesses;
+        public int bootPreloadShaderWarmMisses;
+        public float bootPreloadShaderWarmMaxMilliseconds;
+        public int m139StaleEnemyStateFailures;
+        public int m139StaleRuntimePoolStateFailures;
+        public int m139PoolActiveLeaks;
+        public int m139CacheHitRateWindows;
+        public int m139CacheHitRateWindowFailures;
+        public int m139ShaderMaterialFirstUseMissesAfterLoad;
+        public float m139ManagedMemoryDriftMaxMb;
+        public float m139GraphicsMemoryDriftMaxMb;
     }
 
     [Serializable]
@@ -855,6 +897,12 @@ namespace Hollow.Diagnostics
                     transitionStageCount = operationSnapshot.TransitionStageCount,
                     transitionMaxStageMilliseconds = operationSnapshot.TransitionMaxStageMilliseconds,
                     transitionGcMaxBytes = operationSnapshot.TransitionGcMaxBytes,
+                    transitionCurtainShows = operationSnapshot.TransitionCurtainShows,
+                    transitionCurtainHides = operationSnapshot.TransitionCurtainHides,
+                    transitionCurtainMaxVisibleMilliseconds = operationSnapshot.TransitionCurtainMaxVisibleMilliseconds,
+                    transitionCurtainMaxFramesAfterReady = operationSnapshot.TransitionCurtainMaxFramesAfterReady,
+                    transitionLockMaxMilliseconds = operationSnapshot.TransitionLockMaxMilliseconds,
+                    transitionOrphanCurtainsRemoved = operationSnapshot.TransitionOrphanCurtainsRemoved,
                     roomBuildStageCount = operationSnapshot.RoomBuildStageCount,
                     transitionDestroyedObjectMaxPerFrame = operationSnapshot.TransitionDestroyedObjectMaxPerFrame,
                     enemySpawnSlices = operationSnapshot.EnemySpawnSlices,
@@ -880,7 +928,43 @@ namespace Hollow.Diagnostics
                     presentationPrefabCacheMisses = operationSnapshot.PresentationPrefabCacheMisses,
                     presentationBiomeCacheHits = operationSnapshot.PresentationBiomeCacheHits,
                     presentationBiomeCacheMisses = operationSnapshot.PresentationBiomeCacheMisses,
-                    presentationColliderStripPasses = operationSnapshot.PresentationColliderStripPasses
+                    presentationColliderStripPasses = operationSnapshot.PresentationColliderStripPasses,
+                    branchLoadingStarts = operationSnapshot.BranchLoadingStarts,
+                    branchLoadingCompletions = operationSnapshot.BranchLoadingCompletions,
+                    bossLoadingStarts = operationSnapshot.BossLoadingStarts,
+                    bossLoadingCompletions = operationSnapshot.BossLoadingCompletions,
+                    branchLoadingMaxMilliseconds = operationSnapshot.BranchLoadingMaxMilliseconds,
+                    bossLoadingMaxMilliseconds = operationSnapshot.BossLoadingMaxMilliseconds,
+                    fullBranchPreloadRooms = operationSnapshot.FullBranchPreloadRooms,
+                    traversalColdCacheMisses = operationSnapshot.TraversalColdCacheMisses,
+                    enemyPoolWarmRequests = operationSnapshot.EnemyPoolWarmRequests,
+                    enemyPoolWarmCompletions = operationSnapshot.EnemyPoolWarmCompletions,
+                    enemyPoolRents = operationSnapshot.EnemyPoolRents,
+                    enemyPoolReturns = operationSnapshot.EnemyPoolReturns,
+                    enemyPoolMisses = operationSnapshot.EnemyPoolMisses,
+                    enemyPoolHardInstantiates = operationSnapshot.EnemyPoolHardInstantiates,
+                    bootLoadingStarts = operationSnapshot.BootLoadingStarts,
+                    bootLoadingCompletions = operationSnapshot.BootLoadingCompletions,
+                    bootLoadingFailures = operationSnapshot.BootLoadingFailures,
+                    bootLoadingStageCount = operationSnapshot.BootLoadingStageCount,
+                    bootLoadingMaxStageMilliseconds = operationSnapshot.BootLoadingMaxStageMilliseconds,
+                    bootLoadingMaxMilliseconds = operationSnapshot.BootLoadingMaxMilliseconds,
+                    bootPreloadResourceLoads = operationSnapshot.BootPreloadResourceLoads,
+                    bootPreloadWarmRequests = operationSnapshot.BootPreloadWarmRequests,
+                    bootPreloadWarmCompletions = operationSnapshot.BootPreloadWarmCompletions,
+                    bootPreloadShaderWarmAttempts = operationSnapshot.BootPreloadShaderWarmAttempts,
+                    bootPreloadShaderWarmCollections = operationSnapshot.BootPreloadShaderWarmCollections,
+                    bootPreloadShaderWarmSuccesses = operationSnapshot.BootPreloadShaderWarmSuccesses,
+                    bootPreloadShaderWarmMisses = operationSnapshot.BootPreloadShaderWarmMisses,
+                    bootPreloadShaderWarmMaxMilliseconds = operationSnapshot.BootPreloadShaderWarmMaxMilliseconds,
+                    m139StaleEnemyStateFailures = operationSnapshot.M139StaleEnemyStateFailures,
+                    m139StaleRuntimePoolStateFailures = operationSnapshot.M139StaleRuntimePoolStateFailures,
+                    m139PoolActiveLeaks = operationSnapshot.M139PoolActiveLeaks,
+                    m139CacheHitRateWindows = operationSnapshot.M139CacheHitRateWindows,
+                    m139CacheHitRateWindowFailures = operationSnapshot.M139CacheHitRateWindowFailures,
+                    m139ShaderMaterialFirstUseMissesAfterLoad = operationSnapshot.M139ShaderMaterialFirstUseMissesAfterLoad,
+                    m139ManagedMemoryDriftMaxMb = operationSnapshot.M139ManagedMemoryDriftMaxMb,
+                    m139GraphicsMemoryDriftMaxMb = operationSnapshot.M139GraphicsMemoryDriftMaxMb
                 },
                 objectCounts = BuildObjectCountSummary(),
                 note = note

@@ -27,7 +27,15 @@ namespace Hollow.Core.App
 
         public static AsyncOperation LoadRouteAsync(AppShellRoute route, LoadSceneMode mode = LoadSceneMode.Single)
         {
-            return SceneManager.LoadSceneAsync(SceneNameForRoute(route), mode);
+            var sceneName = SceneNameForRoute(route);
+            var operation = SceneManager.LoadSceneAsync(sceneName, mode);
+#if UNITY_EDITOR
+            if (operation == null)
+            {
+                operation = SceneManager.LoadSceneAsync($"Assets/_Hollow/Scenes/{sceneName}.unity", mode);
+            }
+#endif
+            return operation;
         }
     }
 }

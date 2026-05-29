@@ -1,7 +1,9 @@
 {
   "name": "Hollow.Core",
   "rootNamespace": "Hollow.Core",
-  "references": [],
+  "references": [
+    "UnityEngine.UI"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

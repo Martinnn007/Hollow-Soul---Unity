@@ -152,6 +152,25 @@ MonoBehaviour:
   defaultStartupRoute: 1
   preferVisionOSStartupRoute: 1
   visionOSStartupRoute: 8
+  showBootLoadingScreen: 1
+  studioName: CineFit Studio
+  gameTitle: Hollow Soul
+  minimumVisibleSeconds: 1.5
+  allowEditorFastBoot: 1
+  editorMinimumVisibleSeconds: 0.25
+  fadeOutSeconds: 0.2
+  preloadSettings:
+    preloadResources: 1
+    warmShaderCollections: 1
+    shaderWarmupProfile: {fileID: 0}
+    shaderWarmupProfileResourcePath: Hollow/HollowBootShaderWarmupProfile
+    warmPrimitivePools: 1
+    primitiveWarmCount: 4
+    workPerFrame: 6
+    resourcePreloadPaths:
+    - Hollow
+    - UI/Hud
+    - UI/Minimap
 --- !u!4 &143750346
 Transform:
   m_ObjectHideFlags: 0

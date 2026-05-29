@@ -56,6 +56,8 @@ namespace Hollow.Combat
         private bool hasLastPlayerFootstepStimulusLocalPosition;
         private PlayerDefenseController playerDefenseController;
         private PlayerWeaponController playerWeaponController;
+        private bool transitionSuspended;
+        private string branchEnemyPoolKey = string.Empty;
 
         public event Action<RoomCombatController> RoomCleared;
 
@@ -114,6 +116,8 @@ namespace Hollow.Combat
 
         public bool AutoInitialize => autoInitialize;
 
+        public bool TransitionSuspended => transitionSuspended;
+
         public bool IsWaveEncounterActive => activeWavePlan.IsActive;
 
         public int CurrentWaveNumber => activeWavePlan.IsActive ? Mathf.Clamp(activeWaveIndex + 1, 1, activeWavePlan.TotalWaves) : 0;
@@ -152,6 +156,16 @@ namespace Hollow.Combat
             autoInitialize = enabled;
         }
 
+        public void SetTransitionSuspended(bool suspended)
+        {
+            transitionSuspended = suspended;
+        }
+
+        public void ConfigureBranchEnemyPool(string poolKey)
+        {
+            branchEnemyPoolKey = poolKey ?? string.Empty;
+        }
+
         private void Start()
         {
             if (autoInitialize)
@@ -162,6 +176,11 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            if (transitionSuspended)
+            {
+                return;
+            }
+
             TickPlayerFootstepStimuli(Time.time);
             var now = Time.time;
             if (now >= nextTacticalDirectorTickTime)
@@ -480,7 +499,8 @@ namespace Hollow.Combat
                 difficultyTier,
                 diagnostics,
                 activeEncounterContext,
-                spawnAnchors));
+                spawnAnchors,
+                branchEnemyPoolKey));
             foreach (var enemy in spawnResult.Enemies)
             {
                 RegisterEnemy(enemy);
@@ -659,7 +679,9 @@ namespace Hollow.Combat
                 enemyCatalog,
                 difficultyTier,
                 diagnostics,
-                encounterContext));
+                encounterContext,
+                null,
+                branchEnemyPoolKey));
             foreach (var enemy in spawnResult.Enemies)
             {
                 RegisterEnemy(enemy);
@@ -679,7 +701,9 @@ namespace Hollow.Combat
                 enemyCatalog,
                 difficultyTier,
                 diagnostics,
-                encounterContext),
+                encounterContext,
+                null,
+                branchEnemyPoolKey),
                 RegisterEnemy,
                 maxEnemiesPerFrame: 2);
             diagnostics.SetEnemyCounts(enemies);
@@ -1081,7 +1105,10 @@ namespace Hollow.Combat
                         enemy.Health.Died -= OnEnemyDied;
                     }
 
-                    DestroyRuntimeObject(enemy.gameObject);
+                    if (!EnemyRuntimePool.TryReturn(enemy))
+                    {
+                        DestroyRuntimeObject(enemy.gameObject);
+                    }
                 }
             }
 

@@ -1,5 +1,6 @@
 using Hollow.Entities;
 using Hollow.Data.Definitions;
+using Hollow.Input;
 using Hollow.Presentation;
 using Hollow.Rooms;
 using System;
@@ -90,6 +91,7 @@ namespace Hollow.Combat
         private RoomCombatController roomCombatController;
         private BossDefinition bossDefinition;
         private BossRuntimeController bossRuntime;
+        private string branchPoolKey = string.Empty;
         private InspectionEntityMode inspectionMode = InspectionEntityMode.LiveRuntime;
         private Vector3 homeLocalPosition;
         private Vector3 instinctMoveDirection = Vector3.forward;
@@ -189,6 +191,10 @@ namespace Hollow.Combat
         public CombatantHealth Health { get; private set; }
 
         public EnemyDefinition Definition { get; private set; }
+
+        public string BranchPoolKey => branchPoolKey;
+
+        public bool IsBranchPooledEnemy => !string.IsNullOrWhiteSpace(branchPoolKey);
 
         public EnemyArchetypeId ArchetypeId => archetypeId;
 
@@ -700,6 +706,7 @@ namespace Hollow.Combat
             Health.Damaged += OnDamaged;
             Health.Died -= OnDied;
             Health.Died += OnDied;
+            RemoveRuntimePresentationVisuals();
             ApplyDefinitionPresentation(Definition);
             InstantiateOptionalEnemyVisuals(Definition);
             RefreshVisibilityRenderers();
@@ -811,6 +818,7 @@ namespace Hollow.Combat
             gameObject.name = $"Enemy.Boss.{bossDefinition.BossId}";
             transform.localScale = Vector3.one * bossDefinition.VisualScale;
             Health.Configure(bossDefinition.MaxHealth);
+            RemoveRuntimePresentationVisuals();
             PresentationPrefabResolver.InstantiateVisual(bossDefinition.PresentationPrefabRole, transform, Vector3.zero, Vector3.one);
             InstantiateOptionalBossVisuals(bossDefinition);
             RefreshVisibilityRenderers();
@@ -913,6 +921,147 @@ namespace Hollow.Combat
             difficultyTier = nextDifficultyTier;
             diagnostics = nextDiagnostics;
             spawnIndex = nextSpawnIndex;
+        }
+
+        public void MarkBranchPooled(string key)
+        {
+            branchPoolKey = key ?? string.Empty;
+        }
+
+        public void PrepareForBranchPoolReturn()
+        {
+            SpawnedChild = null;
+            roomCombatController = null;
+            diagnostics = null;
+            playerController = null;
+            playerHealth = null;
+            roomRuntimeRoot = null;
+            bossDefinition = null;
+            bossRuntime = null;
+            activeChargeProfile = null;
+            activeRangedProfile = null;
+            activeMeleeProfile = null;
+            activeAreaProfile = null;
+            activeWarningProfile = null;
+            activeGuardActionProfile = null;
+            activeCreatureMoveProfile = null;
+            activeCreatureSignalProfile = null;
+            activeGuardProfile = null;
+            activeBossContactProfile = null;
+            spawnIndex = -1;
+            sequentialRadialSteps.Clear();
+            ResetPathCache();
+            locomotionAgent.Reset();
+            aiBrain.Reset();
+            DisableUnityBehaviorGraphBridge();
+            DisableNavMeshAgent();
+            if (Health != null)
+            {
+                Health.Damaged -= OnDamaged;
+                Health.Died -= OnDied;
+            }
+
+            RemoveRuntimePresentationVisuals();
+            SetGameplayPlaceholderRenderersVisible(true);
+            transform.localScale = Vector3.one;
+            enabled = false;
+            gameObject.SetActive(false);
+        }
+
+        public bool ValidateBranchPoolReturnState(out string issue)
+        {
+            issue = string.Empty;
+            if (!IsBranchPooledEnemy)
+            {
+                issue = "enemy is not marked as branch pooled";
+                return false;
+            }
+
+            if (gameObject.activeSelf)
+            {
+                issue = "returned enemy GameObject is still active";
+                return false;
+            }
+
+            if (enabled)
+            {
+                issue = "returned enemy behaviour is still enabled";
+                return false;
+            }
+
+            if (bossDefinition != null || bossRuntime != null || archetypeId == EnemyArchetypeId.Boss)
+            {
+                issue = "normal enemy pool return still has boss state";
+                return false;
+            }
+
+            if (roomCombatController != null || diagnostics != null || playerController != null || playerHealth != null || roomRuntimeRoot != null)
+            {
+                issue = "returned enemy still has room, player, combat, or diagnostics references";
+                return false;
+            }
+
+            if (spawnIndex != -1)
+            {
+                issue = "returned enemy still has a spawn index";
+                return false;
+            }
+
+            if (GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true).Length > 0)
+            {
+                issue = "returned enemy still has runtime presentation visuals";
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool ValidateBranchPoolRentState(out string issue)
+        {
+            issue = string.Empty;
+            if (!IsBranchPooledEnemy)
+            {
+                issue = "rented enemy is not marked as branch pooled";
+                return false;
+            }
+
+            if (!gameObject.activeSelf)
+            {
+                issue = "rented enemy GameObject is inactive";
+                return false;
+            }
+
+            if (Definition == null)
+            {
+                issue = "rented enemy has no configured definition";
+                return false;
+            }
+
+            if (Health == null || Health.CurrentHealth != Health.MaxHealth || Health.MaxHealth <= 0)
+            {
+                issue = "rented enemy health was not reset to full";
+                return false;
+            }
+
+            if (bossDefinition != null || bossRuntime != null || archetypeId == EnemyArchetypeId.Boss || Definition.ArchetypeId == EnemyArchetypeId.Boss)
+            {
+                issue = "normal pooled enemy has boss state after rent";
+                return false;
+            }
+
+            if (roomRuntimeRoot == null || playerController == null || playerHealth == null)
+            {
+                issue = "rented enemy is missing room or player references";
+                return false;
+            }
+
+            if (spawnIndex < 0)
+            {
+                issue = "rented enemy has no spawn index";
+                return false;
+            }
+
+            return true;
         }
 
         public void ApplyIntelligenceDisposition(EnemyIntelligenceLevel nextIntelligence, EnemyInstinctDisposition nextDisposition)
@@ -1042,6 +1191,11 @@ namespace Hollow.Combat
 
         private void Update()
         {
+            if (GameplayTransitionState.IsLocked)
+            {
+                return;
+            }
+
             Tick(Time.deltaTime, Time.time);
         }
 
@@ -5806,6 +5960,30 @@ namespace Hollow.Combat
             var prefabRole = PrefabRoleForDefinition(definition);
             var visual = PresentationPrefabResolver.InstantiateVisual(prefabRole, transform, Vector3.zero, Vector3.one);
             SetGameplayPlaceholderRenderersVisible(!ShouldHideGameplayPlaceholder(prefabRole, visual));
+        }
+
+        private void RemoveRuntimePresentationVisuals()
+        {
+            var markers = GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true);
+            for (var index = 0; index < markers.Length; index++)
+            {
+                var marker = markers[index];
+                if (marker == null || marker.transform == transform)
+                {
+                    continue;
+                }
+
+                var target = marker.gameObject;
+                if (Application.isPlaying)
+                {
+                    target.transform.SetParent(null, false);
+                    Destroy(target);
+                }
+                else
+                {
+                    DestroyImmediate(target);
+                }
+            }
         }
 
         private void RefreshVisibilityRenderers()

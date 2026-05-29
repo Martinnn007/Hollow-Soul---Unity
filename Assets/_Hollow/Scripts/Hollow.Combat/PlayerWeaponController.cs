@@ -316,7 +316,7 @@ namespace Hollow.Combat
 
         private void Update()
         {
-            if (GameplayPauseState.IsPaused)
+            if (GameplayPauseState.IsPaused || GameplayTransitionState.IsLocked)
             {
                 return;
             }

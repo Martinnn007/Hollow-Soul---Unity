@@ -42,7 +42,7 @@ namespace Hollow.Combat
                     Debug.LogWarning(warning);
                 }
 
-                var enemyObject = UnityEngine.Object.Instantiate(request.EnemyPrefab, request.Parent);
+                var enemyObject = RentOrInstantiateEnemy(request, definition, spawnKind, spawn.id);
                 enemyObject.name = $"Enemy.{definition.ArchetypeId}.{spawn.id}";
                 enemyObject.SetActive(true);
                 enemyObject.transform.localPosition = spawn.position.ToUnityVector3();
@@ -56,6 +56,7 @@ namespace Hollow.Combat
                 }
 
                 enemy.ConfigureSpawnContext(request.EnemyPrefab, request.EnemyProjectilePrefab, catalog, difficulty, request.Diagnostics, index);
+                EnemyRuntimePool.ValidateRentedEnemy(enemy);
                 enemies.Add(enemy);
             }
 
@@ -96,7 +97,7 @@ namespace Hollow.Combat
                     Debug.LogWarning($"Unknown enemy spawn kind '{spawnKind}', using {definition.SpawnKind}.");
                 }
 
-                var enemyObject = UnityEngine.Object.Instantiate(request.EnemyPrefab, request.Parent);
+                var enemyObject = RentOrInstantiateEnemy(request, definition, spawnKind, spawn.id);
                 enemyObject.name = $"Enemy.{definition.ArchetypeId}.{spawn.id}";
                 enemyObject.SetActive(true);
                 enemyObject.transform.localPosition = spawn.position.ToUnityVector3();
@@ -111,6 +112,7 @@ namespace Hollow.Combat
                 }
 
                 enemy.ConfigureSpawnContext(request.EnemyPrefab, request.EnemyProjectilePrefab, catalog, difficulty, request.Diagnostics, index);
+                EnemyRuntimePool.ValidateRentedEnemy(enemy);
                 spawnedEnemies.Add(enemy);
                 onEnemySpawned?.Invoke(enemy);
                 spawnedThisFrame++;
@@ -160,6 +162,23 @@ namespace Hollow.Combat
             }
 
             return enemies;
+        }
+
+        private static GameObject RentOrInstantiateEnemy(EnemySpawnRequest request, EnemyDefinition definition, string spawnKind, string spawnId)
+        {
+            if (!string.IsNullOrWhiteSpace(request.BranchPoolKey) && Application.isPlaying)
+            {
+                var key = EnemyRuntimePool.KeyFor(request.BranchPoolKey, request.EnemyPrefab, definition?.SpawnKind ?? spawnKind, request.DifficultyTier);
+                var pooled = EnemyRuntimePool.Rent(key, request.EnemyPrefab, request.Parent);
+                if (pooled != null)
+                {
+                    return pooled.gameObject;
+                }
+            }
+
+            var enemyObject = UnityEngine.Object.Instantiate(request.EnemyPrefab, request.Parent);
+            enemyObject.name = $"Enemy.{definition?.ArchetypeId.ToString() ?? "Unknown"}.{spawnId}";
+            return enemyObject;
         }
 
         public static EnemyRuntimeController SpawnBoss(
