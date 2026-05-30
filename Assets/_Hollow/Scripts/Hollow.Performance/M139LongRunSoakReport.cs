@@ -67,6 +67,7 @@ namespace Hollow.Performance
         public int hardInstantiates;
         public int warmRequests;
         public int warmCompletions;
+        public string[] recentMissKeys = Array.Empty<string>();
 
         public static M139PoolSnapshotSummary FromEnemy(EnemyRuntimePoolSnapshot snapshot)
         {
@@ -82,7 +83,8 @@ namespace Hollow.Performance
                 misses = snapshot.misses,
                 hardInstantiates = snapshot.hardInstantiates,
                 warmRequests = snapshot.warmRequests,
-                warmCompletions = snapshot.warmCompletions
+                warmCompletions = snapshot.warmCompletions,
+                recentMissKeys = snapshot.recentMissKeys ?? Array.Empty<string>()
             };
         }
 
@@ -100,7 +102,8 @@ namespace Hollow.Performance
                 misses = snapshot.misses,
                 hardInstantiates = snapshot.hardInstantiates,
                 warmRequests = snapshot.warmRequests,
-                warmCompletions = snapshot.warmCompletions
+                warmCompletions = snapshot.warmCompletions,
+                recentMissKeys = snapshot.recentMissKeys ?? Array.Empty<string>()
             };
         }
     }
@@ -484,6 +487,16 @@ namespace Hollow.Performance
                 builder.AppendLine($"- Special actions: save-load {scenario.saveLoadRestoresCompleted}, abandon/re-enter {scenario.branchAbandonReentriesCompleted}, boss loads {scenario.bossLoadsCompleted}, next branch {scenario.nextBranchTransitionsCompleted}");
                 builder.AppendLine($"- Cache: cold misses {scenario.normalTraversalColdCacheMissesAfterLoad}, hit rate {scenario.branchRuntimeCacheHitRate:P1}, shader/material misses {scenario.shaderMaterialFirstUseMissesAfterLoad}");
                 builder.AppendLine($"- Nav/pools: nav fallback {scenario.runtimeNavMeshFallbacks}, enemy misses/hard {scenario.enemyPoolMissesAfterWarmup}/{scenario.enemyPoolHardInstantiatesAfterWarmup}, runtime misses/hard {scenario.runtimePoolMissesAfterWarmup}/{scenario.runtimePoolHardInstantiatesAfterWarmup}, leaks {scenario.poolActiveLeaks}");
+                if (scenario.enemyPool?.recentMissKeys != null && scenario.enemyPool.recentMissKeys.Length > 0)
+                {
+                    builder.AppendLine($"- Enemy pool miss keys: {string.Join(", ", scenario.enemyPool.recentMissKeys)}");
+                }
+
+                if (scenario.runtimePool?.recentMissKeys != null && scenario.runtimePool.recentMissKeys.Length > 0)
+                {
+                    builder.AppendLine($"- Runtime pool miss keys: {string.Join(", ", scenario.runtimePool.recentMissKeys)}");
+                }
+
                 builder.AppendLine($"- Memory/GC: managed drift {scenario.managedMemoryDriftMb:0.0} MB, graphics drift {scenario.graphicsMemoryDriftMb:0.0} MB, GC p95 {scenario.recurringGcP95Bytes:0} bytes");
                 builder.AppendLine($"- Frame p95/max: {scenario.frameP95Ms:0.00} ms / {scenario.frameMaxMs:0.00} ms");
                 if (scenario.failures != null && scenario.failures.Length > 0)

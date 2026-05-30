@@ -78,6 +78,7 @@ namespace Hollow.Performance
             Directory.CreateDirectory(options.ResolvedOutputRoot);
             var summaries = new List<M140ScenarioSummary>();
             var fpsOverride = new M136CaptureFpsOverride(true, options.targetFrameRate);
+            M140RenderRuntimeSnapshot renderRuntime = null;
             try
             {
                 yield return WaitForBootSettle();
@@ -93,14 +94,15 @@ namespace Hollow.Performance
                         onScenarioComplete?.Invoke(summary);
                     }
                 }
+
+                var operations = M136PerformanceOperationCounters.Snapshot();
+                renderRuntime = M140RenderRuntimeSnapshot.Capture(operations);
             }
             finally
             {
                 fpsOverride.Dispose();
             }
 
-            var operations = M136PerformanceOperationCounters.Snapshot();
-            var renderRuntime = M140RenderRuntimeSnapshot.Capture(operations);
             var playerLog = M140PlayerLogValidator.Validate(ResolvePlayerLogPath());
             var report = M140BuildRealReportGenerator.BuildReport(
                 options.platformId,
@@ -167,7 +169,7 @@ namespace Hollow.Performance
         {
             yield return new WaitForEndOfFrame();
             var screenshot = CaptureScreenshot("boot_loading_screen", options);
-            var visual = M140VisualScreenshotValidator.Validate(screenshot);
+            var visual = M140VisualScreenshotValidator.Validate(screenshot, "boot_loading_screen");
             var operations = M136PerformanceOperationCounters.Snapshot();
             onComplete?.Invoke(M140BuildRealReportGenerator.BuildBootScenarioSummary(
                 options.platformId,
@@ -233,7 +235,7 @@ namespace Hollow.Performance
                 options.platformId,
                 options.buildKind,
                 result,
-                M140VisualScreenshotValidator.Validate(screenshot),
+                M140VisualScreenshotValidator.Validate(screenshot, scenarioId),
                 options.enforceTiming));
         }
 
@@ -264,15 +266,22 @@ namespace Hollow.Performance
             stressOptions.enforceFrameTimingWhenTrusted = options.enforceTiming && options.IsDevelopment;
 
             M138CombatScaleStressScenarioSummary stressSummary = null;
-            yield return M138CombatScaleStressRunner.RunScenario(scenario, stressOptions, summary => stressSummary = summary);
-            yield return new WaitForEndOfFrame();
-            var screenshot = CaptureScreenshot(scenarioId, options);
+            CapturedScenarioEvidence evidence = null;
+            yield return M138CombatScaleStressRunner.RunScenario(
+                scenario,
+                stressOptions,
+                summary => stressSummary = summary,
+                () => CaptureScenarioEvidence(scenarioId, options, next => evidence = next));
+            var screenshot = !string.IsNullOrWhiteSpace(evidence?.screenshotPath)
+                ? evidence.screenshotPath
+                : CaptureScreenshot(scenarioId, options);
             onComplete?.Invoke(M140BuildRealReportGenerator.FromM138Summary(
                 stressSummary,
                 options.platformId,
                 options.buildKind,
-                M140VisualScreenshotValidator.Validate(screenshot),
-                options.enforceTiming && options.IsDevelopment));
+                M140VisualScreenshotValidator.Validate(screenshot, scenarioId),
+                options.enforceTiming && options.IsDevelopment,
+                evidence?.objectSnapshot));
         }
 
         private IEnumerator RunM139Scenario(M140BuiltPlayerCaptureOptions options, Action<M140ScenarioSummary> onComplete)
@@ -280,16 +289,28 @@ namespace Hollow.Performance
             var jsonPath = Path.Combine(options.ResolvedOutputRoot, "long_run_smoke_m139.json");
             var markdownPath = Path.Combine(options.ResolvedOutputRoot, "long_run_smoke_m139.md");
             M139LongRunSoakReport soakReport = null;
+            CapturedScenarioEvidence evidence = null;
             yield return M139LongRunSoakRunner.RunAllScenarios(
                 M139LongRunSoakOptions.SmokeGate(jsonPath, markdownPath),
-                report => soakReport = report);
-            yield return new WaitForEndOfFrame();
-            var screenshot = CaptureScreenshot("long_run_smoke", options);
+                report => soakReport = report,
+                beforeScenarioCleanup: _ =>
+                {
+                    if (evidence != null)
+                    {
+                        return null;
+                    }
+
+                    return CaptureScenarioEvidence("long_run_smoke", options, next => evidence = next);
+                });
+            var screenshot = !string.IsNullOrWhiteSpace(evidence?.screenshotPath)
+                ? evidence.screenshotPath
+                : CaptureScreenshot("long_run_smoke", options);
             onComplete?.Invoke(M140BuildRealReportGenerator.FromM139Report(
                 soakReport,
                 options.platformId,
                 options.buildKind,
-                M140VisualScreenshotValidator.Validate(screenshot)));
+                M140VisualScreenshotValidator.Validate(screenshot, "long_run_smoke"),
+                evidence?.objectSnapshot));
         }
 
         private IEnumerator RunBranchBackedScenario(string scenarioId, M140BuiltPlayerCaptureOptions options, Action<M140ScenarioSummary> onComplete)
@@ -311,16 +332,46 @@ namespace Hollow.Performance
             soakOptions.enforceTiming = false;
 
             M139LongRunSoakScenarioSummary soakSummary = null;
-            yield return M139LongRunSoakRunner.RunScenario(branchScenario, soakOptions, summary => soakSummary = summary);
-            yield return new WaitForEndOfFrame();
-            var screenshot = CaptureScreenshot(scenarioId, options);
+            CapturedScenarioEvidence evidence = null;
+            yield return M139LongRunSoakRunner.RunScenario(
+                branchScenario,
+                soakOptions,
+                summary => soakSummary = summary,
+                () => CaptureScenarioEvidence(scenarioId, options, next => evidence = next));
+            var screenshot = !string.IsNullOrWhiteSpace(evidence?.screenshotPath)
+                ? evidence.screenshotPath
+                : CaptureScreenshot(scenarioId, options);
             onComplete?.Invoke(M140BuildRealReportGenerator.FromM139ScenarioSummary(
                 scenarioId,
                 displayName,
                 soakSummary,
                 options.platformId,
                 options.buildKind,
-                M140VisualScreenshotValidator.Validate(screenshot)));
+                M140VisualScreenshotValidator.Validate(screenshot, scenarioId),
+                evidence?.objectSnapshot));
+        }
+
+        private IEnumerator CaptureScenarioEvidence(
+            string scenarioId,
+            M140BuiltPlayerCaptureOptions options,
+            Action<CapturedScenarioEvidence> onCaptured)
+        {
+            ScenarioCanvasScope canvasScope = null;
+            try
+            {
+                canvasScope = ScenarioCanvasScope.Begin(M140BuildRealReportGenerator.RequiresGameplayEvidence(scenarioId));
+                yield return new WaitForEndOfFrame();
+                var evidence = new CapturedScenarioEvidence
+                {
+                    objectSnapshot = CollectObjectSnapshot(),
+                    screenshotPath = CaptureScreenshot(scenarioId, options)
+                };
+                onCaptured?.Invoke(evidence);
+            }
+            finally
+            {
+                canvasScope?.Dispose();
+            }
         }
 
         private static string CaptureScreenshot(string scenarioId, M140BuiltPlayerCaptureOptions options)
@@ -389,6 +440,76 @@ namespace Hollow.Performance
                 observedBoss = observedBoss,
                 source = "m140-built-player"
             };
+        }
+
+        private sealed class CapturedScenarioEvidence
+        {
+            public string screenshotPath;
+            public M136LiveObjectCountSnapshot objectSnapshot;
+        }
+
+        private sealed class ScenarioCanvasScope : IDisposable
+        {
+            private readonly List<Canvas> disabledCanvases = new();
+
+            private ScenarioCanvasScope()
+            {
+            }
+
+            public static ScenarioCanvasScope Begin(bool disableUiCanvases)
+            {
+                var scope = new ScenarioCanvasScope();
+                if (!disableUiCanvases)
+                {
+                    return scope;
+                }
+
+                var canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude);
+                for (var index = 0; index < canvases.Length; index++)
+                {
+                    var canvas = canvases[index];
+                    if (canvas == null || !canvas.enabled || !LooksLikeMenuOverlay(canvas.transform))
+                    {
+                        continue;
+                    }
+
+                    canvas.enabled = false;
+                    scope.disabledCanvases.Add(canvas);
+                }
+
+                return scope;
+            }
+
+            private static bool LooksLikeMenuOverlay(Transform transform)
+            {
+                while (transform != null)
+                {
+                    var name = transform.name ?? string.Empty;
+                    if (name.IndexOf("MainMenu", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        name.IndexOf("MenuRoot", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return true;
+                    }
+
+                    transform = transform.parent;
+                }
+
+                return false;
+            }
+
+            public void Dispose()
+            {
+                for (var index = 0; index < disabledCanvases.Count; index++)
+                {
+                    var canvas = disabledCanvases[index];
+                    if (canvas != null)
+                    {
+                        canvas.enabled = true;
+                    }
+                }
+
+                disabledCanvases.Clear();
+            }
         }
 
         private static string DisplayNameFor(string scenarioId)

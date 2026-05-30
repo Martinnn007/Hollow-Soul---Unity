@@ -175,6 +175,7 @@ namespace Hollow.Performance
         public int height;
         public float averageLuminance;
         public float darkPixelRatio;
+        public float brightPixelRatio;
         public float hotPinkPixelRatio;
         public bool passed;
         public string[] failures = Array.Empty<string>();
@@ -190,6 +191,7 @@ namespace Hollow.Performance
         public int materialIssueCount;
         public int addressablesIssueCount;
         public int exceptionCount;
+        public int missingScriptWarningCount;
         public bool passed;
         public string[] failures = Array.Empty<string>();
     }
@@ -320,9 +322,15 @@ namespace Hollow.Performance
     {
         public const float MinimumAverageLuminance = 0.10f;
         public const float MaximumDarkPixelRatio = 0.92f;
+        public const float MinimumScenarioBrightPixelRatio = 0.002f;
         public const float MaximumHotPinkPixelRatio = 0.03f;
 
         public static M140VisualValidationSummary Validate(string screenshotPath)
+        {
+            return Validate(screenshotPath, string.Empty);
+        }
+
+        public static M140VisualValidationSummary Validate(string screenshotPath, string scenarioId)
         {
             var summary = new M140VisualValidationSummary
             {
@@ -352,14 +360,22 @@ namespace Hollow.Performance
                     summary.width = texture.width;
                     summary.height = texture.height;
                     Analyze(texture, summary);
-                    if (summary.averageLuminance < MinimumAverageLuminance)
+                    var strictBrightness = string.IsNullOrWhiteSpace(scenarioId);
+                    if (strictBrightness && summary.averageLuminance < MinimumAverageLuminance)
                     {
                         failures.Add($"Screenshot average luminance {summary.averageLuminance:0.000} is below {MinimumAverageLuminance:0.00}.");
                     }
 
-                    if (summary.darkPixelRatio > MaximumDarkPixelRatio)
+                    if (strictBrightness && summary.darkPixelRatio > MaximumDarkPixelRatio)
                     {
                         failures.Add($"Screenshot dark-pixel ratio {summary.darkPixelRatio:P1} exceeds {MaximumDarkPixelRatio:P0}.");
+                    }
+
+                    if (!strictBrightness &&
+                        summary.averageLuminance < 0.015f &&
+                        summary.brightPixelRatio < MinimumScenarioBrightPixelRatio)
+                    {
+                        failures.Add("Screenshot appears blank or fully black for the scenario.");
                     }
 
                     if (summary.hotPinkPixelRatio > MaximumHotPinkPixelRatio)
@@ -393,6 +409,7 @@ namespace Hollow.Performance
         {
             var total = 0;
             var dark = 0;
+            var bright = 0;
             var hotPink = 0;
             var luminanceSum = 0f;
             var stepX = Mathf.Max(1, texture.width / 64);
@@ -410,6 +427,11 @@ namespace Hollow.Performance
                         dark++;
                     }
 
+                    if (luminance > 0.32f)
+                    {
+                        bright++;
+                    }
+
                     if (color.r > 0.82f && color.g < 0.28f && color.b > 0.82f)
                     {
                         hotPink++;
@@ -419,6 +441,7 @@ namespace Hollow.Performance
 
             summary.averageLuminance = total <= 0 ? 0f : luminanceSum / total;
             summary.darkPixelRatio = total <= 0 ? 1f : dark / (float)total;
+            summary.brightPixelRatio = total <= 0 ? 0f : bright / (float)total;
             summary.hotPinkPixelRatio = total <= 0 ? 0f : hotPink / (float)total;
         }
     }
@@ -458,6 +481,13 @@ namespace Hollow.Performance
             "could not be loaded"
         };
 
+        private static readonly string[] MissingScriptTokens =
+        {
+            "The referenced script",
+            "referenced script on this Behaviour",
+            "Behaviour is missing"
+        };
+
         public static M140PlayerLogValidationSummary Validate(string logPath)
         {
             var summary = new M140PlayerLogValidationSummary
@@ -476,7 +506,12 @@ namespace Hollow.Performance
             summary.shaderIssueCount = CountTokens(text, ShaderTokens);
             summary.materialIssueCount = CountTokens(text, MaterialTokens);
             summary.addressablesIssueCount = CountTokens(text, AddressablesTokens);
-            summary.errorCount = summary.exceptionCount + summary.shaderIssueCount + summary.materialIssueCount + summary.addressablesIssueCount;
+            summary.missingScriptWarningCount = CountTokens(text, MissingScriptTokens);
+            summary.errorCount = summary.exceptionCount +
+                summary.shaderIssueCount +
+                summary.materialIssueCount +
+                summary.addressablesIssueCount +
+                summary.missingScriptWarningCount;
             var failures = new List<string>();
             if (summary.exceptionCount > 0)
             {
@@ -496,6 +531,11 @@ namespace Hollow.Performance
             if (summary.addressablesIssueCount > 0)
             {
                 failures.Add($"Player log contains {summary.addressablesIssueCount} Addressables/content issue entries.");
+            }
+
+            if (summary.missingScriptWarningCount > 0)
+            {
+                failures.Add($"Player log contains {summary.missingScriptWarningCount} missing-script warning entries.");
             }
 
             summary.failures = failures.ToArray();
@@ -642,7 +682,8 @@ namespace Hollow.Performance
             string platformId,
             string buildKind,
             M140VisualValidationSummary visual,
-            bool enforceTiming)
+            bool enforceTiming,
+            M136LiveObjectCountSnapshot objectEvidence = null)
         {
             var summary = BaseScenario(stress?.scenarioId, stress?.displayName, platformId, buildKind, visual);
             if (stress == null)
@@ -666,6 +707,7 @@ namespace Hollow.Performance
             summary.runtimeNavMeshFallbacks = stress.runtimeNavMeshFallbacks;
             summary.m138GatePassed = stress.passed;
             summary.note = stress.note ?? "M138 stress scenario reused by M140 built-player gate.";
+            ApplyObjectEvidence(summary, objectEvidence);
             EvaluateScenario(summary, enforceTiming);
             if (!stress.passed)
             {
@@ -685,7 +727,8 @@ namespace Hollow.Performance
             M139LongRunSoakReport soakReport,
             string platformId,
             string buildKind,
-            M140VisualValidationSummary visual)
+            M140VisualValidationSummary visual,
+            M136LiveObjectCountSnapshot objectEvidence = null)
         {
             var summary = BaseScenario("long_run_smoke", "Long-Run Smoke", platformId, buildKind, visual);
             if (soakReport == null)
@@ -716,6 +759,7 @@ namespace Hollow.Performance
 
             summary.m139GatePassed = soakReport.passed;
             summary.note = "M139 CI smoke reused by M140 built-player gate.";
+            ApplyObjectEvidence(summary, objectEvidence);
             EvaluateScenario(summary, enforceTiming: false);
             if (!soakReport.passed)
             {
@@ -732,7 +776,8 @@ namespace Hollow.Performance
             M139LongRunSoakScenarioSummary soak,
             string platformId,
             string buildKind,
-            M140VisualValidationSummary visual)
+            M140VisualValidationSummary visual,
+            M136LiveObjectCountSnapshot objectEvidence = null)
         {
             var summary = BaseScenario(scenarioId, displayName, platformId, buildKind, visual);
             if (soak == null)
@@ -756,6 +801,7 @@ namespace Hollow.Performance
             summary.runtimePoolHardInstantiatesAfterWarmup = soak.runtimePoolHardInstantiatesAfterWarmup;
             summary.m139GatePassed = soak.passed;
             summary.note = $"Branch-backed M139 smoke slice `{soak.scenarioId}` reused by M140.";
+            ApplyObjectEvidence(summary, objectEvidence);
             EvaluateScenario(summary, enforceTiming: false);
             if (!soak.passed)
             {
@@ -801,6 +847,23 @@ namespace Hollow.Performance
             if (playerLog != null && !playerLog.passed)
             {
                 failures.Add($"Player log failed validation: {string.Join("; ", playerLog.failures ?? Array.Empty<string>())}");
+            }
+
+            if (renderRuntime == null)
+            {
+                failures.Add("Render runtime snapshot is missing.");
+            }
+            else
+            {
+                if (renderRuntime.targetFrameRate != TargetFrameRate)
+                {
+                    failures.Add($"M140 runtime target FPS is {renderRuntime.targetFrameRate}; expected {TargetFrameRate} while capture override is active.");
+                }
+
+                if (renderRuntime.vSyncCount != 0)
+                {
+                    failures.Add($"M140 runtime vSyncCount is {renderRuntime.vSyncCount}; expected 0 for deterministic capture FPS policy.");
+                }
             }
 
             if (string.Equals(platformId, "macos-apple-silicon", StringComparison.Ordinal) &&
@@ -892,7 +955,7 @@ namespace Hollow.Performance
                 builder.AppendLine($"- Gates: nav fallback {scenario.runtimeNavMeshFallbacks}, cold misses {scenario.normalTraversalColdCacheMissesAfterLoad}, curtain after-ready {scenario.transitionCurtainMaxFramesAfterReady}, shader misses {scenario.shaderMaterialFirstUseMissesAfterLoad}");
                 if (scenario.visual != null)
                 {
-                    builder.AppendLine($"- Screenshot: `{scenario.visual.screenshotPath}` luminance {scenario.visual.averageLuminance:0.000}, dark {scenario.visual.darkPixelRatio:P1}, hot-pink {scenario.visual.hotPinkPixelRatio:P1}");
+                    builder.AppendLine($"- Screenshot: `{scenario.visual.screenshotPath}` luminance {scenario.visual.averageLuminance:0.000}, dark {scenario.visual.darkPixelRatio:P1}, bright {scenario.visual.brightPixelRatio:P1}, hot-pink {scenario.visual.hotPinkPixelRatio:P1}");
                 }
 
                 foreach (var failure in scenario.failures ?? Array.Empty<string>())
@@ -968,6 +1031,24 @@ namespace Hollow.Performance
                 failures.Add($"Post-warmup hard instantiates enemy/runtime {summary.enemyPoolHardInstantiatesAfterWarmup}/{summary.runtimePoolHardInstantiatesAfterWarmup}; expected 0.");
             }
 
+            if (RequiresGameplayEvidence(summary.scenarioId))
+            {
+                if (summary.peakRenderers <= 0)
+                {
+                    failures.Add("Gameplay scenario captured no active renderers; screenshot was likely taken after cleanup or outside gameplay.");
+                }
+
+                if (!summary.observedCombatController)
+                {
+                    failures.Add("Gameplay scenario did not observe a RoomCombatController before screenshot capture.");
+                }
+
+                if (RequiresBranchEvidence(summary.scenarioId) && !summary.observedBranchSession)
+                {
+                    failures.Add("Branch-backed gameplay scenario did not observe a BranchSessionController before screenshot capture.");
+                }
+            }
+
             if (enforceTiming && summary.timingAuthoritative && summary.frameP95Ms > FrameP95BudgetMs)
             {
                 failures.Add($"Frame p95 {summary.frameP95Ms:0.00} ms exceeds {FrameP95BudgetMs:0.0} ms.");
@@ -980,6 +1061,36 @@ namespace Hollow.Performance
 
             summary.failures = failures.ToArray();
             summary.passed = failures.Count == 0;
+        }
+
+        public static bool RequiresGameplayEvidence(string scenarioId)
+        {
+            return !string.Equals(scenarioId, "boot_loading_screen", StringComparison.Ordinal);
+        }
+
+        private static bool RequiresBranchEvidence(string scenarioId)
+        {
+            return scenarioId is "branch_entry_loading" or
+                "normal_traversal" or
+                "return_to_previous_room" or
+                "reward_room" or
+                "long_run_smoke" or
+                "next_branch_entry";
+        }
+
+        private static void ApplyObjectEvidence(M140ScenarioSummary summary, M136LiveObjectCountSnapshot objectEvidence)
+        {
+            if (summary == null || objectEvidence == null)
+            {
+                return;
+            }
+
+            summary.peakActiveEnemies = Math.Max(summary.peakActiveEnemies, objectEvidence.activeEnemies);
+            summary.peakProjectiles = Math.Max(summary.peakProjectiles, objectEvidence.activeProjectiles);
+            summary.peakRenderers = Math.Max(summary.peakRenderers, objectEvidence.activeRenderers);
+            summary.observedBranchSession |= objectEvidence.observedBranchSession;
+            summary.observedCombatController |= objectEvidence.observedCombatController;
+            summary.observedBoss |= objectEvidence.observedBoss;
         }
 
         private static void AppendFailure(M140ScenarioSummary summary, string failure)

@@ -1446,7 +1446,15 @@ namespace Hollow.Branches
             }
 
             yield return HollowRuntimePool.WarmPrimitivePool("VFX.DoorUnlock.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool("EnemyProjectile.Fallback", PrimitiveType.Sphere, 48, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool("EnemyProjectile.Boss.Fallback", PrimitiveType.Sphere, 24, 4);
             yield return HollowRuntimePool.WarmPrimitivePool("Pickup.Coin.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool($"Pickup.{MaterialRole.RewardPickup}.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool($"Pickup.{MaterialRole.BossKeyPickup}.Fallback", PrimitiveType.Cube, 4, 2);
+            yield return HollowRuntimePool.WarmPrimitivePool($"Pickup.{MaterialRole.HazardCoinDrop}.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool($"Pickup.{MaterialRole.CoinCopper}.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool($"Pickup.{MaterialRole.CoinSilver}.Fallback", PrimitiveType.Sphere, 16, 4);
+            yield return HollowRuntimePool.WarmPrimitivePool($"Pickup.{MaterialRole.CoinGold}.Fallback", PrimitiveType.Sphere, 16, 4);
             yield return HollowRuntimePool.WarmGeneratedPool("Audio.DoorUnlock", 12, () => new GameObject("Audio.DoorUnlock", typeof(AudioSource)), 4);
         }
 

@@ -20,6 +20,7 @@ namespace Hollow.Combat
         public int returns;
         public int misses;
         public int hardInstantiates;
+        public string[] recentMissKeys = Array.Empty<string>();
     }
 
     public static class EnemyRuntimePool
@@ -32,6 +33,7 @@ namespace Hollow.Combat
 
         private static readonly Dictionary<string, Pool> Pools = new(StringComparer.Ordinal);
         private static readonly Dictionary<EnemyRuntimeController, string> KeyByEnemy = new();
+        private static readonly Dictionary<string, int> MissesByKey = new(StringComparer.Ordinal);
 
         public static string KeyFor(string branchKey, GameObject prefab, string spawnKind, DifficultyTierDefinition difficultyTier)
         {
@@ -92,6 +94,7 @@ namespace Hollow.Combat
             if (enemy == null)
             {
                 enemy = CreateEnemy(prefab, key);
+                RecordMissKey(key);
                 M136PerformanceOperationCounters.ReportEnemyPoolMiss();
                 M136PerformanceOperationCounters.ReportEnemyPoolHardInstantiate();
             }
@@ -190,6 +193,11 @@ namespace Hollow.Combat
             }
         }
 
+        public static void ResetDiagnostics()
+        {
+            MissesByKey.Clear();
+        }
+
         public static EnemyRuntimePoolSnapshot Snapshot(string branchKey = null)
         {
             var normalizedBranchKey = string.IsNullOrWhiteSpace(branchKey) ? string.Empty : Normalize(branchKey);
@@ -242,7 +250,8 @@ namespace Hollow.Combat
                 rents = counters.EnemyPoolRents,
                 returns = counters.EnemyPoolReturns,
                 misses = counters.EnemyPoolMisses,
-                hardInstantiates = counters.EnemyPoolHardInstantiates
+                hardInstantiates = counters.EnemyPoolHardInstantiates,
+                recentMissKeys = SnapshotMissKeys(normalizedBranchKey)
             };
         }
 
@@ -264,6 +273,39 @@ namespace Hollow.Combat
             }
 
             return pool;
+        }
+
+        private static void RecordMissKey(string key)
+        {
+            key = string.IsNullOrWhiteSpace(key) ? "<unknown>" : key;
+            MissesByKey.TryGetValue(key, out var count);
+            MissesByKey[key] = count + 1;
+        }
+
+        private static string[] SnapshotMissKeys(string branchKey)
+        {
+            if (MissesByKey.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var result = new List<string>(Mathf.Min(32, MissesByKey.Count));
+            foreach (var pair in MissesByKey)
+            {
+                if (!string.IsNullOrWhiteSpace(branchKey) &&
+                    !pair.Key.StartsWith(branchKey, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                result.Add($"{pair.Key}={pair.Value}");
+                if (result.Count >= 32)
+                {
+                    break;
+                }
+            }
+
+            return result.ToArray();
         }
 
         private static string Normalize(string key)

@@ -37,9 +37,13 @@ namespace Hollow.Combat
 
             if (enemy == null ||
                 enemy.ReadabilityState != EnemyReadabilityState.Idle ||
-                timeSeconds >= nextThinkTime ||
                 cachedCommand.Kind == EnemyBehaviorCommandKind.None ||
                 cachedCommand.StartsCommittedAction)
+            {
+                return false;
+            }
+
+            if (timeSeconds >= nextThinkTime)
             {
                 return false;
             }
@@ -59,6 +63,21 @@ namespace Hollow.Combat
         {
             SetLodTier(ResolveLodTier(enemy, distanceToPlayer));
             var thinkInterval = ThinkInterval(enemy, LodTier);
+            if (!EnemyAiThinkBudget.TryAcquireThink(enemy, LodTier))
+            {
+                var fallback = cachedCommand.Kind == EnemyBehaviorCommandKind.None
+                    ? SimplifyForLod(treeCommand, enemy)
+                    : SimplifyForLod(cachedCommand, enemy);
+                nextThinkTime = timeSeconds + 0.025f + ThinkJitter(enemy) * 0.5f;
+                UpdateBlackboard(enemy, treeCommand, fallback, distanceToPlayer, 0f, "ai_think_budget_deferred");
+                if (enemy != null)
+                {
+                    EnemyAiDebugOverlay.RecordCommandReuse(enemy.GetInstanceID(), LodTier);
+                }
+
+                return fallback;
+            }
+
             nextThinkTime = timeSeconds + thinkInterval + ThinkJitter(enemy);
             if (enemy != null)
             {
@@ -234,6 +253,36 @@ namespace Hollow.Combat
             }
 
             LodTier = nextTier;
+        }
+
+        private static class EnemyAiThinkBudget
+        {
+            private static int frame = -1;
+            private static int thinksUsed;
+
+            public static bool TryAcquireThink(EnemyRuntimeController enemy, EnemyAiLodTier tier)
+            {
+                if (enemy != null && enemy.BossDefinition != null)
+                {
+                    return true;
+                }
+
+                var currentFrame = Time.frameCount;
+                if (frame != currentFrame)
+                {
+                    frame = currentFrame;
+                    thinksUsed = 0;
+                }
+
+                var budget = Mathf.Max(1, M137PerformanceComfortPolicy.M3AiThinkBudgetPerFrame);
+                if (thinksUsed >= budget)
+                {
+                    return false;
+                }
+
+                thinksUsed++;
+                return true;
+            }
         }
 
         private void UpdateBlackboard(

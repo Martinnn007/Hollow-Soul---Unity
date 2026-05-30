@@ -37,7 +37,8 @@ namespace Hollow.Performance
         public static IEnumerator RunAllScenarios(
             M139LongRunSoakOptions options,
             Action<M139LongRunSoakReport> onComplete = null,
-            Action<M139LongRunSoakScenarioSummary> onScenarioComplete = null)
+            Action<M139LongRunSoakScenarioSummary> onScenarioComplete = null,
+            Func<M139SoakScenarioDefinition, IEnumerator> beforeScenarioCleanup = null)
         {
             options ??= M139LongRunSoakOptions.FullGate();
             var summaries = new List<M139LongRunSoakScenarioSummary>();
@@ -47,7 +48,11 @@ namespace Hollow.Performance
                 for (var index = 0; index < Scenarios.Length; index++)
                 {
                     M139LongRunSoakScenarioSummary summary = null;
-                    yield return RunScenario(Scenarios[index], options, next => summary = next);
+                    yield return RunScenario(
+                        Scenarios[index],
+                        options,
+                        next => summary = next,
+                        beforeScenarioCleanup != null ? () => beforeScenarioCleanup(Scenarios[index]) : null);
                     if (summary != null)
                     {
                         summaries.Add(summary);
@@ -72,7 +77,8 @@ namespace Hollow.Performance
         public static IEnumerator RunScenario(
             M139SoakScenarioDefinition scenario,
             M139LongRunSoakOptions options,
-            Action<M139LongRunSoakScenarioSummary> onComplete)
+            Action<M139LongRunSoakScenarioSummary> onComplete,
+            Func<IEnumerator> beforeCleanup = null)
         {
             if (scenario == null)
             {
@@ -81,6 +87,8 @@ namespace Hollow.Performance
 
             options ??= M139LongRunSoakOptions.FullGate();
             M136PerformanceOperationCounters.Reset();
+            EnemyRuntimePool.ResetDiagnostics();
+            Hollow.Core.HollowRuntimePool.ResetDiagnostics();
             using var sampler = new M139SoakSampler();
             sampler.Begin();
             var gateCounters = new M139AfterWarmupGateCounters();
@@ -95,6 +103,7 @@ namespace Hollow.Performance
             {
                 yield return harness.InitializeFreshAndWait(sampler);
                 warmupBaseline = M136PerformanceOperationCounters.Snapshot();
+                sampler.MarkGateBaseline();
 
                 var branchCount = scenario.includeMultiBranch ? Mathf.Max(1, options.branches) : 1;
                 for (var branchIndex = 0; branchIndex < branchCount; branchIndex++)
@@ -165,8 +174,30 @@ namespace Hollow.Performance
                     nextBranchTransitions++;
                 }
 
+                if (beforeCleanup != null)
+                {
+                    sampler.SuppressSamplesFor(4);
+                    var cleanupRoutine = beforeCleanup();
+                    if (cleanupRoutine != null)
+                    {
+                        yield return cleanupRoutine;
+                    }
+
+                    sampler.SuppressSamplesFor(2);
+                }
+
                 harness.ForceCleanupCurrentRoom();
+                sampler.SuppressSamplesFor(3);
                 yield return TickFrames(sampler, 3);
+                var unload = Resources.UnloadUnusedAssets();
+                while (unload != null && !unload.isDone)
+                {
+                    yield return null;
+                }
+
+                GC.Collect();
+                sampler.SuppressSamplesFor(2);
+                yield return TickFrames(sampler, 2);
                 var finalSnapshot = M136PerformanceOperationCounters.Snapshot();
                 var enemyPool = EnemyRuntimePool.Snapshot(harness.Branch.ActiveBranchEnemyPoolKey);
                 var runtimePool = Hollow.Core.HollowRuntimePool.Snapshot();
@@ -241,6 +272,9 @@ namespace Hollow.Performance
 
         private sealed class M139BranchSoakHarness
         {
+            private const string CatalogResourcePath = "Hollow/Branches/M139BranchRoomTemplateCatalog";
+            private const string SingleRoomPath = "Assets/_Hollow/Data/Rooms/MacroFixtures/combat_macro_single_1x1.hollowruntime.json";
+
             private BranchConnection preparedConnection;
 
             private M139BranchSoakHarness(
@@ -270,6 +304,7 @@ namespace Hollow.Performance
             public static M139BranchSoakHarness Create(string scenarioId)
             {
                 var root = new GameObject($"M139_{scenarioId}_BranchSoakHarness");
+                CreateCaptureCamera(root.transform);
                 var roomObject = new GameObject("RoomRuntimeRoot");
                 roomObject.transform.SetParent(root.transform, false);
                 roomObject.AddComponent<RoomRuntimeRoot>();
@@ -320,17 +355,42 @@ namespace Hollow.Performance
 
                 var combat = root.AddComponent<RoomCombatController>();
                 combat.Configure(enemyPrefab, projectilePrefab, EnemyCatalog.CreateRuntimeDefault(), DifficultyTierDefinition.CreateRuntimeDeveloperSample());
+                combat.ConfigureAutoInitialize(false);
 
                 var branch = root.AddComponent<BranchSessionController>();
+                var templateCatalog = LoadMacroCatalog();
                 branch.Configure(rewardPrefab, hubPortalPrefab);
                 branch.ConfigureBranchFeaturePrefabs(bossKeyPrefab, null, nextPortalPrefab);
-                branch.ConfigureTemplateCatalog(CreateMacroCatalog(), BranchGenerator.DefaultSeededMacroSeed);
+                branch.ConfigureTemplateCatalog(templateCatalog, templateCatalog.DefaultSeed);
                 branch.ConfigureGenerationSettings(CreateGenerationSettings());
                 branch.ConfigureBossCatalog(BossCatalogDefinition.CreateRuntimeDefault());
 
-                var roomAsset = ImportRoomAsset("Assets/_Hollow/Data/Rooms/MacroFixtures/combat_macro_single_1x1.hollowruntime.json");
+                var roomAsset = ImportRoomAsset(templateCatalog.Single1x1);
                 var sessionState = GameSessionState.Create(RuntimeSessionMode.ProfileBacked, HollowPlatformKind.WindowsStandard3D, null, Vector3.zero);
                 return new M139BranchSoakHarness(root, roomAsset, sessionState, branch, combat);
+            }
+
+            private static void CreateCaptureCamera(Transform parent)
+            {
+                var lightObject = new GameObject("M139.CaptureLight");
+                lightObject.transform.SetParent(parent, false);
+                lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+                var light = lightObject.AddComponent<Light>();
+                light.type = LightType.Directional;
+                light.intensity = 1.15f;
+
+                var cameraObject = new GameObject("M139.CaptureCamera");
+                cameraObject.transform.SetParent(parent, false);
+                cameraObject.transform.position = new Vector3(0f, 18f, -12f);
+                cameraObject.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
+                var camera = cameraObject.AddComponent<Camera>();
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color(0.035f, 0.04f, 0.05f, 1f);
+                camera.orthographic = true;
+                camera.orthographicSize = 9f;
+                camera.nearClipPlane = 0.1f;
+                camera.farClipPlane = 80f;
+                camera.depth = 1000f;
             }
 
             public IEnumerator InitializeFreshAndWait(M139SoakSampler sampler)
@@ -462,11 +522,29 @@ namespace Hollow.Performance
                 return null;
             }
 
-            private static BranchRoomTemplateCatalogDefinition CreateMacroCatalog()
+            private static BranchRoomTemplateCatalogDefinition LoadMacroCatalog()
+            {
+                var catalog = Resources.Load<BranchRoomTemplateCatalogDefinition>(CatalogResourcePath);
+                if (catalog != null && catalog.Single1x1 != null)
+                {
+                    return catalog;
+                }
+
+                if (File.Exists(SingleRoomPath))
+                {
+                    return CreateMacroCatalogFromLooseFiles();
+                }
+
+                throw new InvalidOperationException(
+                    $"M139 branch soak requires the packaged room template catalog at Resources/{CatalogResourcePath}. " +
+                    "The built player cannot read project-relative Assets/_Hollow/Data room JSON files.");
+            }
+
+            private static BranchRoomTemplateCatalogDefinition CreateMacroCatalogFromLooseFiles()
             {
                 var catalog = ScriptableObject.CreateInstance<BranchRoomTemplateCatalogDefinition>();
                 catalog.Configure(
-                    LoadTextAsset("Assets/_Hollow/Data/Rooms/MacroFixtures/combat_macro_single_1x1.hollowruntime.json"),
+                    LoadTextAsset(SingleRoomPath),
                     LoadTextAsset("Assets/_Hollow/Data/Rooms/MacroFixtures/combat_macro_wide_2x1.hollowruntime.json"),
                     LoadTextAsset("Assets/_Hollow/Data/Rooms/MacroFixtures/combat_macro_tall_1x2.hollowruntime.json"),
                     LoadTextAsset("Assets/_Hollow/Data/Rooms/MacroFixtures/combat_macro_block_2x2.hollowruntime.json"),
@@ -506,13 +584,23 @@ namespace Hollow.Performance
                 return settings;
             }
 
-            private static ImportedRoomRuntimeAsset ImportRoomAsset(string path)
+            private static ImportedRoomRuntimeAsset ImportRoomAsset(TextAsset asset)
             {
-                return HollowRuntimeV2Importer.Import(File.ReadAllText(path));
+                if (asset == null)
+                {
+                    throw new InvalidOperationException("M139 branch soak room asset is missing from the packaged template catalog.");
+                }
+
+                return HollowRuntimeV2Importer.Import(asset.text);
             }
 
             private static TextAsset LoadTextAsset(string path)
             {
+                if (!File.Exists(path))
+                {
+                    throw new FileNotFoundException($"M139 branch soak room fixture is missing: {path}", path);
+                }
+
                 var text = File.ReadAllText(path);
                 var asset = new TextAsset(text)
                 {
@@ -532,6 +620,8 @@ namespace Hollow.Performance
         private ProfilerRecorder gcRecorder;
         private ProfilerRecorder managedRecorder;
         private ProfilerRecorder graphicsRecorder;
+        private int gateBaselineIndex;
+        private int suppressedSampleFrames;
 
         public void Begin()
         {
@@ -540,8 +630,24 @@ namespace Hollow.Performance
             TryStart(ref graphicsRecorder, ProfilerCategory.Memory, "Gfx Used Memory");
         }
 
+        public void MarkGateBaseline()
+        {
+            gateBaselineIndex = frameMs.Count;
+        }
+
+        public void SuppressSamplesFor(int frames)
+        {
+            suppressedSampleFrames = Mathf.Max(suppressedSampleFrames, Mathf.Max(0, frames));
+        }
+
         public void Tick()
         {
+            if (suppressedSampleFrames > 0)
+            {
+                suppressedSampleFrames--;
+                return;
+            }
+
             frameMs.Add(Mathf.Max(0f, Time.unscaledDeltaTime) * 1000d);
             if (gcRecorder.Valid)
             {
@@ -565,13 +671,17 @@ namespace Hollow.Performance
 
         public M139SoakMetricSummary BuildSummary()
         {
+            var frameWindow = Window(frameMs);
+            var gcWindow = Window(gcBytes);
+            var managedWindow = Window(managedMb);
+            var graphicsWindow = Window(graphicsMb);
             return new M139SoakMetricSummary
             {
-                FrameP95Ms = Percentile(frameMs, 0.95d),
-                FrameMaxMs = frameMs.Count > 0 ? frameMs.Max() : 0d,
-                RecurringGcP95Bytes = Percentile(gcBytes, 0.95d),
-                ManagedMemoryDriftMb = Drift(managedMb),
-                GraphicsMemoryDriftMb = Drift(graphicsMb)
+                FrameP95Ms = Percentile(frameWindow, 0.95d),
+                FrameMaxMs = frameWindow.Count > 0 ? frameWindow.Max() : 0d,
+                RecurringGcP95Bytes = Percentile(gcWindow, 0.95d),
+                ManagedMemoryDriftMb = Drift(managedWindow),
+                GraphicsMemoryDriftMb = Drift(graphicsWindow)
             };
         }
 
@@ -604,6 +714,17 @@ namespace Hollow.Performance
             var sorted = values.OrderBy(value => value).ToArray();
             var index = Mathf.Clamp((int)Math.Ceiling(percentile * sorted.Length) - 1, 0, sorted.Length - 1);
             return sorted[index];
+        }
+
+        private List<double> Window(List<double> values)
+        {
+            if (values == null || values.Count == 0)
+            {
+                return new List<double>();
+            }
+
+            var start = Mathf.Clamp(gateBaselineIndex, 0, values.Count - 1);
+            return start <= 0 ? values : values.GetRange(start, values.Count - start);
         }
 
         private static double Drift(List<double> values)

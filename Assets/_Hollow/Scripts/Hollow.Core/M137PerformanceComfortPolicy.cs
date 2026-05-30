@@ -20,6 +20,7 @@ namespace Hollow.Core.Diagnostics
         public const int M3ReducedThreatThinkMinHz = 3;
         public const int M3BackgroundThinkMaxHz = 2;
         public const int M3BackgroundThinkMinHz = 1;
+        public const int M3AiThinkBudgetPerFrame = 6;
         public const int M3NavMeshPathSolveBudgetPerFrame = 4;
         public const int CaptureDefaultMaxSampleHz = 240;
         public const float WallVisibilityCameraAngleThresholdDegrees = 2f;

@@ -20,6 +20,7 @@ namespace Hollow.Core
         public int hardInstantiates;
         public int warmRequests;
         public int warmCompletions;
+        public string[] recentMissKeys = Array.Empty<string>();
     }
 
     public interface IPooledRuntimeObject
@@ -39,6 +40,7 @@ namespace Hollow.Core
         private static readonly Dictionary<string, Stack<GameObject>> GeneratedPools = new(StringComparer.Ordinal);
         private static readonly Dictionary<GameObject, GameObject> PrefabByInstance = new();
         private static readonly Dictionary<GameObject, string> GeneratedKeyByInstance = new();
+        private static readonly Dictionary<string, int> MissesByKey = new(StringComparer.Ordinal);
         private static readonly HashSet<GameObject> ActiveInstances = new();
         private static RuntimePoolRunner runner;
 
@@ -71,6 +73,7 @@ namespace Hollow.Core
             {
                 instance = UnityEngine.Object.Instantiate(prefab, parent);
                 PrefabByInstance[instance] = prefab;
+                RecordMissKey($"prefab:{prefab.name}");
                 M136PerformanceOperationCounters.ReportRuntimePoolMiss();
                 M136PerformanceOperationCounters.ReportRuntimePoolHardInstantiate();
             }
@@ -119,6 +122,7 @@ namespace Hollow.Core
                 }
 
                 GeneratedKeyByInstance[instance] = key;
+                RecordMissKey($"generated:{key}");
                 M136PerformanceOperationCounters.ReportRuntimePoolMiss();
                 M136PerformanceOperationCounters.ReportRuntimePoolHardInstantiate();
             }
@@ -216,6 +220,11 @@ namespace Hollow.Core
         public static IEnumerator WarmPrimitivePool(string key, PrimitiveType primitiveType, int count, int perFrame = 4)
         {
             yield return WarmGeneratedPool(key, count, () => GameObject.CreatePrimitive(primitiveType), perFrame);
+        }
+
+        public static void ResetDiagnostics()
+        {
+            MissesByKey.Clear();
         }
 
         public static void Return(GameObject instance)
@@ -357,8 +366,36 @@ namespace Hollow.Core
                 misses = counters.RuntimePoolMisses,
                 hardInstantiates = counters.RuntimePoolHardInstantiates,
                 warmRequests = counters.RuntimePoolWarmRequests,
-                warmCompletions = counters.RuntimePoolWarmCompletions
+                warmCompletions = counters.RuntimePoolWarmCompletions,
+                recentMissKeys = SnapshotMissKeys()
             };
+        }
+
+        private static void RecordMissKey(string key)
+        {
+            key = string.IsNullOrWhiteSpace(key) ? "<unknown>" : key;
+            MissesByKey.TryGetValue(key, out var count);
+            MissesByKey[key] = count + 1;
+        }
+
+        private static string[] SnapshotMissKeys()
+        {
+            if (MissesByKey.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var result = new List<string>(Mathf.Min(32, MissesByKey.Count));
+            foreach (var pair in MissesByKey)
+            {
+                result.Add($"{pair.Key}={pair.Value}");
+                if (result.Count >= 32)
+                {
+                    break;
+                }
+            }
+
+            return result.ToArray();
         }
 
         private static int CountLive(Stack<GameObject> pool)

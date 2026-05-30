@@ -109,7 +109,7 @@ namespace Hollow.Tests.EditMode
                 M140BuildKind.Development,
                 tempDirectory,
                 new[] { scenario },
-                new M140RenderRuntimeSnapshot { processorType = "Apple M3", operatingSystem = "macOS" },
+                new M140RenderRuntimeSnapshot { processorType = "Apple M3", operatingSystem = "macOS", targetFrameRate = 60, vSyncCount = 0 },
                 new M140PlayerLogValidationSummary { passed = true });
 
             Assert.IsFalse(report.passed);
@@ -122,7 +122,7 @@ namespace Hollow.Tests.EditMode
         public void PlayerLogValidatorFailsShaderMaterialAddressablesAndExceptions()
         {
             var path = Path.Combine(tempDirectory, "Player.log");
-            File.WriteAllText(path, "NullReferenceException\nShader error\npink material\nAddressables Exception\n");
+            File.WriteAllText(path, "NullReferenceException\nShader error\npink material\nAddressables Exception\nThe referenced script on this Behaviour is missing!\n");
 
             var summary = M140PlayerLogValidator.Validate(path);
 
@@ -131,6 +131,7 @@ namespace Hollow.Tests.EditMode
             Assert.Greater(summary.shaderIssueCount, 0);
             Assert.Greater(summary.materialIssueCount, 0);
             Assert.Greater(summary.addressablesIssueCount, 0);
+            Assert.Greater(summary.missingScriptWarningCount, 0);
         }
 
         [Test]
@@ -143,7 +144,7 @@ namespace Hollow.Tests.EditMode
                 M140BuildKind.Development,
                 source,
                 BuildPassingScenarioSet("windows-x64", M140BuildKind.Development),
-                new M140RenderRuntimeSnapshot(),
+                new M140RenderRuntimeSnapshot { targetFrameRate = 60, vSyncCount = 0 },
                 new M140PlayerLogValidationSummary { passed = true });
             M140BuildRealReportGenerator.WriteReport(
                 report,

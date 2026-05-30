@@ -82,7 +82,8 @@ namespace Hollow.Performance
         public static IEnumerator RunScenario(
             M138CombatScaleStressScenarioDefinition scenario,
             M138CombatScaleStressRunOptions options,
-            Action<M138CombatScaleStressScenarioSummary> onComplete)
+            Action<M138CombatScaleStressScenarioSummary> onComplete,
+            Func<IEnumerator> beforeCleanup = null)
         {
             if (scenario == null)
             {
@@ -108,13 +109,23 @@ namespace Hollow.Performance
                 if (!session.Begin())
                 {
                     var failedResult = BuildFailedScenarioResult(m136Scenario, "M136 telemetry is disabled in this runtime.");
-                    onComplete?.Invoke(M138CombatScaleStressReportGenerator.BuildScenarioSummary(
+                    var failedSummary = M138CombatScaleStressReportGenerator.BuildScenarioSummary(
                         scenario,
                         failedResult,
                         frameBudget,
                         bossFullLodObserved,
                         reducedOrBackgroundAddObserved,
-                        options.enforceFrameTimingWhenTrusted));
+                        options.enforceFrameTimingWhenTrusted);
+                    if (beforeCleanup != null)
+                    {
+                        var cleanupRoutine = beforeCleanup();
+                        if (cleanupRoutine != null)
+                        {
+                            yield return cleanupRoutine;
+                        }
+                    }
+
+                    onComplete?.Invoke(failedSummary);
                     yield break;
                 }
 
@@ -172,13 +183,23 @@ namespace Hollow.Performance
                     fpsOverrideApplied: true,
                     fpsOverrideTarget: options.targetFrameRate,
                     samplingSource: M136FrameCadencePolicy.RuntimeUpdateSamplingSource);
-                onComplete?.Invoke(M138CombatScaleStressReportGenerator.BuildScenarioSummary(
+                var summary = M138CombatScaleStressReportGenerator.BuildScenarioSummary(
                     scenario,
                     result,
                     frameBudget,
                     bossFullLodObserved,
                     reducedOrBackgroundAddObserved,
-                    options.enforceFrameTimingWhenTrusted));
+                    options.enforceFrameTimingWhenTrusted);
+                if (beforeCleanup != null)
+                {
+                    var cleanupRoutine = beforeCleanup();
+                    if (cleanupRoutine != null)
+                    {
+                        yield return cleanupRoutine;
+                    }
+                }
+
+                onComplete?.Invoke(summary);
             }
             finally
             {
@@ -296,6 +317,7 @@ namespace Hollow.Performance
             public static M138StressHarness Create(M138CombatScaleStressScenarioDefinition scenario)
             {
                 var root = new GameObject($"M138StressHarness.{scenario.id}");
+                CreateCaptureCamera(root.transform);
                 var roomObject = new GameObject("M138.RoomRuntimeRoot");
                 roomObject.transform.SetParent(root.transform, false);
                 var room = roomObject.AddComponent<RoomRuntimeRoot>();
@@ -369,6 +391,29 @@ namespace Hollow.Performance
 
                 var projectilePressure = new M138ProjectilePressurePool(root.transform, ProjectilePressurePoolSize);
                 return new M138StressHarness(root, combat, projectilePressure, enemyPrefab, projectilePrefab);
+            }
+
+            private static void CreateCaptureCamera(Transform parent)
+            {
+                var lightObject = new GameObject("M138.CaptureLight");
+                lightObject.transform.SetParent(parent, false);
+                lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+                var light = lightObject.AddComponent<Light>();
+                light.type = LightType.Directional;
+                light.intensity = 1.15f;
+
+                var cameraObject = new GameObject("M138.CaptureCamera");
+                cameraObject.transform.SetParent(parent, false);
+                cameraObject.transform.position = new Vector3(0f, 18f, -12f);
+                cameraObject.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
+                var camera = cameraObject.AddComponent<Camera>();
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color(0.035f, 0.04f, 0.05f, 1f);
+                camera.orthographic = true;
+                camera.orthographicSize = 9f;
+                camera.nearClipPlane = 0.1f;
+                camera.farClipPlane = 80f;
+                camera.depth = 1000f;
             }
 
             public void Destroy()
