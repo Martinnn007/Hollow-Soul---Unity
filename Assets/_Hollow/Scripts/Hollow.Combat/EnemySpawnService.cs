@@ -67,7 +67,8 @@ namespace Hollow.Combat
         public static IEnumerator SpawnEnemiesStaged(
             EnemySpawnRequest request,
             Action<EnemyRuntimeController> onEnemySpawned,
-            int maxEnemiesPerFrame = 2)
+            int maxEnemiesPerFrame = 2,
+            bool activateOnComplete = true)
         {
             if (request.Room?.EnemySpawns == null || request.EnemyPrefab == null || request.Parent == null)
             {
@@ -99,7 +100,7 @@ namespace Hollow.Combat
 
                 var enemyObject = RentOrInstantiateEnemy(request, definition, spawnKind, spawn.id);
                 enemyObject.name = $"Enemy.{definition.ArchetypeId}.{spawn.id}";
-                enemyObject.SetActive(true);
+                enemyObject.SetActive(false);
                 enemyObject.transform.localPosition = spawn.position.ToUnityVector3();
 
                 var enemy = enemyObject.GetComponent<EnemyRuntimeController>() ?? enemyObject.AddComponent<EnemyRuntimeController>();
@@ -129,10 +130,16 @@ namespace Hollow.Combat
                 M136PerformanceOperationCounters.ReportEnemySpawnSlice();
             }
 
+            if (!activateOnComplete)
+            {
+                yield break;
+            }
+
             for (var index = 0; index < spawnedEnemies.Count; index++)
             {
                 if (spawnedEnemies[index] != null)
                 {
+                    spawnedEnemies[index].gameObject.SetActive(true);
                     spawnedEnemies[index].enabled = true;
                 }
             }
@@ -248,7 +255,8 @@ namespace Hollow.Combat
             CombatDiagnosticsModel diagnostics,
             BossCatalogDefinition bossCatalog,
             RoomCombatEncounterContext encounterContext,
-            Action<EnemyRuntimeController> onBossSpawned)
+            Action<EnemyRuntimeController> onBossSpawned,
+            bool activateOnComplete = true)
         {
             if (room == null || enemyPrefab == null || parent == null)
             {
@@ -263,7 +271,7 @@ namespace Hollow.Combat
 
             var enemyObject = UnityEngine.Object.Instantiate(enemyPrefab, parent);
             enemyObject.name = "Enemy.Boss.StoneWarden";
-            enemyObject.SetActive(true);
+            enemyObject.SetActive(false);
             var safeStart = room.LastBuiltAsset?.SafeStart?.position?.ToUnityVector3() ?? Vector3.zero;
             enemyObject.transform.localPosition = RoomLocalCollision.ResolveMoveIgnoringObstacles(room, safeStart + new Vector3(0f, 0f, 1.4f), definition.RadiusMeters);
             M136PerformanceOperationCounters.ReportBossActivationSlice();
@@ -285,6 +293,13 @@ namespace Hollow.Combat
             enemy.ConfigureBoss(bossDefinition);
             diagnostics?.SetEnemyCounts(new EnemyRuntimeController[] { enemy });
             onBossSpawned?.Invoke(enemy);
+            if (!activateOnComplete)
+            {
+                M136PerformanceOperationCounters.ReportBossActivationSlice();
+                yield break;
+            }
+
+            enemyObject.SetActive(true);
             enemy.enabled = true;
             M136PerformanceOperationCounters.ReportBossActivationSlice();
         }

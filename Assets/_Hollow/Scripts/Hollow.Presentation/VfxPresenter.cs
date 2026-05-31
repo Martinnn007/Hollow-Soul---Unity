@@ -1,11 +1,14 @@
 using Hollow.Data.Definitions;
 using Hollow.Core;
+using Hollow.Core.Diagnostics;
 using UnityEngine;
 
 namespace Hollow.Presentation
 {
     public static class VfxPresenter
     {
+        public static bool DebugPrimitivePlaybackEnabled { get; set; }
+
         public static GameObject Play(VfxCueId cue, Vector3 position, Transform parent = null)
         {
             var catalog = PresentationContentProvider.ActiveCatalog;
@@ -21,6 +24,12 @@ namespace Hollow.Presentation
             }
             else if (definition.CreateDebugPrimitive)
             {
+                if (!CanPlayDebugPrimitiveVisuals())
+                {
+                    return null;
+                }
+
+                M136PerformanceOperationCounters.ReportPresentationFallbackVisual();
                 instance = HollowRuntimePool.RentPrimitive($"VFX.{cue}.DebugPrimitive", PrimitiveType.Sphere, parent);
                 instance.transform.SetParent(parent, worldPositionStays: false);
                 instance.transform.localScale = Vector3.one * definition.DebugScale;
@@ -61,11 +70,17 @@ namespace Hollow.Presentation
 
         private static GameObject PlayBuiltInFallback(VfxCueId cue, Vector3 position, Transform parent)
         {
+            if (!CanPlayDebugPrimitiveVisuals())
+            {
+                return null;
+            }
+
             if (!TryGetBuiltInFallback(cue, out var color, out var scale))
             {
                 return null;
             }
 
+            M136PerformanceOperationCounters.ReportPresentationFallbackVisual();
             var instance = HollowRuntimePool.RentPrimitive($"VFX.{cue}.Fallback", PrimitiveType.Sphere, parent);
             instance.name = $"VFX.{cue}.Fallback";
             instance.transform.SetParent(parent, worldPositionStays: false);
@@ -97,6 +112,11 @@ namespace Hollow.Presentation
             }
 
             return instance;
+        }
+
+        private static bool CanPlayDebugPrimitiveVisuals()
+        {
+            return !Application.isPlaying || DebugPrimitivePlaybackEnabled;
         }
 
         private static bool TryGetBuiltInFallback(VfxCueId cue, out Color color, out float scale)

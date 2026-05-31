@@ -6,6 +6,7 @@ using Hollow.Data.Definitions;
 using Hollow.Entities;
 using Hollow.Presentation;
 using Hollow.Rooms;
+using Unity.Profiling;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -439,9 +440,9 @@ namespace Hollow.Combat
 
             if (encounterKind == RoomCombatEncounterKind.Boss)
             {
-                using (M137PerformanceProfilerMarkers.BossSpawnActivate.Auto())
-                {
-                    yield return EnemySpawnService.SpawnBossStaged(
+                yield return RunProfiledStage(
+                    M137PerformanceProfilerMarkers.BossSpawnActivate,
+                    EnemySpawnService.SpawnBossStaged(
                         roomRuntimeRoot,
                         playerController.transform.parent,
                         enemyPrefab,
@@ -452,8 +453,8 @@ namespace Hollow.Combat
                         diagnostics,
                         bossCatalog,
                         activeEncounterContext,
-                        RegisterEnemy);
-                }
+                        RegisterEnemy,
+                        activateOnComplete: false));
             }
             else if (encounterKind == RoomCombatEncounterKind.Wave)
             {
@@ -472,6 +473,40 @@ namespace Hollow.Combat
 
             ObjectiveState = RoomObjectiveState.InCombat;
             EvaluateRoomState();
+        }
+
+        public void ActivateStagedEnemiesForReveal()
+        {
+            for (var index = 0; index < enemies.Count; index++)
+            {
+                var enemy = enemies[index];
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                enemy.gameObject.SetActive(true);
+                enemy.enabled = true;
+            }
+        }
+
+        private static IEnumerator RunProfiledStage(ProfilerMarker marker, IEnumerator stage)
+        {
+            while (stage != null)
+            {
+                bool hasNext;
+                using (marker.Auto())
+                {
+                    hasNext = stage.MoveNext();
+                }
+
+                if (!hasNext)
+                {
+                    yield break;
+                }
+
+                yield return stage.Current;
+            }
         }
 
         public IReadOnlyList<EnemyRuntimeController> SpawnAdditionalEnemies(
@@ -705,7 +740,8 @@ namespace Hollow.Combat
                 null,
                 branchEnemyPoolKey),
                 RegisterEnemy,
-                maxEnemiesPerFrame: 2);
+                maxEnemiesPerFrame: 2,
+                activateOnComplete: false);
             diagnostics.SetEnemyCounts(enemies);
         }
 

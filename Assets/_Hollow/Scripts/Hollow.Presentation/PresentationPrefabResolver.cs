@@ -9,6 +9,7 @@ namespace Hollow.Presentation
     {
         private static readonly Dictionary<PresentationPrefabRole, GameObject> FallbackPrefabs = new();
         private static readonly Dictionary<PresentationPrefabRole, GameObject> ResolvedPrefabs = new();
+        private static readonly Dictionary<PresentationPrefabRole, int> FallbackInstantiatesByRole = new();
         private static readonly Dictionary<int, bool> PrefabRequiresColliderStrip = new();
         private static PresentationContentCatalog cachedCatalog;
 
@@ -28,7 +29,7 @@ namespace Hollow.Presentation
                 return cached;
             }
 
-            M136PerformanceOperationCounters.ReportPresentationPrefabCacheMiss();
+            M136PerformanceOperationCounters.ReportPresentationCacheMiss("prefab", role.ToString(), catalog != null ? catalog.name : "no-active-catalog");
             if (catalog != null && catalog.TryGetPrefab(role, out var prefab) && prefab != null)
             {
                 PrewarmPrefab(prefab);
@@ -39,6 +40,11 @@ namespace Hollow.Presentation
             var fallback = FallbackPrefabFor(role);
             ResolvedPrefabs[role] = fallback;
             return fallback;
+        }
+
+        public static IReadOnlyDictionary<PresentationPrefabRole, int> SnapshotFallbackInstantiatesByRole()
+        {
+            return new Dictionary<PresentationPrefabRole, int>(FallbackInstantiatesByRole);
         }
 
         public static GameObject InstantiateVisual(PresentationPrefabRole role, Transform parent, Vector3 localPosition, Vector3 localScale)
@@ -60,19 +66,55 @@ namespace Hollow.Presentation
                 return null;
             }
 
+            var isFallback = prefab.TryGetComponent<PresentationVisualMarker>(out var marker) && marker.IsFallback;
+            if (isFallback)
+            {
+                ReportFallbackInstantiate(role);
+            }
+
             var visual = Object.Instantiate(prefab, parent);
             visual.name = $"ArtPassVisual.{role}";
             visual.transform.localPosition = localPosition;
             visual.transform.localRotation = Quaternion.identity;
             visual.transform.localScale = localScale;
             visual.SetActive(true);
-            EnsureMarker(visual, role, prefab.TryGetComponent<PresentationVisualMarker>(out var marker) && marker.IsFallback);
+            EnsureMarker(visual, role, isFallback);
+            HideProductionDoorDebugChildren(visual, role);
             if (RequiresColliderStrip(prefab))
             {
                 StripColliders(visual);
             }
 
             return visual;
+        }
+
+        private static void HideProductionDoorDebugChildren(GameObject visual, PresentationPrefabRole role)
+        {
+            if (visual == null || !IsDoorPresentationRole(role))
+            {
+                return;
+            }
+
+            var renderers = visual.GetComponentsInChildren<Renderer>(includeInactive: true);
+            for (var index = 0; index < renderers.Length; index++)
+            {
+                var renderer = renderers[index];
+                if (renderer == null ||
+                    !renderer.gameObject.name.Contains("door_dot", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                renderer.gameObject.SetActive(false);
+            }
+        }
+
+        private static bool IsDoorPresentationRole(PresentationPrefabRole role)
+        {
+            return role is PresentationPrefabRole.DoorActive
+                or PresentationPrefabRole.DoorLocked
+                or PresentationPrefabRole.DoorCleared
+                or PresentationPrefabRole.DoorUnavailable;
         }
 
         internal static void PrewarmPrefab(GameObject prefab)
@@ -101,6 +143,7 @@ namespace Hollow.Presentation
 
             FallbackPrefabs.Clear();
             ResolvedPrefabs.Clear();
+            FallbackInstantiatesByRole.Clear();
             PrefabRequiresColliderStrip.Clear();
             cachedCatalog = null;
         }
@@ -123,6 +166,13 @@ namespace Hollow.Presentation
             FallbackPrefabs[role] = fallback;
             PrefabRequiresColliderStrip[fallback.GetInstanceID()] = false;
             return fallback;
+        }
+
+        private static void ReportFallbackInstantiate(PresentationPrefabRole role)
+        {
+            FallbackInstantiatesByRole.TryGetValue(role, out var count);
+            FallbackInstantiatesByRole[role] = count + 1;
+            M136PerformanceOperationCounters.ReportPresentationFallbackVisual();
         }
 
         private static void RemoveExistingVisual(Transform parent, PresentationPrefabRole role)

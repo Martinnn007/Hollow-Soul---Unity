@@ -615,6 +615,8 @@ namespace Hollow.Performance
     {
         private readonly List<double> frameMs = new();
         private readonly List<double> gcBytes = new();
+        private readonly List<double> gcRecorderBytes = new();
+        private readonly List<double> gcFrameDeltaBytes = new();
         private readonly List<double> managedMb = new();
         private readonly List<double> graphicsMb = new();
         private ProfilerRecorder gcRecorder;
@@ -622,12 +624,16 @@ namespace Hollow.Performance
         private ProfilerRecorder graphicsRecorder;
         private int gateBaselineIndex;
         private int suppressedSampleFrames;
+        private long lastThreadAllocatedBytes;
+        private bool hasThreadAllocatedBaseline;
 
         public void Begin()
         {
             TryStart(ref gcRecorder, ProfilerCategory.Memory, "GC Allocated In Frame");
             TryStart(ref managedRecorder, ProfilerCategory.Memory, "Total Used Memory");
             TryStart(ref graphicsRecorder, ProfilerCategory.Memory, "Gfx Used Memory");
+            hasThreadAllocatedBaseline = false;
+            lastThreadAllocatedBytes = 0L;
         }
 
         public void MarkGateBaseline()
@@ -651,8 +657,10 @@ namespace Hollow.Performance
             frameMs.Add(Mathf.Max(0f, Time.unscaledDeltaTime) * 1000d);
             if (gcRecorder.Valid)
             {
-                gcBytes.Add(Math.Max(0, gcRecorder.LastValue));
+                gcRecorderBytes.Add(Math.Max(0, gcRecorder.LastValue));
             }
+
+            AddThreadAllocationDelta();
 
             if (managedRecorder.Valid)
             {
@@ -672,14 +680,23 @@ namespace Hollow.Performance
         public M139SoakMetricSummary BuildSummary()
         {
             var frameWindow = Window(frameMs);
-            var gcWindow = Window(gcBytes);
+            var gcRecorderWindow = Window(gcRecorderBytes);
+            var gcFrameDeltaWindow = Window(gcFrameDeltaBytes);
+            var gcWindow = gcFrameDeltaWindow.Count > 0 ? gcFrameDeltaWindow : gcRecorderWindow;
             var managedWindow = Window(managedMb);
             var graphicsWindow = Window(graphicsMb);
+            var frameDeltaP95 = Percentile(gcFrameDeltaWindow, 0.95d);
+            var recorderP95 = Percentile(gcRecorderWindow, 0.95d);
             return new M139SoakMetricSummary
             {
                 FrameP95Ms = Percentile(frameWindow, 0.95d),
                 FrameMaxMs = frameWindow.Count > 0 ? frameWindow.Max() : 0d,
                 RecurringGcP95Bytes = Percentile(gcWindow, 0.95d),
+                RecurringGcRecorderP95Bytes = recorderP95,
+                RecurringGcFrameDeltaP95Bytes = frameDeltaP95,
+                GcConfidence = gcFrameDeltaWindow.Count > 0
+                    ? "verified-frame-delta"
+                    : gcRecorderWindow.Count > 0 ? "recorder-only" : "unsupported",
                 ManagedMemoryDriftMb = Drift(managedWindow),
                 GraphicsMemoryDriftMb = Drift(graphicsWindow)
             };
@@ -714,6 +731,32 @@ namespace Hollow.Performance
             var sorted = values.OrderBy(value => value).ToArray();
             var index = Mathf.Clamp((int)Math.Ceiling(percentile * sorted.Length) - 1, 0, sorted.Length - 1);
             return sorted[index];
+        }
+
+        private void AddThreadAllocationDelta()
+        {
+            try
+            {
+                var current = GC.GetAllocatedBytesForCurrentThread();
+                if (!hasThreadAllocatedBaseline)
+                {
+                    hasThreadAllocatedBaseline = true;
+                    lastThreadAllocatedBytes = current;
+                    return;
+                }
+
+                var delta = current - lastThreadAllocatedBytes;
+                lastThreadAllocatedBytes = current;
+                gcFrameDeltaBytes.Add(Math.Max(0, delta));
+                gcBytes.Add(Math.Max(0, delta));
+            }
+            catch
+            {
+                if (gcRecorder.Valid)
+                {
+                    gcBytes.Add(Math.Max(0, gcRecorder.LastValue));
+                }
+            }
         }
 
         private List<double> Window(List<double> values)

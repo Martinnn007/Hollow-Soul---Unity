@@ -317,7 +317,7 @@ namespace Hollow.Rooms
                 return descriptor;
             }
 
-            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss();
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("descriptor", key, asset.DisplayName);
             M136PerformanceOperationCounters.ReportRoomDescriptorBuild();
             descriptor = new RoomRuntimeBuildDescriptor(asset);
             Descriptors[key] = descriptor;

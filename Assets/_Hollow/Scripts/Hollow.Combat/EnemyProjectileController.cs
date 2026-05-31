@@ -1,5 +1,6 @@
 using Hollow.Data.Definitions;
 using Hollow.Core;
+using Hollow.Core.Diagnostics;
 using Hollow.Entities;
 using Hollow.Presentation;
 using Hollow.Rooms;
@@ -32,6 +33,7 @@ namespace Hollow.Combat
         private float ballisticSplashRadiusMeters = 0.55f;
         private GameObject ballisticShadow;
         private GameObject presentationVisual;
+        private bool countedActive;
 
         public int Damage => damage;
 
@@ -82,6 +84,12 @@ namespace Hollow.Combat
             if (ballisticShadow != null)
             {
                 ballisticShadow.SetActive(false);
+            }
+
+            if (!countedActive)
+            {
+                countedActive = true;
+                M136PerformanceOperationCounters.ReportProjectileSpawn();
             }
         }
 
@@ -141,6 +149,19 @@ namespace Hollow.Combat
         }
 
         public bool Tick(float deltaTime)
+        {
+            var start = Time.realtimeSinceStartup;
+            try
+            {
+                return TickInternal(deltaTime);
+            }
+            finally
+            {
+                M136PerformanceOperationCounters.ReportProjectileUpdate((Time.realtimeSinceStartup - start) * 1000f);
+            }
+        }
+
+        private bool TickInternal(float deltaTime)
         {
             ageSeconds += Mathf.Max(0f, deltaTime);
             if (ballistic)
@@ -273,6 +294,7 @@ namespace Hollow.Combat
 
         private bool CheckImpact()
         {
+            M136PerformanceOperationCounters.ReportProjectileCollisionCheck();
             if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters) ||
                 RoomLocalCollision.IntersectsProjectileBlocker(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
             {
@@ -356,6 +378,12 @@ namespace Hollow.Combat
             ballistic = false;
             knockbackMeters = 0f;
             guardKnockbackMultiplier = 0f;
+            if (countedActive)
+            {
+                countedActive = false;
+                M136PerformanceOperationCounters.ReportProjectileReturn();
+            }
+
             threatKind = DamageThreatKind.Light;
             damageClassification = DamageClassification.PhysicalProjectile(ImpactForceClass.Light);
             if (presentationVisual != null)

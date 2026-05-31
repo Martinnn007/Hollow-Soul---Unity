@@ -153,7 +153,7 @@ namespace Hollow.Tests.EditMode
                 var result = SyntheticResult(
                     scenario,
                     peakEnemies: scenario.targetEnemyCount + (scenario.includesBoss ? 1 : 0),
-                    peakProjectiles: scenario.projectileHeavy ? 12 : 0,
+                    peakProjectiles: scenario.projectileHeavy ? M138CombatScaleStressReportGenerator.ProjectileHeavyMinimumPeakProjectiles : 0,
                     observedBoss: scenario.includesBoss,
                     aiThinkReduced: scenario.targetEnemyCount >= 20 || scenario.includesBoss ? 8 : 1,
                     aiCommandReuses: scenario.targetEnemyCount >= 20 ? 18 : 3);
@@ -313,7 +313,11 @@ namespace Hollow.Tests.EditMode
                     navPathMaxSolveMilliseconds = 0.75f,
                     avoidanceHigh = 12,
                     avoidanceReduced = 8,
-                    avoidanceBackground = 4
+                    avoidanceBackground = 4,
+                    projectileActivePeak = peakProjectiles,
+                    projectileSpawns = peakProjectiles,
+                    projectileReturns = peakProjectiles / 2,
+                    projectileCollisionChecks = peakProjectiles * 10
                 },
                 objectCounts = new M136LiveObjectCountSummary
                 {

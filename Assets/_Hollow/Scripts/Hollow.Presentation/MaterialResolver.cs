@@ -28,7 +28,7 @@ namespace Hollow.Presentation
                 return cached;
             }
 
-            M136PerformanceOperationCounters.ReportPresentationMaterialCacheMiss();
+            M136PerformanceOperationCounters.ReportPresentationCacheMiss("material", role.ToString(), palette != null ? palette.name : "no-active-palette");
             if (palette != null && palette.TryResolve(role, out var material) && material != null)
             {
                 ResolvedMaterials[role] = material;

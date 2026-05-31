@@ -40,8 +40,8 @@ namespace Hollow.Performance
             {
                 jsonReportPath = string.IsNullOrWhiteSpace(jsonPath) ? M138CombatScaleStressReportGenerator.DefaultJsonReportPath : jsonPath,
                 markdownReportPath = string.IsNullOrWhiteSpace(markdownPath) ? M138CombatScaleStressReportGenerator.DefaultMarkdownReportPath : markdownPath,
-                warmupSeconds = 0.5f,
-                sampleSeconds = 2f,
+                warmupSeconds = 1f,
+                sampleSeconds = 4f,
                 targetFrameRate = M138CombatScaleStressScenarioPolicy.WindowsComfortTargetFrameRate,
                 writeReports = true,
                 enforceFrameTimingWhenTrusted = false
@@ -108,6 +108,13 @@ namespace Hollow.Performance
         public int expectedPeakEnemies;
         public int peakActiveEnemies;
         public int peakProjectiles;
+        public int projectileActivePeak;
+        public int projectileSpawns;
+        public int projectileReturns;
+        public int projectileCollisionChecks;
+        public int projectilePoolMisses;
+        public int projectileHardInstantiates;
+        public float projectileUpdateMaxMilliseconds;
         public bool projectileHeavy;
         public bool bossPresent;
         public bool observedBoss;
@@ -170,6 +177,7 @@ namespace Hollow.Performance
         public const string CaptureMode = "m138-automated-playmode";
         public const double WindowsFrameTimeBudgetMs = 16.7d;
         public const double RecurringGcP95BudgetBytes = 1024d;
+        public const int ProjectileHeavyMinimumPeakProjectiles = M136EditorLaptopPerformancePolicy.ProjectileHeavyMinimumPeakProjectiles;
 
         public static M136PerformanceScenarioDefinition ToM136ScenarioDefinition(M138CombatScaleStressScenarioDefinition scenario, M138CombatScaleStressRunOptions options = null)
         {
@@ -260,9 +268,10 @@ namespace Hollow.Performance
                 failures.Add("Primary 30-enemy gate did not reach 30 active enemies.");
             }
 
-            if (scenario.projectileHeavy && objectCounts.peakProjectiles <= 0)
+            var projectilePeak = Mathf.Max(objectCounts.peakProjectiles, operations.projectileActivePeak);
+            if (scenario.projectileHeavy && projectilePeak < ProjectileHeavyMinimumPeakProjectiles)
             {
-                failures.Add("Projectile-heavy scenario did not observe active projectiles.");
+                failures.Add($"Projectile-heavy scenario peak projectiles {projectilePeak} is below required {ProjectileHeavyMinimumPeakProjectiles}.");
             }
 
             if (scenario.includesBoss)
@@ -344,7 +353,14 @@ namespace Hollow.Performance
                 targetEnemyCount = scenario.targetEnemyCount,
                 expectedPeakEnemies = expectedEnemies,
                 peakActiveEnemies = objectCounts.peakEnemies,
-                peakProjectiles = objectCounts.peakProjectiles,
+                peakProjectiles = projectilePeak,
+                projectileActivePeak = operations.projectileActivePeak,
+                projectileSpawns = operations.projectileSpawns,
+                projectileReturns = operations.projectileReturns,
+                projectileCollisionChecks = operations.projectileCollisionChecks,
+                projectilePoolMisses = operations.projectilePoolMisses,
+                projectileHardInstantiates = operations.projectileHardInstantiates,
+                projectileUpdateMaxMilliseconds = operations.projectileUpdateMaxMilliseconds,
                 projectileHeavy = scenario.projectileHeavy,
                 bossPresent = scenario.includesBoss,
                 observedBoss = objectCounts.observedBoss,
@@ -430,7 +446,7 @@ namespace Hollow.Performance
                 builder.AppendLine($"### {scenario.displayName}");
                 builder.AppendLine($"- Status: {(scenario.passed ? "PASS" : "FAIL")}");
                 builder.AppendLine($"- Enemies: peak {scenario.peakActiveEnemies}, expected {scenario.expectedPeakEnemies}");
-                builder.AppendLine($"- Projectiles: peak {scenario.peakProjectiles}");
+                builder.AppendLine($"- Projectiles: peak {scenario.peakProjectiles}, spawns {scenario.projectileSpawns}, returns {scenario.projectileReturns}, collision checks {scenario.projectileCollisionChecks}, pool misses {scenario.projectilePoolMisses}, hard instantiates {scenario.projectileHardInstantiates}, update max {scenario.projectileUpdateMaxMilliseconds:0.###} ms");
                 builder.AppendLine($"- Frame p95/max: {scenario.frameP95Ms:0.00} ms / {scenario.frameMaxMs:0.00} ms ({scenario.frameCadenceConfidence})");
                 builder.AppendLine($"- AI: full {scenario.aiThinkFull}, reduced {scenario.aiThinkReduced}, background {scenario.aiThinkBackground}, reuse {scenario.aiCommandReuses}, scorer {scenario.aiScorerCalls}");
                 builder.AppendLine($"- Nav: requests {scenario.navPathRequests}, solves {scenario.navPathSolves}, deferred {scenario.navPathDeferred}, fallback {scenario.navPathFallbacks}, max solves/frame {scenario.maxPathSolvesInFrame}");

@@ -1,7 +1,22 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Diagnostics;
+using System.Text;
 
 namespace Hollow.Core.Diagnostics
 {
+    public enum M136CpuStageKind
+    {
+        LiveRoomActivation = 0,
+        DoorVisualState = 1,
+        RoomCombatBegin = 2,
+        EnemyRewardInteractableActivation = 3,
+        SpaceshipTerminalActivation = 4,
+        BranchPreloadSchedule = 5,
+        HudMinimapRefreshAfterTraversal = 6
+    }
+
     public readonly struct M136PerformanceOperationSnapshot
     {
         public M136PerformanceOperationSnapshot(
@@ -74,6 +89,14 @@ namespace Hollow.Core.Diagnostics
             int presentationBiomeCacheHits,
             int presentationBiomeCacheMisses,
             int presentationColliderStripPasses,
+            int stagedRoomVisibleRendererFrames,
+            int normalTraversalRevealFrames,
+            int roomReadyBeforeRevealMaxFrames,
+            int poolWarmVisibleObjects,
+            int poolWarmRootActiveErrors,
+            int poolWarmActiveLeaks,
+            int presentationFallbackVisuals,
+            int roomEntryVfxBeforeReveal,
             int branchLoadingStarts,
             int branchLoadingCompletions,
             int bossLoadingStarts,
@@ -81,6 +104,15 @@ namespace Hollow.Core.Diagnostics
             float branchLoadingMaxMilliseconds,
             float bossLoadingMaxMilliseconds,
             int fullBranchPreloadRooms,
+            int branchLiveRoomsBuilt,
+            float branchLiveRoomBuildMaxMilliseconds,
+            long branchLiveRoomBuildGcMaxBytes,
+            int branchLiveRoomCacheHits,
+            int branchLiveRoomCacheMisses,
+            int normalTraversalRoomRebuildCalls,
+            int normalTraversalWarmCalls,
+            int hibernatedRoomActiveObjectLeaks,
+            int doorStatePreActivationMisses,
             int traversalColdCacheMisses,
             int enemyPoolWarmRequests,
             int enemyPoolWarmCompletions,
@@ -109,7 +141,17 @@ namespace Hollow.Core.Diagnostics
             int m139CacheHitRateWindowFailures,
             int m139ShaderMaterialFirstUseMissesAfterLoad,
             float m139ManagedMemoryDriftMaxMb,
-            float m139GraphicsMemoryDriftMaxMb)
+            float m139GraphicsMemoryDriftMaxMb,
+            string cpuStageSummary,
+            string cacheMissAttributionSummary,
+            string[] cacheMissAttributionRows,
+            int projectileActivePeak,
+            int projectileSpawns,
+            int projectileReturns,
+            int projectileCollisionChecks,
+            int projectilePoolMisses,
+            int projectileHardInstantiates,
+            float projectileUpdateMaxMilliseconds)
         {
             MiniMapRebuilds = miniMapRebuilds;
             MiniMapModelBuilds = miniMapModelBuilds;
@@ -180,6 +222,14 @@ namespace Hollow.Core.Diagnostics
             PresentationBiomeCacheHits = presentationBiomeCacheHits;
             PresentationBiomeCacheMisses = presentationBiomeCacheMisses;
             PresentationColliderStripPasses = presentationColliderStripPasses;
+            StagedRoomVisibleRendererFrames = stagedRoomVisibleRendererFrames;
+            NormalTraversalRevealFrames = normalTraversalRevealFrames;
+            RoomReadyBeforeRevealMaxFrames = roomReadyBeforeRevealMaxFrames;
+            PoolWarmVisibleObjects = poolWarmVisibleObjects;
+            PoolWarmRootActiveErrors = poolWarmRootActiveErrors;
+            PoolWarmActiveLeaks = poolWarmActiveLeaks;
+            PresentationFallbackVisuals = presentationFallbackVisuals;
+            RoomEntryVfxBeforeReveal = roomEntryVfxBeforeReveal;
             BranchLoadingStarts = branchLoadingStarts;
             BranchLoadingCompletions = branchLoadingCompletions;
             BossLoadingStarts = bossLoadingStarts;
@@ -187,6 +237,15 @@ namespace Hollow.Core.Diagnostics
             BranchLoadingMaxMilliseconds = branchLoadingMaxMilliseconds;
             BossLoadingMaxMilliseconds = bossLoadingMaxMilliseconds;
             FullBranchPreloadRooms = fullBranchPreloadRooms;
+            BranchLiveRoomsBuilt = branchLiveRoomsBuilt;
+            BranchLiveRoomBuildMaxMilliseconds = branchLiveRoomBuildMaxMilliseconds;
+            BranchLiveRoomBuildGcMaxBytes = branchLiveRoomBuildGcMaxBytes;
+            BranchLiveRoomCacheHits = branchLiveRoomCacheHits;
+            BranchLiveRoomCacheMisses = branchLiveRoomCacheMisses;
+            NormalTraversalRoomRebuildCalls = normalTraversalRoomRebuildCalls;
+            NormalTraversalWarmCalls = normalTraversalWarmCalls;
+            HibernatedRoomActiveObjectLeaks = hibernatedRoomActiveObjectLeaks;
+            DoorStatePreActivationMisses = doorStatePreActivationMisses;
             TraversalColdCacheMisses = traversalColdCacheMisses;
             EnemyPoolWarmRequests = enemyPoolWarmRequests;
             EnemyPoolWarmCompletions = enemyPoolWarmCompletions;
@@ -216,6 +275,16 @@ namespace Hollow.Core.Diagnostics
             M139ShaderMaterialFirstUseMissesAfterLoad = m139ShaderMaterialFirstUseMissesAfterLoad;
             M139ManagedMemoryDriftMaxMb = m139ManagedMemoryDriftMaxMb;
             M139GraphicsMemoryDriftMaxMb = m139GraphicsMemoryDriftMaxMb;
+            CpuStageSummary = cpuStageSummary ?? string.Empty;
+            CacheMissAttributionSummary = cacheMissAttributionSummary ?? string.Empty;
+            CacheMissAttributionRows = cacheMissAttributionRows ?? Array.Empty<string>();
+            ProjectileActivePeak = projectileActivePeak;
+            ProjectileSpawns = projectileSpawns;
+            ProjectileReturns = projectileReturns;
+            ProjectileCollisionChecks = projectileCollisionChecks;
+            ProjectilePoolMisses = projectilePoolMisses;
+            ProjectileHardInstantiates = projectileHardInstantiates;
+            ProjectileUpdateMaxMilliseconds = projectileUpdateMaxMilliseconds;
         }
 
         public int MiniMapRebuilds { get; }
@@ -356,6 +425,22 @@ namespace Hollow.Core.Diagnostics
 
         public int PresentationColliderStripPasses { get; }
 
+        public int StagedRoomVisibleRendererFrames { get; }
+
+        public int NormalTraversalRevealFrames { get; }
+
+        public int RoomReadyBeforeRevealMaxFrames { get; }
+
+        public int PoolWarmVisibleObjects { get; }
+
+        public int PoolWarmRootActiveErrors { get; }
+
+        public int PoolWarmActiveLeaks { get; }
+
+        public int PresentationFallbackVisuals { get; }
+
+        public int RoomEntryVfxBeforeReveal { get; }
+
         public int BranchLoadingStarts { get; }
 
         public int BranchLoadingCompletions { get; }
@@ -369,6 +454,24 @@ namespace Hollow.Core.Diagnostics
         public float BossLoadingMaxMilliseconds { get; }
 
         public int FullBranchPreloadRooms { get; }
+
+        public int BranchLiveRoomsBuilt { get; }
+
+        public float BranchLiveRoomBuildMaxMilliseconds { get; }
+
+        public long BranchLiveRoomBuildGcMaxBytes { get; }
+
+        public int BranchLiveRoomCacheHits { get; }
+
+        public int BranchLiveRoomCacheMisses { get; }
+
+        public int NormalTraversalRoomRebuildCalls { get; }
+
+        public int NormalTraversalWarmCalls { get; }
+
+        public int HibernatedRoomActiveObjectLeaks { get; }
+
+        public int DoorStatePreActivationMisses { get; }
 
         public int TraversalColdCacheMisses { get; }
 
@@ -427,10 +530,32 @@ namespace Hollow.Core.Diagnostics
         public float M139ManagedMemoryDriftMaxMb { get; }
 
         public float M139GraphicsMemoryDriftMaxMb { get; }
+
+        public string CpuStageSummary { get; }
+
+        public string CacheMissAttributionSummary { get; }
+
+        public string[] CacheMissAttributionRows { get; }
+
+        public int ProjectileActivePeak { get; }
+
+        public int ProjectileSpawns { get; }
+
+        public int ProjectileReturns { get; }
+
+        public int ProjectileCollisionChecks { get; }
+
+        public int ProjectilePoolMisses { get; }
+
+        public int ProjectileHardInstantiates { get; }
+
+        public float ProjectileUpdateMaxMilliseconds { get; }
     }
 
     public static class M136PerformanceOperationCounters
     {
+        private const int CpuStageCount = 7;
+        private const int CacheMissAttributionCapacity = 64;
         private static int miniMapRebuilds;
         private static int miniMapModelBuilds;
         private static int wallVisibilityUpdates;
@@ -500,6 +625,14 @@ namespace Hollow.Core.Diagnostics
         private static int presentationBiomeCacheHits;
         private static int presentationBiomeCacheMisses;
         private static int presentationColliderStripPasses;
+        private static int stagedRoomVisibleRendererFrames;
+        private static int normalTraversalRevealFrames;
+        private static int roomReadyBeforeRevealMaxFrames;
+        private static int poolWarmVisibleObjects;
+        private static int poolWarmRootActiveErrors;
+        private static int poolWarmActiveLeaks;
+        private static int presentationFallbackVisuals;
+        private static int roomEntryVfxBeforeReveal;
         private static int branchLoadingStarts;
         private static int branchLoadingCompletions;
         private static int bossLoadingStarts;
@@ -507,6 +640,15 @@ namespace Hollow.Core.Diagnostics
         private static float branchLoadingMaxMilliseconds;
         private static float bossLoadingMaxMilliseconds;
         private static int fullBranchPreloadRooms;
+        private static int branchLiveRoomsBuilt;
+        private static float branchLiveRoomBuildMaxMilliseconds;
+        private static long branchLiveRoomBuildGcMaxBytes;
+        private static int branchLiveRoomCacheHits;
+        private static int branchLiveRoomCacheMisses;
+        private static int normalTraversalRoomRebuildCalls;
+        private static int normalTraversalWarmCalls;
+        private static int hibernatedRoomActiveObjectLeaks;
+        private static int doorStatePreActivationMisses;
         private static int traversalColdCacheMisses;
         private static int enemyPoolWarmRequests;
         private static int enemyPoolWarmCompletions;
@@ -536,6 +678,20 @@ namespace Hollow.Core.Diagnostics
         private static int m139ShaderMaterialFirstUseMissesAfterLoad;
         private static float m139ManagedMemoryDriftMaxMb;
         private static float m139GraphicsMemoryDriftMaxMb;
+        private static int projectileActivePeak;
+        private static int projectileActiveCurrent;
+        private static int projectileSpawns;
+        private static int projectileReturns;
+        private static int projectileCollisionChecks;
+        private static int projectilePoolMisses;
+        private static int projectileHardInstantiates;
+        private static float projectileUpdateMaxMilliseconds;
+        private static readonly int[] cpuStageCounts = new int[CpuStageCount];
+        private static readonly float[] cpuStageMaxMilliseconds = new float[CpuStageCount];
+        private static readonly long[] cpuStageGcMaxBytes = new long[CpuStageCount];
+        private static readonly string[] cacheMissAttributionRows = new string[CacheMissAttributionCapacity];
+        private static int cacheMissAttributionWriteIndex;
+        private static int cacheMissAttributionCount;
 
         [Conditional("UNITY_EDITOR")]
         [Conditional("DEVELOPMENT_BUILD")]
@@ -767,6 +923,28 @@ namespace Hollow.Core.Diagnostics
 
         [Conditional("UNITY_EDITOR")]
         [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportCpuStage(M136CpuStageKind stage, float milliseconds, long gcBytes)
+        {
+            var index = (int)stage;
+            if (index < 0 || index >= CpuStageCount)
+            {
+                return;
+            }
+
+            cpuStageCounts[index]++;
+            if (milliseconds > cpuStageMaxMilliseconds[index])
+            {
+                cpuStageMaxMilliseconds[index] = milliseconds;
+            }
+
+            if (gcBytes > cpuStageGcMaxBytes[index])
+            {
+                cpuStageGcMaxBytes[index] = gcBytes;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportRoomBuildStage()
         {
             roomBuildStageCount++;
@@ -905,9 +1083,75 @@ namespace Hollow.Core.Diagnostics
 
         [Conditional("UNITY_EDITOR")]
         [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBranchLiveRoomBuilt(float milliseconds, long gcBytes)
+        {
+            branchLiveRoomsBuilt++;
+            if (milliseconds > branchLiveRoomBuildMaxMilliseconds)
+            {
+                branchLiveRoomBuildMaxMilliseconds = milliseconds;
+            }
+
+            if (gcBytes > branchLiveRoomBuildGcMaxBytes)
+            {
+                branchLiveRoomBuildGcMaxBytes = gcBytes;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBranchLiveRoomCacheHit()
+        {
+            branchLiveRoomCacheHits++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBranchLiveRoomCacheMiss()
+        {
+            branchLiveRoomCacheMisses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportNormalTraversalRoomRebuildCall()
+        {
+            normalTraversalRoomRebuildCalls++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportNormalTraversalWarmCall()
+        {
+            normalTraversalWarmCalls++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportHibernatedRoomActiveObjectLeak(int count)
+        {
+            hibernatedRoomActiveObjectLeaks += count <= 0 ? 1 : count;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportDoorStatePreActivationMiss()
+        {
+            doorStatePreActivationMisses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportTraversalColdCacheMiss()
         {
+            ReportTraversalColdCacheMiss("unknown", "unknown", "unknown");
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTraversalColdCacheMiss(string category, string key, string context)
+        {
             traversalColdCacheMisses++;
+            RecordCacheMissAttribution("traversal", category, key, context);
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -1112,7 +1356,15 @@ namespace Hollow.Core.Diagnostics
         [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportBranchRuntimeCacheMiss()
         {
+            ReportBranchRuntimeCacheMiss("unknown", "unknown", "unknown");
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBranchRuntimeCacheMiss(string category, string key, string context)
+        {
             branchRuntimeCacheMisses++;
+            RecordCacheMissAttribution("branch-runtime", category, key, context);
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -1210,7 +1462,7 @@ namespace Hollow.Core.Diagnostics
         [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportPresentationMaterialCacheMiss()
         {
-            presentationMaterialCacheMisses++;
+            ReportPresentationCacheMiss("material", "unknown", "unknown");
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -1224,7 +1476,7 @@ namespace Hollow.Core.Diagnostics
         [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportPresentationPrefabCacheMiss()
         {
-            presentationPrefabCacheMisses++;
+            ReportPresentationCacheMiss("prefab", "unknown", "unknown");
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -1238,7 +1490,97 @@ namespace Hollow.Core.Diagnostics
         [Conditional("DEVELOPMENT_BUILD")]
         public static void ReportPresentationBiomeCacheMiss()
         {
-            presentationBiomeCacheMisses++;
+            ReportPresentationCacheMiss("biome", "unknown", "unknown");
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportPresentationCacheMiss(string category, string key, string context)
+        {
+            switch (category)
+            {
+                case "material":
+                    presentationMaterialCacheMisses++;
+                    break;
+                case "prefab":
+                    presentationPrefabCacheMisses++;
+                    break;
+                case "biome":
+                    presentationBiomeCacheMisses++;
+                    break;
+                default:
+                    presentationPrefabCacheMisses++;
+                    break;
+            }
+
+            RecordCacheMissAttribution("presentation", category, key, context);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectileActiveCount(int count)
+        {
+            if (count > projectileActivePeak)
+            {
+                projectileActivePeak = count;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectileSpawn(int count = 1)
+        {
+            var resolved = count <= 0 ? 1 : count;
+            projectileSpawns += resolved;
+            projectileActiveCurrent += resolved;
+            if (projectileActiveCurrent > projectileActivePeak)
+            {
+                projectileActivePeak = projectileActiveCurrent;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectileReturn(int count = 1)
+        {
+            var resolved = count <= 0 ? 1 : count;
+            projectileReturns += resolved;
+            projectileActiveCurrent -= resolved;
+            if (projectileActiveCurrent < 0)
+            {
+                projectileActiveCurrent = 0;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectileCollisionCheck(int count = 1)
+        {
+            projectileCollisionChecks += count <= 0 ? 1 : count;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectilePoolMiss()
+        {
+            projectilePoolMisses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectileHardInstantiate()
+        {
+            projectileHardInstantiates++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportProjectileUpdate(float milliseconds)
+        {
+            if (milliseconds > projectileUpdateMaxMilliseconds)
+            {
+                projectileUpdateMaxMilliseconds = milliseconds;
+            }
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -1246,6 +1588,143 @@ namespace Hollow.Core.Diagnostics
         public static void ReportPresentationColliderStripPass()
         {
             presentationColliderStripPasses++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportStagedRoomVisibleRendererFrame()
+        {
+            stagedRoomVisibleRendererFrames++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportNormalTraversalReveal(int framesReadyBeforeReveal)
+        {
+            normalTraversalRevealFrames++;
+            if (framesReadyBeforeReveal > roomReadyBeforeRevealMaxFrames)
+            {
+                roomReadyBeforeRevealMaxFrames = framesReadyBeforeReveal;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportPoolWarmVisibleObject(int count = 1)
+        {
+            poolWarmVisibleObjects += count <= 0 ? 1 : count;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportPoolWarmRootActiveError()
+        {
+            poolWarmRootActiveErrors++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportPoolWarmActiveLeak(int count = 1)
+        {
+            poolWarmActiveLeaks += count <= 0 ? 1 : count;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportPresentationFallbackVisual()
+        {
+            presentationFallbackVisuals++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportRoomEntryVfxBeforeReveal()
+        {
+            roomEntryVfxBeforeReveal++;
+        }
+
+        public static string BuildCpuStageSummary()
+        {
+            var builder = new StringBuilder(192);
+            for (var index = 0; index < CpuStageCount; index++)
+            {
+                if (cpuStageCounts[index] <= 0)
+                {
+                    continue;
+                }
+
+                if (builder.Length > 0)
+                {
+                    builder.Append("; ");
+                }
+
+                builder
+                    .Append(CpuStageName((M136CpuStageKind)index))
+                    .Append(" count=")
+                    .Append(cpuStageCounts[index].ToString(CultureInfo.InvariantCulture))
+                    .Append(" maxMs=")
+                    .Append(cpuStageMaxMilliseconds[index].ToString("0.###", CultureInfo.InvariantCulture))
+                    .Append(" gcMax=")
+                    .Append(cpuStageGcMaxBytes[index].ToString(CultureInfo.InvariantCulture));
+            }
+
+            return builder.Length > 0 ? builder.ToString() : string.Empty;
+        }
+
+        public static string BuildCacheMissAttributionSummary()
+        {
+            var rows = CacheMissAttributionRowsSnapshot();
+            if (rows.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (var index = 0; index < rows.Length; index++)
+            {
+                var row = rows[index];
+                if (string.IsNullOrWhiteSpace(row))
+                {
+                    continue;
+                }
+
+                counts[row] = counts.TryGetValue(row, out var count) ? count + 1 : 1;
+            }
+
+            var builder = new StringBuilder(256);
+            foreach (var pair in counts)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.Append("; ");
+                }
+
+                builder
+                    .Append(pair.Value.ToString(CultureInfo.InvariantCulture))
+                    .Append("x ")
+                    .Append(pair.Key);
+            }
+
+            return builder.ToString();
+        }
+
+        public static string[] CacheMissAttributionRowsSnapshot()
+        {
+            if (cacheMissAttributionCount <= 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var rows = new string[cacheMissAttributionCount];
+            var start = cacheMissAttributionCount == CacheMissAttributionCapacity
+                ? cacheMissAttributionWriteIndex
+                : 0;
+            for (var index = 0; index < rows.Length; index++)
+            {
+                rows[index] = cacheMissAttributionRows[(start + index) % CacheMissAttributionCapacity] ?? string.Empty;
+            }
+
+            return rows;
         }
 
         public static M136PerformanceOperationSnapshot Snapshot(bool reset = false)
@@ -1320,6 +1799,14 @@ namespace Hollow.Core.Diagnostics
                 presentationBiomeCacheHits,
                 presentationBiomeCacheMisses,
                 presentationColliderStripPasses,
+                stagedRoomVisibleRendererFrames,
+                normalTraversalRevealFrames,
+                roomReadyBeforeRevealMaxFrames,
+                poolWarmVisibleObjects,
+                poolWarmRootActiveErrors,
+                poolWarmActiveLeaks,
+                presentationFallbackVisuals,
+                roomEntryVfxBeforeReveal,
                 branchLoadingStarts,
                 branchLoadingCompletions,
                 bossLoadingStarts,
@@ -1327,6 +1814,15 @@ namespace Hollow.Core.Diagnostics
                 branchLoadingMaxMilliseconds,
                 bossLoadingMaxMilliseconds,
                 fullBranchPreloadRooms,
+                branchLiveRoomsBuilt,
+                branchLiveRoomBuildMaxMilliseconds,
+                branchLiveRoomBuildGcMaxBytes,
+                branchLiveRoomCacheHits,
+                branchLiveRoomCacheMisses,
+                normalTraversalRoomRebuildCalls,
+                normalTraversalWarmCalls,
+                hibernatedRoomActiveObjectLeaks,
+                doorStatePreActivationMisses,
                 traversalColdCacheMisses,
                 enemyPoolWarmRequests,
                 enemyPoolWarmCompletions,
@@ -1355,13 +1851,73 @@ namespace Hollow.Core.Diagnostics
                 m139CacheHitRateWindowFailures,
                 m139ShaderMaterialFirstUseMissesAfterLoad,
                 m139ManagedMemoryDriftMaxMb,
-                m139GraphicsMemoryDriftMaxMb);
+                m139GraphicsMemoryDriftMaxMb,
+                BuildCpuStageSummary(),
+                BuildCacheMissAttributionSummary(),
+                CacheMissAttributionRowsSnapshot(),
+                projectileActivePeak,
+                projectileSpawns,
+                projectileReturns,
+                projectileCollisionChecks,
+                projectilePoolMisses,
+                projectileHardInstantiates,
+                projectileUpdateMaxMilliseconds);
             if (reset)
             {
                 Reset();
             }
 
             return snapshot;
+        }
+
+        private static void RecordCacheMissAttribution(string kind, string category, string key, string context)
+        {
+            var row = string.Concat(
+                Compact(kind),
+                "|",
+                Compact(category),
+                "|",
+                Compact(key),
+                "|",
+                Compact(context));
+            cacheMissAttributionRows[cacheMissAttributionWriteIndex] = row;
+            cacheMissAttributionWriteIndex = (cacheMissAttributionWriteIndex + 1) % CacheMissAttributionCapacity;
+            if (cacheMissAttributionCount < CacheMissAttributionCapacity)
+            {
+                cacheMissAttributionCount++;
+            }
+        }
+
+        private static string Compact(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "unknown";
+            }
+
+            var builder = new StringBuilder(Math.Min(value.Length, 96));
+            for (var index = 0; index < value.Length && builder.Length < 96; index++)
+            {
+                var character = value[index];
+                builder.Append(character is '|' or '\r' or '\n' or '\t' ? ' ' : character);
+            }
+
+            return builder.ToString().Trim();
+        }
+
+        private static string CpuStageName(M136CpuStageKind stage)
+        {
+            return stage switch
+            {
+                M136CpuStageKind.LiveRoomActivation => "live_room_activation",
+                M136CpuStageKind.DoorVisualState => "door_visual_state",
+                M136CpuStageKind.RoomCombatBegin => "room_combat_begin",
+                M136CpuStageKind.EnemyRewardInteractableActivation => "enemy_reward_interactable_activation",
+                M136CpuStageKind.SpaceshipTerminalActivation => "spaceship_terminal_activation",
+                M136CpuStageKind.BranchPreloadSchedule => "branch_preload_schedule",
+                M136CpuStageKind.HudMinimapRefreshAfterTraversal => "hud_minimap_refresh_after_traversal",
+                _ => "unknown"
+            };
         }
 
         public static void Reset()
@@ -1435,6 +1991,14 @@ namespace Hollow.Core.Diagnostics
             presentationBiomeCacheHits = 0;
             presentationBiomeCacheMisses = 0;
             presentationColliderStripPasses = 0;
+            stagedRoomVisibleRendererFrames = 0;
+            normalTraversalRevealFrames = 0;
+            roomReadyBeforeRevealMaxFrames = 0;
+            poolWarmVisibleObjects = 0;
+            poolWarmRootActiveErrors = 0;
+            poolWarmActiveLeaks = 0;
+            presentationFallbackVisuals = 0;
+            roomEntryVfxBeforeReveal = 0;
             branchLoadingStarts = 0;
             branchLoadingCompletions = 0;
             bossLoadingStarts = 0;
@@ -1442,6 +2006,15 @@ namespace Hollow.Core.Diagnostics
             branchLoadingMaxMilliseconds = 0f;
             bossLoadingMaxMilliseconds = 0f;
             fullBranchPreloadRooms = 0;
+            branchLiveRoomsBuilt = 0;
+            branchLiveRoomBuildMaxMilliseconds = 0f;
+            branchLiveRoomBuildGcMaxBytes = 0;
+            branchLiveRoomCacheHits = 0;
+            branchLiveRoomCacheMisses = 0;
+            normalTraversalRoomRebuildCalls = 0;
+            normalTraversalWarmCalls = 0;
+            hibernatedRoomActiveObjectLeaks = 0;
+            doorStatePreActivationMisses = 0;
             traversalColdCacheMisses = 0;
             enemyPoolWarmRequests = 0;
             enemyPoolWarmCompletions = 0;
@@ -1471,6 +2044,23 @@ namespace Hollow.Core.Diagnostics
             m139ShaderMaterialFirstUseMissesAfterLoad = 0;
             m139ManagedMemoryDriftMaxMb = 0f;
             m139GraphicsMemoryDriftMaxMb = 0f;
+            projectileActivePeak = 0;
+            projectileActiveCurrent = 0;
+            projectileSpawns = 0;
+            projectileReturns = 0;
+            projectileCollisionChecks = 0;
+            projectilePoolMisses = 0;
+            projectileHardInstantiates = 0;
+            projectileUpdateMaxMilliseconds = 0f;
+            cacheMissAttributionWriteIndex = 0;
+            cacheMissAttributionCount = 0;
+            Array.Clear(cacheMissAttributionRows, 0, cacheMissAttributionRows.Length);
+            for (var index = 0; index < CpuStageCount; index++)
+            {
+                cpuStageCounts[index] = 0;
+                cpuStageMaxMilliseconds[index] = 0f;
+                cpuStageGcMaxBytes[index] = 0L;
+            }
         }
     }
 }

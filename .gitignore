@@ -113,6 +113,9 @@ InitTestScene*.unity*
 /output/reports/
 /output/reports.meta
 /output/builds/
+/output/logs/
+/output/test-results/
+/ProfilerCaptures/
 /tmp/pdfs/
 
 # Unity performance/test runner scratch files

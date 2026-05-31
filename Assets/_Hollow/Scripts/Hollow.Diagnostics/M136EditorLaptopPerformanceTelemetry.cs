@@ -98,6 +98,14 @@ namespace Hollow.Diagnostics
         public int presentationBiomeCacheHits;
         public int presentationBiomeCacheMisses;
         public int presentationColliderStripPasses;
+        public int stagedRoomVisibleRendererFrames;
+        public int normalTraversalRevealFrames;
+        public int roomReadyBeforeRevealMaxFrames;
+        public int poolWarmVisibleObjects;
+        public int poolWarmRootActiveErrors;
+        public int poolWarmActiveLeaks;
+        public int presentationFallbackVisuals;
+        public int roomEntryVfxBeforeReveal;
         public int branchLoadingStarts;
         public int branchLoadingCompletions;
         public int bossLoadingStarts;
@@ -105,6 +113,14 @@ namespace Hollow.Diagnostics
         public float branchLoadingMaxMilliseconds;
         public float bossLoadingMaxMilliseconds;
         public int fullBranchPreloadRooms;
+        public int branchLiveRoomsBuilt;
+        public float branchLiveRoomBuildMaxMilliseconds;
+        public long branchLiveRoomBuildGcMaxBytes;
+        public int branchLiveRoomCacheHits;
+        public int branchLiveRoomCacheMisses;
+        public int normalTraversalRoomRebuildCalls;
+        public int normalTraversalWarmCalls;
+        public int hibernatedRoomActiveObjectLeaks;
         public int traversalColdCacheMisses;
         public int enemyPoolWarmRequests;
         public int enemyPoolWarmCompletions;
@@ -134,6 +150,16 @@ namespace Hollow.Diagnostics
         public int m139ShaderMaterialFirstUseMissesAfterLoad;
         public float m139ManagedMemoryDriftMaxMb;
         public float m139GraphicsMemoryDriftMaxMb;
+        public string cpuStageSummary;
+        public string cacheMissAttributionSummary;
+        public string[] cacheMissAttributionRows = Array.Empty<string>();
+        public int projectileActivePeak;
+        public int projectileSpawns;
+        public int projectileReturns;
+        public int projectileCollisionChecks;
+        public int projectilePoolMisses;
+        public int projectileHardInstantiates;
+        public float projectileUpdateMaxMilliseconds;
     }
 
     [Serializable]
@@ -456,6 +482,13 @@ namespace Hollow.Diagnostics
             var enemies = objectCounts?.peakEnemies ?? 0;
             var projectiles = objectCounts?.peakProjectiles ?? 0;
             var vfx = objectCounts?.peakVfx ?? 0;
+            var truthMode = M136EditorLaptopPerformancePolicy.IsTruthCaptureMode(result.captureMode);
+            var liveCacheActivationObserved =
+                operations != null &&
+                operations.branchLiveRoomCacheHits > 0 &&
+                operations.normalTraversalRevealFrames > 0 &&
+                operations.normalTraversalRoomRebuildCalls == 0 &&
+                operations.normalTraversalWarmCalls == 0;
             return scenarioId switch
             {
                 "ship_hub_idle" when objectCounts?.observedSpaceshipHub == true =>
@@ -493,6 +526,46 @@ namespace Hollow.Diagnostics
                     new M136CaptureValidity(Directional, "Legacy capture lacks corrected transition-event evidence."),
                 "room_transition_navmesh" =>
                     new M136CaptureValidity(Invalid, "Room transition capture did not observe a door/room transition event."),
+
+                "steady_room_idle" when truthMode =>
+                    new M136CaptureValidity(Valid, "Truth-mode steady room sample completed with low-overhead object scans disabled."),
+                "steady_room_idle" =>
+                    new M136CaptureValidity(Directional, "Steady room sample is present, but it was not captured in truth mode."),
+
+                "normal_traversal" when liveCacheActivationObserved =>
+                    new M136CaptureValidity(Valid, "Live-room-cache activation was observed without room rebuilds or traversal warm calls."),
+                "normal_traversal" =>
+                    new M136CaptureValidity(Invalid, "Normal traversal capture did not observe a live-room-cache activation."),
+
+                "return_traversal" when liveCacheActivationObserved =>
+                    new M136CaptureValidity(Valid, "Return traversal used the live-room cache without room rebuilds or traversal warm calls."),
+                "return_traversal" =>
+                    new M136CaptureValidity(Invalid, "Return traversal capture did not observe a live-room-cache activation."),
+
+                "spaceship_traversal" when liveCacheActivationObserved && (operations.cpuStageSummary ?? string.Empty).Contains("spaceship_terminal_activation") =>
+                    new M136CaptureValidity(Valid, "Spaceship traversal used the live-room cache and terminal activation path."),
+                "spaceship_traversal" when liveCacheActivationObserved =>
+                    new M136CaptureValidity(Directional, "Spaceship traversal used the live-room cache, but terminal activation was not observed."),
+                "spaceship_traversal" =>
+                    new M136CaptureValidity(Invalid, "Spaceship traversal capture did not observe a live-room-cache activation."),
+
+                "reward_room_entry" when liveCacheActivationObserved =>
+                    new M136CaptureValidity(Valid, "Reward room entry used the live-room cache without room rebuilds or traversal warm calls."),
+                "reward_room_entry" =>
+                    new M136CaptureValidity(Invalid, "Reward room entry capture did not observe a live-room-cache activation."),
+
+                "projectile_heavy_room" when Mathf.Max(projectiles, operations?.projectileActivePeak ?? 0) >= M136EditorLaptopPerformancePolicy.ProjectileHeavyMinimumPeakProjectiles &&
+                                             (operations?.activeEnemyMax > 0 || objectCounts?.observedActiveCombat == true) =>
+                    new M136CaptureValidity(Valid, "Projectile-heavy truth capture observed projectile pressure and combat activity."),
+                "projectile_heavy_room" when operations?.activeEnemyMax > 0 && (operations.aiThinkFull + operations.aiThinkReduced + operations.aiThinkBackground > 0 || operations.navPathRequests > 0) =>
+                    new M136CaptureValidity(Directional, "Projectile-heavy truth capture observed combat AI activity, but not the minimum projectile pressure."),
+                "projectile_heavy_room" =>
+                    new M136CaptureValidity(Invalid, "Projectile-heavy capture did not observe combat AI or projectile content."),
+
+                "boss_entry" when objectCounts?.observedBoss == true || operations?.bossLoadingStarts > 0 || operations?.bossActivationSlices > 0 =>
+                    new M136CaptureValidity(Valid, "Boss entry or boss activation activity was observed."),
+                "boss_entry" =>
+                    new M136CaptureValidity(Directional, "Boss entry capture is present, but boss activity was not observed in this sample."),
 
                 _ => new M136CaptureValidity(Invalid, $"Unknown scenario id `{scenarioId}`.")
             };
@@ -555,6 +628,8 @@ namespace Hollow.Diagnostics
         public const float FixedSampleSeconds = 30f;
         public const string ManualCaptureMode = "manual-live-editor";
         public const string AutomatedCaptureMode = "automated-live-editor-smoke";
+        public const string TruthCaptureMode = "truth-live-editor";
+        public const string DiagnosticCaptureMode = "diagnostic-live-editor";
 
         public static readonly string[] RequiredMetricIds =
         {
@@ -564,8 +639,29 @@ namespace Hollow.Diagnostics
             "render_thread_ms",
             "gpu_frame_ms",
             "gc_allocated_bytes",
+            "gc_allocated_recorder_bytes",
+            "gc_allocated_frame_delta_bytes",
             "managed_memory_mb",
             "graphics_memory_mb"
+        };
+
+        public const int ProjectileHeavyMinimumPeakProjectiles = 24;
+
+        public static readonly string[] RequiredScenarioIds =
+        {
+            "ship_hub_idle",
+            "normal_branch_idle",
+            "active_combat_room",
+            "wave_crowded_room",
+            "anchor_boss_smoke",
+            "room_transition_navmesh",
+            "steady_room_idle",
+            "normal_traversal",
+            "return_traversal",
+            "spaceship_traversal",
+            "reward_room_entry",
+            "projectile_heavy_room",
+            "boss_entry"
         };
 
         public static M136PerformanceScenarioDefinition[] ScenarioManifest => new[]
@@ -575,8 +671,35 @@ namespace Hollow.Diagnostics
             Scenario("active_combat_room", "Active Combat Room", "Ordinary combat cost with enemies, melee/ranged feedback, HUD, and projectiles."),
             Scenario("wave_crowded_room", "Wave / Crowded Room", "Crowded wave-room budget pressure with staged spawns and a reward chest endpoint."),
             Scenario("anchor_boss_smoke", "Anchor Boss Smoke", "Boss HUD, arena, attacks, projectiles, VFX, and clear/reward flow smoke."),
-            Scenario("room_transition_navmesh", "Room Transition + NavMesh", "Branch room load, door transition, room build, and NavMesh attach/fallback spikes.")
+            Scenario("room_transition_navmesh", "Room Transition + NavMesh", "Branch room load, door transition, room build, and NavMesh attach/fallback spikes."),
+            Scenario("steady_room_idle", "Steady Room Idle", "Truth-mode steady gameplay after branch load and warmup."),
+            Scenario("normal_traversal", "Normal Traversal", "Live-room-cache activation between ordinary branch rooms."),
+            Scenario("return_traversal", "Return Traversal", "Re-entering a previously visited live-cached room."),
+            Scenario("spaceship_traversal", "Spaceship Traversal", "Spaceship branch room activation and terminal binding."),
+            Scenario("reward_room_entry", "Reward Room Entry", "Reward/interactable room activation after branch loading."),
+            Scenario("projectile_heavy_room", "Projectile Heavy Room", "Projectile-heavy combat pressure with truth-mode CPU sampling."),
+            Scenario("boss_entry", "Boss Entry", "Boss-room loading, activation, and first playable frame.")
         };
+
+        public static bool IsTruthCaptureMode(string captureMode)
+        {
+            return string.Equals(captureMode, TruthCaptureMode, StringComparison.Ordinal) ||
+                   string.Equals(captureMode, "m138-automated-playmode", StringComparison.Ordinal) ||
+                   string.Equals(captureMode, "m140-built-player", StringComparison.Ordinal) ||
+                   string.Equals(captureMode, "m140-built-player-truth", StringComparison.Ordinal);
+        }
+
+        public static bool IsDiagnosticCaptureMode(string captureMode)
+        {
+            return string.Equals(captureMode, DiagnosticCaptureMode, StringComparison.Ordinal) ||
+                   string.Equals(captureMode, ManualCaptureMode, StringComparison.Ordinal) ||
+                   string.Equals(captureMode, AutomatedCaptureMode, StringComparison.Ordinal);
+        }
+
+        public static bool ShouldCollectObjectCountsDuringCapture(string captureMode)
+        {
+            return IsDiagnosticCaptureMode(captureMode);
+        }
 
         public static bool IsTelemetryAllowed(bool isEditor, bool isDebugBuild)
         {
@@ -611,7 +734,16 @@ namespace Hollow.Diagnostics
             }
 
             detail = $"M136 scenario manifest contains {scenarios.Length} representative editor-laptop scenarios.";
-            return scenarios.Length == 6;
+            var missingRequired = RequiredScenarioIds
+                .Where(id => scenarios.All(scenario => scenario.id != id))
+                .ToArray();
+            if (missingRequired.Length > 0)
+            {
+                detail = $"M136 scenario manifest is missing required scenarios: {string.Join(", ", missingRequired)}.";
+                return false;
+            }
+
+            return true;
         }
 
         public static bool ValidateScenarioResult(M136PerformanceScenarioResult result, out string detail)
@@ -659,6 +791,8 @@ namespace Hollow.Diagnostics
         private readonly List<double> renderThreadMs;
         private readonly List<double> gpuFrameMs;
         private readonly List<double> gcAllocatedBytes;
+        private readonly List<double> gcAllocatedRecorderBytes;
+        private readonly List<double> gcAllocatedFrameDeltaBytes;
         private readonly List<double> managedMemoryMb;
         private readonly List<double> graphicsMemoryMb;
         private readonly List<M136LiveObjectCountSnapshot> objectSnapshots;
@@ -669,6 +803,8 @@ namespace Hollow.Diagnostics
         private ProfilerRecorder managedMemoryRecorder;
         private ProfilerRecorder graphicsMemoryRecorder;
         private float sampledElapsedSeconds;
+        private long lastThreadAllocatedBytes;
+        private bool hasThreadAllocatedBaseline;
 
         public M136FrameTelemetrySampler(int expectedSampleCapacity = 0)
         {
@@ -678,6 +814,8 @@ namespace Hollow.Diagnostics
             renderThreadMs = new List<double>(capacity);
             gpuFrameMs = new List<double>(capacity);
             gcAllocatedBytes = new List<double>(capacity);
+            gcAllocatedRecorderBytes = new List<double>(capacity);
+            gcAllocatedFrameDeltaBytes = new List<double>(capacity);
             managedMemoryMb = new List<double>(capacity);
             graphicsMemoryMb = new List<double>(capacity);
             objectSnapshots = new List<M136LiveObjectCountSnapshot>(capacity);
@@ -693,6 +831,8 @@ namespace Hollow.Diagnostics
         public void Begin()
         {
             M136PerformanceOperationCounters.Reset();
+            hasThreadAllocatedBaseline = false;
+            lastThreadAllocatedBytes = 0L;
             if (!M136EditorLaptopPerformancePolicy.IsTelemetryAllowedNow())
             {
                 return;
@@ -721,7 +861,8 @@ namespace Hollow.Diagnostics
             AddGpuFrameTiming(gpuFrameMs);
             AddRecorderMilliseconds(mainThreadRecorder, mainThreadMs);
             AddRecorderMilliseconds(renderThreadRecorder, renderThreadMs);
-            AddRecorderBytes(gcAllocRecorder, gcAllocatedBytes);
+            AddRecorderBytes(gcAllocRecorder, gcAllocatedRecorderBytes);
+            AddThreadAllocationDelta(gcAllocatedFrameDeltaBytes);
             AddRecorderMegabytes(managedMemoryRecorder, managedMemoryMb);
             AddRecorderMegabytes(graphicsMemoryRecorder, graphicsMemoryMb);
 
@@ -769,6 +910,8 @@ namespace Hollow.Diagnostics
             if (gcBytes >= 0d)
             {
                 gcAllocatedBytes.Add(gcBytes);
+                gcAllocatedRecorderBytes.Add(gcBytes);
+                gcAllocatedFrameDeltaBytes.Add(gcBytes);
             }
 
             if (mainMs >= 0d)
@@ -929,6 +1072,14 @@ namespace Hollow.Diagnostics
                     presentationBiomeCacheHits = operationSnapshot.PresentationBiomeCacheHits,
                     presentationBiomeCacheMisses = operationSnapshot.PresentationBiomeCacheMisses,
                     presentationColliderStripPasses = operationSnapshot.PresentationColliderStripPasses,
+                    stagedRoomVisibleRendererFrames = operationSnapshot.StagedRoomVisibleRendererFrames,
+                    normalTraversalRevealFrames = operationSnapshot.NormalTraversalRevealFrames,
+                    roomReadyBeforeRevealMaxFrames = operationSnapshot.RoomReadyBeforeRevealMaxFrames,
+                    poolWarmVisibleObjects = operationSnapshot.PoolWarmVisibleObjects,
+                    poolWarmRootActiveErrors = operationSnapshot.PoolWarmRootActiveErrors,
+                    poolWarmActiveLeaks = operationSnapshot.PoolWarmActiveLeaks,
+                    presentationFallbackVisuals = operationSnapshot.PresentationFallbackVisuals,
+                    roomEntryVfxBeforeReveal = operationSnapshot.RoomEntryVfxBeforeReveal,
                     branchLoadingStarts = operationSnapshot.BranchLoadingStarts,
                     branchLoadingCompletions = operationSnapshot.BranchLoadingCompletions,
                     bossLoadingStarts = operationSnapshot.BossLoadingStarts,
@@ -936,6 +1087,14 @@ namespace Hollow.Diagnostics
                     branchLoadingMaxMilliseconds = operationSnapshot.BranchLoadingMaxMilliseconds,
                     bossLoadingMaxMilliseconds = operationSnapshot.BossLoadingMaxMilliseconds,
                     fullBranchPreloadRooms = operationSnapshot.FullBranchPreloadRooms,
+                    branchLiveRoomsBuilt = operationSnapshot.BranchLiveRoomsBuilt,
+                    branchLiveRoomBuildMaxMilliseconds = operationSnapshot.BranchLiveRoomBuildMaxMilliseconds,
+                    branchLiveRoomBuildGcMaxBytes = operationSnapshot.BranchLiveRoomBuildGcMaxBytes,
+                    branchLiveRoomCacheHits = operationSnapshot.BranchLiveRoomCacheHits,
+                    branchLiveRoomCacheMisses = operationSnapshot.BranchLiveRoomCacheMisses,
+                    normalTraversalRoomRebuildCalls = operationSnapshot.NormalTraversalRoomRebuildCalls,
+                    normalTraversalWarmCalls = operationSnapshot.NormalTraversalWarmCalls,
+                    hibernatedRoomActiveObjectLeaks = operationSnapshot.HibernatedRoomActiveObjectLeaks,
                     traversalColdCacheMisses = operationSnapshot.TraversalColdCacheMisses,
                     enemyPoolWarmRequests = operationSnapshot.EnemyPoolWarmRequests,
                     enemyPoolWarmCompletions = operationSnapshot.EnemyPoolWarmCompletions,
@@ -964,7 +1123,17 @@ namespace Hollow.Diagnostics
                     m139CacheHitRateWindowFailures = operationSnapshot.M139CacheHitRateWindowFailures,
                     m139ShaderMaterialFirstUseMissesAfterLoad = operationSnapshot.M139ShaderMaterialFirstUseMissesAfterLoad,
                     m139ManagedMemoryDriftMaxMb = operationSnapshot.M139ManagedMemoryDriftMaxMb,
-                    m139GraphicsMemoryDriftMaxMb = operationSnapshot.M139GraphicsMemoryDriftMaxMb
+                    m139GraphicsMemoryDriftMaxMb = operationSnapshot.M139GraphicsMemoryDriftMaxMb,
+                    cpuStageSummary = operationSnapshot.CpuStageSummary,
+                    cacheMissAttributionSummary = operationSnapshot.CacheMissAttributionSummary,
+                    cacheMissAttributionRows = operationSnapshot.CacheMissAttributionRows,
+                    projectileActivePeak = operationSnapshot.ProjectileActivePeak,
+                    projectileSpawns = operationSnapshot.ProjectileSpawns,
+                    projectileReturns = operationSnapshot.ProjectileReturns,
+                    projectileCollisionChecks = operationSnapshot.ProjectileCollisionChecks,
+                    projectilePoolMisses = operationSnapshot.ProjectilePoolMisses,
+                    projectileHardInstantiates = operationSnapshot.ProjectileHardInstantiates,
+                    projectileUpdateMaxMilliseconds = operationSnapshot.ProjectileUpdateMaxMilliseconds
                 },
                 objectCounts = BuildObjectCountSummary(),
                 note = note
@@ -987,7 +1156,9 @@ namespace Hollow.Diagnostics
             yield return Metric("main_thread_ms", "Main Thread", "ms", mainThreadMs, RecorderNote(mainThreadRecorder, "Unity ProfilerRecorder main-thread timing."));
             yield return Metric("render_thread_ms", "Render Thread", "ms", renderThreadMs, RecorderNote(renderThreadRecorder, "Unity ProfilerRecorder render-thread timing."));
             yield return Metric("gpu_frame_ms", "GPU Frame", "ms", gpuFrameMs, "Unity FrameTimingManager GPU timing when the current Editor/platform exposes it; unsupported contexts are reported explicitly.");
-            yield return Metric("gc_allocated_bytes", "GC Allocated In Frame", "bytes", gcAllocatedBytes, RecorderNote(gcAllocRecorder, "Unity ProfilerRecorder GC allocation counter."));
+            yield return Metric("gc_allocated_bytes", "GC Allocated In Frame", "bytes", gcAllocatedFrameDeltaBytes.Count > 0 ? gcAllocatedFrameDeltaBytes : gcAllocatedRecorderBytes, "Compatibility alias for verified per-frame thread allocation delta when available; falls back to the Unity recorder value.");
+            yield return Metric("gc_allocated_recorder_bytes", "GC Allocated Recorder", "bytes", gcAllocatedRecorderBytes, RecorderNote(gcAllocRecorder, "Raw Unity ProfilerRecorder GC allocation counter."));
+            yield return Metric("gc_allocated_frame_delta_bytes", "GC Allocated Frame Delta", "bytes", gcAllocatedFrameDeltaBytes, "Verified per-sample delta from GC.GetAllocatedBytesForCurrentThread; low-overhead truth-mode allocation signal.");
             yield return Metric("managed_memory_mb", "Managed Memory", "MB", managedMemoryMb, RecorderNote(managedMemoryRecorder, "Unity ProfilerRecorder total used memory counter."));
             yield return Metric("graphics_memory_mb", "Graphics Memory", "MB", graphicsMemoryMb, RecorderNote(graphicsMemoryRecorder, "Unity ProfilerRecorder graphics memory counter."));
         }
@@ -1136,6 +1307,29 @@ namespace Hollow.Diagnostics
             target.Add(recorder.LastValue);
         }
 
+        private void AddThreadAllocationDelta(ICollection<double> target)
+        {
+            try
+            {
+                var current = GC.GetAllocatedBytesForCurrentThread();
+                if (!hasThreadAllocatedBaseline)
+                {
+                    hasThreadAllocatedBaseline = true;
+                    lastThreadAllocatedBytes = current;
+                    target.Add(0d);
+                    return;
+                }
+
+                var delta = current - lastThreadAllocatedBytes;
+                lastThreadAllocatedBytes = current;
+                target.Add(delta > 0L ? delta : 0d);
+            }
+            catch
+            {
+                // Some scripting profiles can block this API; the metric will be unsupported.
+            }
+        }
+
         private static void AddRecorderMegabytes(ProfilerRecorder recorder, ICollection<double> target)
         {
             if (!recorder.Valid || recorder.LastValue < 0)
@@ -1183,6 +1377,10 @@ namespace Hollow.Diagnostics
         public string CaptureMode { get; }
 
         public string CaptureId { get; }
+
+        public bool IsTruthMode => M136EditorLaptopPerformancePolicy.IsTruthCaptureMode(CaptureMode);
+
+        public bool CollectsObjectCountsDuringSampling => M136EditorLaptopPerformancePolicy.ShouldCollectObjectCountsDuringCapture(CaptureMode);
 
         public string StartedAtUtc { get; private set; }
 
@@ -1366,8 +1564,10 @@ namespace Hollow.Diagnostics
         private void Configure(M136LivePerformanceCaptureSession captureSession)
         {
             session = captureSession;
-            objectCountCollector.Reset();
-            LatestSnapshot = M136LiveObjectCountSnapshot.Empty("runtime-driver-warmup");
+            objectCountCollector.Reset(captureSession.CollectsObjectCountsDuringSampling);
+            LatestSnapshot = captureSession.CollectsObjectCountsDuringSampling
+                ? M136LiveObjectCountSnapshot.Empty("runtime-driver-warmup")
+                : M136LiveObjectCountSnapshot.Empty("truth-mode-object-counts-disabled");
             if (!session.Begin())
             {
                 session = null;
@@ -1400,15 +1600,24 @@ namespace Hollow.Diagnostics
             private const float CollectionCadenceSeconds = 0.5f;
             private float nextCollectionTime;
             private M136LiveObjectCountSnapshot lastSnapshot = M136LiveObjectCountSnapshot.Empty("runtime-driver-cadence");
+            private bool collectObjectCounts = true;
 
-            public void Reset()
+            public void Reset(bool collectCounts)
             {
+                collectObjectCounts = collectCounts;
                 nextCollectionTime = 0f;
-                lastSnapshot = M136LiveObjectCountSnapshot.Empty("runtime-driver-cadence");
+                lastSnapshot = collectObjectCounts
+                    ? M136LiveObjectCountSnapshot.Empty("runtime-driver-cadence")
+                    : M136LiveObjectCountSnapshot.Empty("truth-mode-object-counts-disabled");
             }
 
             public M136LiveObjectCountSnapshot Capture(float unscaledTime)
             {
+                if (!collectObjectCounts)
+                {
+                    return lastSnapshot;
+                }
+
                 if (unscaledTime < nextCollectionTime)
                 {
                     return lastSnapshot;

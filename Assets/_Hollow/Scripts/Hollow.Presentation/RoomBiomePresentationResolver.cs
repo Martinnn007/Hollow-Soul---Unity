@@ -204,7 +204,7 @@ namespace Hollow.Presentation
                 return cached;
             }
 
-            M136PerformanceOperationCounters.ReportPresentationBiomeCacheMiss();
+            M136PerformanceOperationCounters.ReportPresentationCacheMiss("biome", normalized, catalog != null ? catalog.name : "no-biome-catalog");
             RoomBiomeDefinition definition = null;
             if (catalog != null)
             {

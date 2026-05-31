@@ -21,7 +21,7 @@ M136 adds an editor/development-only performance investigation harness for the l
 - GPU frame timing is marked unsupported when the current Editor/Metal context does not expose it.
 - Profiler traces are saved beside each capture when Unity exposes trace export in the current Editor context.
 - GC allocation, managed memory, graphics memory, object-count snapshots, and runtime operation counters.
-- Operation counters include minimap rebuilds, wall-visibility updates, combat HUD refreshes, and runtime NavMesh fallbacks.
+- Operation counters include minimap rebuilds, wall-visibility updates, combat HUD refreshes, runtime NavMesh fallbacks, and transition curtain/lock readiness.
 
 ## Capture Comparison
 - Reports compare the two latest live captures per scenario when before/after data exists.

@@ -278,11 +278,35 @@ namespace Hollow.Performance
         public bool observedBoss;
         public int runtimeNavMeshFallbacks;
         public int normalTraversalColdCacheMissesAfterLoad;
+        public int branchLiveRoomsBuilt;
+        public int branchLiveRoomCacheHits;
+        public int branchLiveRoomCacheMisses;
+        public int normalTraversalRoomRebuildCalls;
+        public int normalTraversalWarmCalls;
+        public int hibernatedRoomActiveObjectLeaks;
         public int transitionCurtainMaxFramesAfterReady;
         public float transitionCurtainMaxVisibleMilliseconds;
+        public int stagedRoomVisibleRendererFrames;
+        public int normalTraversalRevealFrames;
+        public int roomReadyBeforeRevealMaxFrames;
+        public int poolWarmVisibleObjects;
+        public int poolWarmRootActiveErrors;
+        public int poolWarmActiveLeaks;
+        public int presentationFallbackVisuals;
+        public int roomEntryVfxBeforeReveal;
+        public string cpuStageSummary;
+        public string cacheMissAttributionSummary;
+        public int projectileActivePeak;
+        public int projectileSpawns;
+        public int projectileReturns;
+        public int projectileCollisionChecks;
+        public int projectilePoolMisses;
+        public int projectileHardInstantiates;
+        public float projectileUpdateMaxMilliseconds;
         public int bootLoadingStarts;
         public int bootLoadingCompletions;
         public int branchLoadingCompletions;
+        public int bossLoadingStarts;
         public int bossLoadingCompletions;
         public int shaderMaterialFirstUseMissesAfterLoad;
         public int staleEnemyStateFailures;
@@ -586,6 +610,7 @@ namespace Hollow.Performance
             "enemy_stress_30",
             "projectile_heavy_room",
             "boss_plus_adds",
+            "boss_entry",
             "long_run_smoke",
             "next_branch_entry"
         };
@@ -618,8 +643,24 @@ namespace Hollow.Performance
             summary.bootLoadingStarts = operations.BootLoadingStarts;
             summary.bootLoadingCompletions = operations.BootLoadingCompletions;
             summary.runtimeNavMeshFallbacks = operations.RuntimeNavMeshFallbacks;
+            summary.branchLiveRoomsBuilt = operations.BranchLiveRoomsBuilt;
+            summary.branchLiveRoomCacheHits = operations.BranchLiveRoomCacheHits;
+            summary.branchLiveRoomCacheMisses = operations.BranchLiveRoomCacheMisses;
+            summary.normalTraversalRoomRebuildCalls = operations.NormalTraversalRoomRebuildCalls;
+            summary.normalTraversalWarmCalls = operations.NormalTraversalWarmCalls;
+            summary.hibernatedRoomActiveObjectLeaks = operations.HibernatedRoomActiveObjectLeaks;
             summary.transitionCurtainMaxFramesAfterReady = operations.TransitionCurtainMaxFramesAfterReady;
             summary.transitionCurtainMaxVisibleMilliseconds = operations.TransitionCurtainMaxVisibleMilliseconds;
+            summary.stagedRoomVisibleRendererFrames = operations.StagedRoomVisibleRendererFrames;
+            summary.normalTraversalRevealFrames = operations.NormalTraversalRevealFrames;
+            summary.roomReadyBeforeRevealMaxFrames = operations.RoomReadyBeforeRevealMaxFrames;
+            summary.poolWarmVisibleObjects = operations.PoolWarmVisibleObjects;
+            summary.poolWarmRootActiveErrors = operations.PoolWarmRootActiveErrors;
+            summary.poolWarmActiveLeaks = operations.PoolWarmActiveLeaks;
+            summary.presentationFallbackVisuals = operations.PresentationFallbackVisuals;
+            summary.roomEntryVfxBeforeReveal = operations.RoomEntryVfxBeforeReveal;
+            summary.cpuStageSummary = operations.CpuStageSummary;
+            summary.cacheMissAttributionSummary = operations.CacheMissAttributionSummary;
             summary.note = "Boot counters are captured from runtime operation telemetry.";
             EvaluateScenario(summary, enforceTiming);
             return summary;
@@ -666,11 +707,35 @@ namespace Hollow.Performance
             var operations = result.operations ?? new M136RuntimeOperationSummary();
             summary.runtimeNavMeshFallbacks = operations.runtimeNavMeshFallbacks;
             summary.normalTraversalColdCacheMissesAfterLoad = operations.traversalColdCacheMisses;
+            summary.branchLiveRoomsBuilt = operations.branchLiveRoomsBuilt;
+            summary.branchLiveRoomCacheHits = operations.branchLiveRoomCacheHits;
+            summary.branchLiveRoomCacheMisses = operations.branchLiveRoomCacheMisses;
+            summary.normalTraversalRoomRebuildCalls = operations.normalTraversalRoomRebuildCalls;
+            summary.normalTraversalWarmCalls = operations.normalTraversalWarmCalls;
+            summary.hibernatedRoomActiveObjectLeaks = operations.hibernatedRoomActiveObjectLeaks;
             summary.transitionCurtainMaxFramesAfterReady = operations.transitionCurtainMaxFramesAfterReady;
             summary.transitionCurtainMaxVisibleMilliseconds = operations.transitionCurtainMaxVisibleMilliseconds;
+            summary.stagedRoomVisibleRendererFrames = operations.stagedRoomVisibleRendererFrames;
+            summary.normalTraversalRevealFrames = operations.normalTraversalRevealFrames;
+            summary.roomReadyBeforeRevealMaxFrames = operations.roomReadyBeforeRevealMaxFrames;
+            summary.poolWarmVisibleObjects = operations.poolWarmVisibleObjects;
+            summary.poolWarmRootActiveErrors = operations.poolWarmRootActiveErrors;
+            summary.poolWarmActiveLeaks = operations.poolWarmActiveLeaks;
+            summary.presentationFallbackVisuals = operations.presentationFallbackVisuals;
+            summary.roomEntryVfxBeforeReveal = operations.roomEntryVfxBeforeReveal;
+            summary.cpuStageSummary = operations.cpuStageSummary;
+            summary.cacheMissAttributionSummary = operations.cacheMissAttributionSummary;
+            summary.projectileActivePeak = operations.projectileActivePeak;
+            summary.projectileSpawns = operations.projectileSpawns;
+            summary.projectileReturns = operations.projectileReturns;
+            summary.projectileCollisionChecks = operations.projectileCollisionChecks;
+            summary.projectilePoolMisses = operations.projectilePoolMisses;
+            summary.projectileHardInstantiates = operations.projectileHardInstantiates;
+            summary.projectileUpdateMaxMilliseconds = operations.projectileUpdateMaxMilliseconds;
             summary.bootLoadingStarts = operations.bootLoadingStarts;
             summary.bootLoadingCompletions = operations.bootLoadingCompletions;
             summary.branchLoadingCompletions = operations.branchLoadingCompletions;
+            summary.bossLoadingStarts = operations.bossLoadingStarts;
             summary.bossLoadingCompletions = operations.bossLoadingCompletions;
             summary.note = result.note ?? string.Empty;
             EvaluateScenario(summary, enforceTiming);
@@ -702,6 +767,13 @@ namespace Hollow.Performance
             summary.gcMaxBytes = stress.gcMaxBytes;
             summary.peakActiveEnemies = stress.peakActiveEnemies;
             summary.peakProjectiles = stress.peakProjectiles;
+            summary.projectileActivePeak = stress.projectileActivePeak;
+            summary.projectileSpawns = stress.projectileSpawns;
+            summary.projectileReturns = stress.projectileReturns;
+            summary.projectileCollisionChecks = stress.projectileCollisionChecks;
+            summary.projectilePoolMisses = stress.projectilePoolMisses;
+            summary.projectileHardInstantiates = stress.projectileHardInstantiates;
+            summary.projectileUpdateMaxMilliseconds = stress.projectileUpdateMaxMilliseconds;
             summary.observedCombatController = true;
             summary.observedBoss = stress.observedBoss;
             summary.runtimeNavMeshFallbacks = stress.runtimeNavMeshFallbacks;
@@ -749,8 +821,18 @@ namespace Hollow.Performance
                 summary.poolActiveLeaks += scenario.poolActiveLeaks;
                 summary.enemyPoolHardInstantiatesAfterWarmup += scenario.enemyPoolHardInstantiatesAfterWarmup;
                 summary.runtimePoolHardInstantiatesAfterWarmup += scenario.runtimePoolHardInstantiatesAfterWarmup;
+                summary.stagedRoomVisibleRendererFrames += scenario.stagedRoomVisibleRendererFrames;
+                summary.poolWarmVisibleObjects += scenario.poolWarmVisibleObjects;
+                summary.poolWarmRootActiveErrors += scenario.poolWarmRootActiveErrors;
+                summary.poolWarmActiveLeaks += scenario.poolWarmActiveLeaks;
+                summary.presentationFallbackVisuals += scenario.presentationFallbackVisuals;
+                summary.roomEntryVfxBeforeReveal += scenario.roomEntryVfxBeforeReveal;
                 summary.frameP95Ms = Math.Max(summary.frameP95Ms, scenario.frameP95Ms);
                 summary.frameMaxMs = Math.Max(summary.frameMaxMs, scenario.frameMaxMs);
+                summary.cacheMissAttributionSummary = CombineAttribution(
+                    summary.cacheMissAttributionSummary,
+                    scenario.scenarioId,
+                    scenario.cacheMissAttributionSummary);
                 if (!scenario.passed)
                 {
                     combinedFailures.Add($"{scenario.scenarioId}: {string.Join("; ", scenario.failures ?? Array.Empty<string>())}");
@@ -799,6 +881,13 @@ namespace Hollow.Performance
             summary.poolActiveLeaks = soak.poolActiveLeaks;
             summary.enemyPoolHardInstantiatesAfterWarmup = soak.enemyPoolHardInstantiatesAfterWarmup;
             summary.runtimePoolHardInstantiatesAfterWarmup = soak.runtimePoolHardInstantiatesAfterWarmup;
+            summary.stagedRoomVisibleRendererFrames = soak.stagedRoomVisibleRendererFrames;
+            summary.poolWarmVisibleObjects = soak.poolWarmVisibleObjects;
+            summary.poolWarmRootActiveErrors = soak.poolWarmRootActiveErrors;
+            summary.poolWarmActiveLeaks = soak.poolWarmActiveLeaks;
+            summary.presentationFallbackVisuals = soak.presentationFallbackVisuals;
+            summary.roomEntryVfxBeforeReveal = soak.roomEntryVfxBeforeReveal;
+            summary.cacheMissAttributionSummary = soak.cacheMissAttributionSummary;
             summary.m139GatePassed = soak.passed;
             summary.note = $"Branch-backed M139 smoke slice `{soak.scenarioId}` reused by M140.";
             ApplyObjectEvidence(summary, objectEvidence);
@@ -952,7 +1041,23 @@ namespace Hollow.Performance
                 builder.AppendLine($"- Status: {(scenario.passed ? "PASS" : "FAIL")}");
                 builder.AppendLine($"- Frame p95/max: {scenario.frameP95Ms:0.00} / {scenario.frameMaxMs:0.00} ms ({scenario.frameCadenceConfidence})");
                 builder.AppendLine($"- Objects: enemies {scenario.peakActiveEnemies}, projectiles {scenario.peakProjectiles}, renderers {scenario.peakRenderers}, boss {scenario.observedBoss}");
-                builder.AppendLine($"- Gates: nav fallback {scenario.runtimeNavMeshFallbacks}, cold misses {scenario.normalTraversalColdCacheMissesAfterLoad}, curtain after-ready {scenario.transitionCurtainMaxFramesAfterReady}, shader misses {scenario.shaderMaterialFirstUseMissesAfterLoad}");
+                builder.AppendLine($"- Gates: nav fallback {scenario.runtimeNavMeshFallbacks}, cold misses {scenario.normalTraversalColdCacheMissesAfterLoad}, live rooms {scenario.branchLiveRoomsBuilt}, live hits/misses {scenario.branchLiveRoomCacheHits}/{scenario.branchLiveRoomCacheMisses}, rebuilds/warms {scenario.normalTraversalRoomRebuildCalls}/{scenario.normalTraversalWarmCalls}, curtain after-ready {scenario.transitionCurtainMaxFramesAfterReady}, boss loads {scenario.bossLoadingStarts}/{scenario.bossLoadingCompletions}, shader misses {scenario.shaderMaterialFirstUseMissesAfterLoad}");
+                builder.AppendLine($"- Visual artifacts: staged visible frames {scenario.stagedRoomVisibleRendererFrames}, warm visible {scenario.poolWarmVisibleObjects}, warm leaks {scenario.poolWarmActiveLeaks}, fallback visuals {scenario.presentationFallbackVisuals}, pre-reveal VFX {scenario.roomEntryVfxBeforeReveal}");
+                if (!string.IsNullOrWhiteSpace(scenario.cacheMissAttributionSummary))
+                {
+                    builder.AppendLine($"- Cache miss attribution: {scenario.cacheMissAttributionSummary}");
+                }
+
+                if (scenario.projectileActivePeak > 0 || scenario.projectileSpawns > 0 || scenario.projectileCollisionChecks > 0)
+                {
+                    builder.AppendLine($"- Projectile counters: peak {scenario.projectileActivePeak}, spawns {scenario.projectileSpawns}, returns {scenario.projectileReturns}, collision checks {scenario.projectileCollisionChecks}, pool misses {scenario.projectilePoolMisses}, hard instantiates {scenario.projectileHardInstantiates}, update max {scenario.projectileUpdateMaxMilliseconds:0.###} ms");
+                }
+
+                if (!string.IsNullOrWhiteSpace(scenario.cpuStageSummary))
+                {
+                    builder.AppendLine($"- CPU stages: {scenario.cpuStageSummary}");
+                }
+
                 if (scenario.visual != null)
                 {
                     builder.AppendLine($"- Screenshot: `{scenario.visual.screenshotPath}` luminance {scenario.visual.averageLuminance:0.000}, dark {scenario.visual.darkPixelRatio:P1}, bright {scenario.visual.brightPixelRatio:P1}, hot-pink {scenario.visual.hotPinkPixelRatio:P1}");
@@ -1006,9 +1111,34 @@ namespace Hollow.Performance
                 failures.Add($"Normal traversal cold-cache misses after branch load {summary.normalTraversalColdCacheMissesAfterLoad}; expected 0.");
             }
 
+            if (summary.normalTraversalRoomRebuildCalls != 0 || summary.normalTraversalWarmCalls != 0)
+            {
+                failures.Add($"Normal traversal rebuild/warm calls {summary.normalTraversalRoomRebuildCalls}/{summary.normalTraversalWarmCalls}; expected 0 with branch live room cache.");
+            }
+
+            if (summary.hibernatedRoomActiveObjectLeaks != 0)
+            {
+                failures.Add($"Hibernated room active object leaks {summary.hibernatedRoomActiveObjectLeaks}; expected 0.");
+            }
+
             if (summary.transitionCurtainMaxFramesAfterReady != 0 || summary.transitionCurtainMaxVisibleMilliseconds > 0.01f)
             {
                 failures.Add($"Transition curtain visible during gameplay: after-ready frames {summary.transitionCurtainMaxFramesAfterReady}, visible {summary.transitionCurtainMaxVisibleMilliseconds:0.0} ms.");
+            }
+
+            if (summary.stagedRoomVisibleRendererFrames != 0)
+            {
+                failures.Add($"Staged room content rendered before reveal for {summary.stagedRoomVisibleRendererFrames} frame(s); expected 0.");
+            }
+
+            if (summary.poolWarmVisibleObjects != 0 || summary.poolWarmRootActiveErrors != 0 || summary.poolWarmActiveLeaks != 0)
+            {
+                failures.Add($"Pool warm visibility violations visible={summary.poolWarmVisibleObjects}, rootActive={summary.poolWarmRootActiveErrors}, leaks={summary.poolWarmActiveLeaks}; expected 0.");
+            }
+
+            if (summary.roomEntryVfxBeforeReveal != 0)
+            {
+                failures.Add($"Room-entry VFX/audio spawned before reveal {summary.roomEntryVfxBeforeReveal}; expected 0.");
             }
 
             if (summary.shaderMaterialFirstUseMissesAfterLoad != 0)
@@ -1033,6 +1163,11 @@ namespace Hollow.Performance
 
             if (RequiresGameplayEvidence(summary.scenarioId))
             {
+                if (summary.presentationFallbackVisuals != 0)
+                {
+                    failures.Add($"Gameplay presentation fallback primitive visuals {summary.presentationFallbackVisuals}; expected 0.");
+                }
+
                 if (summary.peakRenderers <= 0)
                 {
                     failures.Add("Gameplay scenario captured no active renderers; screenshot was likely taken after cleanup or outside gameplay.");
@@ -1047,6 +1182,20 @@ namespace Hollow.Performance
                 {
                     failures.Add("Branch-backed gameplay scenario did not observe a BranchSessionController before screenshot capture.");
                 }
+            }
+
+            if (string.Equals(summary.scenarioId, "projectile_heavy_room", StringComparison.Ordinal) &&
+                Math.Max(summary.peakProjectiles, summary.projectileActivePeak) < M138CombatScaleStressReportGenerator.ProjectileHeavyMinimumPeakProjectiles)
+            {
+                failures.Add($"Projectile-heavy scenario observed {Math.Max(summary.peakProjectiles, summary.projectileActivePeak)} projectiles; expected at least {M138CombatScaleStressReportGenerator.ProjectileHeavyMinimumPeakProjectiles}.");
+            }
+
+            if (string.Equals(summary.scenarioId, "boss_entry", StringComparison.Ordinal) &&
+                !summary.observedBoss &&
+                summary.bossLoadingStarts <= 0 &&
+                summary.bossLoadingCompletions <= 0)
+            {
+                failures.Add("Boss-entry scenario did not observe boss runtime, boss loading, or boss activation evidence.");
             }
 
             if (enforceTiming && summary.timingAuthoritative && summary.frameP95Ms > FrameP95BudgetMs)
@@ -1074,6 +1223,7 @@ namespace Hollow.Performance
                 "normal_traversal" or
                 "return_to_previous_room" or
                 "reward_room" or
+                "boss_entry" or
                 "long_run_smoke" or
                 "next_branch_entry";
         }
@@ -1091,6 +1241,17 @@ namespace Hollow.Performance
             summary.observedBranchSession |= objectEvidence.observedBranchSession;
             summary.observedCombatController |= objectEvidence.observedCombatController;
             summary.observedBoss |= objectEvidence.observedBoss;
+        }
+
+        private static string CombineAttribution(string current, string scenarioId, string next)
+        {
+            if (string.IsNullOrWhiteSpace(next))
+            {
+                return current ?? string.Empty;
+            }
+
+            var tagged = string.IsNullOrWhiteSpace(scenarioId) ? next : $"{scenarioId}: {next}";
+            return string.IsNullOrWhiteSpace(current) ? tagged : $"{current}; {tagged}";
         }
 
         private static void AppendFailure(M140ScenarioSummary summary, string failure)

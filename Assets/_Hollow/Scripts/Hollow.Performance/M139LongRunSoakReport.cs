@@ -154,6 +154,12 @@ namespace Hollow.Performance
         public int enemyPoolHardInstantiates;
         public int runtimePoolMisses;
         public int runtimePoolHardInstantiates;
+        public int stagedRoomVisibleRendererFrames;
+        public int poolWarmVisibleObjects;
+        public int poolWarmRootActiveErrors;
+        public int poolWarmActiveLeaks;
+        public int presentationFallbackVisuals;
+        public int roomEntryVfxBeforeReveal;
 
         public void ObserveTraversalWindow(M136PerformanceOperationSnapshot before, M136PerformanceOperationSnapshot after)
         {
@@ -172,6 +178,12 @@ namespace Hollow.Performance
             enemyPoolHardInstantiates += D(after.EnemyPoolHardInstantiates, before.EnemyPoolHardInstantiates);
             runtimePoolMisses += D(after.RuntimePoolMisses, before.RuntimePoolMisses);
             runtimePoolHardInstantiates += D(after.RuntimePoolHardInstantiates, before.RuntimePoolHardInstantiates);
+            stagedRoomVisibleRendererFrames += D(after.StagedRoomVisibleRendererFrames, before.StagedRoomVisibleRendererFrames);
+            poolWarmVisibleObjects += D(after.PoolWarmVisibleObjects, before.PoolWarmVisibleObjects);
+            poolWarmRootActiveErrors += D(after.PoolWarmRootActiveErrors, before.PoolWarmRootActiveErrors);
+            poolWarmActiveLeaks += D(after.PoolWarmActiveLeaks, before.PoolWarmActiveLeaks);
+            presentationFallbackVisuals += D(after.PresentationFallbackVisuals, before.PresentationFallbackVisuals);
+            roomEntryVfxBeforeReveal += D(after.RoomEntryVfxBeforeReveal, before.RoomEntryVfxBeforeReveal);
         }
 
         public float CacheHitRate()
@@ -211,13 +223,24 @@ namespace Hollow.Performance
         public int staleEnemyStateFailures;
         public int staleRuntimePoolStateFailures;
         public int poolActiveLeaks;
+        public int stagedRoomVisibleRendererFrames;
+        public int poolWarmVisibleObjects;
+        public int poolWarmRootActiveErrors;
+        public int poolWarmActiveLeaks;
+        public int presentationFallbackVisuals;
+        public int roomEntryVfxBeforeReveal;
         public int shaderMaterialFirstUseMissesAfterLoad;
         public float branchRuntimeCacheHitRate;
         public double frameP95Ms;
         public double frameMaxMs;
         public double recurringGcP95Bytes;
+        public double recurringGcRecorderP95Bytes;
+        public double recurringGcFrameDeltaP95Bytes;
+        public string gcConfidence;
         public double managedMemoryDriftMb;
         public double graphicsMemoryDriftMb;
+        public string cacheMissAttributionSummary;
+        public string[] cacheMissAttributionRows;
         public M139PoolSnapshotSummary enemyPool;
         public M139PoolSnapshotSummary runtimePool;
         public M139BranchRuntimeCacheSnapshotSummary branchRuntimeCache;
@@ -302,6 +325,12 @@ namespace Hollow.Performance
             var enemyPoolHardInstantiates = gateCounters?.enemyPoolHardInstantiates ?? afterWarmup.EnemyPoolHardInstantiates;
             var runtimePoolMisses = gateCounters?.runtimePoolMisses ?? afterWarmup.RuntimePoolMisses;
             var runtimePoolHardInstantiates = gateCounters?.runtimePoolHardInstantiates ?? afterWarmup.RuntimePoolHardInstantiates;
+            var stagedRoomVisibleRendererFrames = gateCounters?.stagedRoomVisibleRendererFrames ?? afterWarmup.StagedRoomVisibleRendererFrames;
+            var poolWarmVisibleObjects = gateCounters?.poolWarmVisibleObjects ?? afterWarmup.PoolWarmVisibleObjects;
+            var poolWarmRootActiveErrors = gateCounters?.poolWarmRootActiveErrors ?? afterWarmup.PoolWarmRootActiveErrors;
+            var poolWarmActiveLeaks = gateCounters?.poolWarmActiveLeaks ?? afterWarmup.PoolWarmActiveLeaks;
+            var presentationFallbackVisuals = gateCounters?.presentationFallbackVisuals ?? afterWarmup.PresentationFallbackVisuals;
+            var roomEntryVfxBeforeReveal = gateCounters?.roomEntryVfxBeforeReveal ?? afterWarmup.RoomEntryVfxBeforeReveal;
 
             if (traversalColdCacheMisses != 0)
             {
@@ -337,6 +366,26 @@ namespace Hollow.Performance
             if (shaderMissesAfterLoad != 0)
             {
                 failures.Add($"Shader/material/presentation first-use misses after branch load: {shaderMissesAfterLoad}; expected 0.");
+            }
+
+            if (stagedRoomVisibleRendererFrames != 0)
+            {
+                failures.Add($"Staged room renderers were visible before reveal for {stagedRoomVisibleRendererFrames} frame(s); expected 0.");
+            }
+
+            if (poolWarmVisibleObjects != 0 || poolWarmRootActiveErrors != 0 || poolWarmActiveLeaks != 0)
+            {
+                failures.Add($"Pool warm visibility violations visible={poolWarmVisibleObjects}, rootActive={poolWarmRootActiveErrors}, leaks={poolWarmActiveLeaks}; expected 0.");
+            }
+
+            if (presentationFallbackVisuals != 0)
+            {
+                failures.Add($"Gameplay presentation fallback primitive visuals: {presentationFallbackVisuals}; expected 0.");
+            }
+
+            if (roomEntryVfxBeforeReveal != 0)
+            {
+                failures.Add($"Room-entry VFX/audio before reveal: {roomEntryVfxBeforeReveal}; expected 0.");
             }
 
             if (cacheHitRate < BranchCacheHitRateBudget)
@@ -393,13 +442,24 @@ namespace Hollow.Performance
                 staleEnemyStateFailures = finalWithM139Counters.M139StaleEnemyStateFailures,
                 staleRuntimePoolStateFailures = finalWithM139Counters.M139StaleRuntimePoolStateFailures,
                 poolActiveLeaks = activeLeaks,
+                stagedRoomVisibleRendererFrames = stagedRoomVisibleRendererFrames,
+                poolWarmVisibleObjects = poolWarmVisibleObjects,
+                poolWarmRootActiveErrors = poolWarmRootActiveErrors,
+                poolWarmActiveLeaks = poolWarmActiveLeaks,
+                presentationFallbackVisuals = presentationFallbackVisuals,
+                roomEntryVfxBeforeReveal = roomEntryVfxBeforeReveal,
                 shaderMaterialFirstUseMissesAfterLoad = shaderMissesAfterLoad,
                 branchRuntimeCacheHitRate = cacheHitRate,
                 frameP95Ms = metrics?.FrameP95Ms ?? 0d,
                 frameMaxMs = metrics?.FrameMaxMs ?? 0d,
                 recurringGcP95Bytes = metrics?.RecurringGcP95Bytes ?? 0d,
+                recurringGcRecorderP95Bytes = metrics?.RecurringGcRecorderP95Bytes ?? 0d,
+                recurringGcFrameDeltaP95Bytes = metrics?.RecurringGcFrameDeltaP95Bytes ?? 0d,
+                gcConfidence = metrics?.GcConfidence ?? string.Empty,
                 managedMemoryDriftMb = managedDrift,
                 graphicsMemoryDriftMb = graphicsDrift,
+                cacheMissAttributionSummary = finalWithM139Counters.CacheMissAttributionSummary,
+                cacheMissAttributionRows = finalWithM139Counters.CacheMissAttributionRows,
                 enemyPool = M139PoolSnapshotSummary.FromEnemy(enemyPool),
                 runtimePool = M139PoolSnapshotSummary.FromRuntime(runtimePool),
                 branchRuntimeCache = M139BranchRuntimeCacheSnapshotSummary.FromSnapshot(branchCache),
@@ -486,7 +546,13 @@ namespace Hollow.Performance
                 builder.AppendLine($"- Branch loads/traversals: {scenario.branchLoadsCompleted}/{scenario.roomTraversalsCompleted}");
                 builder.AppendLine($"- Special actions: save-load {scenario.saveLoadRestoresCompleted}, abandon/re-enter {scenario.branchAbandonReentriesCompleted}, boss loads {scenario.bossLoadsCompleted}, next branch {scenario.nextBranchTransitionsCompleted}");
                 builder.AppendLine($"- Cache: cold misses {scenario.normalTraversalColdCacheMissesAfterLoad}, hit rate {scenario.branchRuntimeCacheHitRate:P1}, shader/material misses {scenario.shaderMaterialFirstUseMissesAfterLoad}");
+                if (!string.IsNullOrWhiteSpace(scenario.cacheMissAttributionSummary))
+                {
+                    builder.AppendLine($"- Cache miss attribution: {scenario.cacheMissAttributionSummary}");
+                }
+
                 builder.AppendLine($"- Nav/pools: nav fallback {scenario.runtimeNavMeshFallbacks}, enemy misses/hard {scenario.enemyPoolMissesAfterWarmup}/{scenario.enemyPoolHardInstantiatesAfterWarmup}, runtime misses/hard {scenario.runtimePoolMissesAfterWarmup}/{scenario.runtimePoolHardInstantiatesAfterWarmup}, leaks {scenario.poolActiveLeaks}");
+                builder.AppendLine($"- Visual artifacts: staged visible frames {scenario.stagedRoomVisibleRendererFrames}, warm visible {scenario.poolWarmVisibleObjects}, warm leaks {scenario.poolWarmActiveLeaks}, fallback visuals {scenario.presentationFallbackVisuals}, pre-reveal VFX {scenario.roomEntryVfxBeforeReveal}");
                 if (scenario.enemyPool?.recentMissKeys != null && scenario.enemyPool.recentMissKeys.Length > 0)
                 {
                     builder.AppendLine($"- Enemy pool miss keys: {string.Join(", ", scenario.enemyPool.recentMissKeys)}");
@@ -497,7 +563,7 @@ namespace Hollow.Performance
                     builder.AppendLine($"- Runtime pool miss keys: {string.Join(", ", scenario.runtimePool.recentMissKeys)}");
                 }
 
-                builder.AppendLine($"- Memory/GC: managed drift {scenario.managedMemoryDriftMb:0.0} MB, graphics drift {scenario.graphicsMemoryDriftMb:0.0} MB, GC p95 {scenario.recurringGcP95Bytes:0} bytes");
+                builder.AppendLine($"- Memory/GC: managed drift {scenario.managedMemoryDriftMb:0.0} MB, graphics drift {scenario.graphicsMemoryDriftMb:0.0} MB, GC p95 {scenario.recurringGcP95Bytes:0} bytes, recorder {scenario.recurringGcRecorderP95Bytes:0}, frame-delta {scenario.recurringGcFrameDeltaP95Bytes:0}, confidence {scenario.gcConfidence}");
                 builder.AppendLine($"- Frame p95/max: {scenario.frameP95Ms:0.00} ms / {scenario.frameMaxMs:0.00} ms");
                 if (scenario.failures != null && scenario.failures.Length > 0)
                 {
@@ -546,6 +612,12 @@ namespace Hollow.Performance
             public int TraversalColdCacheMisses;
             public int EnemyPoolMisses;
             public int EnemyPoolHardInstantiates;
+            public int StagedRoomVisibleRendererFrames;
+            public int PoolWarmVisibleObjects;
+            public int PoolWarmRootActiveErrors;
+            public int PoolWarmActiveLeaks;
+            public int PresentationFallbackVisuals;
+            public int RoomEntryVfxBeforeReveal;
 
             public static OperationDelta Between(M136PerformanceOperationSnapshot baseline, M136PerformanceOperationSnapshot current)
             {
@@ -566,7 +638,13 @@ namespace Hollow.Performance
                     PresentationBiomeCacheMisses = D(current.PresentationBiomeCacheMisses, baseline.PresentationBiomeCacheMisses),
                     TraversalColdCacheMisses = D(current.TraversalColdCacheMisses, baseline.TraversalColdCacheMisses),
                     EnemyPoolMisses = D(current.EnemyPoolMisses, baseline.EnemyPoolMisses),
-                    EnemyPoolHardInstantiates = D(current.EnemyPoolHardInstantiates, baseline.EnemyPoolHardInstantiates)
+                    EnemyPoolHardInstantiates = D(current.EnemyPoolHardInstantiates, baseline.EnemyPoolHardInstantiates),
+                    StagedRoomVisibleRendererFrames = D(current.StagedRoomVisibleRendererFrames, baseline.StagedRoomVisibleRendererFrames),
+                    PoolWarmVisibleObjects = D(current.PoolWarmVisibleObjects, baseline.PoolWarmVisibleObjects),
+                    PoolWarmRootActiveErrors = D(current.PoolWarmRootActiveErrors, baseline.PoolWarmRootActiveErrors),
+                    PoolWarmActiveLeaks = D(current.PoolWarmActiveLeaks, baseline.PoolWarmActiveLeaks),
+                    PresentationFallbackVisuals = D(current.PresentationFallbackVisuals, baseline.PresentationFallbackVisuals),
+                    RoomEntryVfxBeforeReveal = D(current.RoomEntryVfxBeforeReveal, baseline.RoomEntryVfxBeforeReveal)
                 };
             }
 
@@ -592,6 +670,9 @@ namespace Hollow.Performance
         public double FrameP95Ms;
         public double FrameMaxMs;
         public double RecurringGcP95Bytes;
+        public double RecurringGcRecorderP95Bytes;
+        public double RecurringGcFrameDeltaP95Bytes;
+        public string GcConfidence;
         public double ManagedMemoryDriftMb;
         public double GraphicsMemoryDriftMb;
     }

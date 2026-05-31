@@ -19,6 +19,7 @@ namespace Hollow.Rooms
         private const float DoorVisualHeightMeters = 2.2f;
         private const float DoorVisualCenterY = DoorVisualHeightMeters * 0.5f;
         private const float MinimumWallSegmentLengthMeters = 0.08f;
+        private const string StagingRootName = "__RoomRuntimeStaging";
 
         [SerializeField] private Vector2 roomSizeMeters = new(DefaultWidthMeters, DefaultDepthMeters);
         private readonly Dictionary<string, List<Renderer>> doorRenderersByDirection = new();
@@ -26,7 +27,10 @@ namespace Hollow.Rooms
         private readonly Dictionary<string, GameObject> doorMarkersByPortId = new();
         private readonly Dictionary<string, RoomDynamicNavigationObjectMarker> doorNavigationByPortId = new();
         private readonly Dictionary<string, string> doorDirectionByPortId = new();
+        private readonly Dictionary<string, RoomDoorVisualState> doorVisualStateByPortId = new();
         private readonly HashSet<string> openDoorPortIds = new();
+        private readonly HashSet<Renderer> renderersSuppressedForReveal = new();
+        private readonly List<Renderer> rendererSuppressionScratch = new();
         private readonly List<RoomHazardMarker> hazardMarkers = new();
         private readonly List<RoomInteractiveObjectMarker> interactiveObjectMarkers = new();
         private readonly List<RoomDynamicNavigationObjectMarker> dynamicNavigationObjects = new();
@@ -36,6 +40,11 @@ namespace Hollow.Rooms
         private bool activeNavMeshWasRuntimeBuilt;
         private string navMeshBakeSource = string.Empty;
         private GameObject perimeterWallsRoot;
+        private Transform buildParentOverride;
+        private GameObject pendingStagingRoot;
+        private List<GameObject> pendingOldChildren;
+
+        private Transform BuildParent => buildParentOverride != null ? buildParentOverride : transform;
 
         public Vector2 RoomSizeMeters => roomSizeMeters;
 
@@ -83,6 +92,7 @@ namespace Hollow.Rooms
 
         public void BuildFrom(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode)
         {
+            CancelPendingStagedBuild();
             var descriptor = RoomRuntimeDescriptorCache.GetOrCreate(asset);
             if (descriptor == null)
             {
@@ -100,6 +110,7 @@ namespace Hollow.Rooms
             doorMarkersByPortId.Clear();
             doorNavigationByPortId.Clear();
             doorDirectionByPortId.Clear();
+            doorVisualStateByPortId.Clear();
             openDoorPortIds.Clear();
             foreach (var port in descriptor.DoorPorts)
             {
@@ -123,8 +134,9 @@ namespace Hollow.Rooms
             ConfigureCarvingObstacles();
         }
 
-        public IEnumerator BuildFromStaged(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode)
+        public IEnumerator BuildFromStaged(ImportedRoomRuntimeAsset asset, RoomNavMeshRuntimeFallbackMode fallbackMode, bool revealOnCommit = true)
         {
+            CancelPendingStagedBuild();
             var descriptor = RoomRuntimeDescriptorCache.GetOrCreate(asset);
             if (descriptor == null)
             {
@@ -132,37 +144,138 @@ namespace Hollow.Rooms
                 yield break;
             }
 
+            var oldChildren = SnapshotCurrentChildren();
+            var stagingRoot = CreateStagingRoot();
             asset = descriptor.Asset;
             LastBuiltAsset = asset;
             roomSizeMeters = new Vector2(descriptor.Layout.WidthTiles, descriptor.Layout.HeightTiles);
-            yield return ClearChildrenStaged();
-            ResetRuntimeCollectionsForBuild(descriptor);
-            yield return ReportBuildStageAndYield();
+            buildParentOverride = stagingRoot.transform;
+            try
+            {
+                ResetRuntimeCollectionsForBuild(descriptor);
+                yield return ReportBuildStageAndYield(stagingRoot);
 
-            var biomeId = descriptor.BiomeId;
-            BuildFloor(descriptor.Layout, biomeId);
+                var biomeId = descriptor.BiomeId;
+                BuildFloor(descriptor.Layout, biomeId);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                BuildPerimeterWalls(descriptor.Layout, descriptor.DoorPorts, biomeId);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                BuildHoleMarkers(descriptor.Layout);
+                BuildObstacles(descriptor.Layout, biomeId);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                BuildHazards(descriptor);
+                BuildInteractiveObjects(descriptor);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                BuildDecor(descriptor, biomeId);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                BuildDoors(descriptor, biomeId);
+                BuildSpawnMarkers(descriptor);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                AttachNavMesh(asset, fallbackMode);
+                yield return ReportBuildStageAndYield(stagingRoot);
+                ConfigureCarvingObstacles();
+                yield return ReportBuildStageAndYield(stagingRoot);
+            }
+            finally
+            {
+                if (revealOnCommit)
+                {
+                    buildParentOverride = null;
+                }
+            }
+
+            if (!revealOnCommit)
+            {
+                pendingStagingRoot = stagingRoot;
+                pendingOldChildren = oldChildren;
+                yield break;
+            }
+
+            CommitStagedBuild(stagingRoot, oldChildren, suppressRenderersForReveal: !revealOnCommit);
+            if (revealOnCommit)
+            {
+                M136PerformanceOperationCounters.ReportNormalTraversalReveal(0);
+            }
+
             yield return ReportBuildStageAndYield();
-            BuildPerimeterWalls(descriptor.Layout, descriptor.DoorPorts, biomeId);
-            yield return ReportBuildStageAndYield();
-            BuildHoleMarkers(descriptor.Layout);
-            BuildObstacles(descriptor.Layout, biomeId);
-            yield return ReportBuildStageAndYield();
-            BuildHazards(descriptor);
-            BuildInteractiveObjects(descriptor);
-            yield return ReportBuildStageAndYield();
-            BuildDecor(descriptor, biomeId);
-            yield return ReportBuildStageAndYield();
-            BuildDoors(descriptor, biomeId);
-            BuildSpawnMarkers(descriptor);
-            yield return ReportBuildStageAndYield();
-            AttachNavMesh(asset, fallbackMode);
-            yield return ReportBuildStageAndYield();
-            ConfigureCarvingObstacles();
-            yield return ReportBuildStageAndYield();
+            yield return DestroyHiddenChildrenStaged(oldChildren);
+        }
+
+        public void CommitPendingStagedBuildForReveal()
+        {
+            if (pendingStagingRoot == null)
+            {
+                RevealSuppressedRuntimeRenderers();
+                return;
+            }
+
+            var stagingRoot = pendingStagingRoot;
+            var oldChildren = pendingOldChildren ?? new List<GameObject>();
+            pendingStagingRoot = null;
+            pendingOldChildren = null;
+            buildParentOverride = null;
+
+            CommitStagedBuild(stagingRoot, oldChildren, suppressRenderersForReveal: false);
+            M136PerformanceOperationCounters.ReportNormalTraversalReveal(0);
+            if (Application.isPlaying && isActiveAndEnabled)
+            {
+                StartCoroutine(DestroyHiddenChildrenStaged(oldChildren));
+            }
+            else
+            {
+                for (var index = 0; index < oldChildren.Count; index++)
+                {
+                    if (oldChildren[index] != null)
+                    {
+                        DestroyRuntimeChild(oldChildren[index]);
+                    }
+                }
+            }
+        }
+
+        public void SuppressRuntimeRenderersForReveal()
+        {
+            rendererSuppressionScratch.Clear();
+            GetComponentsInChildren<Renderer>(true, rendererSuppressionScratch);
+            for (var index = 0; index < rendererSuppressionScratch.Count; index++)
+            {
+                var renderer = rendererSuppressionScratch[index];
+                if (renderer == null ||
+                    !renderer.enabled ||
+                    !renderer.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                renderer.enabled = false;
+                renderersSuppressedForReveal.Add(renderer);
+            }
+
+            rendererSuppressionScratch.Clear();
+        }
+
+        public void RevealSuppressedRuntimeRenderers()
+        {
+            if (renderersSuppressedForReveal.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var renderer in renderersSuppressedForReveal)
+            {
+                if (renderer != null)
+                {
+                    renderer.enabled = true;
+                }
+            }
+
+            renderersSuppressedForReveal.Clear();
+            M136PerformanceOperationCounters.ReportNormalTraversalReveal(0);
         }
 
         public void ClearRuntime()
         {
+            CancelPendingStagedBuild();
             LastBuiltAsset = null;
             ReleaseNavMesh();
             ClearChildren();
@@ -172,11 +285,35 @@ namespace Hollow.Rooms
             doorMarkersByPortId.Clear();
             doorNavigationByPortId.Clear();
             doorDirectionByPortId.Clear();
+            doorVisualStateByPortId.Clear();
             openDoorPortIds.Clear();
             hazardMarkers.Clear();
             interactiveObjectMarkers.Clear();
             dynamicNavigationObjects.Clear();
             ClearWallVisibilityController();
+        }
+
+        public bool SetRuntimeNavMeshActive(bool active, RoomNavMeshRuntimeFallbackMode fallbackMode = RoomNavMeshRuntimeFallbackMode.RequireCatalogBake)
+        {
+            if (!active)
+            {
+                ReleaseNavMesh();
+                return true;
+            }
+
+            if (HasNavMeshBake)
+            {
+                return true;
+            }
+
+            if (LastBuiltAsset == null)
+            {
+                navMeshBakeError = "no_room_asset_for_navmesh_attach";
+                return false;
+            }
+
+            AttachNavMesh(LastBuiltAsset, fallbackMode);
+            return HasNavMeshBake;
         }
 
         private void OnDestroy()
@@ -262,9 +399,22 @@ namespace Hollow.Rooms
             {
                 if (renderer != null)
                 {
+                    var portId = PortIdForDoorRenderer(renderer);
+                    if (!string.IsNullOrEmpty(portId) &&
+                        doorVisualStateByPortId.TryGetValue(portId, out var existingState) &&
+                        existingState == state)
+                    {
+                        continue;
+                    }
+
                     renderer.sharedMaterial = material;
                     ClearArtPassChildren(renderer.transform);
                     RoomBiomePresentationResolver.InstantiateVisual(BiomeId, PrefabRoleForDoorState(state), renderer.transform, Vector3.zero, Vector3.one);
+                    renderer.enabled = false;
+                    if (!string.IsNullOrEmpty(portId))
+                    {
+                        doorVisualStateByPortId[portId] = state;
+                    }
                 }
             }
 
@@ -284,17 +434,37 @@ namespace Hollow.Rooms
                 return;
             }
 
+            if (doorVisualStateByPortId.TryGetValue(portId, out var existingState) && existingState == state)
+            {
+                return;
+            }
+
             renderer.sharedMaterial = RoomBiomePresentationResolver.ResolveMaterial(BiomeId, MaterialRoleForDoorState(state));
             if (doorMarkersByPortId.TryGetValue(portId, out var marker) && marker != null)
             {
                 ClearArtPassChildren(marker.transform);
                 RoomBiomePresentationResolver.InstantiateVisual(BiomeId, PrefabRoleForDoorState(state), marker.transform, Vector3.zero, Vector3.one);
+                renderer.enabled = false;
             }
 
+            doorVisualStateByPortId[portId] = state;
             if (doorNavigationByPortId.TryGetValue(portId, out var navigation) && navigation != null)
             {
                 navigation.ApplyDoorState(state);
             }
+        }
+
+        private string PortIdForDoorRenderer(Renderer renderer)
+        {
+            foreach (var pair in doorRenderersByPortId)
+            {
+                if (pair.Value == renderer)
+                {
+                    return pair.Key;
+                }
+            }
+
+            return string.Empty;
         }
 
         public void ApplyInteractiveObjectState(System.Collections.Generic.IEnumerable<string> destroyedObjectIds)
@@ -392,6 +562,100 @@ namespace Hollow.Rooms
             M136PerformanceOperationCounters.ReportTransitionDestroyedObjects(destroyedThisFrame);
         }
 
+        private void CancelPendingStagedBuild()
+        {
+            if (pendingStagingRoot != null)
+            {
+                DestroyRuntimeChild(pendingStagingRoot);
+            }
+
+            pendingStagingRoot = null;
+            pendingOldChildren = null;
+            if (buildParentOverride != null && buildParentOverride.name == StagingRootName)
+            {
+                buildParentOverride = null;
+            }
+        }
+
+        private List<GameObject> SnapshotCurrentChildren()
+        {
+            var children = new List<GameObject>(transform.childCount);
+            for (var index = 0; index < transform.childCount; index++)
+            {
+                var child = transform.GetChild(index);
+                if (child != null)
+                {
+                    children.Add(child.gameObject);
+                }
+            }
+
+            return children;
+        }
+
+        private GameObject CreateStagingRoot()
+        {
+            var stagingRoot = new GameObject(StagingRootName);
+            stagingRoot.transform.SetParent(transform, false);
+            stagingRoot.SetActive(false);
+            return stagingRoot;
+        }
+
+        private void CommitStagedBuild(GameObject stagingRoot, List<GameObject> oldChildren, bool suppressRenderersForReveal)
+        {
+            if (stagingRoot == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < oldChildren.Count; index++)
+            {
+                if (oldChildren[index] != null)
+                {
+                    oldChildren[index].SetActive(false);
+                }
+            }
+
+            stagingRoot.SetActive(true);
+            while (stagingRoot.transform.childCount > 0)
+            {
+                stagingRoot.transform.GetChild(0).SetParent(transform, worldPositionStays: false);
+            }
+
+            stagingRoot.SetActive(false);
+            DestroyRuntimeChild(stagingRoot);
+            if (suppressRenderersForReveal)
+            {
+                SuppressRuntimeRenderersForReveal();
+            }
+        }
+
+        private IEnumerator DestroyHiddenChildrenStaged(List<GameObject> oldChildren)
+        {
+            const int destroyBudgetPerFrame = 24;
+            var destroyedThisFrame = 0;
+            for (var index = 0; index < oldChildren.Count; index++)
+            {
+                var child = oldChildren[index];
+                if (child == null)
+                {
+                    continue;
+                }
+
+                child.SetActive(false);
+                DestroyRuntimeChild(child);
+                destroyedThisFrame++;
+                if (destroyedThisFrame >= destroyBudgetPerFrame)
+                {
+                    M136PerformanceOperationCounters.ReportTransitionDestroyedObjects(destroyedThisFrame);
+                    M136PerformanceOperationCounters.ReportRoomBuildStage();
+                    destroyedThisFrame = 0;
+                    yield return null;
+                }
+            }
+
+            M136PerformanceOperationCounters.ReportTransitionDestroyedObjects(destroyedThisFrame);
+        }
+
         private void ResetRuntimeCollectionsForBuild(RoomRuntimeBuildDescriptor descriptor)
         {
             ReleaseNavMesh();
@@ -401,6 +665,7 @@ namespace Hollow.Rooms
             doorMarkersByPortId.Clear();
             doorNavigationByPortId.Clear();
             doorDirectionByPortId.Clear();
+            doorVisualStateByPortId.Clear();
             openDoorPortIds.Clear();
             foreach (var port in descriptor.DoorPorts)
             {
@@ -412,8 +677,13 @@ namespace Hollow.Rooms
             dynamicNavigationObjects.Clear();
         }
 
-        private static IEnumerator ReportBuildStageAndYield()
+        private static IEnumerator ReportBuildStageAndYield(GameObject stagingRoot = null)
         {
+            if (stagingRoot != null && stagingRoot.activeInHierarchy)
+            {
+                M136PerformanceOperationCounters.ReportStagedRoomVisibleRendererFrame();
+            }
+
             M136PerformanceOperationCounters.ReportRoomBuildStage();
             yield return null;
         }
@@ -424,7 +694,7 @@ namespace Hollow.Rooms
             {
                 var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 floor.name = $"tileGround.{region.Id}";
-                floor.transform.SetParent(transform, false);
+                floor.transform.SetParent(BuildParent, false);
                 floor.transform.localPosition = new Vector3(region.Center.x, -0.05f, region.Center.z);
                 floor.transform.localScale = new Vector3(region.HalfSize.x * 2f, 0.1f, region.HalfSize.y * 2f);
                 RoomBiomePresentationResolver.ApplyTo(biomeId, floor, MaterialRole.RoomFloor);
@@ -442,7 +712,7 @@ namespace Hollow.Rooms
             }
 
             var parent = new GameObject("PerimeterWalls");
-            parent.transform.SetParent(transform, false);
+            parent.transform.SetParent(BuildParent, false);
             perimeterWallsRoot = parent;
             var bindings = new List<RoomWallVisibilityController.WallBinding>();
 
@@ -484,18 +754,19 @@ namespace Hollow.Rooms
                 roots.Add(perimeterWallsRoot);
             }
 
-            for (var index = transform.childCount - 1; index >= 0; index--)
+            var root = BuildParent;
+            for (var index = root.childCount - 1; index >= 0; index--)
             {
-                var child = transform.GetChild(index).gameObject;
+                var child = root.GetChild(index).gameObject;
                 if (child.name == "PerimeterWalls" && !roots.Contains(child))
                 {
                     roots.Add(child);
                 }
             }
 
-            foreach (var root in roots)
+            foreach (var wallRoot in roots)
             {
-                HideAndDestroyRuntimeChild(root);
+                HideAndDestroyRuntimeChild(wallRoot);
             }
 
             perimeterWallsRoot = null;
@@ -658,7 +929,7 @@ namespace Hollow.Rooms
             {
                 var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 block.name = $"{obstacle.Kind}.{obstacle.Id}";
-                block.transform.SetParent(transform, false);
+                block.transform.SetParent(BuildParent, false);
                 block.transform.localPosition = obstacle.Center;
                 block.transform.localScale = obstacle.Size;
                 RoomBiomePresentationResolver.ApplyTo(biomeId, block, MaterialRole.RoomObstacleRock);
@@ -666,7 +937,7 @@ namespace Hollow.Rooms
                 var visualCenter = obstacle.Center;
                 visualCenter.y = obstacle.Center.y - obstacle.Size.y * 0.5f + visualScale * 0.5f;
                 var visualAnchor = new GameObject($"ArtPassAnchor.{obstacle.Kind}.{obstacle.Id}");
-                visualAnchor.transform.SetParent(transform, false);
+                visualAnchor.transform.SetParent(BuildParent, false);
                 visualAnchor.transform.localPosition = visualCenter;
                 visualAnchor.transform.localRotation = Quaternion.identity;
                 visualAnchor.transform.localScale = Vector3.one * visualScale;
@@ -699,7 +970,7 @@ namespace Hollow.Rooms
             {
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 marker.name = $"holeTile.{hole.x}_{hole.y}";
-                marker.transform.SetParent(transform, false);
+                marker.transform.SetParent(BuildParent, false);
                 marker.transform.localPosition = new Vector3(hole.x, 0.012f, hole.y);
                 marker.transform.localScale = new Vector3(0.88f, 0.024f, 0.88f);
                 MaterialResolver.ApplyTo(marker, MaterialRole.RoomHazardSpike);
@@ -731,7 +1002,7 @@ namespace Hollow.Rooms
 
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 marker.name = $"{hazard.kind}.{hazard.id}";
-                marker.transform.SetParent(transform, false);
+                marker.transform.SetParent(BuildParent, false);
                 var position = hazard.center?.ToUnityVector3() ?? Vector3.zero;
                 marker.transform.localPosition = new Vector3(position.x, 0.025f, position.z);
                 marker.transform.localScale = new Vector3(0.72f, 0.05f, 0.72f);
@@ -760,7 +1031,7 @@ namespace Hollow.Rooms
 
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 marker.name = $"{roomObject.kind}.{roomObject.id}";
-                marker.transform.SetParent(transform, false);
+                marker.transform.SetParent(BuildParent, false);
                 marker.transform.localPosition = roomObject.center?.ToUnityVector3() ?? Vector3.zero;
                 marker.transform.localScale = roomObject.size?.ToUnityVector3() ?? Vector3.one;
                 var materialRole = roomObject.kind == RoomInteractiveObjectKind.ExplosiveBarrel
@@ -816,7 +1087,7 @@ namespace Hollow.Rooms
                 }
 
                 var marker = new GameObject($"{decor.kind}.{decor.id}");
-                marker.transform.SetParent(transform, false);
+                marker.transform.SetParent(BuildParent, false);
                 marker.transform.localPosition = decor.center?.ToUnityVector3() ?? Vector3.zero;
                 marker.transform.localRotation = Quaternion.identity;
                 marker.transform.localScale = decor.size?.ToUnityVector3() ?? Vector3.one;
@@ -952,12 +1223,17 @@ namespace Hollow.Rooms
             {
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 marker.name = $"doorAnchorActive.{port.Id}";
-                marker.transform.SetParent(transform, false);
+                marker.transform.SetParent(BuildParent, false);
                 marker.transform.localPosition = new Vector3(port.Position.x, DoorVisualCenterY, port.Position.z);
                 marker.transform.localScale = DoorScaleFor(port.Direction);
                 RoomBiomePresentationResolver.ApplyTo(biomeId, marker, MaterialRole.DoorActive);
                 RoomBiomePresentationResolver.InstantiateVisual(biomeId, PresentationPrefabRole.DoorActive, marker.transform, Vector3.zero, Vector3.one);
                 var renderer = marker.GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    renderer.enabled = false;
+                }
+
                 doorRenderersByPortId[port.Id] = renderer;
                 doorMarkersByPortId[port.Id] = marker;
                 doorDirectionByPortId[port.Id] = port.Direction;
@@ -1027,7 +1303,7 @@ namespace Hollow.Rooms
         private void CreateSpawnMarker(string id, string kind, Vector3 position, bool addPlayerSpawnComponent)
         {
             var marker = new GameObject($"{kind}.{id}");
-            marker.transform.SetParent(transform, false);
+            marker.transform.SetParent(BuildParent, false);
             marker.transform.localPosition = position;
             marker.transform.localRotation = Quaternion.identity;
             marker.transform.localScale = Vector3.one;

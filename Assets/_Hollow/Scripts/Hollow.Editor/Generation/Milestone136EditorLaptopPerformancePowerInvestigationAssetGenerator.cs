@@ -143,7 +143,9 @@ namespace Hollow.Editor.Generation
             var renderSettings = BuildRenderSettingsSnapshot();
             var scenarioManifest = M136EditorLaptopPerformancePolicy.ScenarioManifest;
             var liveManifests = M136LivePerformanceCaptureStore.LoadManifests(liveCaptureRoot);
-            var latestLiveCaptures = LatestManifestByScenario(liveManifests).ToArray();
+            var latestLiveCaptures = LatestManifestByScenario(liveManifests)
+                .Select(RefreshManifestValidity)
+                .ToArray();
             var scenarios = BuildScenarioResultsPreferLive(scenarioManifest, renderSettings, latestLiveCaptures).ToArray();
             var captureComparisons = BuildCaptureComparisons(scenarioManifest, liveManifests).ToArray();
             var recommendations = BuildRecommendations(renderSettings).ToArray();
@@ -238,9 +240,32 @@ namespace Hollow.Editor.Generation
                     builder.AppendLine($"- Profiler trace: {(scenario.profilerTraceSupported ? scenario.profilerTracePath : scenario.profilerTraceNote)}");
                 }
 
+                if (!string.IsNullOrWhiteSpace(scenario.validityGrade))
+                {
+                    builder.AppendLine($"- Validity: {scenario.validityGrade} - {scenario.validityReason}");
+                }
+
                 builder.AppendLine($"- Note: {scenario.note}");
-                builder.AppendLine($"- Operations: minimap rebuilds {scenario.operations?.miniMapRebuilds ?? 0}, wall updates {scenario.operations?.wallVisibilityUpdates ?? 0}, combat HUD refreshes {scenario.operations?.combatHudRefreshes ?? 0}, runtime NavMesh fallbacks {scenario.operations?.runtimeNavMeshFallbacks ?? 0}, curtain after-ready max frames {scenario.operations?.transitionCurtainMaxFramesAfterReady ?? 0}, transition lock max {scenario.operations?.transitionLockMaxMilliseconds ?? 0f:0.#} ms");
-                builder.AppendLine($"- Object peaks: enemies {scenario.objectCounts?.peakEnemies ?? 0}, projectiles {scenario.objectCounts?.peakProjectiles ?? 0}, VFX {scenario.objectCounts?.peakVfx ?? 0}, canvases {scenario.objectCounts?.peakUiCanvases ?? 0}, renderers {scenario.objectCounts?.peakRenderers ?? 0}");
+                builder.AppendLine($"- Operations: minimap rebuilds {scenario.operations?.miniMapRebuilds ?? 0}, wall updates {scenario.operations?.wallVisibilityUpdates ?? 0}, combat HUD refreshes {scenario.operations?.combatHudRefreshes ?? 0}, runtime NavMesh fallbacks {scenario.operations?.runtimeNavMeshFallbacks ?? 0}, curtain after-ready max frames {scenario.operations?.transitionCurtainMaxFramesAfterReady ?? 0}, transition lock max {scenario.operations?.transitionLockMaxMilliseconds ?? 0f:0.#} ms, live-cache hits/misses {scenario.operations?.branchLiveRoomCacheHits ?? 0}/{scenario.operations?.branchLiveRoomCacheMisses ?? 0}, room rebuild/warm calls {scenario.operations?.normalTraversalRoomRebuildCalls ?? 0}/{scenario.operations?.normalTraversalWarmCalls ?? 0}, cold-cache misses {scenario.operations?.traversalColdCacheMisses ?? 0}");
+                if (!string.IsNullOrWhiteSpace(scenario.operations?.cacheMissAttributionSummary))
+                {
+                    builder.AppendLine($"- Cache miss attribution: {scenario.operations.cacheMissAttributionSummary}");
+                }
+
+                if ((scenario.operations?.projectileActivePeak ?? 0) > 0 ||
+                    (scenario.operations?.projectileSpawns ?? 0) > 0 ||
+                    (scenario.operations?.projectileCollisionChecks ?? 0) > 0)
+                {
+                    builder.AppendLine($"- Projectile counters: peak {scenario.operations.projectileActivePeak}, spawns {scenario.operations.projectileSpawns}, returns {scenario.operations.projectileReturns}, collision checks {scenario.operations.projectileCollisionChecks}, pool misses {scenario.operations.projectilePoolMisses}, hard instantiates {scenario.operations.projectileHardInstantiates}, update max {scenario.operations.projectileUpdateMaxMilliseconds:0.###} ms");
+                }
+
+                var objectSource = string.IsNullOrWhiteSpace(scenario.objectCounts?.source) ? "unknown" : scenario.objectCounts.source;
+                builder.AppendLine($"- Object peaks: enemies {scenario.objectCounts?.peakEnemies ?? 0}, projectiles {scenario.objectCounts?.peakProjectiles ?? 0}, VFX {scenario.objectCounts?.peakVfx ?? 0}, canvases {scenario.objectCounts?.peakUiCanvases ?? 0}, renderers {scenario.objectCounts?.peakRenderers ?? 0} (source: {objectSource})");
+                if (!string.IsNullOrWhiteSpace(scenario.operations?.cpuStageSummary))
+                {
+                    builder.AppendLine($"- CPU stages: {scenario.operations.cpuStageSummary}");
+                }
+
                 foreach (var metric in scenario.metrics ?? Array.Empty<M136PerformanceMetricSummary>())
                 {
                     builder.AppendLine($"- `{metric.id}`: {MetricSummary(metric)}");
@@ -393,6 +418,7 @@ namespace Hollow.Editor.Generation
                     var liveResult = M136LivePerformanceCaptureStore.LoadScenarioResult(manifest);
                     if (liveResult != null && M136EditorLaptopPerformancePolicy.ValidateScenarioResult(liveResult, out _))
                     {
+                        RefreshResultValidity(manifest, liveResult);
                         yield return liveResult;
                         continue;
                     }
@@ -412,6 +438,37 @@ namespace Hollow.Editor.Generation
                 .GroupBy(manifest => manifest.scenarioId)
                 .Select(group => group.Last())
                 .OrderBy(manifest => manifest.scenarioId, StringComparer.Ordinal);
+        }
+
+        private static M136LiveCaptureManifest RefreshManifestValidity(M136LiveCaptureManifest manifest)
+        {
+            if (manifest == null)
+            {
+                return null;
+            }
+
+            var result = M136LivePerformanceCaptureStore.LoadScenarioResult(manifest);
+            if (result == null)
+            {
+                return manifest;
+            }
+
+            RefreshResultValidity(manifest, result);
+            manifest.validityGrade = result.validityGrade;
+            manifest.validityReason = result.validityReason;
+            return manifest;
+        }
+
+        private static void RefreshResultValidity(M136LiveCaptureManifest manifest, M136PerformanceScenarioResult result)
+        {
+            if (manifest == null || result == null)
+            {
+                return;
+            }
+
+            var validity = M136CaptureValidityClassifier.Classify(manifest, result);
+            result.validityGrade = validity.Grade;
+            result.validityReason = validity.Reason;
         }
 
         private static IEnumerable<M136CaptureComparison> BuildCaptureComparisons(
@@ -573,7 +630,7 @@ namespace Hollow.Editor.Generation
         {
             AddCheck(checks, "telemetry:gating", "Telemetry", M136EditorLaptopPerformancePolicy.IsTelemetryAllowed(true, false) && M136EditorLaptopPerformancePolicy.IsTelemetryAllowed(false, true) && !M136EditorLaptopPerformancePolicy.IsTelemetryAllowed(false, false), "Telemetry is editor/development-only.");
             AddCheck(checks, "telemetry:scenario-manifest", "Telemetry", M136EditorLaptopPerformancePolicy.ValidateScenarioManifest(out var detail), detail);
-            AddCheck(checks, "telemetry:scenario-results-count", "Telemetry", scenarios.Length == scenarioManifest.Length && scenarios.Length == 6, $"Scenario results: {scenarios.Length}.");
+            AddCheck(checks, "telemetry:scenario-results-count", "Telemetry", scenarios.Length == scenarioManifest.Length, $"Scenario results: {scenarios.Length}.");
             AddCheck(checks, "telemetry:live-capture-fallback", "Telemetry", scenarios.All(scenario => scenario.liveCaptured || scenario.captureMode == "deterministic-editor-baseline"), $"Live captures present for {latestLiveCaptures.Length}/{scenarioManifest.Length} scenarios; deterministic fallback is labelled when needed.");
             AddCheck(checks, "telemetry:capture-comparisons", "Telemetry", captureComparisons.Length == scenarioManifest.Length, $"Capture comparison rows: {captureComparisons.Length}.");
             foreach (var scenario in scenarios)

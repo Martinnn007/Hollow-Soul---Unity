@@ -137,6 +137,7 @@ namespace Hollow.Performance
                     if (scenario.projectileHeavy)
                     {
                         harness.ProjectilePressure.Tick(Time.unscaledTime);
+                        M136PerformanceOperationCounters.ReportProjectileActiveCount(harness.ProjectilePressure.ActiveCount);
                         if (session.IsSampling && Time.unscaledTime >= nextProjectileSpawnTime)
                         {
                             harness.ProjectilePressure.SpawnBurst(Time.unscaledTime, 3);
@@ -484,9 +485,20 @@ namespace Hollow.Performance
 
             public void Tick(float timeSeconds)
             {
+                var start = Time.realtimeSinceStartup;
+                var active = 0;
                 for (var index = 0; index < slots.Length; index++)
                 {
-                    slots[index].Tick(timeSeconds);
+                    if (slots[index].Tick(timeSeconds))
+                    {
+                        active++;
+                    }
+                }
+
+                if (active > 0)
+                {
+                    M136PerformanceOperationCounters.ReportProjectileCollisionCheck(active);
+                    M136PerformanceOperationCounters.ReportProjectileUpdate((Time.realtimeSinceStartup - start) * 1000f);
                 }
             }
 
@@ -501,6 +513,7 @@ namespace Hollow.Performance
                     var origin = new Vector3(Mathf.Cos(angle) * 7.5f, 0.55f, Mathf.Sin(angle) * 4.5f);
                     var direction = new Vector3(-Mathf.Cos(angle), 0f, -Mathf.Sin(angle)).normalized;
                     slot.Activate(origin, direction * 7.5f, timeSeconds + 1.25f);
+                    M136PerformanceOperationCounters.ReportProjectileSpawn();
                 }
             }
         }
@@ -531,20 +544,22 @@ namespace Hollow.Performance
                 gameObject.SetActive(true);
             }
 
-            public void Tick(float timeSeconds)
+            public bool Tick(float timeSeconds)
             {
                 if (!Active)
                 {
-                    return;
+                    return false;
                 }
 
                 if (timeSeconds >= activeUntil)
                 {
                     gameObject.SetActive(false);
-                    return;
+                    M136PerformanceOperationCounters.ReportProjectileReturn();
+                    return false;
                 }
 
                 gameObject.transform.localPosition += velocity * Time.unscaledDeltaTime;
+                return true;
             }
         }
 

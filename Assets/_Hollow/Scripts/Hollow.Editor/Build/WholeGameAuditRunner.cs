@@ -746,6 +746,7 @@ namespace Hollow.Editor.Build
             AuditM138CombatScaleStressGate(report);
             AuditM139LongRunSoakGate(report);
             AuditM140BuildRealReleaseGate(report);
+            AuditAutomatedTruthGate(report);
         }
 
         private static void AuditBootLoadingStartupSafety(WholeGameAuditReport report)
@@ -1074,6 +1075,115 @@ namespace Hollow.Editor.Build
                     "The gate code is present, but no latest M140 built-player orchestration report exists yet.",
                     latestReportPath,
                     "Run Hollow/Performance/Run M140 macOS Apple Silicon Gate, then import or run Windows artifacts before release signoff.");
+            }
+        }
+
+        private static void AuditAutomatedTruthGate(WholeGameAuditReport report)
+        {
+            const string reportPath = "Assets/_Hollow/Scripts/Hollow.Performance/AutomatedTruthGateReport.cs";
+            const string runnerPath = "Assets/_Hollow/Scripts/Hollow.Editor/Build/AutomatedTruthGateRunner.cs";
+            const string editModeTestPath = "Assets/_Hollow/Tests/EditMode/AutomatedTruthGateTests.cs";
+            const string playModeTestPath = "Assets/_Hollow/Tests/PlayMode/AutomatedTruthGateSmokeTests.cs";
+            var reportSource = File.Exists(ToAbsolutePath(reportPath))
+                ? File.ReadAllText(ToAbsolutePath(reportPath))
+                : string.Empty;
+            var runnerSource = File.Exists(ToAbsolutePath(runnerPath))
+                ? File.ReadAllText(ToAbsolutePath(runnerPath))
+                : string.Empty;
+
+            if (!AssetPathExists(reportPath) ||
+                !AssetPathExists(runnerPath) ||
+                !runnerSource.Contains("RunBatchSmoke", StringComparison.Ordinal) ||
+                !runnerSource.Contains("Run Automated Truth Gate Smoke", StringComparison.Ordinal) ||
+                !runnerSource.Contains("Run Automated Truth Gate Built Player", StringComparison.Ordinal) ||
+                !runnerSource.Contains("M140BuildRealGateRunner.RunMacOSAppleSiliconGate", StringComparison.Ordinal) ||
+                !reportSource.Contains("FromM138Report", StringComparison.Ordinal) ||
+                !reportSource.Contains("FromM139Report", StringComparison.Ordinal))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    140,
+                    "AutomatedTruthGate",
+                    "Automated truth gate runner is incomplete",
+                    "The one-click gate should orchestrate M138, M139, and M140 evidence without manual gameplay and write a combined JSON/Markdown report.",
+                    runnerPath,
+                    "Restore AutomatedTruthGateRunner, report aggregation, menu items, and batch entrypoint."));
+            }
+
+            if (!AssetPathExists(editModeTestPath) || !AssetPathExists(playModeTestPath))
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    140,
+                    "Tests",
+                    "Automated truth gate test coverage is missing",
+                    "The combined gate needs synthetic aggregation tests plus a PlayMode smoke test that writes the combined report.",
+                    editModeTestPath,
+                    "Restore AutomatedTruthGateTests and AutomatedTruthGateSmokeTests."));
+            }
+
+            var latestPath = new[]
+                {
+                    AutomatedTruthGateReportGenerator.JsonReportPathForMode(AutomatedTruthGateMode.BuiltPlayer),
+                    AutomatedTruthGateReportGenerator.JsonReportPathForMode(AutomatedTruthGateMode.Full),
+                    AutomatedTruthGateReportGenerator.JsonReportPathForMode(AutomatedTruthGateMode.Smoke)
+                }
+                .FirstOrDefault(path => File.Exists(ToAbsolutePath(path))) ??
+                AutomatedTruthGateReportGenerator.JsonReportPathForMode(AutomatedTruthGateMode.Smoke);
+            if (!File.Exists(ToAbsolutePath(latestPath)))
+            {
+                AddFinding(
+                    report,
+                    140,
+                    WholeGameAuditSeverity.Info,
+                    "Evidence",
+                    "Automated truth gate has not been generated in this workspace",
+                    "The gate code is present, but no latest combined truth-gate artifact exists yet.",
+                    latestPath,
+                    "Run Hollow/Performance/Run Automated Truth Gate Smoke before using editor diagnostics as evidence.");
+                return;
+            }
+
+            try
+            {
+                var gate = JsonUtility.FromJson<AutomatedTruthGateReport>(File.ReadAllText(ToAbsolutePath(latestPath)));
+                if (gate == null)
+                {
+                    throw new InvalidDataException("Could not parse automated truth-gate report JSON.");
+                }
+
+                if (!gate.passed)
+                {
+                    report.findings.Add(WholeGameAuditFinding.Warning(
+                        140,
+                        "Evidence",
+                        $"Latest automated truth gate is {gate.result}",
+                        string.Join("; ", gate.failures ?? Array.Empty<string>()),
+                        latestPath,
+                        "Open the combined truth-gate report and fix the failing stage before treating current performance evidence as clean."));
+                }
+
+                if (DateTime.TryParse(gate.generatedAtUtc, out var generatedAtUtc) &&
+                    DateTime.UtcNow - generatedAtUtc.ToUniversalTime() > TimeSpan.FromDays(7))
+                {
+                    AddFinding(
+                        report,
+                        140,
+                        WholeGameAuditSeverity.Info,
+                        "Evidence",
+                        "Latest automated truth gate report is stale",
+                        $"Generated at {gate.generatedAtUtc}; rerun the gate after major cache/loading/performance changes.",
+                        latestPath,
+                        "Run the smoke gate again to refresh the combined evidence.");
+                }
+            }
+            catch (Exception exception)
+            {
+                report.findings.Add(WholeGameAuditFinding.Warning(
+                    140,
+                    "Evidence",
+                    "Latest automated truth gate report is unreadable",
+                    exception.Message,
+                    latestPath,
+                    "Regenerate the automated truth-gate report."));
             }
         }
 

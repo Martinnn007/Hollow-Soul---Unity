@@ -24,6 +24,7 @@ namespace Hollow.Editor
         private M136CaptureFpsOverride activeFpsOverride;
         private string activeDirectory;
         private bool automatedRunning;
+        private bool useTruthCaptureMode = true;
         private bool use60FpsCaptureCap;
         private bool captureProfilerTrace;
         private int selectedScenarioIndex;
@@ -77,12 +78,16 @@ namespace Hollow.Editor
                         scenarios.Select(scenario => scenario.displayName).ToArray());
                     EditorGUILayout.LabelField("Warmup", $"{M136EditorLaptopPerformancePolicy.FixedWarmupSeconds:0.#}s");
                     EditorGUILayout.LabelField("Sample", $"{M136EditorLaptopPerformancePolicy.FixedSampleSeconds:0.#}s");
+                    useTruthCaptureMode = EditorGUILayout.Toggle("Truth capture mode", useTruthCaptureMode);
                     use60FpsCaptureCap = EditorGUILayout.Toggle("Use 60 FPS capture cap", use60FpsCaptureCap);
-                    captureProfilerTrace = EditorGUILayout.Toggle("Capture profiler trace", captureProfilerTrace);
+                    using (new EditorGUI.DisabledScope(useTruthCaptureMode))
+                    {
+                        captureProfilerTrace = EditorGUILayout.Toggle("Capture profiler trace", useTruthCaptureMode ? false : captureProfilerTrace);
+                    }
                 }
 
                 EditorGUILayout.HelpBox(
-                    "M136B samples from a hidden Play Mode MonoBehaviour.Update driver. The 60 FPS cap and profiler trace are capture-scoped toggles only; defaults are restored after export.",
+                    "Truth mode keeps the live sampler lightweight: no Unity profiler trace and no repeated object-count scans. Diagnostic mode enables heavier object counts and optional profiler trace for focused investigations.",
                     MessageType.Info);
                 if (!captureProfilerTrace)
                 {
@@ -121,7 +126,7 @@ namespace Hollow.Editor
             EditorGUILayout.LabelField("Sample Source", M136RuntimeLiveCaptureDriver.SamplingSource);
             EditorGUILayout.LabelField("Sample Rate", $"{activeDriver?.SampleRateHz ?? 0d:0.#} Hz");
             EditorGUILayout.LabelField("FPS Override", activeFpsOverride?.Applied == true ? $"{activeFpsOverride.TargetFrameRate} FPS during capture" : "off");
-            EditorGUILayout.LabelField("Trace", captureProfilerTrace ? activeTrace?.Status ?? "starting" : "off by default");
+            EditorGUILayout.LabelField("Trace", activeSession.IsTruthMode ? "off in truth mode" : captureProfilerTrace ? activeTrace?.Status ?? "starting" : "off by default");
             DrawValidityHints(activeDriver?.LatestSnapshot);
         }
 
@@ -205,7 +210,11 @@ namespace Hollow.Editor
         private void StartManualCapture()
         {
             var scenario = scenarios[Mathf.Clamp(selectedScenarioIndex, 0, scenarios.Length - 1)];
-            StartCapture(scenario, M136EditorLaptopPerformancePolicy.ManualCaptureMode);
+            StartCapture(
+                scenario,
+                useTruthCaptureMode
+                    ? M136EditorLaptopPerformancePolicy.TruthCaptureMode
+                    : M136EditorLaptopPerformancePolicy.DiagnosticCaptureMode);
         }
 
         private void StartAutomatedSmoke()
@@ -235,7 +244,11 @@ namespace Hollow.Editor
                 return;
             }
 
-            StartCapture(automatedQueue.Dequeue(), M136EditorLaptopPerformancePolicy.AutomatedCaptureMode);
+            StartCapture(
+                automatedQueue.Dequeue(),
+                useTruthCaptureMode
+                    ? M136EditorLaptopPerformancePolicy.TruthCaptureMode
+                    : M136EditorLaptopPerformancePolicy.AutomatedCaptureMode);
         }
 
         private void StartCapture(M136PerformanceScenarioDefinition scenario, string captureMode)
@@ -250,7 +263,8 @@ namespace Hollow.Editor
             activeDirectory = Path.Combine(M136LivePerformanceCaptureStore.LiveCaptureRoot, activeSession.CaptureId);
             Directory.CreateDirectory(activeDirectory);
             activeFpsOverride = new M136CaptureFpsOverride(use60FpsCaptureCap);
-            activeTrace = captureProfilerTrace ? M136ProfilerTraceRecorder.Begin(activeDirectory, activeSession.CaptureId) : null;
+            var shouldCaptureTrace = captureProfilerTrace && !activeSession.IsTruthMode;
+            activeTrace = shouldCaptureTrace ? M136ProfilerTraceRecorder.Begin(activeDirectory, activeSession.CaptureId) : null;
             activeDriver = M136RuntimeLiveCaptureDriver.StartCapture(activeSession);
             if (activeDriver.Session == null)
             {
@@ -296,7 +310,8 @@ namespace Hollow.Editor
             activeSession.Complete();
             var trace = activeTrace;
             activeTrace = null;
-            if (captureProfilerTrace)
+            var traceRequested = captureProfilerTrace && activeSession?.IsTruthMode != true;
+            if (traceRequested)
             {
                 trace?.End();
             }
@@ -309,9 +324,9 @@ namespace Hollow.Editor
                 rawSampleCsvPath,
                 trace?.TracePath,
                 trace?.TraceSupported ?? false,
-                captureProfilerTrace ? trace?.Status ?? "Profiler trace recorder was not available." : "Profiler trace capture was disabled for this capture.",
+                traceRequested ? trace?.Status ?? "Profiler trace recorder was not available." : "Profiler trace capture was disabled for this capture.",
                 note,
-                profilerTraceRequested: captureProfilerTrace,
+                profilerTraceRequested: traceRequested,
                 fpsOverrideApplied: activeFpsOverride?.Applied ?? false,
                 fpsOverrideTarget: activeFpsOverride?.Applied == true ? activeFpsOverride.TargetFrameRate : 0,
                 samplingSource: M136RuntimeLiveCaptureDriver.SamplingSource);
@@ -322,7 +337,7 @@ namespace Hollow.Editor
                 activeSession.Samples,
                 trace?.TracePath,
                 trace?.TraceSupported ?? false,
-                captureProfilerTrace ? trace?.Status ?? "Profiler trace recorder was not available." : "Profiler trace capture was disabled for this capture.",
+                traceRequested ? trace?.Status ?? "Profiler trace recorder was not available." : "Profiler trace capture was disabled for this capture.",
                 note);
 
             trace?.Dispose();
@@ -357,6 +372,8 @@ namespace Hollow.Editor
             EditorGUILayout.LabelField("Transition Curtain", $"shows={operations.TransitionCurtainShows}, hides={operations.TransitionCurtainHides}, maxVisibleMs={operations.TransitionCurtainMaxVisibleMilliseconds:0.#}, afterReadyFrames={operations.TransitionCurtainMaxFramesAfterReady}, lockMs={operations.TransitionLockMaxMilliseconds:0.#}, orphans={operations.TransitionOrphanCurtainsRemoved}");
             EditorGUILayout.LabelField("Branch Cache", $"hits={operations.BranchRuntimeCacheHits}, misses={operations.BranchRuntimeCacheMisses}, graphs={operations.BranchGraphBuilds}, distances={operations.BranchRoomDistanceMapBuilds}, rooms={operations.BranchRoomAssetResolves}, descriptors={operations.RoomDescriptorBuilds}");
             EditorGUILayout.LabelField("Branch Loading", $"branch={operations.BranchLoadingStarts}/{operations.BranchLoadingCompletions} maxMs={operations.BranchLoadingMaxMilliseconds:0.#}, boss={operations.BossLoadingStarts}/{operations.BossLoadingCompletions} maxMs={operations.BossLoadingMaxMilliseconds:0.#}, preloadRooms={operations.FullBranchPreloadRooms}, coldMisses={operations.TraversalColdCacheMisses}");
+            EditorGUILayout.LabelField("Live Rooms", $"built={operations.BranchLiveRoomsBuilt}, buildMaxMs={operations.BranchLiveRoomBuildMaxMilliseconds:0.#}, hits/misses={operations.BranchLiveRoomCacheHits}/{operations.BranchLiveRoomCacheMisses}, rebuilds={operations.NormalTraversalRoomRebuildCalls}, warms={operations.NormalTraversalWarmCalls}, hibernatedLeaks={operations.HibernatedRoomActiveObjectLeaks}");
+            EditorGUILayout.LabelField("CPU Stages", string.IsNullOrWhiteSpace(operations.CpuStageSummary) ? "none yet" : operations.CpuStageSummary);
             EditorGUILayout.LabelField("Enemy Pool", $"warm={operations.EnemyPoolWarmRequests}/{operations.EnemyPoolWarmCompletions}, rents={operations.EnemyPoolRents}, returns={operations.EnemyPoolReturns}, misses={operations.EnemyPoolMisses}, hard={operations.EnemyPoolHardInstantiates}");
             EditorGUILayout.LabelField("M139 Soak", $"staleEnemy={operations.M139StaleEnemyStateFailures}, stalePool={operations.M139StaleRuntimePoolStateFailures}, leaks={operations.M139PoolActiveLeaks}, cacheWindows={operations.M139CacheHitRateWindows}/{operations.M139CacheHitRateWindowFailures}, firstUseMiss={operations.M139ShaderMaterialFirstUseMissesAfterLoad}, drift={operations.M139ManagedMemoryDriftMaxMb:0.#}/{operations.M139GraphicsMemoryDriftMaxMb:0.#}MB");
             EditorGUILayout.LabelField("Boot Loading", $"boot={operations.BootLoadingStarts}/{operations.BootLoadingCompletions}, fail={operations.BootLoadingFailures}, maxMs={operations.BootLoadingMaxMilliseconds:0.#}, stages={operations.BootLoadingStageCount}, resources={operations.BootPreloadResourceLoads}, warm={operations.BootPreloadWarmRequests}/{operations.BootPreloadWarmCompletions}, shaders={operations.BootPreloadShaderWarmSuccesses}/{operations.BootPreloadShaderWarmAttempts}, shaderMiss={operations.BootPreloadShaderWarmMisses}, shaderMaxMs={operations.BootPreloadShaderWarmMaxMilliseconds:0.#}");

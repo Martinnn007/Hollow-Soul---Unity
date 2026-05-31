@@ -156,6 +156,7 @@ namespace Hollow.Performance
                 case "normal_traversal":
                 case "return_to_previous_room":
                 case "reward_room":
+                case "boss_entry":
                 case "next_branch_entry":
                     yield return RunBranchBackedScenario(scenarioId, options, onComplete);
                     break;
@@ -317,7 +318,7 @@ namespace Hollow.Performance
         {
             var displayName = DisplayNameFor(scenarioId);
             var includeNextBranch = string.Equals(scenarioId, "next_branch_entry", StringComparison.Ordinal);
-            var includeBoss = string.Equals(scenarioId, "reward_room", StringComparison.Ordinal);
+            var includeBoss = string.Equals(scenarioId, "boss_entry", StringComparison.Ordinal);
             var branchScenario = new M139LongRunSoakRunner.M139SoakScenarioDefinition(
                 scenarioId,
                 displayName,
@@ -520,6 +521,7 @@ namespace Hollow.Performance
                 "normal_traversal" => "Normal Traversal",
                 "return_to_previous_room" => "Return To Previous Room",
                 "reward_room" => "Reward Room",
+                "boss_entry" => "Boss Entry",
                 "next_branch_entry" => "Next Branch Entry",
                 _ => scenarioId ?? string.Empty
             };

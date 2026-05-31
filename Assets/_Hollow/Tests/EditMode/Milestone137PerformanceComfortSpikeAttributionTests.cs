@@ -97,7 +97,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(json.passed, string.Join("\n", json.failures ?? Array.Empty<string>()));
             Assert.AreEqual(Milestone137PerformanceComfortSpikeAttributionAssetGenerator.LockId, json.lockId);
             Assert.AreEqual(M137PerformanceComfortPolicy.WindowsComfortTargetFrameRate, json.windowsTargetFrameRate);
-            Assert.AreEqual(6, json.recaptureChecklist.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, json.recaptureChecklist.Length);
 
             var pdf = File.ReadAllBytes(Milestone137PerformanceComfortSpikeAttributionAssetGenerator.ReportPdfPath);
             Assert.Greater(pdf.Length, 4096);

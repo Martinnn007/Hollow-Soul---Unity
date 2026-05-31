@@ -1,5 +1,6 @@
 using Hollow.Data.Definitions;
 using Hollow.Core;
+using Hollow.Core.Diagnostics;
 using Hollow.Presentation;
 using Hollow.Rooms;
 using UnityEngine;
@@ -28,6 +29,7 @@ namespace Hollow.Combat
         private float knockbackMeters;
         private GameObject sourceOwner;
         private GameObject presentationVisual;
+        private bool countedActive;
 
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
@@ -63,6 +65,12 @@ namespace Hollow.Combat
             {
                 presentationVisual.SetActive(true);
             }
+
+            if (!countedActive)
+            {
+                countedActive = true;
+                M136PerformanceOperationCounters.ReportProjectileSpawn();
+            }
         }
 
         public void ConfigureCombatFeel(CombatFeelProfileDefinition profile, bool isHeavyAttackProjectile)
@@ -93,6 +101,19 @@ namespace Hollow.Combat
 
         public bool Tick(float deltaTime)
         {
+            var start = Time.realtimeSinceStartup;
+            try
+            {
+                return TickInternal(deltaTime);
+            }
+            finally
+            {
+                M136PerformanceOperationCounters.ReportProjectileUpdate((Time.realtimeSinceStartup - start) * 1000f);
+            }
+        }
+
+        private bool TickInternal(float deltaTime)
+        {
             ageSeconds += Mathf.Max(0f, deltaTime);
             if (CheckImpact())
             {
@@ -122,6 +143,7 @@ namespace Hollow.Combat
 
         private bool CheckImpact()
         {
+            M136PerformanceOperationCounters.ReportProjectileCollisionCheck();
             var enemy = combatController != null ? combatController.FindEnemyHit(transform.localPosition, hitRadiusMeters) : null;
             if (enemy != null)
             {
@@ -197,6 +219,12 @@ namespace Hollow.Combat
             heavyAttackProjectile = false;
             impactForceClass = ImpactForceClass.Light;
             knockbackMeters = 0f;
+            if (countedActive)
+            {
+                countedActive = false;
+                M136PerformanceOperationCounters.ReportProjectileReturn();
+            }
+
             if (presentationVisual != null)
             {
                 presentationVisual.SetActive(false);

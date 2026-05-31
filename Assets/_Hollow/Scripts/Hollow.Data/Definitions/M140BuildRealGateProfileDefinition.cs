@@ -35,6 +35,7 @@ namespace Hollow.Data.Definitions
             "enemy_stress_30",
             "projectile_heavy_room",
             "boss_plus_adds",
+            "boss_entry",
             "long_run_smoke",
             "next_branch_entry"
         };

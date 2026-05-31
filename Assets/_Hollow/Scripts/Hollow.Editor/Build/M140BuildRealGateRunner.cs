@@ -106,6 +106,12 @@ namespace Hollow.Editor.Build
             var report = CreateEditorReport(profile);
             Directory.CreateDirectory(profile.BuildRoot);
             Directory.CreateDirectory(profile.ReportRoot);
+            if (!ValidateProfileAndStaticContent(profile, report))
+            {
+                report.Recalculate();
+                WriteEditorReport(profile, report);
+                return report;
+            }
 
             if (profile.BuildDevelopmentPlayers)
             {
@@ -151,6 +157,12 @@ namespace Hollow.Editor.Build
             var report = CreateEditorReport(profile);
             Directory.CreateDirectory(profile.BuildRoot);
             Directory.CreateDirectory(profile.ReportRoot);
+            if (!ValidateProfileAndStaticContent(profile, report))
+            {
+                report.Recalculate();
+                WriteEditorReport(profile, report);
+                return report;
+            }
 
             if (profile.BuildDevelopmentPlayers)
             {
@@ -212,6 +224,45 @@ namespace Hollow.Editor.Build
 
             detail = "M140 profile covers Windows, macOS Apple silicon, required scenes, and development scenarios.";
             return true;
+        }
+
+        private static bool ValidateProfileAndStaticContent(
+            M140BuildRealGateProfileDefinition profile,
+            M140BuildRealGateEditorReport report)
+        {
+            if (!ValidateProfile(profile, out var detail))
+            {
+                report.targets.Add(PlatformBuildTargetResult.Failed(
+                    "m140-profile-validation",
+                    "Editor",
+                    ProfilePath,
+                    0,
+                    detail,
+                    "Regenerate the M140 profile or add every required M140 development scenario before building."));
+                return false;
+            }
+
+            var missingScripts = M140MissingScriptLocator.FindMissingScriptLocations(profile);
+            if (missingScripts.Length <= 0)
+            {
+                report.targets.Add(PlatformBuildTargetResult.Passed(
+                    "m140-static-content-validation",
+                    "Editor",
+                    ProfilePath,
+                    0,
+                    detail,
+                    "No missing script components were found in required scenes or Hollow prefabs."));
+                return true;
+            }
+
+            report.targets.Add(PlatformBuildTargetResult.Failed(
+                "m140-missing-script-validation",
+                "Editor",
+                ProfilePath,
+                0,
+                $"Found {missingScripts.Length} missing script component location(s): {string.Join("; ", missingScripts.Take(20))}",
+                "Open the listed scene/prefab objects, remove missing MonoBehaviour slots, and rerun M140."));
+            return false;
         }
 
         private static void RunBuildAndMaybeCapture(

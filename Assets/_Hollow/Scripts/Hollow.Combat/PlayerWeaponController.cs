@@ -706,7 +706,16 @@ namespace Hollow.Combat
             return Mathf.Max(0.01f, attack.RequiredDrawSeconds > 0f ? attack.RequiredDrawSeconds : 1f);
         }
 
-        private void SpawnProjectile(ProjectileShotSpec shot, int attackDamage, float projectileSpeed, float lifetimeSeconds, WeaponAttackDefinition attack)
+        private void SpawnProjectile(
+            ProjectileShotSpec shot,
+            int attackDamage,
+            float projectileSpeed,
+            float lifetimeSeconds,
+            WeaponAttackDefinition attack,
+            PlayerShotAimSource aimSource,
+            string lockedTargetName,
+            float lockedTargetDistanceMeters,
+            float shotTimeSeconds)
         {
             var direction = shot.Direction.sqrMagnitude > 0.001f ? shot.Direction.normalized : Vector2.up;
             var side = new Vector2(-direction.y, direction.x);
@@ -737,6 +746,14 @@ namespace Hollow.Combat
                 attack.AttackKind == AttackKind.Heavy,
                 attack.ImpactForceClass,
                 attack.KnockbackMeters);
+            PlayerAimShotTelemetry.RecordShot(
+                aimSource,
+                lockedTargetName,
+                lockedTargetDistanceMeters,
+                projectileSpeed,
+                Time.deltaTime,
+                direction,
+                shotTimeSeconds);
             VfxPresenter.Play(VfxCueId.ProjectileFire, projectileObject.transform.position, projectileObject.transform.parent);
         }
 
@@ -882,9 +899,20 @@ namespace Hollow.Combat
             var effectiveRange = EffectiveRange(pendingAttack, WeaponSlot.Ranged);
             var projectileSpeed = ProjectileController.DefaultSpeedMetersPerSecond;
             var lifetimeSeconds = Mathf.Max(0.1f, effectiveRange / projectileSpeed);
+            var aimSource = ResolveShotAimSource();
+            TryGetLockedTargetTelemetry(out var lockedTargetName, out var lockedTargetDistanceMeters);
             foreach (var shot in BuildProjectileShots(cardinal))
             {
-                SpawnProjectile(shot, attackDamage, projectileSpeed, lifetimeSeconds, pendingAttack);
+                SpawnProjectile(
+                    shot,
+                    attackDamage,
+                    projectileSpeed,
+                    lifetimeSeconds,
+                    pendingAttack,
+                    aimSource,
+                    lockedTargetName,
+                    lockedTargetDistanceMeters,
+                    timeSeconds);
             }
 
             combatController.EmitPlayerStimulus(
@@ -1063,6 +1091,53 @@ namespace Hollow.Combat
             }
 
             return lastAimDirection.sqrMagnitude > 0.001f ? lastAimDirection : Vector2.up;
+        }
+
+        private PlayerShotAimSource ResolveShotAimSource()
+        {
+            if (aimLockController == null)
+            {
+                return PlayerShotAimSource.Unknown;
+            }
+
+            return aimLockController.CurrentLockMode switch
+            {
+                PlayerTargetLockMode.ManualRetarget => PlayerShotAimSource.ManualLock,
+                PlayerTargetLockMode.Auto => PlayerShotAimSource.AutoLock,
+                _ => aimLockController.HasManualAimOverride
+                    ? PlayerShotAimSource.ManualAim
+                    : PlayerShotAimSource.BodyFacing
+            };
+        }
+
+        private bool TryGetLockedTargetTelemetry(out string targetName, out float distanceMeters)
+        {
+            targetName = string.Empty;
+            distanceMeters = -1f;
+            var target = aimLockController != null ? aimLockController.LockedEnemy : null;
+            if (target == null)
+            {
+                return false;
+            }
+
+            targetName = target.name;
+            distanceMeters = DistanceToTarget(target);
+            return true;
+        }
+
+        private float DistanceToTarget(EnemyRuntimeController target)
+        {
+            if (target == null)
+            {
+                return -1f;
+            }
+
+            var gameplayRoot = ResolveGameplayRoot();
+            var targetPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(target.transform.position) : target.transform.position;
+            var playerPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
+            var delta = targetPosition - playerPosition;
+            delta.y = 0f;
+            return delta.magnitude;
         }
 
         private void EnsureAimLockController()

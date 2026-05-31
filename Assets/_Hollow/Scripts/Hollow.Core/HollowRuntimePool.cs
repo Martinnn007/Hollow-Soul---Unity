@@ -20,6 +20,9 @@ namespace Hollow.Core
         public int hardInstantiates;
         public int warmRequests;
         public int warmCompletions;
+        public int warmVisibleObjects;
+        public int warmRootActiveErrors;
+        public int warmActiveLeaks;
         public string[] recentMissKeys = Array.Empty<string>();
     }
 
@@ -43,6 +46,10 @@ namespace Hollow.Core
         private static readonly Dictionary<string, int> MissesByKey = new(StringComparer.Ordinal);
         private static readonly HashSet<GameObject> ActiveInstances = new();
         private static RuntimePoolRunner runner;
+        private static Transform warmRoot;
+        private const string WarmRootName = "HollowRuntimePool.HiddenWarmRoot";
+
+        public static bool IsWarmRootVisibleForDiagnostics => warmRoot != null && warmRoot.gameObject.activeInHierarchy;
 
         public static GameObject Rent(GameObject prefab, Transform parent)
         {
@@ -148,20 +155,23 @@ namespace Hollow.Core
             var warmed = 0;
             var budget = Mathf.Max(1, perFrame);
             var rented = new List<GameObject>(count);
+            var hiddenRoot = HiddenWarmRoot();
             while (warmed < count)
             {
                 var slice = Mathf.Min(budget, count - warmed);
                 for (var index = 0; index < slice; index++)
                 {
-                    var instance = Rent(prefab, null);
+                    var instance = Rent(prefab, hiddenRoot);
                     if (instance != null)
                     {
+                        instance.transform.SetParent(hiddenRoot, worldPositionStays: false);
                         rented.Add(instance);
                     }
 
                     warmed++;
                 }
 
+                ReportVisibleWarmObjects(rented, hiddenRoot);
                 yield return null;
             }
 
@@ -174,6 +184,7 @@ namespace Hollow.Core
                 }
             }
 
+            ReportWarmReturnLeaks(rented);
             M136PerformanceOperationCounters.ReportRuntimePoolWarmCompletion();
         }
 
@@ -188,20 +199,23 @@ namespace Hollow.Core
             var warmed = 0;
             var budget = Mathf.Max(1, perFrame);
             var rented = new List<GameObject>(count);
+            var hiddenRoot = HiddenWarmRoot();
             while (warmed < count)
             {
                 var slice = Mathf.Min(budget, count - warmed);
                 for (var index = 0; index < slice; index++)
                 {
-                    var instance = RentGenerated(key, null, factory);
+                    var instance = RentGenerated(key, hiddenRoot, factory);
                     if (instance != null)
                     {
+                        instance.transform.SetParent(hiddenRoot, worldPositionStays: false);
                         rented.Add(instance);
                     }
 
                     warmed++;
                 }
 
+                ReportVisibleWarmObjects(rented, hiddenRoot);
                 yield return null;
             }
 
@@ -214,12 +228,101 @@ namespace Hollow.Core
                 }
             }
 
+            ReportWarmReturnLeaks(rented);
             M136PerformanceOperationCounters.ReportRuntimePoolWarmCompletion();
         }
 
         public static IEnumerator WarmPrimitivePool(string key, PrimitiveType primitiveType, int count, int perFrame = 4)
         {
             yield return WarmGeneratedPool(key, count, () => GameObject.CreatePrimitive(primitiveType), perFrame);
+        }
+
+        private static Transform HiddenWarmRoot()
+        {
+            if (warmRoot != null)
+            {
+                if (warmRoot.gameObject.activeSelf || warmRoot.gameObject.activeInHierarchy)
+                {
+                    M136PerformanceOperationCounters.ReportPoolWarmRootActiveError();
+                    warmRoot.gameObject.SetActive(false);
+                }
+
+                return warmRoot;
+            }
+
+            var root = new GameObject(WarmRootName);
+            root.hideFlags = HideFlags.HideAndDontSave;
+            root.SetActive(false);
+            if (Application.isPlaying)
+            {
+                UnityEngine.Object.DontDestroyOnLoad(root);
+            }
+
+            warmRoot = root.transform;
+            return warmRoot;
+        }
+
+        private static void ReportVisibleWarmObjects(IReadOnlyList<GameObject> warmedObjects, Transform hiddenRoot)
+        {
+            if (hiddenRoot == null)
+            {
+                return;
+            }
+
+            if (hiddenRoot.gameObject.activeSelf || hiddenRoot.gameObject.activeInHierarchy)
+            {
+                M136PerformanceOperationCounters.ReportPoolWarmRootActiveError();
+                hiddenRoot.gameObject.SetActive(false);
+            }
+
+            var visible = 0;
+            for (var index = 0; index < warmedObjects.Count; index++)
+            {
+                var instance = warmedObjects[index];
+                if (instance == null)
+                {
+                    continue;
+                }
+
+                if (instance.activeInHierarchy)
+                {
+                    visible++;
+                    continue;
+                }
+
+                var renderers = instance.GetComponentsInChildren<Renderer>(includeInactive: false);
+                for (var rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+                {
+                    if (renderers[rendererIndex] != null && renderers[rendererIndex].enabled && renderers[rendererIndex].isVisible)
+                    {
+                        visible++;
+                        break;
+                    }
+                }
+            }
+
+            if (visible > 0)
+            {
+                M136PerformanceOperationCounters.ReportPoolWarmVisibleObject(visible);
+            }
+        }
+
+        private static void ReportWarmReturnLeaks(IReadOnlyList<GameObject> warmedObjects)
+        {
+            var activeLeaks = 0;
+            for (var index = 0; index < warmedObjects.Count; index++)
+            {
+                var instance = warmedObjects[index];
+                if (instance != null && instance.activeInHierarchy)
+                {
+                    activeLeaks++;
+                }
+            }
+
+            if (activeLeaks > 0)
+            {
+                M136PerformanceOperationCounters.ReportPoolWarmActiveLeak(activeLeaks);
+            }
         }
 
         public static void ResetDiagnostics()
@@ -367,6 +470,9 @@ namespace Hollow.Core
                 hardInstantiates = counters.RuntimePoolHardInstantiates,
                 warmRequests = counters.RuntimePoolWarmRequests,
                 warmCompletions = counters.RuntimePoolWarmCompletions,
+                warmVisibleObjects = counters.PoolWarmVisibleObjects,
+                warmRootActiveErrors = counters.PoolWarmRootActiveErrors,
+                warmActiveLeaks = counters.PoolWarmActiveLeaks,
                 recentMissKeys = SnapshotMissKeys()
             };
         }

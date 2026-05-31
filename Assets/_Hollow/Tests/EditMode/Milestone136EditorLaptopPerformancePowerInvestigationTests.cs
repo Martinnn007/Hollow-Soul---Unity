@@ -47,6 +47,8 @@ namespace Hollow.Tests.EditMode
             AssertMetricSupported(result, "main_thread_ms");
             AssertMetricSupported(result, "render_thread_ms");
             AssertMetricSupported(result, "gc_allocated_bytes");
+            AssertMetricSupported(result, "gc_allocated_recorder_bytes");
+            AssertMetricSupported(result, "gc_allocated_frame_delta_bytes");
             AssertMetricSupported(result, "managed_memory_mb");
             AssertMetricSupported(result, "graphics_memory_mb");
             var gpu = result.metrics.First(metric => metric.id == "gpu_frame_ms");
@@ -59,20 +61,41 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void ScenarioManifestIncludesSixRepresentativeFixedWindowScenarios()
+        public void OperationCountersAttributeColdCacheMissesAndProjectilePressure()
+        {
+            M136PerformanceOperationCounters.Reset();
+
+            M136PerformanceOperationCounters.ReportTraversalColdCacheMiss("live-room-cache", "room_03", "runtime-root-missing");
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("descriptor", "room_asset_01", "branch-load");
+            M136PerformanceOperationCounters.ReportPresentationCacheMiss("prefab", "ChestReward", "reward-room");
+            M136PerformanceOperationCounters.ReportProjectileActiveCount(24);
+            M136PerformanceOperationCounters.ReportProjectileSpawn(6);
+            M136PerformanceOperationCounters.ReportProjectileCollisionCheck(18);
+            M136PerformanceOperationCounters.ReportProjectileReturn(4);
+            M136PerformanceOperationCounters.ReportProjectileUpdate(0.25f);
+
+            var snapshot = M136PerformanceOperationCounters.Snapshot();
+
+            Assert.AreEqual(1, snapshot.TraversalColdCacheMisses);
+            Assert.AreEqual(1, snapshot.BranchRuntimeCacheMisses);
+            Assert.AreEqual(1, snapshot.PresentationPrefabCacheMisses);
+            StringAssert.Contains("live-room-cache", snapshot.CacheMissAttributionSummary);
+            StringAssert.Contains("room_asset_01", snapshot.CacheMissAttributionSummary);
+            Assert.AreEqual(3, snapshot.CacheMissAttributionRows.Length);
+            Assert.AreEqual(24, snapshot.ProjectileActivePeak);
+            Assert.AreEqual(6, snapshot.ProjectileSpawns);
+            Assert.AreEqual(18, snapshot.ProjectileCollisionChecks);
+            Assert.AreEqual(4, snapshot.ProjectileReturns);
+            Assert.AreEqual(0.25f, snapshot.ProjectileUpdateMaxMilliseconds);
+        }
+
+        [Test]
+        public void ScenarioManifestIncludesRepresentativeFixedWindowScenarios()
         {
             Assert.IsTrue(M136EditorLaptopPerformancePolicy.ValidateScenarioManifest(out var detail), detail);
             var scenarios = M136EditorLaptopPerformancePolicy.ScenarioManifest;
             CollectionAssert.AreEquivalent(
-                new[]
-                {
-                    "ship_hub_idle",
-                    "normal_branch_idle",
-                    "active_combat_room",
-                    "wave_crowded_room",
-                    "anchor_boss_smoke",
-                    "room_transition_navmesh"
-                },
+                M136EditorLaptopPerformancePolicy.RequiredScenarioIds,
                 scenarios.Select(scenario => scenario.id).ToArray());
             Assert.IsTrue(scenarios.All(scenario => Math.Abs(scenario.warmupSeconds - 3f) < 0.001f));
             Assert.IsTrue(scenarios.All(scenario => Math.Abs(scenario.sampleSeconds - 30f) < 0.001f));
@@ -195,10 +218,10 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(report.passed, string.Join("\n", report.failures ?? Array.Empty<string>()));
             Assert.IsTrue(report.usedLiveCaptures);
             Assert.AreEqual(1, report.liveCaptureScenarioCount);
-            Assert.AreEqual(6, report.scenarios.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, report.scenarios.Length);
             Assert.IsTrue(report.scenarios.First(scenarioResult => scenarioResult.scenarioId == scenario.id).liveCaptured);
             Assert.IsTrue(report.scenarios.Any(scenarioResult => scenarioResult.captureMode == "deterministic-editor-baseline"));
-            Assert.AreEqual(6, report.captureComparisons.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, report.captureComparisons.Length);
         }
 
         [Test]
@@ -210,8 +233,8 @@ namespace Hollow.Tests.EditMode
             Assert.Greater(report.totalChecks, 20);
             Assert.AreEqual(report.totalChecks, report.passedChecks);
             Assert.AreEqual(M136EditorLaptopPerformancePolicy.ComfortTargetFrameRate, report.comfortTargetFrameRate);
-            Assert.AreEqual(6, report.scenarioManifest.Length);
-            Assert.AreEqual(6, report.scenarios.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, report.scenarioManifest.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, report.scenarios.Length);
             Assert.IsTrue(report.renderSettings.targetFrameRate > 0);
             CollectionAssert.Contains(report.evidencePaths, Milestone136EditorLaptopPerformancePowerInvestigationAssetGenerator.DocsPath);
             CollectionAssert.Contains(report.evidencePaths, Milestone136EditorLaptopPerformancePowerInvestigationAssetGenerator.M135ReportPath);
@@ -265,7 +288,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(json);
             Assert.AreEqual(Milestone136ALiveCaptureInsightsAssetGenerator.LockId, json.lockId);
             Assert.IsTrue(json.passed);
-            Assert.AreEqual(6, json.expectedScenarioCount);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, json.expectedScenarioCount);
             Assert.GreaterOrEqual(json.needsRecaptureCount, 3);
 
             var pdf = File.ReadAllBytes(Milestone136ALiveCaptureInsightsAssetGenerator.ReportPdfPath);
@@ -295,7 +318,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(json);
             Assert.AreEqual(Milestone136EditorLaptopPerformancePowerInvestigationAssetGenerator.LockId, json.lockId);
             Assert.IsTrue(json.passed);
-            Assert.AreEqual(6, json.scenarios.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, json.scenarios.Length);
 
             var pdf = File.ReadAllBytes(Milestone136EditorLaptopPerformancePowerInvestigationAssetGenerator.ReportPdfPath);
             Assert.Greater(pdf.Length, 4096);
@@ -438,7 +461,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(json);
             Assert.AreEqual(Milestone136BCorrectedLivePerformanceCaptureAssetGenerator.LockId, json.lockId);
             Assert.IsTrue(json.passed, string.Join("\n", json.failures ?? Array.Empty<string>()));
-            Assert.AreEqual(6, json.recaptureChecklist.Length);
+            Assert.AreEqual(M136EditorLaptopPerformancePolicy.ScenarioManifest.Length, json.recaptureChecklist.Length);
 
             var pdf = File.ReadAllBytes(Milestone136BCorrectedLivePerformanceCaptureAssetGenerator.ReportPdfPath);
             Assert.Greater(pdf.Length, 4096);

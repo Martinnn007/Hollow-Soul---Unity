@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Build;
 using Hollow.Performance;
@@ -36,6 +37,40 @@ namespace Hollow.Tests.EditMode
             {
                 Assert.IsTrue(M140BuildRealGateRunner.ValidateProfile(profile, out var detail), detail);
                 StringAssert.Contains("macOS Apple silicon", detail);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
+        public void ProfileValidationFailsWhenBossEntryIsMissing()
+        {
+            var profile = ScriptableObject.CreateInstance<M140BuildRealGateProfileDefinition>();
+            try
+            {
+                profile.ConfigureForTests(
+                    "output/builds/m140",
+                    "output/reports/m140",
+                    "HollowSoul_M140_macOS_AppleSilicon",
+                    "HollowSoul_M140_Windows",
+                    "HollowSoul",
+                    60,
+                    1800,
+                    true,
+                    true,
+                    true,
+                    true,
+                    new[] { "macos-apple-silicon", "windows-x64" },
+                    new[] { "Assets/_Hollow/Scenes/Boot.unity", "Assets/_Hollow/Scenes/Game_Windows.unity" },
+                    M140BuildRealReportGenerator.RequiredDevelopmentScenarioIds
+                        .Where(id => id != "boss_entry")
+                        .ToArray(),
+                    M140BuildRealReportGenerator.RequiredReleaseSmokeScenarioIds);
+
+                Assert.IsFalse(M140BuildRealGateRunner.ValidateProfile(profile, out var detail));
+                StringAssert.Contains("boss_entry", detail);
             }
             finally
             {
@@ -116,6 +151,75 @@ namespace Hollow.Tests.EditMode
             var failures = string.Join("\n", report.failures);
             StringAssert.Contains("normal_traversal", failures);
             StringAssert.Contains("Missing M140 built-player scenario", failures);
+        }
+
+        [Test]
+        public void M140FailsProjectileHeavyWithoutProjectilePressureEvidence()
+        {
+            var summary = M140BuildRealReportGenerator.FromM138Summary(
+                new M138CombatScaleStressScenarioSummary
+                {
+                    scenarioId = "projectile_heavy_room",
+                    displayName = "Projectile Heavy Room",
+                    passed = true,
+                    peakActiveEnemies = 4,
+                    peakProjectiles = 2,
+                    projectileActivePeak = 2,
+                    observedBoss = false,
+                    timingAuthoritative = false,
+                    frameCadenceConfidence = "Trusted"
+                },
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: false,
+                new Hollow.Diagnostics.M136LiveObjectCountSnapshot
+                {
+                    activeRenderers = 12,
+                    activeProjectiles = 2,
+                    observedCombatController = true
+                });
+
+            Assert.IsFalse(summary.passed);
+            StringAssert.Contains("Projectile-heavy", string.Join("\n", summary.failures));
+        }
+
+        [Test]
+        public void M140FailsBossEntryWithoutBossEvidence()
+        {
+            var result = new Hollow.Diagnostics.M136PerformanceScenarioResult
+            {
+                scenarioId = "boss_entry",
+                displayName = "Boss Entry",
+                samplingSource = Hollow.Diagnostics.M136FrameCadencePolicy.RuntimeUpdateSamplingSource,
+                frameCadenceConfidence = Hollow.Diagnostics.M136FrameCadencePolicy.Trusted,
+                rawSampleCount = 120,
+                metrics = new[]
+                {
+                    new Hollow.Diagnostics.M136PerformanceMetricSummary { id = "frame_time_ms", supported = true, sampleCount = 120, p95 = 12d, max = 14d },
+                    new Hollow.Diagnostics.M136PerformanceMetricSummary { id = "gc_allocated_bytes", supported = true, sampleCount = 120 }
+                },
+                operations = new Hollow.Diagnostics.M136RuntimeOperationSummary(),
+                objectCounts = new Hollow.Diagnostics.M136LiveObjectCountSummary
+                {
+                    peakRenderers = 20,
+                    observedBranchSession = true,
+                    observedCombatController = true,
+                    observedBoss = false
+                }
+            };
+
+            var summary = M140BuildRealReportGenerator.FromM136Result(
+                "boss_entry",
+                "Boss Entry",
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                result,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: false);
+
+            Assert.IsFalse(summary.passed);
+            StringAssert.Contains("Boss-entry", string.Join("\n", summary.failures));
         }
 
         [Test]

@@ -63,7 +63,7 @@ namespace Hollow.Branches
                 ClearPlanAndRoomCaches();
             }
 
-            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss();
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("content", key, "branch-session-content");
             M136PerformanceOperationCounters.ReportBranchContentBuild();
             cachedContent = BranchSessionContent.Create(legacySampleRoomAsset, catalog, seed, out cachedContentError);
             cachedContentKey = key;
@@ -81,7 +81,7 @@ namespace Hollow.Branches
                 return CloneGraph(cached);
             }
 
-            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss();
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("graph", key, "branch-floor-graph");
             M136PerformanceOperationCounters.ReportBranchGraphBuild();
             var graph = factory != null ? factory() : null;
             if (graph != null)
@@ -104,7 +104,7 @@ namespace Hollow.Branches
                 return cached;
             }
 
-            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss();
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("distance-map", key, "room-distance-map");
             M136PerformanceOperationCounters.ReportBranchRoomDistanceMapBuild();
             var distanceMap = BranchRoomDistanceMap.Create(graph);
             roomDistanceMapCache[key] = distanceMap;
@@ -139,7 +139,7 @@ namespace Hollow.Branches
                 return cached;
             }
 
-            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss();
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("room-asset", key, "room-asset-resolve");
             M136PerformanceOperationCounters.ReportBranchRoomAssetResolve();
             var asset = factory != null ? factory() : null;
             if (asset != null)
@@ -237,7 +237,7 @@ namespace Hollow.Branches
                 return cached;
             }
 
-            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss();
+            M136PerformanceOperationCounters.ReportBranchRuntimeCacheMiss("plan", key, typeof(TPlan).Name);
             reportBuild?.Invoke();
             var plan = factory != null ? factory() : null;
             if (plan != null)
