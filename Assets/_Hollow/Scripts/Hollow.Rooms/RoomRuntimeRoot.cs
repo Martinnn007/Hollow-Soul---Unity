@@ -1120,14 +1120,36 @@ namespace Hollow.Rooms
                 : RoomNavMeshCatalogDefinition.MissingBakeMessage(roomId);
             if (CanUseRuntimeNavMeshFallback(fallbackMode))
             {
-                activeNavMeshData = RoomNavMeshBuildUtility.BuildRoom(asset, "NavMesh.DevRuntime", out var runtimeBuildError);
+                var isStressHarnessBake = fallbackMode == RoomNavMeshRuntimeFallbackMode.AutomatedStressHarnessRuntimeBake;
+                if (isStressHarnessBake && !IsAutomatedStressHarnessRoom(roomId))
+                {
+                    navMeshBakeError = $"{navMeshBakeError}:stress_harness_bake_requires_m138_room";
+                    Debug.LogError(
+                        $"Room '{roomId}' requested automated stress-harness NavMesh baking outside an m138_* generated stress room.",
+                        this);
+                    return;
+                }
+
+                activeNavMeshData = RoomNavMeshBuildUtility.BuildRoom(
+                    asset,
+                    isStressHarnessBake ? "NavMesh.M138StressHarness" : "NavMesh.DevRuntime",
+                    out var runtimeBuildError);
                 if (activeNavMeshData != null)
                 {
-                    M136PerformanceOperationCounters.ReportRuntimeNavMeshFallback();
-                    Debug.LogWarning(
-                        $"Room '{roomId}' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run {RoomNavMeshCatalogDefinition.PreferredBakeMenuPath} before shipping or locking QA. Missing bake: {navMeshBakeError}",
-                        this);
-                    AttachResolvedNavMeshData(roomId, runtimeBuilt: true, source: "dev-runtime-fallback");
+                    if (isStressHarnessBake)
+                    {
+                        M136PerformanceOperationCounters.ReportStressHarnessNavMeshBake();
+                        AttachResolvedNavMeshData(roomId, runtimeBuilt: true, source: "m138-stress-harness-runtime-bake");
+                    }
+                    else
+                    {
+                        M136PerformanceOperationCounters.ReportRuntimeNavMeshFallback();
+                        Debug.LogWarning(
+                            $"Room '{roomId}' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found. Run {RoomNavMeshCatalogDefinition.PreferredBakeMenuPath} before shipping or locking QA. Missing bake: {navMeshBakeError}",
+                            this);
+                        AttachResolvedNavMeshData(roomId, runtimeBuilt: true, source: "dev-runtime-fallback");
+                    }
+
                     return;
                 }
 
@@ -1156,8 +1178,15 @@ namespace Hollow.Rooms
 
         private static bool CanUseRuntimeNavMeshFallback(RoomNavMeshRuntimeFallbackMode fallbackMode)
         {
-            return fallbackMode == RoomNavMeshRuntimeFallbackMode.EditorOrDevelopmentRuntimeBake &&
+            return (fallbackMode == RoomNavMeshRuntimeFallbackMode.EditorOrDevelopmentRuntimeBake ||
+                    fallbackMode == RoomNavMeshRuntimeFallbackMode.AutomatedStressHarnessRuntimeBake) &&
                 (Application.isEditor || Debug.isDebugBuild);
+        }
+
+        private static bool IsAutomatedStressHarnessRoom(string roomId)
+        {
+            return !string.IsNullOrWhiteSpace(roomId) &&
+                roomId.StartsWith("m138_", System.StringComparison.Ordinal);
         }
 
         private void ReleaseNavMesh()

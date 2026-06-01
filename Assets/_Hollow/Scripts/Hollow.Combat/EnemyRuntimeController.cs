@@ -1,4 +1,5 @@
 using Hollow.Entities;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using Hollow.Input;
 using Hollow.Presentation;
@@ -349,6 +350,12 @@ namespace Hollow.Combat
         public EnemyTacticalIntent LastTacticalIntent => lastTacticalIntent;
 
         public EnemyNavMeshAgentBridge NavMeshAgentBridge => navMeshAgentBridge;
+
+        public bool RoomHasActiveBoss => roomCombatController != null && roomCombatController.ActiveBoss != null;
+
+        public int RoomNonBossEnemyCountEstimate => roomCombatController != null
+            ? roomCombatController.LivingNonBossEnemyCountForAiBudget
+            : EnemyAiDebugOverlay.EstimatedActiveAiAgents;
 
         public bool IsVisibleToCamera
         {
@@ -1212,6 +1219,27 @@ namespace Hollow.Combat
             SetAiDebugTextVisible(false);
         }
 
+        private static float BeginCpuStage(out long startingGc)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Truth captures must stay cheap: calling GC.GetTotalMemory from every
+            // enemy update path was distorting the boss/add performance gate.
+            startingGc = 0;
+            return Time.realtimeSinceStartup;
+#else
+            startingGc = 0;
+            return 0f;
+#endif
+        }
+
+        private static void EndCpuStage(M136CpuStageKind stage, float startedRealtime, long startingGc)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var elapsedMilliseconds = Mathf.Max(0f, (Time.realtimeSinceStartup - startedRealtime) * 1000f);
+            M136PerformanceOperationCounters.ReportCpuStage(stage, elapsedMilliseconds, 0L);
+#endif
+        }
+
         public void Tick(float deltaTime, float timeSeconds)
         {
             lastTickTime = timeSeconds;
@@ -1239,15 +1267,23 @@ namespace Hollow.Combat
 
             if (bossRuntime != null)
             {
+                var started = BeginCpuStage(out var startingGc);
                 bossRuntime.Tick(deltaTime, timeSeconds);
+                EndCpuStage(M136CpuStageKind.BossAiUpdate, started, startingGc);
+                started = BeginCpuStage(out startingGc);
                 TryApplyContactDamage(timeSeconds);
+                EndCpuStage(M136CpuStageKind.CombatHitEvaluation, started, startingGc);
                 return;
             }
 
             if (behaviorId == EnemyBehaviorId.BossWarden || archetypeId == EnemyArchetypeId.Boss)
             {
+                var started = BeginCpuStage(out var startingGc);
                 TickBoss(deltaTime, timeSeconds);
+                EndCpuStage(M136CpuStageKind.BossAiUpdate, started, startingGc);
+                started = BeginCpuStage(out startingGc);
                 TryApplyContactDamage(timeSeconds);
+                EndCpuStage(M136CpuStageKind.CombatHitEvaluation, started, startingGc);
                 return;
             }
 
@@ -1259,7 +1295,9 @@ namespace Hollow.Combat
                 TickIntelligenceMovement(deltaTime, timeSeconds, distanceToPlayer);
             }
 
+            var contactStarted = BeginCpuStage(out var contactStartingGc);
             TryApplyContactDamage(timeSeconds);
+            EndCpuStage(M136CpuStageKind.CombatHitEvaluation, contactStarted, contactStartingGc);
         }
 
         private bool TryTickBehaviorTree(float deltaTime, float timeSeconds, float distanceToPlayer)
@@ -1290,6 +1328,34 @@ namespace Hollow.Combat
                 }
             }
 
+            if (aiBrain.TryResolveBossRoomCachedAddCommand(this, timeSeconds, distanceToPlayer, out var bossAddCachedCommand))
+            {
+                lastTacticalIntent = roomCombatController != null
+                    ? roomCombatController.TacticalDirector.ResolveIntent(this, bossAddCachedCommand.ActionId)
+                    : lastTacticalIntent;
+                if (ExecuteBehaviorCommand(bossAddCachedCommand, deltaTime, timeSeconds, distanceToPlayer))
+                {
+                    lastBehaviorTreeNodeId = bossAddCachedCommand.Reason;
+                    lastBehaviorCommand = bossAddCachedCommand.Kind.ToString();
+                    lastBehaviorReason = bossAddCachedCommand.ActionId;
+                    return true;
+                }
+            }
+
+            if (aiBrain.TryResolveCrowdedRoomCachedCommand(this, timeSeconds, distanceToPlayer, out var crowdCachedCommand))
+            {
+                lastTacticalIntent = roomCombatController != null
+                    ? roomCombatController.TacticalDirector.ResolveIntent(this, crowdCachedCommand.ActionId)
+                    : lastTacticalIntent;
+                if (ExecuteBehaviorCommand(crowdCachedCommand, deltaTime, timeSeconds, distanceToPlayer))
+                {
+                    lastBehaviorTreeNodeId = crowdCachedCommand.Reason;
+                    lastBehaviorCommand = crowdCachedCommand.Kind.ToString();
+                    lastBehaviorReason = crowdCachedCommand.ActionId;
+                    return true;
+                }
+            }
+
             var context = new EnemyBehaviorTreeContext(
                 this,
                 deltaTime,
@@ -1308,8 +1374,12 @@ namespace Hollow.Combat
                     ConfigureUnityBehaviorGraphBridge();
                 }
 
-                if (unityBehaviorGraphBridge == null ||
-                    !unityBehaviorGraphBridge.TryEvaluate(context, out var unityBehaviorCommand))
+                var graphStarted = BeginCpuStage(out var graphStartingGc);
+                var unityBehaviorCommand = EnemyBehaviorCommand.None("unity_behavior_not_evaluated");
+                var graphEvaluated = unityBehaviorGraphBridge != null &&
+                    unityBehaviorGraphBridge.TryEvaluate(context, out unityBehaviorCommand);
+                EndCpuStage(M136CpuStageKind.BehaviorGraphTick, graphStarted, graphStartingGc);
+                if (!graphEvaluated)
                 {
                     lastBehaviorTreeNodeId = "unity_behavior_missing_bridge";
                     lastBehaviorCommand = EnemyBehaviorCommandKind.None.ToString();
@@ -1329,7 +1399,10 @@ namespace Hollow.Combat
                 return false;
             }
 
-            if (!tree.TryEvaluate(context, out var command))
+            var treeStarted = BeginCpuStage(out var treeStartingGc);
+            var treeEvaluated = tree.TryEvaluate(context, out var command);
+            EndCpuStage(M136CpuStageKind.BehaviorGraphTick, treeStarted, treeStartingGc);
+            if (!treeEvaluated)
             {
                 lastBehaviorTreeNodeId = tree.RootNode != null ? tree.RootNode.NodeId : string.Empty;
                 lastBehaviorCommand = EnemyBehaviorCommandKind.None.ToString();
@@ -1349,12 +1422,14 @@ namespace Hollow.Combat
             float timeSeconds,
             float distanceToPlayer)
         {
+            var aiStarted = BeginCpuStage(out var aiStartingGc);
             command = aiBrain.ChooseCommand(
                 this,
                 command,
                 timeSeconds,
                 distanceToPlayer,
                 roomCombatController != null ? roomCombatController.ThreatDirector : null);
+            EndCpuStage(M136CpuStageKind.AddAiThinkScorer, aiStarted, aiStartingGc);
             if (roomCombatController != null)
             {
                 command = roomCombatController.TacticalDirector.PlanCommand(
@@ -4568,7 +4643,9 @@ namespace Hollow.Combat
                 navMeshAgentBridge,
                 desiredSpeedMetersPerSecond,
                 aiBrain.LodTier,
-                lastTacticalIntent.Role);
+                lastTacticalIntent.Role,
+                RoomHasActiveBoss,
+                bossDefinition != null || archetypeId == EnemyArchetypeId.Boss || behaviorId == EnemyBehaviorId.BossWarden);
             lastNavigationResult = locomotionAgent.Resolve(request, lastTacticalIntent);
             lastNavigationMoveRequiresAgentSync = !allowPathfinding || lastNavigationResult.Backend != EnemyNavigationBackend.UnityNavMesh;
             UpdatePathCacheAfterResult(lastNavigationResult, finalGoal, intent, allowPathfinding);

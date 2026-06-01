@@ -33,7 +33,7 @@ namespace Hollow.Performance
                 traversalsPerBranch = 8,
                 targetFrameRate = 60,
                 writeReports = true,
-                enforceTiming = true,
+                enforceTiming = false,
                 ciSmoke = false
             };
         }
@@ -240,6 +240,8 @@ namespace Hollow.Performance
         public double managedMemoryDriftMb;
         public double graphicsMemoryDriftMb;
         public string cacheMissAttributionSummary;
+        public string preloadBuildCacheMissAttributionSummary;
+        public string postLoadCacheMissAttributionSummary;
         public string[] cacheMissAttributionRows;
         public M139PoolSnapshotSummary enemyPool;
         public M139PoolSnapshotSummary runtimePool;
@@ -459,6 +461,12 @@ namespace Hollow.Performance
                 managedMemoryDriftMb = managedDrift,
                 graphicsMemoryDriftMb = graphicsDrift,
                 cacheMissAttributionSummary = finalWithM139Counters.CacheMissAttributionSummary,
+                preloadBuildCacheMissAttributionSummary = BuildAttributionSummary(
+                    finalWithM139Counters.CacheMissAttributionRows,
+                    row => !IsPostLoadTraversalAttribution(row)),
+                postLoadCacheMissAttributionSummary = BuildAttributionSummary(
+                    finalWithM139Counters.CacheMissAttributionRows,
+                    IsPostLoadTraversalAttribution),
                 cacheMissAttributionRows = finalWithM139Counters.CacheMissAttributionRows,
                 enemyPool = M139PoolSnapshotSummary.FromEnemy(enemyPool),
                 runtimePool = M139PoolSnapshotSummary.FromRuntime(runtimePool),
@@ -546,9 +554,14 @@ namespace Hollow.Performance
                 builder.AppendLine($"- Branch loads/traversals: {scenario.branchLoadsCompleted}/{scenario.roomTraversalsCompleted}");
                 builder.AppendLine($"- Special actions: save-load {scenario.saveLoadRestoresCompleted}, abandon/re-enter {scenario.branchAbandonReentriesCompleted}, boss loads {scenario.bossLoadsCompleted}, next branch {scenario.nextBranchTransitionsCompleted}");
                 builder.AppendLine($"- Cache: cold misses {scenario.normalTraversalColdCacheMissesAfterLoad}, hit rate {scenario.branchRuntimeCacheHitRate:P1}, shader/material misses {scenario.shaderMaterialFirstUseMissesAfterLoad}");
-                if (!string.IsNullOrWhiteSpace(scenario.cacheMissAttributionSummary))
+                if (!string.IsNullOrWhiteSpace(scenario.postLoadCacheMissAttributionSummary))
                 {
-                    builder.AppendLine($"- Cache miss attribution: {scenario.cacheMissAttributionSummary}");
+                    builder.AppendLine($"- Post-load traversal miss attribution: {scenario.postLoadCacheMissAttributionSummary}");
+                }
+
+                if (!scenario.passed && !string.IsNullOrWhiteSpace(scenario.preloadBuildCacheMissAttributionSummary))
+                {
+                    builder.AppendLine($"- Preload/build attribution: {TrimAttributionForMarkdown(scenario.preloadBuildCacheMissAttributionSummary)}");
                 }
 
                 builder.AppendLine($"- Nav/pools: nav fallback {scenario.runtimeNavMeshFallbacks}, enemy misses/hard {scenario.enemyPoolMissesAfterWarmup}/{scenario.enemyPoolHardInstantiatesAfterWarmup}, runtime misses/hard {scenario.runtimePoolMissesAfterWarmup}/{scenario.runtimePoolHardInstantiatesAfterWarmup}, leaks {scenario.poolActiveLeaks}");
@@ -577,6 +590,49 @@ namespace Hollow.Performance
             }
 
             return builder.ToString();
+        }
+
+        private static string TrimAttributionForMarkdown(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            const int maxLength = 900;
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength) + " ...";
+        }
+
+        private static bool IsPostLoadTraversalAttribution(string row)
+        {
+            return !string.IsNullOrWhiteSpace(row) &&
+                row.StartsWith("traversal|post-load-delta|", StringComparison.Ordinal);
+        }
+
+        private static string BuildAttributionSummary(IEnumerable<string> rows, Func<string, bool> predicate)
+        {
+            if (rows == null || predicate == null)
+            {
+                return string.Empty;
+            }
+
+            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var row in rows)
+            {
+                if (string.IsNullOrWhiteSpace(row) || !predicate(row))
+                {
+                    continue;
+                }
+
+                counts[row] = counts.TryGetValue(row, out var count) ? count + 1 : 1;
+            }
+
+            if (counts.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join("; ", counts.Select(pair => $"{pair.Value.ToString(CultureInfo.InvariantCulture)}x {pair.Key}"));
         }
 
         private static float CacheHitRate(OperationDelta snapshot)

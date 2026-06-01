@@ -239,7 +239,10 @@ namespace Hollow.Combat
 
                 reusablePath ??= new NavMeshPath();
                 var started = Time.realtimeSinceStartup;
-                if (!agent.CalculatePath(destinationWorld, reusablePath) || reusablePath.status == NavMeshPathStatus.PathInvalid)
+                var stageStarted = BeginCpuStage(out var stageStartingGc);
+                var pathCalculated = agent.CalculatePath(destinationWorld, reusablePath);
+                EndCpuStage(M136CpuStageKind.NavMeshRequest, stageStarted, stageStartingGc);
+                if (!pathCalculated || reusablePath.status == NavMeshPathStatus.PathInvalid)
                 {
                     lastReason = "navmesh_path_invalid";
                     EnemyNavigationDebugOverlay.RecordFreshPathSolve((Time.realtimeSinceStartup - started) * 1000f);
@@ -508,7 +511,8 @@ namespace Hollow.Combat
                 return;
             }
 
-            if (request.AiLodTier == EnemyAiLodTier.Full &&
+            if ((!request.RoomHasActiveBoss || request.IsBoss) &&
+                request.AiLodTier == EnemyAiLodTier.Full &&
                 request.TacticalRole == EnemyTacticalRole.ActiveThreat)
             {
                 agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
@@ -560,6 +564,25 @@ namespace Hollow.Combat
                 request.PathAgeSeconds,
                 0,
                 reason);
+        }
+
+        private static float BeginCpuStage(out long startingGc)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            startingGc = 0;
+            return Time.realtimeSinceStartup;
+#else
+            startingGc = 0;
+            return 0f;
+#endif
+        }
+
+        private static void EndCpuStage(M136CpuStageKind stage, float startedRealtime, long startingGc)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var elapsedMilliseconds = Mathf.Max(0f, (Time.realtimeSinceStartup - startedRealtime) * 1000f);
+            M136PerformanceOperationCounters.ReportCpuStage(stage, elapsedMilliseconds, 0L);
+#endif
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hollow.Core.Diagnostics;
 using Hollow.Entities;
 using Hollow.Rooms;
 using UnityEngine;
@@ -17,10 +18,27 @@ namespace Hollow.Combat
         private readonly List<EnemyRuntimeController> livingEnemies = new();
         private readonly List<EnemyRuntimeController> activeCandidates = new();
         private readonly HashSet<int> activeThreatIds = new();
+        private NavMeshPath reservationPath;
         private int activeThreatCount;
         private int waitingCount;
         private float lastTickTime = float.NegativeInfinity;
+        private int lastBossRoomSignature;
+        private bool hasLastBossRoomSignature;
+        private int lastCrowdedRoomSignature;
+        private bool hasLastCrowdedRoomSignature;
         private static readonly float[] ReservationAngleOffsets = { 0f, -28f, 28f, -56f, 56f, 92f, -92f, 180f };
+        private static readonly float[] BossReservationAngleOffsets = { 0f, -28f, 28f };
+        private static readonly Vector3[] ClearanceSampleDirections =
+        {
+            Vector3.forward,
+            Vector3.back,
+            Vector3.left,
+            Vector3.right,
+            (Vector3.forward + Vector3.left).normalized,
+            (Vector3.forward + Vector3.right).normalized,
+            (Vector3.back + Vector3.left).normalized,
+            (Vector3.back + Vector3.right).normalized
+        };
 
         public int ActiveThreatCount => activeThreatCount;
 
@@ -35,6 +53,10 @@ namespace Hollow.Combat
             activeThreatCount = 0;
             waitingCount = 0;
             lastTickTime = float.NegativeInfinity;
+            hasLastBossRoomSignature = false;
+            lastBossRoomSignature = 0;
+            hasLastCrowdedRoomSignature = false;
+            lastCrowdedRoomSignature = 0;
         }
 
         public void Tick(
@@ -43,6 +65,30 @@ namespace Hollow.Combat
             PlaceholderPlayerController player,
             float timeSeconds)
         {
+            var hasBossRoomSignature = TryBuildBossRoomSignature(enemies, player, out var bossRoomSignature, out var livingBossAdds);
+            if (hasBossRoomSignature &&
+                hasLastBossRoomSignature &&
+                bossRoomSignature == lastBossRoomSignature &&
+                intents.Count > 0)
+            {
+                lastTickTime = timeSeconds;
+                M136PerformanceOperationCounters.ReportTacticalCachedIntentReuse(livingBossAdds);
+                EnemyTacticalDebugOverlay.ReportRoomState(activeThreatCount, waitingCount);
+                return;
+            }
+
+            var hasCrowdedRoomSignature = TryBuildCrowdedRoomSignature(enemies, player, out var crowdedRoomSignature, out var livingCrowdEnemies);
+            if (hasCrowdedRoomSignature &&
+                hasLastCrowdedRoomSignature &&
+                crowdedRoomSignature == lastCrowdedRoomSignature &&
+                intents.Count > 0)
+            {
+                lastTickTime = timeSeconds;
+                M136PerformanceOperationCounters.ReportTacticalCrowdCachedIntentReuse(livingCrowdEnemies);
+                EnemyTacticalDebugOverlay.ReportRoomState(activeThreatCount, waitingCount);
+                return;
+            }
+
             intents.Clear();
             reservedPositions.Clear();
             livingEnemies.Clear();
@@ -58,11 +104,18 @@ namespace Hollow.Combat
                 return;
             }
 
+            var bossPresent = false;
             for (var index = 0; index < enemies.Count; index++)
             {
                 var enemy = enemies[index];
-                if (enemy == null || !enemy.IsAlive || enemy.BossDefinition != null || enemy.ArchetypeId == EnemyArchetypeId.Boss)
+                if (enemy == null || !enemy.IsAlive)
                 {
+                    continue;
+                }
+
+                if (enemy.BossDefinition != null || enemy.ArchetypeId == EnemyArchetypeId.Boss)
+                {
+                    bossPresent = true;
                     continue;
                 }
 
@@ -75,42 +128,71 @@ namespace Hollow.Combat
 
             activeCandidates.Sort(CompareThreatCandidates);
             livingEnemies.Sort(CompareSpawnOrder);
-            var activeLimit = ResolveActiveThreatLimit(activeCandidates.Count, livingEnemies.Count);
+            var crowdPresent = IsCrowdedNonBossRoom(bossPresent, livingEnemies.Count);
+            var activeLimit = ResolveActiveThreatLimit(activeCandidates.Count, livingEnemies.Count, bossPresent);
+            if (crowdPresent)
+            {
+                M136PerformanceOperationCounters.ReportTacticalCrowdActiveThreatLimit(activeLimit);
+            }
+
             for (var index = 0; index < activeCandidates.Count && index < activeLimit; index++)
             {
                 activeThreatIds.Add(activeCandidates[index].GetInstanceID());
             }
 
             var activeSlot = 0;
+            var crowdSupportReservationBudgetUsed = 0;
             for (var index = 0; index < livingEnemies.Count; index++)
             {
                 var enemy = livingEnemies[index];
                 var isActive = activeThreatIds.Contains(enemy.GetInstanceID());
                 var role = ResolveRole(enemy, isActive);
+                if (bossPresent && !isActive)
+                {
+                    role = DowngradeBossAddRole(enemy, role);
+                }
+                else if (crowdPresent && !isActive)
+                {
+                    role = DowngradeCrowdNonActiveRole(enemy, role);
+                }
+
                 var commitPolicy = ResolveCommitPolicy(role);
                 var slotIndex = isActive ? activeSlot : -1;
                 var actionId = enemy.AiBlackboard.ChosenActionId;
-                var hasReservation = TryResolveReservedPosition(
-                    enemy,
-                    room,
-                    player,
-                    actionId,
-                    role,
-                    slotIndex,
-                    Mathf.Max(1, activeLimit),
-                    out var reserved,
-                    out var reservationPathStatus,
-                    out var reservationPathCornerCount,
-                    out var reservationPathLengthMeters,
-                    out var reservationReason);
-                if (role == EnemyTacticalRole.ActiveThreat && !hasReservation)
+                var reserved = enemy.transform.localPosition;
+                var reservationPathStatus = EnemyPathStatus.NotRequested;
+                var reservationPathCornerCount = 0;
+                var reservationPathLengthMeters = 0f;
+                var reservationReason = bossPresent && role != EnemyTacticalRole.ActiveThreat
+                    ? "boss_add_cached_hold_no_reservation"
+                    : crowdPresent && role != EnemyTacticalRole.ActiveThreat
+                        ? "crowd_cached_intent_no_reservation"
+                        : "reservation_not_requested";
+                if (bossPresent && role != EnemyTacticalRole.ActiveThreat)
                 {
-                    var activeReservationReason = reservationReason;
-                    isActive = false;
-                    role = EnemyTacticalRole.SupportPressure;
-                    commitPolicy = ResolveCommitPolicy(role);
-                    slotIndex = -1;
-                    hasReservation = TryResolveReservedPosition(
+                    M136PerformanceOperationCounters.ReportTacticalBossAddReservationSkip();
+                }
+                else if (crowdPresent && role != EnemyTacticalRole.ActiveThreat)
+                {
+                    M136PerformanceOperationCounters.ReportTacticalCrowdReservationSkip();
+                }
+
+                var compactReservationMode = (bossPresent || crowdPresent) && role == EnemyTacticalRole.ActiveThreat;
+                var crowdSupportReservationAllowed = !bossPresent &&
+                    crowdPresent &&
+                    role != EnemyTacticalRole.ActiveThreat &&
+                    ShouldUseCrowdSupportReservation(enemy, role, crowdSupportReservationBudgetUsed);
+                if (crowdSupportReservationAllowed)
+                {
+                    crowdSupportReservationBudgetUsed++;
+                    M136PerformanceOperationCounters.ReportTacticalCrowdSupportReservationBudgetUse();
+                }
+
+                var canRequestReservation = role == EnemyTacticalRole.ActiveThreat ||
+                    (!bossPresent && !crowdPresent) ||
+                    crowdSupportReservationAllowed;
+                var hasReservation = canRequestReservation
+                    ? TryResolveReservedPosition(
                         enemy,
                         room,
                         player,
@@ -122,7 +204,48 @@ namespace Hollow.Combat
                         out reservationPathStatus,
                         out reservationPathCornerCount,
                         out reservationPathLengthMeters,
-                        out reservationReason);
+                        out reservationReason,
+                        compactReservationMode: compactReservationMode)
+                    : false;
+                if (role == EnemyTacticalRole.ActiveThreat && !hasReservation)
+                {
+                    var activeReservationReason = reservationReason;
+                    isActive = false;
+                    role = bossPresent ? EnemyTacticalRole.Hold : EnemyTacticalRole.SupportPressure;
+                    commitPolicy = ResolveCommitPolicy(role);
+                    slotIndex = -1;
+                    if (bossPresent || crowdPresent)
+                    {
+                        reserved = enemy.transform.localPosition;
+                        reservationPathStatus = EnemyPathStatus.NotRequested;
+                        reservationPathCornerCount = 0;
+                        reservationPathLengthMeters = 0f;
+                        reservationReason = bossPresent
+                            ? "boss_add_active_slot_missing_cached_hold"
+                            : "crowd_active_slot_missing_cached_support";
+                        hasReservation = false;
+                        if (crowdPresent)
+                        {
+                            M136PerformanceOperationCounters.ReportTacticalCrowdReservationSkip();
+                        }
+                    }
+                    else
+                    {
+                        hasReservation = TryResolveReservedPosition(
+                            enemy,
+                            room,
+                            player,
+                            actionId,
+                            role,
+                            slotIndex,
+                            Mathf.Max(1, activeLimit),
+                            out reserved,
+                            out reservationPathStatus,
+                            out reservationPathCornerCount,
+                            out reservationPathLengthMeters,
+                            out reservationReason);
+                    }
+
                     var activeMissingPrefix = string.IsNullOrWhiteSpace(activeReservationReason)
                         ? "active_slot_missing_reachable_reservation"
                         : $"active_slot_missing_reachable_reservation:{activeReservationReason}";
@@ -163,6 +286,24 @@ namespace Hollow.Combat
                 }
             }
 
+            if (hasBossRoomSignature)
+            {
+                lastBossRoomSignature = bossRoomSignature;
+                hasLastBossRoomSignature = true;
+                hasLastCrowdedRoomSignature = false;
+            }
+            else if (hasCrowdedRoomSignature)
+            {
+                lastCrowdedRoomSignature = crowdedRoomSignature;
+                hasLastCrowdedRoomSignature = true;
+                hasLastBossRoomSignature = false;
+            }
+            else
+            {
+                hasLastBossRoomSignature = false;
+                hasLastCrowdedRoomSignature = false;
+            }
+
             EnemyTacticalDebugOverlay.ReportRoomState(activeThreatCount, waitingCount);
         }
 
@@ -186,12 +327,13 @@ namespace Hollow.Combat
             float distanceToPlayer,
             out EnemyTacticalIntent intent)
         {
-            intent = ResolveIntent(enemy, requested.ActionId);
             if (enemy == null || enemy.BossDefinition != null || enemy.ArchetypeId == EnemyArchetypeId.Boss)
             {
+                intent = EnemyTacticalIntent.Empty;
                 return requested;
             }
 
+            intent = ResolveIntent(enemy, requested.ActionId);
             if (requested.StartsCommittedAction && intent.Role != EnemyTacticalRole.ActiveThreat)
             {
                 return intent.Role switch
@@ -226,6 +368,15 @@ namespace Hollow.Combat
             if (enemy == null || room == null || player == null || string.IsNullOrWhiteSpace(actionId))
             {
                 reason = "missing_attack_reposition_context";
+                return false;
+            }
+
+            if (!enemy.RoomHasActiveBoss &&
+                enemy.LastTacticalIntent.Role != EnemyTacticalRole.ActiveThreat &&
+                enemy.CurrentAiLodTier != EnemyAiLodTier.Full)
+            {
+                reason = "crowd_non_active_lod_skips_clear_attack_reposition";
+                M136PerformanceOperationCounters.ReportTacticalCrowdReservationSkip();
                 return false;
             }
 
@@ -275,14 +426,32 @@ namespace Hollow.Combat
 
         public static int ResolveActiveThreatLimit(int candidateCount, int livingCount)
         {
+            return ResolveActiveThreatLimit(candidateCount, livingCount, bossPresent: false);
+        }
+
+        public static int ResolveActiveThreatLimit(int candidateCount, int livingCount, bool bossPresent)
+        {
             if (candidateCount <= 0 || livingCount <= 0)
             {
                 return 0;
             }
 
+            if (bossPresent)
+            {
+                return Mathf.Clamp(candidateCount, 1, 1);
+            }
+
             if (candidateCount <= MinActiveThreatSlots)
             {
                 return candidateCount;
+            }
+
+            if (livingCount >= M137PerformanceComfortPolicy.M3CrowdedRoomEnemyThreshold)
+            {
+                return Mathf.Clamp(
+                    M137PerformanceComfortPolicy.M3CrowdedRoomActiveThreatSlots,
+                    1,
+                    Mathf.Min(candidateCount, MaxActiveThreatSlots));
             }
 
             var target = livingCount <= 5 ? MinActiveThreatSlots : livingCount <= 10 ? 3 : MaxActiveThreatSlots;
@@ -302,6 +471,191 @@ namespace Hollow.Combat
             }
 
             return enemy.DistanceToPlayerMeters <= 13f || enemy.IsEndangeredNow;
+        }
+
+        private static EnemyTacticalRole DowngradeBossAddRole(EnemyRuntimeController enemy, EnemyTacticalRole role)
+        {
+            if (enemy == null)
+            {
+                return EnemyTacticalRole.Hold;
+            }
+
+            return role switch
+            {
+                EnemyTacticalRole.SupportPressure or EnemyTacticalRole.Reposition or EnemyTacticalRole.Investigate =>
+                    enemy.DistanceToPlayerMeters > 5.5f ? EnemyTacticalRole.Waiting : EnemyTacticalRole.Hold,
+                _ => role
+            };
+        }
+
+        private static bool IsCrowdedNonBossRoom(bool bossPresent, int livingEnemyCount)
+        {
+            return !bossPresent && livingEnemyCount >= M137PerformanceComfortPolicy.M3CrowdedRoomEnemyThreshold;
+        }
+
+        private static EnemyTacticalRole DowngradeCrowdNonActiveRole(EnemyRuntimeController enemy, EnemyTacticalRole role)
+        {
+            if (enemy == null)
+            {
+                return EnemyTacticalRole.Hold;
+            }
+
+            if (enemy.ReadabilityState != EnemyReadabilityState.Idle ||
+                enemy.IsEndangeredNow ||
+                enemy.DistanceToPlayerMeters <= M137PerformanceComfortPolicy.M3CrowdedRoomProtectResponsivenessDistanceMeters)
+            {
+                return role;
+            }
+
+            return role switch
+            {
+                EnemyTacticalRole.SupportPressure or EnemyTacticalRole.Reposition or EnemyTacticalRole.Investigate =>
+                    enemy.DistanceToPlayerMeters > M137PerformanceComfortPolicy.M3CrowdedRoomCheapCommandDistanceMeters
+                        ? EnemyTacticalRole.Waiting
+                        : EnemyTacticalRole.Hold,
+                _ => role
+            };
+        }
+
+        private static bool ShouldUseCrowdSupportReservation(
+            EnemyRuntimeController enemy,
+            EnemyTacticalRole role,
+            int budgetUsed)
+        {
+            if (enemy == null ||
+                role is EnemyTacticalRole.ActiveThreat or
+                    EnemyTacticalRole.Waiting or
+                    EnemyTacticalRole.Hold or
+                    EnemyTacticalRole.StationarySentinel or
+                    EnemyTacticalRole.None ||
+                budgetUsed >= M137PerformanceComfortPolicy.M3CrowdedRoomSupportReservationBudgetPerTick)
+            {
+                return false;
+            }
+
+            return enemy.ReadabilityState != EnemyReadabilityState.Idle ||
+                enemy.IsEndangeredNow ||
+                enemy.DistanceToPlayerMeters <= M137PerformanceComfortPolicy.M3CrowdedRoomProtectResponsivenessDistanceMeters;
+        }
+
+        private static bool TryBuildBossRoomSignature(
+            IReadOnlyList<EnemyRuntimeController> enemies,
+            PlaceholderPlayerController player,
+            out int signature,
+            out int livingAddCount)
+        {
+            signature = 0;
+            livingAddCount = 0;
+            if (enemies == null || player == null)
+            {
+                return false;
+            }
+
+            var bossPresent = false;
+            unchecked
+            {
+                var hash = 17;
+                hash = AppendQuantizedPosition(hash, player.transform.localPosition);
+                for (var index = 0; index < enemies.Count; index++)
+                {
+                    var enemy = enemies[index];
+                    if (enemy == null || !enemy.IsAlive)
+                    {
+                        continue;
+                    }
+
+                    if (enemy.BossDefinition != null || enemy.ArchetypeId == EnemyArchetypeId.Boss)
+                    {
+                        bossPresent = true;
+                        continue;
+                    }
+
+                    livingAddCount++;
+                    hash = hash * 31 + enemy.GetInstanceID();
+                    hash = AppendQuantizedPosition(hash, enemy.transform.localPosition);
+                    hash = hash * 31 + (int)enemy.CurrentAiLodTier;
+                    hash = hash * 31 + (int)enemy.AwarenessState;
+                    hash = hash * 31 + StableStringHash(enemy.AiBlackboard.ChosenActionId);
+                }
+
+                signature = hash * 31 + livingAddCount;
+            }
+
+            return bossPresent;
+        }
+
+        private static bool TryBuildCrowdedRoomSignature(
+            IReadOnlyList<EnemyRuntimeController> enemies,
+            PlaceholderPlayerController player,
+            out int signature,
+            out int livingEnemyCount)
+        {
+            signature = 0;
+            livingEnemyCount = 0;
+            if (enemies == null || player == null)
+            {
+                return false;
+            }
+
+            unchecked
+            {
+                var hash = 29;
+                hash = AppendQuantizedPosition(hash, player.transform.localPosition);
+                for (var index = 0; index < enemies.Count; index++)
+                {
+                    var enemy = enemies[index];
+                    if (enemy == null || !enemy.IsAlive)
+                    {
+                        continue;
+                    }
+
+                    if (enemy.BossDefinition != null || enemy.ArchetypeId == EnemyArchetypeId.Boss)
+                    {
+                        return false;
+                    }
+
+                    livingEnemyCount++;
+                    hash = hash * 31 + enemy.GetInstanceID();
+                    hash = AppendQuantizedPosition(hash, enemy.transform.localPosition);
+                    hash = hash * 31 + (int)enemy.CurrentAiLodTier;
+                    hash = hash * 31 + (int)enemy.ReadabilityState;
+                    hash = hash * 31 + (int)enemy.AwarenessState;
+                    hash = hash * 31 + StableStringHash(enemy.AiBlackboard.ChosenActionId);
+                }
+
+                signature = hash * 31 + livingEnemyCount;
+            }
+
+            return livingEnemyCount >= M137PerformanceComfortPolicy.M3CrowdedRoomEnemyThreshold;
+        }
+
+        private static int AppendQuantizedPosition(int hash, Vector3 position)
+        {
+            unchecked
+            {
+                hash = hash * 31 + Mathf.RoundToInt(position.x);
+                hash = hash * 31 + Mathf.RoundToInt(position.z);
+                return hash;
+            }
+        }
+
+        private static int StableStringHash(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return 0;
+            }
+
+            unchecked
+            {
+                var hash = 23;
+                for (var index = 0; index < value.Length; index++)
+                {
+                    hash = hash * 31 + value[index];
+                }
+
+                return hash;
+            }
         }
 
         private static float ThreatScore(EnemyRuntimeController enemy)
@@ -395,7 +749,8 @@ namespace Hollow.Combat
             out float reservationPathLengthMeters,
             out string reservationReason,
             bool respectExistingReservations = true,
-            bool recordReservation = true)
+            bool recordReservation = true,
+            bool compactReservationMode = false)
         {
             reserved = enemy != null ? enemy.transform.localPosition : Vector3.zero;
             reservationPathStatus = EnemyPathStatus.NotRequested;
@@ -407,6 +762,8 @@ namespace Hollow.Combat
                 reservationReason = "reservation_not_needed";
                 return false;
             }
+
+            M136PerformanceOperationCounters.ReportTacticalReservationAttempt();
 
             var anchor = player.transform.localPosition;
             var spacing = enemy.ResolveActionSpacingForTacticalIntent(actionId);
@@ -435,7 +792,9 @@ namespace Hollow.Combat
             var bestCornerCount = 0;
             var bestPathLength = 0f;
             var bestReason = string.Empty;
-            for (var distanceIndex = 0; distanceIndex < 4; distanceIndex++)
+            var distanceCandidateCount = compactReservationMode ? 2 : 4;
+            var angleOffsets = compactReservationMode ? BossReservationAngleOffsets : ReservationAngleOffsets;
+            for (var distanceIndex = 0; distanceIndex < distanceCandidateCount; distanceIndex++)
             {
                 var candidateDistance = distanceIndex switch
                 {
@@ -444,9 +803,10 @@ namespace Hollow.Combat
                     3 => desiredDistance + 0.9f,
                     _ => desiredDistance
                 };
-                for (var angleIndex = 0; angleIndex < ReservationAngleOffsets.Length; angleIndex++)
+                for (var angleIndex = 0; angleIndex < angleOffsets.Length; angleIndex++)
                 {
-                    var angle = primaryAngle + ReservationAngleOffsets[angleIndex];
+                    M136PerformanceOperationCounters.ReportTacticalReservationCandidateChecked();
+                    var angle = primaryAngle + angleOffsets[angleIndex];
                     var direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
                     var candidate = anchor + direction.normalized * candidateDistance;
                     candidate.y = enemy.transform.localPosition.y;
@@ -459,7 +819,9 @@ namespace Hollow.Combat
                             out var pathStatus,
                             out var cornerCount,
                             out var pathLength,
-                            out var reachReason))
+                            out var reachReason,
+                            GetReservationPath(),
+                            reportTacticalPathSolve: true))
                     {
                         reservationReason = reachReason;
                         continue;
@@ -475,6 +837,21 @@ namespace Hollow.Combat
                     {
                         reservationReason = attackReachReason;
                         continue;
+                    }
+
+                    if (compactReservationMode)
+                    {
+                        reserved = reachableCandidate;
+                        reservationPathStatus = pathStatus;
+                        reservationPathCornerCount = cornerCount;
+                        reservationPathLengthMeters = pathLength;
+                        reservationReason = reachReason;
+                        if (recordReservation)
+                        {
+                            reservedPositions.Add(reachableCandidate);
+                        }
+
+                        return true;
                     }
 
                     var score = ClearanceScore(room, reachableCandidate, enemy.RadiusMeters) * 0.35f
@@ -555,6 +932,12 @@ namespace Hollow.Combat
             return false;
         }
 
+        private NavMeshPath GetReservationPath()
+        {
+            reservationPath ??= new NavMeshPath();
+            return reservationPath;
+        }
+
         public static bool TryResolveReachableReservation(
             RoomRuntimeRoot room,
             Vector3 currentLocalPosition,
@@ -564,7 +947,9 @@ namespace Hollow.Combat
             out EnemyPathStatus pathStatus,
             out int pathCornerCount,
             out float pathLengthMeters,
-            out string reason)
+            out string reason,
+            NavMeshPath reusablePath = null,
+            bool reportTacticalPathSolve = false)
         {
             resolvedLocalPosition = candidateLocalPosition;
             pathStatus = EnemyPathStatus.NotRequested;
@@ -612,7 +997,13 @@ namespace Hollow.Combat
                 return false;
             }
 
-            var path = new NavMeshPath();
+            var path = reusablePath ?? new NavMeshPath();
+            path.ClearCorners();
+            if (reportTacticalPathSolve)
+            {
+                M136PerformanceOperationCounters.ReportTacticalReservationPathSolve();
+            }
+
             if (!NavMesh.CalculatePath(startHit.position, candidateHit.position, areaMask, path))
             {
                 reason = "navmesh_path_failed";
@@ -650,21 +1041,10 @@ namespace Hollow.Combat
         private static float ClearanceScore(RoomRuntimeRoot room, Vector3 localPosition, float radius)
         {
             var score = 0f;
-            var samples = new[]
-            {
-                Vector3.forward,
-                Vector3.back,
-                Vector3.left,
-                Vector3.right,
-                (Vector3.forward + Vector3.left).normalized,
-                (Vector3.forward + Vector3.right).normalized,
-                (Vector3.back + Vector3.left).normalized,
-                (Vector3.back + Vector3.right).normalized
-            };
 
-            for (var index = 0; index < samples.Length; index++)
+            for (var index = 0; index < ClearanceSampleDirections.Length; index++)
             {
-                var sample = localPosition + samples[index] * Mathf.Max(0.5f, radius + 0.25f);
+                var sample = localPosition + ClearanceSampleDirections[index] * Mathf.Max(0.5f, radius + 0.25f);
                 if (RoomLocalCollision.CanOccupy(room, sample, radius))
                 {
                     score += 1f;

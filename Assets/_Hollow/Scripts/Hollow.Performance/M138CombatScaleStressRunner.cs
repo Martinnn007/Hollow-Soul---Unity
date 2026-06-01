@@ -44,6 +44,9 @@ namespace Hollow.Performance
             "spawnEnemyClockworkSentry"
         };
 
+        public static RoomNavMeshRuntimeFallbackMode StressHarnessNavMeshModeForDiagnostics =>
+            RoomNavMeshRuntimeFallbackMode.AutomatedStressHarnessRuntimeBake;
+
         public static IEnumerator RunAllScenarios(
             M138CombatScaleStressRunOptions options,
             Action<M138CombatScaleStressReport> onComplete = null,
@@ -91,6 +94,7 @@ namespace Hollow.Performance
             }
 
             options ??= M138CombatScaleStressRunOptions.FullGate();
+            M136PerformanceOperationCounters.Reset();
             var harness = M138StressHarness.Create(scenario);
             yield return null;
 
@@ -105,7 +109,6 @@ namespace Hollow.Performance
 
             try
             {
-                M136PerformanceOperationCounters.Reset();
                 if (!session.Begin())
                 {
                     var failedResult = BuildFailedScenarioResult(m136Scenario, "M136 telemetry is disabled in this runtime.");
@@ -323,7 +326,7 @@ namespace Hollow.Performance
                 roomObject.transform.SetParent(root.transform, false);
                 var room = roomObject.AddComponent<RoomRuntimeRoot>();
                 room.ConfigureDefault();
-                room.BuildFrom(CreateRoomAsset(scenario), RoomNavMeshRuntimeFallbackMode.EditorOrDevelopmentRuntimeBake);
+                room.BuildFrom(CreateRoomAsset(scenario), StressHarnessNavMeshModeForDiagnostics);
 
                 var playerObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 playerObject.name = "M138.Player";

@@ -14,6 +14,7 @@ namespace Hollow.Core.Diagnostics
         public const int PlayerBuildHudMaxRefreshHz = 10;
         public const int PickupRevealMaxRefreshHz = 10;
         public const int TacticalDirectorMaxTickHz = 8;
+        public const int M3BossRoomTacticalDirectorMaxTickHz = 5;
         public const int M3FullThreatThinkMaxHz = 15;
         public const int M3FullThreatThinkMinHz = 8;
         public const int M3ReducedThreatThinkMaxHz = 6;
@@ -21,7 +22,17 @@ namespace Hollow.Core.Diagnostics
         public const int M3BackgroundThinkMaxHz = 2;
         public const int M3BackgroundThinkMinHz = 1;
         public const int M3AiThinkBudgetPerFrame = 6;
+        public const int M3BossRoomAddThinkBudgetPerFrame = 2;
+        public const int M3BossRoomAddScorerBudgetPerFrame = 1;
         public const int M3NavMeshPathSolveBudgetPerFrame = 4;
+        public const int M3BossRoomAddNavMeshPathSolveBudgetPerFrame = 1;
+        public const int M3CrowdedRoomEnemyThreshold = 12;
+        public const int M3CrowdedRoomActiveThreatSlots = 2;
+        public const int M3CrowdedRoomSupportReservationBudgetPerTick = 0;
+        public const float M3CrowdedRoomProtectResponsivenessDistanceMeters = 4.75f;
+        public const float M3CrowdedRoomNonActiveCloseProtectionDistanceMeters = 0.75f;
+        public const float M3CrowdedRoomCheapCommandDistanceMeters = 9f;
+        public const float M3CrowdedRoomBackgroundDistanceMeters = 8f;
         public const int CaptureDefaultMaxSampleHz = 240;
         public const float WallVisibilityCameraAngleThresholdDegrees = 2f;
 
@@ -32,6 +43,7 @@ namespace Hollow.Core.Diagnostics
         public static readonly float PlayerBuildHudMinRefreshIntervalSeconds = 1f / PlayerBuildHudMaxRefreshHz;
         public static readonly float PickupRevealMinRefreshIntervalSeconds = 1f / PickupRevealMaxRefreshHz;
         public static readonly float TacticalDirectorMinTickIntervalSeconds = 1f / TacticalDirectorMaxTickHz;
+        public static readonly float M3BossRoomTacticalDirectorMinTickIntervalSeconds = 1f / M3BossRoomTacticalDirectorMaxTickHz;
         public static readonly float M3FullThreatMinThinkIntervalSeconds = 1f / M3FullThreatThinkMaxHz;
         public static readonly float M3FullThreatMaxThinkIntervalSeconds = 1f / M3FullThreatThinkMinHz;
         public static readonly float M3ReducedThreatMinThinkIntervalSeconds = 1f / M3ReducedThreatThinkMaxHz;

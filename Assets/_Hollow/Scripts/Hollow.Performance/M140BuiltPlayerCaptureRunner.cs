@@ -86,15 +86,22 @@ namespace Hollow.Performance
                 for (var index = 0; index < scenarioIds.Length; index++)
                 {
                     var scenarioId = scenarioIds[index];
+                    Debug.Log($"[M140] ScenarioStart {scenarioId} ({index + 1}/{scenarioIds.Length})");
                     M140ScenarioSummary summary = null;
                     yield return RunScenario(scenarioId, options, next => summary = next);
                     if (summary != null)
                     {
                         summaries.Add(summary);
                         onScenarioComplete?.Invoke(summary);
+                        Debug.Log($"[M140] ScenarioEnd {scenarioId} {(summary.passed ? "PASS" : "FAIL")}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[M140] ScenarioEnd {scenarioId} MISSING_SUMMARY");
                     }
                 }
 
+                Debug.Log("[M140] CaptureScenariosComplete");
                 var operations = M136PerformanceOperationCounters.Snapshot();
                 renderRuntime = M140RenderRuntimeSnapshot.Capture(operations);
             }
@@ -103,7 +110,7 @@ namespace Hollow.Performance
                 fpsOverride.Dispose();
             }
 
-            var playerLog = M140PlayerLogValidator.Validate(ResolvePlayerLogPath());
+            var playerLog = M140PlayerLogValidator.Validate(CopyPlayerLogForReport(options.ResolvedOutputRoot));
             var report = M140BuildRealReportGenerator.BuildReport(
                 options.platformId,
                 options.buildKind,
@@ -548,6 +555,30 @@ namespace Hollow.Performance
             }
 
             return string.Empty;
+        }
+
+        private static string CopyPlayerLogForReport(string outputRoot)
+        {
+            var source = ResolvePlayerLogPath();
+            if (string.IsNullOrWhiteSpace(source) || !File.Exists(source))
+            {
+                return source;
+            }
+
+            try
+            {
+                var root = string.IsNullOrWhiteSpace(outputRoot)
+                    ? M140BuildRealReportGenerator.DefaultReportDirectory
+                    : outputRoot;
+                Directory.CreateDirectory(root);
+                var destination = Path.Combine(root, "player_log.txt");
+                File.Copy(source, destination, overwrite: true);
+                return destination;
+            }
+            catch
+            {
+                return source;
+            }
         }
     }
 }

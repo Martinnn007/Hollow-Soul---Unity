@@ -11,7 +11,9 @@ namespace Hollow.Data.Definitions
 
         public static string Normalize(string biomeId)
         {
-            return string.IsNullOrWhiteSpace(biomeId) ? HollowThreshold : biomeId.Trim();
+            return string.IsNullOrWhiteSpace(biomeId)
+                ? HollowThreshold
+                : biomeId.Trim().Replace('-', '_').ToLowerInvariant();
         }
 
         public static bool Matches(string left, string right)

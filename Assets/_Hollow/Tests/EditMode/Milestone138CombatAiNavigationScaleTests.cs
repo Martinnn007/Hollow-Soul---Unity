@@ -4,6 +4,7 @@ using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
 using Hollow.Diagnostics;
 using Hollow.Performance;
+using Hollow.Rooms;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -92,6 +93,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void NavigationBudgetUsesLodRoleIntervalsAndStaggeredOffsets()
         {
+            EnemyNavigationBudget.ResetForTests();
             var fullThreat = NavigationRequest(EnemyAiLodTier.Full, EnemyTacticalRole.ActiveThreat, EnemyIntelligenceLevel.Tactical, 1);
             var reducedSupport = NavigationRequest(EnemyAiLodTier.Reduced, EnemyTacticalRole.SupportPressure, EnemyIntelligenceLevel.Simple, 2);
             var background = NavigationRequest(EnemyAiLodTier.Background, EnemyTacticalRole.Waiting, EnemyIntelligenceLevel.Simple, 3);
@@ -112,6 +114,137 @@ namespace Hollow.Tests.EditMode
 
             Assert.IsFalse(EnemyNavigationBudget.TryAcquirePathSolve(fullThreat, force: true));
             Assert.AreEqual(1, M136PerformanceOperationCounters.Snapshot().NavPathDeferred);
+        }
+
+        [Test]
+        public void BossRoomAddsLoseHighPriorityNavigationAndUseOneSolveBudget()
+        {
+            EnemyNavigationBudget.ResetForTests();
+            M136PerformanceOperationCounters.Reset();
+            var bossRoomAdd = new EnemyNavigationRequest(
+                null,
+                Vector3.zero,
+                Vector3.forward,
+                0.4f,
+                EnemyNavigationMode.GroundedLocal,
+                EnemyNavigationIntent.MoveToPlayer,
+                EnemyIntelligenceLevel.Tactical,
+                allowPathfinding: true,
+                pathSeed: 7,
+                aiLodTier: EnemyAiLodTier.Full,
+                tacticalRole: EnemyTacticalRole.ActiveThreat,
+                roomHasActiveBoss: true,
+                isBoss: false);
+
+            Assert.IsFalse(EnemyNavigationBudget.IsHighPriority(bossRoomAdd));
+            Assert.GreaterOrEqual(EnemyNavigationBudget.RepathIntervalFor(bossRoomAdd), 0.28f);
+            Assert.IsTrue(EnemyNavigationBudget.TryAcquirePathSolve(bossRoomAdd, force: false));
+            Assert.IsFalse(EnemyNavigationBudget.TryAcquirePathSolve(bossRoomAdd, force: false));
+            Assert.AreEqual(1, M136PerformanceOperationCounters.Snapshot().NavPathDeferred);
+        }
+
+        [Test]
+        public void BossRoomNonActiveAddsSkipExpensiveActionScorer()
+        {
+            Assert.IsFalse(EnemyAiBrain.ShouldSkipBossAddScorerForDiagnostics(
+                roomHasActiveBoss: true,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.ActiveThreat));
+            Assert.IsFalse(EnemyAiBrain.ShouldSkipBossAddScorerForDiagnostics(
+                roomHasActiveBoss: true,
+                isBoss: true,
+                tacticalRole: EnemyTacticalRole.Waiting));
+            Assert.IsFalse(EnemyAiBrain.ShouldSkipBossAddScorerForDiagnostics(
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting));
+
+            Assert.IsTrue(EnemyAiBrain.ShouldSkipBossAddScorerForDiagnostics(
+                roomHasActiveBoss: true,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting));
+            Assert.IsTrue(EnemyAiBrain.ShouldSkipBossAddScorerForDiagnostics(
+                roomHasActiveBoss: true,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.SupportPressure));
+            Assert.IsTrue(EnemyAiBrain.ShouldSkipBossAddScorerForDiagnostics(
+                roomHasActiveBoss: true,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.None));
+        }
+
+        [Test]
+        public void CrowdedNonBossRoomsCapActiveThreatReservations()
+        {
+            Assert.AreEqual(
+                3,
+                RoomTacticalDirector.ResolveActiveThreatLimit(candidateCount: 8, livingCount: 8, bossPresent: false),
+                "Small rooms should keep the existing non-crowd active-threat spread.");
+            Assert.Greater(
+                RoomTacticalDirector.ResolveActiveThreatLimit(candidateCount: 8, livingCount: 8, bossPresent: false),
+                M137PerformanceComfortPolicy.M3CrowdedRoomActiveThreatSlots,
+                "The crowded-room active cap should not engage below the crowd threshold.");
+            Assert.AreEqual(
+                M137PerformanceComfortPolicy.M3CrowdedRoomActiveThreatSlots,
+                RoomTacticalDirector.ResolveActiveThreatLimit(candidateCount: 30, livingCount: 30, bossPresent: false));
+            Assert.AreEqual(
+                1,
+                RoomTacticalDirector.ResolveActiveThreatLimit(candidateCount: 12, livingCount: 12, bossPresent: true),
+                "Boss rooms keep the stricter boss-add active slot.");
+        }
+
+        [Test]
+        public void CrowdedNonBossCheapCommandPolicyProtectsActiveCloseAndEndangeredEnemies()
+        {
+            Assert.IsTrue(EnemyAiBrain.ShouldUseCrowdedRoomCheapCommandForDiagnostics(
+                activeEnemyCount: 30,
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting,
+                readabilityState: EnemyReadabilityState.Idle,
+                isEndangered: false,
+                distanceToPlayer: M137PerformanceComfortPolicy.M3CrowdedRoomProtectResponsivenessDistanceMeters + 2f));
+
+            Assert.IsFalse(EnemyAiBrain.ShouldUseCrowdedRoomCheapCommandForDiagnostics(
+                activeEnemyCount: 8,
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting,
+                readabilityState: EnemyReadabilityState.Idle,
+                isEndangered: false,
+                distanceToPlayer: 12f));
+            Assert.IsFalse(EnemyAiBrain.ShouldUseCrowdedRoomCheapCommandForDiagnostics(
+                activeEnemyCount: 30,
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.ActiveThreat,
+                readabilityState: EnemyReadabilityState.Idle,
+                isEndangered: false,
+                distanceToPlayer: 12f));
+            Assert.IsFalse(EnemyAiBrain.ShouldUseCrowdedRoomCheapCommandForDiagnostics(
+                activeEnemyCount: 30,
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting,
+                readabilityState: EnemyReadabilityState.Idle,
+                isEndangered: true,
+                distanceToPlayer: 12f));
+            Assert.IsFalse(EnemyAiBrain.ShouldUseCrowdedRoomCheapCommandForDiagnostics(
+                activeEnemyCount: 30,
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting,
+                readabilityState: EnemyReadabilityState.Idle,
+                isEndangered: false,
+                distanceToPlayer: M137PerformanceComfortPolicy.M3CrowdedRoomNonActiveCloseProtectionDistanceMeters * 0.5f));
+            Assert.IsTrue(EnemyAiBrain.ShouldUseCrowdedRoomCheapCommandForDiagnostics(
+                activeEnemyCount: 30,
+                roomHasActiveBoss: false,
+                isBoss: false,
+                tacticalRole: EnemyTacticalRole.Waiting,
+                readabilityState: EnemyReadabilityState.Idle,
+                isEndangered: false,
+                distanceToPlayer: 2f));
         }
 
         [Test]
@@ -192,6 +325,41 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void M138ReportAcceptsCleanFrameCapCadenceJitter()
+        {
+            var scenario = System.Array.Find(M138CombatScaleStressScenarioPolicy.StressManifest, item => item.id == "boss_plus_adds");
+            var result = SyntheticResult(
+                scenario,
+                peakEnemies: scenario.targetEnemyCount + 1,
+                peakProjectiles: 8,
+                observedBoss: true,
+                aiThinkReduced: 12,
+                aiCommandReuses: 20,
+                frameP95Ms: 17.6d,
+                frameMaxMs: 24.1d,
+                cpuStageSummary: "tactical_director count=30 maxMs=1.328 maxGc=0; add_ai_think_scorer count=32 maxMs=1.35 maxGc=0");
+
+            var summary = M138CombatScaleStressReportGenerator.BuildScenarioSummary(
+                scenario,
+                result,
+                SyntheticFrameBudget(maxAiThinks: 3, maxPathSolves: M137PerformanceComfortPolicy.M3NavMeshPathSolveBudgetPerFrame),
+                bossFullLodObserved: true,
+                reducedOrBackgroundAddObserved: true,
+                enforceFrameTimingWhenTrusted: true);
+
+            Assert.IsTrue(summary.passed, string.Join("; ", summary.failures));
+            StringAssert.Contains("Accepted borderline", summary.note);
+        }
+
+        [Test]
+        public void M138StressHarnessUsesDedicatedNavMeshBakeMode()
+        {
+            Assert.AreEqual(
+                RoomNavMeshRuntimeFallbackMode.AutomatedStressHarnessRuntimeBake,
+                M138CombatScaleStressRunner.StressHarnessNavMeshModeForDiagnostics);
+        }
+
+        [Test]
         public void M138ReportDetectsMissingBossAndProjectileContent()
         {
             var scenario = System.Array.Find(M138CombatScaleStressScenarioPolicy.StressManifest, item => item.id == "boss_plus_projectile_adds");
@@ -237,6 +405,13 @@ namespace Hollow.Tests.EditMode
             M136PerformanceOperationCounters.ReportAvoidanceTier((int)EnemyAiLodTier.Full);
             M136PerformanceOperationCounters.ReportAvoidanceTier((int)EnemyAiLodTier.Reduced);
             M136PerformanceOperationCounters.ReportAvoidanceTier((int)EnemyAiLodTier.Background);
+            M136PerformanceOperationCounters.ReportBossAddScorerSkip();
+            M136PerformanceOperationCounters.ReportBossAddCachedCommandReuse();
+            M136PerformanceOperationCounters.ReportTacticalCrowdReservationSkip(7);
+            M136PerformanceOperationCounters.ReportTacticalCrowdCachedIntentReuse(9);
+            M136PerformanceOperationCounters.ReportTacticalCrowdSupportReservationBudgetUse();
+            M136PerformanceOperationCounters.ReportTacticalCrowdActiveThreatLimit(2);
+            M136PerformanceOperationCounters.ReportTacticalCrowdScorerSkip(5);
 
             var snapshot = M136PerformanceOperationCounters.Snapshot();
             Assert.AreEqual(30, snapshot.ActiveEnemyMax);
@@ -256,6 +431,15 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(1, snapshot.AvoidanceHigh);
             Assert.AreEqual(1, snapshot.AvoidanceReduced);
             Assert.AreEqual(1, snapshot.AvoidanceBackground);
+            StringAssert.Contains("bossAddScorerSkips=1", snapshot.TacticalDirectorSummary);
+            StringAssert.Contains("bossAddCachedCommandReuses=1", snapshot.TacticalDirectorSummary);
+            Assert.AreEqual(7, snapshot.TacticalCrowdReservationSkips);
+            Assert.AreEqual(9, snapshot.TacticalCrowdCachedIntentReuses);
+            Assert.AreEqual(1, snapshot.TacticalCrowdSupportReservationBudgetUses);
+            Assert.AreEqual(2, snapshot.TacticalCrowdActiveThreatLimitMax);
+            Assert.AreEqual(5, snapshot.TacticalCrowdScorerSkips);
+            StringAssert.Contains("crowdReservationSkips=7", snapshot.TacticalDirectorSummary);
+            StringAssert.Contains("crowdScorerSkips=5", snapshot.TacticalDirectorSummary);
         }
 
         private static M136PerformanceScenarioResult SyntheticResult(
@@ -264,7 +448,10 @@ namespace Hollow.Tests.EditMode
             int peakProjectiles,
             bool observedBoss,
             int aiThinkReduced,
-            int aiCommandReuses)
+            int aiCommandReuses,
+            double frameP95Ms = 12d,
+            double frameMaxMs = 15d,
+            string cpuStageSummary = "")
         {
             return new M136PerformanceScenarioResult
             {
@@ -282,8 +469,8 @@ namespace Hollow.Tests.EditMode
                         supported = true,
                         sampleCount = 1800,
                         p50 = 10d,
-                        p95 = 12d,
-                        max = 15d
+                        p95 = frameP95Ms,
+                        max = frameMaxMs
                     },
                     new M136PerformanceMetricSummary
                     {
@@ -317,7 +504,8 @@ namespace Hollow.Tests.EditMode
                     projectileActivePeak = peakProjectiles,
                     projectileSpawns = peakProjectiles,
                     projectileReturns = peakProjectiles / 2,
-                    projectileCollisionChecks = peakProjectiles * 10
+                    projectileCollisionChecks = peakProjectiles * 10,
+                    cpuStageSummary = cpuStageSummary
                 },
                 objectCounts = new M136LiveObjectCountSummary
                 {

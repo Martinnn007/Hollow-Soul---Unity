@@ -63,6 +63,21 @@ namespace Hollow.Editor.Build
             RunPlayModeGate(AutomatedTruthGateOptions.SmokeGate(), exitEditorOnComplete: true);
         }
 
+        public static void RunBatchFull()
+        {
+            RunPlayModeGate(AutomatedTruthGateOptions.FullGate(), exitEditorOnComplete: true);
+        }
+
+        public static void RunBatchBuiltPlayer()
+        {
+            var report = RunBuiltPlayerGate();
+            LogReport(report);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(report != null && report.passed ? 0 : 1);
+            }
+        }
+
         public static AutomatedTruthGateReport RunBuiltPlayerGate()
         {
             var options = AutomatedTruthGateOptions.BuiltPlayerGate();

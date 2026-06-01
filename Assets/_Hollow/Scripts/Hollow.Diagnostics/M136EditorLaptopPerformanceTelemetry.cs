@@ -43,6 +43,7 @@ namespace Hollow.Diagnostics
         public int wallVisibilityUpdates;
         public int combatHudRefreshes;
         public int runtimeNavMeshFallbacks;
+        public int stressHarnessNavMeshBakes;
         public int roomTransitionEvents;
         public int runtimePoolWarmRequests;
         public int runtimePoolWarmCompletions;
@@ -151,6 +152,12 @@ namespace Hollow.Diagnostics
         public float m139ManagedMemoryDriftMaxMb;
         public float m139GraphicsMemoryDriftMaxMb;
         public string cpuStageSummary;
+        public string tacticalDirectorSummary;
+        public int tacticalCrowdReservationSkips;
+        public int tacticalCrowdCachedIntentReuses;
+        public int tacticalCrowdSupportReservationBudgetUses;
+        public int tacticalCrowdActiveThreatLimitMax;
+        public int tacticalCrowdScorerSkips;
         public string cacheMissAttributionSummary;
         public string[] cacheMissAttributionRows = Array.Empty<string>();
         public int projectileActivePeak;
@@ -308,6 +315,7 @@ namespace Hollow.Diagnostics
         public int wallVisibilityUpdates;
         public int combatHudRefreshes;
         public int runtimeNavMeshFallbacks;
+        public int stressHarnessNavMeshBakes;
         public int roomTransitionEvents;
     }
 
@@ -888,6 +896,7 @@ namespace Hollow.Diagnostics
                 wallVisibilityUpdates = operations.WallVisibilityUpdates,
                 combatHudRefreshes = operations.CombatHudRefreshes,
                 runtimeNavMeshFallbacks = operations.RuntimeNavMeshFallbacks,
+                stressHarnessNavMeshBakes = operations.StressHarnessNavMeshBakes,
                 roomTransitionEvents = operations.RoomTransitionEvents
             });
         }
@@ -950,6 +959,7 @@ namespace Hollow.Diagnostics
                 wallVisibilityUpdates = operations.WallVisibilityUpdates,
                 combatHudRefreshes = operations.CombatHudRefreshes,
                 runtimeNavMeshFallbacks = operations.RuntimeNavMeshFallbacks,
+                stressHarnessNavMeshBakes = operations.StressHarnessNavMeshBakes,
                 roomTransitionEvents = operations.RoomTransitionEvents
             });
         }
@@ -1017,6 +1027,7 @@ namespace Hollow.Diagnostics
                     wallVisibilityUpdates = operationSnapshot.WallVisibilityUpdates,
                     combatHudRefreshes = operationSnapshot.CombatHudRefreshes,
                     runtimeNavMeshFallbacks = operationSnapshot.RuntimeNavMeshFallbacks,
+                    stressHarnessNavMeshBakes = operationSnapshot.StressHarnessNavMeshBakes,
                     roomTransitionEvents = operationSnapshot.RoomTransitionEvents,
                     runtimePoolWarmRequests = operationSnapshot.RuntimePoolWarmRequests,
                     runtimePoolWarmCompletions = operationSnapshot.RuntimePoolWarmCompletions,
@@ -1125,6 +1136,12 @@ namespace Hollow.Diagnostics
                     m139ManagedMemoryDriftMaxMb = operationSnapshot.M139ManagedMemoryDriftMaxMb,
                     m139GraphicsMemoryDriftMaxMb = operationSnapshot.M139GraphicsMemoryDriftMaxMb,
                     cpuStageSummary = operationSnapshot.CpuStageSummary,
+                    tacticalDirectorSummary = operationSnapshot.TacticalDirectorSummary,
+                    tacticalCrowdReservationSkips = operationSnapshot.TacticalCrowdReservationSkips,
+                    tacticalCrowdCachedIntentReuses = operationSnapshot.TacticalCrowdCachedIntentReuses,
+                    tacticalCrowdSupportReservationBudgetUses = operationSnapshot.TacticalCrowdSupportReservationBudgetUses,
+                    tacticalCrowdActiveThreatLimitMax = operationSnapshot.TacticalCrowdActiveThreatLimitMax,
+                    tacticalCrowdScorerSkips = operationSnapshot.TacticalCrowdScorerSkips,
                     cacheMissAttributionSummary = operationSnapshot.CacheMissAttributionSummary,
                     cacheMissAttributionRows = operationSnapshot.CacheMissAttributionRows,
                     projectileActivePeak = operationSnapshot.ProjectileActivePeak,
@@ -1931,7 +1948,7 @@ namespace Hollow.Diagnostics
         private static string ToCsv(IEnumerable<M136LiveFrameSample> samples)
         {
             var builder = new StringBuilder();
-            builder.AppendLine("sampleIndex,elapsedSeconds,frameTimeMs,fps,activeEnemies,activeProjectiles,activeVfx,activeUiCanvases,activeCameras,activeLights,activeRenderers,activeParticleSystems,miniMapRebuilds,wallVisibilityUpdates,combatHudRefreshes,runtimeNavMeshFallbacks,roomTransitionEvents");
+            builder.AppendLine("sampleIndex,elapsedSeconds,frameTimeMs,fps,activeEnemies,activeProjectiles,activeVfx,activeUiCanvases,activeCameras,activeLights,activeRenderers,activeParticleSystems,miniMapRebuilds,wallVisibilityUpdates,combatHudRefreshes,runtimeNavMeshFallbacks,stressHarnessNavMeshBakes,roomTransitionEvents");
             foreach (var sample in samples ?? Array.Empty<M136LiveFrameSample>())
             {
                 builder.Append(sample.sampleIndex).Append(',')
@@ -1950,6 +1967,7 @@ namespace Hollow.Diagnostics
                     .Append(sample.wallVisibilityUpdates).Append(',')
                     .Append(sample.combatHudRefreshes).Append(',')
                     .Append(sample.runtimeNavMeshFallbacks).Append(',')
+                    .Append(sample.stressHarnessNavMeshBakes).Append(',')
                     .Append(sample.roomTransitionEvents)
                     .AppendLine();
             }

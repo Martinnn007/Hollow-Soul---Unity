@@ -14,7 +14,16 @@ namespace Hollow.Core.Diagnostics
         EnemyRewardInteractableActivation = 3,
         SpaceshipTerminalActivation = 4,
         BranchPreloadSchedule = 5,
-        HudMinimapRefreshAfterTraversal = 6
+        HudMinimapRefreshAfterTraversal = 6,
+        BossAiUpdate = 7,
+        AddAiThinkScorer = 8,
+        BehaviorGraphTick = 9,
+        TacticalDirector = 10,
+        NavMeshRequest = 11,
+        ProjectileLoop = 12,
+        CombatHitEvaluation = 13,
+        HudRefresh = 14,
+        EnemyVisualPresenter = 15
     }
 
     public readonly struct M136PerformanceOperationSnapshot
@@ -67,6 +76,7 @@ namespace Hollow.Core.Diagnostics
             int bossActivationSlices,
             int navMeshCatalogAttachCount,
             int runtimeNavMeshFallbacks,
+            int stressHarnessNavMeshBakes,
             int roomTransitionEvents,
             int branchRuntimeCacheHits,
             int branchRuntimeCacheMisses,
@@ -143,6 +153,12 @@ namespace Hollow.Core.Diagnostics
             float m139ManagedMemoryDriftMaxMb,
             float m139GraphicsMemoryDriftMaxMb,
             string cpuStageSummary,
+            string tacticalDirectorSummary,
+            int tacticalCrowdReservationSkips,
+            int tacticalCrowdCachedIntentReuses,
+            int tacticalCrowdSupportReservationBudgetUses,
+            int tacticalCrowdActiveThreatLimitMax,
+            int tacticalCrowdScorerSkips,
             string cacheMissAttributionSummary,
             string[] cacheMissAttributionRows,
             int projectileActivePeak,
@@ -200,6 +216,7 @@ namespace Hollow.Core.Diagnostics
             BossActivationSlices = bossActivationSlices;
             NavMeshCatalogAttachCount = navMeshCatalogAttachCount;
             RuntimeNavMeshFallbacks = runtimeNavMeshFallbacks;
+            StressHarnessNavMeshBakes = stressHarnessNavMeshBakes;
             RoomTransitionEvents = roomTransitionEvents;
             BranchRuntimeCacheHits = branchRuntimeCacheHits;
             BranchRuntimeCacheMisses = branchRuntimeCacheMisses;
@@ -276,6 +293,12 @@ namespace Hollow.Core.Diagnostics
             M139ManagedMemoryDriftMaxMb = m139ManagedMemoryDriftMaxMb;
             M139GraphicsMemoryDriftMaxMb = m139GraphicsMemoryDriftMaxMb;
             CpuStageSummary = cpuStageSummary ?? string.Empty;
+            TacticalDirectorSummary = tacticalDirectorSummary ?? string.Empty;
+            TacticalCrowdReservationSkips = tacticalCrowdReservationSkips;
+            TacticalCrowdCachedIntentReuses = tacticalCrowdCachedIntentReuses;
+            TacticalCrowdSupportReservationBudgetUses = tacticalCrowdSupportReservationBudgetUses;
+            TacticalCrowdActiveThreatLimitMax = tacticalCrowdActiveThreatLimitMax;
+            TacticalCrowdScorerSkips = tacticalCrowdScorerSkips;
             CacheMissAttributionSummary = cacheMissAttributionSummary ?? string.Empty;
             CacheMissAttributionRows = cacheMissAttributionRows ?? Array.Empty<string>();
             ProjectileActivePeak = projectileActivePeak;
@@ -380,6 +403,8 @@ namespace Hollow.Core.Diagnostics
         public int NavMeshCatalogAttachCount { get; }
 
         public int RuntimeNavMeshFallbacks { get; }
+
+        public int StressHarnessNavMeshBakes { get; }
 
         public int RoomTransitionEvents { get; }
 
@@ -533,6 +558,18 @@ namespace Hollow.Core.Diagnostics
 
         public string CpuStageSummary { get; }
 
+        public string TacticalDirectorSummary { get; }
+
+        public int TacticalCrowdReservationSkips { get; }
+
+        public int TacticalCrowdCachedIntentReuses { get; }
+
+        public int TacticalCrowdSupportReservationBudgetUses { get; }
+
+        public int TacticalCrowdActiveThreatLimitMax { get; }
+
+        public int TacticalCrowdScorerSkips { get; }
+
         public string CacheMissAttributionSummary { get; }
 
         public string[] CacheMissAttributionRows { get; }
@@ -554,7 +591,7 @@ namespace Hollow.Core.Diagnostics
 
     public static class M136PerformanceOperationCounters
     {
-        private const int CpuStageCount = 7;
+        private const int CpuStageCount = 16;
         private const int CacheMissAttributionCapacity = 64;
         private static int miniMapRebuilds;
         private static int miniMapModelBuilds;
@@ -603,6 +640,7 @@ namespace Hollow.Core.Diagnostics
         private static int bossActivationSlices;
         private static int navMeshCatalogAttachCount;
         private static int runtimeNavMeshFallbacks;
+        private static int stressHarnessNavMeshBakes;
         private static int roomTransitionEvents;
         private static int branchRuntimeCacheHits;
         private static int branchRuntimeCacheMisses;
@@ -686,6 +724,18 @@ namespace Hollow.Core.Diagnostics
         private static int projectilePoolMisses;
         private static int projectileHardInstantiates;
         private static float projectileUpdateMaxMilliseconds;
+        private static int tacticalReservationAttempts;
+        private static int tacticalReservationPathSolves;
+        private static int tacticalReservationCandidatesChecked;
+        private static int tacticalCachedIntentReuses;
+        private static int tacticalBossAddReservationSkips;
+        private static int bossAddScorerSkips;
+        private static int bossAddCachedCommandReuses;
+        private static int tacticalCrowdReservationSkips;
+        private static int tacticalCrowdCachedIntentReuses;
+        private static int tacticalCrowdSupportReservationBudgetUses;
+        private static int tacticalCrowdActiveThreatLimitMax;
+        private static int tacticalCrowdScorerSkips;
         private static readonly int[] cpuStageCounts = new int[CpuStageCount];
         private static readonly float[] cpuStageMaxMilliseconds = new float[CpuStageCount];
         private static readonly long[] cpuStageGcMaxBytes = new long[CpuStageCount];
@@ -740,6 +790,93 @@ namespace Hollow.Core.Diagnostics
         public static void ReportTacticalDirectorTick()
         {
             tacticalDirectorTicks++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalReservationAttempt()
+        {
+            tacticalReservationAttempts++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalReservationPathSolve()
+        {
+            tacticalReservationPathSolves++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalReservationCandidateChecked()
+        {
+            tacticalReservationCandidatesChecked++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalCachedIntentReuse(int count = 1)
+        {
+            tacticalCachedIntentReuses += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalBossAddReservationSkip(int count = 1)
+        {
+            tacticalBossAddReservationSkips += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBossAddScorerSkip(int count = 1)
+        {
+            bossAddScorerSkips += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportBossAddCachedCommandReuse(int count = 1)
+        {
+            bossAddCachedCommandReuses += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalCrowdReservationSkip(int count = 1)
+        {
+            tacticalCrowdReservationSkips += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalCrowdCachedIntentReuse(int count = 1)
+        {
+            tacticalCrowdCachedIntentReuses += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalCrowdSupportReservationBudgetUse(int count = 1)
+        {
+            tacticalCrowdSupportReservationBudgetUses += Math.Max(1, count);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalCrowdActiveThreatLimit(int activeThreatLimit)
+        {
+            if (activeThreatLimit > tacticalCrowdActiveThreatLimitMax)
+            {
+                tacticalCrowdActiveThreatLimitMax = activeThreatLimit;
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportTacticalCrowdScorerSkip(int count = 1)
+        {
+            tacticalCrowdScorerSkips += Math.Max(1, count);
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -986,6 +1123,13 @@ namespace Hollow.Core.Diagnostics
         public static void ReportRuntimeNavMeshFallback()
         {
             runtimeNavMeshFallbacks++;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [Conditional("DEVELOPMENT_BUILD")]
+        public static void ReportStressHarnessNavMeshBake()
+        {
+            stressHarnessNavMeshBakes++;
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -1708,6 +1852,52 @@ namespace Hollow.Core.Diagnostics
             return builder.ToString();
         }
 
+        public static string BuildTacticalDirectorSummary()
+        {
+            if (tacticalReservationAttempts <= 0 &&
+                tacticalReservationPathSolves <= 0 &&
+                tacticalReservationCandidatesChecked <= 0 &&
+                tacticalCachedIntentReuses <= 0 &&
+                tacticalBossAddReservationSkips <= 0 &&
+                bossAddScorerSkips <= 0 &&
+                bossAddCachedCommandReuses <= 0 &&
+                tacticalCrowdReservationSkips <= 0 &&
+                tacticalCrowdCachedIntentReuses <= 0 &&
+                tacticalCrowdSupportReservationBudgetUses <= 0 &&
+                tacticalCrowdActiveThreatLimitMax <= 0 &&
+                tacticalCrowdScorerSkips <= 0)
+            {
+                return string.Empty;
+            }
+
+            return new StringBuilder(320)
+                .Append("reservationAttempts=")
+                .Append(tacticalReservationAttempts.ToString(CultureInfo.InvariantCulture))
+                .Append("; pathSolves=")
+                .Append(tacticalReservationPathSolves.ToString(CultureInfo.InvariantCulture))
+                .Append("; candidates=")
+                .Append(tacticalReservationCandidatesChecked.ToString(CultureInfo.InvariantCulture))
+                .Append("; cachedIntentReuses=")
+                .Append(tacticalCachedIntentReuses.ToString(CultureInfo.InvariantCulture))
+                .Append("; bossAddSkips=")
+                .Append(tacticalBossAddReservationSkips.ToString(CultureInfo.InvariantCulture))
+                .Append("; bossAddScorerSkips=")
+                .Append(bossAddScorerSkips.ToString(CultureInfo.InvariantCulture))
+                .Append("; bossAddCachedCommandReuses=")
+                .Append(bossAddCachedCommandReuses.ToString(CultureInfo.InvariantCulture))
+                .Append("; crowdReservationSkips=")
+                .Append(tacticalCrowdReservationSkips.ToString(CultureInfo.InvariantCulture))
+                .Append("; crowdCachedIntentReuses=")
+                .Append(tacticalCrowdCachedIntentReuses.ToString(CultureInfo.InvariantCulture))
+                .Append("; crowdSupportBudgetUses=")
+                .Append(tacticalCrowdSupportReservationBudgetUses.ToString(CultureInfo.InvariantCulture))
+                .Append("; crowdActiveThreatLimitMax=")
+                .Append(tacticalCrowdActiveThreatLimitMax.ToString(CultureInfo.InvariantCulture))
+                .Append("; crowdScorerSkips=")
+                .Append(tacticalCrowdScorerSkips.ToString(CultureInfo.InvariantCulture))
+                .ToString();
+        }
+
         public static string[] CacheMissAttributionRowsSnapshot()
         {
             if (cacheMissAttributionCount <= 0)
@@ -1777,6 +1967,7 @@ namespace Hollow.Core.Diagnostics
                 bossActivationSlices,
                 navMeshCatalogAttachCount,
                 runtimeNavMeshFallbacks,
+                stressHarnessNavMeshBakes,
                 roomTransitionEvents,
                 branchRuntimeCacheHits,
                 branchRuntimeCacheMisses,
@@ -1853,6 +2044,12 @@ namespace Hollow.Core.Diagnostics
                 m139ManagedMemoryDriftMaxMb,
                 m139GraphicsMemoryDriftMaxMb,
                 BuildCpuStageSummary(),
+                BuildTacticalDirectorSummary(),
+                tacticalCrowdReservationSkips,
+                tacticalCrowdCachedIntentReuses,
+                tacticalCrowdSupportReservationBudgetUses,
+                tacticalCrowdActiveThreatLimitMax,
+                tacticalCrowdScorerSkips,
                 BuildCacheMissAttributionSummary(),
                 CacheMissAttributionRowsSnapshot(),
                 projectileActivePeak,
@@ -1916,6 +2113,15 @@ namespace Hollow.Core.Diagnostics
                 M136CpuStageKind.SpaceshipTerminalActivation => "spaceship_terminal_activation",
                 M136CpuStageKind.BranchPreloadSchedule => "branch_preload_schedule",
                 M136CpuStageKind.HudMinimapRefreshAfterTraversal => "hud_minimap_refresh_after_traversal",
+                M136CpuStageKind.BossAiUpdate => "boss_ai_update",
+                M136CpuStageKind.AddAiThinkScorer => "add_ai_think_scorer",
+                M136CpuStageKind.BehaviorGraphTick => "behavior_graph_tick",
+                M136CpuStageKind.TacticalDirector => "tactical_director",
+                M136CpuStageKind.NavMeshRequest => "navmesh_request",
+                M136CpuStageKind.ProjectileLoop => "projectile_loop",
+                M136CpuStageKind.CombatHitEvaluation => "combat_hit_evaluation",
+                M136CpuStageKind.HudRefresh => "hud_refresh",
+                M136CpuStageKind.EnemyVisualPresenter => "enemy_visual_presenter",
                 _ => "unknown"
             };
         }
@@ -1969,6 +2175,7 @@ namespace Hollow.Core.Diagnostics
             bossActivationSlices = 0;
             navMeshCatalogAttachCount = 0;
             runtimeNavMeshFallbacks = 0;
+            stressHarnessNavMeshBakes = 0;
             roomTransitionEvents = 0;
             branchRuntimeCacheHits = 0;
             branchRuntimeCacheMisses = 0;
@@ -2052,6 +2259,18 @@ namespace Hollow.Core.Diagnostics
             projectilePoolMisses = 0;
             projectileHardInstantiates = 0;
             projectileUpdateMaxMilliseconds = 0f;
+            tacticalReservationAttempts = 0;
+            tacticalReservationPathSolves = 0;
+            tacticalReservationCandidatesChecked = 0;
+            tacticalCachedIntentReuses = 0;
+            tacticalBossAddReservationSkips = 0;
+            bossAddScorerSkips = 0;
+            bossAddCachedCommandReuses = 0;
+            tacticalCrowdReservationSkips = 0;
+            tacticalCrowdCachedIntentReuses = 0;
+            tacticalCrowdSupportReservationBudgetUses = 0;
+            tacticalCrowdActiveThreatLimitMax = 0;
+            tacticalCrowdScorerSkips = 0;
             cacheMissAttributionWriteIndex = 0;
             cacheMissAttributionCount = 0;
             Array.Clear(cacheMissAttributionRows, 0, cacheMissAttributionRows.Length);

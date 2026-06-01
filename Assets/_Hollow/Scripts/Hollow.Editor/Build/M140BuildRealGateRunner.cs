@@ -251,7 +251,7 @@ namespace Hollow.Editor.Build
                     ProfilePath,
                     0,
                     detail,
-                    "No missing script components were found in required scenes or Hollow prefabs."));
+                    "No missing script components were found in build/all Assets scenes, prefabs, Addressables dependencies, Resources/generic serialized assets, or generated catalogs."));
                 return true;
             }
 
@@ -362,6 +362,7 @@ namespace Hollow.Editor.Build
             var targetId = $"{platformId}-{buildKind}-player-capture";
             var outputRoot = CaptureOutputRoot(profile, platformId, buildKind);
             var reportPath = CaptureReportPath(profile, platformId, buildKind);
+            var markdownReportPath = CaptureMarkdownReportPath(profile, platformId, buildKind);
             var stopwatch = Stopwatch.StartNew();
             try
             {
@@ -391,10 +392,12 @@ namespace Hollow.Editor.Build
                 }
 
                 Directory.CreateDirectory(outputRoot);
+                DeleteStaleCaptureArtifacts(reportPath, markdownReportPath, outputRoot);
                 var scenarios = string.Equals(buildKind, M140BuildKind.ReleaseSmoke, StringComparison.Ordinal)
                     ? profile.ReleaseSmokeScenarioManifest
                     : profile.ScenarioManifest;
                 var arguments = BuildCaptureArguments(outputRoot, platformId, buildKind, profile.TargetFrameRate, scenarios);
+                var captureStartedUtc = DateTime.UtcNow;
                 var process = new Process
                 {
                     StartInfo = new ProcessStartInfo(executable, arguments)
@@ -441,6 +444,7 @@ namespace Hollow.Editor.Build
                     stopwatch.Stop();
                     File.WriteAllText(Path.Combine(outputRoot, "player_stdout_timeout.txt"), stdout.ToString());
                     File.WriteAllText(Path.Combine(outputRoot, "player_stderr_timeout.txt"), stderr.ToString());
+                    CopyPlayerLogAfterExit(outputRoot);
                     return PlatformBuildTargetResult.Failed(
                         targetId,
                         platformId,
@@ -453,6 +457,7 @@ namespace Hollow.Editor.Build
                 process.WaitForExit();
                 File.WriteAllText(Path.Combine(outputRoot, "player_stdout.txt"), stdout.ToString());
                 File.WriteAllText(Path.Combine(outputRoot, "player_stderr.txt"), stderr.ToString());
+                CopyPlayerLogAfterExit(outputRoot);
                 stopwatch.Stop();
                 if (!File.Exists(reportPath))
                 {
@@ -461,11 +466,33 @@ namespace Hollow.Editor.Build
                         platformId,
                         reportPath,
                         stopwatch.Elapsed.TotalMilliseconds,
-                        $"M140 player exited with code {process.ExitCode}, but no report was written.",
+                        $"M140 player exited with code {process.ExitCode}, but no fresh report was written.",
                         "Inspect player_stdout.txt, player_stderr.txt, and Player.log.");
                 }
 
+                if (!IsFreshCaptureReport(reportPath, captureStartedUtc, out var freshnessDetail))
+                {
+                    return PlatformBuildTargetResult.Failed(
+                        targetId,
+                        platformId,
+                        reportPath,
+                        stopwatch.Elapsed.TotalMilliseconds,
+                        $"M140 player exited with code {process.ExitCode}, but the report is stale. {freshnessDetail}",
+                        "Inspect player_stdout.txt, player_stderr.txt, and Player.log; the runner deletes stale report files before launch.");
+                }
+
                 var playerReport = JsonUtility.FromJson<M140BuildRealReport>(File.ReadAllText(reportPath));
+                if (!IsFreshGeneratedReport(playerReport, captureStartedUtc, out var generatedDetail))
+                {
+                    return PlatformBuildTargetResult.Failed(
+                        targetId,
+                        platformId,
+                        reportPath,
+                        stopwatch.Elapsed.TotalMilliseconds,
+                        $"M140 player exited with code {process.ExitCode}, but the report metadata is stale. {generatedDetail}",
+                        "Inspect player_stdout.txt, player_stderr.txt, and Player.log; the player may have crashed before writing a new report.");
+                }
+
                 if (playerReport != null && playerReport.passed && process.ExitCode == 0)
                 {
                     return PlatformBuildTargetResult.Passed(
@@ -562,6 +589,143 @@ namespace Hollow.Editor.Build
         private static string CaptureReportPath(M140BuildRealGateProfileDefinition profile, string platformId, string buildKind)
         {
             return Path.Combine(CaptureOutputRoot(profile, platformId, buildKind), M140BuildRealReportGenerator.DefaultJsonFileName);
+        }
+
+        private static string CaptureMarkdownReportPath(M140BuildRealGateProfileDefinition profile, string platformId, string buildKind)
+        {
+            return Path.Combine(CaptureOutputRoot(profile, platformId, buildKind), M140BuildRealReportGenerator.DefaultMarkdownFileName);
+        }
+
+        private static void DeleteStaleCaptureArtifacts(string reportPath, string markdownReportPath, string outputRoot)
+        {
+            TryDeleteFile(reportPath);
+            TryDeleteFile(markdownReportPath);
+            TryDeleteFile(Path.Combine(outputRoot, "player_stdout.txt"));
+            TryDeleteFile(Path.Combine(outputRoot, "player_stderr.txt"));
+            TryDeleteFile(Path.Combine(outputRoot, "player_stdout_timeout.txt"));
+            TryDeleteFile(Path.Combine(outputRoot, "player_stderr_timeout.txt"));
+            TryDeleteFile(Path.Combine(outputRoot, "player_log.txt"));
+        }
+
+        private static void TryDeleteFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                return;
+            }
+
+            try
+            {
+                File.Delete(path);
+            }
+            catch
+            {
+                // Freshness checks below will reject stale files that could not be removed.
+            }
+        }
+
+        private static void CopyPlayerLogAfterExit(string outputRoot)
+        {
+            var source = ResolvePlayerLogPathForEditor();
+            if (string.IsNullOrWhiteSpace(source) || !File.Exists(source))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(outputRoot);
+                File.Copy(source, Path.Combine(outputRoot, "player_log.txt"), overwrite: true);
+            }
+            catch
+            {
+                // The runtime runner also copies the log when possible; do not hide the capture result if this best-effort copy fails.
+            }
+        }
+
+        private static string ResolvePlayerLogPathForEditor()
+        {
+            var companyName = string.IsNullOrWhiteSpace(PlayerSettings.companyName)
+                ? Application.companyName
+                : PlayerSettings.companyName;
+            var productName = string.IsNullOrWhiteSpace(PlayerSettings.productName)
+                ? Application.productName
+                : PlayerSettings.productName;
+
+            if (Application.platform == RuntimePlatform.OSXEditor)
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                    "Library",
+                    "Logs",
+                    companyName,
+                    productName,
+                    "Player.log");
+            }
+
+            var localApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            return string.IsNullOrWhiteSpace(localApplicationData)
+                ? string.Empty
+                : Path.Combine(localApplicationData, "..", "LocalLow", companyName, productName, "Player.log");
+        }
+
+        private static bool IsFreshCaptureReport(string reportPath, DateTime captureStartedUtc, out string detail)
+        {
+            detail = string.Empty;
+            if (string.IsNullOrWhiteSpace(reportPath) || !File.Exists(reportPath))
+            {
+                detail = "Report file is missing.";
+                return false;
+            }
+
+            var lastWriteUtc = File.GetLastWriteTimeUtc(reportPath);
+            if (lastWriteUtc < captureStartedUtc.AddSeconds(-2))
+            {
+                detail = $"Report file timestamp `{lastWriteUtc:O}` predates capture start `{captureStartedUtc:O}`.";
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool IsFreshCaptureReportForTests(string reportPath, DateTime captureStartedUtc, out string detail)
+        {
+            return IsFreshCaptureReport(reportPath, captureStartedUtc, out detail);
+        }
+
+        private static bool IsFreshGeneratedReport(M140BuildRealReport report, DateTime captureStartedUtc, out string detail)
+        {
+            detail = string.Empty;
+            if (report == null)
+            {
+                detail = "Report JSON could not be parsed.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(report.generatedAtUtc))
+            {
+                detail = "Report generatedAtUtc is empty.";
+                return false;
+            }
+
+            if (!DateTime.TryParse(report.generatedAtUtc, out var generatedAt))
+            {
+                detail = $"Report generatedAtUtc `{report.generatedAtUtc}` could not be parsed.";
+                return false;
+            }
+
+            if (generatedAt.ToUniversalTime() < captureStartedUtc.AddSeconds(-5))
+            {
+                detail = $"Report generatedAtUtc `{generatedAt.ToUniversalTime():O}` predates capture start `{captureStartedUtc:O}`.";
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool IsFreshGeneratedReportForTests(M140BuildRealReport report, DateTime captureStartedUtc, out string detail)
+        {
+            return IsFreshGeneratedReport(report, captureStartedUtc, out detail);
         }
 
         private static bool HasPassingWindowsRuntimeReport(M140BuildRealGateEditorReport report)

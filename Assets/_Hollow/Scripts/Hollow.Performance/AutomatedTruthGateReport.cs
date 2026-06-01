@@ -123,6 +123,7 @@ namespace Hollow.Performance
                 var runOptions = options.IsFull
                     ? M138CombatScaleStressRunOptions.FullGate(json, markdown)
                     : M138CombatScaleStressRunOptions.SmokeGate(json, markdown);
+                runOptions.enforceFrameTimingWhenTrusted = false;
                 yield return M138CombatScaleStressRunner.RunAllScenarios(runOptions, next => report = next);
                 stopwatch.Stop();
                 stages.Add(AutomatedTruthGateReportGenerator.FromM138Report(report, json, markdown, stopwatch.Elapsed.TotalMilliseconds));

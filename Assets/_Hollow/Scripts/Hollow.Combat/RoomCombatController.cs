@@ -119,6 +119,8 @@ namespace Hollow.Combat
 
         public bool TransitionSuspended => transitionSuspended;
 
+        public int LivingNonBossEnemyCountForAiBudget => LivingNonBossEnemyCount();
+
         public bool IsWaveEncounterActive => activeWavePlan.IsActive;
 
         public int CurrentWaveNumber => activeWavePlan.IsActive ? Mathf.Clamp(activeWaveIndex + 1, 1, activeWavePlan.TotalWaves) : 0;
@@ -186,6 +188,7 @@ namespace Hollow.Combat
             var now = Time.time;
             if (now >= nextTacticalDirectorTickTime)
             {
+                var stageStarted = BeginCpuStage(out var stageStartingGc);
                 M136PerformanceOperationCounters.ReportActiveEnemyCount(EnemiesRemaining());
                 threatDirector.Tick(enemies);
                 EnemyAiDebugOverlay.ReportRoomEnemyCount(LivingNonBossEnemyCount());
@@ -196,10 +199,37 @@ namespace Hollow.Combat
                     threatDirector.ChargePressure);
                 tacticalDirector.Tick(enemies, roomRuntimeRoot, playerController, now);
                 M136PerformanceOperationCounters.ReportTacticalDirectorTick();
-                nextTacticalDirectorTickTime = now + M137PerformanceComfortPolicy.TacticalDirectorMinTickIntervalSeconds;
+                EndCpuStage(M136CpuStageKind.TacticalDirector, stageStarted, stageStartingGc);
+                nextTacticalDirectorTickTime = now + ResolveTacticalDirectorTickIntervalSeconds();
             }
 
             EvaluateRoomState();
+        }
+
+        private float ResolveTacticalDirectorTickIntervalSeconds()
+        {
+            return ActiveBoss != null
+                ? M137PerformanceComfortPolicy.M3BossRoomTacticalDirectorMinTickIntervalSeconds
+                : M137PerformanceComfortPolicy.TacticalDirectorMinTickIntervalSeconds;
+        }
+
+        private static float BeginCpuStage(out long startingGc)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            startingGc = 0;
+            return Time.realtimeSinceStartup;
+#else
+            startingGc = 0;
+            return 0f;
+#endif
+        }
+
+        private static void EndCpuStage(M136CpuStageKind stage, float startedRealtime, long startingGc)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var elapsedMilliseconds = Mathf.Max(0f, (Time.realtimeSinceStartup - startedRealtime) * 1000f);
+            M136PerformanceOperationCounters.ReportCpuStage(stage, elapsedMilliseconds, 0L);
+#endif
         }
 
         public void InitializeCombat()

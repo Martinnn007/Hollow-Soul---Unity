@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hollow.Data.Definitions;
@@ -11,11 +12,14 @@ namespace Hollow.Combat
     public sealed class BossRuntimeController : MonoBehaviour
     {
         public const int MaxActiveBossProjectiles = 24;
+        private const float ProjectileCleanupIntervalSeconds = 0.25f;
 
         private readonly List<EnemyProjectileController> activeProjectiles = new();
         private readonly List<EnemyRuntimeController> summonedEnemies = new();
+        private readonly Dictionary<string, EnemyAttackProfileDefinition> attackProfileCache = new(StringComparer.Ordinal);
         private EnemyRuntimeController owner;
         private BossDefinition definition;
+        private BossPhaseDefinition[] phaseStatusCache = Array.Empty<BossPhaseDefinition>();
         private RoomRuntimeRoot room;
         private PlaceholderPlayerController player;
         private GameObject projectilePrefab;
@@ -24,6 +28,7 @@ namespace Hollow.Combat
         private float nextSecondaryTime;
         private float nextSpecialTime;
         private float nextHopTime;
+        private float nextProjectileCleanupTime;
         private float rotationAngle;
         private bool spawnedFirstMirrorSplit;
         private bool spawnedSecondMirrorSplit;
@@ -55,17 +60,25 @@ namespace Hollow.Combat
             player = nextPlayer;
             projectilePrefab = nextProjectilePrefab;
             combatFeelProfile = CombatFeelProfileDefinition.Resolve(nextCombatFeelProfile);
+            activeProjectiles.Clear();
+            summonedEnemies.Clear();
+            spawnedFirstMirrorSplit = false;
+            spawnedSecondMirrorSplit = false;
+            spawnedLarvaMinions = false;
+            phaseStatusCache = BuildPhaseStatusCache(definition);
+            BuildAttackProfileCache(definition);
             nextPrimaryTime = Time.time + 1.2f;
             nextSecondaryTime = Time.time + 2.2f;
             nextSpecialTime = Time.time + 3.4f;
             nextHopTime = Time.time + 1.6f;
+            nextProjectileCleanupTime = Time.time + ProjectileCleanupIntervalSeconds;
             rotationAngle = StableHash(definition != null ? definition.BossId : "boss") % 360;
             statusText = "Entering";
         }
 
         public void Tick(float deltaTime, float timeSeconds)
         {
-            CleanupProjectiles();
+            CleanupProjectiles(timeSeconds, force: false);
             if (inspectionMode == InspectionEntityMode.FrozenRuntime ||
                 owner == null ||
                 definition == null ||
@@ -413,7 +426,7 @@ namespace Hollow.Combat
 
         private void FireProjectile(Vector3 direction, EnemyAttackProfileDefinition profile)
         {
-            CleanupProjectiles();
+            CleanupProjectiles(Time.time, force: activeProjectiles.Count >= MaxActiveBossProjectiles);
             if (activeProjectiles.Count >= MaxActiveBossProjectiles)
             {
                 return;
@@ -466,8 +479,17 @@ namespace Hollow.Combat
 
         private EnemyAttackProfileDefinition Profile(string attackId)
         {
+            if (!string.IsNullOrWhiteSpace(attackId) &&
+                attackProfileCache.TryGetValue(attackId, out var cached) &&
+                cached != null)
+            {
+                return cached;
+            }
+
             var profile = definition != null ? definition.ResolveAttackProfile(attackId) : null;
-            return profile ?? EnemyAttackProfileDefinition.CreateRuntime(new EnemyAttackProfileSpec(
+            if (profile == null)
+            {
+                profile = EnemyAttackProfileDefinition.CreateRuntime(new EnemyAttackProfileSpec(
                 definition != null ? definition.BossId : "boss",
                 true,
                 attackId,
@@ -488,6 +510,14 @@ namespace Hollow.Combat
                 0.35f,
                 0.35f,
                 "Runtime fallback profile."));
+            }
+
+            if (profile != null && !string.IsNullOrWhiteSpace(profile.AttackId))
+            {
+                attackProfileCache[profile.AttackId] = profile;
+            }
+
+            return profile;
         }
 
         private void SpawnMinions(IEnumerable<string> spawnKinds)
@@ -509,9 +539,22 @@ namespace Hollow.Combat
             rotationAngle += 41f;
         }
 
-        private void CleanupProjectiles()
+        private void CleanupProjectiles(float timeSeconds, bool force)
         {
-            activeProjectiles.RemoveAll(projectile => projectile == null || !projectile.gameObject.activeInHierarchy);
+            if (!force && timeSeconds < nextProjectileCleanupTime)
+            {
+                return;
+            }
+
+            nextProjectileCleanupTime = timeSeconds + ProjectileCleanupIntervalSeconds;
+            for (var index = activeProjectiles.Count - 1; index >= 0; index--)
+            {
+                var projectile = activeProjectiles[index];
+                if (projectile == null || !projectile.gameObject.activeInHierarchy)
+                {
+                    activeProjectiles.RemoveAt(index);
+                }
+            }
         }
 
         private float HealthPercent()
@@ -522,19 +565,57 @@ namespace Hollow.Combat
 
         private void UpdatePhaseStatus()
         {
-            if (definition == null || definition.Phases.Count == 0)
+            if (phaseStatusCache == null || phaseStatusCache.Length == 0)
             {
                 return;
             }
 
             var percent = HealthPercent();
-            var phase = definition.Phases
-                .OrderBy(phase => phase.healthThreshold01)
-                .LastOrDefault(phase => percent <= phase.healthThreshold01);
-            if (phase != null && string.IsNullOrWhiteSpace(statusText))
+            for (var index = phaseStatusCache.Length - 1; index >= 0; index--)
             {
-                statusText = phase.statusText;
+                var phase = phaseStatusCache[index];
+                if (phase != null && percent <= phase.healthThreshold01)
+                {
+                    if (string.IsNullOrWhiteSpace(statusText))
+                    {
+                        statusText = phase.statusText;
+                    }
+
+                    return;
+                }
             }
+        }
+
+        private void BuildAttackProfileCache(BossDefinition bossDefinition)
+        {
+            attackProfileCache.Clear();
+            if (bossDefinition == null)
+            {
+                return;
+            }
+
+            var profiles = bossDefinition.AttackProfiles;
+            for (var index = 0; index < profiles.Count; index++)
+            {
+                var profile = profiles[index];
+                if (profile != null && !string.IsNullOrWhiteSpace(profile.AttackId))
+                {
+                    attackProfileCache[profile.AttackId] = profile;
+                }
+            }
+        }
+
+        private static BossPhaseDefinition[] BuildPhaseStatusCache(BossDefinition bossDefinition)
+        {
+            if (bossDefinition == null || bossDefinition.Phases == null || bossDefinition.Phases.Count == 0)
+            {
+                return Array.Empty<BossPhaseDefinition>();
+            }
+
+            return bossDefinition.Phases
+                .Where(phase => phase != null)
+                .OrderBy(phase => phase.healthThreshold01)
+                .ToArray();
         }
 
         private static void DestroyRuntime(Component component)

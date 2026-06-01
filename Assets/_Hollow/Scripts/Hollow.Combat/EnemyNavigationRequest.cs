@@ -28,7 +28,9 @@ namespace Hollow.Combat
             EnemyNavMeshAgentBridge navMeshAgentBridge = null,
             float desiredSpeedMetersPerSecond = 0f,
             EnemyAiLodTier aiLodTier = EnemyAiLodTier.Full,
-            EnemyTacticalRole tacticalRole = EnemyTacticalRole.None)
+            EnemyTacticalRole tacticalRole = EnemyTacticalRole.None,
+            bool roomHasActiveBoss = false,
+            bool isBoss = false)
         {
             Room = room;
             CurrentLocalPosition = currentLocalPosition;
@@ -53,6 +55,8 @@ namespace Hollow.Combat
             DesiredSpeedMetersPerSecond = Mathf.Max(0f, desiredSpeedMetersPerSecond);
             AiLodTier = aiLodTier;
             TacticalRole = tacticalRole;
+            RoomHasActiveBoss = roomHasActiveBoss;
+            IsBoss = isBoss;
         }
 
         public RoomRuntimeRoot Room { get; }
@@ -100,5 +104,9 @@ namespace Hollow.Combat
         public EnemyAiLodTier AiLodTier { get; }
 
         public EnemyTacticalRole TacticalRole { get; }
+
+        public bool RoomHasActiveBoss { get; }
+
+        public bool IsBoss { get; }
     }
 }

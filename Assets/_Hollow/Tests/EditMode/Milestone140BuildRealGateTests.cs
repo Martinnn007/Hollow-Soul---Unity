@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using Hollow.Core.Diagnostics;
 using Hollow.Data.Definitions;
+using Hollow.Diagnostics;
 using Hollow.Editor.Build;
 using Hollow.Performance;
 using NUnit.Framework;
@@ -223,10 +225,194 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void M140AcceptsBorderlineFrameCadenceWhenDeterministicAndCpuStagesAreClean()
+        {
+            var summary = M140BuildRealReportGenerator.FromM138Summary(
+                new M138CombatScaleStressScenarioSummary
+                {
+                    scenarioId = "boss_plus_adds",
+                    displayName = "Boss Plus Adds",
+                    passed = true,
+                    timingAuthoritative = true,
+                    frameCadenceConfidence = Hollow.Diagnostics.M136FrameCadencePolicy.Trusted,
+                    rawSampleCount = 1800,
+                    frameP95Ms = 17.6d,
+                    frameMaxMs = 24.1d,
+                    cpuWorkMetricSupported = false,
+                    cpuWorkP95Ms = 17.59d,
+                    cpuWorkMaxMs = 24.03d,
+                    gcMaxBytes = 0,
+                    peakActiveEnemies = 13,
+                    observedBoss = true,
+                    cpuStageSummary = "tactical_director count=30 maxMs=1.328 maxGc=0; add_ai_think_scorer count=32 maxMs=1.35 maxGc=0"
+                },
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: true,
+                new Hollow.Diagnostics.M136LiveObjectCountSnapshot
+                {
+                    activeEnemies = 13,
+                    activeRenderers = 80,
+                    observedCombatController = true,
+                    observedBoss = true
+                });
+
+            Assert.IsTrue(summary.passed, string.Join("\n", summary.failures));
+            StringAssert.Contains("Accepted borderline", summary.note);
+        }
+
+        [Test]
+        public void M140AcceptsNestedM138TimingOnlyFailureWhenCleanJitterRulePasses()
+        {
+            var summary = M140BuildRealReportGenerator.FromM138Summary(
+                new M138CombatScaleStressScenarioSummary
+                {
+                    scenarioId = "boss_plus_adds",
+                    displayName = "Boss Plus Adds",
+                    passed = false,
+                    failures = new[] { "Trusted frame p95 17.12 ms exceeds 16.7 ms." },
+                    timingAuthoritative = true,
+                    frameCadenceConfidence = Hollow.Diagnostics.M136FrameCadencePolicy.Trusted,
+                    rawSampleCount = 1800,
+                    frameP95Ms = 17.12d,
+                    frameMaxMs = 24.1d,
+                    cpuWorkMetricSupported = false,
+                    gcMaxBytes = 0,
+                    peakActiveEnemies = 13,
+                    observedBoss = true,
+                    cpuStageSummary = "boss_ai_update count=1791 maxMs=1.2 maxGc=0; tactical_director count=30 maxMs=1.1 maxGc=0; add_ai_think_scorer count=32 maxMs=1.35 maxGc=0"
+                },
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: true,
+                new Hollow.Diagnostics.M136LiveObjectCountSnapshot
+                {
+                    activeEnemies = 13,
+                    activeRenderers = 80,
+                    observedCombatController = true,
+                    observedBoss = true
+                });
+
+            Assert.IsTrue(summary.passed, string.Join("\n", summary.failures));
+            Assert.IsTrue(summary.m138GatePassed);
+            StringAssert.Contains("Nested M138 frame-p95-only failure accepted", summary.note);
+        }
+
+        [Test]
+        public void M140RejectsNestedM138DeterministicFailuresEvenWhenFrameJitterIsClean()
+        {
+            var summary = M140BuildRealReportGenerator.FromM138Summary(
+                new M138CombatScaleStressScenarioSummary
+                {
+                    scenarioId = "boss_plus_adds",
+                    displayName = "Boss Plus Adds",
+                    passed = false,
+                    failures = new[] { "Max path solves in one frame 4 exceeds budget 2." },
+                    timingAuthoritative = true,
+                    frameCadenceConfidence = Hollow.Diagnostics.M136FrameCadencePolicy.Trusted,
+                    rawSampleCount = 1800,
+                    frameP95Ms = 17.12d,
+                    frameMaxMs = 24.1d,
+                    cpuWorkMetricSupported = false,
+                    gcMaxBytes = 0,
+                    peakActiveEnemies = 13,
+                    observedBoss = true,
+                    cpuStageSummary = "boss_ai_update count=1791 maxMs=1.2 maxGc=0; tactical_director count=30 maxMs=1.1 maxGc=0; add_ai_think_scorer count=32 maxMs=1.35 maxGc=0"
+                },
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: true,
+                new Hollow.Diagnostics.M136LiveObjectCountSnapshot
+                {
+                    activeEnemies = 13,
+                    activeRenderers = 80,
+                    observedCombatController = true,
+                    observedBoss = true
+                });
+
+            Assert.IsFalse(summary.passed);
+            Assert.IsFalse(summary.m138GatePassed);
+            StringAssert.Contains("M138 scenario gate failed", string.Join("\n", summary.failures));
+        }
+
+        [Test]
+        public void M140RejectsFrameCadenceAboveCleanJitterCeilingEvenWhenStagesAreClean()
+        {
+            var summary = M140BuildRealReportGenerator.FromM138Summary(
+                new M138CombatScaleStressScenarioSummary
+                {
+                    scenarioId = "boss_plus_adds",
+                    displayName = "Boss Plus Adds",
+                    passed = true,
+                    timingAuthoritative = true,
+                    frameCadenceConfidence = Hollow.Diagnostics.M136FrameCadencePolicy.Trusted,
+                    rawSampleCount = 1800,
+                    frameP95Ms = 18.1d,
+                    frameMaxMs = 24.1d,
+                    gcMaxBytes = 0,
+                    peakActiveEnemies = 13,
+                    observedBoss = true,
+                    cpuStageSummary = "tactical_director count=30 maxMs=1.328 maxGc=0; add_ai_think_scorer count=32 maxMs=1.35 maxGc=0"
+                },
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: true,
+                new Hollow.Diagnostics.M136LiveObjectCountSnapshot
+                {
+                    activeEnemies = 13,
+                    activeRenderers = 80,
+                    observedCombatController = true,
+                    observedBoss = true
+                });
+
+            Assert.IsFalse(summary.passed);
+            StringAssert.Contains("Frame p95", string.Join("\n", summary.failures));
+        }
+
+        [Test]
+        public void M140RejectsBorderlineFrameCadenceWhenCpuStagesAreNotClean()
+        {
+            var summary = M140BuildRealReportGenerator.FromM138Summary(
+                new M138CombatScaleStressScenarioSummary
+                {
+                    scenarioId = "boss_plus_adds",
+                    displayName = "Boss Plus Adds",
+                    passed = true,
+                    timingAuthoritative = true,
+                    frameCadenceConfidence = Hollow.Diagnostics.M136FrameCadencePolicy.Trusted,
+                    rawSampleCount = 1800,
+                    frameP95Ms = 16.9d,
+                    frameMaxMs = 22.1d,
+                    gcMaxBytes = 0,
+                    peakActiveEnemies = 13,
+                    observedBoss = true,
+                    cpuStageSummary = "add_ai_think_scorer count=1 maxMs=26.527 maxGc=0"
+                },
+                "macos-apple-silicon",
+                M140BuildKind.Development,
+                new M140VisualValidationSummary { passed = true },
+                enforceTiming: true,
+                new Hollow.Diagnostics.M136LiveObjectCountSnapshot
+                {
+                    activeEnemies = 13,
+                    activeRenderers = 80,
+                    observedCombatController = true,
+                    observedBoss = true
+                });
+
+            Assert.IsFalse(summary.passed);
+            StringAssert.Contains("Frame p95", string.Join("\n", summary.failures));
+        }
+
+        [Test]
         public void PlayerLogValidatorFailsShaderMaterialAddressablesAndExceptions()
         {
             var path = Path.Combine(tempDirectory, "Player.log");
-            File.WriteAllText(path, "NullReferenceException\nShader error\npink material\nAddressables Exception\nThe referenced script on this Behaviour is missing!\n");
+            File.WriteAllText(path, "[M140] ScenarioStart boss_plus_adds (8/14)\nNullReferenceException\nShader error\npink material\nAddressables Exception\nThe referenced script on this Behaviour is missing!\n[M140] ScenarioEnd boss_plus_adds FAIL\n");
 
             var summary = M140PlayerLogValidator.Validate(path);
 
@@ -235,7 +421,163 @@ namespace Hollow.Tests.EditMode
             Assert.Greater(summary.shaderIssueCount, 0);
             Assert.Greater(summary.materialIssueCount, 0);
             Assert.Greater(summary.addressablesIssueCount, 0);
-            Assert.Greater(summary.missingScriptWarningCount, 0);
+            Assert.AreEqual(1, summary.missingScriptWarningCount);
+            Assert.AreEqual(0, summary.startupMissingScriptWarningCount);
+            Assert.AreEqual(1, summary.scenarioMissingScriptWarningCount);
+            Assert.IsNotEmpty(summary.missingScriptWarningContextLines);
+            StringAssert.Contains("referenced script", summary.missingScriptWarningContextLines[0]);
+        }
+
+        [Test]
+        public void PlayerLogValidatorReportsStartupMissingScriptsWithoutFailingGameplayScenarios()
+        {
+            var path = Path.Combine(tempDirectory, "PlayerStartup.log");
+            File.WriteAllText(path, "Initialize engine version\nThe referenced script (Unknown) on this Behaviour is missing!\nThe referenced script on this Behaviour (Game Object '<null>') is missing!\n[M140] ScenarioStart boot_loading_screen (1/3)\n[M140] ScenarioEnd boot_loading_screen PASS\n");
+
+            var summary = M140PlayerLogValidator.Validate(path);
+
+            Assert.IsTrue(summary.passed);
+            Assert.AreEqual(2, summary.missingScriptWarningCount);
+            Assert.AreEqual(2, summary.startupMissingScriptWarningCount);
+            Assert.AreEqual(0, summary.scenarioMissingScriptWarningCount);
+        }
+
+        [Test]
+        public void PlayerLogValidatorFailsScenarioRuntimeNavMeshFallbackWarnings()
+        {
+            var path = Path.Combine(tempDirectory, "PlayerRuntimeNavMeshFallback.log");
+            File.WriteAllText(path, "Initialize engine version\n[M140] ScenarioStart boss_plus_adds (8/11)\nRoom 'm138_boss_plus_adds' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found.\n[M140] ScenarioEnd boss_plus_adds FAIL\n");
+
+            var summary = M140PlayerLogValidator.Validate(path);
+
+            Assert.IsFalse(summary.passed);
+            Assert.AreEqual(1, summary.runtimeNavMeshFallbackWarningCount);
+            Assert.AreEqual(0, summary.startupRuntimeNavMeshFallbackWarningCount);
+            Assert.AreEqual(1, summary.scenarioRuntimeNavMeshFallbackWarningCount);
+            Assert.IsNotEmpty(summary.runtimeNavMeshFallbackWarningContextLines);
+            StringAssert.Contains("runtime NavMesh fallback", string.Join("\n", summary.failures));
+        }
+
+        [Test]
+        public void PlayerLogValidatorReportsStartupRuntimeNavMeshFallbackWithoutPassingItAsScenarioClean()
+        {
+            var path = Path.Combine(tempDirectory, "PlayerStartupRuntimeNavMeshFallback.log");
+            File.WriteAllText(path, "Room 'startup_probe' is using a dev-only runtime Unity NavMesh fallback because no catalog bake was found.\n[M140] ScenarioStart boot_loading_screen (1/3)\n[M140] ScenarioEnd boot_loading_screen PASS\n");
+
+            var summary = M140PlayerLogValidator.Validate(path);
+
+            Assert.IsTrue(summary.passed);
+            Assert.AreEqual(1, summary.runtimeNavMeshFallbackWarningCount);
+            Assert.AreEqual(1, summary.startupRuntimeNavMeshFallbackWarningCount);
+            Assert.AreEqual(0, summary.scenarioRuntimeNavMeshFallbackWarningCount);
+        }
+
+        [Test]
+        public void M140RunnerRejectsStaleCaptureReportFile()
+        {
+            var path = Path.Combine(tempDirectory, M140BuildRealReportGenerator.DefaultJsonFileName);
+            var captureStartedUtc = DateTime.UtcNow;
+            File.WriteAllText(path, "{}");
+            File.SetLastWriteTimeUtc(path, captureStartedUtc.AddMinutes(-5));
+
+            var fresh = M140BuildRealGateRunner.IsFreshCaptureReportForTests(path, captureStartedUtc, out var detail);
+
+            Assert.IsFalse(fresh);
+            StringAssert.Contains("predates capture start", detail);
+        }
+
+        [Test]
+        public void M140RunnerRejectsStaleGeneratedReportMetadata()
+        {
+            var captureStartedUtc = DateTime.UtcNow;
+            var report = new M140BuildRealReport
+            {
+                generatedAtUtc = captureStartedUtc.AddMinutes(-5).ToString("O")
+            };
+
+            var fresh = M140BuildRealGateRunner.IsFreshGeneratedReportForTests(report, captureStartedUtc, out var detail);
+
+            Assert.IsFalse(fresh);
+            StringAssert.Contains("predates capture start", detail);
+        }
+
+        [Test]
+        public void MarkdownSeparatesPreloadBuildAttributionFromPostLoadMisses()
+        {
+            var report = new M140BuildRealReport
+            {
+                result = M140GateResult.Passed,
+                passed = true,
+                platformId = "macos-apple-silicon",
+                buildKind = M140BuildKind.Development,
+                playerLog = new M140PlayerLogValidationSummary { passed = true },
+                renderRuntime = new M140RenderRuntimeSnapshot { targetFrameRate = 60, vSyncCount = 0 },
+                scenarios = new[]
+                {
+                    new M140ScenarioSummary
+                    {
+                        scenarioId = "normal_traversal",
+                        displayName = "Normal Traversal",
+                        passed = true,
+                        cacheMissAttributionSummary = "presentation|preload|role=floor",
+                        preloadBuildCacheMissAttributionSummary = "presentation|preload|role=floor",
+                        postLoadCacheMissAttributionSummary = string.Empty
+                    }
+                }
+            };
+
+            var markdown = M140BuildRealReportGenerator.ToMarkdown(report);
+
+            Assert.That(markdown, Does.Not.Contain("Cache miss attribution"));
+            Assert.That(markdown, Does.Not.Contain("Preload/build attribution"));
+            Assert.That(markdown, Does.Not.Contain("Post-load traversal miss attribution"));
+        }
+
+        [Test]
+        public void PerformanceComparisonReportsCrowdCounterReductionsAndRegressions()
+        {
+            var passing = PerformanceComparisonReportGenerator.BuildComparison(
+                "before",
+                "after",
+                BuildM138ComparisonReport(reservationCandidates: 1000, reservationPathSolves: 1000, passed: true),
+                BuildM138ComparisonReport(reservationCandidates: 100, reservationPathSolves: 100, passed: true),
+                BuildM140ComparisonReport(passScenarios: true),
+                BuildM140ComparisonReport(passScenarios: true));
+
+            Assert.IsTrue(passing.passed, string.Join("; ", passing.failures));
+            var enemyStress = passing.scenarios.First(scenario => scenario.scenarioId == "enemy_stress_30");
+            Assert.AreEqual(90d, enemyStress.reservationCandidateReductionPercent, 0.001d);
+            Assert.AreEqual(90d, enemyStress.reservationPathSolveReductionPercent, 0.001d);
+
+            var failing = PerformanceComparisonReportGenerator.BuildComparison(
+                "before",
+                "after",
+                BuildM138ComparisonReport(reservationCandidates: 1000, reservationPathSolves: 1000, passed: true),
+                BuildM138ComparisonReport(reservationCandidates: 600, reservationPathSolves: 600, passed: true),
+                BuildM140ComparisonReport(passScenarios: true),
+                BuildM140ComparisonReport(passScenarios: false));
+
+            Assert.IsFalse(failing.passed);
+            Assert.That(string.Join("\n", failing.failures), Does.Contain("reservation candidate reduction"));
+            Assert.That(string.Join("\n", failing.failures), Does.Contain("boss_plus_adds"));
+        }
+
+        [Test]
+        public void PerformanceComparisonAllowsLegacyBaselineWithoutTacticalCounters()
+        {
+            var report = PerformanceComparisonReportGenerator.BuildComparison(
+                "legacy-before",
+                "after",
+                BuildLegacyM138ComparisonReport(passed: true),
+                BuildM138ComparisonReport(reservationCandidates: 100, reservationPathSolves: 100, passed: true),
+                BuildM140ComparisonReport(passScenarios: true),
+                BuildM140ComparisonReport(passScenarios: true));
+
+            Assert.IsTrue(report.passed, string.Join("; ", report.failures));
+            var enemyStress = report.scenarios.First(scenario => scenario.scenarioId == "enemy_stress_30");
+            Assert.IsFalse(enemyStress.baselineReservationCountersAvailable);
+            Assert.That(enemyStress.note, Does.Contain("Baseline predates tactical reservation counters"));
+            Assert.Greater(enemyStress.candidateCrowdReservationSkips, 0);
         }
 
         [Test]
@@ -312,6 +654,124 @@ namespace Hollow.Tests.EditMode
             }
 
             return scenarios;
+        }
+
+        private static M138CombatScaleStressReport BuildM138ComparisonReport(
+            int reservationCandidates,
+            int reservationPathSolves,
+            bool passed)
+        {
+            return new M138CombatScaleStressReport
+            {
+                lockId = M138CombatScaleStressScenarioPolicy.LockId,
+                title = "comparison-test",
+                generatedAtUtc = DateTime.UtcNow.ToString("O"),
+                passed = passed,
+                scenarioCount = 2,
+                failures = Array.Empty<string>(),
+                scenarios = new[]
+                {
+                    M138ComparisonScenario("enemy_stress_30", reservationCandidates, reservationPathSolves, passed),
+                    M138ComparisonScenario("projectile_heavy_room", reservationCandidates, reservationPathSolves, passed)
+                }
+            };
+        }
+
+        private static M138CombatScaleStressReport BuildLegacyM138ComparisonReport(bool passed)
+        {
+            return new M138CombatScaleStressReport
+            {
+                lockId = M138CombatScaleStressScenarioPolicy.LockId,
+                title = "legacy-comparison-test",
+                generatedAtUtc = DateTime.UtcNow.ToString("O"),
+                passed = passed,
+                scenarioCount = 2,
+                failures = Array.Empty<string>(),
+                scenarios = new[]
+                {
+                    M138LegacyComparisonScenario("enemy_stress_30", passed),
+                    M138LegacyComparisonScenario("projectile_heavy_room", passed)
+                }
+            };
+        }
+
+        private static M138CombatScaleStressScenarioSummary M138ComparisonScenario(
+            string id,
+            int reservationCandidates,
+            int reservationPathSolves,
+            bool passed)
+        {
+            return new M138CombatScaleStressScenarioSummary
+            {
+                scenarioId = id,
+                displayName = id,
+                frameP95Ms = 12d,
+                frameMaxMs = 18d,
+                aiScorerCalls = reservationCandidates / 10,
+                aiBehaviorGraphTicks = reservationCandidates / 5,
+                navPathRequests = reservationPathSolves,
+                navPathSolves = reservationPathSolves,
+                tacticalDirectorSummary = $"reservationCandidatesChecked={reservationCandidates}; reservationPathSolves={reservationPathSolves};",
+                tacticalCrowdReservationSkips = passed ? 50 : 0,
+                tacticalCrowdCachedIntentReuses = passed ? 100 : 0,
+                tacticalCrowdScorerSkips = passed ? 40 : 0,
+                passed = passed,
+                failures = passed ? Array.Empty<string>() : new[] { "synthetic failure" }
+            };
+        }
+
+        private static M138CombatScaleStressScenarioSummary M138LegacyComparisonScenario(string id, bool passed)
+        {
+            return new M138CombatScaleStressScenarioSummary
+            {
+                scenarioId = id,
+                displayName = id,
+                frameP95Ms = 35d,
+                frameMaxMs = 70d,
+                aiScorerCalls = 2000,
+                aiBehaviorGraphTicks = 4000,
+                navPathRequests = 1000,
+                navPathSolves = 1000,
+                tacticalDirectorSummary = string.Empty,
+                passed = passed,
+                failures = passed ? Array.Empty<string>() : new[] { "synthetic failure" }
+            };
+        }
+
+        private static M140BuildRealReport BuildM140ComparisonReport(bool passScenarios)
+        {
+            var ids = new[]
+            {
+                "normal_traversal",
+                "return_to_previous_room",
+                "reward_room",
+                "boss_entry",
+                "boss_plus_adds"
+            };
+            return new M140BuildRealReport
+            {
+                lockId = M140BuildRealReportGenerator.LockId,
+                title = "comparison-test",
+                generatedAtUtc = DateTime.UtcNow.ToString("O"),
+                platformId = "macos-apple-silicon",
+                buildKind = M140BuildKind.Development,
+                result = passScenarios ? M140GateResult.Passed : M140GateResult.Failed,
+                passed = passScenarios,
+                scenarioCount = ids.Length,
+                scenarios = ids.Select(id => new M140ScenarioSummary
+                {
+                    scenarioId = id,
+                    displayName = id,
+                    platformId = "macos-apple-silicon",
+                    buildKind = M140BuildKind.Development,
+                    frameP95Ms = passScenarios ? 12d : 19d,
+                    frameMaxMs = passScenarios ? 20d : 55d,
+                    tacticalDirectorSummary = "reservationCandidatesChecked=0; reservationPathSolves=0;",
+                    passed = passScenarios,
+                    failures = passScenarios ? Array.Empty<string>() : new[] { "synthetic failure" }
+                }).ToArray(),
+                failures = passScenarios ? Array.Empty<string>() : new[] { "synthetic failure" }
+            };
         }
     }
 }
