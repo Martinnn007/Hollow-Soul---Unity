@@ -17,13 +17,14 @@ MonoBehaviour:
   notes: 
   budgets:
   - mode: 0
-    minimumTargetFrameRate: 120
-    maximumFrameTimeMs: 8.33
+    minimumTargetFrameRate: 60
+    maximumFrameTimeMs: 16.67
     maximumRenderScale: 1
     maximumVisibleEnemies: 24
     maximumProjectiles: 48
     maximumDrawCalls: 800
-    notes: Desktop prototype budget. Keep full-scale gameplay and high refresh readability.
+    notes: Desktop prototype budget. Keep laptop-friendly 60 FPS gameplay and full-scale
+      readability.
   - mode: 1
     minimumTargetFrameRate: 90
     maximumFrameTimeMs: 11.11

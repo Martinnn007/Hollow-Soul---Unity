@@ -1,6 +1,8 @@
 using System;
 using Hollow.Core;
 using Hollow.Input;
+using Hollow.Platform;
+using Hollow.Presentation;
 using Hollow.World;
 using UnityEngine;
 using UnityEngine.UI;
@@ -100,11 +102,19 @@ namespace Hollow.UI.Shell
 
             var panel = CreatePanel("Pause.Settings", root, new Vector2(620f, 560f), new Color(0.04f, 0.05f, 0.08f, PanelAlpha));
             AddText(panel, "Settings", 30, FontStyle.Bold, new Vector2(0f, 220f), new Vector2(540f, 52f));
-            AddText(panel, "Audio, graphics, and accessibility are placeholders for now.", 13, FontStyle.Normal, new Vector2(0f, 180f), new Vector2(540f, 28f), new Color(0.76f, 0.83f, 0.92f));
-            AddDisabledRow(panel, "Audio", "Placeholder");
-            AddDisabledRow(panel, "Graphics", "Placeholder", -15f);
-            AddDisabledRow(panel, "Accessibility", "Placeholder", -70f);
-            AddButton(panel, "Controls", new Vector2(0f, -125f), ShowControls, new Color(0.20f, 0.44f, 0.70f));
+            AddText(panel, "Runtime settings for the current run.", 13, FontStyle.Normal, new Vector2(0f, 180f), new Vector2(540f, 28f), new Color(0.76f, 0.83f, 0.92f));
+            AddDisabledRow(panel, "Audio", "Placeholder", 70f);
+            if (CanSwitchDesktopRenderProfile())
+            {
+                AddRenderProfileSelector(panel, 10f);
+            }
+            else
+            {
+                AddDisabledRow(panel, "Graphics", "VisionOS Fixed", 10f);
+            }
+
+            AddDisabledRow(panel, "Accessibility", "Placeholder", -60f);
+            AddButton(panel, "Controls", new Vector2(0f, -130f), ShowControls, new Color(0.20f, 0.44f, 0.70f));
             AddButton(panel, "Back", new Vector2(0f, -210f), ShowRoot, new Color(0.22f, 0.25f, 0.33f));
         }
 
@@ -318,6 +328,38 @@ namespace Hollow.UI.Shell
             panel.anchoredPosition = new Vector2(0f, y);
             AddText(panel, label, 15, FontStyle.Bold, new Vector2(-120f, 0f), new Vector2(160f, 32f), new Color(0.86f, 0.90f, 1f));
             AddText(panel, status, 13, FontStyle.Normal, new Vector2(120f, 0f), new Vector2(160f, 32f), new Color(0.68f, 0.72f, 0.80f));
+        }
+
+        private void AddRenderProfileSelector(RectTransform parent, float y)
+        {
+            var panel = CreatePanel("Setting.Graphics", parent, new Vector2(500f, 52f), new Color(0.11f, 0.12f, 0.16f, 0.90f));
+            panel.anchoredPosition = new Vector2(0f, y);
+            AddText(panel, "Graphics", 15, FontStyle.Bold, new Vector2(-170f, 0f), new Vector2(130f, 34f), new Color(0.86f, 0.90f, 1f));
+
+            var currentMode = RuntimeRenderProfileSettings.CurrentMode;
+            AddRenderProfileButton(panel, "Cool", RuntimeRenderProfileMode.Cool, currentMode, new Vector2(35f, 0f));
+            AddRenderProfileButton(panel, "Quality", RuntimeRenderProfileMode.Quality, currentMode, new Vector2(155f, 0f));
+        }
+
+        private void AddRenderProfileButton(RectTransform parent, string label, RuntimeRenderProfileMode mode, RuntimeRenderProfileMode currentMode, Vector2 anchoredPosition)
+        {
+            var isActive = mode == currentMode;
+            var color = isActive ? new Color(0.18f, 0.45f, 0.28f) : new Color(0.18f, 0.22f, 0.30f);
+            AddButton(parent, label, anchoredPosition, () => SelectRenderProfile(mode), color, new Vector2(110f, 34f));
+        }
+
+        private void SelectRenderProfile(RuntimeRenderProfileMode mode)
+        {
+            RuntimeRenderProfileSettings.SetMode(mode);
+            ShowSettings();
+        }
+
+        private bool CanSwitchDesktopRenderProfile()
+        {
+            ResolveSessionController();
+            return gameSessionController == null ||
+                   gameSessionController.SessionState == null ||
+                   gameSessionController.SessionState.PlatformKind == HollowPlatformKind.WindowsStandard3D;
         }
 
         private void AddControlsColumn(RectTransform parent, string title, Vector2 anchoredPosition, string[] rows)

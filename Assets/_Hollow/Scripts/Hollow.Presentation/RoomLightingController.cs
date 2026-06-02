@@ -32,6 +32,15 @@ namespace Hollow.Presentation
 
         private void OnEnable()
         {
+            if (!string.IsNullOrWhiteSpace(appliedBiomeId) &&
+                appliedProfile != null &&
+                globalAppliedFrame == Time.frameCount)
+            {
+                ApplyEmitterBudget(appliedProfile);
+                BiomeLightingDiagnostics.RecordSnapshot(BuildSnapshot(appliedProfile, appliedBiomeId));
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(preparedBiomeId) && string.IsNullOrWhiteSpace(appliedBiomeId))
             {
                 ApplyBiome(preparedBiomeId, force: true);

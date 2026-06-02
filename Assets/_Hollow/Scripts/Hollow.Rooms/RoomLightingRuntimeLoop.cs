@@ -1,3 +1,4 @@
+using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace Hollow.Rooms
     {
         private const float RefreshIntervalSeconds = 0.25f;
         private float nextRefreshTime;
+        private RoomRuntimeRoot cachedActiveRoot;
 
         public static bool DebugHudEnabled { get; set; }
 
@@ -30,6 +32,11 @@ namespace Hollow.Rooms
 
         private void Update()
         {
+            if (!DebugHudEnabled && ActiveRoomLightingIsCurrent())
+            {
+                return;
+            }
+
             if (Time.unscaledTime < nextRefreshTime)
             {
                 return;
@@ -57,8 +64,29 @@ namespace Hollow.Rooms
                 }
 
                 lighting.ApplyBiome(root.BiomeId);
+                cachedActiveRoot = root;
                 break;
             }
+        }
+
+        private bool ActiveRoomLightingIsCurrent()
+        {
+            if (cachedActiveRoot == null || !cachedActiveRoot.gameObject.activeInHierarchy)
+            {
+                cachedActiveRoot = null;
+                return false;
+            }
+
+            var lighting = cachedActiveRoot.GetComponent<RoomLightingController>();
+            if (lighting == null ||
+                lighting.AppliedProfile == null ||
+                !lighting.IsPreparedFor(cachedActiveRoot.BiomeId) ||
+                !RoomBiomeIds.Matches(lighting.AppliedBiomeId, cachedActiveRoot.BiomeId))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void OnGUI()

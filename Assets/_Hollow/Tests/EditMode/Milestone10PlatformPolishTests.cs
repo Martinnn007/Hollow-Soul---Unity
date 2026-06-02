@@ -53,7 +53,7 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(Milestone10AssetGenerator.ArpgCameraFieldOfView, immersive.CameraFieldOfView, 0.0001f);
             Assert.AreEqual(PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, immersive.WorldYawDegrees, 0.0001f);
             Assert.IsTrue(immersive.UseComfortVignette);
-            Assert.GreaterOrEqual(windows.TargetFrameRate, 120);
+            Assert.AreEqual(60, windows.TargetFrameRate);
             Assert.GreaterOrEqual(bounded.TargetFrameRate, 90);
             Assert.GreaterOrEqual(immersive.TargetFrameRate, 90);
         }

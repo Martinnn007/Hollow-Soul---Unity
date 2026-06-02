@@ -1027,6 +1027,7 @@ namespace Hollow.Branches
             DestroyTransientInteractables();
             currentRoomAsset = ResolveCurrentRoomAsset();
             roomRuntimeRoot.BuildFrom(currentRoomAsset);
+            RoomLightingPrewarm.ApplyForEntry(roomRuntimeRoot);
             if (!IsSpaceshipHub && State.CurrentRoom.Role == BranchRoomRole.Origin)
             {
                 roomRuntimeRoot.ClearHazardsAndInteractiveObjects();
@@ -1116,6 +1117,7 @@ namespace Hollow.Branches
             yield return RunTransitionAction(DestroyTransientInteractables);
             currentRoomAsset = ResolveCurrentRoomAsset();
             yield return RunTransitionStage(roomRuntimeRoot.BuildFromStaged(currentRoomAsset, RoomNavMeshRuntimeFallbackMode.RequireCatalogBake, revealOnCommit: false));
+            RoomLightingPrewarm.Prepare(roomRuntimeRoot, applyGlobalSettings: false);
             SuppressRoomEntryRenderers();
             if (!IsSpaceshipHub && State.CurrentRoom.Role == BranchRoomRole.Origin)
             {
@@ -1213,6 +1215,7 @@ namespace Hollow.Branches
             }
 
             playerController.transform.localPosition = revealPlayerLocalPosition;
+            RoomLightingPrewarm.ApplyForEntry(roomRuntimeRoot);
             RevealRoomEntryVisuals();
             RunMeasuredCpuStage(M136CpuStageKind.BranchPreloadSchedule, ScheduleBranchPreload);
         }

@@ -1,4 +1,5 @@
 using Hollow.Data.Definitions;
+using Hollow.Platform;
 using UnityEngine;
 
 namespace Hollow.Presentation
@@ -68,7 +69,19 @@ namespace Hollow.Presentation
 
         private void ApplyPerformance()
         {
-            var renderProfile = renderProfileOverride != null ? renderProfileOverride : profile.RenderProfile;
+            if (renderProfileOverride != null)
+            {
+                RenderProfileApplier.Apply(renderProfileOverride);
+                return;
+            }
+
+            if (profile.Mode.ToPlatformKind() == HollowPlatformKind.WindowsStandard3D &&
+                RuntimeRenderProfileSettings.ApplyCurrentProfile() != null)
+            {
+                return;
+            }
+
+            var renderProfile = profile.RenderProfile;
             if (renderProfile != null)
             {
                 RenderProfileApplier.Apply(renderProfile);

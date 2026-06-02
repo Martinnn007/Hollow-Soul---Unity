@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2fa70ad98b2a42779213df33a569e6b, type: 3}
+  m_Name: RenderProfile_DevCool
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.HollowRenderProfileDefinition
+  id: 
+  displayName: Desktop Cool
+  notes: Laptop-friendly desktop render profile for lower heat.
+  profileKind: 0
+  renderPipelineAsset: {fileID: 11400000, guid: 4b83569d67af61e458304325a23e5dfd, type: 2}
+  targetFrameRate: 60
+  vSyncCount: 0
+  renderScale: 0.75
+  supportsHdr: 0
+  requiresDepthTexture: 1
+  requiresOpaqueTexture: 0
+  mainLightShadowResolution: 1024
+  shadowDistance: 24
+  shadowCascadeCount: 2
+  additionalLightShadows: 0
+  maxAdditionalLights: 2
+  screenSpaceAmbientOcclusion: 0
+  maxActiveParticleSystems: 48
+  maxActiveVfx: 32
+  maxActiveLights: 8
+  worldTextureMaxSize: 2048
+  uiSpriteMaxSize: 1024
+  gpuFrameP95BudgetMs: 16.67

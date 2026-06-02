@@ -48,11 +48,15 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(HollowRenderProfileKind.WindowsQuality, windows.ProfileKind);
             Assert.AreEqual(HollowRenderProfileKind.VisionOSBounded, bounded.ProfileKind);
             Assert.AreEqual(HollowRenderProfileKind.VisionOSImmersive, immersive.ProfileKind);
-            Assert.AreEqual(1f, dev.RenderScale, 0.001f);
-            Assert.AreEqual(windows.RenderScale, dev.RenderScale, 0.001f);
-            Assert.Less(dev.TargetFrameRate, windows.TargetFrameRate);
+            Assert.AreEqual(0.75f, dev.RenderScale, 0.001f);
+            Assert.AreEqual(60, dev.TargetFrameRate);
+            Assert.AreEqual(60, windows.TargetFrameRate);
+            Assert.Less(dev.RenderScale, windows.RenderScale);
+            Assert.IsFalse(dev.SupportsHdr);
+            Assert.IsFalse(dev.RequiresOpaqueTexture);
             Assert.IsFalse(dev.AdditionalLightShadows);
             Assert.IsTrue(windows.AdditionalLightShadows);
+            Assert.AreEqual(4, windows.ShadowCascadeCount);
             Assert.AreEqual(0.9f, bounded.RenderScale, 0.001f);
             Assert.AreEqual(0.85f, immersive.RenderScale, 0.001f);
             Assert.IsFalse(bounded.AdditionalLightShadows);

@@ -66,13 +66,13 @@ namespace Hollow.Editor.Generation
         {
             Directory.CreateDirectory(RenderProfileDirectory);
             Directory.CreateDirectory(RenderPipelineDirectory);
-            var devPipeline = CreatePipeline(DevCoolPipelinePath, SourcePcPipelinePath, 1f, true, true, true, 2048, 45f, 2, false, 2);
-            var windowsPipeline = CreatePipeline(WindowsQualityPipelinePath, SourcePcPipelinePath, 1f, true, true, true, 2048, 50f, 2, true, 4);
+            var devPipeline = CreatePipeline(DevCoolPipelinePath, SourcePcPipelinePath, 0.75f, false, true, false, 1024, 24f, 2, false, 2);
+            var windowsPipeline = CreatePipeline(WindowsQualityPipelinePath, SourcePcPipelinePath, 1f, true, true, true, 2048, 50f, 4, true, 4);
             var boundedPipeline = CreatePipeline(VisionOSBoundedPipelinePath, SourceMobilePipelinePath, 0.9f, true, false, false, 1024, 35f, 1, false, 2);
             var immersivePipeline = CreatePipeline(VisionOSImmersivePipelinePath, SourceMobilePipelinePath, 0.85f, true, false, false, 1024, 30f, 1, false, 1);
 
-            var dev = CreateProfile(DevCoolProfilePath, HollowRenderProfileKind.DevCool, devPipeline, 45, 1f, true, true, true, 2048, 45f, 2, false, 2, true, 56, 40, 10, 2048, 1024, 22.22f);
-            var windows = CreateProfile(WindowsQualityProfilePath, HollowRenderProfileKind.WindowsQuality, windowsPipeline, 60, 1f, true, true, true, 2048, 50f, 2, true, 4, true, 72, 56, 14, 2048, 1024, 16.67f);
+            var dev = CreateProfile(DevCoolProfilePath, HollowRenderProfileKind.DevCool, devPipeline, 60, 0.75f, false, true, false, 1024, 24f, 2, false, 2, false, 48, 32, 8, 2048, 1024, 16.67f);
+            var windows = CreateProfile(WindowsQualityProfilePath, HollowRenderProfileKind.WindowsQuality, windowsPipeline, 60, 1f, true, true, true, 2048, 50f, 4, true, 4, true, 72, 56, 14, 2048, 1024, 16.67f);
             var bounded = CreateProfile(VisionOSBoundedProfilePath, HollowRenderProfileKind.VisionOSBounded, boundedPipeline, 90, 0.9f, true, false, false, 1024, 35f, 1, false, 2, false, 48, 32, 8, 1024, 768, 11.11f);
             var immersive = CreateProfile(VisionOSImmersiveProfilePath, HollowRenderProfileKind.VisionOSImmersive, immersivePipeline, 90, 0.85f, true, false, false, 1024, 30f, 1, false, 1, false, 40, 28, 6, 1024, 768, 11.11f);
 
@@ -237,9 +237,9 @@ namespace Hollow.Editor.Generation
             var immersive = profiles[3];
             if (dev != null && windows != null)
             {
-                if (dev.RenderScale != windows.RenderScale || dev.TargetFrameRate >= windows.TargetFrameRate)
+                if (dev.RenderScale >= windows.RenderScale || dev.TargetFrameRate != windows.TargetFrameRate)
                 {
-                    failures.Add("Dev Cool must keep Windows render scale while using a lower FPS cap.");
+                    failures.Add("Dev Cool must use the desktop FPS cap with a lower render scale than Windows Quality.");
                 }
 
                 if (dev.AdditionalLightShadows && windows.AdditionalLightShadows)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Hollow.Branches;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using Hollow.Rooms;
@@ -13,6 +14,72 @@ namespace Hollow.Tests.PlayMode
 {
     public sealed class BiomeLightingPlayModeTests
     {
+        [UnityTest]
+        public IEnumerator FullBranchRoomCacheAppliesLightingBeforeFirstVisibleFrame()
+        {
+            var previousAmbientMode = RenderSettings.ambientMode;
+            var previousAmbientSky = RenderSettings.ambientSkyColor;
+            var previousAmbientEquator = RenderSettings.ambientEquatorColor;
+            var previousAmbientGround = RenderSettings.ambientGroundColor;
+            var previousAmbientIntensity = RenderSettings.ambientIntensity;
+            var previousFog = RenderSettings.fog;
+            var previousFogMode = RenderSettings.fogMode;
+            var previousFogColor = RenderSettings.fogColor;
+            var previousFogDensity = RenderSettings.fogDensity;
+            var previousSkybox = RenderSettings.skybox;
+            var previousReflectionIntensity = RenderSettings.reflectionIntensity;
+            var parentObject = new GameObject("FullBranchLightingPrewarmPlayModeParent");
+            var cache = new BranchLiveRoomCache();
+
+            try
+            {
+                var room = CreateBranchRoom(BranchRoomId.Origin, "playmode_verdant_asset", BranchRoomRole.Origin);
+                var asset = CreateRoomAsset(RoomBiomeIds.VerdantRuins);
+
+                yield return cache.BuildBranchRooms(new[] { room }, _ => asset, parentObject.transform);
+
+                Assert.IsTrue(cache.TryGetRoom(room.Id, out var instance));
+                Assert.IsFalse(instance.RootObject.activeSelf, "Cached room should still be hidden after branch prewarm.");
+
+                var lighting = instance.RuntimeRoot.GetComponent<RoomLightingController>();
+                Assert.NotNull(lighting);
+                Assert.IsTrue(lighting.IsPreparedFor(RoomBiomeIds.VerdantRuins));
+                Assert.AreEqual(string.Empty, lighting.AppliedBiomeId, "Prewarm should not apply active-room globals while hidden.");
+
+                Assert.IsTrue(cache.PrepareRoomForEntry(room.Id));
+                Assert.IsTrue(cache.ActivateRoom(room.Id));
+                var revealFrame = Time.frameCount;
+
+                Assert.IsTrue(instance.RootObject.activeSelf);
+                Assert.NotNull(lighting.AppliedProfile);
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, lighting.AppliedBiomeId);
+                Assert.LessOrEqual(lighting.GlobalAppliedFrame, revealFrame);
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, BiomeLightingDiagnostics.LastSnapshot.BiomeId);
+                AssertColorApproximately(lighting.AppliedProfile.AmbientSkyColor, RenderSettings.ambientSkyColor);
+
+                yield return null;
+
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, lighting.AppliedBiomeId);
+                Assert.LessOrEqual(lighting.GlobalAppliedFrame, revealFrame);
+            }
+            finally
+            {
+                cache.DisposeBranchRooms();
+                Object.Destroy(parentObject);
+                RenderSettings.ambientMode = previousAmbientMode;
+                RenderSettings.ambientSkyColor = previousAmbientSky;
+                RenderSettings.ambientEquatorColor = previousAmbientEquator;
+                RenderSettings.ambientGroundColor = previousAmbientGround;
+                RenderSettings.ambientIntensity = previousAmbientIntensity;
+                RenderSettings.fog = previousFog;
+                RenderSettings.fogMode = previousFogMode;
+                RenderSettings.fogColor = previousFogColor;
+                RenderSettings.fogDensity = previousFogDensity;
+                RenderSettings.skybox = previousSkybox;
+                RenderSettings.reflectionIntensity = previousReflectionIntensity;
+            }
+        }
+
         [UnityTest]
         public IEnumerator RuntimeRoomLightingBinderAppliesBiomeTransitions()
         {
@@ -66,6 +133,84 @@ namespace Hollow.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator RenderProfileSwitchDoesNotReapplyActiveRoomGlobals()
+        {
+            var previousAmbientMode = RenderSettings.ambientMode;
+            var previousAmbientSky = RenderSettings.ambientSkyColor;
+            var previousAmbientEquator = RenderSettings.ambientEquatorColor;
+            var previousAmbientGround = RenderSettings.ambientGroundColor;
+            var previousAmbientIntensity = RenderSettings.ambientIntensity;
+            var previousFog = RenderSettings.fog;
+            var previousFogMode = RenderSettings.fogMode;
+            var previousFogColor = RenderSettings.fogColor;
+            var previousFogDensity = RenderSettings.fogDensity;
+            var previousSkybox = RenderSettings.skybox;
+            var previousReflectionIntensity = RenderSettings.reflectionIntensity;
+            var previousTargetFrameRate = Application.targetFrameRate;
+            var previousVSyncCount = QualitySettings.vSyncCount;
+            var previousPipeline = QualitySettings.renderPipeline;
+            var hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+            var previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            var room = CreateRoomRoot(RoomBiomeIds.VerdantRuins);
+
+            try
+            {
+                PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                RuntimeRenderProfileSettings.ResetForTests();
+                room.gameObject.SetActive(false);
+
+                Assert.IsTrue(RoomLightingPrewarm.Prepare(room));
+                Assert.IsTrue(RoomLightingPrewarm.ApplyForEntry(room));
+                var lighting = room.GetComponent<RoomLightingController>();
+                Assert.NotNull(lighting);
+                var preRevealGlobalFrame = lighting.GlobalAppliedFrame;
+
+                room.gameObject.SetActive(true);
+                var revealFrame = Time.frameCount;
+
+                Assert.AreEqual(preRevealGlobalFrame, lighting.GlobalAppliedFrame, "Room enable should not reapply globals after pre-entry lighting was applied.");
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, lighting.AppliedBiomeId);
+                Assert.LessOrEqual(lighting.GlobalAppliedFrame, revealFrame);
+
+                RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Cool, persist: false);
+                RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Quality, persist: false);
+                yield return null;
+
+                Assert.IsTrue(lighting.IsPreparedFor(RoomBiomeIds.VerdantRuins));
+                Assert.AreEqual(RoomBiomeIds.VerdantRuins, lighting.AppliedBiomeId);
+                Assert.AreEqual(preRevealGlobalFrame, lighting.GlobalAppliedFrame);
+            }
+            finally
+            {
+                Object.Destroy(room.gameObject);
+                RenderSettings.ambientMode = previousAmbientMode;
+                RenderSettings.ambientSkyColor = previousAmbientSky;
+                RenderSettings.ambientEquatorColor = previousAmbientEquator;
+                RenderSettings.ambientGroundColor = previousAmbientGround;
+                RenderSettings.ambientIntensity = previousAmbientIntensity;
+                RenderSettings.fog = previousFog;
+                RenderSettings.fogMode = previousFogMode;
+                RenderSettings.fogColor = previousFogColor;
+                RenderSettings.fogDensity = previousFogDensity;
+                RenderSettings.skybox = previousSkybox;
+                RenderSettings.reflectionIntensity = previousReflectionIntensity;
+                Application.targetFrameRate = previousTargetFrameRate;
+                QualitySettings.vSyncCount = previousVSyncCount;
+                QualitySettings.renderPipeline = previousPipeline;
+                if (hadPreviousPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderProfileSettings.PlayerPrefsKey, previousPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                }
+
+                RuntimeRenderProfileSettings.ResetForTests();
+            }
+        }
+
         private static IEnumerator AssertActiveBiome(RoomLightingRuntimeLoop loop, Camera camera, RoomRuntimeRoot active, string expectedBiomeId, params RoomRuntimeRoot[] inactive)
         {
             for (var index = 0; index < inactive.Length; index++)
@@ -93,6 +238,17 @@ namespace Hollow.Tests.PlayMode
             Assert.NotNull(active.transform.Find("RoomLightingRig/BiomeKeyLight"));
             Assert.NotNull(active.transform.Find("RoomLightingRig/BiomeFillLight"));
             Assert.NotNull(active.transform.Find("RoomLightingRig/BiomeRimLight"));
+        }
+
+        private static BranchRoomState CreateBranchRoom(BranchRoomId id, string roomAssetId, BranchRoomRole role)
+        {
+            return new BranchRoomState(
+                id,
+                Vector2Int.zero,
+                new BranchRoomInstanceId(id.Value),
+                roomAssetId,
+                null,
+                role);
         }
 
         private static RoomRuntimeRoot CreateRoomRoot(string biomeId)

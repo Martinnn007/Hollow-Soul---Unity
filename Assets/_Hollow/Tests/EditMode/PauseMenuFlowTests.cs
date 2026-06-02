@@ -1,9 +1,11 @@
 using System.Linq;
 using Hollow.Input;
 using Hollow.Persistence;
+using Hollow.Presentation;
 using Hollow.UI.Shell;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -104,6 +106,57 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void SettingsPanelSwitchesRuntimeRenderProfile()
+        {
+            var previousTargetFrameRate = Application.targetFrameRate;
+            var previousVSyncCount = QualitySettings.vSyncCount;
+            var previousPipeline = QualitySettings.renderPipeline;
+            var hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+            var previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            var shell = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            try
+            {
+                PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                RuntimeRenderProfileSettings.ResetForTests();
+                var pause = shell.AddComponent<PauseMenuController>();
+
+                pause.ShowSettings();
+
+                var labels = shell.GetComponentsInChildren<Text>(includeInactive: true).Select(text => text.text).ToArray();
+                Assert.Contains("Graphics", labels);
+                Assert.Contains("Cool", labels);
+                Assert.Contains("Quality", labels);
+                Assert.AreEqual(RuntimeRenderProfileMode.Cool, RuntimeRenderProfileSettings.CurrentMode);
+
+                FindButton(shell, "Quality").onClick.Invoke();
+
+                Assert.AreEqual(RuntimeRenderProfileMode.Quality, RuntimeRenderProfileSettings.CurrentMode);
+                RuntimeRenderProfileSettings.ResetForTests();
+                Assert.AreEqual(RuntimeRenderProfileMode.Quality, RuntimeRenderProfileSettings.CurrentMode);
+                labels = shell.GetComponentsInChildren<Text>(includeInactive: true).Select(text => text.text).ToArray();
+                Assert.Contains("Cool", labels);
+                Assert.Contains("Quality", labels);
+            }
+            finally
+            {
+                Object.DestroyImmediate(shell);
+                Application.targetFrameRate = previousTargetFrameRate;
+                QualitySettings.vSyncCount = previousVSyncCount;
+                QualitySettings.renderPipeline = previousPipeline;
+                if (hadPreviousPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderProfileSettings.PlayerPrefsKey, previousPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                }
+
+                RuntimeRenderProfileSettings.ResetForTests();
+            }
+        }
+
+        [Test]
         public void RunSnapshotCanPersistChallengeIdentity()
         {
             var snapshot = new RunSaveSnapshot
@@ -113,6 +166,14 @@ namespace Hollow.Tests.EditMode
             };
 
             Assert.AreEqual("blade_trial", snapshot.challengeId);
+        }
+
+        private static Button FindButton(GameObject root, string label)
+        {
+            var button = root.GetComponentsInChildren<Button>(includeInactive: true)
+                .FirstOrDefault(candidate => candidate.GetComponentInChildren<Text>(includeInactive: true)?.text == label);
+            Assert.NotNull(button, label);
+            return button;
         }
     }
 }

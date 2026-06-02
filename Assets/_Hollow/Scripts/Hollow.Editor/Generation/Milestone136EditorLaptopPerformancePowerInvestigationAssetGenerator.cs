@@ -351,7 +351,7 @@ namespace Hollow.Editor.Generation
                 "- Reports compare the two latest live captures per scenario when before/after data exists.\n" +
                 "- Comparison highlights p95 frame-time and p50 FPS movement so optimization passes can prove actual improvement.\n\n" +
                 "## Ranked Suspects\n" +
-                "- Desktop profile currently targets `120 FPS` with `vSyncCount = 0`, which can make the laptop run flat out even when gameplay is not heavy.\n" +
+                "- Desktop runtime now defaults to a cool `60 FPS` profile with `vSyncCount = 0`; Quality remains available for visual comparison and should be measured separately.\n" +
                 "- PC URP settings are expensive for a cool editor target: HDR, depth texture, opaque texture, 50m shadows, 4 cascades, soft shadows, and additional light shadows are all part of the snapshot.\n" +
                 "- Per-frame HUD/debug, minimap, and wall-visibility work should be measured before refactoring.\n" +
                 "- Runtime NavMesh fallback is treated as a spike suspect because missing bakes can force dev-only room NavMesh builds.\n\n" +
@@ -615,7 +615,7 @@ namespace Hollow.Editor.Generation
                 "GPU frame timing",
                 "minimap rebuilds",
                 "runtime NavMesh fallbacks",
-                "120 FPS",
+                "60 FPS",
                 "vSyncCount = 0",
                 "No save schema"
             });

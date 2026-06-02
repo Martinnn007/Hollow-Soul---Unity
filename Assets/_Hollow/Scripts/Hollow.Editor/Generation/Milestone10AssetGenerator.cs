@@ -42,7 +42,7 @@ namespace Hollow.Editor.Generation
                 95f,
                 new Color(0.018f, 0.023f, 0.034f, 1f),
                 new Color(0.64f, 0.70f, 0.82f, 1f),
-                120,
+                60,
                 0,
                 1f,
                 false,

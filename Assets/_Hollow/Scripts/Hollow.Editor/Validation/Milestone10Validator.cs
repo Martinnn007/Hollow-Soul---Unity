@@ -91,7 +91,7 @@ namespace Hollow.Editor.Validation
 
         private static void ValidateProfiles(List<string> failures)
         {
-            AssertProfile(Milestone10AssetGenerator.WindowsProfilePath, PlatformPresentationMode.WindowsStandard3D, 1f, false, 120, failures);
+            AssertProfile(Milestone10AssetGenerator.WindowsProfilePath, PlatformPresentationMode.WindowsStandard3D, 1f, false, 60, failures);
             AssertProfile(Milestone10AssetGenerator.BoundedProfilePath, PlatformPresentationMode.VisionOSBoundedTabletop, PresentationScalePolicy.VisionOSBoundedTabletopScale, false, 90, failures);
             AssertProfile(Milestone10AssetGenerator.ImmersiveProfilePath, PlatformPresentationMode.VisionOSImmersive, 1f, true, 90, failures);
         }

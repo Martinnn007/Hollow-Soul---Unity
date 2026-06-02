@@ -52,7 +52,8 @@ namespace Hollow.Tests.EditMode
                 LightingRenderAuditScenarioPolicy.AshenProjectiles,
                 LightingRenderAuditScenarioPolicy.SunkenManyLights,
                 LightingRenderAuditScenarioPolicy.RustManyEnemies,
-                LightingRenderAuditScenarioPolicy.TransitionSweep
+                LightingRenderAuditScenarioPolicy.TransitionSweep,
+                LightingRenderAuditScenarioPolicy.BranchTraversalPrewarm
             }, ids);
         }
 
@@ -159,6 +160,8 @@ namespace Hollow.Tests.EditMode
             SetField(summary, "peakActiveLights", activeLocalLights + 1);
             SetField(summary, "peakActiveLocalLights", activeLocalLights);
             SetField(summary, "peakShadowedLights", shadowedLights);
+            SetField(summary, "peakPropLights", activePropLights);
+            SetField(summary, "peakDynamicEffectLights", activeEffectLights);
             SetField(summary, "peakActivePropLights", activePropLights);
             SetField(summary, "peakActiveDynamicEffectLights", activeEffectLights);
             SetField(summary, "maxActiveLocalLights", maxActiveLocalLights);

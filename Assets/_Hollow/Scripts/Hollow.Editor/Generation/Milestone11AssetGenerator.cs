@@ -94,7 +94,7 @@ namespace Hollow.Editor.Generation
 
             budget.Configure(new[]
             {
-                new PlatformPerformanceBudget(PlatformPresentationMode.WindowsStandard3D, 120, 8.33f, 1f, 24, 48, 800, "Desktop prototype budget. Keep full-scale gameplay and high refresh readability."),
+                new PlatformPerformanceBudget(PlatformPresentationMode.WindowsStandard3D, 60, 16.67f, 1f, 24, 48, 800, "Desktop prototype budget. Keep laptop-friendly 60 FPS gameplay and full-scale readability."),
                 new PlatformPerformanceBudget(PlatformPresentationMode.VisionOSBoundedTabletop, 90, 11.11f, 0.9f, 20, 40, 550, "Bounded tabletop budget. World root scales to 0.5 while HUD and shell remain unscaled."),
                 new PlatformPerformanceBudget(PlatformPresentationMode.VisionOSImmersive, 90, 11.11f, 0.85f, 18, 36, 500, "Immersive comfort budget. Keep reduced render scale, conservative FOV, and comfort vignette metadata.")
             });

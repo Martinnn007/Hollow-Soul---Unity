@@ -59,6 +59,7 @@ namespace Hollow.Branches
                 runtimeRoot.ConfigureDefault();
                 runtimeRoot.BuildFrom(asset, RoomNavMeshRuntimeFallbackMode.RequireCatalogBake);
                 configureBuiltRoom?.Invoke(room, runtimeRoot);
+                RoomLightingPrewarm.Prepare(runtimeRoot, applyGlobalSettings: false);
                 var navMeshValidated = runtimeRoot.HasNavMeshBake;
                 runtimeRoot.SetRuntimeNavMeshActive(false);
 
@@ -213,11 +214,13 @@ namespace Hollow.Branches
             }
 
             NavMeshValidated = RuntimeRoot.SetRuntimeNavMeshActive(true, RoomNavMeshRuntimeFallbackMode.RequireCatalogBake);
+            RoomLightingPrewarm.Prepare(RuntimeRoot, applyGlobalSettings: false);
             return NavMeshValidated;
         }
 
         public void ActivateForEntry()
         {
+            RoomLightingPrewarm.ApplyForEntry(RuntimeRoot);
             if (RootObject != null)
             {
                 RootObject.SetActive(true);

@@ -9,6 +9,7 @@
         "Hollow.Rewards",
         "Hollow.Persistence",
     "Hollow.Platform",
+    "Hollow.Presentation",
     "Hollow.Input",
     "Hollow.World",
     "UnityEngine.UI"

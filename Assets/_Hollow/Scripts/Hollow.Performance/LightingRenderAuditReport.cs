@@ -168,6 +168,7 @@ namespace Hollow.Performance
         public int vfxCount;
         public bool transitionSweep;
         public bool overBudgetLights;
+        public bool branchTraversalPrewarm;
     }
 
     public static class LightingRenderAuditScenarioPolicy
@@ -178,12 +179,14 @@ namespace Hollow.Performance
         public const string SunkenManyLights = "biome_sunken_many_lights";
         public const string RustManyEnemies = "biome_rust_many_enemies";
         public const string TransitionSweep = "biome_transition_sweep";
+        public const string BranchTraversalPrewarm = "branch_lighting_prewarm_traversal";
 
         public static readonly string[] SmokeScenarioIds =
         {
             HollowThresholdBaseline,
             VerdantProps,
-            TransitionSweep
+            TransitionSweep,
+            BranchTraversalPrewarm
         };
 
         public static readonly string[] AllScenarioIds =
@@ -193,7 +196,8 @@ namespace Hollow.Performance
             AshenProjectiles,
             SunkenManyLights,
             RustManyEnemies,
-            TransitionSweep
+            TransitionSweep,
+            BranchTraversalPrewarm
         };
 
         public static readonly LightingRenderAuditScenarioDefinition[] Manifest =
@@ -203,7 +207,8 @@ namespace Hollow.Performance
             Scenario(AshenProjectiles, "Ashen Projectile Pressure", RoomBiomeIds.CorruptedAshenShrine, propLights: 2, effects: 3, enemies: 6, projectiles: 18, vfx: 8),
             Scenario(SunkenManyLights, "Sunken Many Lights Budget", RoomBiomeIds.SunkenCartouche, propLights: 9, effects: 5, enemies: 0, projectiles: 0, vfx: 4, overBudget: true),
             Scenario(RustManyEnemies, "Rust Choir Enemy Crowd", RoomBiomeIds.RustChoir, propLights: 4, effects: 2, enemies: 20, projectiles: 4, vfx: 4),
-            Scenario(TransitionSweep, "Biome Transition Sweep", RoomBiomeIds.HollowThreshold, propLights: 3, effects: 1, enemies: 2, projectiles: 2, vfx: 2, transition: true)
+            Scenario(TransitionSweep, "Biome Transition Sweep", RoomBiomeIds.HollowThreshold, propLights: 3, effects: 1, enemies: 2, projectiles: 2, vfx: 2, transition: true),
+            Scenario(BranchTraversalPrewarm, "Full Branch Lighting Prewarm Traversal", RoomBiomeIds.HollowThreshold, propLights: 2, effects: 1, enemies: 4, projectiles: 3, vfx: 2, branchTraversal: true)
         };
 
         public static LightingRenderAuditScenarioDefinition Find(string id)
@@ -221,7 +226,8 @@ namespace Hollow.Performance
             int projectiles,
             int vfx,
             bool transition = false,
-            bool overBudget = false)
+            bool overBudget = false,
+            bool branchTraversal = false)
         {
             return new LightingRenderAuditScenarioDefinition
             {
@@ -234,7 +240,42 @@ namespace Hollow.Performance
                 projectileCount = projectiles,
                 vfxCount = vfx,
                 transitionSweep = transition,
-                overBudgetLights = overBudget
+                overBudgetLights = overBudget,
+                branchTraversalPrewarm = branchTraversal
+            };
+        }
+    }
+
+    [Serializable]
+    public sealed class LightingRenderAuditSnapshotSummary
+    {
+        public string biomeId;
+        public string profileId;
+        public int activeLightCount;
+        public int activeLocalLightCount;
+        public int shadowedLightCount;
+        public int activePropLightCount;
+        public int activeDynamicEffectLightCount;
+        public int maxActiveLocalLights;
+        public int maxShadowedLocalLights;
+        public int maxPropLights;
+        public int maxDynamicEffectLights;
+
+        public static LightingRenderAuditSnapshotSummary From(BiomeLightingSnapshot snapshot)
+        {
+            return new LightingRenderAuditSnapshotSummary
+            {
+                biomeId = snapshot.BiomeId,
+                profileId = snapshot.ProfileId,
+                activeLightCount = snapshot.ActiveLightCount,
+                activeLocalLightCount = snapshot.ActiveLocalLightCount,
+                shadowedLightCount = snapshot.ShadowedLightCount,
+                activePropLightCount = snapshot.ActivePropLightCount,
+                activeDynamicEffectLightCount = snapshot.ActiveDynamicEffectLightCount,
+                maxActiveLocalLights = snapshot.MaxActiveLocalLights,
+                maxShadowedLocalLights = snapshot.MaxShadowedLocalLights,
+                maxPropLights = snapshot.MaxPropLights,
+                maxDynamicEffectLights = snapshot.MaxDynamicEffectLights
             };
         }
     }
@@ -267,12 +308,15 @@ namespace Hollow.Performance
     {
         public string scenarioId;
         public string displayName;
+        public string requestedBiomeId;
+        public string appliedBiomeId;
         public string biomeId;
         public string profileId;
         public bool passed;
         public string[] failures = Array.Empty<string>();
         public string screenshotPath;
         public M140VisualValidationSummary visual;
+        public LightingRenderAuditSnapshotSummary lightingSnapshot;
         public int sampleCount;
         public double frameP50Ms;
         public double frameP95Ms;
@@ -286,6 +330,8 @@ namespace Hollow.Performance
         public int peakShadowedLights;
         public int peakPropLights;
         public int peakDynamicEffectLights;
+        public int peakActivePropLights;
+        public int peakActiveDynamicEffectLights;
         public int peakEnemies;
         public int peakProjectiles;
         public int peakVfx;
@@ -299,6 +345,12 @@ namespace Hollow.Performance
         public string ambientSkyColor;
         public string fogColor;
         public bool fogEnabled;
+        public bool requiresPrewarmEvidence;
+        public bool prewarmPreparedBeforeReveal;
+        public bool prewarmGlobalAppliedBeforeReveal;
+        public int prewarmPreparedFrame;
+        public int prewarmGlobalAppliedFrame;
+        public int prewarmRevealFrame;
         public string note;
         public LightingRenderAuditFrameSample[] samples = Array.Empty<LightingRenderAuditFrameSample>();
     }
@@ -463,14 +515,40 @@ namespace Hollow.Performance
                 yield return $"Shadowed light budget exceeded {summary.peakShadowedLights}/{summary.maxShadowedLocalLights}.";
             }
 
-            if (summary.maxPropLights >= 0 && summary.peakPropLights > summary.maxPropLights)
+            var peakPropLights = Math.Max(summary.peakPropLights, summary.peakActivePropLights);
+            var peakDynamicEffectLights = Math.Max(summary.peakDynamicEffectLights, summary.peakActiveDynamicEffectLights);
+
+            if (summary.maxPropLights >= 0 && peakPropLights > summary.maxPropLights)
             {
-                yield return $"Prop light budget exceeded {summary.peakPropLights}/{summary.maxPropLights}.";
+                yield return $"Prop light budget exceeded {peakPropLights}/{summary.maxPropLights}.";
             }
 
-            if (summary.maxDynamicEffectLights >= 0 && summary.peakDynamicEffectLights > summary.maxDynamicEffectLights)
+            if (summary.maxDynamicEffectLights >= 0 && peakDynamicEffectLights > summary.maxDynamicEffectLights)
             {
-                yield return $"Dynamic effect light budget exceeded {summary.peakDynamicEffectLights}/{summary.maxDynamicEffectLights}.";
+                yield return $"Dynamic effect light budget exceeded {peakDynamicEffectLights}/{summary.maxDynamicEffectLights}.";
+            }
+
+            if (summary.requiresPrewarmEvidence)
+            {
+                if (!summary.prewarmPreparedBeforeReveal)
+                {
+                    yield return "Branch room lighting was not prepared before reveal.";
+                }
+
+                if (!summary.prewarmGlobalAppliedBeforeReveal)
+                {
+                    yield return "Active room global lighting was not applied before reveal.";
+                }
+
+                if (summary.prewarmPreparedFrame > summary.prewarmRevealFrame)
+                {
+                    yield return $"Lighting prepared after reveal frame {summary.prewarmPreparedFrame}>{summary.prewarmRevealFrame}.";
+                }
+
+                if (summary.prewarmGlobalAppliedFrame > summary.prewarmRevealFrame)
+                {
+                    yield return $"Global lighting applied after reveal frame {summary.prewarmGlobalAppliedFrame}>{summary.prewarmRevealFrame}.";
+                }
             }
 
             if (summary.visual == null || !summary.visual.exists || !summary.visual.loadable)

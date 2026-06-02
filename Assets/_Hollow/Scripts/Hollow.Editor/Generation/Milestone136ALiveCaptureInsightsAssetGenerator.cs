@@ -352,9 +352,9 @@ namespace Hollow.Editor.Generation
                 rank = 2,
                 id = "editor-laptop-60fps-cap",
                 confidence = "High",
-                title = "Add an editor-laptop 60 FPS cap/dev profile",
-                evidence = $"GPU p95 is {gpuP95Range} and main-thread p95 is {mainP95Range}, but the current Windows profile still targets 120 FPS with vSync disabled.",
-                nextStep = "Add a low-risk editor/dev profile that caps to 60 FPS before visual cuts."
+                title = "Keep Cool as the editor-laptop default",
+                evidence = $"GPU p95 is {gpuP95Range} and main-thread p95 is {mainP95Range}; keep the Cool 60 FPS profile as the default and compare it against Quality before deeper visual cuts.",
+                nextStep = "Use the Cool/Quality profile switch to separate frame-cap wins from expensive render-feature costs."
             };
             yield return new M136AInsightRecommendation
             {
