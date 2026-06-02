@@ -1,5 +1,6 @@
 using Hollow.Input;
 using Hollow.Presentation;
+using Hollow.Rooms;
 using UnityEngine;
 
 namespace Hollow.Combat
@@ -11,6 +12,61 @@ namespace Hollow.Combat
         ManualRetarget = 2
     }
 
+    public enum PlayerAimAssistSource
+    {
+        None = 0,
+        BodyFacing = 1,
+        ManualAim = 2,
+        MouseHover = 3,
+        AimCone = 4,
+        RecentTarget = 5,
+        ManualFocus = 6
+    }
+
+    public readonly struct PlayerAimAssistResult
+    {
+        public PlayerAimAssistResult(
+            EnemyRuntimeController target,
+            Vector2 direction,
+            PlayerAimAssistSource source,
+            PlayerTargetLockMode lockMode,
+            float score,
+            float distanceMeters)
+        {
+            Target = target;
+            Direction = direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up;
+            Source = source;
+            LockMode = lockMode;
+            Score = score;
+            DistanceMeters = distanceMeters;
+        }
+
+        public EnemyRuntimeController Target { get; }
+
+        public Vector2 Direction { get; }
+
+        public PlayerAimAssistSource Source { get; }
+
+        public PlayerTargetLockMode LockMode { get; }
+
+        public float Score { get; }
+
+        public float DistanceMeters { get; }
+
+        public bool HasTarget => Target != null;
+
+        public static PlayerAimAssistResult None(Vector2 direction)
+        {
+            return new PlayerAimAssistResult(
+                null,
+                direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up,
+                PlayerAimAssistSource.None,
+                PlayerTargetLockMode.None,
+                float.MaxValue,
+                -1f);
+        }
+    }
+
     public sealed class PlayerAimLockController : MonoBehaviour
     {
         public const float ExplicitLockRangeMeters = 10f;
@@ -19,42 +75,48 @@ namespace Hollow.Combat
         public const float RecentTargetMemorySeconds = 4f;
         public const float RetargetCooldownSeconds = 0.2f;
         public const float MouseAimIntentMemorySeconds = 1.25f;
-        private const float RetargetSectorDegrees = 80f;
-        private const int RingSegments = 48;
 
         [SerializeField] private RoomCombatController combatController;
 
-        private EnemyRuntimeController lockedEnemy;
-        private EnemyRuntimeController recentEnemy;
         private Transform playerVisualRoot;
         private GameObject lockMarker;
         private Material lockMarkerMaterial;
         private Vector2 bodyFacingDirection = Vector2.up;
         private Vector2 attackDirection = Vector2.up;
-        private float recentEnemyTimeSeconds = -999f;
-        private float nextRetargetTimeSeconds;
+        private Vector2 lastResolvedAttackDirection = Vector2.up;
         private float lastMouseAimIntentTimeSeconds = -999f;
-        private PlayerTargetLockMode currentLockMode = PlayerTargetLockMode.None;
         private bool hasManualAimOverride;
 
         public Vector2 BodyFacingDirection => SafeDirection(bodyFacingDirection);
 
         public Vector2 AttackDirection => SafeDirection(attackDirection);
 
-        public EnemyRuntimeController LockedEnemy => IsValidTarget(lockedEnemy) ? lockedEnemy : null;
+        public Vector2 LastResolvedAttackDirection => SafeDirection(lastResolvedAttackDirection);
 
-        public PlayerTargetLockMode CurrentLockMode => LockedEnemy != null ? currentLockMode : PlayerTargetLockMode.None;
+        public EnemyRuntimeController CurrentFocusTarget => null;
 
-        public bool IsTargetLocked => CurrentLockMode != PlayerTargetLockMode.None && LockedEnemy != null;
+        public EnemyRuntimeController CurrentAssistTarget => null;
 
-        public bool IsExplicitlyLocked => CurrentLockMode == PlayerTargetLockMode.ManualRetarget && LockedEnemy != null;
+        public EnemyRuntimeController RecentAttackTarget => null;
+
+        public EnemyRuntimeController RecentDamagedTarget => null;
+
+        public EnemyRuntimeController LockedEnemy => null;
+
+        public PlayerTargetLockMode CurrentLockMode => PlayerTargetLockMode.None;
+
+        public bool IsTargetLocked => false;
+
+        public bool IsExplicitlyLocked => false;
+
+        public bool HasAssistTarget => false;
 
         public bool HasManualAimOverride => hasManualAimOverride;
 
         public void Configure(RoomCombatController controller)
         {
             combatController = controller;
-            ValidateCurrentTarget();
+            HideLockMarker();
         }
 
         public void BindPresentation(GameObject nextPlayerVisualRoot)
@@ -66,95 +128,78 @@ namespace Hollow.Combat
         public void TickAim(GameplayInputSnapshot input, float timeSeconds)
         {
             UpdateBodyFacing(input);
-            ValidateCurrentTarget();
-
-            if (input.LockTargetPressed)
-            {
-                ToggleManualLock();
-            }
-
-            if (IsTargetLocked && input.HasShoot && timeSeconds >= nextRetargetTimeSeconds)
-            {
-                var retargetDirection = GameplayInputReader.QuantizeEightAxis(input.Shoot);
-                var retarget = FindTargetInDirection(retargetDirection, ExplicitLockRangeMeters, lockedEnemy);
-                if (retarget != null)
-                {
-                    lockedEnemy = retarget;
-                    currentLockMode = PlayerTargetLockMode.ManualRetarget;
-                    nextRetargetTimeSeconds = timeSeconds + RetargetCooldownSeconds;
-                }
-            }
-
-            UpdateAutoLock();
             RecordMouseAimIntent(input, timeSeconds);
-            hasManualAimOverride = !IsTargetLocked &&
-                (input.HasShoot || (IsMouseAimRecentlyActive(timeSeconds) && TryResolveMouseAimDirection(input, out _)));
-            attackDirection = ResolveAttackDirection(input, timeSeconds);
+            attackDirection = ResolveInputDirection(input, timeSeconds);
+            lastResolvedAttackDirection = attackDirection;
+            hasManualAimOverride = HasExplicitAim(input, timeSeconds);
+            HideLockMarker();
             ApplyPresentationFacing();
-            UpdateLockMarker();
         }
 
         public Vector2 ResolveAttackDirection(GameplayInputSnapshot input, float timeSeconds)
         {
             UpdateBodyFacing(input);
-            return ResolveAttackDirection(input, timeSeconds, BodyFacingDirection);
+            RecordMouseAimIntent(input, timeSeconds);
+            attackDirection = ResolveInputDirection(input, timeSeconds);
+            lastResolvedAttackDirection = attackDirection;
+            hasManualAimOverride = HasExplicitAim(input, timeSeconds);
+            HideLockMarker();
+            ApplyPresentationFacing();
+            return attackDirection;
         }
 
         public Vector2 ResolveGuardDirection(GameplayInputSnapshot input, float timeSeconds)
         {
             UpdateBodyFacing(input);
-            var fallback = GameplayInputReader.NormalizeAimDirection(input.Move);
-            return ResolveAttackDirection(input, timeSeconds, fallback.sqrMagnitude > 0.001f ? fallback : BodyFacingDirection);
+            RecordMouseAimIntent(input, timeSeconds);
+            hasManualAimOverride = HasExplicitAim(input, timeSeconds);
+            return ResolveInputDirection(input, timeSeconds);
         }
 
         public bool TryGetLockedTargetDirection(out Vector2 direction)
         {
             direction = Vector2.zero;
-            var target = LockedEnemy;
-            if (!IsTargetLocked || target == null)
-            {
-                return false;
-            }
-
-            direction = DirectionTo(target);
-            return true;
+            return false;
         }
 
-        private Vector2 ResolveAttackDirection(GameplayInputSnapshot input, float timeSeconds, Vector2 fallbackDirection)
+        public PlayerAimAssistResult ResolveAttackAssist(
+            GameplayInputSnapshot input,
+            float rangeMeters,
+            bool isMelee,
+            float timeSeconds)
         {
-            RecordMouseAimIntent(input, timeSeconds);
-            if (IsTargetLocked)
-            {
-                return DirectionTo(LockedEnemy);
-            }
+            return PlayerAimAssistResult.None(ResolveAttackDirection(input, timeSeconds));
+        }
 
-            if (input.HasShoot)
-            {
-                return SafeDirection(input.Shoot);
-            }
+        public PlayerAimAssistResult ResolveAttackAssist(
+            Vector2 requestedDirection,
+            float rangeMeters,
+            bool isMelee,
+            float timeSeconds)
+        {
+            var direction = requestedDirection.sqrMagnitude > 0.001f
+                ? SafeDirection(requestedDirection)
+                : BodyFacingDirection;
+            attackDirection = direction;
+            lastResolvedAttackDirection = direction;
+            HideLockMarker();
+            ApplyPresentationFacing();
+            return PlayerAimAssistResult.None(direction);
+        }
 
-            if (IsMouseAimRecentlyActive(timeSeconds) && TryResolveMouseAimDirection(input, out var mouseDirection))
-            {
-                return mouseDirection;
-            }
-
-            return SafeDirection(fallbackDirection);
+        public void NotifyAttackCommitted(PlayerAimAssistResult result, float timeSeconds)
+        {
+            lastResolvedAttackDirection = result.Direction.sqrMagnitude > 0.001f
+                ? SafeDirection(result.Direction)
+                : AttackDirection;
         }
 
         public void NotifyEnemyDamaged(EnemyRuntimeController enemy)
         {
-            NotifyEnemyDamaged(enemy, Time.time);
         }
 
         public void NotifyEnemyDamaged(EnemyRuntimeController enemy, float timeSeconds)
         {
-            if (!IsValidTarget(enemy))
-            {
-                return;
-            }
-
-            recentEnemy = enemy;
-            recentEnemyTimeSeconds = timeSeconds;
         }
 
         private void OnDisable()
@@ -211,169 +256,84 @@ namespace Hollow.Combat
             return timeSeconds - lastMouseAimIntentTimeSeconds <= MouseAimIntentMemorySeconds;
         }
 
-        private void ToggleManualLock()
+        private Vector2 ResolveInputDirection(GameplayInputSnapshot input, float timeSeconds)
         {
-            if (CurrentLockMode == PlayerTargetLockMode.ManualRetarget)
+            if (input.HasShoot)
             {
-                currentLockMode = PlayerTargetLockMode.None;
-                lockedEnemy = null;
-                HideLockMarker();
-                return;
+                return SafeDirection(input.Shoot);
             }
 
-            if (IsTargetLocked)
+            if (IsMouseAimRecentlyActive(timeSeconds) && TryResolveMouseAimDirection(input, out var mouseDirection))
             {
-                currentLockMode = PlayerTargetLockMode.ManualRetarget;
-                UpdateLockMarker();
-                return;
+                return mouseDirection;
             }
 
-            lockedEnemy = FindNearestTarget(ExplicitLockRangeMeters);
-            currentLockMode = lockedEnemy != null ? PlayerTargetLockMode.ManualRetarget : PlayerTargetLockMode.None;
-            UpdateLockMarker();
+            return BodyFacingDirection;
         }
 
-        private EnemyRuntimeController ResolveSoftTarget(float timeSeconds)
+        private bool HasExplicitAim(GameplayInputSnapshot input, float timeSeconds)
         {
-            if (IsValidTarget(recentEnemy) &&
-                timeSeconds - recentEnemyTimeSeconds <= RecentTargetMemorySeconds &&
-                DistanceTo(recentEnemy) <= ExplicitLockRangeMeters)
-            {
-                return recentEnemy;
-            }
-
-            return FindNearestTarget(SoftAutoLockRangeMeters);
+            return input.HasShoot ||
+                (IsMouseAimRecentlyActive(timeSeconds) && input.HasPointerScreenPosition);
         }
 
-        private EnemyRuntimeController FindNearestTarget(float rangeMeters)
+        private bool TryResolveMouseAimDirection(GameplayInputSnapshot input, out Vector2 direction)
         {
-            if (combatController == null)
+            direction = Vector2.zero;
+            if (!TryResolveMouseAimPoint(input, out var pointerLocalPoint))
             {
-                return null;
+                return false;
             }
 
-            EnemyRuntimeController best = null;
-            var bestScore = float.MaxValue;
-            foreach (var enemy in combatController.Enemies)
+            var playerLocalPosition = LocalGameplayPosition(transform);
+            var delta = pointerLocalPoint - new Vector2(playerLocalPosition.x, playerLocalPosition.z);
+            if (delta.sqrMagnitude <= 0.001f)
             {
-                if (!IsValidTarget(enemy))
-                {
-                    continue;
-                }
-
-                var distance = DistanceTo(enemy);
-                if (distance > rangeMeters)
-                {
-                    continue;
-                }
-
-                if (distance >= bestScore)
-                {
-                    continue;
-                }
-
-                bestScore = distance;
-                best = enemy;
+                return false;
             }
 
-            return best;
+            direction = delta.normalized;
+            return true;
         }
 
-        private EnemyRuntimeController FindTargetInDirection(Vector2 direction, float rangeMeters, EnemyRuntimeController exclude)
+        private bool TryResolveMouseAimPoint(GameplayInputSnapshot input, out Vector2 localPoint)
         {
-            if (combatController == null || direction.sqrMagnitude <= 0.001f)
+            localPoint = Vector2.zero;
+            if (!input.HasPointerScreenPosition)
             {
-                return null;
+                return false;
             }
 
-            EnemyRuntimeController best = null;
-            var bestScore = float.MaxValue;
-            foreach (var enemy in combatController.Enemies)
+            var root = ResolveGameplayRoot();
+            if (!GameplayInputProjection.TryScreenPointToGameplayPlane(input.PointerScreenPosition, root, transform.position, out var local))
             {
-                if (!IsValidTarget(enemy) || enemy == exclude)
-                {
-                    continue;
-                }
-
-                var distance = DistanceTo(enemy);
-                if (distance > rangeMeters)
-                {
-                    continue;
-                }
-
-                var toEnemy = DirectionTo(enemy);
-                var angle = Vector2.Angle(direction, toEnemy);
-                if (angle > RetargetSectorDegrees * 0.5f)
-                {
-                    continue;
-                }
-
-                var score = angle + distance * 3f;
-                if (score >= bestScore)
-                {
-                    continue;
-                }
-
-                bestScore = score;
-                best = enemy;
+                return false;
             }
 
-            return best;
+            localPoint = new Vector2(local.x, local.z);
+            return true;
         }
 
-        private void UpdateAutoLock()
+        private Vector3 LocalGameplayPosition(Transform target)
         {
-            if (currentLockMode == PlayerTargetLockMode.ManualRetarget)
+            if (target == null)
             {
-                return;
+                return Vector3.zero;
             }
 
-            var nearest = FindNearestTarget(SoftAutoLockRangeMeters);
-            if (nearest == null)
-            {
-                lockedEnemy = null;
-                currentLockMode = PlayerTargetLockMode.None;
-                return;
-            }
-
-            if (currentLockMode != PlayerTargetLockMode.Auto || !IsValidTarget(lockedEnemy))
-            {
-                lockedEnemy = nearest;
-                currentLockMode = PlayerTargetLockMode.Auto;
-                return;
-            }
-
-            if (nearest == lockedEnemy)
-            {
-                return;
-            }
-
-            var currentDistance = DistanceTo(lockedEnemy);
-            var nearestDistance = DistanceTo(nearest);
-            if (nearestDistance + AutoSwitchCloserMarginMeters <= currentDistance)
-            {
-                lockedEnemy = nearest;
-            }
+            var root = ResolveGameplayRoot();
+            return root != null ? root.InverseTransformPoint(target.position) : target.localPosition;
         }
 
-        private void ValidateCurrentTarget()
+        private Transform ResolveGameplayRoot()
         {
-            if (currentLockMode == PlayerTargetLockMode.None)
+            var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
+            if (presentationRoot != null)
             {
-                return;
+                return presentationRoot.transform;
             }
 
-            var maxRange = currentLockMode == PlayerTargetLockMode.ManualRetarget
-                ? ExplicitLockRangeMeters * 1.25f
-                : SoftAutoLockRangeMeters;
-            if (IsValidTarget(lockedEnemy) && DistanceTo(lockedEnemy) <= maxRange)
-            {
-                return;
-            }
-
-            lockedEnemy = null;
-            currentLockMode = PlayerTargetLockMode.None;
-            HideLockMarker();
+            return combatController != null ? combatController.transform : transform.parent;
         }
 
         private void ApplyPresentationFacing()
@@ -384,73 +344,12 @@ namespace Hollow.Combat
             }
 
             var facing = AttackDirection;
-            var direction = new Vector3(facing.x, 0f, facing.y);
-            if (direction.sqrMagnitude <= 0.001f)
+            if (facing.sqrMagnitude <= 0.001f)
             {
                 return;
             }
 
-            playerVisualRoot.localRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
-        }
-
-        private void UpdateLockMarker()
-        {
-            if (!IsTargetLocked)
-            {
-                HideLockMarker();
-                return;
-            }
-
-            EnsureLockMarker();
-            if (lockMarker == null)
-            {
-                return;
-            }
-
-            lockMarker.SetActive(true);
-            lockMarker.transform.SetParent(LockedEnemy.transform, false);
-            lockMarker.transform.localPosition = new Vector3(0f, 0.08f, 0f);
-            lockMarker.transform.localRotation = Quaternion.identity;
-
-            var radius = Mathf.Max(0.42f, LockedEnemy.RadiusMeters + 0.22f);
-            var line = lockMarker.GetComponent<LineRenderer>();
-            if (line == null)
-            {
-                return;
-            }
-
-            line.positionCount = RingSegments;
-            for (var index = 0; index < RingSegments; index++)
-            {
-                var angle = (Mathf.PI * 2f * index) / RingSegments;
-                line.SetPosition(index, new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius));
-            }
-        }
-
-        private void EnsureLockMarker()
-        {
-            if (lockMarker != null)
-            {
-                return;
-            }
-
-            lockMarker = new GameObject("PlayerTargetLockRing");
-            var line = lockMarker.AddComponent<LineRenderer>();
-            line.useWorldSpace = false;
-            line.loop = true;
-            line.startWidth = 0.035f;
-            line.endWidth = 0.035f;
-            line.startColor = new Color(1f, 0.88f, 0.22f, 0.9f);
-            line.endColor = new Color(1f, 0.88f, 0.22f, 0.9f);
-            var shader = Shader.Find("Sprites/Default");
-            if (shader != null)
-            {
-                lockMarkerMaterial = new Material(shader)
-                {
-                    color = new Color(1f, 0.88f, 0.22f, 0.9f)
-                };
-                line.material = lockMarkerMaterial;
-            }
+            playerVisualRoot.localRotation = Quaternion.LookRotation(new Vector3(facing.x, 0f, facing.y), Vector3.up);
         }
 
         private void HideLockMarker()
@@ -461,85 +360,9 @@ namespace Hollow.Combat
             }
         }
 
-        private bool IsValidTarget(EnemyRuntimeController enemy)
-        {
-            return enemy != null && enemy.IsAlive && enemy.gameObject.activeInHierarchy;
-        }
-
-        private float DistanceTo(EnemyRuntimeController enemy)
-        {
-            if (enemy == null)
-            {
-                return float.MaxValue;
-            }
-
-            var gameplayRoot = ResolveGameplayRoot();
-            var enemyPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(enemy.transform.position) : enemy.transform.position;
-            var playerPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
-            var delta = enemyPosition - playerPosition;
-            delta.y = 0f;
-            return delta.magnitude;
-        }
-
-        private Vector2 DirectionTo(EnemyRuntimeController enemy)
-        {
-            if (enemy == null)
-            {
-                return BodyFacingDirection;
-            }
-
-            var gameplayRoot = ResolveGameplayRoot();
-            var enemyPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(enemy.transform.position) : enemy.transform.position;
-            var playerPosition = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
-            var delta = enemyPosition - playerPosition;
-            delta.y = 0f;
-            if (delta.sqrMagnitude <= 0.001f)
-            {
-                return BodyFacingDirection;
-            }
-
-            return SafeDirection(new Vector2(delta.x, delta.z));
-        }
-
-        private bool TryResolveMouseAimDirection(GameplayInputSnapshot input, out Vector2 direction)
-        {
-            direction = Vector2.zero;
-            if (!input.HasPointerScreenPosition)
-            {
-                return false;
-            }
-
-            var gameplayRoot = ResolveGameplayRoot();
-            if (!GameplayInputProjection.TryScreenPointToGameplayPlane(
-                    input.PointerScreenPosition,
-                    gameplayRoot,
-                    transform.position,
-                    out var localPoint))
-            {
-                return false;
-            }
-
-            var localPlayer = gameplayRoot != null ? gameplayRoot.InverseTransformPoint(transform.position) : transform.position;
-            var delta = localPoint - localPlayer;
-            delta.y = 0f;
-            if (delta.sqrMagnitude <= 0.001f)
-            {
-                return false;
-            }
-
-            direction = SafeDirection(new Vector2(delta.x, delta.z));
-            return true;
-        }
-
         private static Vector2 SafeDirection(Vector2 direction)
         {
             return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up;
-        }
-
-        private Transform ResolveGameplayRoot()
-        {
-            var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
-            return presentationRoot != null ? presentationRoot.transform : transform.parent;
         }
     }
 }

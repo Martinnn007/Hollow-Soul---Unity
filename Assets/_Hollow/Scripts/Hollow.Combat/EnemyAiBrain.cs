@@ -6,6 +6,7 @@ namespace Hollow.Combat
     public sealed class EnemyAiBrain
     {
         private EnemyBehaviorCommand cachedCommand = EnemyBehaviorCommand.None("ai_uninitialized");
+        private float cachedCommandTime = float.NegativeInfinity;
         private float nextThinkTime;
         private string topScores = string.Empty;
 
@@ -16,6 +17,7 @@ namespace Hollow.Combat
         public void Reset()
         {
             cachedCommand = EnemyBehaviorCommand.None("ai_reset");
+            cachedCommandTime = float.NegativeInfinity;
             nextThinkTime = 0f;
             topScores = string.Empty;
             LodTier = EnemyAiLodTier.Full;
@@ -38,7 +40,8 @@ namespace Hollow.Combat
             if (enemy == null ||
                 enemy.ReadabilityState != EnemyReadabilityState.Idle ||
                 cachedCommand.Kind == EnemyBehaviorCommandKind.None ||
-                cachedCommand.StartsCommittedAction)
+                cachedCommand.StartsCommittedAction ||
+                ShouldRefreshCachedCommand(enemy, timeSeconds, distanceToPlayer))
             {
                 return false;
             }
@@ -93,6 +96,7 @@ namespace Hollow.Combat
             if (TryResolveBossRoomNonActiveAddCommand(enemy, chosen, distanceToPlayer, out var bossAddCommand, out var bossAddReason))
             {
                 cachedCommand = bossAddCommand;
+                cachedCommandTime = timeSeconds;
                 M136PerformanceOperationCounters.ReportBossAddScorerSkip();
                 M136PerformanceOperationCounters.ReportBossAddCachedCommandReuse();
                 if (enemy != null)
@@ -107,6 +111,7 @@ namespace Hollow.Combat
             if (TryResolveCrowdedRoomNonActiveCommand(enemy, chosen, distanceToPlayer, out var crowdCommand, out var crowdReason))
             {
                 cachedCommand = crowdCommand;
+                cachedCommandTime = timeSeconds;
                 M136PerformanceOperationCounters.ReportTacticalCrowdScorerSkip();
                 M136PerformanceOperationCounters.ReportTacticalCrowdCachedIntentReuse();
                 if (enemy != null)
@@ -119,6 +124,7 @@ namespace Hollow.Combat
             }
 
             var scorerBudgetAllowed = !chosen.StartsCommittedAction ||
+                (enemy != null && enemy.IsRootedStaticEnemy) ||
                 LodTier == EnemyAiLodTier.Background ||
                 EnemyAiScorerBudget.TryAcquireScorer(enemy);
 
@@ -155,8 +161,26 @@ namespace Hollow.Combat
             }
 
             cachedCommand = chosen;
+            cachedCommandTime = timeSeconds;
             UpdateBlackboard(enemy, treeCommand, chosen, distanceToPlayer, pressurePenalty, cooldownReason);
             return chosen;
+        }
+
+        private bool ShouldRefreshCachedCommand(EnemyRuntimeController enemy, float timeSeconds, float distanceToPlayer)
+        {
+            if (enemy == null)
+            {
+                return true;
+            }
+
+            if (enemy.LastStimulusTime >= cachedCommandTime)
+            {
+                return true;
+            }
+
+            return enemy.AwarenessState >= EnemyAwarenessState.Alerted &&
+                   distanceToPlayer <= 4.25f &&
+                   timeSeconds >= cachedCommandTime + 0.08f;
         }
 
         public bool TryResolveBossRoomCachedAddCommand(
@@ -167,6 +191,11 @@ namespace Hollow.Combat
         {
             command = EnemyBehaviorCommand.None("boss_add_cached_command_unavailable");
             SetLodTier(ResolveLodTier(enemy, distanceToPlayer));
+            if (enemy != null && enemy.IsRootedStaticEnemy)
+            {
+                return false;
+            }
+
             if (!TryResolveBossRoomNonActiveAddCommand(
                     enemy,
                     EnemyBehaviorCommand.None("boss_add_cached_before_graph"),
@@ -199,6 +228,11 @@ namespace Hollow.Combat
         {
             command = EnemyBehaviorCommand.None("crowd_cached_command_unavailable");
             SetLodTier(ResolveLodTier(enemy, distanceToPlayer));
+            if (enemy != null && enemy.IsRootedStaticEnemy)
+            {
+                return false;
+            }
+
             if (!TryResolveCrowdedRoomNonActiveCommand(
                     enemy,
                     EnemyBehaviorCommand.None("crowd_cached_before_graph"),
@@ -233,6 +267,13 @@ namespace Hollow.Combat
             if (enemy.BossDefinition != null)
             {
                 return EnemyAiLodTier.Full;
+            }
+
+            if (enemy.IsRootedStaticEnemy)
+            {
+                return enemy.AwarenessState >= EnemyAwarenessState.Alerted || distanceToPlayer <= 11f
+                    ? EnemyAiLodTier.Reduced
+                    : EnemyAiLodTier.Background;
             }
 
             if (enemy.RoomHasActiveBoss)
@@ -314,6 +355,11 @@ namespace Hollow.Combat
             }
 
             var tier = ResolveLodTier(enemy, enemy.DistanceToPlayerMeters);
+            if (enemy.IsRootedStaticEnemy && command.StartsCommittedAction)
+            {
+                return command;
+            }
+
             if (tier != EnemyAiLodTier.Background)
             {
                 return command;
@@ -362,6 +408,7 @@ namespace Hollow.Combat
         private static bool ShouldSkipCrowdedRoomScorerBudget(EnemyRuntimeController enemy)
         {
             return enemy != null &&
+                !enemy.IsRootedStaticEnemy &&
                 ResolveCrowdEnemyCount(enemy) >= M137PerformanceComfortPolicy.M3CrowdedRoomEnemyThreshold &&
                 !enemy.RoomHasActiveBoss &&
                 !IsBossEnemy(enemy) &&
@@ -386,6 +433,11 @@ namespace Hollow.Combat
             }
 
             var role = enemy.LastTacticalIntent.Role;
+            if (enemy.IsRootedStaticEnemy && chosen.StartsCommittedAction)
+            {
+                return false;
+            }
+
             reason = $"boss_add_{role.ToString().ToLowerInvariant()}_no_scorer";
             command = role switch
             {
@@ -428,6 +480,11 @@ namespace Hollow.Combat
             }
 
             var role = enemy.LastTacticalIntent.Role;
+            if (enemy.IsRootedStaticEnemy && chosen.StartsCommittedAction)
+            {
+                return false;
+            }
+
             reason = $"crowd_{role.ToString().ToLowerInvariant()}_cached_no_scorer";
             command = role switch
             {

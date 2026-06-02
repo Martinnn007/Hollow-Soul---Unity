@@ -14,6 +14,10 @@ namespace Hollow.Combat
 
         public bool IsAlive => currentHealth > 0;
 
+        public DamageRequest LastDamageRequest { get; private set; }
+
+        public int LastDamageAppliedAmount { get; private set; }
+
         public event Action<CombatantHealth> Damaged;
 
         public event Action<CombatantHealth, DamageRequest, int> DamageApplied;
@@ -24,12 +28,16 @@ namespace Hollow.Combat
         {
             maxHealth = Mathf.Max(1, nextMaxHealth);
             currentHealth = maxHealth;
+            LastDamageRequest = default;
+            LastDamageAppliedAmount = 0;
         }
 
         public void Restore(int nextMaxHealth, int nextCurrentHealth)
         {
             maxHealth = Mathf.Max(1, nextMaxHealth);
             currentHealth = Mathf.Clamp(nextCurrentHealth, 0, maxHealth);
+            LastDamageRequest = default;
+            LastDamageAppliedAmount = 0;
         }
 
         public void SetMaxHealthPreservingCurrent(int nextMaxHealth, int healAmount)
@@ -62,6 +70,8 @@ namespace Hollow.Combat
 
             var appliedAmount = Mathf.Min(currentHealth, amount);
             currentHealth = Mathf.Max(0, currentHealth - amount);
+            LastDamageRequest = request;
+            LastDamageAppliedAmount = appliedAmount;
             DamageApplied?.Invoke(this, request, appliedAmount);
             Damaged?.Invoke(this);
             if (currentHealth == 0)

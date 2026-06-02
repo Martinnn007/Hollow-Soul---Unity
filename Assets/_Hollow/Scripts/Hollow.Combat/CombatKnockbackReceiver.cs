@@ -43,8 +43,10 @@ namespace Hollow.Combat
         public void ApplyKnockback(Vector3 direction, float meters, float seconds, DamageClassification classification)
         {
             var enemy = ResolveEnemyRuntime();
-            if (enemy != null && enemy.IsInspectionFrozen)
+            if (enemy != null && (enemy.IsInspectionFrozen || enemy.IsRootedStaticEnemy))
             {
+                remainingSeconds = 0f;
+                velocity = Vector3.zero;
                 return;
             }
 
@@ -68,6 +70,14 @@ namespace Hollow.Combat
 
         public void Tick(float deltaTime)
         {
+            var enemy = ResolveEnemyRuntime();
+            if (enemy != null && enemy.IsRootedStaticEnemy)
+            {
+                remainingSeconds = 0f;
+                velocity = Vector3.zero;
+                return;
+            }
+
             if (remainingSeconds <= 0f)
             {
                 return;
@@ -79,7 +89,6 @@ namespace Hollow.Combat
             transform.localPosition = ignoreObstacles
                 ? RoomLocalCollision.ResolveMoveIgnoringObstacles(roomRuntimeRoot, desired, radiusMeters)
                 : RoomLocalCollision.ResolveMove(roomRuntimeRoot, transform.localPosition, desired, radiusMeters);
-            var enemy = ResolveEnemyRuntime();
             enemy?.SyncNavMeshAgentAfterExternalDisplacement("knockback");
 
             if (remainingSeconds <= 0f)

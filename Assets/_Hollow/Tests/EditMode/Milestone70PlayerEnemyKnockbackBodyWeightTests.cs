@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Reflection;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Validation;
@@ -72,9 +74,68 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void RootedStaticEnemyIgnoresDamageKnockback()
+        {
+            var enemyObject = new GameObject("M70RootedTurretKnockbackHarness");
+            try
+            {
+                var enemy = enemyObject.AddComponent<EnemyRuntimeController>();
+                enemy.Configure(null, null, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyTurret"), DifficultyTierDefinition.CreateRuntimeDeveloperSample());
+                var start = enemy.transform.localPosition;
+                Assert.IsTrue(enemy.IsRootedStaticEnemy);
+
+                var knockback = enemyObject.GetComponent<CombatKnockbackReceiver>();
+                Assert.IsNotNull(knockback);
+                knockback.ApplyKnockback(Vector3.forward, 1f, 0.1f, DamageClassification.PhysicalMelee(ImpactForceClass.Heavy));
+                knockback.Tick(0.1f);
+
+                Assert.AreEqual(start, enemy.transform.localPosition);
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemyObject);
+            }
+        }
+
+        [Test]
+        public void RootedStaticEnemyIgnoresPlayerBodyNudge()
+        {
+            var enemyObject = new GameObject("M70RootedTurretBodyHarness");
+            try
+            {
+                var enemy = enemyObject.AddComponent<EnemyRuntimeController>();
+                enemy.Configure(null, null, EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyTurret"), DifficultyTierDefinition.CreateRuntimeDeveloperSample());
+                SetPrivate(enemy, "bodyClass", EnemyBodyClass.Light);
+                var start = enemy.transform.localPosition;
+                Assert.IsTrue(enemy.IsRootedStaticEnemy);
+                Assert.AreEqual(EnemyBodyClass.Light, enemy.BodyClass);
+
+                PlayerEnemyBodyCollision.Resolve(
+                    null,
+                    new List<EnemyRuntimeController> { enemy },
+                    new Vector3(0f, 0f, -0.7f),
+                    new Vector3(0f, 0f, 0.05f),
+                    0.3f);
+
+                Assert.AreEqual(start, enemy.transform.localPosition);
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemyObject);
+            }
+        }
+
+        [Test]
         public void Milestone70ValidatorReportsGeneratedStateValid()
         {
             Assert.IsTrue(Milestone70Validator.Validate());
+        }
+
+        private static void SetPrivate<T>(EnemyRuntimeController enemy, string fieldName, T value)
+        {
+            var field = typeof(EnemyRuntimeController).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field);
+            field.SetValue(enemy, value);
         }
     }
 }

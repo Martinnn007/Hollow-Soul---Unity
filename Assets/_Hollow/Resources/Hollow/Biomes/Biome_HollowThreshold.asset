@@ -15,6 +15,7 @@ MonoBehaviour:
   biomeId: hollow_threshold
   displayName: The Hollow Threshold
   biomeTags: 00000000
+  lightingProfile: {fileID: 11400000, guid: 4b2cf3fb40b24fc2a0f884be05f25510, type: 2}
   roomTemplates: []
   materialOverrides: []
   prefabOverrides: []

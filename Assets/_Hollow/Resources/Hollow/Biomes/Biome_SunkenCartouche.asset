@@ -15,6 +15,7 @@ MonoBehaviour:
   biomeId: sunken_cartouche
   displayName: The Sunken Cartouche
   biomeTags: 030000000a0000000b000000
+  lightingProfile: {fileID: 11400000, guid: 81a8e8cb2fc0493d8e9b23e3a6167ba5, type: 2}
   roomTemplates:
   - {fileID: 4900000, guid: 2bdfa211981b84fc5cdfe48336534b02, type: 3}
   - {fileID: 4900000, guid: 5e5194307da70048977da859fc0281fb, type: 3}

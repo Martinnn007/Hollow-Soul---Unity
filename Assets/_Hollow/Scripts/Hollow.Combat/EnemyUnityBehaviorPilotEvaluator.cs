@@ -256,7 +256,8 @@ namespace Hollow.Combat
                 return new EnemyBehaviorCommand(EnemyBehaviorCommandKind.MovePreferredRange, string.Empty, 0.85f, "unity_behavior_ranged_reset_distance");
             }
 
-            if (HasStartableAction(context, EnemyBehaviorCommandKind.StartRangedAction))
+            if (context.CanStartRangedAttack ||
+                HasStartableAction(context, EnemyBehaviorCommandKind.StartRangedAction))
             {
                 return new EnemyBehaviorCommand(EnemyBehaviorCommandKind.StartRangedAction, string.Empty, 1f, "unity_behavior_ranged_fire_intent");
             }

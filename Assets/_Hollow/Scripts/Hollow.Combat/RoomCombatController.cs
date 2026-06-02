@@ -22,6 +22,7 @@ namespace Hollow.Combat
 
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject projectilePrefab;
+        [SerializeField] private GameObject enemyProjectilePrefab;
         [SerializeField] private EnemyCatalog enemyCatalog;
         [SerializeField] private BossCatalogDefinition bossCatalog;
         [SerializeField] private DifficultyTierDefinition difficultyTier;
@@ -71,6 +72,8 @@ namespace Hollow.Combat
         public GameObject EnemyPrefab => enemyPrefab;
 
         public GameObject ProjectilePrefab => projectilePrefab;
+
+        public GameObject EnemyProjectilePrefab => enemyProjectilePrefab;
 
         public EnemyCatalog EnemyCatalog => enemyCatalog;
 
@@ -135,10 +138,31 @@ namespace Hollow.Combat
             projectilePrefab = nextProjectilePrefab;
         }
 
+        public void Configure(GameObject nextEnemyPrefab, GameObject nextProjectilePrefab, GameObject nextEnemyProjectilePrefab)
+        {
+            enemyPrefab = nextEnemyPrefab;
+            projectilePrefab = nextProjectilePrefab;
+            enemyProjectilePrefab = nextEnemyProjectilePrefab;
+        }
+
         public void Configure(GameObject nextEnemyPrefab, GameObject nextProjectilePrefab, EnemyCatalog nextEnemyCatalog, DifficultyTierDefinition nextDifficultyTier)
         {
             enemyPrefab = nextEnemyPrefab;
             projectilePrefab = nextProjectilePrefab;
+            enemyCatalog = nextEnemyCatalog;
+            difficultyTier = nextDifficultyTier;
+        }
+
+        public void Configure(
+            GameObject nextEnemyPrefab,
+            GameObject nextProjectilePrefab,
+            GameObject nextEnemyProjectilePrefab,
+            EnemyCatalog nextEnemyCatalog,
+            DifficultyTierDefinition nextDifficultyTier)
+        {
+            enemyPrefab = nextEnemyPrefab;
+            projectilePrefab = nextProjectilePrefab;
+            enemyProjectilePrefab = nextEnemyProjectilePrefab;
             enemyCatalog = nextEnemyCatalog;
             difficultyTier = nextDifficultyTier;
         }
@@ -354,7 +378,7 @@ namespace Hollow.Combat
             {
                 using (M137PerformanceProfilerMarkers.BossSpawnActivate.Auto())
                 {
-                    var boss = EnemySpawnService.SpawnBoss(roomRuntimeRoot, playerController.transform.parent, enemyPrefab, projectilePrefab, playerController, enemyCatalog, difficultyTier, diagnostics, bossCatalog, activeEncounterContext);
+                    var boss = EnemySpawnService.SpawnBoss(roomRuntimeRoot, playerController.transform.parent, enemyPrefab, EnemyProjectilePrefab, playerController, enemyCatalog, difficultyTier, diagnostics, bossCatalog, activeEncounterContext);
                     if (boss != null)
                     {
                         RegisterEnemy(boss);
@@ -476,7 +500,7 @@ namespace Hollow.Combat
                         roomRuntimeRoot,
                         playerController.transform.parent,
                         enemyPrefab,
-                        projectilePrefab,
+                        EnemyProjectilePrefab,
                         playerController,
                         enemyCatalog,
                         difficultyTier,
@@ -558,7 +582,7 @@ namespace Hollow.Combat
                 roomRuntimeRoot,
                 playerController.transform.parent,
                 enemyPrefab,
-                projectilePrefab,
+                EnemyProjectilePrefab,
                 playerController,
                 enemyCatalog,
                 difficultyTier,
@@ -609,6 +633,19 @@ namespace Hollow.Combat
 
         public EnemyRuntimeController FindEnemyHit(Vector3 localPosition, float radius)
         {
+            return FindEnemyHit(localPosition, localPosition, radius);
+        }
+
+        public EnemyRuntimeController FindEnemyHit(Vector3 fromLocalPosition, Vector3 toLocalPosition, float radius)
+        {
+            if (radius < 0f)
+            {
+                radius = 0f;
+            }
+
+            var from = Flat(fromLocalPosition);
+            var to = Flat(toLocalPosition);
+
             foreach (var enemy in enemies)
             {
                 if (enemy == null || !enemy.IsAlive)
@@ -617,8 +654,10 @@ namespace Hollow.Combat
                 }
 
                 var enemyPosition = enemy.transform.localPosition;
-                enemyPosition.y = localPosition.y;
-                if (Vector3.Distance(enemyPosition, localPosition) <= radius + 0.36f)
+                enemyPosition.y = from.y;
+                var enemyRadius = Mathf.Max(0.36f, enemy.RadiusMeters);
+                var maxDistance = radius + enemyRadius;
+                if (DistanceToSegment(enemyPosition, from, to) <= maxDistance)
                 {
                     return enemy;
                 }
@@ -629,6 +668,19 @@ namespace Hollow.Combat
 
         public DestructibleRoomObjectController FindDestructibleHit(Vector3 localPosition, float radius)
         {
+            return FindDestructibleHit(localPosition, localPosition, radius);
+        }
+
+        public DestructibleRoomObjectController FindDestructibleHit(Vector3 fromLocalPosition, Vector3 toLocalPosition, float radius)
+        {
+            if (radius < 0f)
+            {
+                radius = 0f;
+            }
+
+            var from = Flat(fromLocalPosition);
+            var to = Flat(toLocalPosition);
+
             foreach (var roomObject in destructibleObjects)
             {
                 if (roomObject == null || roomObject.IsDestroyed)
@@ -637,14 +689,34 @@ namespace Hollow.Combat
                 }
 
                 var objectPosition = roomObject.transform.localPosition;
-                objectPosition.y = localPosition.y;
-                if (Vector3.Distance(objectPosition, localPosition) <= roomObject.RadiusMeters + radius)
+                objectPosition.y = from.y;
+                if (DistanceToSegment(objectPosition, from, to) <= roomObject.RadiusMeters + radius)
                 {
                     return roomObject;
                 }
             }
 
             return null;
+        }
+
+        private static float DistanceToSegment(Vector3 point, Vector3 from, Vector3 to)
+        {
+            var delta = to - from;
+            var squaredLength = delta.sqrMagnitude;
+            if (squaredLength <= Mathf.Epsilon)
+            {
+                return Vector3.Distance(point, from);
+            }
+
+            var projection = Vector3.Dot(point - from, delta) / squaredLength;
+            projection = Mathf.Clamp01(projection);
+            var nearest = from + delta * projection;
+            return Vector3.Distance(point, nearest);
+        }
+
+        private static Vector3 Flat(Vector3 value)
+        {
+            return new Vector3(value.x, 0f, value.z);
         }
 
         public CombatHudModel CreateHudModel()
@@ -739,7 +811,7 @@ namespace Hollow.Combat
                 roomRuntimeRoot,
                 playerController.transform.parent,
                 enemyPrefab,
-                projectilePrefab,
+                EnemyProjectilePrefab,
                 playerController,
                 enemyCatalog,
                 difficultyTier,
@@ -761,7 +833,7 @@ namespace Hollow.Combat
                 roomRuntimeRoot,
                 playerController.transform.parent,
                 enemyPrefab,
-                projectilePrefab,
+                EnemyProjectilePrefab,
                 playerController,
                 enemyCatalog,
                 difficultyTier,

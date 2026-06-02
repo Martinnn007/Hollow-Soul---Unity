@@ -404,6 +404,7 @@ namespace Hollow.Rooms
                         doorVisualStateByPortId.TryGetValue(portId, out var existingState) &&
                         existingState == state)
                     {
+                        ApplyDoorNavigationState(portId, state);
                         continue;
                     }
 
@@ -436,6 +437,7 @@ namespace Hollow.Rooms
 
             if (doorVisualStateByPortId.TryGetValue(portId, out var existingState) && existingState == state)
             {
+                ApplyDoorNavigationState(portId, state);
                 return;
             }
 
@@ -448,6 +450,11 @@ namespace Hollow.Rooms
             }
 
             doorVisualStateByPortId[portId] = state;
+            ApplyDoorNavigationState(portId, state);
+        }
+
+        private void ApplyDoorNavigationState(string portId, RoomDoorVisualState state)
+        {
             if (doorNavigationByPortId.TryGetValue(portId, out var navigation) && navigation != null)
             {
                 navigation.ApplyDoorState(state);

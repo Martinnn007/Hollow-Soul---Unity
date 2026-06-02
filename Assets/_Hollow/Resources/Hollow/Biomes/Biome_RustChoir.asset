@@ -15,6 +15,7 @@ MonoBehaviour:
   biomeId: rust_choir
   displayName: The Rust Choir
   biomeTags: 0500000008000000
+  lightingProfile: {fileID: 11400000, guid: f7d996520d094b24889ec3b82b849909, type: 2}
   roomTemplates:
   - {fileID: 4900000, guid: f33a31bb0c7b1def10dfbd5dc2dbef1b, type: 3}
   - {fileID: 4900000, guid: d4b8ccefdcec9b8c7dec85ea70f0ebd6, type: 3}

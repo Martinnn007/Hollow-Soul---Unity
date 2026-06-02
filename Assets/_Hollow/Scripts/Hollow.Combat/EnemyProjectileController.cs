@@ -285,7 +285,16 @@ namespace Hollow.Combat
             var renderer = ballisticShadow.GetComponent<Renderer>();
             if (renderer != null)
             {
-                renderer.sharedMaterial = new Material(Shader.Find("Standard"))
+                var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
+                             Shader.Find("Universal Render Pipeline/Lit") ??
+                             Shader.Find("Unlit/Color") ??
+                             Shader.Find("Standard");
+                if (shader == null)
+                {
+                    return;
+                }
+
+                renderer.sharedMaterial = new Material(shader)
                 {
                     color = new Color(0f, 0f, 0f, 0.35f)
                 };

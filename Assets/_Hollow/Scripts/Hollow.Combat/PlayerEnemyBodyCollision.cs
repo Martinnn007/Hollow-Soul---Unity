@@ -260,6 +260,11 @@ namespace Hollow.Combat
             Vector3 movementDelta,
             bool isRollTraveling)
         {
+            if (enemy.IsRootedStaticEnemy)
+            {
+                return false;
+            }
+
             if (enemy.BodyClass != EnemyBodyClass.Light)
             {
                 return false;

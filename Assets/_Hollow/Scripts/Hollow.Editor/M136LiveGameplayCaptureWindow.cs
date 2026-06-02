@@ -27,6 +27,8 @@ namespace Hollow.Editor
         private bool useTruthCaptureMode = true;
         private bool use60FpsCaptureCap;
         private bool captureProfilerTrace;
+        private bool activeCaptureCallbacksRegistered;
+        private bool cleanupInProgress;
         private int selectedScenarioIndex;
         private Vector2 scroll;
 
@@ -40,22 +42,16 @@ namespace Hollow.Editor
         {
             scenarios = M136EditorLaptopPerformancePolicy.ScenarioManifest;
             RefreshLatestCaptures();
-            EditorApplication.update += TickCapture;
         }
 
         private void OnDisable()
         {
-            EditorApplication.update -= TickCapture;
-            activeDriver?.StopCapture();
-            DestroyRuntimeDriver();
+            CleanupActiveCaptureResources(cancelAutomated: true);
+        }
 
-            activeTrace?.Dispose();
-            activeSession?.Dispose();
-            activeFpsOverride?.Dispose();
-            activeDriver = null;
-            activeTrace = null;
-            activeSession = null;
-            activeFpsOverride = null;
+        private void OnDestroy()
+        {
+            CleanupActiveCaptureResources(cancelAutomated: true);
         }
 
         private void OnGUI()
@@ -268,19 +264,12 @@ namespace Hollow.Editor
             activeDriver = M136RuntimeLiveCaptureDriver.StartCapture(activeSession);
             if (activeDriver.Session == null)
             {
-                activeTrace?.Dispose();
-                activeFpsOverride?.Dispose();
-                DestroyRuntimeDriver();
-
-                activeTrace = null;
-                activeFpsOverride = null;
-                activeDriver = null;
-                activeSession.Dispose();
-                activeSession = null;
+                CleanupActiveCaptureResources(cancelAutomated: false);
                 ShowNotification(new GUIContent("Telemetry is disabled for this build."));
                 return;
             }
 
+            RegisterActiveCaptureCallbacks();
             Repaint();
         }
 
@@ -350,10 +339,11 @@ namespace Hollow.Editor
             activeFpsOverride = null;
             activeDirectory = null;
             RefreshLatestCaptures();
+            UnregisterActiveCaptureCallbacks();
 
-            if (automatedRunning)
+            if (automatedRunning && EditorApplication.isPlaying)
             {
-                EditorApplication.delayCall += StartNextAutomatedCapture;
+                StartNextAutomatedCapture();
             }
         }
 
@@ -485,6 +475,77 @@ namespace Hollow.Editor
             }
 
             activeDriver = null;
+        }
+
+        private void RegisterActiveCaptureCallbacks()
+        {
+            UnregisterActiveCaptureCallbacks();
+            EditorApplication.update += TickCapture;
+            EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload += CleanupBeforeAssemblyReload;
+            activeCaptureCallbacksRegistered = true;
+        }
+
+        private void UnregisterActiveCaptureCallbacks()
+        {
+            if (!activeCaptureCallbacksRegistered)
+            {
+                EditorApplication.delayCall -= StartNextAutomatedCapture;
+                return;
+            }
+
+            EditorApplication.update -= TickCapture;
+            EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= CleanupBeforeAssemblyReload;
+            EditorApplication.delayCall -= StartNextAutomatedCapture;
+            activeCaptureCallbacksRegistered = false;
+        }
+
+        private void CleanupBeforeAssemblyReload()
+        {
+            CleanupActiveCaptureResources(cancelAutomated: true);
+        }
+
+        private void HandlePlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.ExitingPlayMode || state == PlayModeStateChange.ExitingEditMode)
+            {
+                CleanupActiveCaptureResources(cancelAutomated: true);
+            }
+        }
+
+        private void CleanupActiveCaptureResources(bool cancelAutomated)
+        {
+            if (cleanupInProgress)
+            {
+                return;
+            }
+
+            cleanupInProgress = true;
+            try
+            {
+                UnregisterActiveCaptureCallbacks();
+                if (cancelAutomated)
+                {
+                    automatedRunning = false;
+                    automatedQueue.Clear();
+                }
+
+                activeDriver?.StopCapture();
+                DestroyRuntimeDriver();
+                activeTrace?.Dispose();
+                activeSession?.Dispose();
+                activeFpsOverride?.Dispose();
+                activeDriver = null;
+                activeTrace = null;
+                activeSession = null;
+                activeFpsOverride = null;
+                activeDirectory = null;
+            }
+            finally
+            {
+                cleanupInProgress = false;
+            }
         }
 
         private sealed class M136ProfilerTraceRecorder : IDisposable

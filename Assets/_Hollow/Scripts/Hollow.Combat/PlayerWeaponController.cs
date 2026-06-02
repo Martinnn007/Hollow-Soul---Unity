@@ -19,6 +19,7 @@ namespace Hollow.Combat
     public sealed class PlayerWeaponController : MonoBehaviour
     {
         public const float DefaultCooldownSeconds = 0.22f;
+        public const float PlayerProjectileSpeedMetersPerSecond = ProjectileController.DefaultSpeedMetersPerSecond;
         public const float AttackMovementMultiplier = 0.55f;
         public const float RollStaminaCost = M135CombatReadinessPolicy.LockedRollStaminaCost;
         public const float StaminaRegenDelaySeconds = M135CombatReadinessPolicy.LockedStaminaRegenDelaySeconds;
@@ -81,6 +82,8 @@ namespace Hollow.Combat
         private AttackKind pendingAttackKind = AttackKind.Light;
         private WeaponAttackDefinition pendingAttack;
         private Vector2 pendingAttackDirection = Vector2.up;
+        private EnemyRuntimeController pendingAttackTarget;
+        private PlayerAimAssistResult pendingAttackAssistResult;
         private float attackWindupEndTime;
         private float attackActiveEndTime;
         private float attackRecoveryEndTime;
@@ -321,16 +324,21 @@ namespace Hollow.Combat
                 return;
             }
 
-            BindHealthEvents();
             var input = GameplayInputReader.ReadCurrent(ResolveGameplayRoot());
-            TickAction(Time.deltaTime, Time.time);
-            RegenerateStamina(Time.deltaTime, Time.time);
+            TickInput(input, Time.deltaTime, Time.time);
+        }
+
+        public void TickInput(GameplayInputSnapshot input, float deltaTime, float timeSeconds)
+        {
+            BindHealthEvents();
+            TickAction(deltaTime, timeSeconds);
+            RegenerateStamina(deltaTime, timeSeconds);
             EnsureAimLockController();
             aimLockController.Configure(combatController);
-            aimLockController.TickAim(input, Time.time);
+            aimLockController.TickAim(input, timeSeconds);
             if (rangedDrawActive)
             {
-                HandleRangedDrawInput(input, Time.time);
+                HandleRangedDrawInput(input, timeSeconds);
                 return;
             }
 
@@ -339,9 +347,9 @@ namespace Hollow.Combat
                 ToggleWeaponSlot();
             }
 
-            lastAimDirection = CurrentAim(input);
+            lastAimDirection = CurrentAim(input, timeSeconds);
 
-            if (input.RollPressed && TryRoll(input.Move, CurrentAim(input), Time.time))
+            if (input.RollPressed && TryRoll(input.Move, CurrentAim(input, timeSeconds), timeSeconds))
             {
                 return;
             }
@@ -353,12 +361,12 @@ namespace Hollow.Combat
 
             if (input.LightAttackPressed)
             {
-                TryAttack(AttackKind.Light, CurrentAim(input), Time.time);
+                TryAttack(AttackKind.Light, CurrentAim(input, timeSeconds), timeSeconds);
             }
 
             if (input.HeavyAttackPressed)
             {
-                TryAttack(AttackKind.Heavy, CurrentAim(input), Time.time);
+                TryAttack(AttackKind.Heavy, CurrentAim(input, timeSeconds), timeSeconds);
             }
         }
 
@@ -425,59 +433,18 @@ namespace Hollow.Combat
 
         private Vector2 ResolveRollDirection(Vector2 moveDirection, Vector2 aimDirection)
         {
-            var lockedDirection = ResolveLockedRollDirection(moveDirection);
-            if (lockedDirection.sqrMagnitude > 0.001f)
+            if (moveDirection.sqrMagnitude > 0.001f)
             {
-                return lockedDirection.normalized;
+                return Vector2.ClampMagnitude(moveDirection, 1f).normalized;
             }
 
-            var direction = moveDirection.sqrMagnitude > 0.001f
-                ? Vector2.ClampMagnitude(moveDirection, 1f)
-                : GameplayInputReader.NormalizeAimDirection(aimDirection);
+            var direction = GameplayInputReader.NormalizeAimDirection(aimDirection);
             if (direction.sqrMagnitude < 0.001f)
             {
                 direction = LastAimDirection;
             }
 
             return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.up;
-        }
-
-        private Vector2 ResolveLockedRollDirection(Vector2 moveDirection)
-        {
-            if (aimLockController == null)
-            {
-                aimLockController = GetComponent<PlayerAimLockController>();
-            }
-
-            if (aimLockController == null || !aimLockController.IsTargetLocked || aimLockController.LockedEnemy == null)
-            {
-                return Vector2.zero;
-            }
-
-            var toTarget3 = aimLockController.LockedEnemy.transform.localPosition - transform.localPosition;
-            var toTarget = new Vector2(toTarget3.x, toTarget3.z);
-            if (toTarget.sqrMagnitude < 0.001f)
-            {
-                return Vector2.zero;
-            }
-
-            var forward = toTarget.normalized;
-            var away = -forward;
-            var move = GameplayInputReader.NormalizeAimDirection(moveDirection);
-            if (move.sqrMagnitude < 0.001f)
-            {
-                return away;
-            }
-
-            var right = new Vector2(forward.y, -forward.x);
-            var lateral = Vector2.Dot(move, right);
-            var radial = Vector2.Dot(move, forward);
-            if (Mathf.Abs(lateral) > Mathf.Abs(radial))
-            {
-                return lateral >= 0f ? right : -right;
-            }
-
-            return radial >= 0f ? forward : away;
         }
 
         public void TickAction(float deltaTime, float timeSeconds)
@@ -597,7 +564,8 @@ namespace Hollow.Combat
                 nextAllowedShotTime = timeSeconds + EffectiveRangedCooldown(attack, attackKind);
             }
 
-            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
+            var assist = ResolveAttackAssist(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
+            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, assist.Direction, timeSeconds, assist.Target, assist);
             return true;
         }
 
@@ -626,7 +594,7 @@ namespace Hollow.Combat
 
         private void HandleRangedDrawInput(GameplayInputSnapshot input, float timeSeconds)
         {
-            lastAimDirection = CurrentAim(input);
+            lastAimDirection = CurrentAim(input, timeSeconds);
             if (lastAimDirection.sqrMagnitude > 0.001f)
             {
                 rangedDrawDirection = lastAimDirection.normalized;
@@ -646,7 +614,7 @@ namespace Hollow.Combat
                 return;
             }
 
-            TryReleaseRangedDraw(CurrentAim(input), timeSeconds);
+            TryReleaseRangedDraw(CurrentAim(input, timeSeconds), timeSeconds);
         }
 
         public bool TryReleaseRangedDraw(Vector2 releaseDirection, float timeSeconds)
@@ -681,13 +649,14 @@ namespace Hollow.Combat
 
             var attackKind = rangedDrawAttackKind;
             var attack = rangedDrawAttack;
+            var assist = ResolveAttackAssist(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
             CancelRangedDraw();
             if (attackKind == AttackKind.Light)
             {
                 nextAllowedShotTime = timeSeconds + EffectiveRangedCooldown(attack, attackKind);
             }
 
-            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, aim, timeSeconds);
+            StartPendingAttack(WeaponSlot.Ranged, attackKind, attack, assist.Direction, timeSeconds, assist.Target, assist);
             return true;
         }
 
@@ -699,11 +668,42 @@ namespace Hollow.Combat
             rangedDrawDirection = Vector2.up;
             rangedDrawStartTime = 0f;
             rangedDrawRequiredSeconds = 0f;
+            pendingAttackTarget = null;
+            pendingAttackAssistResult = default;
         }
 
         private static float RequiredDrawSeconds(WeaponAttackDefinition attack)
         {
             return Mathf.Max(0.01f, attack.RequiredDrawSeconds > 0f ? attack.RequiredDrawSeconds : 1f);
+        }
+
+        private PlayerAimAssistResult ResolveAttackAssist(
+            WeaponSlot slot,
+            AttackKind attackKind,
+            WeaponAttackDefinition attack,
+            Vector2 requestedDirection,
+            float timeSeconds)
+        {
+            if (aimLockController == null)
+            {
+                aimLockController = GetComponent<PlayerAimLockController>();
+            }
+
+            if (aimLockController == null)
+            {
+                return PlayerAimAssistResult.None(requestedDirection);
+            }
+
+            if (combatController != null)
+            {
+                aimLockController.Configure(combatController);
+            }
+
+            return aimLockController.ResolveAttackAssist(
+                requestedDirection,
+                EffectiveRange(attack, slot),
+                slot == WeaponSlot.Melee,
+                timeSeconds);
         }
 
         private void SpawnProjectile(
@@ -713,6 +713,7 @@ namespace Hollow.Combat
             float lifetimeSeconds,
             WeaponAttackDefinition attack,
             PlayerShotAimSource aimSource,
+            EnemyRuntimeController shotTarget,
             string lockedTargetName,
             float lockedTargetDistanceMeters,
             float shotTimeSeconds)
@@ -721,12 +722,21 @@ namespace Hollow.Combat
             var side = new Vector2(-direction.y, direction.x);
             var projectileObject = HollowRuntimePool.Rent(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
-            projectileObject.transform.localPosition =
+            var projectileTransform = projectileObject.transform;
+            var prefabScale = projectilePrefab != null ? projectilePrefab.transform.localScale : Vector3.one;
+            projectileTransform.localScale = prefabScale == Vector3.zero ? Vector3.one : prefabScale;
+            var projectileLocalPosition =
                 transform.localPosition +
                 new Vector3(direction.x, 0f, direction.y) * 0.42f +
                 new Vector3(side.x, 0f, side.y) * shot.LateralOffsetMeters +
                 new Vector3(0f, 0.45f, 0f);
-            projectileObject.transform.localRotation = PlayerWeaponVisualPosePolicy.AimRotation(direction);
+            direction = ResolveProjectileDirectionFromOrigin(
+                direction,
+                shot.SpreadAngleDegrees,
+                shotTarget,
+                projectileLocalPosition);
+            projectileTransform.localPosition = projectileLocalPosition;
+            projectileTransform.localRotation = PlayerWeaponVisualPosePolicy.AimRotation(direction);
             MaterialResolver.ApplyTo(
                 projectileObject,
                 projectilePassiveState.VisualStyle == ProjectileVisualStyle.RedPower
@@ -764,24 +774,33 @@ namespace Hollow.Combat
             {
                 ProjectilePatternKind.DoubleBarrel => new[]
                 {
-                    new ProjectileShotSpec(baseDirection, -0.11f),
-                    new ProjectileShotSpec(baseDirection, 0.11f)
+                    new ProjectileShotSpec(baseDirection, -0.11f, 0f),
+                    new ProjectileShotSpec(baseDirection, 0.11f, 0f)
                 },
                 ProjectilePatternKind.TripleShot => new[]
                 {
-                    new ProjectileShotSpec(Rotate(baseDirection, -30f), 0f),
-                    new ProjectileShotSpec(baseDirection, 0f),
-                    new ProjectileShotSpec(Rotate(baseDirection, 30f), 0f)
+                    new ProjectileShotSpec(Rotate(baseDirection, -30f), 0f, -30f),
+                    new ProjectileShotSpec(baseDirection, 0f, 0f),
+                    new ProjectileShotSpec(Rotate(baseDirection, 30f), 0f, 30f)
                 },
                 ProjectilePatternKind.QuadShot => new[]
                 {
-                    new ProjectileShotSpec(baseDirection, -0.09f),
-                    new ProjectileShotSpec(baseDirection, 0.09f),
-                    new ProjectileShotSpec(Rotate(baseDirection, -30f), 0f),
-                    new ProjectileShotSpec(Rotate(baseDirection, 30f), 0f)
+                    new ProjectileShotSpec(baseDirection, -0.09f, 0f),
+                    new ProjectileShotSpec(baseDirection, 0.09f, 0f),
+                    new ProjectileShotSpec(Rotate(baseDirection, -30f), 0f, -30f),
+                    new ProjectileShotSpec(Rotate(baseDirection, 30f), 0f, 30f)
                 },
-                _ => new[] { new ProjectileShotSpec(baseDirection, 0f) }
+                _ => new[] { new ProjectileShotSpec(baseDirection, 0f, 0f) }
             };
+        }
+
+        private Vector2 ResolveProjectileDirectionFromOrigin(
+            Vector2 fallbackDirection,
+            float spreadAngleDegrees,
+            EnemyRuntimeController shotTarget,
+            Vector3 projectileLocalPosition)
+        {
+            return fallbackDirection.sqrMagnitude > 0.001f ? fallbackDirection.normalized : Vector2.up;
         }
 
         private float EffectiveRangedCooldown(WeaponAttackDefinition attack, AttackKind attackKind)
@@ -809,15 +828,18 @@ namespace Hollow.Combat
 
         private readonly struct ProjectileShotSpec
         {
-            public ProjectileShotSpec(Vector2 direction, float lateralOffsetMeters)
+            public ProjectileShotSpec(Vector2 direction, float lateralOffsetMeters, float spreadAngleDegrees)
             {
                 Direction = direction;
                 LateralOffsetMeters = lateralOffsetMeters;
+                SpreadAngleDegrees = spreadAngleDegrees;
             }
 
             public Vector2 Direction { get; }
 
             public float LateralOffsetMeters { get; }
+
+            public float SpreadAngleDegrees { get; }
         }
 
         private bool TryMeleeAttack(AttackKind attackKind, Vector2 attackDirection, float timeSeconds)
@@ -850,22 +872,33 @@ namespace Hollow.Combat
                 nextAllowedMeleeTime = timeSeconds + EffectiveMeleeCooldown(attack, attackKind);
             }
 
-            StartPendingAttack(WeaponSlot.Melee, attackKind, attack, aim, timeSeconds);
+            var assist = ResolveAttackAssist(WeaponSlot.Melee, attackKind, attack, aim, timeSeconds);
+            StartPendingAttack(WeaponSlot.Melee, attackKind, attack, assist.Direction, timeSeconds, assist.Target, assist);
             return true;
         }
 
-        private void StartPendingAttack(WeaponSlot slot, AttackKind attackKind, WeaponAttackDefinition attack, Vector2 direction, float timeSeconds)
+        private void StartPendingAttack(
+            WeaponSlot slot,
+            AttackKind attackKind,
+            WeaponAttackDefinition attack,
+            Vector2 direction,
+            float timeSeconds,
+            EnemyRuntimeController shotTarget = null,
+            PlayerAimAssistResult assistResult = default)
         {
             pendingAttackSlot = slot;
             pendingAttackKind = attackKind;
             pendingAttack = attack;
             pendingAttackDirection = direction.sqrMagnitude > 0.001f ? direction.normalized : LastAimDirection;
+            pendingAttackTarget = slot == WeaponSlot.Ranged ? shotTarget : null;
+            pendingAttackAssistResult = assistResult;
             lastAimDirection = pendingAttackDirection;
             pendingAttackApplied = false;
             attackWindupEndTime = timeSeconds + attack.WindupSeconds;
             attackActiveEndTime = attackWindupEndTime + attack.ActiveSeconds;
             attackRecoveryEndTime = attackActiveEndTime + attack.RecoverySeconds;
             attackExecutionState = PlayerAttackExecutionState.Windup;
+            aimLockController?.NotifyAttackCommitted(assistResult, timeSeconds);
             var actionDurationSeconds = Mathf.Max(0.01f, attack.WindupSeconds + attack.ActiveSeconds + attack.RecoverySeconds);
             WeaponActionAnimationRequested?.Invoke(slot, attackKind, pendingAttackDirection, actionDurationSeconds);
         }
@@ -897,10 +930,10 @@ namespace Hollow.Combat
             var cardinal = pendingAttackDirection.sqrMagnitude > 0.001f ? pendingAttackDirection : LastAimDirection;
             var attackDamage = Mathf.Max(1, Mathf.RoundToInt((pendingAttack.Damage + projectileDamageBonus + CurrentTemporaryDamageBonus) * projectilePassiveState.RangedDamageMultiplier));
             var effectiveRange = EffectiveRange(pendingAttack, WeaponSlot.Ranged);
-            var projectileSpeed = ProjectileController.DefaultSpeedMetersPerSecond;
+            var projectileSpeed = PlayerProjectileSpeedMetersPerSecond;
             var lifetimeSeconds = Mathf.Max(0.1f, effectiveRange / projectileSpeed);
             var aimSource = ResolveShotAimSource();
-            TryGetLockedTargetTelemetry(out var lockedTargetName, out var lockedTargetDistanceMeters);
+            TryGetLockedTargetTelemetry(pendingAttackTarget, out var lockedTargetName, out var lockedTargetDistanceMeters);
             foreach (var shot in BuildProjectileShots(cardinal))
             {
                 SpawnProjectile(
@@ -910,6 +943,7 @@ namespace Hollow.Combat
                     lifetimeSeconds,
                     pendingAttack,
                     aimSource,
+                    pendingAttackTarget,
                     lockedTargetName,
                     lockedTargetDistanceMeters,
                     timeSeconds);
@@ -995,6 +1029,7 @@ namespace Hollow.Combat
         {
             CancelRangedDraw();
             attackExecutionState = PlayerAttackExecutionState.Idle;
+            pendingAttackTarget = null;
             pendingAttackApplied = false;
             attackWindupEndTime = 0f;
             attackActiveEndTime = 0f;
@@ -1080,9 +1115,14 @@ namespace Hollow.Combat
 
         private Vector2 CurrentAim(GameplayInputSnapshot input)
         {
+            return CurrentAim(input, Time.time);
+        }
+
+        private Vector2 CurrentAim(GameplayInputSnapshot input, float timeSeconds)
+        {
             if (aimLockController != null)
             {
-                return aimLockController.ResolveAttackDirection(input, Time.time);
+                return aimLockController.ResolveAttackDirection(input, timeSeconds);
             }
 
             if (input.HasShoot)
@@ -1100,21 +1140,24 @@ namespace Hollow.Combat
                 return PlayerShotAimSource.Unknown;
             }
 
-            return aimLockController.CurrentLockMode switch
-            {
-                PlayerTargetLockMode.ManualRetarget => PlayerShotAimSource.ManualLock,
-                PlayerTargetLockMode.Auto => PlayerShotAimSource.AutoLock,
-                _ => aimLockController.HasManualAimOverride
-                    ? PlayerShotAimSource.ManualAim
-                    : PlayerShotAimSource.BodyFacing
-            };
+            return aimLockController.HasManualAimOverride
+                ? PlayerShotAimSource.ManualAim
+                : PlayerShotAimSource.BodyFacing;
         }
 
-        private bool TryGetLockedTargetTelemetry(out string targetName, out float distanceMeters)
+        private bool TryGetLockedTargetTelemetry(
+            EnemyRuntimeController shotTarget,
+            out string targetName,
+            out float distanceMeters)
         {
             targetName = string.Empty;
             distanceMeters = -1f;
-            var target = aimLockController != null ? aimLockController.LockedEnemy : null;
+            var target = IsValidTarget(shotTarget) ? shotTarget : null;
+            if (target == null)
+            {
+                target = aimLockController != null ? aimLockController.LockedEnemy : null;
+            }
+
             if (target == null)
             {
                 return false;
@@ -1123,6 +1166,11 @@ namespace Hollow.Combat
             targetName = target.name;
             distanceMeters = DistanceToTarget(target);
             return true;
+        }
+
+        private static bool IsValidTarget(EnemyRuntimeController target)
+        {
+            return target != null && target.IsAlive && target.gameObject.activeInHierarchy;
         }
 
         private float DistanceToTarget(EnemyRuntimeController target)
@@ -1230,12 +1278,49 @@ namespace Hollow.Combat
             health = null;
         }
 
-        private void OnPlayerDamaged(CombatantHealth _)
+        private void OnPlayerDamaged(CombatantHealth damagedHealth)
         {
-            if (!IsRolling)
+            if (IsRolling)
+            {
+                return;
+            }
+
+            if (rangedDrawActive)
+            {
+                ClearPendingAction();
+                return;
+            }
+
+            if (ShouldDamageInterruptCommittedAttack(damagedHealth))
             {
                 ClearPendingAction();
             }
+        }
+
+        private static bool ShouldDamageInterruptCommittedAttack(CombatantHealth damagedHealth)
+        {
+            if (damagedHealth == null ||
+                damagedHealth.LastDamageAppliedAmount <= 0 ||
+                damagedHealth.LastDamageRequest.Amount <= 0)
+            {
+                return true;
+            }
+
+            var request = damagedHealth.LastDamageRequest;
+            if (request.Classification.Delivery != DamageDelivery.Projectile)
+            {
+                return true;
+            }
+
+            if (request.ThreatKind is DamageThreatKind.Boss
+                or DamageThreatKind.Environmental
+                or DamageThreatKind.StrongProjectile)
+            {
+                return true;
+            }
+
+            return request.Classification.ForceClass is ImpactForceClass.Heavy
+                or ImpactForceClass.Massive;
         }
 
         private void OnPlayerDied(CombatantHealth _)

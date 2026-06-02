@@ -71,6 +71,46 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void SpittingPodStillLobsWhenCrowdTacticsWouldOtherwiseHoldStaticEnemies()
+        {
+            var root = CreateHarness(out var room, out var player, out _);
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var catalog = EnemyCatalog.CreateRuntimeDefault();
+                player.transform.localPosition = Vector3.zero;
+                var enemies = new List<EnemyRuntimeController>();
+                for (var index = 0; index < 11; index++)
+                {
+                    var blocker = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemyFast"));
+                    blocker.transform.localPosition = new Vector3(0.6f + index * 0.08f, 0f, 0.9f + index * 0.04f);
+                    blocker.BindRoomCombatController(combat);
+                    enemies.Add(blocker);
+                    AddEnemyToCombat(combat, blocker);
+                }
+
+                var pod = CreateEnemy(root.transform, room, player, catalog.Resolve("spawnEnemySpittingPod"));
+                pod.transform.localPosition = new Vector3(5.8f, 0f, 0f);
+                pod.BindRoomCombatController(combat);
+                enemies.Add(pod);
+                AddEnemyToCombat(combat, pod);
+                pod.ReceiveStimulus(EnemyStimulusKind.Footstep, player.transform.localPosition, 2f);
+
+                combat.TacticalDirector.Tick(enemies, room, player, 2.05f);
+                pod.Tick(0.05f, 2.1f);
+
+                Assert.IsTrue(pod.IsRootedStaticEnemy);
+                Assert.AreEqual(EnemyReadabilityState.RangedWindup, pod.ReadabilityState);
+                Assert.AreEqual("StartRangedAction", pod.LastBehaviorCommand);
+                Assert.AreEqual("spit_lob", pod.LastBehaviorReason);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void RatDelaysFirstBiteThenRetreatsAfterDamage()
         {
             var root = CreateHarness(out var room, out var player, out _);
@@ -288,6 +328,14 @@ namespace Hollow.Tests.EditMode
             var enemy = enemyObject.AddComponent<EnemyRuntimeController>();
             enemy.Configure(room, player, definition, DifficultyTierDefinition.CreateRuntimeDeveloperSample());
             return enemy;
+        }
+
+        private static void AddEnemyToCombat(RoomCombatController combat, EnemyRuntimeController enemy)
+        {
+            var field = typeof(RoomCombatController).GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field);
+            var enemies = (List<EnemyRuntimeController>)field.GetValue(combat);
+            enemies.Add(enemy);
         }
     }
 }

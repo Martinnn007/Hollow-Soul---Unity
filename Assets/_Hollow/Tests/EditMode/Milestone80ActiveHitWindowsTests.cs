@@ -85,21 +85,25 @@ namespace Hollow.Tests.EditMode
             try
             {
                 var definition = EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyTurret");
-                var profile = definition.ResolveAttackProfile("bone_dart");
                 player.transform.localPosition = new Vector3(0f, 0f, 5f);
                 var enemy = CreateEnemy(root.transform, player, definition);
                 enemy.transform.localPosition = Vector3.zero;
+                var start = enemy.transform.localPosition;
+                Assert.IsTrue(enemy.IsRootedStaticEnemy);
 
                 enemy.Tick(0.05f, 8f);
                 Assert.AreEqual(EnemyReadabilityState.RangedWindup, enemy.ReadabilityState);
+                Assert.AreEqual(start, enemy.transform.localPosition);
                 Assert.AreEqual(0, root.transform.Cast<Transform>().Count(child => child.name.StartsWith("EnemyProjectile.")));
 
-                enemy.Tick(0.05f, 8f + profile.WindupSeconds + 0.01f);
+                enemy.Tick(0.05f, enemy.ReadabilityStateEndTime + 0.01f);
                 Assert.AreEqual(EnemyReadabilityState.RangedActive, enemy.ReadabilityState);
+                Assert.AreEqual(start, enemy.transform.localPosition);
                 Assert.AreEqual(1, root.transform.Cast<Transform>().Count(child => child.name.StartsWith("EnemyProjectile.")));
 
-                enemy.Tick(0.05f, 8f + profile.WindupSeconds + profile.ActiveSeconds + 0.04f);
+                enemy.Tick(0.05f, enemy.ReadabilityStateEndTime + 0.04f);
                 Assert.AreEqual(EnemyReadabilityState.RangedRecovery, enemy.ReadabilityState);
+                Assert.AreEqual(start, enemy.transform.localPosition);
             }
             finally
             {
@@ -128,17 +132,18 @@ namespace Hollow.Tests.EditMode
                 player.transform.localPosition = new Vector3(0f, 0f, 1.6f);
                 heavy.transform.localPosition = Vector3.zero;
                 heavy.Tick(0.05f, 5f);
-                Assert.AreEqual(EnemyReadabilityState.MeleeWindup, heavy.ReadabilityState);
+                var heavyWindupState = heavy.ReadabilityState;
+                Assert.IsTrue(IsPoiseInterruptibleWindup(heavyWindupState));
 
                 DamageSystem.ApplyDamage(
                     heavy.Health,
                     new DamageRequest(1, player.gameObject, DamageFeedbackContext.None, DamageClassification.PhysicalMelee(ImpactForceClass.Medium)));
-                Assert.AreEqual(EnemyReadabilityState.MeleeWindup, heavy.ReadabilityState);
+                Assert.AreEqual(heavyWindupState, heavy.ReadabilityState);
 
                 DamageSystem.ApplyDamage(
                     heavy.Health,
-                    new DamageRequest(1, player.gameObject, DamageFeedbackContext.None, DamageClassification.PhysicalMelee(ImpactForceClass.Heavy)));
-                Assert.AreEqual(EnemyReadabilityState.MeleeRecovery, heavy.ReadabilityState);
+                    new DamageRequest(1, player.gameObject, DamageFeedbackContext.None, DamageClassification.PhysicalMelee(ImpactForceClass.Massive)));
+                Assert.AreEqual(RecoveryStateForWindup(heavyWindupState), heavy.ReadabilityState);
             }
             finally
             {
@@ -245,6 +250,30 @@ namespace Hollow.Tests.EditMode
             var root = new GameObject("M80EnemyHarness");
             player = CreatePlayer(root.transform).GetComponent<PlaceholderPlayerController>();
             return root;
+        }
+
+        private static bool IsPoiseInterruptibleWindup(EnemyReadabilityState state)
+        {
+            return state is EnemyReadabilityState.MeleeWindup
+                or EnemyReadabilityState.ChargeWindup
+                or EnemyReadabilityState.RangedWindup
+                or EnemyReadabilityState.AreaWindup
+                or EnemyReadabilityState.CreatureMoveWindup
+                or EnemyReadabilityState.CreatureSignalWindup;
+        }
+
+        private static EnemyReadabilityState RecoveryStateForWindup(EnemyReadabilityState state)
+        {
+            return state switch
+            {
+                EnemyReadabilityState.MeleeWindup => EnemyReadabilityState.MeleeRecovery,
+                EnemyReadabilityState.ChargeWindup => EnemyReadabilityState.ChargeRecovery,
+                EnemyReadabilityState.RangedWindup => EnemyReadabilityState.RangedRecovery,
+                EnemyReadabilityState.AreaWindup => EnemyReadabilityState.AreaRecovery,
+                EnemyReadabilityState.CreatureMoveWindup => EnemyReadabilityState.CreatureMoveRecovery,
+                EnemyReadabilityState.CreatureSignalWindup => EnemyReadabilityState.CreatureSignalRecovery,
+                _ => EnemyReadabilityState.Idle
+            };
         }
 
         private static GameObject CreatePlayer(Transform parent)

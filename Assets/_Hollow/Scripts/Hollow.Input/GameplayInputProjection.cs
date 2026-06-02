@@ -24,13 +24,13 @@ namespace Hollow.Input
             }
 
             var right = ProjectCameraAxis(camera.transform.right, gameplayRoot != null ? gameplayRoot.TransformDirection(Vector3.right) : Vector3.right);
-            var forward = ProjectCameraAxis(camera.transform.forward, gameplayRoot != null ? gameplayRoot.TransformDirection(Vector3.forward) : Vector3.forward);
-            if (right.sqrMagnitude <= 0.0001f || forward.sqrMagnitude <= 0.0001f)
+            var up = ProjectCameraAxis(camera.transform.up, gameplayRoot != null ? gameplayRoot.TransformDirection(Vector3.forward) : Vector3.forward);
+            if (right.sqrMagnitude <= 0.0001f || up.sqrMagnitude <= 0.0001f)
             {
                 return Vector2.ClampMagnitude(screenVector, 1f);
             }
 
-            var worldDirection = right.normalized * screenVector.x + forward.normalized * screenVector.y;
+            var worldDirection = right.normalized * screenVector.x + up.normalized * screenVector.y;
             worldDirection.y = 0f;
             if (worldDirection.sqrMagnitude <= 0.0001f)
             {

@@ -334,6 +334,11 @@ namespace Hollow.Combat
             }
 
             intent = ResolveIntent(enemy, requested.ActionId);
+            if (enemy.IsRootedStaticEnemy && requested.StartsCommittedAction)
+            {
+                return requested;
+            }
+
             if (requested.StartsCommittedAction && intent.Role != EnemyTacticalRole.ActiveThreat)
             {
                 return intent.Role switch

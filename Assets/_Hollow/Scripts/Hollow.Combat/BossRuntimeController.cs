@@ -432,18 +432,11 @@ namespace Hollow.Combat
                 return;
             }
 
-            var projectileObject = projectilePrefab != null
-                ? Hollow.Core.HollowRuntimePool.Rent(projectilePrefab, owner.transform.parent)
-                : Hollow.Core.HollowRuntimePool.RentPrimitive("EnemyProjectile.Boss.Fallback", PrimitiveType.Sphere, owner.transform.parent);
+            var projectileObject = RentEnemyProjectileObject();
             projectileObject.name = $"EnemyProjectile.Boss.{definition.BossId}";
             projectileObject.transform.SetParent(owner.transform.parent, worldPositionStays: false);
             projectileObject.transform.localPosition = owner.transform.localPosition + direction.normalized * (owner.RadiusMeters + 0.32f) + new Vector3(0f, 0.42f, 0f);
             projectileObject.transform.localScale = Vector3.one * 0.26f;
-            var playerProjectile = projectileObject.GetComponent<ProjectileController>();
-            if (playerProjectile != null)
-            {
-                DestroyRuntime(playerProjectile);
-            }
 
             var collider = projectileObject.GetComponent<Collider>();
             if (collider != null)
@@ -469,6 +462,22 @@ namespace Hollow.Combat
                 projectile.ConfigureThreat(DamageThreatKind.Light);
             }
             activeProjectiles.Add(projectile);
+        }
+
+        private GameObject RentEnemyProjectileObject()
+        {
+            if (projectilePrefab != null && projectilePrefab.GetComponent<ProjectileController>() == null)
+            {
+                var projectileObject = Hollow.Core.HollowRuntimePool.Rent(projectilePrefab, owner.transform.parent);
+                if (projectileObject.GetComponent<ProjectileController>() == null)
+                {
+                    return projectileObject;
+                }
+
+                Hollow.Core.HollowRuntimePool.Return(projectileObject);
+            }
+
+            return Hollow.Core.HollowRuntimePool.RentPrimitive("EnemyProjectile.Boss.Fallback", PrimitiveType.Sphere, owner.transform.parent);
         }
 
         private void PlayBossPatternCue(EnemyAttackProfileDefinition profile)
@@ -616,23 +625,6 @@ namespace Hollow.Combat
                 .Where(phase => phase != null)
                 .OrderBy(phase => phase.healthThreshold01)
                 .ToArray();
-        }
-
-        private static void DestroyRuntime(Component component)
-        {
-            if (component == null)
-            {
-                return;
-            }
-
-            if (Application.isPlaying)
-            {
-                Destroy(component);
-            }
-            else
-            {
-                DestroyImmediate(component);
-            }
         }
 
         private static int StableHash(string value)

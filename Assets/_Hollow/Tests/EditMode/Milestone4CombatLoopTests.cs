@@ -116,6 +116,34 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void FindEnemyHitConsidersProjectileTravelSegment()
+        {
+            var root = CreateCombatHarness(out _, out _, out var enemyPrefab, out _);
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                combat.Configure(enemyPrefab, null);
+                combat.InitializeCombat();
+
+                var enemy = combat.Enemies[0];
+                enemy.transform.localPosition = Vector3.zero;
+
+                Assert.IsNull(combat.FindEnemyHit(new Vector3(-1f, 0f, 0f), 0f));
+                Assert.AreSame(
+                    enemy,
+                    combat.FindEnemyHit(
+                        new Vector3(-1f, 0f, 0f),
+                        new Vector3(1f, 0f, 0f),
+                        0f),
+                    "Travel segment should detect enemies even when segment endpoints are outside the hit radius.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void RoomObjectiveClearsWhenAllEnemiesDie()
         {
             var root = CreateCombatHarness(out _, out _, out var enemyPrefab, out var projectilePrefab);

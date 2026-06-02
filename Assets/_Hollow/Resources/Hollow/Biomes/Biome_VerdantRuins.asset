@@ -15,6 +15,7 @@ MonoBehaviour:
   biomeId: verdant_ruins
   displayName: Verdant Ruins
   biomeTags: 0c0000000d0000000e000000
+  lightingProfile: {fileID: 11400000, guid: 195f3b5c9fae4c8a84d1334d9af1e902, type: 2}
   roomTemplates:
   - {fileID: 4900000, guid: 636b0a022bede4f8292c1d39652e68e6, type: 3}
   - {fileID: 4900000, guid: fd06661d1c52b430491d6e9c09ab337d, type: 3}

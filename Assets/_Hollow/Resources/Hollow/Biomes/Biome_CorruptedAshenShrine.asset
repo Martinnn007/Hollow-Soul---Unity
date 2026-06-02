@@ -15,6 +15,7 @@ MonoBehaviour:
   biomeId: corrupted_ashen_shrine
   displayName: Ashen Shrine
   biomeTags: 08000000090000000a0000000e000000
+  lightingProfile: {fileID: 11400000, guid: a6cb40d24196428fb4d0c8637426e0d4, type: 2}
   roomTemplates: []
   materialOverrides:
   - role: 0

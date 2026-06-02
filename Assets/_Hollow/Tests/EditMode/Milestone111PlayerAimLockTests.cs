@@ -50,7 +50,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void AimLockUsesMovementFacingAutoLockAndRetargetFlick()
+        public void AimControllerUsesFacingAndExplicitAimWithoutTargetLock()
         {
             var root = new GameObject("M111AimLockHarness");
             try
@@ -76,19 +76,16 @@ namespace Hollow.Tests.EditMode
                 AddEnemy(combat, northEnemy);
 
                 aim.TickAim(Snapshot(move: Vector2.zero, shoot: Vector2.zero, lockPressed: false), 0.2f);
-                Assert.AreEqual(PlayerTargetLockMode.Auto, aim.CurrentLockMode);
-                Assert.IsTrue(aim.IsTargetLocked);
-                Assert.AreSame(eastEnemy, aim.LockedEnemy);
-                var lockedDirection = new Vector2(2f, 0.75f).normalized;
-                Assert.AreEqual(lockedDirection.x, aim.AttackDirection.x, 0.001f);
-                Assert.AreEqual(lockedDirection.y, aim.AttackDirection.y, 0.001f);
-                Assert.IsTrue(aim.TryGetLockedTargetDirection(out var locomotionLockDirection));
-                Assert.AreEqual(lockedDirection.x, locomotionLockDirection.x, 0.001f);
-                Assert.AreEqual(lockedDirection.y, locomotionLockDirection.y, 0.001f);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsFalse(aim.IsTargetLocked);
+                Assert.IsNull(aim.LockedEnemy);
+                Assert.AreEqual(1f, aim.AttackDirection.x, 0.001f);
+                Assert.AreEqual(0f, aim.AttackDirection.y, 0.001f);
+                Assert.IsFalse(aim.TryGetLockedTargetDirection(out _));
 
                 aim.TickAim(Snapshot(move: Vector2.zero, shoot: Vector2.up, lockPressed: false), 0.5f);
-                Assert.AreEqual(PlayerTargetLockMode.ManualRetarget, aim.CurrentLockMode);
-                Assert.AreSame(northEnemy, aim.LockedEnemy);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsNull(aim.LockedEnemy);
                 Assert.AreEqual(0f, aim.AttackDirection.x, 0.001f);
                 Assert.AreEqual(1f, aim.AttackDirection.y, 0.001f);
             }
@@ -99,7 +96,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void AutoLockSwitchesWithMarginAndManualRetargetStaysStickyUntilInvalid()
+        public void EnemiesNeverCreateAssistOrStickyLock()
         {
             var root = new GameObject("M111ReliableAutoLockHarness");
             try
@@ -115,37 +112,42 @@ namespace Hollow.Tests.EditMode
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0f);
                 Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
                 Assert.IsFalse(aim.IsTargetLocked);
+                Assert.IsNull(aim.LockedEnemy);
 
                 var firstEnemy = CreateEnemy(root.transform, new Vector3(3f, 0f, 0f));
                 AddEnemy(combat, firstEnemy);
 
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.1f);
-                Assert.AreEqual(PlayerTargetLockMode.Auto, aim.CurrentLockMode);
-                Assert.AreSame(firstEnemy, aim.LockedEnemy);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsNull(aim.LockedEnemy);
 
                 var closerButNotEnoughEnemy = CreateEnemy(root.transform, new Vector3(2.5f, 0f, 0f));
                 AddEnemy(combat, closerButNotEnoughEnemy);
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.2f);
-                Assert.AreSame(firstEnemy, aim.LockedEnemy);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsNull(aim.LockedEnemy);
 
                 closerButNotEnoughEnemy.transform.localPosition = new Vector3(1.8f, 0f, 0f);
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.3f);
-                Assert.AreSame(closerButNotEnoughEnemy, aim.LockedEnemy);
+                Assert.IsNull(aim.LockedEnemy);
 
                 var northEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 2f));
                 AddEnemy(combat, northEnemy);
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.up, lockPressed: false), 0.6f);
-                Assert.AreEqual(PlayerTargetLockMode.ManualRetarget, aim.CurrentLockMode);
-                Assert.AreSame(northEnemy, aim.LockedEnemy);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsNull(aim.LockedEnemy);
+                Assert.AreEqual(0f, aim.AttackDirection.x, 0.001f);
+                Assert.AreEqual(1f, aim.AttackDirection.y, 0.001f);
 
                 closerButNotEnoughEnemy.transform.localPosition = new Vector3(0.5f, 0f, 0f);
-                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.8f);
-                Assert.AreSame(northEnemy, aim.LockedEnemy);
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: true), 0.8f);
+                Assert.IsFalse(aim.IsExplicitlyLocked);
+                Assert.IsNull(aim.LockedEnemy);
 
                 northEnemy.gameObject.SetActive(false);
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 1f);
-                Assert.AreEqual(PlayerTargetLockMode.Auto, aim.CurrentLockMode);
-                Assert.AreSame(closerButNotEnoughEnemy, aim.LockedEnemy);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsNull(aim.LockedEnemy);
             }
             finally
             {
@@ -154,7 +156,131 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void AimLockUsesMouseCursorWhenUnlockedAndLockOverridesMouse()
+        public void RecentDamageDoesNotCreateTargetLock()
+        {
+            var root = new GameObject("M111RecentTargetExplicitRangeHarness");
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("Player").AddComponent<PlaceholderPlayerController>();
+                player.transform.SetParent(root.transform, false);
+                var aim = player.gameObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+
+                var rangedEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 6f));
+                AddEnemy(combat, rangedEnemy);
+
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0f);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsFalse(aim.IsTargetLocked);
+
+                aim.NotifyEnemyDamaged(rangedEnemy, 0.1f);
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.2f);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsFalse(aim.IsTargetLocked);
+                Assert.IsNull(aim.LockedEnemy);
+                Assert.IsNull(aim.RecentDamagedTarget);
+
+                rangedEnemy.transform.localPosition = new Vector3(0f, 0f, 7f);
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.3f);
+                Assert.IsNull(aim.LockedEnemy);
+
+                aim.TickAim(
+                    Snapshot(Vector2.zero, Vector2.zero, lockPressed: false),
+                    PlayerAimLockController.RecentTargetMemorySeconds + 0.3f);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsFalse(aim.IsTargetLocked);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MouseAimDirectionIgnoresHoveredEnemy()
+        {
+            var root = new GameObject("M111MouseHoverAssistHarness");
+            var cameraObject = new GameObject("Main Camera");
+            try
+            {
+                cameraObject.tag = "MainCamera";
+                var camera = cameraObject.AddComponent<Camera>();
+                camera.orthographic = true;
+                camera.orthographicSize = 5f;
+                camera.pixelRect = new Rect(0f, 0f, 1000f, 1000f);
+                camera.transform.position = new Vector3(0f, 10f, 0f);
+                camera.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("Player").AddComponent<PlaceholderPlayerController>();
+                player.transform.SetParent(root.transform, false);
+                var aim = player.gameObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+
+                var nearestEnemy = CreateEnemy(root.transform, new Vector3(1f, 0f, 0f));
+                var hoveredEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 4f));
+                AddEnemy(combat, nearestEnemy);
+                AddEnemy(combat, hoveredEnemy);
+
+                var pointer = camera.WorldToScreenPoint(hoveredEnemy.transform.position);
+                var result = aim.ResolveAttackAssist(
+                    SnapshotWithPointer(new Vector2(pointer.x, pointer.y), lockPressed: false),
+                    PlayerAimLockController.ExplicitLockRangeMeters,
+                    false,
+                    0f);
+
+                var expected = new Vector2(hoveredEnemy.transform.localPosition.x, hoveredEnemy.transform.localPosition.z).normalized;
+                Assert.IsFalse(result.HasTarget);
+                Assert.IsNull(result.Target);
+                Assert.AreEqual(PlayerAimAssistSource.None, result.Source);
+                Assert.AreEqual(expected.x, result.Direction.x, 0.001f);
+                Assert.AreEqual(expected.y, result.Direction.y, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void StickAimDirectionIgnoresInConeEnemy()
+        {
+            var root = new GameObject("M111AimConeAssistHarness");
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("Player").AddComponent<PlaceholderPlayerController>();
+                player.transform.SetParent(root.transform, false);
+                var aim = player.gameObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+
+                var closerOutOfCone = CreateEnemy(root.transform, new Vector3(1f, 0f, 0f));
+                var aimedEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 4f));
+                AddEnemy(combat, closerOutOfCone);
+                AddEnemy(combat, aimedEnemy);
+
+                var result = aim.ResolveAttackAssist(
+                    Snapshot(Vector2.zero, Vector2.up, lockPressed: false),
+                    PlayerAimLockController.ExplicitLockRangeMeters,
+                    false,
+                    0f);
+
+                Assert.IsFalse(result.HasTarget);
+                Assert.IsNull(result.Target);
+                Assert.AreEqual(PlayerAimAssistSource.None, result.Source);
+                Assert.AreEqual(0f, result.Direction.x, 0.001f);
+                Assert.AreEqual(1f, result.Direction.y, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MouseCursorAimStaysActiveAndLockInputDoesNothing()
         {
             var root = new GameObject("M111MouseAimHarness");
             var cameraObject = new GameObject("Main Camera");
@@ -183,10 +309,11 @@ namespace Hollow.Tests.EditMode
                 var northEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 2f));
                 AddEnemy(combat, northEnemy);
                 aim.TickAim(SnapshotWithPointer(new Vector2(pointer.x, pointer.y), lockPressed: true), 0.1f);
-                Assert.IsTrue(aim.IsExplicitlyLocked);
-                Assert.AreSame(northEnemy, aim.LockedEnemy);
-                Assert.AreEqual(0f, aim.AttackDirection.x, 0.001f);
-                Assert.AreEqual(1f, aim.AttackDirection.y, 0.001f);
+                Assert.IsFalse(aim.IsExplicitlyLocked);
+                Assert.IsFalse(aim.IsTargetLocked);
+                Assert.IsNull(aim.LockedEnemy);
+                Assert.AreEqual(expected.x, aim.AttackDirection.x, 0.001f);
+                Assert.AreEqual(expected.y, aim.AttackDirection.y, 0.001f);
             }
             finally
             {
@@ -367,6 +494,175 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void LockInputRangedShotUsesFacingDirection()
+        {
+            AssertRangedShotIgnoresTargetAndUsesDirection(lockPressed: true);
+        }
+
+        [Test]
+        public void AutoTargetRangedShotUsesFacingDirection()
+        {
+            AssertRangedShotIgnoresTargetAndUsesDirection(lockPressed: false);
+        }
+
+        [Test]
+        public void TripleShotKeepsSpreadWithoutTargetSteering()
+        {
+            var root = new GameObject("M111UnlockedTripleShotHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            projectilePrefab.transform.SetParent(root.transform, false);
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var playerObject = new GameObject("Player");
+                playerObject.transform.SetParent(root.transform, false);
+                var aim = playerObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+                var weapon = playerObject.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.ConfigureProjectilePassives(new ProjectilePassiveState(
+                    ProjectilePatternKind.TripleShot,
+                    1f,
+                    0f,
+                    ProjectileVisualStyle.Default));
+
+                var enemy = CreateEnemy(root.transform, new Vector3(2f, 0f, 3f));
+                AddEnemy(combat, enemy);
+
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0f);
+                Assert.IsNull(aim.LockedEnemy);
+
+                Assert.IsTrue(weapon.TryFire(Vector2.zero, 0f));
+                weapon.TickAction(0f, WeaponAttackDefinition.DefaultLight(WeaponSlot.Ranged).WindupSeconds + 0.01f);
+
+                var projectiles = new List<Transform>();
+                for (var index = 0; index < root.transform.childCount; index++)
+                {
+                    var child = root.transform.GetChild(index);
+                    if (child != null && child.name == "PlayerProjectile")
+                    {
+                        projectiles.Add(child);
+                    }
+                }
+
+                Assert.AreEqual(3, projectiles.Count);
+                var forwardProjectiles = 0;
+                var directTargetedProjectiles = 0;
+                foreach (var projectile in projectiles)
+                {
+                    if (Vector3.Dot(projectile.forward, Vector3.forward) > 0.999f)
+                    {
+                        forwardProjectiles++;
+                    }
+
+                    var expected = enemy.transform.localPosition - projectile.localPosition;
+                    expected.y = 0f;
+                    expected.Normalize();
+                    if (Vector3.Dot(projectile.forward, expected) > 0.999f)
+                    {
+                        directTargetedProjectiles++;
+                    }
+                }
+
+                Assert.AreEqual(1, forwardProjectiles);
+                Assert.AreEqual(0, directTargetedProjectiles);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void RangedShotKeepsCommittedFacingDirectionThroughWindup()
+        {
+            var root = new GameObject("M111RangedShotKeepFacingHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            projectilePrefab.transform.SetParent(root.transform, false);
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var playerObject = new GameObject("Player");
+                playerObject.transform.SetParent(root.transform, false);
+                var aim = playerObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+                var weapon = playerObject.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+
+                var primary = CreateEnemy(root.transform, new Vector3(0f, 0f, 3f));
+                var secondary = CreateEnemy(root.transform, new Vector3(6f, 0f, 0f));
+                AddEnemy(combat, primary);
+                AddEnemy(combat, secondary);
+
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0f);
+                Assert.IsNull(aim.LockedEnemy);
+
+                Assert.IsTrue(weapon.TryFire(Vector2.zero, 0f));
+                secondary.transform.localPosition = new Vector3(0f, 0f, 2f);
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.01f);
+                Assert.IsNull(aim.LockedEnemy);
+
+                var windupSeconds = WeaponAttackDefinition.DefaultLight(WeaponSlot.Ranged).WindupSeconds;
+                weapon.TickAction(0f, windupSeconds + 0.01f);
+                var projectile = root.transform.Find("PlayerProjectile");
+                Assert.IsNotNull(projectile);
+                Assert.Greater(Vector3.Dot(projectile.forward, Vector3.forward), 0.999f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void RangedShotIgnoresInvalidAndNewTargetsDuringWindup()
+        {
+            var root = new GameObject("M111RangedShotInvalidTargetIgnoredHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            projectilePrefab.transform.SetParent(root.transform, false);
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var playerObject = new GameObject("Player");
+                playerObject.transform.SetParent(root.transform, false);
+                var aim = playerObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+                var weapon = playerObject.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+
+                var primary = CreateEnemy(root.transform, new Vector3(0f, 0f, 3f));
+                var secondary = CreateEnemy(root.transform, new Vector3(6f, 0f, 0f));
+                AddEnemy(combat, primary);
+                AddEnemy(combat, secondary);
+
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0f);
+                Assert.IsNull(aim.LockedEnemy);
+
+                Assert.IsTrue(weapon.TryFire(Vector2.zero, 0f));
+                primary.gameObject.SetActive(false);
+                secondary.transform.localPosition = new Vector3(0f, 0f, 2f);
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0.01f);
+                Assert.IsNull(aim.LockedEnemy);
+
+                var windupSeconds = WeaponAttackDefinition.DefaultLight(WeaponSlot.Ranged).WindupSeconds;
+                weapon.TickAction(0f, windupSeconds + 0.01f);
+                var projectile = root.transform.Find("PlayerProjectile");
+                Assert.IsNotNull(projectile);
+                Assert.Greater(Vector3.Dot(projectile.forward, Vector3.forward), 0.999f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void PlayerMovementPreservesAnalog360Direction()
         {
             var playerObject = new GameObject("M111MovementHarness");
@@ -389,7 +685,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void GuardFacingUsesLockManualAimAndMouseAim()
+        public void GuardFacingUsesManualAimMouseAimAndBodyFacing()
         {
             var root = new GameObject("M111GuardHarness");
             var cameraObject = new GameObject("Main Camera");
@@ -439,10 +735,10 @@ namespace Hollow.Tests.EditMode
                 var lockedEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 2f));
                 AddEnemy(combat, lockedEnemy);
                 aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: true), PlayerAimLockController.MouseAimIntentMemorySeconds + 0.5f);
-                Assert.IsTrue(aim.IsExplicitlyLocked);
+                Assert.IsFalse(aim.IsExplicitlyLocked);
                 defense.Tick(SnapshotWithPointer(new Vector2(pointer.x, pointer.y), lockPressed: false, guardHeld: true), 0.01f, PlayerAimLockController.MouseAimIntentMemorySeconds + 0.6f);
-                Assert.AreEqual(0f, defense.GuardFacing.x, 0.001f);
-                Assert.AreEqual(1f, defense.GuardFacing.z, 0.001f);
+                Assert.AreEqual(expectedMouse.x, defense.GuardFacing.x, 0.001f);
+                Assert.AreEqual(expectedMouse.y, defense.GuardFacing.z, 0.001f);
             }
             finally
             {
@@ -484,14 +780,12 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void TargetLockedRollUsesRelativeOrbitAndBackstepDirections()
+        public void RollIgnoresTargetLockAndUsesMoveOrAimDirection()
         {
-            AssertAutoLockedRollDirection(Vector2.right, Vector2.right);
-            AssertAutoLockedRollDirection(Vector2.left, Vector2.left);
-            AssertAutoLockedRollDirection(Vector2.down, Vector2.down);
-            AssertAutoLockedRollDirection(Vector2.zero, Vector2.down);
-            AssertAutoLockedRollDirection(new Vector2(1f, 0.25f), Vector2.right);
-            AssertAutoLockedRollDirection(new Vector2(0.25f, 1f), Vector2.up);
+            AssertRollIgnoresTargetLockDirection(Vector2.right, Vector2.right, Vector2.right);
+            AssertRollIgnoresTargetLockDirection(Vector2.left, Vector2.right, Vector2.left);
+            AssertRollIgnoresTargetLockDirection(Vector2.down, Vector2.right, Vector2.down);
+            AssertRollIgnoresTargetLockDirection(Vector2.zero, Vector2.right, Vector2.right);
         }
 
         private static GameplayInputSnapshot Snapshot(Vector2 move, Vector2 shoot, bool lockPressed, bool guardHeld = false)
@@ -559,9 +853,49 @@ namespace Hollow.Tests.EditMode
             enemies.Add(enemy);
         }
 
-        private static void AssertAutoLockedRollDirection(Vector2 move, Vector2 expected)
+        private static void AssertRangedShotIgnoresTargetAndUsesDirection(bool lockPressed)
         {
-            var root = new GameObject("M111TargetLockedRollHarness");
+            var root = new GameObject(lockPressed ? "M111ManualLockIgnoredShotHarness" : "M111AutoTargetIgnoredShotHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            projectilePrefab.transform.SetParent(root.transform, false);
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var playerObject = new GameObject("Player");
+                playerObject.transform.SetParent(root.transform, false);
+                var aim = playerObject.AddComponent<PlayerAimLockController>();
+                aim.Configure(combat);
+                var weapon = playerObject.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                var enemy = CreateEnemy(root.transform, new Vector3(1.4f, 0f, 2.2f));
+                AddEnemy(combat, enemy);
+
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: lockPressed), 0f);
+                Assert.IsNull(aim.LockedEnemy);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+
+                Assert.IsTrue(weapon.TryFire(Vector2.up, 0f));
+                weapon.TickAction(0f, WeaponAttackDefinition.DefaultLight(WeaponSlot.Ranged).WindupSeconds + 0.01f);
+
+                var projectile = root.transform.Find("PlayerProjectile");
+                Assert.IsNotNull(projectile);
+                var expected = enemy.transform.localPosition - projectile.localPosition;
+                expected.y = 0f;
+                expected.Normalize();
+                Assert.Greater(Vector3.Dot(projectile.forward, Vector3.forward), 0.999f);
+                Assert.Less(Vector3.Dot(projectile.forward, expected), 0.999f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void AssertRollIgnoresTargetLockDirection(Vector2 move, Vector2 aimDirection, Vector2 expected)
+        {
+            var root = new GameObject("M111TargetLockIgnoredRollHarness");
             try
             {
                 var combat = root.AddComponent<RoomCombatController>();
@@ -573,10 +907,10 @@ namespace Hollow.Tests.EditMode
                 var enemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 2f));
                 AddEnemy(combat, enemy);
 
-                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: false), 0f);
-                Assert.AreEqual(PlayerTargetLockMode.Auto, aim.CurrentLockMode);
-                Assert.AreSame(enemy, aim.LockedEnemy);
-                Assert.IsTrue(weapon.TryRoll(move, Vector2.right, 0f));
+                aim.TickAim(Snapshot(Vector2.zero, Vector2.zero, lockPressed: true), 0f);
+                Assert.AreEqual(PlayerTargetLockMode.None, aim.CurrentLockMode);
+                Assert.IsNull(aim.LockedEnemy);
+                Assert.IsTrue(weapon.TryRoll(move, aimDirection, 0f));
                 Assert.AreEqual(expected.normalized.x, weapon.RollDirection.x, 0.001f);
                 Assert.AreEqual(expected.normalized.y, weapon.RollDirection.y, 0.001f);
             }

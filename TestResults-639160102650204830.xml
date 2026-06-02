@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="3" result="Failed(Child)" total="3" passed="1" failed="2" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.2737181">
+  <test-suite type="TestSuite" id="1026" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="10" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.273718" total="3" passed="1" failed="2" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1019" name="Hollow.Tests.PlayMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.PlayMode.dll" runstate="Runnable" testcasecount="10" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.269754" total="3" passed="1" failed="2" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="7328" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1020" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="10" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.269311" total="3" passed="1" failed="2" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1021" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="10" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.269016" total="3" passed="1" failed="2" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1022" name="PlayMode" fullname="Hollow.Tests.PlayMode" runstate="Runnable" testcasecount="10" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.268720" total="3" passed="1" failed="2" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1003" name="LiveManualAimProjectileInputPlayModeTests" fullname="Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests" classname="Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:44Z" duration="0.120775" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1005" name="PooledPlayerProjectileSpawnResetsDirectionSpeedLifetimeAndScale" fullname="Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests.PooledPlayerProjectileSpawnResetsDirectionSpeedLifetimeAndScale" methodname="PooledPlayerProjectileSpawnResetsDirectionSpeedLifetimeAndScale" classname="Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests" runstate="Runnable" seed="1019508165" result="Passed" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:44Z" duration="0.095648" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="180000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1004" name="WeaponUpdateFiresExpectedManualDirectionAcrossLiveInputScenarios" fullname="Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests.WeaponUpdateFiresExpectedManualDirectionAcrossLiveInputScenarios" methodname="WeaponUpdateFiresExpectedManualDirectionAcrossLiveInputScenarios" classname="Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests" runstate="Runnable" seed="1668903389" result="Failed" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:44Z" duration="0.018378" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="180000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  windows_profile_right_stick
+  Expected: not null
+  But was:  null
+]]></message>
+                  <stack-trace><![CDATA[at Hollow.Tests.PlayMode.LiveManualAimProjectileInputPlayModeTests+<RunLiveScenario>d__5.MoveNext () [0x000e7] in /Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Assets/_Hollow/Tests/PlayMode/LiveManualAimProjectileInputPlayModeTests.cs:119
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@76560ee600cb/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1010" name="ManualAimProjectileDiagnosticsPlayModeTests" fullname="Hollow.Tests.PlayMode.ManualAimProjectileDiagnosticsPlayModeTests" classname="Hollow.Tests.PlayMode.ManualAimProjectileDiagnosticsPlayModeTests" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.147046" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              <test-case id="1011" name="ManualAimingProjectilePathsStayAlignedAndReportMeasurements" fullname="Hollow.Tests.PlayMode.ManualAimProjectileDiagnosticsPlayModeTests.ManualAimingProjectilePathsStayAlignedAndReportMeasurements" methodname="ManualAimingProjectilePathsStayAlignedAndReportMeasurements" classname="Hollow.Tests.PlayMode.ManualAimProjectileDiagnosticsPlayModeTests" runstate="Runnable" seed="1828050927" result="Failed" start-time="2026-06-02 14:17:44Z" end-time="2026-06-02 14:17:45Z" duration="0.146199" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="180000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  rotated_root_mouse_cursor: localPath=0.00deg localConfigured=0.00deg worldPath=0.00deg worldForward=0.00deg localSpeed=9.29m/s worldSpeed=9.29/9.00m/s aim=ManualAim passed=False
+scaled_bounded_root_right_stick: localPath=0.00deg localConfigured=0.00deg worldPath=0.00deg worldForward=0.00deg localSpeed=8.60m/s worldSpeed=4.30/4.50m/s aim=ManualAim passed=False
+  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[at Hollow.Tests.PlayMode.ManualAimProjectileDiagnosticsPlayModeTests+<ManualAimingProjectilePathsStayAlignedAndReportMeasurements>d__4.MoveNext () [0x001f3] in /Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Assets/_Hollow/Tests/PlayMode/ManualAimProjectileDiagnosticsPlayModeTests.cs:52
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@76560ee600cb/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+Failed to create agent because there is no valid NavMesh
+Failed to create agent because there is no valid NavMesh
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+Saving results to: /Users/martinjedrzejewski/Library/Application Support/CineFit Studio/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

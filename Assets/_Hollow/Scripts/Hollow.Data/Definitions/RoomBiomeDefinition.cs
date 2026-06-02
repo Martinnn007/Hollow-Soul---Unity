@@ -11,6 +11,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private string biomeId = RoomBiomeIds.HollowThreshold;
         [SerializeField] private string displayName = "The Hollow Threshold";
         [SerializeField] private WorldBiomeTag[] biomeTags = { WorldBiomeTag.MixedThreshold };
+        [SerializeField] private BiomeLightingProfileDefinition lightingProfile;
         [SerializeField] private TextAsset[] roomTemplates = Array.Empty<TextAsset>();
         [SerializeField] private RoomBiomeMaterialOverride[] materialOverrides = Array.Empty<RoomBiomeMaterialOverride>();
         [SerializeField] private RoomBiomePrefabOverride[] prefabOverrides = Array.Empty<RoomBiomePrefabOverride>();
@@ -24,6 +25,8 @@ namespace Hollow.Data.Definitions
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? BiomeId : displayName;
 
         public IReadOnlyList<WorldBiomeTag> BiomeTags => biomeTags ?? Array.Empty<WorldBiomeTag>();
+
+        public BiomeLightingProfileDefinition LightingProfile => lightingProfile;
 
         public IReadOnlyList<TextAsset> RoomTemplates => roomTemplates ?? Array.Empty<TextAsset>();
 
@@ -64,11 +67,13 @@ namespace Hollow.Data.Definitions
             IEnumerable<TextAsset> nextRoomTemplates,
             IEnumerable<RoomBiomeMaterialOverride> nextMaterialOverrides = null,
             IEnumerable<RoomBiomePrefabOverride> nextPrefabOverrides = null,
-            IEnumerable<RoomBiomeDecorBinding> nextDecorPrefabBindings = null)
+            IEnumerable<RoomBiomeDecorBinding> nextDecorPrefabBindings = null,
+            BiomeLightingProfileDefinition nextLightingProfile = null)
         {
             biomeId = RoomBiomeIds.Normalize(nextBiomeId);
             displayName = string.IsNullOrWhiteSpace(nextDisplayName) ? biomeId : nextDisplayName.Trim();
             biomeTags = (nextBiomeTags ?? Array.Empty<WorldBiomeTag>()).Distinct().ToArray();
+            lightingProfile = nextLightingProfile;
             roomTemplates = (nextRoomTemplates ?? Array.Empty<TextAsset>()).Where(template => template != null).Distinct().ToArray();
             materialOverrides = (nextMaterialOverrides ?? Array.Empty<RoomBiomeMaterialOverride>()).ToArray();
             prefabOverrides = (nextPrefabOverrides ?? Array.Empty<RoomBiomePrefabOverride>()).ToArray();

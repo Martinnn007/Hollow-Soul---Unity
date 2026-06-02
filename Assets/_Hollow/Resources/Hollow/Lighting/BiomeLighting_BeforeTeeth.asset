@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f0e2d5b2e824f9a9fb13cc821f3e601, type: 3}
+  m_Name: BiomeLighting_BeforeTeeth
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.BiomeLightingProfileDefinition
+  profileId: before_teeth_lighting
+  biomeId: before_teeth
+  cameraBackgroundColor: {r: 0.038, g: 0.031, b: 0.021, a: 1}
+  ambientSkyColor: {r: 0.38, g: 0.315, b: 0.22, a: 1}
+  ambientEquatorColor: {r: 0.2, g: 0.16, b: 0.105, a: 1}
+  ambientGroundColor: {r: 0.075, g: 0.064, b: 0.044, a: 1}
+  ambientIntensity: 0.96
+  fogEnabled: 1
+  fogColor: {r: 0.18, g: 0.15, b: 0.095, a: 1}
+  fogMode: 3
+  fogDensity: 0.01
+  linearFogStart: 0
+  linearFogEnd: 32
+  skyboxMaterial: {fileID: 0}
+  reflectionIntensity: 0.58
+  keyLightColor: {r: 1, g: 0.82, b: 0.52, a: 1}
+  keyLightEulerAngles: {x: 54, y: -30, z: 0}
+  keyLightIntensity: 1.04
+  keyLightCastsShadows: 1
+  keyLightShadowStrength: 0.62
+  fillLightEnabled: 1
+  fillLightColor: {r: 0.62, g: 0.5, b: 0.34, a: 1}
+  fillLightLocalPosition: {x: -4.8, y: 4.6, z: -3.2}
+  fillLightIntensity: 0.5
+  fillLightRange: 16
+  rimLightEnabled: 1
+  rimLightColor: {r: 1, g: 0.92, b: 0.72, a: 1}
+  rimLightLocalPosition: {x: 4.8, y: 3.4, z: 4.2}
+  rimLightIntensity: 0.34
+  rimLightRange: 12
+  primaryAccentColor: {r: 1, g: 0.86, b: 0.56, a: 1}
+  secondaryAccentColor: {r: 0.74, g: 0.56, b: 0.32, a: 1}
+  bloomTint: {r: 1, g: 0.88, b: 0.62, a: 1}
+  maxActiveLocalLights: 7
+  maxShadowedLocalLights: 1
+  maxPropLights: 4
+  maxDynamicEffectLights: 2
+  maxActiveParticleSystems: 40
+  gpuFrameP95BudgetMs: 16.67

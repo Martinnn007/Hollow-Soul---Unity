@@ -31,6 +31,14 @@ namespace Hollow.Combat
         private GameObject presentationVisual;
         private bool countedActive;
 
+        public Vector3 ConfiguredLocalDirection => localDirection.sqrMagnitude > 0.001f ? localDirection.normalized : Vector3.forward;
+
+        public float ConfiguredSpeedMetersPerSecond => speedMetersPerSecond;
+
+        public float ConfiguredLifetimeSeconds => lifetimeSeconds;
+
+        public float AgeSeconds => ageSeconds;
+
         public void Configure(RoomRuntimeRoot room, RoomCombatController controller, Vector3 direction)
         {
             Configure(room, controller, direction, 0);
@@ -115,7 +123,7 @@ namespace Hollow.Combat
         private bool TickInternal(float deltaTime)
         {
             ageSeconds += Mathf.Max(0f, deltaTime);
-            if (CheckImpact())
+            if (CheckImpact(transform.localPosition, transform.localPosition))
             {
                 return false;
             }
@@ -129,22 +137,25 @@ namespace Hollow.Combat
             var movement = localDirection * speedMetersPerSecond * Mathf.Max(0f, deltaTime);
             var stepCount = Mathf.Max(1, Mathf.CeilToInt(movement.magnitude / CombatFeelTuning.ProjectileSubstepMeters));
             var increment = movement / stepCount;
+            var previousPosition = transform.localPosition;
             for (var index = 0; index < stepCount; index++)
             {
-                transform.localPosition += increment;
-                if (CheckImpact())
+                var nextPosition = previousPosition + increment;
+                if (CheckImpact(previousPosition, nextPosition))
                 {
                     return false;
                 }
+
+                transform.localPosition = previousPosition = nextPosition;
             }
 
             return true;
         }
 
-        private bool CheckImpact()
+        private bool CheckImpact(Vector3 fromLocalPosition, Vector3 toLocalPosition)
         {
             M136PerformanceOperationCounters.ReportProjectileCollisionCheck();
-            var enemy = combatController != null ? combatController.FindEnemyHit(transform.localPosition, hitRadiusMeters) : null;
+            var enemy = combatController != null ? combatController.FindEnemyHit(fromLocalPosition, toLocalPosition, hitRadiusMeters) : null;
             if (enemy != null)
             {
                 var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
@@ -167,7 +178,7 @@ namespace Hollow.Combat
                 return true;
             }
 
-            var destructible = combatController != null ? combatController.FindDestructibleHit(transform.localPosition, hitRadiusMeters) : null;
+            var destructible = combatController != null ? combatController.FindDestructibleHit(fromLocalPosition, toLocalPosition, hitRadiusMeters) : null;
             if (destructible != null)
             {
                 destructible.TryApplyHit(damage, gameObject);
@@ -175,13 +186,13 @@ namespace Hollow.Combat
                 return true;
             }
 
-            if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            if (RoomLocalCollision.IsOutsideBounds(roomRuntimeRoot, toLocalPosition, hitRadiusMeters))
             {
                 DestroyProjectile(ProjectileDespawnReason.BoundsExit);
                 return true;
             }
 
-            if (RoomLocalCollision.IntersectsProjectileBlocker(roomRuntimeRoot, transform.localPosition, hitRadiusMeters))
+            if (RoomLocalCollision.IntersectsProjectileBlocker(roomRuntimeRoot, toLocalPosition, hitRadiusMeters))
             {
                 DestroyProjectile(ProjectileDespawnReason.ObstacleHit);
                 return true;

@@ -15,6 +15,7 @@ MonoBehaviour:
   biomeId: before_teeth
   displayName: Before Teeth
   biomeTags: 0200000001000000
+  lightingProfile: {fileID: 11400000, guid: d24ff41e23ab4e338dbed9c4b953d208, type: 2}
   roomTemplates:
   - {fileID: 4900000, guid: c1d5c0184011f4e2c1c3c94729eeb38a, type: 3}
   - {fileID: 4900000, guid: 6eca652acd526bfda1be353de31f0ac9, type: 3}

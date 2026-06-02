@@ -215,6 +215,8 @@ namespace Hollow.Combat
 
         public int SpawnIndex => spawnIndex;
 
+        public bool IsRootedStaticEnemy => IsStaticRootedBehavior(behaviorId);
+
         public float SpeedMetersPerSecond => speedMetersPerSecond;
 
         public int ContactDamage => contactDamage;
@@ -853,6 +855,7 @@ namespace Hollow.Combat
                 roomRuntimeRoot.HasNavMeshBake &&
                 movementMode == EnemyMovementMode.Grounded &&
                 speedMetersPerSecond > 0f &&
+                !IsRootedStaticEnemy &&
                 bossRuntime == null &&
                 bossDefinition == null &&
                 archetypeId != EnemyArchetypeId.Boss;
@@ -887,6 +890,13 @@ namespace Hollow.Combat
 
         private void ApplyNavigationMove(Vector3 resolvedLocalPosition, string reason)
         {
+            if (IsRootedStaticEnemy)
+            {
+                lastNavigationMoveRequiresAgentSync = false;
+                StopNavMeshAgent(clearPath: true);
+                return;
+            }
+
             transform.localPosition = resolvedLocalPosition;
             if (lastNavigationMoveRequiresAgentSync)
             {
@@ -1792,6 +1802,11 @@ namespace Hollow.Combat
 
         private bool TryStartSpacingReset(string actionId, EnemyResolvedActionSpacing spacing, float timeSeconds)
         {
+            if (IsRootedStaticEnemy)
+            {
+                return false;
+            }
+
             var key = string.IsNullOrWhiteSpace(actionId) ? spacing.ActionId : actionId;
             if (!string.Equals(lastSpacingResetActionId, key, StringComparison.Ordinal))
             {
@@ -1813,7 +1828,7 @@ namespace Hollow.Combat
 
         private void MoveSpacingReset(float deltaTime, float speedMultiplier, EnemyResolvedActionSpacing spacing)
         {
-            if (playerController == null)
+            if (IsRootedStaticEnemy || playerController == null)
             {
                 return;
             }
@@ -2792,8 +2807,23 @@ namespace Hollow.Combat
                 or EnemyBehaviorId.RailSpider;
         }
 
+        private static bool IsStaticRootedBehavior(EnemyBehaviorId id)
+        {
+            return id is EnemyBehaviorId.TurretShooter
+                or EnemyBehaviorId.SpittingPod
+                or EnemyBehaviorId.RepeaterTurret
+                or EnemyBehaviorId.GraveLantern
+                or EnemyBehaviorId.OctantSentry
+                or EnemyBehaviorId.MinigunTurret;
+        }
+
         private bool TryReserveAttackBudget(float timeSeconds)
         {
+            if (IsRootedStaticEnemy)
+            {
+                return true;
+            }
+
             return roomCombatController == null || roomCombatController.TryReserveEnemyAttack(this, timeSeconds);
         }
 
@@ -3767,6 +3797,12 @@ namespace Hollow.Combat
                 return true;
             }
 
+            if (behaviorId == EnemyBehaviorId.SpittingPod)
+            {
+                var lobRange = Mathf.Max(Definition.AttackRangeMeters, PreferredRangeMaxMeters);
+                return HasActiveInvestigation(timeSeconds) && distanceToPlayer <= lobRange;
+            }
+
             return IsWithinSentinelApproachRange(distanceToPlayer);
         }
 
@@ -3782,6 +3818,11 @@ namespace Hollow.Combat
 
         private void TickSentinelHold(float deltaTime)
         {
+            if (IsRootedStaticEnemy)
+            {
+                return;
+            }
+
             var homeDelta = homeLocalPosition - transform.localPosition;
             homeDelta.y = 0f;
             if (homeDelta.sqrMagnitude <= 0.0025f)
@@ -4277,7 +4318,7 @@ namespace Hollow.Combat
 
         private void BeginRecoveryMovement(EnemyAttackProfileDefinition profile)
         {
-            if (bossRuntime != null || bossDefinition != null || archetypeId == EnemyArchetypeId.Boss)
+            if (IsRootedStaticEnemy || bossRuntime != null || bossDefinition != null || archetypeId == EnemyArchetypeId.Boss)
             {
                 recoveryMovementRemainingMeters = 0f;
                 recoveryMovementActionId = string.Empty;
@@ -4293,7 +4334,8 @@ namespace Hollow.Combat
 
         private void TickRecoveryMovement(float deltaTime, EnemyAttackProfileDefinition profile)
         {
-            if (bossRuntime != null ||
+            if (IsRootedStaticEnemy ||
+                bossRuntime != null ||
                 playerController == null ||
                 recoveryMovementRemainingMeters <= 0.001f ||
                 recoveryMovementMode == EnemySpacingRecoveryMode.Planted)
@@ -4363,6 +4405,11 @@ namespace Hollow.Combat
 
         private void MoveActiveCharge(float deltaTime)
         {
+            if (IsRootedStaticEnemy)
+            {
+                return;
+            }
+
             var direction = activeChargeDirection.sqrMagnitude > 0.001f ? activeChargeDirection.normalized : TelegraphDirection;
             direction.y = 0f;
             if (direction.sqrMagnitude <= 0.001f)
@@ -4377,6 +4424,11 @@ namespace Hollow.Combat
 
         private void MoveActiveLunge(float deltaTime, float timeSeconds)
         {
+            if (IsRootedStaticEnemy)
+            {
+                return;
+            }
+
             var direction = activeLungeDirection.sqrMagnitude > 0.001f ? activeLungeDirection.normalized : TelegraphDirection;
             if (direction.sqrMagnitude <= 0.001f)
             {
@@ -4552,6 +4604,17 @@ namespace Hollow.Combat
             EnemyNavigationIntent intent = EnemyNavigationIntent.None,
             Vector3? finalGoalLocalPosition = null)
         {
+            if (IsRootedStaticEnemy)
+            {
+                if (awarenessState is EnemyAwarenessState.Alerted or EnemyAwarenessState.Engaged)
+                {
+                    FacePlayer();
+                }
+
+                StopNavMeshAgent(clearPath: true);
+                return;
+            }
+
             direction.y = 0f;
             var movementDirection = allowSteering ? ResolveLocalSteeringDirection(direction) : direction.normalized;
             if (movementDirection.sqrMagnitude <= 0.01f)
@@ -5549,25 +5612,11 @@ namespace Hollow.Combat
 
         private void FireProjectile(Vector3 direction, EnemyAttackProfileDefinition profile)
         {
-            var projectileObject = enemyProjectilePrefab != null
-                ? Hollow.Core.HollowRuntimePool.Rent(enemyProjectilePrefab, transform.parent)
-                : Hollow.Core.HollowRuntimePool.RentPrimitive("EnemyProjectile.Fallback", PrimitiveType.Sphere, transform.parent);
+            var projectileObject = RentEnemyProjectileObject();
             projectileObject.name = $"EnemyProjectile.{Definition.SpawnKind}";
             projectileObject.transform.SetParent(transform.parent, worldPositionStays: false);
             projectileObject.transform.localPosition = transform.localPosition + direction.normalized * (radiusMeters + 0.22f) + new Vector3(0f, 0.35f, 0f);
             projectileObject.transform.localScale = Vector3.one * 0.22f;
-            var playerProjectile = projectileObject.GetComponent<ProjectileController>();
-            if (playerProjectile != null)
-            {
-                if (Application.isPlaying)
-                {
-                    Destroy(playerProjectile);
-                }
-                else
-                {
-                    DestroyImmediate(playerProjectile);
-                }
-            }
 
             var collider = projectileObject.GetComponent<Collider>();
             if (collider != null)
@@ -5600,6 +5649,22 @@ namespace Hollow.Combat
             {
                 projectile.ConfigureThreat(behaviorId == EnemyBehaviorId.BossWarden ? DamageThreatKind.StrongProjectile : DamageThreatKind.Light);
             }
+        }
+
+        private GameObject RentEnemyProjectileObject()
+        {
+            if (enemyProjectilePrefab != null && enemyProjectilePrefab.GetComponent<ProjectileController>() == null)
+            {
+                var projectileObject = Hollow.Core.HollowRuntimePool.Rent(enemyProjectilePrefab, transform.parent);
+                if (projectileObject.GetComponent<ProjectileController>() == null)
+                {
+                    return projectileObject;
+                }
+
+                Hollow.Core.HollowRuntimePool.Return(projectileObject);
+            }
+
+            return Hollow.Core.HollowRuntimePool.RentPrimitive("EnemyProjectile.Fallback", PrimitiveType.Sphere, transform.parent);
         }
 
         private EnemyAttackProfileDefinition ResolveContactAttackProfile()
@@ -5733,6 +5798,11 @@ namespace Hollow.Combat
 
         private void SeparateFromPlayerBump()
         {
+            if (IsRootedStaticEnemy)
+            {
+                return;
+            }
+
             var away = transform.localPosition - playerController.transform.localPosition;
             away.y = 0f;
             if (away.sqrMagnitude <= 0.001f)

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="17" result="Passed" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.2849192">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="973" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.284919" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2125" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="972" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.279356" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="6909" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2126" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="972" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.278736" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2127" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="972" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.278229" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="2128" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="972" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.277664" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1084" name="ManualAimInputReaderTests" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.042492" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1087" name="GamepadRightShoulderAndRightStickProduceAttackAndAimSnapshot" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests.GamepadRightShoulderAndRightStickProduceAttackAndAimSnapshot" methodname="GamepadRightShoulderAndRightStickProduceAttackAndAimSnapshot" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" seed="2058753050" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.026754" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1085" name="KeyboardLightAttackProducesSnapshotPress" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests.KeyboardLightAttackProducesSnapshotPress" methodname="KeyboardLightAttackProducesSnapshotPress" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" seed="1169989536" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.002675" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1086" name="MouseLightAttackPreservesPointerAndAimIntent" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests.MouseLightAttackPreservesPointerAndAimIntent" methodname="MouseLightAttackPreservesPointerAndAimIntent" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" seed="363321204" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.003788" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1088" name="ManualAimProjectileDirectionTests" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.091336" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1093" name="BodyFacingShotFiresAlongResolvedFacingDirection" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.BodyFacingShotFiresAlongResolvedFacingDirection" methodname="BodyFacingShotFiresAlongResolvedFacingDirection" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="1275734659" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.079409" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1096" name="DrawAndReleaseKeepsReleaseDirectionThroughWindup" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.DrawAndReleaseKeepsReleaseDirectionThroughWindup" methodname="DrawAndReleaseKeepsReleaseDirectionThroughWindup" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="2020613839" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.003806" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1094" name="ManualStickShotFiresAlongRequestedDirection" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.ManualStickShotFiresAlongRequestedDirection" methodname="ManualStickShotFiresAlongRequestedDirection" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="381200019" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.000459" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1092" name="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.004082" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1089" name="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots(0.0f,1.0f)" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots(0.0f,1.0f)" methodname="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="2006122021" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.003067" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1090" name="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots(45.0f,1.0f)" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots(45.0f,1.0f)" methodname="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="1490593427" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.000141" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1091" name="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots(90.0f,0.5f)" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots(90.0f,0.5f)" methodname="MouseAimProjectionUsesSharedGameplayProjectionForTransformedRoots" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="591922734" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.000091" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1095" name="TripleShotPreservesSpreadAroundManualBaseDirection" fullname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests.TripleShotPreservesSpreadAroundManualBaseDirection" methodname="TripleShotPreservesSpreadAroundManualBaseDirection" classname="Hollow.Tests.EditMode.ManualAimProjectileDirectionTests" runstate="Runnable" seed="1525029638" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.001342" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1097" name="ManualAimProjectileStabilityTests" fullname="Hollow.Tests.EditMode.ManualAimProjectileStabilityTests" classname="Hollow.Tests.EditMode.ManualAimProjectileStabilityTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.002703" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1098" name="ProjectileTravelEqualsConfiguredSpeedAcrossFixedDeltas" fullname="Hollow.Tests.EditMode.ManualAimProjectileStabilityTests.ProjectileTravelEqualsConfiguredSpeedAcrossFixedDeltas" methodname="ProjectileTravelEqualsConfiguredSpeedAcrossFixedDeltas" classname="Hollow.Tests.EditMode.ManualAimProjectileStabilityTests" runstate="Runnable" seed="975824880" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.001647" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1099" name="ProjectileTravelEqualsConfiguredSpeedAcrossVariableDeltas" fullname="Hollow.Tests.EditMode.ManualAimProjectileStabilityTests.ProjectileTravelEqualsConfiguredSpeedAcrossVariableDeltas" methodname="ProjectileTravelEqualsConfiguredSpeedAcrossVariableDeltas" classname="Hollow.Tests.EditMode.ManualAimProjectileStabilityTests" runstate="Runnable" seed="1249142126" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.000291" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1100" name="ManualAimProjectionTests" fullname="Hollow.Tests.EditMode.ManualAimProjectionTests" classname="Hollow.Tests.EditMode.ManualAimProjectionTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.010116" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1104" name="NoCameraFallbackKeepsRawScreenVector" fullname="Hollow.Tests.EditMode.ManualAimProjectionTests.NoCameraFallbackKeepsRawScreenVector" methodname="NoCameraFallbackKeepsRawScreenVector" classname="Hollow.Tests.EditMode.ManualAimProjectionTests" runstate="Runnable" seed="1085941058" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.001509" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1103" name="StraightDownCameraScreenUpProjectsToWorldForward" fullname="Hollow.Tests.EditMode.ManualAimProjectionTests.StraightDownCameraScreenUpProjectsToWorldForward" methodname="StraightDownCameraScreenUpProjectsToWorldForward" classname="Hollow.Tests.EditMode.ManualAimProjectionTests" runstate="Runnable" seed="1951964089" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.003067" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1102" name="VisionOSBoundedYawAndScaleProjectsIntoGameplayRoot" fullname="Hollow.Tests.EditMode.ManualAimProjectionTests.VisionOSBoundedYawAndScaleProjectsIntoGameplayRoot" methodname="VisionOSBoundedYawAndScaleProjectsIntoGameplayRoot" classname="Hollow.Tests.EditMode.ManualAimProjectionTests" runstate="Runnable" seed="1545555125" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.002566" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1101" name="WindowsProfileCameraYawPitchUsesCameraUpForScreenY" fullname="Hollow.Tests.EditMode.ManualAimProjectionTests.WindowsProfileCameraYawPitchUsesCameraUpForScreenY" methodname="WindowsProfileCameraYawPitchUsesCameraUpForScreenY" classname="Hollow.Tests.EditMode.ManualAimProjectionTests" runstate="Runnable" seed="819805683" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.001948" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1180" name="Milestone111PlayerAimLockTests" fullname="Hollow.Tests.EditMode.Milestone111PlayerAimLockTests" classname="Hollow.Tests.EditMode.Milestone111PlayerAimLockTests" runstate="Runnable" testcasecount="20" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.122645" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1198" name="GuardFacingUsesManualAimMouseAimAndBodyFacing" fullname="Hollow.Tests.EditMode.Milestone111PlayerAimLockTests.GuardFacingUsesManualAimMouseAimAndBodyFacing" methodname="GuardFacingUsesManualAimMouseAimAndBodyFacing" classname="Hollow.Tests.EditMode.Milestone111PlayerAimLockTests" runstate="Runnable" seed="1674229286" result="Passed" start-time="2026-06-02 14:17:15Z" end-time="2026-06-02 14:17:15Z" duration="0.121117" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/CineFit Studio/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -64,6 +64,24 @@ namespace Hollow.Tests.EditMode
                 Assert.IsFalse(doorNavigation.CarvingActive, doorNavigation.StatusSummary);
                 Assert.IsFalse(obstacle.enabled);
                 StringAssert.Contains("active", doorNavigation.LastReason);
+
+                room.SetDoorVisualStateById("east_0", RoomDoorVisualState.Locked);
+                Assert.IsTrue(doorNavigation.CarvingActive, doorNavigation.StatusSummary);
+
+                room.SetDoorVisualStateById("east_0", RoomDoorVisualState.Cleared);
+                room.SetDoorVisualStateById("east_0", RoomDoorVisualState.Cleared);
+                Assert.IsFalse(doorNavigation.CarvingActive, doorNavigation.StatusSummary);
+                Assert.IsFalse(obstacle.enabled);
+                StringAssert.Contains("cleared", doorNavigation.LastReason);
+
+                room.SetDoorVisualStateById("east_0", RoomDoorVisualState.Unavailable);
+                Assert.IsTrue(doorNavigation.CarvingActive, doorNavigation.StatusSummary);
+
+                room.SetDoorVisualState("east", RoomDoorVisualState.Active);
+                room.SetDoorVisualState("east", RoomDoorVisualState.Active);
+                Assert.IsFalse(doorNavigation.CarvingActive, doorNavigation.StatusSummary);
+                Assert.IsFalse(obstacle.enabled);
+                StringAssert.Contains("active", doorNavigation.LastReason);
             }
             finally
             {

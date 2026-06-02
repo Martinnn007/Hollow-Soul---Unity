@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="3" result="Passed" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.1084836">
+  <test-suite type="TestSuite" id="1000" name="Hollow Soul" fullname="Hollow Soul" runstate="Runnable" testcasecount="967" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.108484" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2117" name="Hollow.Tests.EditMode.dll" fullname="/Users/martinjedrzejewski/Documents/GitHub/Unity/Hollow Soul - Unity/Library/ScriptAssemblies/Hollow.Tests.EditMode.dll" runstate="Runnable" testcasecount="966" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.103652" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="3640" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2118" name="Hollow" fullname="Hollow" runstate="Runnable" testcasecount="966" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.101913" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2119" name="Tests" fullname="Hollow.Tests" runstate="Runnable" testcasecount="966" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.100187" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="2120" name="EditMode" fullname="Hollow.Tests.EditMode" runstate="Runnable" testcasecount="966" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.098974" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1084" name="ManualAimInputReaderTests" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.065356" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1087" name="GamepadRightShoulderAndRightStickProduceAttackAndAimSnapshot" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests.GamepadRightShoulderAndRightStickProduceAttackAndAimSnapshot" methodname="GamepadRightShoulderAndRightStickProduceAttackAndAimSnapshot" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" seed="1139825408" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.035679" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1085" name="KeyboardLightAttackProducesSnapshotPress" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests.KeyboardLightAttackProducesSnapshotPress" methodname="KeyboardLightAttackProducesSnapshotPress" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" seed="2016113813" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.006946" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1086" name="MouseLightAttackPreservesPointerAndAimIntent" fullname="Hollow.Tests.EditMode.ManualAimInputReaderTests.MouseLightAttackPreservesPointerAndAimIntent" methodname="MouseLightAttackPreservesPointerAndAimIntent" classname="Hollow.Tests.EditMode.ManualAimInputReaderTests" runstate="Runnable" seed="1727871927" result="Passed" start-time="2026-06-02 13:52:01Z" end-time="2026-06-02 13:52:01Z" duration="0.010694" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/martinjedrzejewski/Library/Application Support/CineFit Studio/Hollow Soul/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
