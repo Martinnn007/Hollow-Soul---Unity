@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Hollow.Combat
 {
+    [DefaultExecutionOrder(50)]
     public sealed class PlayerHeldWeaponVisualController : MonoBehaviour
     {
         public const string MeleeHandSocketName = "MainCharacter_RightHandWeaponSocket";
@@ -11,23 +12,33 @@ namespace Hollow.Combat
         public const string MeleeHolsterSocketName = "MainCharacter_BackMeleeHolsterSocket";
         public const string RangedHolsterSocketName = "MainCharacter_HipRangedHolsterSocket";
         public const string RangedMuzzleSocketName = "MainCharacter_RangedMuzzleSocket";
+        public const string ShieldForearmSocketName = "MainCharacter_LeftForearmShieldSocket";
+        public const string ShieldBackSocketName = "MainCharacter_BackShieldSocket";
 
         public static readonly Vector3 DefaultMeleeSocketLocalPosition = new(0.03f, 0f, 0.02f);
         public static readonly Vector3 DefaultMeleeSocketLocalEuler = new(90f, 0f, 0f);
         public static readonly Vector3 DefaultMeleeSocketLocalScale = new(0.75f, 0.75f, 0.75f);
-        public static readonly Vector3 DefaultRangedHandSocketLocalPosition = new(0.28f, 0.74f, 0.44f);
+        public static readonly Vector3 DefaultRangedHandSocketLocalPosition = new(0.045f, -0.015f, 0.025f);
         public static readonly Vector3 DefaultRangedHandSocketLocalEuler = Vector3.zero;
         public static readonly Vector3 DefaultRangedHandSocketLocalScale = Vector3.one;
         public static readonly Vector3 DefaultMeleeHolsterSocketLocalPosition = new(-0.22f, 0.98f, -0.18f);
         public static readonly Vector3 DefaultMeleeHolsterSocketLocalEuler = new(35f, -35f, 145f);
         public static readonly Vector3 DefaultMeleeHolsterSocketLocalScale = new(0.72f, 0.72f, 0.72f);
-        public static readonly Vector3 DefaultRangedHolsterSocketLocalPosition = new(0.32f, 0.72f, -0.18f);
+        public static readonly Vector3 DefaultRangedHolsterSocketLocalPosition = new(0.32f, 1.08f, -0.18f);
         public static readonly Vector3 DefaultRangedHolsterSocketLocalEuler = new(0f, 90f, 18f);
         public static readonly Vector3 DefaultRangedHolsterSocketLocalScale = new(0.78f, 0.78f, 0.78f);
+        public static readonly Vector3 DefaultShieldForearmSocketLocalPosition = new(0.015f, 0.02f, 0.02f);
+        public static readonly Vector3 DefaultShieldForearmSocketLocalEuler = new(0f, 0f, 0f);
+        public static readonly Vector3 DefaultShieldForearmSocketLocalScale = new(0.72f, 0.72f, 0.72f);
+        public static readonly Vector3 DefaultShieldBackSocketLocalPosition = new(0f, 0.08f, -0.13f);
+        public static readonly Vector3 DefaultShieldBackSocketLocalEuler = new(0f, 180f, 0f);
+        public static readonly Vector3 DefaultShieldBackSocketLocalScale = new(0.82f, 0.82f, 0.82f);
 
         private const string MeshyVisualRootName = "MainCharacter_VisualRoot";
         private const string MeshyModelName = "MainCharacter_MeshyModel";
         private const string RightHandBoneName = "RightHand";
+        private const string LeftForearmBoneName = "LeftForeArm";
+        private const string BackShieldBoneName = "Spine02";
         private const float LightAttackDurationSeconds = 0.14f;
         private const float HeavyAttackDurationSeconds = 0.22f;
         private const float MuzzleFlashDurationSeconds = 0.1f;
@@ -38,6 +49,8 @@ namespace Hollow.Combat
         [SerializeField] private Transform meleeHolsterSocket;
         [SerializeField] private Transform rangedHolsterSocket;
         [SerializeField] private Transform rangedMuzzleSocket;
+        [SerializeField] private Transform shieldForearmSocket;
+        [SerializeField] private Transform shieldBackSocket;
         [SerializeField] private Vector3 meleeSocketLocalPosition = DefaultMeleeSocketLocalPosition;
         [SerializeField] private Vector3 meleeSocketLocalEuler = DefaultMeleeSocketLocalEuler;
         [SerializeField] private Vector3 meleeSocketLocalScale = DefaultMeleeSocketLocalScale;
@@ -46,6 +59,7 @@ namespace Hollow.Combat
         private GameObject activeVisual;
         private GameObject holsteredMeleeVisual;
         private GameObject holsteredRangedVisual;
+        private GameObject equippedShieldVisual;
         private GameObject muzzleFlash;
         private WeaponSlot visibleSlot;
         private bool hasVisibleSlot;
@@ -65,6 +79,12 @@ namespace Hollow.Combat
 
         public Transform RangedHolsterSocket => rangedHolsterSocket;
 
+        public Transform ShieldForearmSocket => shieldForearmSocket;
+
+        public Transform ShieldBackSocket => shieldBackSocket;
+
+        public Transform CurrentShieldSocket => equippedShieldVisual != null ? equippedShieldVisual.transform.parent : null;
+
         public Transform ActiveMuzzleTransform => rangedMuzzleSocket;
 
         public GameObject ActiveWeaponVisual => activeVisual;
@@ -73,11 +93,20 @@ namespace Hollow.Combat
 
         public GameObject HolsteredRangedVisual => holsteredRangedVisual;
 
+        public GameObject EquippedShieldVisual => equippedShieldVisual;
+
         public bool IsUsingHandAttachedMeleeVisual =>
             visibleSlot == WeaponSlot.Melee &&
             activeVisual != null &&
             meleeHandSocket != null &&
             activeVisual.transform.parent == meleeHandSocket;
+
+        public bool IsUsingHandAttachedRangedVisual =>
+            visibleSlot == WeaponSlot.Ranged &&
+            activeVisual != null &&
+            rangedHandSocket != null &&
+            activeVisual.transform.parent == rangedHandSocket &&
+            IsRangedHandSocketHandAttached();
 
         public void Bind(PlayerWeaponController nextWeaponController)
         {
@@ -117,11 +146,32 @@ namespace Hollow.Combat
             Transform nextRangedHolsterSocket,
             Transform nextRangedMuzzleSocket)
         {
+            BindWeaponSockets(
+                nextMeleeHandSocket,
+                nextRangedHandSocket,
+                nextMeleeHolsterSocket,
+                nextRangedHolsterSocket,
+                nextRangedMuzzleSocket,
+                null,
+                null);
+        }
+
+        public void BindWeaponSockets(
+            Transform nextMeleeHandSocket,
+            Transform nextRangedHandSocket,
+            Transform nextMeleeHolsterSocket,
+            Transform nextRangedHolsterSocket,
+            Transform nextRangedMuzzleSocket,
+            Transform nextShieldForearmSocket,
+            Transform nextShieldBackSocket)
+        {
             meleeHandSocket = nextMeleeHandSocket;
             rangedHandSocket = nextRangedHandSocket;
             meleeHolsterSocket = nextMeleeHolsterSocket;
             rangedHolsterSocket = nextRangedHolsterSocket;
             rangedMuzzleSocket = nextRangedMuzzleSocket;
+            shieldForearmSocket = nextShieldForearmSocket;
+            shieldBackSocket = nextShieldBackSocket;
             ApplyKnownSocketDefaults();
             if (weaponController != null || hasVisibleSlot || activeVisual != null)
             {
@@ -159,7 +209,69 @@ namespace Hollow.Combat
             currentFacing = ResolveVisualFacing();
             TickAttack(Time.deltaTime);
             TickMuzzleFlash(Time.deltaTime);
+        }
+
+        private void LateUpdate()
+        {
             ApplyPose();
+        }
+
+        public void ForceRangedAimPose(Vector2 direction)
+        {
+            currentFacing = PlayerWeaponVisualPosePolicy.SafeAim(direction);
+            if (visibleSlot == WeaponSlot.Ranged)
+            {
+                attackFacing = currentFacing;
+            }
+
+            ApplyPose();
+        }
+
+        public bool TryResolveRangedMuzzlePose(
+            Vector2 aimDirection,
+            float lateralOffsetMeters,
+            Transform localSpace,
+            out Vector3 localOrigin,
+            out Vector2 localDirection)
+        {
+            localOrigin = default;
+            localDirection = PlayerWeaponVisualPosePolicy.SafeAim(aimDirection);
+            EnsureRoot();
+            EnsureSockets();
+            if (rangedMuzzleSocket == null)
+            {
+                return false;
+            }
+
+            ForceRangedAimPose(aimDirection);
+            var forwardWorld = rangedMuzzleSocket.forward;
+            forwardWorld.y = 0f;
+            if (forwardWorld.sqrMagnitude < 0.000001f)
+            {
+                forwardWorld = LocalPlanarToWorld(localDirection);
+            }
+            else
+            {
+                forwardWorld.Normalize();
+            }
+
+            var sideWorld = new Vector3(-forwardWorld.z, 0f, forwardWorld.x);
+            if (sideWorld.sqrMagnitude > 0.000001f)
+            {
+                sideWorld.Normalize();
+            }
+
+            var worldOrigin = rangedMuzzleSocket.position + sideWorld * lateralOffsetMeters;
+            localOrigin = localSpace != null ? localSpace.InverseTransformPoint(worldOrigin) : worldOrigin;
+            var localForward = localSpace != null ? localSpace.InverseTransformDirection(forwardWorld) : forwardWorld;
+            localForward.y = 0f;
+            if (localForward.sqrMagnitude > 0.000001f)
+            {
+                localForward.Normalize();
+                localDirection = new Vector2(localForward.x, localForward.z);
+            }
+
+            return true;
         }
 
         private void HandleActiveWeaponSlotChanged(WeaponSlot slot)
@@ -207,6 +319,7 @@ namespace Hollow.Combat
             EnsureSockets();
             var nextSlot = weaponController != null ? weaponController.ActiveWeaponSlot : WeaponSlot.Ranged;
             var nextParent = ActiveParentFor(nextSlot);
+            EnsureShieldVisual(ShieldParentFor(nextSlot));
             if (nextParent == null)
             {
                 return;
@@ -264,20 +377,52 @@ namespace Hollow.Combat
         {
             EnsureRoot();
             meleeHandSocket ??= FindDescendant(transform, MeleeHandSocketName);
+            var rightHand = FindCharacterBone(RightHandBoneName);
             if (meleeHandSocket == null)
             {
-                var rightHand = FindRightHandBone();
                 meleeHandSocket = CreateSocket(rightHand != null ? rightHand : heldRoot, MeleeHandSocketName);
+            }
+            else if (rightHand != null && meleeHandSocket.parent != rightHand)
+            {
+                meleeHandSocket.SetParent(rightHand, false);
             }
 
             rangedHandSocket ??= FindDescendant(transform, RangedHandSocketName);
-            rangedHandSocket ??= CreateSocket(heldRoot, RangedHandSocketName);
+            if (rangedHandSocket == null)
+            {
+                rangedHandSocket = CreateSocket(rightHand != null ? rightHand : heldRoot, RangedHandSocketName);
+            }
+            else if (rightHand != null && rangedHandSocket.parent != rightHand)
+            {
+                rangedHandSocket.SetParent(rightHand, false);
+            }
 
             var visualRoot = FindDescendant(transform, MeshyVisualRootName) ?? transform;
             meleeHolsterSocket ??= FindDescendant(transform, MeleeHolsterSocketName);
             meleeHolsterSocket ??= CreateSocket(visualRoot, MeleeHolsterSocketName);
             rangedHolsterSocket ??= FindDescendant(transform, RangedHolsterSocketName);
             rangedHolsterSocket ??= CreateSocket(visualRoot, RangedHolsterSocketName);
+            var leftForearm = FindCharacterBone(LeftForearmBoneName);
+            shieldForearmSocket ??= FindDescendant(transform, ShieldForearmSocketName);
+            if (shieldForearmSocket == null)
+            {
+                shieldForearmSocket = CreateSocket(leftForearm != null ? leftForearm : visualRoot, ShieldForearmSocketName);
+            }
+            else if (leftForearm != null && shieldForearmSocket.parent != leftForearm)
+            {
+                shieldForearmSocket.SetParent(leftForearm, false);
+            }
+
+            var backShieldBone = FindCharacterBone(BackShieldBoneName);
+            shieldBackSocket ??= FindDescendant(transform, ShieldBackSocketName);
+            if (shieldBackSocket == null)
+            {
+                shieldBackSocket = CreateSocket(backShieldBone != null ? backShieldBone : visualRoot, ShieldBackSocketName);
+            }
+            else if (backShieldBone != null && shieldBackSocket.parent != backShieldBone)
+            {
+                shieldBackSocket.SetParent(backShieldBone, false);
+            }
 
             rangedMuzzleSocket ??= FindDescendant(transform, RangedMuzzleSocketName);
             if (rangedMuzzleSocket == null)
@@ -306,8 +451,18 @@ namespace Hollow.Combat
                 DefaultRangedHolsterSocketLocalPosition,
                 DefaultRangedHolsterSocketLocalEuler,
                 DefaultRangedHolsterSocketLocalScale);
+            ApplySocketDefaults(
+                shieldForearmSocket,
+                DefaultShieldForearmSocketLocalPosition,
+                DefaultShieldForearmSocketLocalEuler,
+                DefaultShieldForearmSocketLocalScale);
+            ApplySocketDefaults(
+                shieldBackSocket,
+                DefaultShieldBackSocketLocalPosition,
+                DefaultShieldBackSocketLocalEuler,
+                DefaultShieldBackSocketLocalScale);
 
-            if (rangedHandSocket != null && rangedHandSocket.parent == heldRoot)
+            if (rangedHandSocket != null)
             {
                 ApplySocketDefaults(
                     rangedHandSocket,
@@ -364,13 +519,26 @@ namespace Hollow.Combat
 
             if (slot == WeaponSlot.Ranged && rangedHandSocket != null)
             {
-                SetPlayerSpacePose(
-                    rangedHandSocket,
-                    PlayerWeaponVisualPosePolicy.HeldLocalPosition(slot, direction2) + attackPositionOffset,
-                    aimRotation);
-                activeVisual.transform.localPosition = Vector3.zero;
-                activeVisual.transform.localRotation = Quaternion.identity;
-                activeVisual.transform.localScale = Vector3.one;
+                if (IsRangedHandSocketHandAttached())
+                {
+                    var rangedWorldRotation = transform.rotation * PlayerWeaponVisualPosePolicy.AimRotation(direction2);
+                    rangedHandSocket.rotation = rangedWorldRotation;
+                    rangedHandSocket.localScale = DefaultRangedHandSocketLocalScale;
+                    activeVisual.transform.localPosition = Vector3.zero;
+                    activeVisual.transform.localRotation = Quaternion.identity;
+                    activeVisual.transform.localScale = Vector3.one;
+                }
+                else
+                {
+                    SetPlayerSpacePose(
+                        rangedHandSocket,
+                        PlayerWeaponVisualPosePolicy.HeldLocalPosition(slot, direction2) + attackPositionOffset,
+                        aimRotation);
+                    activeVisual.transform.localPosition = Vector3.zero;
+                    activeVisual.transform.localRotation = Quaternion.identity;
+                    activeVisual.transform.localScale = Vector3.one;
+                }
+
                 return;
             }
 
@@ -496,10 +664,72 @@ namespace Hollow.Combat
             return wrapper;
         }
 
+        private void EnsureShieldVisual(Transform parent)
+        {
+            if (parent == null)
+            {
+                return;
+            }
+
+            if (equippedShieldVisual == null)
+            {
+                equippedShieldVisual = new GameObject("EquippedShieldVisual");
+                equippedShieldVisual.transform.SetParent(parent, false);
+                var model = PresentationPrefabResolver.InstantiateVisual(
+                    PresentationPrefabRole.Armor,
+                    equippedShieldVisual.transform,
+                    Vector3.zero,
+                    Vector3.one);
+                if (model != null)
+                {
+                    model.transform.localPosition = Vector3.zero;
+                    model.transform.localRotation = Quaternion.identity;
+                    model.transform.localScale = Vector3.one;
+                }
+            }
+            else if (equippedShieldVisual.transform.parent != parent)
+            {
+                equippedShieldVisual.transform.SetParent(parent, false);
+            }
+
+            equippedShieldVisual.transform.localPosition = Vector3.zero;
+            equippedShieldVisual.transform.localRotation = Quaternion.identity;
+            equippedShieldVisual.transform.localScale = Vector3.one;
+            equippedShieldVisual.SetActive(true);
+        }
+
         private Transform ActiveParentFor(WeaponSlot slot)
         {
             EnsureSockets();
             return slot == WeaponSlot.Melee ? meleeHandSocket : rangedHandSocket;
+        }
+
+        private Transform ShieldParentFor(WeaponSlot slot)
+        {
+            EnsureSockets();
+            if (ActiveWeaponIsDoubleHandedForPresentation(slot))
+            {
+                return shieldBackSocket != null ? shieldBackSocket : heldRoot;
+            }
+
+            return shieldForearmSocket != null ? shieldForearmSocket : heldRoot;
+        }
+
+        private bool ActiveWeaponIsDoubleHandedForPresentation(WeaponSlot slot)
+        {
+            var weapon = ResolveWeaponForSlot(slot);
+            return weapon != null && weapon.IsDoubleHandedForPresentation;
+        }
+
+        private WeaponDefinition ResolveWeaponForSlot(WeaponSlot slot)
+        {
+            if (weaponController == null || weaponController.WeaponCatalog == null)
+            {
+                return null;
+            }
+
+            var weaponId = slot == WeaponSlot.Melee ? weaponController.MeleeWeaponId : weaponController.RangedWeaponId;
+            return weaponController.WeaponCatalog.Resolve(weaponId, slot);
         }
 
         private Vector2 ResolveVisualFacing()
@@ -535,12 +765,26 @@ namespace Hollow.Combat
             return slot == WeaponSlot.Melee ? PresentationPrefabRole.WeaponMelee : PresentationPrefabRole.WeaponRanged;
         }
 
-        private Transform FindRightHandBone()
+        private Transform FindCharacterBone(string boneName)
         {
             var visualRoot = FindDescendant(transform, MeshyVisualRootName);
             var modelRoot = visualRoot != null ? FindDescendant(visualRoot, MeshyModelName) : null;
             var searchRoot = modelRoot != null ? modelRoot : visualRoot != null ? visualRoot : transform;
-            return FindDescendant(searchRoot, RightHandBoneName);
+            return FindDescendant(searchRoot, boneName);
+        }
+
+        private bool IsRangedHandSocketHandAttached()
+        {
+            return rangedHandSocket != null &&
+                rangedHandSocket.parent != null &&
+                rangedHandSocket.parent.name == RightHandBoneName;
+        }
+
+        private Vector3 LocalPlanarToWorld(Vector2 direction)
+        {
+            var local = PlayerWeaponVisualPosePolicy.PlanarForward(direction);
+            var parent = transform.parent;
+            return parent != null ? parent.TransformDirection(local).normalized : transform.TransformDirection(local).normalized;
         }
 
         private static Transform CreateSocket(Transform parent, string socketName)

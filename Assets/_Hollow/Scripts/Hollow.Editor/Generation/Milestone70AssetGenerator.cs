@@ -104,7 +104,8 @@ namespace Hollow.Editor.Generation
                 weapon.Tags,
                 WithForce(weapon.LightAttack, lightForce, lightKnockbackMeters),
                 WithForce(weapon.HeavyAttack, heavyForce, heavyKnockbackMeters),
-                weapon.LoadClass);
+                weapon.LoadClass,
+                nextIsDoubleHandedForPresentation: weapon.IsDoubleHandedForPresentation);
             EditorUtility.SetDirty(weapon);
         }
 

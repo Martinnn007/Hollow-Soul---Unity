@@ -16,6 +16,9 @@ namespace Hollow.Combat
         public const string IsTargetLockedParameter = "IsTargetLocked";
         public const string LockedMoveXParameter = "LockedMoveX";
         public const string LockedMoveYParameter = "LockedMoveY";
+        public const float DefaultTurnInPlaceStartDegrees = 85f;
+        public const float DefaultTurnInPlaceFullDegrees = 125f;
+        public const float DefaultDiagnosticSmoothingSeconds = 0.08f;
 
         [SerializeField] private Animator animator;
         [SerializeField] private Transform visualFacingRoot;
@@ -30,6 +33,9 @@ namespace Hollow.Combat
         [SerializeField] private float slashClipDurationSeconds = 0.75f;
         [SerializeField] private float hitClipDurationSeconds = 0.45f;
         [SerializeField] private float deathClipDurationSeconds = 1.1f;
+        [SerializeField] private float turnInPlaceStartDegrees = DefaultTurnInPlaceStartDegrees;
+        [SerializeField] private float turnInPlaceFullDegrees = DefaultTurnInPlaceFullDegrees;
+        [SerializeField] private float diagnosticSmoothingSeconds = DefaultDiagnosticSmoothingSeconds;
 
         private static readonly int IsMovingHash = Animator.StringToHash(IsMovingParameter);
         private static readonly int MoveSpeedHash = Animator.StringToHash(MoveSpeedParameter);
@@ -71,7 +77,13 @@ namespace Hollow.Combat
         private float actionSpeed = 1f;
         private float actionFacingUntilTime;
         private Vector2 lockedRelativeMove;
+        private Vector2 smoothedRelativeMove;
+        private Vector3 worldVelocity;
+        private Vector3 smoothedWorldVelocity;
         private PlayerRollPhase lastObservedRollPhase = PlayerRollPhase.None;
+        private Vector3 aimFacingDirectionWorld = Vector3.forward;
+        private float aimBodyAngleDegrees;
+        private bool isTurnInPlaceActive;
 
         public bool IsMoving => isMoving;
 
@@ -85,9 +97,29 @@ namespace Hollow.Combat
 
         public Vector3 FacingDirectionWorld => facingDirectionWorld;
 
+        public Vector3 AimFacingDirectionWorld => aimFacingDirectionWorld;
+
+        public Vector3 WorldVelocity => smoothedWorldVelocity;
+
+        public Vector3 RawWorldVelocity => worldVelocity;
+
         public bool IsTargetLockedForLocomotion => isTargetLockedForLocomotion;
 
         public Vector2 LockedRelativeMove => lockedRelativeMove;
+
+        public Vector2 RelativeMove => smoothedRelativeMove;
+
+        public float MoveAngleDegrees => smoothedRelativeMove.sqrMagnitude > 0.0001f
+            ? Mathf.Atan2(smoothedRelativeMove.x, smoothedRelativeMove.y) * Mathf.Rad2Deg
+            : 0f;
+
+        public bool IsBackpedaling => smoothedRelativeMove.y < -0.35f;
+
+        public bool IsStrafing => Mathf.Abs(smoothedRelativeMove.x) > 0.35f;
+
+        public float AimBodyAngleDegrees => aimBodyAngleDegrees;
+
+        public bool IsTurnInPlaceActive => isTurnInPlaceActive;
 
         private void Awake()
         {
@@ -123,6 +155,9 @@ namespace Hollow.Combat
             slashClipDurationSeconds = Mathf.Max(0.01f, slashClipDurationSeconds);
             hitClipDurationSeconds = Mathf.Max(0.01f, hitClipDurationSeconds);
             deathClipDurationSeconds = Mathf.Max(0.01f, deathClipDurationSeconds);
+            turnInPlaceStartDegrees = Mathf.Clamp(turnInPlaceStartDegrees, 0f, 180f);
+            turnInPlaceFullDegrees = Mathf.Clamp(Mathf.Max(turnInPlaceStartDegrees, turnInPlaceFullDegrees), 0f, 180f);
+            diagnosticSmoothingSeconds = Mathf.Max(0f, diagnosticSmoothingSeconds);
         }
 
         private void LateUpdate()
@@ -167,12 +202,16 @@ namespace Hollow.Combat
             float nextMovementThresholdMetersPerSecond,
             float nextTurnSpeedDegreesPerSecond,
             float nextWalkSpeedNormalizationMetersPerSecond,
-            float nextTeleportResetDistanceMeters)
+            float nextTeleportResetDistanceMeters,
+            float nextTurnInPlaceStartDegrees = DefaultTurnInPlaceStartDegrees,
+            float nextTurnInPlaceFullDegrees = DefaultTurnInPlaceFullDegrees)
         {
             movementThresholdMetersPerSecond = Mathf.Max(0f, nextMovementThresholdMetersPerSecond);
             turnSpeedDegreesPerSecond = Mathf.Max(0f, nextTurnSpeedDegreesPerSecond);
             walkSpeedNormalizationMetersPerSecond = Mathf.Max(0.01f, nextWalkSpeedNormalizationMetersPerSecond);
             teleportResetDistanceMeters = Mathf.Max(0.1f, nextTeleportResetDistanceMeters);
+            turnInPlaceStartDegrees = Mathf.Clamp(nextTurnInPlaceStartDegrees, 0f, 180f);
+            turnInPlaceFullDegrees = Mathf.Clamp(Mathf.Max(turnInPlaceStartDegrees, nextTurnInPlaceFullDegrees), 0f, 180f);
         }
 
         public void ConfigureActionClips(
@@ -197,6 +236,12 @@ namespace Hollow.Combat
             isDead = health != null && !health.IsAlive;
             isTargetLockedForLocomotion = false;
             lockedRelativeMove = Vector2.zero;
+            smoothedRelativeMove = Vector2.zero;
+            worldVelocity = Vector3.zero;
+            smoothedWorldVelocity = Vector3.zero;
+            aimFacingDirectionWorld = facingDirectionWorld;
+            aimBodyAngleDegrees = 0f;
+            isTurnInPlaceActive = false;
             lastObservedRollPhase = weaponController != null ? weaponController.CurrentRollPhase : PlayerRollPhase.None;
             ApplyAnimatorParameters();
         }
@@ -214,6 +259,10 @@ namespace Hollow.Combat
             var planarDelta = currentWorldPosition - previousWorldPosition;
             planarDelta.y = 0f;
             previousWorldPosition = currentWorldPosition;
+            worldVelocity = deltaTime > 0f && planarDelta.magnitude < teleportResetDistanceMeters
+                ? planarDelta / deltaTime
+                : Vector3.zero;
+            smoothedWorldVelocity = SmoothVector(smoothedWorldVelocity, worldVelocity, deltaTime);
 
             if (isDead)
             {
@@ -221,6 +270,9 @@ namespace Hollow.Combat
                 isMoving = false;
                 isTargetLockedForLocomotion = false;
                 lockedRelativeMove = Vector2.zero;
+                smoothedRelativeMove = SmoothVector2(smoothedRelativeMove, Vector2.zero, deltaTime);
+                aimBodyAngleDegrees = 0f;
+                isTurnInPlaceActive = false;
                 ApplyAnimatorParameters();
                 return;
             }
@@ -235,6 +287,7 @@ namespace Hollow.Combat
                     lockedRelativeMove = Vector2.zero;
                 }
 
+                smoothedRelativeMove = SmoothVector2(smoothedRelativeMove, lockedRelativeMove, deltaTime);
                 ApplyAnimatorParameters();
                 return;
             }
@@ -244,6 +297,7 @@ namespace Hollow.Combat
                 planarSpeedMetersPerSecond = 0f;
                 isMoving = false;
                 lockedRelativeMove = Vector2.zero;
+                smoothedRelativeMove = SmoothVector2(smoothedRelativeMove, Vector2.zero, deltaTime);
                 ApplyAnimatorParameters();
                 return;
             }
@@ -260,6 +314,7 @@ namespace Hollow.Combat
                 RotateVisualFacingRoot(deltaTime, instant: false);
             }
 
+            smoothedRelativeMove = SmoothVector2(smoothedRelativeMove, lockedRelativeMove, deltaTime);
             ApplyAnimatorParameters();
         }
 
@@ -449,10 +504,31 @@ namespace Hollow.Combat
             if (!hasLockedDirection)
             {
                 lockedRelativeMove = Vector2.zero;
+                aimFacingDirectionWorld = facingDirectionWorld;
+                aimBodyAngleDegrees = 0f;
+                isTurnInPlaceActive = false;
                 return false;
             }
 
-            facingDirectionWorld = new Vector3(lockedDirection.x, 0f, lockedDirection.y).normalized;
+            aimFacingDirectionWorld = new Vector3(lockedDirection.x, 0f, lockedDirection.y).normalized;
+            aimBodyAngleDegrees = Vector3.Angle(SafePlanarDirection(facingDirectionWorld, Vector3.forward), aimFacingDirectionWorld);
+            isTurnInPlaceActive = aimBodyAngleDegrees >= turnInPlaceStartDegrees;
+            if (isTurnInPlaceActive)
+            {
+                var turnWeight = turnInPlaceFullDegrees <= turnInPlaceStartDegrees
+                    ? 1f
+                    : Mathf.InverseLerp(turnInPlaceStartDegrees, turnInPlaceFullDegrees, aimBodyAngleDegrees);
+                facingDirectionWorld = rotateVisual && deltaTime > 0f
+                    ? Vector3.RotateTowards(
+                        SafePlanarDirection(facingDirectionWorld, aimFacingDirectionWorld),
+                        aimFacingDirectionWorld,
+                        Mathf.Deg2Rad * turnSpeedDegreesPerSecond * Mathf.Max(0.15f, turnWeight) * deltaTime,
+                        0f)
+                    : aimFacingDirectionWorld;
+                facingDirectionWorld = SafePlanarDirection(facingDirectionWorld, aimFacingDirectionWorld);
+                aimBodyAngleDegrees = Vector3.Angle(facingDirectionWorld, aimFacingDirectionWorld);
+            }
+
             lockedRelativeMove = CalculateLockedRelativeMove(planarDelta, facingDirectionWorld, deltaTime);
             if (rotateVisual)
             {
@@ -505,6 +581,38 @@ namespace Hollow.Combat
             return new Vector2(
                 Mathf.Clamp(Vector3.Dot(normalizedDelta, right), -1f, 1f),
                 Mathf.Clamp(Vector3.Dot(normalizedDelta, forward), -1f, 1f));
+        }
+
+        private Vector3 SmoothVector(Vector3 current, Vector3 target, float deltaTime)
+        {
+            if (diagnosticSmoothingSeconds <= 0f || deltaTime <= 0f)
+            {
+                return target;
+            }
+
+            return Vector3.Lerp(current, target, 1f - Mathf.Exp(-deltaTime / diagnosticSmoothingSeconds));
+        }
+
+        private Vector2 SmoothVector2(Vector2 current, Vector2 target, float deltaTime)
+        {
+            if (diagnosticSmoothingSeconds <= 0f || deltaTime <= 0f)
+            {
+                return target;
+            }
+
+            return Vector2.Lerp(current, target, 1f - Mathf.Exp(-deltaTime / diagnosticSmoothingSeconds));
+        }
+
+        private static Vector3 SafePlanarDirection(Vector3 direction, Vector3 fallback)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.000001f)
+            {
+                return direction.normalized;
+            }
+
+            fallback.y = 0f;
+            return fallback.sqrMagnitude > 0.000001f ? fallback.normalized : Vector3.forward;
         }
 
         private void RotateVisualFacingRoot(float deltaTime, bool instant)

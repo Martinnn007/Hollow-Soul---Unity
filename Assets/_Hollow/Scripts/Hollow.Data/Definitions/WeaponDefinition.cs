@@ -13,6 +13,7 @@ namespace Hollow.Data.Definitions
         [SerializeField] private WeaponCategory category;
         [SerializeField] private EquipmentLoadClass loadClass = EquipmentLoadClass.Light;
         [SerializeField] private WeaponRangedFireMode rangedFireMode = WeaponRangedFireMode.Instant;
+        [SerializeField] private bool isDoubleHandedForPresentation;
         [SerializeField] private BuildTag[] tags = System.Array.Empty<BuildTag>();
         [SerializeField] private WeaponAttackDefinition lightAttack;
         [SerializeField] private WeaponAttackDefinition heavyAttack;
@@ -32,6 +33,8 @@ namespace Hollow.Data.Definitions
                 ? WeaponRangedFireMode.DrawAndRelease
                 : rangedFireMode;
 
+        public bool IsDoubleHandedForPresentation => isDoubleHandedForPresentation;
+
         public IReadOnlyList<BuildTag> Tags => tags;
 
         public WeaponAttackDefinition LightAttack => lightAttack.Damage <= 0 ? WeaponAttackDefinition.DefaultLight(slot) : lightAttack;
@@ -47,7 +50,8 @@ namespace Hollow.Data.Definitions
             WeaponAttackDefinition? nextLightAttack = null,
             WeaponAttackDefinition? nextHeavyAttack = null,
             EquipmentLoadClass nextLoadClass = EquipmentLoadClass.Light,
-            WeaponRangedFireMode? nextRangedFireMode = null)
+            WeaponRangedFireMode? nextRangedFireMode = null,
+            bool? nextIsDoubleHandedForPresentation = null)
         {
             weaponId = nextWeaponId ?? string.Empty;
             displayName = nextDisplayName ?? string.Empty;
@@ -55,6 +59,8 @@ namespace Hollow.Data.Definitions
             category = nextCategory;
             loadClass = nextLoadClass;
             rangedFireMode = nextRangedFireMode ?? DefaultRangedFireMode(nextSlot, nextCategory);
+            isDoubleHandedForPresentation = nextIsDoubleHandedForPresentation ??
+                DefaultIsDoubleHandedForPresentation(nextSlot, nextCategory);
             tags = (nextTags ?? Enumerable.Empty<BuildTag>())
                 .Where(tag => tag != BuildTag.None)
                 .Distinct()
@@ -68,6 +74,11 @@ namespace Hollow.Data.Definitions
             return nextSlot == WeaponSlot.Ranged && nextCategory == WeaponCategory.Bow
                 ? WeaponRangedFireMode.DrawAndRelease
                 : WeaponRangedFireMode.Instant;
+        }
+
+        private static bool DefaultIsDoubleHandedForPresentation(WeaponSlot nextSlot, WeaponCategory nextCategory)
+        {
+            return nextSlot == WeaponSlot.Ranged && nextCategory == WeaponCategory.Bow;
         }
     }
 }

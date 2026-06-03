@@ -183,7 +183,16 @@ namespace Hollow.Editor.Generation
                 return;
             }
 
-            weapon.Configure(weapon.WeaponId, weapon.DisplayName, weapon.Slot, weapon.Category, weapon.Tags, weapon.LightAttack, weapon.HeavyAttack, loadClass);
+            weapon.Configure(
+                weapon.WeaponId,
+                weapon.DisplayName,
+                weapon.Slot,
+                weapon.Category,
+                weapon.Tags,
+                weapon.LightAttack,
+                weapon.HeavyAttack,
+                loadClass,
+                nextIsDoubleHandedForPresentation: weapon.IsDoubleHandedForPresentation);
             EditorUtility.SetDirty(weapon);
         }
 

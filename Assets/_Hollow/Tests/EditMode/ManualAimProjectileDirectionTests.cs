@@ -169,6 +169,85 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void RangedProjectileUsesHeldWeaponMuzzleOriginWhenAvailable()
+        {
+            var root = CreateProjectileHarness(out _, out var weapon, out var projectilePrefab);
+            try
+            {
+                var heldWeaponVisual = weapon.gameObject.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.Bind(weapon);
+
+                var projectile = FireSingleProjectile(root, weapon, Vector2.up, 0f);
+
+                Assert.Greater(projectile.localPosition.y, 0.7f);
+                Assert.Greater(projectile.localPosition.z, 0.8f);
+                Assert.IsTrue(heldWeaponVisual.TryResolveRangedMuzzlePose(
+                    Vector2.up,
+                    0f,
+                    root.transform,
+                    out var muzzleLocalPosition,
+                    out var muzzleDirection));
+                Assert.AreEqual(muzzleLocalPosition.y, projectile.localPosition.y, 0.001f);
+                Assert.AreEqual(muzzleLocalPosition.z, projectile.localPosition.z, 0.001f);
+                Assert.AreEqual(0f, muzzleDirection.x, 0.001f);
+                Assert.AreEqual(1f, muzzleDirection.y, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void DoubleBarrelLateralOffsetsStartFromHeldWeaponMuzzle()
+        {
+            var root = CreateProjectileHarness(out _, out var weapon, out var projectilePrefab);
+            try
+            {
+                weapon.gameObject.AddComponent<PlayerHeldWeaponVisualController>().Bind(weapon);
+                weapon.ConfigureProjectilePassives(new ProjectilePassiveState(
+                    ProjectilePatternKind.DoubleBarrel,
+                    1f,
+                    0f,
+                    ProjectileVisualStyle.Default));
+
+                FireProjectiles(root, weapon, Vector2.up, 0f);
+                var projectiles = FindPlayerProjectiles(root);
+                Assert.AreEqual(2, projectiles.Count);
+
+                projectiles.Sort((left, right) => left.localPosition.x.CompareTo(right.localPosition.x));
+                Assert.Greater(projectiles[0].localPosition.y, 0.7f);
+                Assert.Greater(projectiles[1].localPosition.y, 0.7f);
+                Assert.AreEqual(0.22f, Mathf.Abs(projectiles[1].localPosition.x - projectiles[0].localPosition.x), 0.01f);
+                Assert.AreEqual(projectiles[0].localPosition.z, projectiles[1].localPosition.z, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void RangedProjectileFallsBackToBodyOriginWithoutHeldWeaponVisual()
+        {
+            var root = CreateProjectileHarness(out _, out var weapon, out var projectilePrefab);
+            try
+            {
+                var projectile = FireSingleProjectile(root, weapon, Vector2.up, 0f);
+
+                Assert.AreEqual(0.45f, projectile.localPosition.y, 0.001f);
+                Assert.AreEqual(0.42f, projectile.localPosition.z, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void DrawAndReleaseKeepsReleaseDirectionThroughWindup()
         {
             var root = CreateProjectileHarness(out _, out var weapon, out var projectilePrefab);

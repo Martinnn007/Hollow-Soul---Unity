@@ -71,6 +71,7 @@ namespace Hollow.Combat
         [SerializeField] private RoomCombatController combatController;
         [SerializeField] private PlayerDefenseController defenseController;
         [SerializeField] private PlayerAimLockController aimLockController;
+        [SerializeField] private PlayerHeldWeaponVisualController heldWeaponVisualController;
 
         private float nextAllowedShotTime;
         private float nextAllowedMeleeTime;
@@ -102,6 +103,9 @@ namespace Hollow.Combat
         private float staminaRegenBlockedUntil;
         private bool heldAttackQueued;
         private AttackKind heldAttackKind = AttackKind.Light;
+        private bool rangedHeldAttackPoseActive;
+        private AttackKind rangedHeldAttackKind = AttackKind.Light;
+        private Vector2 rangedHeldAttackDirection = Vector2.up;
         private CombatantHealth health;
 
         public float CooldownSeconds => cooldownSeconds * cooldownMultiplier;
@@ -120,12 +124,27 @@ namespace Hollow.Combat
 
         public bool DebugLightAttackSpeedDoubled => debugLightAttackSpeedDoubled;
 
-        public bool IsAttackCommitted => rangedDrawActive ||
-            attackExecutionState is PlayerAttackExecutionState.Windup
-            or PlayerAttackExecutionState.Active
-            or PlayerAttackExecutionState.Recovery;
+        public bool IsAttackCommitted => rangedDrawActive || IsPendingAttackCommitted;
 
-        public bool HasVisualAimCommitment => IsAttackCommitted;
+        public bool IsRangedAttackCommitted => rangedDrawActive ||
+            (pendingAttackSlot == WeaponSlot.Ranged && IsPendingAttackCommitted);
+
+        public bool IsRangedHeldAttackPoseActive =>
+            rangedHeldAttackPoseActive &&
+            activeWeaponSlot == WeaponSlot.Ranged &&
+            !IsRolling &&
+            !IsGuarding &&
+            !GameplayPauseState.IsPaused &&
+            !GameplayTransitionState.IsLocked &&
+            (health == null || health.IsAlive);
+
+        public AttackKind RangedHeldAttackKind => rangedHeldAttackKind;
+
+        public Vector2 RangedHeldAimDirection => rangedHeldAttackDirection.sqrMagnitude > 0.001f
+            ? rangedHeldAttackDirection.normalized
+            : LastAimDirection;
+
+        public bool HasVisualAimCommitment => IsAttackCommitted || IsRangedHeldAttackPoseActive;
 
         public Vector2 VisualAimDirection
         {
@@ -143,6 +162,11 @@ namespace Hollow.Combat
                     return pendingAttackDirection.sqrMagnitude > 0.001f
                         ? pendingAttackDirection.normalized
                         : LastAimDirection;
+                }
+
+                if (IsRangedHeldAttackPoseActive)
+                {
+                    return RangedHeldAimDirection;
                 }
 
                 return LastAimDirection;
@@ -167,6 +191,11 @@ namespace Hollow.Combat
                 return $"Bow draw {rangedDrawAttackKind} | {RangedDrawProgress01 * 100f:0}% | release";
             }
         }
+
+        private bool IsPendingAttackCommitted =>
+            attackExecutionState is PlayerAttackExecutionState.Windup
+            or PlayerAttackExecutionState.Active
+            or PlayerAttackExecutionState.Recovery;
 
         public bool IsRolling => CurrentRollPhase != PlayerRollPhase.None;
 
@@ -339,6 +368,8 @@ namespace Hollow.Combat
             aimLockController.Configure(combatController);
             aimLockController.TickAim(input, timeSeconds);
             UpdateHeldAttackIntent(input);
+            var currentAim = CurrentAim(input, timeSeconds);
+            UpdateRangedHeldAttackPose(input, currentAim);
             if (rangedDrawActive && HandleRangedDrawInput(input, timeSeconds))
             {
                 return;
@@ -349,9 +380,9 @@ namespace Hollow.Combat
                 ToggleWeaponSlot();
             }
 
-            lastAimDirection = CurrentAim(input, timeSeconds);
+            lastAimDirection = currentAim;
 
-            if (input.RollPressed && TryRoll(input.Move, CurrentAim(input, timeSeconds), timeSeconds))
+            if (input.RollPressed && TryRoll(input.Move, currentAim, timeSeconds))
             {
                 return;
             }
@@ -363,7 +394,7 @@ namespace Hollow.Combat
 
             if (heldAttackQueued)
             {
-                TryAttack(heldAttackKind, CurrentAim(input, timeSeconds), timeSeconds);
+                TryAttack(heldAttackKind, currentAim, timeSeconds);
             }
         }
 
@@ -422,6 +453,36 @@ namespace Hollow.Combat
                 : input.LightAttackHeld;
         }
 
+        private void UpdateRangedHeldAttackPose(GameplayInputSnapshot input, Vector2 aimDirection)
+        {
+            if (input.SwapWeaponPressed ||
+                input.GuardHeld ||
+                activeWeaponSlot != WeaponSlot.Ranged ||
+                !heldAttackQueued ||
+                !IsAttackHeld(input, heldAttackKind))
+            {
+                ClearRangedHeldAttackPose();
+                return;
+            }
+
+            var aim = GameplayInputReader.NormalizeAimDirection(aimDirection);
+            if (aim.sqrMagnitude < 0.001f)
+            {
+                aim = LastAimDirection;
+            }
+
+            rangedHeldAttackPoseActive = true;
+            rangedHeldAttackKind = heldAttackKind;
+            rangedHeldAttackDirection = aim.sqrMagnitude > 0.001f ? aim.normalized : Vector2.up;
+        }
+
+        private void ClearRangedHeldAttackPose()
+        {
+            rangedHeldAttackPoseActive = false;
+            rangedHeldAttackKind = AttackKind.Light;
+            rangedHeldAttackDirection = Vector2.up;
+        }
+
         public void ToggleWeaponSlot()
         {
             SetActiveWeaponSlot(activeWeaponSlot == WeaponSlot.Ranged ? WeaponSlot.Melee : WeaponSlot.Ranged);
@@ -436,6 +497,7 @@ namespace Hollow.Combat
             }
 
             CancelRangedDraw();
+            ClearRangedHeldAttackPose();
             activeWeaponSlot = slot;
             ActiveWeaponSlotChanged?.Invoke(activeWeaponSlot);
         }
@@ -447,6 +509,7 @@ namespace Hollow.Combat
             if (IsGuarding)
             {
                 CancelRangedDraw();
+                ClearRangedHeldAttackPose();
                 return false;
             }
 
@@ -479,6 +542,7 @@ namespace Hollow.Combat
             rollEndTime = timeSeconds + RollDurationSeconds;
             lastActionEvaluationTime = timeSeconds;
             attackExecutionState = PlayerAttackExecutionState.RollStartup;
+            ClearRangedHeldAttackPose();
             combatController?.EmitPlayerStimulus(EnemyStimulusKind.Roll, transform.localPosition, timeSeconds, EnemyStimulusTier.Normal, "roll");
             return true;
         }
@@ -585,6 +649,7 @@ namespace Hollow.Combat
             if (IsGuarding)
             {
                 CancelRangedDraw();
+                ClearRangedHeldAttackPose();
                 return false;
             }
 
@@ -655,6 +720,7 @@ namespace Hollow.Combat
             if (input.SwapWeaponPressed || input.RollPressed || input.GuardHeld)
             {
                 CancelRangedDraw();
+                ClearRangedHeldAttackPose();
                 return true;
             }
 
@@ -775,17 +841,12 @@ namespace Hollow.Combat
             float shotTimeSeconds)
         {
             var direction = shot.Direction.sqrMagnitude > 0.001f ? shot.Direction.normalized : Vector2.up;
-            var side = new Vector2(-direction.y, direction.x);
             var projectileObject = HollowRuntimePool.Rent(projectilePrefab, transform.parent);
             projectileObject.name = "PlayerProjectile";
             var projectileTransform = projectileObject.transform;
             var prefabScale = projectilePrefab != null ? projectilePrefab.transform.localScale : Vector3.one;
             projectileTransform.localScale = prefabScale == Vector3.zero ? Vector3.one : prefabScale;
-            var projectileLocalPosition =
-                transform.localPosition +
-                new Vector3(direction.x, 0f, direction.y) * 0.42f +
-                new Vector3(side.x, 0f, side.y) * shot.LateralOffsetMeters +
-                new Vector3(0f, 0.45f, 0f);
+            var projectileLocalPosition = ResolveProjectileLocalPosition(shot, direction, projectileTransform.parent);
             direction = ResolveProjectileDirectionFromOrigin(
                 direction,
                 shot.SpreadAngleDegrees,
@@ -821,6 +882,27 @@ namespace Hollow.Combat
                 direction,
                 shotTimeSeconds);
             VfxPresenter.Play(VfxCueId.ProjectileFire, projectileObject.transform.position, projectileObject.transform.parent);
+        }
+
+        private Vector3 ResolveProjectileLocalPosition(ProjectileShotSpec shot, Vector2 direction, Transform projectileParent)
+        {
+            EnsureHeldWeaponVisualController();
+            if (heldWeaponVisualController != null &&
+                heldWeaponVisualController.TryResolveRangedMuzzlePose(
+                    direction,
+                    shot.LateralOffsetMeters,
+                    projectileParent,
+                    out var muzzleLocalPosition,
+                    out _))
+            {
+                return muzzleLocalPosition;
+            }
+
+            var side = new Vector2(-direction.y, direction.x);
+            return transform.localPosition +
+                new Vector3(direction.x, 0f, direction.y) * 0.42f +
+                new Vector3(side.x, 0f, side.y) * shot.LateralOffsetMeters +
+                new Vector3(0f, 0.45f, 0f);
         }
 
         private ProjectileShotSpec[] BuildProjectileShots(Vector2 aimDirection)
@@ -990,6 +1072,8 @@ namespace Hollow.Combat
             var lifetimeSeconds = Mathf.Max(0.1f, effectiveRange / projectileSpeed);
             var aimSource = ResolveShotAimSource();
             TryGetLockedTargetTelemetry(pendingAttackTarget, out var lockedTargetName, out var lockedTargetDistanceMeters);
+            EnsureHeldWeaponVisualController();
+            WeaponAttackVisualRequested?.Invoke(WeaponSlot.Ranged, pendingAttackKind, cardinal);
             foreach (var shot in BuildProjectileShots(cardinal))
             {
                 SpawnProjectile(
@@ -1011,7 +1095,6 @@ namespace Hollow.Combat
                 timeSeconds,
                 RoomCombatController.StimulusTierForPlayerAttack(pendingAttackKind),
                 pendingAttackKind == AttackKind.Heavy ? "heavy_ranged" : "light_ranged");
-            WeaponAttackVisualRequested?.Invoke(WeaponSlot.Ranged, pendingAttackKind, cardinal);
             AudioPresenter.Play(AudioCueId.ProjectileFire, transform.position);
         }
 
@@ -1252,6 +1335,19 @@ namespace Hollow.Combat
             }
         }
 
+        private void EnsureHeldWeaponVisualController()
+        {
+            if (heldWeaponVisualController == null)
+            {
+                heldWeaponVisualController = GetComponent<PlayerHeldWeaponVisualController>();
+            }
+
+            if (heldWeaponVisualController != null)
+            {
+                heldWeaponVisualController.Bind(this);
+            }
+        }
+
         private Transform ResolveGameplayRoot()
         {
             var presentationRoot = GetComponentInParent<PlatformPresentationRoot>();
@@ -1344,12 +1440,14 @@ namespace Hollow.Combat
             if (rangedDrawActive)
             {
                 ClearPendingAction();
+                ClearRangedHeldAttackPose();
                 return;
             }
 
             if (ShouldDamageInterruptCommittedAttack(damagedHealth))
             {
                 ClearPendingAction();
+                ClearRangedHeldAttackPose();
             }
         }
 
@@ -1382,6 +1480,7 @@ namespace Hollow.Combat
         private void OnPlayerDied(CombatantHealth _)
         {
             ClearPendingAction();
+            ClearRangedHeldAttackPose();
         }
     }
 }

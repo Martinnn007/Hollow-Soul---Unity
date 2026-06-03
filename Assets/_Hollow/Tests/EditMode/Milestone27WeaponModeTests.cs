@@ -25,18 +25,44 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(WeaponSlot.Melee, starterBlade.Slot);
             Assert.AreEqual(AttackKind.Light, starterBlade.LightAttack.AttackKind);
             Assert.Greater(starterBlade.HeavyAttack.Damage, starterBlade.LightAttack.Damage);
+            Assert.IsFalse(starterBlade.IsDoubleHandedForPresentation);
             Assert.IsTrue(catalog.TryGetWeapon("starter_pistol", out var starterPistol));
             Assert.AreEqual(WeaponSlot.Ranged, starterPistol.Slot);
             Assert.AreEqual(WeaponCategory.Gun, starterPistol.Category);
             Assert.AreEqual(WeaponRangedFireMode.Instant, starterPistol.RangedFireMode);
+            Assert.IsFalse(starterPistol.IsDoubleHandedForPresentation);
             Assert.IsFalse(catalog.Weapons.Any(weapon => weapon.WeaponId == "starter_bow"));
             Assert.IsTrue(catalog.TryGetWeapon("starter_bolt", out var starterBolt));
             Assert.AreEqual(WeaponSlot.Ranged, starterBolt.Slot);
             Assert.AreEqual(WeaponRangedFireMode.Instant, starterBolt.RangedFireMode);
+            Assert.IsFalse(starterBolt.IsDoubleHandedForPresentation);
             Assert.IsTrue(catalog.TryGetWeapon("iron_cleaver", out var ironCleaver));
             Assert.AreEqual(WeaponSlot.Melee, ironCleaver.Slot);
+            Assert.IsTrue(ironCleaver.IsDoubleHandedForPresentation);
             Assert.IsTrue(catalog.TryGetWeapon("ember_bolt", out var emberBolt));
             Assert.AreEqual(WeaponSlot.Ranged, emberBolt.Slot);
+            Assert.IsFalse(emberBolt.IsDoubleHandedForPresentation);
+        }
+
+        [Test]
+        public void BowWeaponsDefaultToDoubleHandedPresentation()
+        {
+            var bow = ScriptableObject.CreateInstance<WeaponDefinition>();
+            try
+            {
+                bow.Configure(
+                    "test_bow",
+                    "Test Bow",
+                    WeaponSlot.Ranged,
+                    WeaponCategory.Bow);
+
+                Assert.AreEqual(WeaponRangedFireMode.DrawAndRelease, bow.RangedFireMode);
+                Assert.IsTrue(bow.IsDoubleHandedForPresentation);
+            }
+            finally
+            {
+                Object.DestroyImmediate(bow);
+            }
         }
 
         [Test]

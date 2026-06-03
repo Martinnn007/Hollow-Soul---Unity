@@ -10,6 +10,7 @@
     "Hollow.Presentation",
     "Hollow.RoomDesigner",
     "Hollow.Rooms",
+    "Unity.Animation.Rigging",
     "Unity.Behavior",
     "Unity.Behavior.SerializableGUID",
     "Unity.Properties",

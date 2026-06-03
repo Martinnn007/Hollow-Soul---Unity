@@ -25,13 +25,19 @@ namespace Hollow.Combat
         private float nextBodyBumpStimulusTime;
         private const float BodyBumpStimulusIntervalSeconds = 0.2f;
 
-        public float SpeedMetersPerSecond => (speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus) * GuardSpeedMultiplier;
+        public float SpeedMetersPerSecond => (speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus) * GuardLikeSpeedMultiplier;
 
         private float CurrentTemporarySpeedBonus => Time.time < temporarySpeedEndTime ? temporarySpeedBonusMetersPerSecond : 0f;
 
-        private float GuardSpeedMultiplier => (defenseController != null && defenseController.IsGuarding) || currentFrameGuardHeld
+        private float GuardLikeSpeedMultiplier => IsGuardLikeSlowActive
             ? (defenseController != null ? defenseController.GuardMoveMultiplier : ShieldGuardProfileDefinition.Resolve(null).GuardMoveMultiplier)
             : 1f;
+
+        private bool IsGuardLikeSlowActive =>
+            (defenseController != null && defenseController.IsGuarding) ||
+            currentFrameGuardHeld ||
+            (weaponController != null &&
+                (weaponController.IsRangedAttackCommitted || weaponController.IsRangedHeldAttackPoseActive));
 
         public RoomRuntimeRoot RoomRuntimeRoot => roomRuntimeRoot;
 
@@ -125,9 +131,14 @@ namespace Hollow.Combat
                 ? weaponController.RollDirection
                 : Vector2.ClampMagnitude(moveInput, 1f);
             var rollDirectionLocal = isRollTraveling ? new Vector3(move.x, 0f, move.y) : Vector3.zero;
+            var attackMoveMultiplier = weaponController != null &&
+                weaponController.IsAttackCommitted &&
+                !weaponController.IsRangedAttackCommitted
+                    ? PlayerWeaponController.AttackMovementMultiplier
+                    : 1f;
             var speed = isRollTraveling
                 ? weaponController.RollSpeedMetersPerSecond
-                : SpeedMetersPerSecond * (weaponController != null && weaponController.IsAttackCommitted ? PlayerWeaponController.AttackMovementMultiplier : 1f);
+                : SpeedMetersPerSecond * attackMoveMultiplier;
             var step = new Vector3(move.x, 0f, move.y) * speed * deltaTime;
             var stepCount = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / CombatFeelTuning.MovementSubstepMeters));
             var increment = step / stepCount;

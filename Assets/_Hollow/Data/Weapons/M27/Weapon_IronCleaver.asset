@@ -17,6 +17,7 @@ MonoBehaviour:
   slot: 0
   category: 0
   loadClass: 2
+  isDoubleHandedForPresentation: 1
   tags: 0100000003000000
   lightAttack:
     attackKind: 0

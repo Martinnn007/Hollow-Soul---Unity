@@ -64,7 +64,8 @@ namespace Hollow.Editor.Generation
                 WeaponCategory.Blade,
                 new[] { BuildTag.Melee, BuildTag.Heavy },
                 new WeaponAttackDefinition(AttackKind.Light, 2, 0.85f, 18f, 1.05f),
-                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3.15f, 50f, 1.35f));
+                new WeaponAttackDefinition(AttackKind.Heavy, 4, 3.15f, 50f, 1.35f),
+                isDoubleHandedForPresentation: true);
             var emberBolt = SaveWeapon(
                 "Weapon_EmberBolt.asset",
                 "ember_bolt",
@@ -92,7 +93,8 @@ namespace Hollow.Editor.Generation
             WeaponCategory category,
             IEnumerable<BuildTag> tags,
             WeaponAttackDefinition lightAttack,
-            WeaponAttackDefinition heavyAttack)
+            WeaponAttackDefinition heavyAttack,
+            bool? isDoubleHandedForPresentation = null)
         {
             var path = $"{WeaponDirectory}/{fileName}";
             var definition = AssetDatabase.LoadAssetAtPath<WeaponDefinition>(path);
@@ -102,7 +104,15 @@ namespace Hollow.Editor.Generation
                 AssetDatabase.CreateAsset(definition, path);
             }
 
-            definition.Configure(weaponId, displayName, slot, category, tags, lightAttack, heavyAttack);
+            definition.Configure(
+                weaponId,
+                displayName,
+                slot,
+                category,
+                tags,
+                lightAttack,
+                heavyAttack,
+                nextIsDoubleHandedForPresentation: isDoubleHandedForPresentation);
             EditorUtility.SetDirty(definition);
             return definition;
         }

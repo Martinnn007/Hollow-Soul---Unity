@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Linq;
 using Hollow.Combat;
@@ -11,6 +12,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
@@ -271,25 +273,38 @@ namespace Hollow.Tests.EditMode
                 Assert.AreSame(socket.transform, heldWeaponVisual.MeleeHandSocket);
                 Assert.IsNotNull(heldWeaponVisual.ActiveWeaponVisual);
                 Assert.IsNotNull(heldWeaponVisual.HolsteredRangedVisual);
+                Assert.IsNotNull(heldWeaponVisual.EquippedShieldVisual);
+                Assert.AreSame(heldWeaponVisual.ShieldForearmSocket, heldWeaponVisual.CurrentShieldSocket);
                 Assert.AreEqual(1, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
                 AssertVisibleMeshyMeleeWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.Armor));
+                AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.HolsteredRangedVisual);
+                AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
 
                 Assert.IsFalse(heldWeaponVisual.IsUsingHandAttachedMeleeVisual);
+                Assert.IsTrue(heldWeaponVisual.IsUsingHandAttachedRangedVisual);
+                Assert.AreSame(rightHand.transform, heldWeaponVisual.RangedHandSocket.parent);
                 Assert.IsNotNull(heldWeaponVisual.ActiveWeaponVisual);
                 Assert.IsNotNull(heldWeaponVisual.HolsteredMeleeVisual);
                 Assert.IsNull(heldWeaponVisual.HolsteredRangedVisual);
+                Assert.AreSame(heldWeaponVisual.ShieldForearmSocket, heldWeaponVisual.CurrentShieldSocket);
                 Assert.AreEqual(0, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.Armor));
+                AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
                 AssertVisibleMeshyMeleeWeaponVisual(heldWeaponVisual.HolsteredMeleeVisual);
+                AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
@@ -298,11 +313,579 @@ namespace Hollow.Tests.EditMode
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.Armor));
                 Assert.AreSame(heldWeaponVisual.RangedHandSocket, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
+                AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
             }
             finally
             {
                 Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void HeldWeaponVisualMovesShieldBetweenForearmAndBackForDoubleHandedWeapons()
+        {
+            var presentationCatalog = AssetDatabase.LoadAssetAtPath<PresentationContentCatalog>(Milestone9AssetGenerator.CatalogPath);
+            var weaponCatalog = AssetDatabase.LoadAssetAtPath<WeaponCatalogDefinition>(Milestone27AssetGenerator.WeaponCatalogPath);
+            Assert.IsNotNull(presentationCatalog);
+            Assert.IsNotNull(weaponCatalog);
+            PresentationContentProvider.Configure(presentationCatalog);
+
+            var player = new GameObject("PlayerCharacter");
+            var rightHand = new GameObject("RightHand");
+            var leftForearm = new GameObject("LeftForeArm");
+            var spine = new GameObject("Spine02");
+            try
+            {
+                rightHand.transform.SetParent(player.transform, false);
+                leftForearm.transform.SetParent(player.transform, false);
+                spine.transform.SetParent(player.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.ConfigureBuildStats(
+                    1f,
+                    0,
+                    1,
+                    10000f,
+                    1000f,
+                    "iron_cleaver",
+                    WeaponIdAliases.StarterPistolId,
+                    WeaponSlot.Melee,
+                    10000f,
+                    weaponCatalog);
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.Bind(weapon);
+
+                Assert.AreSame(rightHand.transform, heldWeaponVisual.MeleeHandSocket.parent);
+                Assert.AreSame(rightHand.transform, heldWeaponVisual.RangedHandSocket.parent);
+                Assert.AreSame(leftForearm.transform, heldWeaponVisual.ShieldForearmSocket.parent);
+                Assert.AreSame(spine.transform, heldWeaponVisual.ShieldBackSocket.parent);
+                Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
+                AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
+
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+
+                Assert.IsTrue(heldWeaponVisual.IsUsingHandAttachedRangedVisual);
+                Assert.AreSame(heldWeaponVisual.ShieldForearmSocket, heldWeaponVisual.CurrentShieldSocket);
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.Armor));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                PresentationContentProvider.Reset();
+            }
+        }
+
+        [Test]
+        public void RangedHandPoseControllerBlendsOnlyForActiveRangedWeapon()
+        {
+            var root = new GameObject("RangedHandPoseHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                player.transform.SetParent(root.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                var pose = player.AddComponent<PlayerRangedHandPoseController>();
+                pose.Bind(null, weapon, null);
+                pose.Configure(10f, 1f, 1f, 1.08f, 0.48f, 0.24f);
+
+                pose.SamplePose(0.2f);
+
+                Assert.AreEqual(0f, pose.CurrentBlend01, 0.001f);
+                Assert.IsFalse(pose.IsRangedPoseActive);
+
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                pose.SamplePose(0.2f);
+
+                Assert.AreEqual(0f, pose.CurrentBlend01, 0.001f);
+                Assert.IsFalse(pose.IsRangedPoseActive);
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                pose.SamplePose(0.2f);
+
+                Assert.AreEqual(1f, pose.CurrentBlend01, 0.001f);
+                Assert.IsTrue(pose.IsRangedPoseActive);
+                Assert.Greater(pose.TargetWorldPosition.y, 1f);
+
+                weapon.TickAction(3f, 3f);
+                pose.SamplePose(0.2f);
+
+                Assert.AreEqual(0f, pose.CurrentBlend01, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void RangedHandPoseControllerRaisesFallbackSocketAndMuzzle()
+        {
+            var root = new GameObject("RangedFallbackPoseHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            var rightHand = new GameObject("RightHand");
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                player.transform.SetParent(root.transform, false);
+                rightHand.transform.SetParent(player.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.Bind(weapon);
+                var pose = player.AddComponent<PlayerRangedHandPoseController>();
+                pose.Bind(null, weapon, heldWeaponVisual);
+                pose.Configure(10f, 1f, 1f, 1.08f, 0.48f, 0.24f);
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                heldWeaponVisual.ForceRangedAimPose(Vector2.up);
+                pose.SamplePose(0.2f);
+                InvokePrivateLateUpdate(pose);
+
+                Assert.AreEqual(1f, pose.CurrentBlend01, 0.001f);
+                Assert.Greater(heldWeaponVisual.RangedHandSocket.position.y, 1f);
+                Assert.Greater(heldWeaponVisual.ActiveMuzzleTransform.position.y, 1f);
+                Assert.Greater(
+                    Vector3.Dot(heldWeaponVisual.ActiveMuzzleTransform.forward, Vector3.forward),
+                    0.98f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void RangedHandPoseControllerStaysRaisedWhileHeldBetweenShots()
+        {
+            var root = new GameObject("RangedHeldPoseHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                player.transform.SetParent(root.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                var pose = player.AddComponent<PlayerRangedHandPoseController>();
+                pose.Bind(null, weapon, null);
+                pose.Configure(10f, 1f, 1f, 1.08f, 0.48f, 0.24f);
+
+                weapon.TickInput(HeldRangedLightSnapshot(Vector2.up), 0f, 0f);
+                pose.SamplePose(0.2f);
+
+                Assert.IsTrue(weapon.IsRangedHeldAttackPoseActive);
+                Assert.AreEqual(AttackKind.Light, weapon.RangedHeldAttackKind);
+                Assert.AreEqual(1f, pose.CurrentBlend01, 0.001f);
+                Assert.IsTrue(pose.IsRangedPoseActive);
+
+                weapon.TickAction(0.21f, 0.21f);
+                Assert.IsFalse(weapon.IsRangedAttackCommitted);
+                Assert.IsTrue(weapon.IsRangedHeldAttackPoseActive);
+                pose.SamplePose(0f);
+
+                Assert.AreEqual(1f, pose.CurrentBlend01, 0.001f);
+                Assert.IsTrue(pose.IsRangedPoseActive);
+
+                weapon.TickInput(ReleasedRangedSnapshot(Vector2.up), 0f, 0.22f);
+                pose.SamplePose(0.2f);
+
+                Assert.IsFalse(weapon.IsRangedHeldAttackPoseActive);
+                Assert.AreEqual(0f, pose.CurrentBlend01, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ShieldGuardPoseControllerRaisesFallbackShieldSocket()
+        {
+            var player = new GameObject("PlayerCharacter");
+            var leftForearm = new GameObject("LeftForeArm");
+            try
+            {
+                leftForearm.transform.SetParent(player.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                var defense = player.AddComponent<PlayerDefenseController>();
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.Bind(weapon);
+                var pose = player.AddComponent<PlayerShieldGuardPoseController>();
+                pose.Bind(null, defense, heldWeaponVisual);
+                pose.Configure(10f, 1f, 1f, 1.04f, 0.46f, -0.22f);
+
+                defense.Tick(
+                    new GameplayInputSnapshot(
+                        Vector2.zero,
+                        Vector2.up,
+                        interactPressed: false,
+                        swapWeaponPressed: false,
+                        lightAttackPressed: false,
+                        heavyAttackPressed: false,
+                        useActiveItemPressed: false,
+                        useConsumableCardPressed: false,
+                        guardHeld: true),
+                    0f,
+                    0f);
+                pose.SamplePose(0.2f);
+                InvokePrivateLateUpdate(pose);
+
+                Assert.AreEqual(1f, pose.CurrentBlend01, 0.001f);
+                Assert.IsTrue(pose.IsShieldPoseActive);
+                Assert.Greater(heldWeaponVisual.ShieldForearmSocket.position.y, 0.95f);
+                Assert.Greater(
+                    Vector3.Dot(heldWeaponVisual.ShieldForearmSocket.forward, Vector3.forward),
+                    0.9f);
+
+                defense.Tick(false, 0.1f);
+                pose.SamplePose(0.2f);
+
+                Assert.AreEqual(0f, pose.CurrentBlend01, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void AnimationRiggingPackageIsDeclaredForModernPlayerRig()
+        {
+            var manifest = File.ReadAllText("Packages/manifest.json");
+
+            StringAssert.Contains("\"com.unity.animation.rigging\": \"1.4.0\"", manifest);
+        }
+
+        [Test]
+        public void DirectionalLocomotionValidationTracksRequiredEightWayImports()
+        {
+            var required = MainCharacterAnimationIntegrator.RequiredDirectionalLocomotionFbxPaths();
+            var expectedMissing = required.Where(path => !File.Exists(path)).ToArray();
+
+            Assert.AreEqual(16, required.Length);
+            Assert.AreEqual(required.Length, required.Distinct().Count());
+            Assert.IsTrue(required.Any(path => path.Contains("Walk_Backward")));
+            Assert.IsTrue(required.Any(path => path.Contains("Walk_Right")));
+            Assert.IsTrue(required.Any(path => path.Contains("Run_Backward")));
+            Assert.IsTrue(required.Any(path => path.Contains("Run_Left")));
+            CollectionAssert.AreEquivalent(expectedMissing, MainCharacterAnimationIntegrator.MissingDirectionalLocomotionFbxPaths());
+        }
+
+        [Test]
+        public void PlayerLocomotionAnimatorKeepsLowerBodyStableUntilTurnThreshold()
+        {
+            var root = new GameObject("TurnInPlaceThresholdHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                var visualRoot = new GameObject(VisualRootName);
+                player.transform.SetParent(root.transform, false);
+                visualRoot.transform.SetParent(player.transform, false);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                var locomotionAnimator = player.AddComponent<PlayerLocomotionAnimator>();
+                locomotionAnimator.Bind(null, visualRoot.transform);
+                locomotionAnimator.BindGameplay(weapon, null, null);
+                locomotionAnimator.Configure(
+                    0.05f,
+                    3600f,
+                    PlayerMovementController.DefaultSpeedMetersPerSecond,
+                    100f,
+                    PlayerLocomotionAnimator.DefaultTurnInPlaceStartDegrees,
+                    PlayerLocomotionAnimator.DefaultTurnInPlaceFullDegrees);
+                locomotionAnimator.ResetTracking();
+
+                weapon.TickInput(HeldRangedLightSnapshot(new Vector2(0.70710677f, 0.70710677f)), 0f, 0f);
+                locomotionAnimator.Sample(0.1f);
+
+                Assert.IsTrue(locomotionAnimator.IsTargetLockedForLocomotion);
+                Assert.IsFalse(locomotionAnimator.IsTurnInPlaceActive);
+                Assert.Greater(Vector3.Dot(visualRoot.transform.forward, Vector3.forward), 0.99f);
+                Assert.That(locomotionAnimator.AimBodyAngleDegrees, Is.InRange(40f, 50f));
+
+                weapon.TickInput(HeldRangedLightSnapshot(Vector2.right), 0f, 0.2f);
+                locomotionAnimator.Sample(0.1f);
+
+                Assert.IsTrue(locomotionAnimator.IsTurnInPlaceActive);
+                Assert.Greater(locomotionAnimator.AimBodyAngleDegrees, 40f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlayerAnimationPoseCoordinatorDrivesRangedAndShieldRigState()
+        {
+            var root = new GameObject("ModernAnimationPoseHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                player.transform.SetParent(root.transform, false);
+                var rightHand = new GameObject("RightHand");
+                var leftForearm = new GameObject("LeftForeArm");
+                rightHand.transform.SetParent(player.transform, false);
+                leftForearm.transform.SetParent(player.transform, false);
+                var health = player.AddComponent<CombatantHealth>();
+                health.Configure(6);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                var defense = player.AddComponent<PlayerDefenseController>();
+                defense.Configure(0);
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.Bind(weapon);
+                var rangedPose = player.AddComponent<PlayerRangedHandPoseController>();
+                rangedPose.Bind(null, weapon, heldWeaponVisual);
+                rangedPose.Configure(10f, 1f, 1f, 1.08f, 0.48f, 0.24f);
+                var shieldPose = player.AddComponent<PlayerShieldGuardPoseController>();
+                shieldPose.Bind(null, defense, heldWeaponVisual);
+                shieldPose.Configure(10f, 1f, 1f, 1.04f, 0.46f, -0.22f);
+                var rigHarness = CreateModernRigHarness(player.transform);
+                var constraintHarness = CreateModernConstraintHarness(rigHarness.UpperBodyRig.transform);
+                var coordinator = player.AddComponent<PlayerAnimationPoseCoordinator>();
+                coordinator.Bind(null, null, weapon, defense, health, heldWeaponVisual, rangedPose, shieldPose);
+                coordinator.BindRigs(rigHarness.BaseRig, rigHarness.FullBodyRig, rigHarness.UpperBodyRig, rigHarness.AdditiveRig);
+                coordinator.BindRigConstraints(
+                    constraintHarness.RightHandIk,
+                    constraintHarness.LeftHandIk,
+                    constraintHarness.ChestAim);
+                coordinator.BindTargets(
+                    rigHarness.RightHandTarget,
+                    rigHarness.LeftHandTarget,
+                    rigHarness.ChestTarget,
+                    rigHarness.ResponseTarget,
+                    rigHarness.LeftFootTarget,
+                    rigHarness.RightFootTarget);
+                coordinator.Configure(10f, 10f, 10f, PlayerMovementController.DefaultSpeedMetersPerSecond);
+
+                weapon.TickInput(HeldRangedLightSnapshot(Vector2.up), 0f, 0f);
+                rangedPose.SamplePose(0.2f);
+                coordinator.SamplePose(0.2f);
+
+                Assert.AreEqual(PlayerAnimationUpperBodyPose.RangedAim, coordinator.CurrentUpperBodyPose);
+                Assert.AreEqual(PlayerAnimationActionPhase.RangedAttack, coordinator.CurrentActionPhase);
+                Assert.AreEqual(1f, coordinator.UpperBodyCombatRigWeight, 0.001f);
+                Assert.AreEqual(1f, rigHarness.UpperBodyRig.weight, 0.001f);
+                Assert.AreEqual(1f, constraintHarness.RightHandIk.weight, 0.001f);
+                Assert.AreEqual(0f, constraintHarness.LeftHandIk.weight, 0.001f);
+                Assert.AreEqual(0.45f, constraintHarness.ChestAim.weight, 0.001f);
+                Assert.Greater(rigHarness.RightHandTarget.position.y, 1f);
+                Assert.Greater(Vector3.Dot(rigHarness.ChestTarget.forward, Vector3.forward), 0.95f);
+
+                weapon.TickAction(1f, 1f);
+                weapon.TickInput(ReleasedRangedSnapshot(Vector2.up), 0f, 1.1f);
+                defense.Tick(
+                    new GameplayInputSnapshot(
+                        Vector2.zero,
+                        Vector2.right,
+                        interactPressed: false,
+                        swapWeaponPressed: false,
+                        lightAttackPressed: false,
+                        heavyAttackPressed: false,
+                        useActiveItemPressed: false,
+                        useConsumableCardPressed: false,
+                        guardHeld: true),
+                    0f,
+                    1.2f);
+                shieldPose.SamplePose(0.2f);
+                coordinator.SamplePose(0.2f);
+
+                Assert.AreEqual(PlayerAnimationUpperBodyPose.ShieldGuard, coordinator.CurrentUpperBodyPose);
+                Assert.AreEqual(PlayerAnimationActionPhase.Guard, coordinator.CurrentActionPhase);
+                Assert.AreEqual(1f, coordinator.UpperBodyCombatRigWeight, 0.001f);
+                Assert.AreEqual(0f, constraintHarness.RightHandIk.weight, 0.001f);
+                Assert.AreEqual(1f, constraintHarness.LeftHandIk.weight, 0.001f);
+                Assert.AreEqual(0.35f, constraintHarness.ChestAim.weight, 0.001f);
+                Assert.Greater(rigHarness.LeftHandTarget.position.y, 0.95f);
+                Assert.Greater(Vector3.Dot(rigHarness.ChestTarget.forward, Vector3.right), 0.95f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlayerAnimationPoseCoordinatorRaisesPhysicalResponseOnShotAndDamage()
+        {
+            var root = new GameObject("ModernAnimationResponseHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                player.transform.SetParent(root.transform, false);
+                var health = player.AddComponent<CombatantHealth>();
+                health.Configure(6);
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                var rigHarness = CreateModernRigHarness(player.transform);
+                var coordinator = player.AddComponent<PlayerAnimationPoseCoordinator>();
+                coordinator.Bind(null, null, weapon, null, health, null, null, null);
+                coordinator.BindRigs(rigHarness.BaseRig, rigHarness.FullBodyRig, rigHarness.UpperBodyRig, rigHarness.AdditiveRig);
+                coordinator.BindTargets(
+                    rigHarness.RightHandTarget,
+                    rigHarness.LeftHandTarget,
+                    rigHarness.ChestTarget,
+                    rigHarness.ResponseTarget,
+                    rigHarness.LeftFootTarget,
+                    rigHarness.RightFootTarget);
+                coordinator.Configure(10f, 3f, 10f, PlayerMovementController.DefaultSpeedMetersPerSecond);
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                weapon.TickAction(0.02f, 0.02f);
+                coordinator.SamplePose(0.02f);
+
+                Assert.Greater(coordinator.PhysicalImpulse01, 0.1f);
+                Assert.Greater(coordinator.AdditivePhysicalResponseRigWeight, 0.1f);
+                Assert.Greater(rigHarness.AdditiveRig.weight, 0.1f);
+
+                DamageSystem.ApplyDamage(health, new DamageRequest(1, player));
+                coordinator.SamplePose(0.02f);
+
+                Assert.Greater(coordinator.PhysicalImpulse01, 0.5f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlayerFootPlacementPlantsFeetAndBoundsAimYawOnFlatFloor()
+        {
+            var player = new GameObject("PlayerCharacter");
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            try
+            {
+                floor.name = "FlatFootPlacementFloor";
+                floor.transform.position = Vector3.zero;
+                var leftTarget = new GameObject("LeftFootTarget").transform;
+                var rightTarget = new GameObject("RightFootTarget").transform;
+                var pelvisTarget = new GameObject("PelvisTarget").transform;
+                leftTarget.SetParent(player.transform, false);
+                rightTarget.SetParent(player.transform, false);
+                pelvisTarget.SetParent(player.transform, false);
+                var leftIk = new GameObject("LeftFootIK").AddComponent<TwoBoneIKConstraint>();
+                var rightIk = new GameObject("RightFootIK").AddComponent<TwoBoneIKConstraint>();
+                var pelvis = new GameObject("PelvisPosition").AddComponent<MultiPositionConstraint>();
+                leftIk.transform.SetParent(player.transform, false);
+                rightIk.transform.SetParent(player.transform, false);
+                pelvis.transform.SetParent(player.transform, false);
+
+                var footPlacement = player.AddComponent<PlayerFootPlacementController>();
+                footPlacement.Bind(null, null, null, null, leftTarget, rightTarget, pelvisTarget);
+                footPlacement.BindConstraints(leftIk, rightIk, pelvis);
+                footPlacement.Configure(
+                    PlayerFootPlacementController.DefaultStrideLengthMeters,
+                    PlayerFootPlacementController.DefaultLockThresholdMetersPerSecond,
+                    PlayerFootPlacementController.DefaultPelvisSmoothing,
+                    PlayerFootPlacementController.DefaultFootHeightMeters,
+                    PlayerFootPlacementController.DefaultRaycastDistanceMeters,
+                    PlayerFootPlacementController.DefaultIkBlendSpeed,
+                    PlayerFootPlacementController.DefaultYawBlend,
+                    PlayerFootPlacementController.DefaultFootPlantHalfCycleSeconds);
+
+                footPlacement.SamplePlacement(
+                    0.2f,
+                    allowFootIk: true,
+                    Vector3.forward,
+                    Vector3.right,
+                    Vector2.up,
+                    PlayerAnimationPoseCoordinator.DefaultFootYawAimInfluenceMaxDegrees);
+                footPlacement.ApplyConstraintWeights(1f);
+
+                Assert.IsTrue(footPlacement.IsFootIkEligible);
+                Assert.IsFalse(footPlacement.IsUsingGroundFallback);
+                Assert.Greater(leftTarget.position.y, 0f);
+                Assert.Greater(rightTarget.position.y, 0f);
+                Assert.That(Mathf.Abs(Vector3.SignedAngle(Vector3.forward, leftTarget.forward, Vector3.up)), Is.LessThanOrEqualTo(16f));
+                Assert.That(footPlacement.PelvisOffset, Is.InRange(-0.18f, 0.06f));
+                Assert.Greater(leftIk.weight, 0.1f);
+                Assert.Greater(rightIk.weight, 0.1f);
+                Assert.Greater(pelvis.weight, 0.05f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(floor);
+            }
+        }
+
+        [Test]
+        public void PlayerAnimationPoseCoordinatorWeightsFootPlacementAndSuppressesOnDamage()
+        {
+            var player = new GameObject("PlayerCharacter");
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            try
+            {
+                var health = player.AddComponent<CombatantHealth>();
+                health.Configure(4);
+                var rigHarness = CreateModernRigHarness(player.transform);
+                var footPlacement = player.AddComponent<PlayerFootPlacementController>();
+                var leftIk = new GameObject(PlayerAnimationPoseCoordinator.LeftFootIkConstraintName).AddComponent<TwoBoneIKConstraint>();
+                var rightIk = new GameObject(PlayerAnimationPoseCoordinator.RightFootIkConstraintName).AddComponent<TwoBoneIKConstraint>();
+                var pelvis = new GameObject(PlayerAnimationPoseCoordinator.PelvisPositionConstraintName).AddComponent<MultiPositionConstraint>();
+                leftIk.transform.SetParent(player.transform, false);
+                rightIk.transform.SetParent(player.transform, false);
+                pelvis.transform.SetParent(player.transform, false);
+                var coordinator = player.AddComponent<PlayerAnimationPoseCoordinator>();
+                coordinator.Bind(null, null, null, null, health, null, null, null);
+                coordinator.BindRigs(rigHarness.BaseRig, rigHarness.FullBodyRig, rigHarness.UpperBodyRig, rigHarness.AdditiveRig);
+                coordinator.BindTargets(
+                    rigHarness.RightHandTarget,
+                    rigHarness.LeftHandTarget,
+                    rigHarness.ChestTarget,
+                    rigHarness.ResponseTarget,
+                    rigHarness.LeftFootTarget,
+                    rigHarness.RightFootTarget);
+                coordinator.BindFootPlacement(footPlacement, leftIk, rightIk, pelvis, rigHarness.PelvisTarget);
+                coordinator.Configure(10f, 10f, 10f, PlayerMovementController.DefaultSpeedMetersPerSecond);
+
+                coordinator.SamplePose(0.2f);
+
+                Assert.Greater(coordinator.FootIkWeight, 0.9f);
+                Assert.Greater(coordinator.LeftFootLockWeight, 0.1f);
+                Assert.Greater(coordinator.RightFootLockWeight, 0.1f);
+
+                DamageSystem.ApplyDamage(health, new DamageRequest(1, player));
+                coordinator.SamplePose(0.02f);
+
+                Assert.Less(coordinator.FootIkWeight, 1f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(floor);
             }
         }
 
@@ -313,6 +896,196 @@ namespace Hollow.Tests.EditMode
                     .SelectMany(renderer => renderer.sharedMaterials)
                     .Where(material => material != null)
                     .Any(material => AssetDatabase.GetAssetPath(material) == WeaponMeleeMeshyAssetGenerator.MeshyMaterialPath);
+        }
+
+        private static GameplayInputSnapshot HeldRangedLightSnapshot(Vector2 aim)
+        {
+            return new GameplayInputSnapshot(
+                Vector2.zero,
+                aim,
+                interactPressed: false,
+                swapWeaponPressed: false,
+                lightAttackPressed: true,
+                heavyAttackPressed: false,
+                useActiveItemPressed: false,
+                useConsumableCardPressed: false,
+                guardHeld: false,
+                pausePressed: false,
+                rollPressed: false,
+                lockTargetPressed: false,
+                pointerScreenPosition: Vector2.zero,
+                hasPointerScreenPosition: false,
+                mouseAimIntent: false,
+                lightAttackHeld: true,
+                lightAttackReleased: false,
+                heavyAttackHeld: false,
+                heavyAttackReleased: false);
+        }
+
+        private static GameplayInputSnapshot ReleasedRangedSnapshot(Vector2 aim)
+        {
+            return new GameplayInputSnapshot(
+                Vector2.zero,
+                aim,
+                interactPressed: false,
+                swapWeaponPressed: false,
+                lightAttackPressed: false,
+                heavyAttackPressed: false,
+                useActiveItemPressed: false,
+                useConsumableCardPressed: false,
+                guardHeld: false,
+                pausePressed: false,
+                rollPressed: false,
+                lockTargetPressed: false,
+                pointerScreenPosition: Vector2.zero,
+                hasPointerScreenPosition: false,
+                mouseAimIntent: false,
+                lightAttackHeld: false,
+                lightAttackReleased: true,
+                heavyAttackHeld: false,
+                heavyAttackReleased: false);
+        }
+
+        private static ModernRigHarness CreateModernRigHarness(Transform parent)
+        {
+            var root = new GameObject(PlayerAnimationPoseCoordinator.ModernAnimationRigRootName);
+            root.transform.SetParent(parent, false);
+            var baseRig = CreateRig(root.transform, PlayerAnimationPoseCoordinator.BaseLocomotionRigName);
+            var fullBodyRig = CreateRig(root.transform, PlayerAnimationPoseCoordinator.FullBodyActionRigName);
+            var upperBodyRig = CreateRig(root.transform, PlayerAnimationPoseCoordinator.UpperBodyCombatRigName);
+            var additiveRig = CreateRig(root.transform, PlayerAnimationPoseCoordinator.AdditivePhysicalResponseRigName);
+            var targets = new GameObject(PlayerAnimationPoseCoordinator.RigTargetsRootName);
+            targets.transform.SetParent(root.transform, false);
+
+            return new ModernRigHarness(
+                baseRig,
+                fullBodyRig,
+                upperBodyRig,
+                additiveRig,
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.RightHandWeaponTargetName),
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.LeftHandShieldTargetName),
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.ChestAimTargetName),
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.PhysicalResponseTargetName),
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.LeftFootGroundTargetName),
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.RightFootGroundTargetName),
+                CreateTarget(targets.transform, PlayerAnimationPoseCoordinator.PelvisTargetName));
+        }
+
+        private static Rig CreateRig(Transform parent, string rigName)
+        {
+            var rigObject = new GameObject(rigName);
+            rigObject.transform.SetParent(parent, false);
+            return rigObject.AddComponent<Rig>();
+        }
+
+        private static Transform CreateTarget(Transform parent, string targetName)
+        {
+            var target = new GameObject(targetName);
+            target.transform.SetParent(parent, false);
+            return target.transform;
+        }
+
+        private static ModernConstraintHarness CreateModernConstraintHarness(Transform parent)
+        {
+            var rightHand = new GameObject(PlayerAnimationPoseCoordinator.RightHandWeaponIkConstraintName);
+            rightHand.transform.SetParent(parent, false);
+            var leftHand = new GameObject(PlayerAnimationPoseCoordinator.LeftHandShieldIkConstraintName);
+            leftHand.transform.SetParent(parent, false);
+            var chestAim = new GameObject(PlayerAnimationPoseCoordinator.ChestAimConstraintName);
+            chestAim.transform.SetParent(parent, false);
+
+            return new ModernConstraintHarness(
+                rightHand.AddComponent<TwoBoneIKConstraint>(),
+                leftHand.AddComponent<TwoBoneIKConstraint>(),
+                chestAim.AddComponent<MultiAimConstraint>());
+        }
+
+        private readonly struct ModernConstraintHarness
+        {
+            public ModernConstraintHarness(
+                TwoBoneIKConstraint rightHandIk,
+                TwoBoneIKConstraint leftHandIk,
+                MultiAimConstraint chestAim)
+            {
+                RightHandIk = rightHandIk;
+                LeftHandIk = leftHandIk;
+                ChestAim = chestAim;
+            }
+
+            public TwoBoneIKConstraint RightHandIk { get; }
+
+            public TwoBoneIKConstraint LeftHandIk { get; }
+
+            public MultiAimConstraint ChestAim { get; }
+        }
+
+        private readonly struct ModernRigHarness
+        {
+            public ModernRigHarness(
+                Rig baseRig,
+                Rig fullBodyRig,
+                Rig upperBodyRig,
+                Rig additiveRig,
+                Transform rightHandTarget,
+                Transform leftHandTarget,
+                Transform chestTarget,
+                Transform responseTarget,
+                Transform leftFootTarget,
+                Transform rightFootTarget,
+                Transform pelvisTarget)
+            {
+                BaseRig = baseRig;
+                FullBodyRig = fullBodyRig;
+                UpperBodyRig = upperBodyRig;
+                AdditiveRig = additiveRig;
+                RightHandTarget = rightHandTarget;
+                LeftHandTarget = leftHandTarget;
+                ChestTarget = chestTarget;
+                ResponseTarget = responseTarget;
+                LeftFootTarget = leftFootTarget;
+                RightFootTarget = rightFootTarget;
+                PelvisTarget = pelvisTarget;
+            }
+
+            public Rig BaseRig { get; }
+
+            public Rig FullBodyRig { get; }
+
+            public Rig UpperBodyRig { get; }
+
+            public Rig AdditiveRig { get; }
+
+            public Transform RightHandTarget { get; }
+
+            public Transform LeftHandTarget { get; }
+
+            public Transform ChestTarget { get; }
+
+            public Transform ResponseTarget { get; }
+
+            public Transform LeftFootTarget { get; }
+
+            public Transform RightFootTarget { get; }
+
+            public Transform PelvisTarget { get; }
+        }
+
+        private static bool UsesMeshyRangedWeaponMaterial(GameObject root)
+        {
+            return root != null &&
+                root.GetComponentsInChildren<Renderer>(includeInactive: true)
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null)
+                    .Any(material => AssetDatabase.GetAssetPath(material) == DefaultEquipmentMeshyAssetGenerator.MeshyPistolMaterialPath);
+        }
+
+        private static bool UsesMeshyShieldMaterial(GameObject root)
+        {
+            return root != null &&
+                root.GetComponentsInChildren<Renderer>(includeInactive: true)
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null)
+                    .Any(material => AssetDatabase.GetAssetPath(material) == DefaultEquipmentMeshyAssetGenerator.MeshyShieldMaterialPath);
         }
 
         private static void AssertVisibleMeshyMeleeWeaponVisual(GameObject root)
@@ -326,6 +1099,33 @@ namespace Hollow.Tests.EditMode
             var bounds = Encapsulate(renderers);
             Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.5f);
             Assert.Greater(bounds.size.sqrMagnitude, 0.25f);
+        }
+
+        private static void AssertVisibleMeshyRangedWeaponVisual(GameObject root)
+        {
+            Assert.IsNotNull(root);
+            Assert.IsTrue(UsesMeshyRangedWeaponMaterial(root));
+            var renderers = root.GetComponentsInChildren<Renderer>(includeInactive: false)
+                .Where(renderer => renderer.enabled && renderer.gameObject.activeInHierarchy)
+                .ToArray();
+            Assert.Greater(renderers.Length, 0, "Ranged weapon visual should have an active renderer in gameplay hierarchy.");
+            var bounds = Encapsulate(renderers);
+            Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.35f);
+            Assert.Greater(bounds.size.sqrMagnitude, 0.08f);
+        }
+
+        private static void AssertVisibleMeshyShieldVisual(GameObject root)
+        {
+            Assert.IsNotNull(root);
+            Assert.IsTrue(UsesMeshyShieldMaterial(root));
+            Assert.AreEqual(0, root.GetComponentsInChildren<Collider>(includeInactive: true).Length);
+            var renderers = root.GetComponentsInChildren<Renderer>(includeInactive: false)
+                .Where(renderer => renderer.enabled && renderer.gameObject.activeInHierarchy)
+                .ToArray();
+            Assert.Greater(renderers.Length, 0, "Shield visual should have an active renderer in gameplay hierarchy.");
+            var bounds = Encapsulate(renderers);
+            Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.35f);
+            Assert.Greater(bounds.size.sqrMagnitude, 0.08f);
         }
 
         private static Bounds Encapsulate(Renderer[] renderers)
@@ -575,29 +1375,61 @@ namespace Hollow.Tests.EditMode
             var rangedMuzzleSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
                 .Where(child => child.name == PlayerHeldWeaponVisualController.RangedMuzzleSocketName)
                 .ToArray();
+            var shieldForearmSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(child => child.name == PlayerHeldWeaponVisualController.ShieldForearmSocketName)
+                .ToArray();
+            var shieldBackSockets = visualRoot.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(child => child.name == PlayerHeldWeaponVisualController.ShieldBackSocketName)
+                .ToArray();
             Assert.AreEqual(1, meleeSockets.Length);
             Assert.AreEqual(1, rangedHandSockets.Length);
             Assert.AreEqual(1, meleeHolsterSockets.Length);
             Assert.AreEqual(1, rangedHolsterSockets.Length);
             Assert.AreEqual(1, rangedMuzzleSockets.Length);
+            Assert.LessOrEqual(shieldForearmSockets.Length, 1);
+            Assert.LessOrEqual(shieldBackSockets.Length, 1);
             Assert.AreEqual("RightHand", meleeSockets[0].parent.name);
-            Assert.AreSame(visualRoot, rangedHandSockets[0].parent);
+            Assert.IsTrue(
+                rangedHandSockets[0].parent.name == "RightHand" || rangedHandSockets[0].parent == visualRoot,
+                "Regenerated prefabs should parent the ranged hand socket to RightHand; older prefabs are repaired by PlayerHeldWeaponVisualController at runtime.");
             Assert.AreSame(visualRoot, meleeHolsterSockets[0].parent);
             Assert.AreSame(visualRoot, rangedHolsterSockets[0].parent);
             Assert.AreSame(rangedHandSockets[0], rangedMuzzleSockets[0].parent);
+            if (shieldForearmSockets.Length > 0)
+            {
+                Assert.AreEqual("LeftForeArm", shieldForearmSockets[0].parent.name);
+            }
+
+            if (shieldBackSockets.Length > 0)
+            {
+                Assert.AreEqual("Spine02", shieldBackSockets[0].parent.name);
+            }
 
             var locomotionAnimator = prefab.GetComponent<PlayerLocomotionAnimator>();
             var heldWeaponVisual = prefab.GetComponent<PlayerHeldWeaponVisualController>();
             var aimLockController = prefab.GetComponent<PlayerAimLockController>();
+            var rangedHandPose = prefab.GetComponent<PlayerRangedHandPoseController>();
+            var shieldGuardPose = prefab.GetComponent<PlayerShieldGuardPoseController>();
             var animator = prefab.GetComponentInChildren<Animator>(includeInactive: true);
             Assert.IsNotNull(locomotionAnimator);
             Assert.IsNotNull(heldWeaponVisual);
             Assert.IsNotNull(aimLockController);
+            Assert.IsNotNull(rangedHandPose);
+            Assert.IsNotNull(shieldGuardPose);
             Assert.AreSame(meleeSockets[0], heldWeaponVisual.MeleeHandSocket);
             Assert.AreSame(rangedHandSockets[0], heldWeaponVisual.RangedHandSocket);
             Assert.AreSame(meleeHolsterSockets[0], heldWeaponVisual.MeleeHolsterSocket);
             Assert.AreSame(rangedHolsterSockets[0], heldWeaponVisual.RangedHolsterSocket);
             Assert.AreSame(rangedMuzzleSockets[0], heldWeaponVisual.ActiveMuzzleTransform);
+            if (shieldForearmSockets.Length > 0)
+            {
+                Assert.AreSame(shieldForearmSockets[0], heldWeaponVisual.ShieldForearmSocket);
+            }
+
+            if (shieldBackSockets.Length > 0)
+            {
+                Assert.AreSame(shieldBackSockets[0], heldWeaponVisual.ShieldBackSocket);
+            }
             Assert.IsNotNull(animator);
             Assert.IsFalse(animator.applyRootMotion);
             var aimLockField = typeof(PlayerLocomotionAnimator).GetField(
@@ -608,6 +1440,7 @@ namespace Hollow.Tests.EditMode
 
             var controller = animator.runtimeAnimatorController as AnimatorController;
             Assert.IsNotNull(controller);
+            Assert.IsTrue(controller.layers[0].iKPass);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.IsMovingParameter, AnimatorControllerParameterType.Bool);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.MoveSpeedParameter, AnimatorControllerParameterType.Float);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.ActionSpeedParameter, AnimatorControllerParameterType.Float);
@@ -799,6 +1632,15 @@ namespace Hollow.Tests.EditMode
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field);
             return (bool)field.GetValue(animator);
+        }
+
+        private static void InvokePrivateLateUpdate(object target)
+        {
+            var method = target.GetType().GetMethod(
+                "LateUpdate",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+            method.Invoke(target, null);
         }
 
         private static GameplayInputSnapshot Snapshot(Vector2 move)

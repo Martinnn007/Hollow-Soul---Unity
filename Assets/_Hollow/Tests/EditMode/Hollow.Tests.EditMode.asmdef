@@ -19,6 +19,7 @@
     "Hollow.Rewards",
     "Hollow.RoomDesigner",
     "Hollow.Editor",
+    "Unity.Animation.Rigging",
     "Unity.Behavior",
     "Unity.Behavior.SerializableGUID",
     "Unity.PolySpatial",

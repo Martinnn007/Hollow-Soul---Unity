@@ -93,6 +93,37 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void WeaponRangedArtPassPrefabUsesMeshyPistolVisualOnlyAsset()
+        {
+            AssertMeshyEquipmentArtPassPrefab(
+                PresentationPrefabRole.WeaponRanged,
+                DefaultEquipmentMeshyAssetGenerator.ArtPassWeaponRangedPrefabPath,
+                DefaultEquipmentMeshyAssetGenerator.MeshyPistolMaterialPath,
+                "Ranged weapon ArtPass renderers should use the imported Meshy pistol material.",
+                bounds =>
+                {
+                    Assert.Greater(bounds.size.y, 0.45f, "Pistol ArtPass should preserve local-Y barrel length for held weapon canonical rotation.");
+                    Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.z), 0.08f, "Pistol ArtPass should not be fitted as an edge-on sliver.");
+                });
+        }
+
+        [Test]
+        public void ArmorArtPassPrefabUsesMeshyShieldVisualOnlyAsset()
+        {
+            AssertMeshyEquipmentArtPassPrefab(
+                PresentationPrefabRole.Armor,
+                DefaultEquipmentMeshyAssetGenerator.ArtPassArmorPrefabPath,
+                DefaultEquipmentMeshyAssetGenerator.MeshyShieldMaterialPath,
+                "Armor ArtPass renderers should use the imported Meshy small shield material.",
+                bounds =>
+                {
+                    Assert.Greater(bounds.size.x, 0.45f, "Shield ArtPass should preserve a readable local-X width.");
+                    Assert.Greater(bounds.size.y, 0.35f, "Shield ArtPass should preserve a readable local-Y height.");
+                    Assert.Less(bounds.size.z, Mathf.Max(bounds.size.x, bounds.size.y), "Shield ArtPass should face local +Z rather than becoming a thick block.");
+                });
+        }
+
+        [Test]
         public void HubShopCardAttachesVisualWithoutGameplayColliders()
         {
             var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -117,6 +148,50 @@ namespace Hollow.Tests.EditMode
         public void Milestone38ValidatorReportsGeneratedStateValid()
         {
             Assert.DoesNotThrow(() => Milestone38Validator.Validate());
+        }
+
+        private static void AssertMeshyEquipmentArtPassPrefab(
+            PresentationPrefabRole role,
+            string prefabPath,
+            string materialPath,
+            string materialMessage,
+            Action<Bounds> assertBounds)
+        {
+            var presentationCatalog = AssetDatabase.LoadAssetAtPath<PresentationContentCatalog>(Milestone9AssetGenerator.CatalogPath);
+            Assert.IsNotNull(presentationCatalog);
+            Assert.IsTrue(presentationCatalog.TryGetPrefab(role, out var boundPrefab));
+            Assert.AreEqual(prefabPath, AssetDatabase.GetAssetPath(boundPrefab));
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            Assert.IsNotNull(prefab, $"Run Meshy default equipment generation before validating {role}.");
+            var errors = ArtPassProductionValidator.ValidatePrefabSafetyForTests(prefab, role);
+            Assert.IsEmpty(errors, string.Join("; ", errors));
+
+            var renderers = prefab.GetComponentsInChildren<Renderer>(includeInactive: true);
+            Assert.Greater(renderers.Length, 0);
+            Assert.IsTrue(renderers
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null)
+                    .Any(material => AssetDatabase.GetAssetPath(material) == materialPath),
+                materialMessage);
+
+            var instance = UnityEngine.Object.Instantiate(prefab);
+            try
+            {
+                var activeRenderers = instance.GetComponentsInChildren<Renderer>(includeInactive: false)
+                    .Where(renderer => renderer.enabled && renderer.gameObject.activeInHierarchy)
+                    .ToArray();
+                Assert.Greater(activeRenderers.Length, 0);
+                assertBounds(Encapsulate(activeRenderers));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+            }
+
+            Assert.AreEqual(0, prefab.GetComponentsInChildren<Collider>(includeInactive: true).Length);
+            var markerScripts = prefab.GetComponentsInChildren<MonoBehaviour>(includeInactive: true);
+            Assert.IsTrue(markerScripts.All(component => component is PresentationVisualMarker));
         }
 
         private static Bounds Encapsulate(Renderer[] renderers)

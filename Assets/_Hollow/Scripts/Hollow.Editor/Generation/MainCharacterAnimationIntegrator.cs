@@ -8,6 +8,7 @@ using Hollow.Presentation;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using Object = UnityEngine.Object;
 
 namespace Hollow.Editor.Generation
@@ -17,6 +18,7 @@ namespace Hollow.Editor.Generation
         private const string IdleFbxPath = "Assets/MeshyImports/MainCharacter_001/Idle_11_20260506_124917/Meshy_AI_Grey_Sentinel_biped_Animation_Idle_11_withSkin.fbx";
         private const string WalkFbxPath = "Assets/MeshyImports/MainCharacter_001/Walking_20260506_124626/Meshy_AI_Grey_Sentinel_biped_Animation_Walking_withSkin.fbx";
         private const string RunFbxPath = "Assets/MeshyImports/Running_20260506_131917/Meshy_AI_Grey_Sentinel_biped_Animation_Running_withSkin.fbx";
+        private const string DirectionalLocomotionRoot = "Assets/MeshyImports/MainCharacter_001/Locomotion360";
         private const string RollFbxPath = "Assets/MeshyImports/Roll_Dodge_1_20260506_131201/Meshy_AI_Grey_Sentinel_biped_Animation_Roll_Dodge_1_withSkin.fbx";
         private const string SlashFbxPath = "Assets/MeshyImports/Left_Slash_20260506_131213/Meshy_AI_Grey_Sentinel_biped_Animation_Left_Slash_withSkin.fbx";
         private const string HitFbxPath = "Assets/MeshyImports/Hit_Reaction_1_20260506_131232/Meshy_AI_Grey_Sentinel_biped_Animation_Hit_Reaction_1_withSkin.fbx";
@@ -42,7 +44,39 @@ namespace Hollow.Editor.Generation
         private const string VisualRootName = "MainCharacter_VisualRoot";
         private const string ModelInstanceName = "MainCharacter_MeshyModel";
         private const string LegacyCapsuleName = "PlayerHeight_1_78m";
+        private const string HipsBoneName = "Hips";
+        private const string RightUpperArmBoneName = "RightArm";
+        private const string RightForearmBoneName = "RightForeArm";
         private const string RightHandBoneName = "RightHand";
+        private const string LeftUpperArmBoneName = "LeftArm";
+        private const string LeftForearmBoneName = "LeftForeArm";
+        private const string LeftHandBoneName = "LeftHand";
+        private const string LeftUpperLegBoneName = "LeftUpLeg";
+        private const string LeftLowerLegBoneName = "LeftLeg";
+        private const string LeftFootBoneName = "LeftFoot";
+        private const string RightUpperLegBoneName = "RightUpLeg";
+        private const string RightLowerLegBoneName = "RightLeg";
+        private const string RightFootBoneName = "RightFoot";
+        private const string BackShieldBoneName = "Spine02";
+        private static readonly DirectionalLocomotionImportSpec[] DirectionalLocomotionImportSpecs =
+        {
+            new("WalkForward", WalkFbxPath, "MainCharacter_Walk_Forward", new Vector2(0f, 1f), 0.45f, usesBaseForwardClip: true),
+            new("WalkForwardRight", DirectionalPath("Walk_ForwardRight", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_ForwardRight_withSkin.fbx"), "MainCharacter_Walk_ForwardRight", new Vector2(0.70710677f, 0.70710677f), 0.45f),
+            new("WalkRight", DirectionalPath("Walk_Right", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_Right_withSkin.fbx"), "MainCharacter_Walk_Right", new Vector2(1f, 0f), 0.45f),
+            new("WalkBackRight", DirectionalPath("Walk_BackRight", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_BackRight_withSkin.fbx"), "MainCharacter_Walk_BackRight", new Vector2(0.70710677f, -0.70710677f), 0.45f),
+            new("WalkBackward", DirectionalPath("Walk_Backward", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_Backward_withSkin.fbx"), "MainCharacter_Walk_Backward", new Vector2(0f, -1f), 0.45f),
+            new("WalkBackLeft", DirectionalPath("Walk_BackLeft", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_BackLeft_withSkin.fbx"), "MainCharacter_Walk_BackLeft", new Vector2(-0.70710677f, -0.70710677f), 0.45f),
+            new("WalkLeft", DirectionalPath("Walk_Left", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_Left_withSkin.fbx"), "MainCharacter_Walk_Left", new Vector2(-1f, 0f), 0.45f),
+            new("WalkForwardLeft", DirectionalPath("Walk_ForwardLeft", "Meshy_AI_Grey_Sentinel_biped_Animation_Walk_ForwardLeft_withSkin.fbx"), "MainCharacter_Walk_ForwardLeft", new Vector2(-0.70710677f, 0.70710677f), 0.45f),
+            new("RunForward", RunFbxPath, "MainCharacter_Run_Forward", new Vector2(0f, 1f), 1f, usesBaseForwardClip: true),
+            new("RunForwardRight", DirectionalPath("Run_ForwardRight", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_ForwardRight_withSkin.fbx"), "MainCharacter_Run_ForwardRight", new Vector2(0.70710677f, 0.70710677f), 1f),
+            new("RunRight", DirectionalPath("Run_Right", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_Right_withSkin.fbx"), "MainCharacter_Run_Right", new Vector2(1f, 0f), 1f),
+            new("RunBackRight", DirectionalPath("Run_BackRight", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_BackRight_withSkin.fbx"), "MainCharacter_Run_BackRight", new Vector2(0.70710677f, -0.70710677f), 1f),
+            new("RunBackward", DirectionalPath("Run_Backward", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_Backward_withSkin.fbx"), "MainCharacter_Run_Backward", new Vector2(0f, -1f), 1f),
+            new("RunBackLeft", DirectionalPath("Run_BackLeft", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_BackLeft_withSkin.fbx"), "MainCharacter_Run_BackLeft", new Vector2(-0.70710677f, -0.70710677f), 1f),
+            new("RunLeft", DirectionalPath("Run_Left", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_Left_withSkin.fbx"), "MainCharacter_Run_Left", new Vector2(-1f, 0f), 1f),
+            new("RunForwardLeft", DirectionalPath("Run_ForwardLeft", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_ForwardLeft_withSkin.fbx"), "MainCharacter_Run_ForwardLeft", new Vector2(-0.70710677f, 0.70710677f), 1f)
+        };
         private static readonly HashSet<string> RollRootLikeBindingNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "Armature",
@@ -58,18 +92,39 @@ namespace Hollow.Editor.Generation
             var idleClip = ConfigureAnimationImport(IdleFbxPath, IdleClipName, loop: true);
             var walkClip = ConfigureAnimationImport(WalkFbxPath, WalkClipName, loop: true);
             var runClip = ConfigureAnimationImport(RunFbxPath, RunClipName, loop: true);
+            var directionalLocomotionClips = ConfigureDirectionalLocomotionImports(walkClip, runClip);
             var importedRollClip = ConfigureAnimationImport(RollFbxPath, RollClipName, loop: false);
             var rollClip = CreateOrUpdateInPlaceRollClip(importedRollClip);
             var slashClip = ConfigureAnimationImport(SlashFbxPath, SlashClipName, loop: false);
             var hitClip = ConfigureAnimationImport(HitFbxPath, HitClipName, loop: false);
             var deadClip = ConfigureAnimationImport(DeadFbxPath, DeadClipName, loop: false);
             var material = CreateOrUpdateCanonicalMaterial();
-            var controller = CreateAnimatorController(idleClip, walkClip, runClip, rollClip, slashClip, hitClip, deadClip);
+            var controller = CreateAnimatorController(idleClip, walkClip, runClip, directionalLocomotionClips, rollClip, slashClip, hitClip, deadClip);
             UpdatePlayerPrefab(controller, material, rollClip, slashClip, hitClip, deadClip);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Integrated Meshy main character idle/walk/run/action animations into PlayerCharacter.prefab.");
+        }
+
+        public static string[] RequiredDirectionalLocomotionFbxPaths()
+        {
+            return DirectionalLocomotionImportSpecs
+                .Select(spec => spec.Path)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        public static string[] MissingDirectionalLocomotionFbxPaths()
+        {
+            return RequiredDirectionalLocomotionFbxPaths()
+                .Where(path => !File.Exists(path))
+                .ToArray();
+        }
+
+        private static string DirectionalPath(string folderName, string fileName)
+        {
+            return $"{DirectionalLocomotionRoot}/{folderName}/{fileName}";
         }
 
         private static AnimationClip ConfigureAnimationImport(string path, string clipName, bool loop)
@@ -122,6 +177,32 @@ namespace Hollow.Editor.Generation
             }
 
             return importedClip;
+        }
+
+        private static DirectionalLocomotionClip[] ConfigureDirectionalLocomotionImports(
+            AnimationClip walkForwardClip,
+            AnimationClip runForwardClip)
+        {
+            var missing = MissingDirectionalLocomotionFbxPaths();
+            if (missing.Length > 0)
+            {
+                throw new FileNotFoundException(
+                    "Missing required 360 directional locomotion FBX assets:\n" +
+                    string.Join("\n", missing));
+            }
+
+            return DirectionalLocomotionImportSpecs
+                .Select(spec =>
+                {
+                    var clip = spec.UsesBaseForwardClip
+                        ? spec.SpeedMagnitude >= 1f ? runForwardClip : walkForwardClip
+                        : ConfigureAnimationImport(spec.Path, spec.ClipName, loop: true);
+                    return new DirectionalLocomotionClip(
+                        spec.Label,
+                        clip,
+                        spec.Direction.normalized * spec.SpeedMagnitude);
+                })
+                .ToArray();
         }
 
         private static AnimationClip CreateOrUpdateInPlaceRollClip(AnimationClip sourceClip)
@@ -329,6 +410,7 @@ namespace Hollow.Editor.Generation
             AnimationClip idleClip,
             AnimationClip walkClip,
             AnimationClip runClip,
+            IReadOnlyList<DirectionalLocomotionClip> directionalLocomotionClips,
             AnimationClip rollClip,
             AnimationClip slashClip,
             AnimationClip hitClip,
@@ -341,6 +423,13 @@ namespace Hollow.Editor.Generation
             }
 
             var controller = AnimatorController.CreateAnimatorControllerAtPath(PlayerControllerPath);
+            var layers = controller.layers;
+            if (layers.Length > 0)
+            {
+                layers[0].iKPass = true;
+                controller.layers = layers;
+            }
+
             controller.AddParameter(PlayerLocomotionAnimator.IsMovingParameter, AnimatorControllerParameterType.Bool);
             controller.AddParameter(PlayerLocomotionAnimator.MoveSpeedParameter, AnimatorControllerParameterType.Float);
             controller.AddParameter(PlayerLocomotionAnimator.ActionSpeedParameter, AnimatorControllerParameterType.Float);
@@ -361,7 +450,7 @@ namespace Hollow.Editor.Generation
             var lockedState = AddState(
                 stateMachine,
                 "LockedLocomotion",
-                CreateLockedLocomotionBlendTree(controller, idleClip, walkClip, runClip),
+                CreateLockedLocomotionBlendTree(controller, idleClip, directionalLocomotionClips),
                 new Vector3(500f, -80f, 0f));
             var rollState = AddActionState(stateMachine, "Roll", rollClip, new Vector3(220f, 320f, 0f));
             var slashState = AddActionState(stateMachine, "LeftSlash", slashClip, new Vector3(500f, 320f, 0f));
@@ -379,16 +468,48 @@ namespace Hollow.Editor.Generation
             AddActionExitTransitions(slashState, idleState, walkState, runState, lockedState);
             AddActionExitTransitions(hitState, idleState, walkState, runState, lockedState);
 
+            AddModernAnimationLayers(controller);
             EditorUtility.SetDirty(controller);
             return controller;
+        }
+
+        private static void AddModernAnimationLayers(AnimatorController controller)
+        {
+            var layers = controller.layers;
+            if (layers.Length > 0)
+            {
+                layers[0].name = "Base Locomotion";
+                layers[0].defaultWeight = 1f;
+                layers[0].iKPass = true;
+                controller.layers = layers;
+            }
+
+            AddEmptyLayer(controller, "Full-Body Actions", 0f);
+            AddEmptyLayer(controller, "Upper-Body Combat", 0f);
+            AddEmptyLayer(controller, "Additive Physical Response", 0f);
+        }
+
+        private static void AddEmptyLayer(AnimatorController controller, string layerName, float defaultWeight)
+        {
+            controller.AddLayer(layerName);
+            var layers = controller.layers;
+            var layer = layers[layers.Length - 1];
+            layer.defaultWeight = defaultWeight;
+            layer.iKPass = true;
+            layers[layers.Length - 1] = layer;
+            controller.layers = layers;
         }
 
         private static BlendTree CreateLockedLocomotionBlendTree(
             AnimatorController controller,
             Motion idleClip,
-            Motion walkClip,
-            Motion runClip)
+            IReadOnlyList<DirectionalLocomotionClip> directionalLocomotionClips)
         {
+            if (directionalLocomotionClips == null || directionalLocomotionClips.Count != 16)
+            {
+                throw new InvalidOperationException("Locked locomotion requires exactly 16 directional walk/run clips.");
+            }
+
             var tree = new BlendTree
             {
                 name = "LockedLocomotionBlendTree",
@@ -400,23 +521,12 @@ namespace Hollow.Editor.Generation
             AssetDatabase.AddObjectToAsset(tree, controller);
 
             tree.AddChild(idleClip, Vector2.zero);
-            AddDirectionalChildren(tree, walkClip, 0.45f);
-            AddDirectionalChildren(tree, runClip, 1f);
+            foreach (var clip in directionalLocomotionClips)
+            {
+                tree.AddChild(clip.Clip, clip.Threshold);
+            }
+
             return tree;
-        }
-
-        private static void AddDirectionalChildren(BlendTree tree, Motion motion, float magnitude)
-        {
-            tree.AddChild(motion, new Vector2(0f, magnitude));
-            tree.AddChild(motion, new Vector2(0f, -magnitude));
-            tree.AddChild(motion, new Vector2(magnitude, 0f));
-            tree.AddChild(motion, new Vector2(-magnitude, 0f));
-
-            var diagonal = magnitude * 0.70710677f;
-            tree.AddChild(motion, new Vector2(diagonal, diagonal));
-            tree.AddChild(motion, new Vector2(-diagonal, diagonal));
-            tree.AddChild(motion, new Vector2(diagonal, -diagonal));
-            tree.AddChild(motion, new Vector2(-diagonal, -diagonal));
         }
 
         private static AnimatorState AddState(AnimatorStateMachine stateMachine, string name, Motion motion, Vector3 position)
@@ -665,9 +775,10 @@ namespace Hollow.Editor.Generation
                 animator.runtimeAnimatorController = controller;
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                var modernRig = EnsureModernAnimationRig(animator, visualRoot.transform, modelInstance.transform);
                 var meleeHandSocket = EnsureMeleeHandSocket(modelInstance.transform);
                 var rangedHandSocket = EnsureSocket(
-                    visualRoot.transform,
+                    FindDescendant(modelInstance.transform, RightHandBoneName),
                     PlayerHeldWeaponVisualController.RangedHandSocketName,
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalEuler,
@@ -690,6 +801,18 @@ namespace Hollow.Editor.Generation
                     PlayerWeaponVisualPosePolicy.MuzzleLocalPosition(),
                     Vector3.zero,
                     Vector3.one);
+                var shieldForearmSocket = EnsureSocket(
+                    FindDescendant(modelInstance.transform, LeftForearmBoneName) ?? visualRoot.transform,
+                    PlayerHeldWeaponVisualController.ShieldForearmSocketName,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmSocketLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmSocketLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmSocketLocalScale);
+                var shieldBackSocket = EnsureSocket(
+                    FindDescendant(modelInstance.transform, BackShieldBoneName) ?? visualRoot.transform,
+                    PlayerHeldWeaponVisualController.ShieldBackSocketName,
+                    PlayerHeldWeaponVisualController.DefaultShieldBackSocketLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultShieldBackSocketLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultShieldBackSocketLocalScale);
 
                 var locomotionAnimator = prefabRoot.GetComponent<PlayerLocomotionAnimator>() ??
                     prefabRoot.AddComponent<PlayerLocomotionAnimator>();
@@ -715,8 +838,112 @@ namespace Hollow.Editor.Generation
                     rangedHandSocket,
                     meleeHolsterSocket,
                     rangedHolsterSocket,
-                    rangedMuzzleSocket);
+                    rangedMuzzleSocket,
+                    shieldForearmSocket,
+                    shieldBackSocket);
                 EditorUtility.SetDirty(heldWeaponVisual);
+
+                var rangedHandPose = prefabRoot.GetComponent<PlayerRangedHandPoseController>() ??
+                    prefabRoot.AddComponent<PlayerRangedHandPoseController>();
+                rangedHandPose.Bind(
+                    animator,
+                    prefabRoot.GetComponent<PlayerWeaponController>(),
+                    heldWeaponVisual);
+                rangedHandPose.Configure(
+                    PlayerRangedHandPoseController.DefaultBlendSpeed,
+                    PlayerRangedHandPoseController.DefaultPositionWeight,
+                    PlayerRangedHandPoseController.DefaultRotationWeight,
+                    PlayerRangedHandPoseController.DefaultHandHeightMeters,
+                    PlayerRangedHandPoseController.DefaultForwardOffsetMeters,
+                    PlayerRangedHandPoseController.DefaultSideOffsetMeters);
+                EditorUtility.SetDirty(rangedHandPose);
+                var rangedHandPoseRelay = animator.GetComponent<PlayerRangedHandPoseIkRelay>() ??
+                    animator.gameObject.AddComponent<PlayerRangedHandPoseIkRelay>();
+                rangedHandPoseRelay.Bind(rangedHandPose);
+
+                var shieldGuardPose = prefabRoot.GetComponent<PlayerShieldGuardPoseController>() ??
+                    prefabRoot.AddComponent<PlayerShieldGuardPoseController>();
+                shieldGuardPose.Bind(
+                    animator,
+                    prefabRoot.GetComponent<PlayerDefenseController>(),
+                    heldWeaponVisual);
+                shieldGuardPose.Configure(
+                    PlayerShieldGuardPoseController.DefaultBlendSpeed,
+                    PlayerShieldGuardPoseController.DefaultPositionWeight,
+                    PlayerShieldGuardPoseController.DefaultRotationWeight,
+                    PlayerShieldGuardPoseController.DefaultHandHeightMeters,
+                    PlayerShieldGuardPoseController.DefaultForwardOffsetMeters,
+                    PlayerShieldGuardPoseController.DefaultSideOffsetMeters);
+                EditorUtility.SetDirty(shieldGuardPose);
+                rangedHandPoseRelay.BindShield(shieldGuardPose);
+                EditorUtility.SetDirty(rangedHandPoseRelay);
+
+                var footPlacement = prefabRoot.GetComponent<PlayerFootPlacementController>() ??
+                    prefabRoot.AddComponent<PlayerFootPlacementController>();
+                footPlacement.Bind(
+                    animator,
+                    locomotionAnimator,
+                    prefabRoot.GetComponent<PlayerWeaponController>(),
+                    prefabRoot.GetComponent<CombatantHealth>(),
+                    modernRig.LeftFootGroundTarget,
+                    modernRig.RightFootGroundTarget,
+                    modernRig.PelvisTarget);
+                footPlacement.BindConstraints(
+                    modernRig.LeftFootIkConstraint,
+                    modernRig.RightFootIkConstraint,
+                    modernRig.PelvisPositionConstraint);
+                footPlacement.Configure(
+                    PlayerFootPlacementController.DefaultStrideLengthMeters,
+                    PlayerFootPlacementController.DefaultLockThresholdMetersPerSecond,
+                    PlayerFootPlacementController.DefaultPelvisSmoothing,
+                    PlayerFootPlacementController.DefaultFootHeightMeters,
+                    PlayerFootPlacementController.DefaultRaycastDistanceMeters,
+                    PlayerFootPlacementController.DefaultIkBlendSpeed,
+                    PlayerFootPlacementController.DefaultYawBlend,
+                    PlayerFootPlacementController.DefaultFootPlantHalfCycleSeconds);
+                EditorUtility.SetDirty(footPlacement);
+
+                var poseCoordinator = prefabRoot.GetComponent<PlayerAnimationPoseCoordinator>() ??
+                    prefabRoot.AddComponent<PlayerAnimationPoseCoordinator>();
+                poseCoordinator.Bind(
+                    animator,
+                    locomotionAnimator,
+                    prefabRoot.GetComponent<PlayerWeaponController>(),
+                    prefabRoot.GetComponent<PlayerDefenseController>(),
+                    prefabRoot.GetComponent<CombatantHealth>(),
+                    heldWeaponVisual,
+                    rangedHandPose,
+                    shieldGuardPose);
+                poseCoordinator.BindRigs(
+                    modernRig.BaseLocomotionRig,
+                    modernRig.FullBodyActionRig,
+                    modernRig.UpperBodyCombatRig,
+                    modernRig.AdditivePhysicalResponseRig);
+                poseCoordinator.BindRigConstraints(
+                    modernRig.RightHandWeaponIkConstraint,
+                    modernRig.LeftHandShieldIkConstraint,
+                    modernRig.ChestAimConstraint);
+                poseCoordinator.BindTargets(
+                    modernRig.RightHandWeaponTarget,
+                    modernRig.LeftHandShieldTarget,
+                    modernRig.ChestAimTarget,
+                    modernRig.PhysicalResponseTarget,
+                    modernRig.LeftFootGroundTarget,
+                    modernRig.RightFootGroundTarget);
+                poseCoordinator.BindFootPlacement(
+                    footPlacement,
+                    modernRig.LeftFootIkConstraint,
+                    modernRig.RightFootIkConstraint,
+                    modernRig.PelvisPositionConstraint,
+                    modernRig.PelvisTarget);
+                poseCoordinator.Configure(
+                    PlayerAnimationPoseCoordinator.DefaultRigBlendSpeed,
+                    PlayerAnimationPoseCoordinator.DefaultImpulseDecaySpeed,
+                    PlayerAnimationPoseCoordinator.DefaultLeanBlendSpeed,
+                    PlayerAnimationPoseCoordinator.DefaultLeanSpeedReferenceMetersPerSecond,
+                    PlayerAnimationPoseCoordinator.DefaultFootYawAimInfluenceMaxDegrees,
+                    PlayerAnimationPoseCoordinator.DefaultHitReactionFootIkSuppressSeconds);
+                EditorUtility.SetDirty(poseCoordinator);
 
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, PlayerPrefabPath);
             }
@@ -724,6 +951,428 @@ namespace Hollow.Editor.Generation
             {
                 PrefabUtility.UnloadPrefabContents(prefabRoot);
             }
+        }
+
+        private static ModernAnimationRigSetup EnsureModernAnimationRig(Animator animator, Transform visualRoot, Transform modelRoot)
+        {
+            var rigRoot = EnsureChild(
+                visualRoot,
+                PlayerAnimationPoseCoordinator.ModernAnimationRigRootName,
+                Vector3.zero,
+                Vector3.zero,
+                Vector3.one);
+            var targetsRoot = EnsureChild(
+                rigRoot,
+                PlayerAnimationPoseCoordinator.RigTargetsRootName,
+                Vector3.zero,
+                Vector3.zero,
+                Vector3.one);
+            var baseRig = EnsureRig(
+                rigRoot,
+                PlayerAnimationPoseCoordinator.BaseLocomotionRigName,
+                1f);
+            var fullBodyRig = EnsureRig(
+                rigRoot,
+                PlayerAnimationPoseCoordinator.FullBodyActionRigName,
+                0f);
+            var upperBodyRig = EnsureRig(
+                rigRoot,
+                PlayerAnimationPoseCoordinator.UpperBodyCombatRigName,
+                0f);
+            var additiveRig = EnsureRig(
+                rigRoot,
+                PlayerAnimationPoseCoordinator.AdditivePhysicalResponseRigName,
+                0f);
+
+            var rightHandTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.RightHandWeaponTargetName,
+                new Vector3(0.42f, 1.08f, 0.48f),
+                Vector3.zero,
+                Vector3.one);
+            var leftHandTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.LeftHandShieldTargetName,
+                new Vector3(-0.34f, 1.04f, 0.46f),
+                Vector3.zero,
+                Vector3.one);
+            var chestTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.ChestAimTargetName,
+                new Vector3(0f, 1.15f, 2f),
+                Vector3.zero,
+                Vector3.one);
+            var responseTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.PhysicalResponseTargetName,
+                new Vector3(0f, 0.95f, -0.08f),
+                Vector3.zero,
+                Vector3.one);
+            var leftFootTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.LeftFootGroundTargetName,
+                new Vector3(-0.12f, 0f, 0.02f),
+                Vector3.zero,
+                Vector3.one);
+            var rightFootTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.RightFootGroundTargetName,
+                new Vector3(0.12f, 0f, 0.02f),
+                Vector3.zero,
+                Vector3.one);
+            var pelvisTarget = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.PelvisTargetName,
+                new Vector3(0f, 0.9f, 0f),
+                Vector3.zero,
+                Vector3.one);
+            var rightElbowHint = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.RightElbowHintTargetName,
+                new Vector3(0.48f, 0.9f, 0.08f),
+                Vector3.zero,
+                Vector3.one);
+            var leftElbowHint = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.LeftElbowHintTargetName,
+                new Vector3(-0.48f, 0.9f, 0.08f),
+                Vector3.zero,
+                Vector3.one);
+            var leftKneeHint = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.LeftKneeHintTargetName,
+                new Vector3(-0.24f, 0.45f, 0.18f),
+                Vector3.zero,
+                Vector3.one);
+            var rightKneeHint = EnsureChild(
+                targetsRoot,
+                PlayerAnimationPoseCoordinator.RightKneeHintTargetName,
+                new Vector3(0.24f, 0.45f, 0.18f),
+                Vector3.zero,
+                Vector3.one);
+
+            var rightHandIk = EnsureTwoBoneIkConstraint(
+                upperBodyRig.transform,
+                PlayerAnimationPoseCoordinator.RightHandWeaponIkConstraintName,
+                FindDescendant(modelRoot, RightUpperArmBoneName),
+                FindDescendant(modelRoot, RightForearmBoneName),
+                FindDescendant(modelRoot, RightHandBoneName),
+                rightHandTarget,
+                rightElbowHint);
+            var leftHandIk = EnsureTwoBoneIkConstraint(
+                upperBodyRig.transform,
+                PlayerAnimationPoseCoordinator.LeftHandShieldIkConstraintName,
+                FindDescendant(modelRoot, LeftUpperArmBoneName),
+                FindDescendant(modelRoot, LeftForearmBoneName),
+                FindDescendant(modelRoot, LeftHandBoneName),
+                leftHandTarget,
+                leftElbowHint);
+            var chestAim = EnsureChestAimConstraint(
+                upperBodyRig.transform,
+                PlayerAnimationPoseCoordinator.ChestAimConstraintName,
+                FindDescendant(modelRoot, BackShieldBoneName),
+                chestTarget);
+            var leftFootIk = EnsureTwoBoneIkConstraint(
+                baseRig.transform,
+                PlayerAnimationPoseCoordinator.LeftFootIkConstraintName,
+                FindDescendant(modelRoot, LeftUpperLegBoneName),
+                FindDescendant(modelRoot, LeftLowerLegBoneName),
+                FindDescendant(modelRoot, LeftFootBoneName),
+                leftFootTarget,
+                leftKneeHint);
+            var rightFootIk = EnsureTwoBoneIkConstraint(
+                baseRig.transform,
+                PlayerAnimationPoseCoordinator.RightFootIkConstraintName,
+                FindDescendant(modelRoot, RightUpperLegBoneName),
+                FindDescendant(modelRoot, RightLowerLegBoneName),
+                FindDescendant(modelRoot, RightFootBoneName),
+                rightFootTarget,
+                rightKneeHint);
+            var pelvisPosition = EnsureMultiPositionConstraint(
+                baseRig.transform,
+                PlayerAnimationPoseCoordinator.PelvisPositionConstraintName,
+                FindDescendant(modelRoot, HipsBoneName),
+                pelvisTarget,
+                constrainX: false,
+                constrainY: true,
+                constrainZ: false);
+
+            var rigBuilder = animator.GetComponent<RigBuilder>() ?? animator.gameObject.AddComponent<RigBuilder>();
+            rigBuilder.layers.Clear();
+            rigBuilder.layers.Add(new RigLayer(baseRig, true));
+            rigBuilder.layers.Add(new RigLayer(fullBodyRig, true));
+            rigBuilder.layers.Add(new RigLayer(upperBodyRig, true));
+            rigBuilder.layers.Add(new RigLayer(additiveRig, true));
+            EditorUtility.SetDirty(rigBuilder);
+
+            return new ModernAnimationRigSetup(
+                baseRig,
+                fullBodyRig,
+                upperBodyRig,
+                additiveRig,
+                rightHandIk,
+                leftHandIk,
+                chestAim,
+                leftFootIk,
+                rightFootIk,
+                pelvisPosition,
+                rightHandTarget,
+                leftHandTarget,
+                chestTarget,
+                responseTarget,
+                leftFootTarget,
+                rightFootTarget,
+                pelvisTarget);
+        }
+
+        private static Rig EnsureRig(Transform parent, string rigName, float weight)
+        {
+            var rigTransform = EnsureChild(parent, rigName, Vector3.zero, Vector3.zero, Vector3.one);
+            var rig = rigTransform.GetComponent<Rig>() ?? rigTransform.gameObject.AddComponent<Rig>();
+            rig.weight = Mathf.Clamp01(weight);
+            EditorUtility.SetDirty(rig);
+            return rig;
+        }
+
+        private static TwoBoneIKConstraint EnsureTwoBoneIkConstraint(
+            Transform parent,
+            string constraintName,
+            Transform root,
+            Transform mid,
+            Transform tip,
+            Transform target,
+            Transform hint)
+        {
+            var constraintTransform = EnsureChild(parent, constraintName, Vector3.zero, Vector3.zero, Vector3.one);
+            var constraint = constraintTransform.GetComponent<TwoBoneIKConstraint>() ??
+                constraintTransform.gameObject.AddComponent<TwoBoneIKConstraint>();
+            constraint.weight = 0f;
+            constraint.data.root = root;
+            constraint.data.mid = mid;
+            constraint.data.tip = tip;
+            constraint.data.target = target;
+            constraint.data.hint = hint;
+            constraint.data.targetPositionWeight = 1f;
+            constraint.data.targetRotationWeight = 1f;
+            constraint.data.hintWeight = hint != null ? 0.75f : 0f;
+            constraint.data.maintainTargetPositionOffset = false;
+            constraint.data.maintainTargetRotationOffset = false;
+            EditorUtility.SetDirty(constraint);
+            return constraint;
+        }
+
+        private static MultiAimConstraint EnsureChestAimConstraint(
+            Transform parent,
+            string constraintName,
+            Transform chest,
+            Transform target)
+        {
+            var constraintTransform = EnsureChild(parent, constraintName, Vector3.zero, Vector3.zero, Vector3.one);
+            var constraint = constraintTransform.GetComponent<MultiAimConstraint>() ??
+                constraintTransform.gameObject.AddComponent<MultiAimConstraint>();
+            var sourceObjects = new WeightedTransformArray(1);
+            sourceObjects[0] = new WeightedTransform(target, 1f);
+            constraint.weight = 0f;
+            constraint.data.constrainedObject = chest;
+            constraint.data.sourceObjects = sourceObjects;
+            constraint.data.maintainOffset = true;
+            constraint.data.aimAxis = MultiAimConstraintData.Axis.Z;
+            constraint.data.upAxis = MultiAimConstraintData.Axis.Y;
+            constraint.data.worldUpType = MultiAimConstraintData.WorldUpType.SceneUp;
+            constraint.data.worldUpAxis = MultiAimConstraintData.Axis.Y;
+            constraint.data.constrainedXAxis = true;
+            constraint.data.constrainedYAxis = true;
+            constraint.data.constrainedZAxis = false;
+            constraint.data.limits = new Vector2(-50f, 50f);
+            EditorUtility.SetDirty(constraint);
+            return constraint;
+        }
+
+        private static MultiPositionConstraint EnsureMultiPositionConstraint(
+            Transform parent,
+            string constraintName,
+            Transform constrainedObject,
+            Transform target,
+            bool constrainX,
+            bool constrainY,
+            bool constrainZ)
+        {
+            var constraintTransform = EnsureChild(parent, constraintName, Vector3.zero, Vector3.zero, Vector3.one);
+            var constraint = constraintTransform.GetComponent<MultiPositionConstraint>() ??
+                constraintTransform.gameObject.AddComponent<MultiPositionConstraint>();
+            var sourceObjects = new WeightedTransformArray(1);
+            sourceObjects[0] = new WeightedTransform(target, 1f);
+            constraint.weight = 0f;
+            constraint.data.constrainedObject = constrainedObject;
+            constraint.data.sourceObjects = sourceObjects;
+            constraint.data.maintainOffset = true;
+            constraint.data.constrainedXAxis = constrainX;
+            constraint.data.constrainedYAxis = constrainY;
+            constraint.data.constrainedZAxis = constrainZ;
+            EditorUtility.SetDirty(constraint);
+            return constraint;
+        }
+
+        private static Transform EnsureChild(
+            Transform parent,
+            string childName,
+            Vector3 localPosition,
+            Vector3 localEuler,
+            Vector3 localScale)
+        {
+            var child = FindDirectChild(parent, childName);
+            if (child == null)
+            {
+                var childObject = new GameObject(childName);
+                child = childObject.transform;
+                child.SetParent(parent, false);
+            }
+
+            child.localPosition = localPosition;
+            child.localRotation = Quaternion.Euler(localEuler);
+            child.localScale = localScale;
+            return child;
+        }
+
+        private static Transform FindDirectChild(Transform parent, string childName)
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            for (var index = 0; index < parent.childCount; index++)
+            {
+                var child = parent.GetChild(index);
+                if (child.name == childName)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
+        private readonly struct DirectionalLocomotionImportSpec
+        {
+            public DirectionalLocomotionImportSpec(
+                string label,
+                string path,
+                string clipName,
+                Vector2 direction,
+                float speedMagnitude,
+                bool usesBaseForwardClip = false)
+            {
+                Label = label;
+                Path = path;
+                ClipName = clipName;
+                Direction = direction;
+                SpeedMagnitude = speedMagnitude;
+                UsesBaseForwardClip = usesBaseForwardClip;
+            }
+
+            public string Label { get; }
+
+            public string Path { get; }
+
+            public string ClipName { get; }
+
+            public Vector2 Direction { get; }
+
+            public float SpeedMagnitude { get; }
+
+            public bool UsesBaseForwardClip { get; }
+        }
+
+        private readonly struct DirectionalLocomotionClip
+        {
+            public DirectionalLocomotionClip(string label, AnimationClip clip, Vector2 threshold)
+            {
+                Label = label;
+                Clip = clip;
+                Threshold = threshold;
+            }
+
+            public string Label { get; }
+
+            public AnimationClip Clip { get; }
+
+            public Vector2 Threshold { get; }
+        }
+
+        private readonly struct ModernAnimationRigSetup
+        {
+            public ModernAnimationRigSetup(
+                Rig baseLocomotionRig,
+                Rig fullBodyActionRig,
+                Rig upperBodyCombatRig,
+                Rig additivePhysicalResponseRig,
+                TwoBoneIKConstraint rightHandWeaponIkConstraint,
+                TwoBoneIKConstraint leftHandShieldIkConstraint,
+                MultiAimConstraint chestAimConstraint,
+                TwoBoneIKConstraint leftFootIkConstraint,
+                TwoBoneIKConstraint rightFootIkConstraint,
+                MultiPositionConstraint pelvisPositionConstraint,
+                Transform rightHandWeaponTarget,
+                Transform leftHandShieldTarget,
+                Transform chestAimTarget,
+                Transform physicalResponseTarget,
+                Transform leftFootGroundTarget,
+                Transform rightFootGroundTarget,
+                Transform pelvisTarget)
+            {
+                BaseLocomotionRig = baseLocomotionRig;
+                FullBodyActionRig = fullBodyActionRig;
+                UpperBodyCombatRig = upperBodyCombatRig;
+                AdditivePhysicalResponseRig = additivePhysicalResponseRig;
+                RightHandWeaponIkConstraint = rightHandWeaponIkConstraint;
+                LeftHandShieldIkConstraint = leftHandShieldIkConstraint;
+                ChestAimConstraint = chestAimConstraint;
+                LeftFootIkConstraint = leftFootIkConstraint;
+                RightFootIkConstraint = rightFootIkConstraint;
+                PelvisPositionConstraint = pelvisPositionConstraint;
+                RightHandWeaponTarget = rightHandWeaponTarget;
+                LeftHandShieldTarget = leftHandShieldTarget;
+                ChestAimTarget = chestAimTarget;
+                PhysicalResponseTarget = physicalResponseTarget;
+                LeftFootGroundTarget = leftFootGroundTarget;
+                RightFootGroundTarget = rightFootGroundTarget;
+                PelvisTarget = pelvisTarget;
+            }
+
+            public Rig BaseLocomotionRig { get; }
+
+            public Rig FullBodyActionRig { get; }
+
+            public Rig UpperBodyCombatRig { get; }
+
+            public Rig AdditivePhysicalResponseRig { get; }
+
+            public TwoBoneIKConstraint RightHandWeaponIkConstraint { get; }
+
+            public TwoBoneIKConstraint LeftHandShieldIkConstraint { get; }
+
+            public MultiAimConstraint ChestAimConstraint { get; }
+
+            public TwoBoneIKConstraint LeftFootIkConstraint { get; }
+
+            public TwoBoneIKConstraint RightFootIkConstraint { get; }
+
+            public MultiPositionConstraint PelvisPositionConstraint { get; }
+
+            public Transform RightHandWeaponTarget { get; }
+
+            public Transform LeftHandShieldTarget { get; }
+
+            public Transform ChestAimTarget { get; }
+
+            public Transform PhysicalResponseTarget { get; }
+
+            public Transform LeftFootGroundTarget { get; }
+
+            public Transform RightFootGroundTarget { get; }
+
+            public Transform PelvisTarget { get; }
         }
 
         private static void RemoveExistingVisuals(Transform root)
@@ -836,13 +1485,27 @@ namespace Hollow.Editor.Generation
 
             foreach (var child in root.GetComponentsInChildren<Transform>(includeInactive: true))
             {
-                if (string.Equals(child.name, childName, StringComparison.Ordinal))
+                if (string.Equals(child.name, childName, StringComparison.Ordinal) ||
+                    string.Equals(NormalizeTransformName(child.name), childName, StringComparison.Ordinal))
                 {
                     return child;
                 }
             }
 
             return null;
+        }
+
+        private static string NormalizeTransformName(string transformName)
+        {
+            if (string.IsNullOrEmpty(transformName))
+            {
+                return string.Empty;
+            }
+
+            var namespaceSeparator = transformName.LastIndexOf(':');
+            return namespaceSeparator >= 0 && namespaceSeparator < transformName.Length - 1
+                ? transformName[(namespaceSeparator + 1)..]
+                : transformName;
         }
 
         private static void EnsureRendererMaterials(GameObject visual, Material material)

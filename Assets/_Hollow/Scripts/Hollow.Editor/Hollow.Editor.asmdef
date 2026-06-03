@@ -18,6 +18,7 @@
     "Hollow.Branches",
     "Hollow.Rewards",
     "Hollow.RoomDesigner",
+    "Unity.Animation.Rigging",
     "Unity.Behavior",
     "Unity.Behavior.SerializableGUID",
     "Unity.PolySpatial",
