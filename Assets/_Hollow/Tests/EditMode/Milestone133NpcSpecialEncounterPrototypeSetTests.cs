@@ -123,15 +123,27 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void EscapistRoomKeepsDoorwayEntryMovableAfterDoorLock()
+        public void SpecialRoomsKeepDoorwayEntriesWalkableAfterDoorLock()
         {
             Assert.IsTrue(HollowRuntimeV2Importer.TryImport(
                 File.ReadAllText(Milestone133NpcSpecialEncounterPrototypeSetAssetGenerator.EscapistRoomPath),
-                out var asset,
-                out var error),
-                error);
+                out var escapist,
+                out var escapistError),
+                escapistError);
+            Assert.IsTrue(HollowRuntimeV2Importer.TryImport(
+                File.ReadAllText(Milestone133NpcSpecialEncounterPrototypeSetAssetGenerator.SoulEaterRoomPath),
+                out var soulEater,
+                out var soulEaterError),
+                soulEaterError);
 
-            var host = new GameObject("m133_escapist_lock_entry_test");
+            AssertDoorwayEntriesStayWalkableAfterDoorLock(escapist);
+            AssertDoorwayEntriesStayWalkableAfterDoorLock(soulEater);
+        }
+
+        private static void AssertDoorwayEntriesStayWalkableAfterDoorLock(ImportedRoomRuntimeAsset asset)
+        {
+            Assert.AreEqual(91, asset.Layout.WalkableTiles.Count, asset.Id);
+            var host = new GameObject($"{asset.Id}_doorway_access_test");
             try
             {
                 var room = host.AddComponent<RoomRuntimeRoot>();
@@ -143,30 +155,36 @@ namespace Hollow.Tests.EditMode
 
                 var radius = Hollow.Entities.PlaceholderPlayerController.DefaultRadiusMeters;
                 var safeStart = room.SafeStartLocalPosition;
-                Assert.IsTrue(RoomLocalCollision.CanOccupy(room, safeStart, radius), "Escapist safe start must stay occupiable after door locks.");
+                Assert.IsTrue(RoomLocalCollision.CanOccupy(room, safeStart, radius), $"{asset.Id} safe start must stay occupiable after door locks.");
 
                 foreach (var direction in new[] { "north", "south", "east", "west" })
                 {
                     var entry = BranchTraversalService.EntryPositionFor(room, direction);
                     var inward = BranchTraversalService.EntryInsetDirectionFor(direction);
                     var resolved = RoomLocalCollision.ResolveNearestOccupiablePosition(room, entry, radius, inward, 3f);
-                    Assert.IsTrue(RoomLocalCollision.CanOccupy(room, resolved, radius), $"Escapist {direction} doorway entry must resolve to an occupiable point after door locks.");
-                    Assert.Less(
-                        Vector3.Distance(resolved, entry),
-                        Vector3.Distance(safeStart, entry),
-                        $"Escapist {direction} doorway entry should stay near the doorway instead of snapping to safe start.");
+                    Assert.IsTrue(RoomLocalCollision.CanOccupy(room, resolved, radius), $"{asset.Id}:{direction} doorway entry must resolve to an occupiable point after door locks.");
+                    Assert.LessOrEqual(Vector3.Distance(resolved, entry), 0.05f, $"{asset.Id}:{direction} doorway entry should stay at the door inset instead of snapping inward.");
 
                     var moved = RoomLocalCollision.ResolveMove(room, resolved, resolved + inward * 0.35f, radius);
-                    Assert.Greater(
-                        Vector3.Distance(resolved, moved),
-                        0.1f,
-                        $"Escapist {direction} doorway entry must allow inward movement after door locks.");
+                    Assert.Greater(Vector3.Distance(resolved, moved), 0.1f, $"{asset.Id}:{direction} doorway entry must allow inward movement after door locks.");
                 }
             }
             finally
             {
                 Object.DestroyImmediate(host);
             }
+        }
+
+        [Test]
+        public void EscapistRoomKeepsDoorwayEntryMovableAfterDoorLock()
+        {
+            Assert.IsTrue(HollowRuntimeV2Importer.TryImport(
+                File.ReadAllText(Milestone133NpcSpecialEncounterPrototypeSetAssetGenerator.EscapistRoomPath),
+                out var asset,
+                out var error),
+                error);
+
+            AssertDoorwayEntriesStayWalkableAfterDoorLock(asset);
         }
 
         [Test]
@@ -266,6 +284,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(HollowRuntimeV2Importer.TryImport(File.ReadAllText(path), out var asset, out var error), error);
             Assert.AreEqual(expectedId, asset.Id);
             Assert.AreEqual("hollow_threshold", asset.BiomeId);
+            Assert.AreEqual(91, asset.Layout.WalkableTiles.Count);
             Assert.IsTrue(asset.EnemySpawns.Any(spawn => spawn.kind == expectedSpawnKind));
             Assert.IsTrue(RuntimeRoomValidator.Validate(asset).IsValid);
         }

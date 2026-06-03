@@ -39,12 +39,10 @@ namespace Hollow.Editor.Generation
 
         private static GameObject SaveBossKeyPrefab()
         {
-            var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var root = new GameObject("BossKeyPickup");
             root.name = "BossKeyPickup";
             root.transform.localScale = Vector3.one * 0.32f;
             root.AddComponent<BossKeyPickup>();
-            DisableCollider(root);
-            MaterialResolver.ApplyTo(root, MaterialRole.BossKeyPickup);
             return SavePrefab(root, BossKeyPickupPrefabPath);
         }
 

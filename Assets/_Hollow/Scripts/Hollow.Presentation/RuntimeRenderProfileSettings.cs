@@ -53,6 +53,7 @@ namespace Hollow.Presentation
             if (profile != null)
             {
                 RenderProfileApplier.Apply(profile);
+                RuntimeRenderResolutionSettings.ApplyCurrentResolution(profile);
             }
 
             return profile;

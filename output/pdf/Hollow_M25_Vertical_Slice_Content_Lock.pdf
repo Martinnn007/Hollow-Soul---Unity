@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Length 3683 >>
+<< /Length 3672 >>
 stream
 BT
 /F1 11 Tf
@@ -20,19 +20,19 @@ BT
 0 -14 Td
 (Result: Failed) Tj
 0 -14 Td
-(Generated: 2026-05-03T14:19:55.0897540Z) Tj
+(Generated: 2026-06-03T00:20:38.0461740Z) Tj
 0 -14 Td
 (Unity: 6000.4.1f1) Tj
 0 -14 Td
-(Git: main @ bd21a1f) Tj
+(Git: main @ aa0deae) Tj
 0 -14 Td
 (Branch: m20_branch_features_v1) Tj
 0 -14 Td
 (Seed: 15001) Tj
 0 -14 Td
-(Rooms: 8; Connections: 20) Tj
+(Rooms: 8; Connections: 24) Tj
 0 -14 Td
-(Fixtures: 5; Approved rooms: 46) Tj
+(Fixtures: 5; Approved rooms: 50) Tj
 0 -14 Td
 (Shop offers: 3; Next portals: 3) Tj
 0 -14 Td
@@ -46,11 +46,11 @@ BT
 0 -14 Td
 (- branch-content: Passed) Tj
 0 -14 Td
-(  Locked branch generated with 8 rooms, 20 directional connections, 5 fixtures, and 46) Tj
+(  Locked branch generated with 8 rooms, 24 directional connections, 5 fixtures, and 50) Tj
 0 -14 Td
 (approved rooms.) Tj
 0 -14 Td
-(  Boss key source: room_05; secret: room_06; boss: boss_01.) Tj
+(  Boss key source: room_04; secret: room_06; boss: boss_01.) Tj
 0 -14 Td
 (- hub-shop-portals: Passed) Tj
 0 -14 Td
@@ -78,37 +78,37 @@ BT
 0 -14 Td
 (resolve material role HazardCoinDrop.; ArtPass palette does not resolve material role) Tj
 0 -14 Td
-(ChestNormal.; ArtPass palette does not resolve material role ChestGolden.; ArtPass palette) Tj
+(CoinCopper.; ArtPass palette does not resolve material role CoinSilver.; ArtPass palette) Tj
 0 -14 Td
-(does not resolve material role CoinCopper.; ArtPass palette does not resolve material role) Tj
+(does not resolve material role CoinGold.; ArtPass palette does not resolve material role) Tj
 0 -14 Td
-(CoinSilver.; ArtPass palette does not resolve material role CoinGold.; ArtPass palette does) Tj
+(DesignerChest.; ArtPass palette does not resolve material role ProjectilePower.; ArtPass) Tj
 0 -14 Td
-(not resolve material role DesignerChest.; ArtPass palette does not resolve material role) Tj
+(palette does not resolve material role EnemySpittingPod.; ArtPass palette does not resolve) Tj
 0 -14 Td
-(ProjectilePower.; ArtPass palette does not resolve material role EnemySpittingPod.; ArtPass) Tj
+(material role EnemyRat.; ArtPass palette does not resolve material role EnemySpider.;) Tj
 0 -14 Td
-(palette does not resolve material role EnemyRat.; ArtPass palette does not resolve material) Tj
+(ArtPass palette does not resolve material role EnemyHollowBird.; ArtPass palette does not) Tj
 0 -14 Td
-(role EnemySpider.; ArtPass palette does not resolve material role EnemyHollowBird.; ArtPass) Tj
+(resolve material role EnemyHollowBeast.; ArtPass palette does not resolve material role) Tj
 0 -14 Td
-(palette does not resolve material role EnemyHollowBeast.; ArtPass palette does not resolve) Tj
+(EnemySkeletonSword.; ArtPass palette does not resolve material role EnemySkeletonSpear.;) Tj
 0 -14 Td
-(material role EnemySkeletonSword.; ArtPass palette does not resolve material role) Tj
+(ArtPass palette does not resolve material role EnemyKnight.; ArtPass palette does not) Tj
 0 -14 Td
-(EnemySkeletonSpear.; ArtPass palette does not resolve material role EnemyKnight.; ArtPass) Tj
+(resolve material role EnemyGiant.; ArtPass palette does not resolve material role) Tj
 0 -14 Td
-(palette does not resolve material role EnemyGiant.; ArtPass palette does not resolve) Tj
+(EnemyHollowArcher.; ArtPass palette does not resolve material role EnemyPowderGunner.;) Tj
 0 -14 Td
-(material role EnemyHollowArcher.; ArtPass palette does not resolve material role) Tj
+(ArtPass palette does not resolve material role EnemyKnifeThrower.; ArtPass palette does not) Tj
 0 -14 Td
-(EnemyPowderGunner.; ArtPass palette does not resolve material role EnemyKnifeThrower.;) Tj
+(resolve material role EnemyRepeaterTurret.; ArtPass palette does not resolve material role) Tj
 0 -14 Td
-(ArtPass palette does not resolve material role EnemyRepeaterTurret.; ArtPass palette does) Tj
+(EnemyClockworkSentry.; ArtPass palette does not resolve material role EnemyHollowAcolyte.;) Tj
 0 -14 Td
-(not resolve material role EnemyClockworkSentry.; ArtPass palette does not resolve material) Tj
+(ArtPass palette does not resolve material role EnemyWraith.; ArtPass palette does not) Tj
 0 -14 Td
-(role EnemyHollowAcolyte.; ArtPass palette does not resolve material role EnemyWraith.;) Tj
+(resolve material role EnemySoulEater.; ArtPass palette does not resolve material role) Tj
 ET
 endstream
 endobj
@@ -116,41 +116,225 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
 endobj
 6 0 obj
-<< /Length 2793 >>
+<< /Length 4499 >>
 stream
 BT
 /F1 11 Tf
 50 742 Td
-(ArtPass palette does not resolve material role EnemySoulEater.; ArtPass palette does not) Tj
+(EnemyCurseBinder.; ArtPass palette does not resolve material role EnemyGraveLantern.;) Tj
 0 -14 Td
-(resolve material role EnemyCurseBinder.; ArtPass palette does not resolve material role) Tj
+(ArtPass palette does not resolve material role DecorGrassTuft.; ArtPass palette does not) Tj
 0 -14 Td
-(EnemyGraveLantern.; ArtPass audio cue PlayerInvulnerable must have a placeholder clip.;) Tj
+(resolve material role DecorCrystalCluster.; ArtPass palette does not resolve material role) Tj
 0 -14 Td
-(ArtPass audio cue KnockbackImpact must have a placeholder clip.; ArtPass audio cue) Tj
+(DecorSmallTree.; ArtPass palette does not resolve material role DecorStoneRuin.; ArtPass) Tj
 0 -14 Td
-(EnemyWindup must have a placeholder clip.; ArtPass audio cue EnemyCorpseGhost must have a) Tj
+(prefab Assets/_Hollow/Prefabs/ArtPass/AP_RoomObstacleRock.prefab must declare) Tj
 0 -14 Td
-(placeholder clip.; ArtPass audio cue DamageBlocked must have a placeholder clip.; ArtPass) Tj
+(PresentationVisualMarker role RoomHazardSpike.; ArtPass prefab) Tj
 0 -14 Td
-(audio cue ShieldGuardStart must have a placeholder clip.; ArtPass audio cue ShieldBlock must) Tj
+(Assets/_Hollow/Prefabs/ArtPass/AP_RoomObstacleRock.prefab must declare) Tj
 0 -14 Td
-(have a placeholder clip.; ArtPass audio cue ShieldParryCounter must have a placeholder) Tj
+(PresentationVisualMarker role StandardBarrel.; ArtPass prefab) Tj
 0 -14 Td
-(clip.; ArtPass audio cue ShieldUnavailable must have a placeholder clip.; ArtPass audio cue) Tj
+(Assets/_Hollow/Prefabs/ArtPass/AP_RoomObstacleRock.prefab must declare) Tj
 0 -14 Td
-(HazardHit must have a placeholder clip.; ArtPass audio cue BarrelBreak must have a) Tj
+(PresentationVisualMarker role ExplosiveBarrel.; ArtPass prefab) Tj
 0 -14 Td
-(placeholder clip.; ArtPass audio cue BarrelExplode must have a placeholder clip.; ArtPass) Tj
+(Assets/_Hollow/Prefabs/ArtPass/AP_RewardPickup.prefab must declare PresentationVisualMarker) Tj
 0 -14 Td
-(audio cue HazardCoinDrop must have a placeholder clip.; ArtPass audio cue ChestOpen must) Tj
+(role HazardCoinDrop.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_RewardPickup.prefab) Tj
 0 -14 Td
-(have a placeholder clip.; ArtPass audio cue CoinPickup must have a placeholder clip.) Tj
+(must declare PresentationVisualMarker role CoinCopper.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_RewardPickup.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role CoinSilver.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_RewardPickup.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role CoinGold.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxRewardClaim.prefab must declare) Tj
+0 -14 Td
+(PresentationVisualMarker role VfxChestOpen.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/VFX/VFX_VfxRewardClaim.prefab must declare) Tj
+0 -14 Td
+(PresentationVisualMarker role VfxCoinPickup.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemySpittingPod.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyFast.prefab) Tj
+0 -14 Td
+(must declare PresentationVisualMarker role EnemyRat.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyFast.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemySpider.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyFlying.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role EnemyHollowBird.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyHeavy.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyHollowBeast.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyNormal.prefab) Tj
+0 -14 Td
+(must declare PresentationVisualMarker role EnemySkeletonSword.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyNormal.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemySkeletonSpear.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyHeavy.prefab) Tj
+0 -14 Td
+(must declare PresentationVisualMarker role EnemyKnight.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyHeavy.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyGiant.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role EnemyHollowArcher.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyPowderGunner.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyNormal.prefab) Tj
+0 -14 Td
+(must declare PresentationVisualMarker role EnemyKnifeThrower.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyRepeaterTurret.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyClockworkSentry.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyNormal.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyHollowAcolyte.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyFlying.prefab must declare PresentationVisualMarker) Tj
+0 -14 Td
+(role EnemyWraith.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyHeavy.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role EnemySoulEater.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyNormal.prefab must declare PresentationVisualMarker) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 4427 >>
+stream
+BT
+/F1 11 Tf
+50 742 Td
+(role EnemyCurseBinder.; ArtPass prefab Assets/_Hollow/Prefabs/ArtPass/AP_EnemyTurret.prefab) Tj
+0 -14 Td
+(must declare PresentationVisualMarker role EnemyGraveLantern.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorGrassTuft.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role DecorGrassTuft.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorCrystalCluster.prefab) Tj
+0 -14 Td
+(must declare PresentationVisualMarker role DecorCrystalCluster.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorSmallTree.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role DecorSmallTree.; ArtPass prefab) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorStoneRuin.prefab must) Tj
+0 -14 Td
+(declare PresentationVisualMarker role DecorStoneRuin.; ArtPass VFX cue PlayerRollStart must) Tj
+0 -14 Td
+(have a placeholder prefab or debug primitive fallback.; ArtPass VFX cue PlayerRollTrail must) Tj
+0 -14 Td
+(have a placeholder prefab or debug primitive fallback.; ArtPass VFX cue PlayerRollRecovery) Tj
+0 -14 Td
+(must have a placeholder prefab or debug primitive fallback.; ArtPass audio cue) Tj
+0 -14 Td
+(PlayerInvulnerable must have a placeholder clip.; ArtPass audio cue KnockbackImpact must) Tj
+0 -14 Td
+(have a placeholder clip.; ArtPass audio cue EnemyWindup must have a placeholder clip.;) Tj
+0 -14 Td
+(ArtPass audio cue EnemyCorpseGhost must have a placeholder clip.; ArtPass audio cue) Tj
+0 -14 Td
+(DamageBlocked must have a placeholder clip.; ArtPass audio cue ShieldGuardStart must have a) Tj
+0 -14 Td
+(placeholder clip.; ArtPass audio cue ShieldBlock must have a placeholder clip.; ArtPass) Tj
+0 -14 Td
+(audio cue ShieldParryCounter must have a placeholder clip.; ArtPass audio cue) Tj
+0 -14 Td
+(ShieldUnavailable must have a placeholder clip.; ArtPass audio cue HazardHit must have a) Tj
+0 -14 Td
+(placeholder clip.; ArtPass audio cue BarrelBreak must have a placeholder clip.; ArtPass) Tj
+0 -14 Td
+(audio cue BarrelExplode must have a placeholder clip.; ArtPass audio cue HazardCoinDrop must) Tj
+0 -14 Td
+(have a placeholder clip.; ArtPass audio cue ChestOpen must have a placeholder clip.; ArtPass) Tj
+0 -14 Td
+(audio cue CoinPickup must have a placeholder clip.; ArtPass audio cue PlayerRollStart must) Tj
+0 -14 Td
+(have a placeholder clip.; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_ChestCorrupted.prefab; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_ChestGolden.prefab; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/AP_EnemyAzureMinigunTurret.prefab; ArtPass asset is not) Tj
+0 -14 Td
+(addressable: Assets/_Hollow/Prefabs/ArtPass/AP_EnemyCrimsonRailSpider.prefab; ArtPass asset) Tj
+0 -14 Td
+(is not addressable: Assets/_Hollow/Prefabs/ArtPass/AP_EnemyStarforgedOctantSentry.prefab;) Tj
+0 -14 Td
+(ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/CorruptedAshenShrine/AP_CorruptedAshenShrine_DecorAshP) Tj
+0 -14 Td
+(ile.prefab; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/CorruptedAshenShrine/AP_CorruptedAshenShrine_DecorAshe) Tj
+0 -14 Td
+(nObelisk.prefab; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/CorruptedAshenShrine/AP_CorruptedAshenShrine_DecorBrok) Tj
+0 -14 Td
+(enShrineStones.prefab; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/CorruptedAshenShrine/AP_CorruptedAshenShrine_DecorSigi) Tj
+0 -14 Td
+(lShard.prefab; ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorCrystalCluster.prefab;) Tj
+0 -14 Td
+(ArtPass asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorGrassTuft.prefab; ArtPass) Tj
+0 -14 Td
+(asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorSmallTree.prefab; ArtPass) Tj
+0 -14 Td
+(asset is not addressable:) Tj
+0 -14 Td
+(Assets/_Hollow/Prefabs/ArtPass/Biomes/VerdantRuins/AP_Verdant_DecorStoneRuin.prefab) Tj
 0 -14 Td
 (  Remediation: Regenerate M23 ArtPass assets and repair catalog bindings.) Tj
 0 -14 Td
 (- platform-checklist: Passed) Tj
-0 -14 Td
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1333 >>
+stream
+BT
+/F1 11 Tf
+50 742 Td
 (  Windows, Vision Pro bounded, and Vision Pro immersive have equal vertical-slice checklist) Tj
 0 -14 Td
 (coverage.) Tj
@@ -177,7 +361,7 @@ BT
 0 -14 Td
 (restores.) Tj
 0 -14 Td
-(- Vision Pro bounded: repeat route smoke with tabletop scale 0.1, HUD/minimap unscaled,) Tj
+(- Vision Pro bounded: repeat route smoke with tabletop scale 0.5, HUD/minimap unscaled,) Tj
 0 -14 Td
 (readable door/shop/portal cards, and no ArtPass visual collider takeover.) Tj
 0 -14 Td
@@ -191,21 +375,25 @@ BT
 ET
 endstream
 endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
 endobj
 xref
-0 8
+0 12
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000121 00000 n 
-0000000191 00000 n 
-0000003926 00000 n 
-0000004052 00000 n 
-0000006897 00000 n 
+0000000134 00000 n 
+0000000204 00000 n 
+0000003928 00000 n 
+0000004054 00000 n 
+0000008605 00000 n 
+0000008731 00000 n 
+0000013210 00000 n 
+0000013336 00000 n 
+0000014722 00000 n 
 trailer
-<< /Size 8 /Root 1 0 R >>
+<< /Size 12 /Root 1 0 R >>
 startxref
-7023
+14850
 %%EOF

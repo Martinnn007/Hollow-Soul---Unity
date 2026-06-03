@@ -438,6 +438,246 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void HeldMeleeLightRepeatsOnlyAfterCooldownAllows()
+        {
+            var rig = CreateHeldAttackRig("HeldMeleeLight", WeaponSlot.Melee);
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true), 0f, 0f);
+                Assert.AreEqual(186f, rig.Weapon.CurrentStamina, 0.001f);
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.24f);
+                Assert.AreEqual(186f, rig.Weapon.CurrentStamina, 0.001f);
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.67f);
+                Assert.AreEqual(172f, rig.Weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void HeldMeleeHeavyRepeatsAfterRecoveryAllows()
+        {
+            var rig = CreateHeldAttackRig("HeldMeleeHeavy", WeaponSlot.Melee);
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(heavyPressed: true, heavyHeld: true), 0f, 0f);
+                Assert.AreEqual(158f, rig.Weapon.CurrentStamina, 0.001f);
+
+                rig.Weapon.TickInput(AttackInput(heavyHeld: true), 0f, 0.69f);
+                Assert.AreEqual(158f, rig.Weapon.CurrentStamina, 0.001f);
+
+                rig.Weapon.TickInput(AttackInput(heavyHeld: true), 0f, 0.71f);
+                Assert.AreEqual(116f, rig.Weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void HeldAttacksUseLatestPressedPriorityAndFallbackOnRelease()
+        {
+            var simultaneousRig = CreateHeldAttackRig("HeldSimultaneousPriority", WeaponSlot.Melee);
+            try
+            {
+                simultaneousRig.Weapon.TickInput(
+                    AttackInput(lightPressed: true, lightHeld: true, heavyPressed: true, heavyHeld: true),
+                    0f,
+                    0f);
+                Assert.AreEqual(158f, simultaneousRig.Weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                simultaneousRig.Destroy();
+            }
+
+            var rig = CreateHeldAttackRig("HeldPriorityFallback", WeaponSlot.Melee);
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true), 0f, 0f);
+                Assert.AreEqual(186f, rig.Weapon.CurrentStamina, 0.001f);
+
+                rig.Weapon.TickInput(AttackInput(heavyPressed: true, lightHeld: true, heavyHeld: true), 0f, 0.67f);
+                Assert.AreEqual(144f, rig.Weapon.CurrentStamina, 0.001f);
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true, heavyReleased: true), 0f, 1.38f);
+                Assert.AreEqual(130f, rig.Weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void HeldInstantRangedLightRepeatsOnlyAfterCooldownAllows()
+        {
+            var rig = CreateHeldAttackRig("HeldRangedLight", WeaponSlot.Ranged, "starter_pistol");
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true), 0f, 0f);
+                Assert.AreEqual(194f, rig.Weapon.CurrentStamina, 0.001f);
+                rig.Weapon.TickAction(0f, 0.02f);
+                Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.2f);
+                Assert.AreEqual(194f, rig.Weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.5f);
+                Assert.AreEqual(188f, rig.Weapon.CurrentStamina, 0.001f);
+                rig.Weapon.TickAction(0f, 0.52f);
+                Assert.AreEqual(2, CountPlayerProjectiles(rig.Parent));
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void HeldInstantRangedHeavyRepeatsOnlyAfterRecoveryAllows()
+        {
+            var rig = CreateHeldAttackRig("HeldRangedHeavy", WeaponSlot.Ranged, "starter_pistol");
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(heavyPressed: true, heavyHeld: true), 0f, 0f);
+                Assert.AreEqual(166f, rig.Weapon.CurrentStamina, 0.001f);
+                rig.Weapon.TickAction(0f, 0.02f);
+                Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
+
+                rig.Weapon.TickInput(AttackInput(heavyHeld: true), 0f, 0.36f);
+                Assert.AreEqual(166f, rig.Weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
+
+                rig.Weapon.TickInput(AttackInput(heavyHeld: true), 0f, 0.38f);
+                Assert.AreEqual(132f, rig.Weapon.CurrentStamina, 0.001f);
+                rig.Weapon.TickAction(0f, 0.4f);
+                Assert.AreEqual(2, CountPlayerProjectiles(rig.Parent));
+            }
+            finally
+            {
+                rig.Destroy();
+            }
+        }
+
+        [Test]
+        public void HeldDrawRangedAutoFiresAfterDrawAndRepeats()
+        {
+            var bow = CreateTestDrawBow();
+            var catalog = ScriptableObject.CreateInstance<WeaponCatalogDefinition>();
+            catalog.Configure("held_draw_test_catalog", new[] { bow });
+            var rig = CreateHeldAttackRig("HeldDrawRanged", WeaponSlot.Ranged, bow.WeaponId, catalog);
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true), 0f, 0f);
+                Assert.IsTrue(rig.Weapon.IsRangedDrawActive);
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.19f);
+                Assert.IsTrue(rig.Weapon.IsRangedDrawActive);
+                Assert.AreEqual(0, CountPlayerProjectiles(rig.Parent));
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.2f);
+                Assert.IsFalse(rig.Weapon.IsRangedDrawActive);
+                Assert.AreEqual(195f, rig.Weapon.CurrentStamina, 0.001f);
+                rig.Weapon.TickAction(0f, 0.22f);
+                Assert.AreEqual(1, CountPlayerProjectiles(rig.Parent));
+
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.3f);
+                Assert.IsTrue(rig.Weapon.IsRangedDrawActive);
+                rig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.5f);
+                rig.Weapon.TickAction(0f, 0.52f);
+                Assert.AreEqual(2, CountPlayerProjectiles(rig.Parent));
+            }
+            finally
+            {
+                rig.Destroy();
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(bow);
+            }
+        }
+
+        [Test]
+        public void HeldDrawRangedReleaseBeforeDrawCancelsWithoutSpending()
+        {
+            var bow = CreateTestDrawBow();
+            var catalog = ScriptableObject.CreateInstance<WeaponCatalogDefinition>();
+            catalog.Configure("held_draw_cancel_test_catalog", new[] { bow });
+            var rig = CreateHeldAttackRig("HeldDrawCancel", WeaponSlot.Ranged, bow.WeaponId, catalog);
+            try
+            {
+                rig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true), 0f, 1f);
+                Assert.IsTrue(rig.Weapon.IsRangedDrawActive);
+
+                rig.Weapon.TickInput(AttackInput(lightReleased: true), 0f, 1.1f);
+
+                Assert.IsFalse(rig.Weapon.IsRangedDrawActive);
+                Assert.AreEqual(200f, rig.Weapon.CurrentStamina, 0.001f);
+                Assert.AreEqual(0, CountPlayerProjectiles(rig.Parent));
+            }
+            finally
+            {
+                rig.Destroy();
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(bow);
+            }
+        }
+
+        [Test]
+        public void GuardRollAndHeavyDamageStillBlockHeldAttacksThroughExistingPaths()
+        {
+            var meleeRig = CreateHeldAttackRig("HeldMeleeBlockers", WeaponSlot.Melee);
+            try
+            {
+                meleeRig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true, guardHeld: true), 0f, 0f);
+                Assert.AreEqual(200f, meleeRig.Weapon.CurrentStamina, 0.001f);
+
+                meleeRig.Weapon.TickInput(AttackInput(Vector2.up, lightPressed: true, lightHeld: true, rollPressed: true), 0f, 0.1f);
+                Assert.AreEqual(200f - PlayerWeaponController.RollStaminaCost, meleeRig.Weapon.CurrentStamina, 0.001f);
+
+                meleeRig.Weapon.TickInput(AttackInput(lightHeld: true), 0f, 0.2f);
+                Assert.AreEqual(200f - PlayerWeaponController.RollStaminaCost, meleeRig.Weapon.CurrentStamina, 0.001f);
+            }
+            finally
+            {
+                meleeRig.Destroy();
+            }
+
+            var rangedRig = CreateHeldAttackRig("HeldDamageInterrupt", WeaponSlot.Ranged, "starter_pistol");
+            var damageSource = new GameObject("HeldInterruptDamageSource");
+            try
+            {
+                var health = rangedRig.Player.AddComponent<CombatantHealth>();
+                health.Configure(10);
+
+                rangedRig.Weapon.TickInput(AttackInput(lightPressed: true, lightHeld: true), 0f, 2f);
+                Assert.AreEqual(194f, rangedRig.Weapon.CurrentStamina, 0.001f);
+
+                DamageSystem.ApplyDamage(
+                    health,
+                    new DamageRequest(
+                        1,
+                        damageSource,
+                        DamageFeedbackContext.None,
+                        DamageThreatKind.Heavy,
+                        DamageClassification.PhysicalMelee(ImpactForceClass.Heavy)));
+                rangedRig.Weapon.TickAction(0f, 2.02f);
+
+                Assert.AreEqual(0, CountPlayerProjectiles(rangedRig.Parent));
+            }
+            finally
+            {
+                rangedRig.Destroy();
+                Object.DestroyImmediate(damageSource);
+            }
+        }
+
+        [Test]
         public void RepeatedRollsExhaustStaminaUntilRegen()
         {
             var player = new GameObject("RollStaminaPlayer");
@@ -594,6 +834,144 @@ namespace Hollow.Tests.EditMode
             var method = typeof(PlayerWeaponController).GetMethod("RegenerateStamina", BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(method);
             method.Invoke(weapon, new object[] { deltaTime, timeSeconds });
+        }
+
+        private static GameplayInputSnapshot AttackInput(
+            Vector2? move = null,
+            bool lightPressed = false,
+            bool lightHeld = false,
+            bool lightReleased = false,
+            bool heavyPressed = false,
+            bool heavyHeld = false,
+            bool heavyReleased = false,
+            bool guardHeld = false,
+            bool rollPressed = false)
+        {
+            return new GameplayInputSnapshot(
+                move ?? Vector2.zero,
+                Vector2.up,
+                false,
+                false,
+                lightPressed,
+                heavyPressed,
+                false,
+                false,
+                guardHeld,
+                false,
+                rollPressed,
+                false,
+                Vector2.zero,
+                false,
+                false,
+                lightHeld,
+                lightReleased,
+                heavyHeld,
+                heavyReleased);
+        }
+
+        private static HeldAttackRig CreateHeldAttackRig(
+            string name,
+            WeaponSlot activeSlot,
+            string rangedWeaponId = "starter_pistol",
+            WeaponCatalogDefinition catalog = null)
+        {
+            var parent = new GameObject(name);
+            var player = new GameObject("Player");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            player.transform.SetParent(parent.transform, false);
+
+            var weapon = player.AddComponent<PlayerWeaponController>();
+            weapon.Configure(null, combat, projectilePrefab);
+            weapon.ConfigureBuildStats(
+                1f,
+                0,
+                0,
+                200f,
+                0f,
+                "starter_blade",
+                rangedWeaponId,
+                activeSlot,
+                200f,
+                catalog ?? LoadCatalog());
+            return new HeldAttackRig(parent, player, combat.gameObject, projectilePrefab, weapon);
+        }
+
+        private static WeaponDefinition CreateTestDrawBow()
+        {
+            var bow = ScriptableObject.CreateInstance<WeaponDefinition>();
+            bow.Configure(
+                "test_draw_bow",
+                "Test Draw Bow",
+                WeaponSlot.Ranged,
+                WeaponCategory.Bow,
+                nextLightAttack: new WeaponAttackDefinition(
+                    AttackKind.Light,
+                    1,
+                    0.05f,
+                    5f,
+                    6f,
+                    ImpactForceClass.Light,
+                    0.25f,
+                    windupSeconds: 0.01f,
+                    activeSeconds: 0.03f,
+                    recoverySeconds: 0.05f,
+                    hitArcDegrees: 1f,
+                    requiredDrawSeconds: 0.2f),
+                nextHeavyAttack: new WeaponAttackDefinition(
+                    AttackKind.Heavy,
+                    2,
+                    0.05f,
+                    12f,
+                    6.5f,
+                    ImpactForceClass.Medium,
+                    0.45f,
+                    windupSeconds: 0.01f,
+                    activeSeconds: 0.03f,
+                    recoverySeconds: 0.05f,
+                    hitArcDegrees: 1f,
+                    requiredDrawSeconds: 0.2f));
+            return bow;
+        }
+
+        private static int CountPlayerProjectiles(GameObject parent)
+        {
+            return parent.transform.Cast<Transform>().Count(child => child.name == "PlayerProjectile");
+        }
+
+        private readonly struct HeldAttackRig
+        {
+            public HeldAttackRig(
+                GameObject parent,
+                GameObject player,
+                GameObject combat,
+                GameObject projectilePrefab,
+                PlayerWeaponController weapon)
+            {
+                Parent = parent;
+                Player = player;
+                Combat = combat;
+                ProjectilePrefab = projectilePrefab;
+                Weapon = weapon;
+            }
+
+            public GameObject Parent { get; }
+
+            public GameObject Player { get; }
+
+            public GameObject Combat { get; }
+
+            public GameObject ProjectilePrefab { get; }
+
+            public PlayerWeaponController Weapon { get; }
+
+            public void Destroy()
+            {
+                Object.DestroyImmediate(Parent);
+                Object.DestroyImmediate(Combat);
+                Object.DestroyImmediate(ProjectilePrefab);
+            }
         }
     }
 }

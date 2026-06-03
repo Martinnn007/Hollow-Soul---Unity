@@ -152,12 +152,16 @@ namespace Hollow.Tests.PlayMode
             var previousPipeline = QualitySettings.renderPipeline;
             var hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
             var previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            var hadPreviousResolutionPreference = PlayerPrefs.HasKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+            var previousResolutionPreference = hadPreviousResolutionPreference ? PlayerPrefs.GetString(RuntimeRenderResolutionSettings.PlayerPrefsKey) : string.Empty;
             var room = CreateRoomRoot(RoomBiomeIds.VerdantRuins);
 
             try
             {
                 PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
                 RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
                 room.gameObject.SetActive(false);
 
                 Assert.IsTrue(RoomLightingPrewarm.Prepare(room));
@@ -175,6 +179,8 @@ namespace Hollow.Tests.PlayMode
 
                 RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Cool, persist: false);
                 RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Quality, persist: false);
+                RuntimeRenderResolutionSettings.SetMode(RuntimeRenderResolutionMode.Low, persist: false);
+                RuntimeRenderResolutionSettings.SetMode(RuntimeRenderResolutionMode.Balanced, persist: false);
                 yield return null;
 
                 Assert.IsTrue(lighting.IsPreparedFor(RoomBiomeIds.VerdantRuins));
@@ -207,7 +213,17 @@ namespace Hollow.Tests.PlayMode
                     PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
                 }
 
+                if (hadPreviousResolutionPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderResolutionSettings.PlayerPrefsKey, previousResolutionPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+                }
+
                 RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
             }
         }
 

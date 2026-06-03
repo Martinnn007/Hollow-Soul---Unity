@@ -17,17 +17,17 @@ MonoBehaviour:
   notes: 
   bindings:
   - role: 29
-    material: {fileID: 2100000, guid: e0ce59097d58a431fa311c963767ce73, type: 2}
-    fallbackColor: {r: 0.7105, g: 0.63960004, b: 0.11849997, a: 1}
+    material: {fileID: 2100000, guid: d00d798a0cd43452ea5fe8e578bb3e79, type: 2}
+    fallbackColor: {r: 0.76, g: 0.67, b: 0.5, a: 1}
   - role: 92
     material: {fileID: 2100000, guid: 88a9111ac333c4ed18b416580e6491db, type: 2}
     fallbackColor: {r: 0.25, g: 0.08, b: 0.28, a: 1}
-  - role: 55
-    material: {fileID: 2100000, guid: 31c3cf03c5c44ce7b3d62b33bb1a7a65, type: 2}
-    fallbackColor: {r: 0.43, g: 0.28, b: 0.14, a: 1}
   - role: 56
     material: {fileID: 2100000, guid: c74dac8c9a1c4ce0b9eba9ccad1a9bb9, type: 2}
     fallbackColor: {r: 1, g: 0.76, b: 0.18, a: 1}
+  - role: 55
+    material: {fileID: 2100000, guid: 31c3cf03c5c44ce7b3d62b33bb1a7a65, type: 2}
+    fallbackColor: {r: 0.43, g: 0.28, b: 0.14, a: 1}
   - role: 22
     material: {fileID: 2100000, guid: cb5aae76281464761850dd57d569f8a9, type: 2}
     fallbackColor: {r: 0.7105, g: 0.5836, b: 0.13949996, a: 1}

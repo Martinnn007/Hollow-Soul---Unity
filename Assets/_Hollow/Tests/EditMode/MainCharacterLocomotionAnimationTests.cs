@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
+using Hollow.Editor.Generation;
 using Hollow.Entities;
 using Hollow.Input;
 using Hollow.Presentation;
@@ -250,6 +251,10 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void HeldWeaponVisualSwapsActiveAndHolsteredWeaponsWithoutDuplicates()
         {
+            var presentationCatalog = AssetDatabase.LoadAssetAtPath<PresentationContentCatalog>(Milestone9AssetGenerator.CatalogPath);
+            Assert.IsNotNull(presentationCatalog);
+            PresentationContentProvider.Configure(presentationCatalog);
+
             var player = new GameObject("PlayerCharacter");
             var rightHand = new GameObject("RightHand");
             var socket = new GameObject(PlayerHeldWeaponVisualController.MeleeHandSocketName);
@@ -268,6 +273,7 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(heldWeaponVisual.HolsteredRangedVisual);
                 Assert.AreEqual(1, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                AssertVisibleMeshyMeleeWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
 
@@ -283,6 +289,7 @@ namespace Hollow.Tests.EditMode
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                AssertVisibleMeshyMeleeWeaponVisual(heldWeaponVisual.HolsteredMeleeVisual);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
@@ -297,6 +304,40 @@ namespace Hollow.Tests.EditMode
             {
                 Object.DestroyImmediate(player);
             }
+        }
+
+        private static bool UsesMeshyMeleeWeaponMaterial(GameObject root)
+        {
+            return root != null &&
+                root.GetComponentsInChildren<Renderer>(includeInactive: true)
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null)
+                    .Any(material => AssetDatabase.GetAssetPath(material) == WeaponMeleeMeshyAssetGenerator.MeshyMaterialPath);
+        }
+
+        private static void AssertVisibleMeshyMeleeWeaponVisual(GameObject root)
+        {
+            Assert.IsNotNull(root);
+            Assert.IsTrue(UsesMeshyMeleeWeaponMaterial(root));
+            var renderers = root.GetComponentsInChildren<Renderer>(includeInactive: false)
+                .Where(renderer => renderer.enabled && renderer.gameObject.activeInHierarchy)
+                .ToArray();
+            Assert.Greater(renderers.Length, 0, "Melee weapon visual should have an active renderer in gameplay hierarchy.");
+            var bounds = Encapsulate(renderers);
+            Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.5f);
+            Assert.Greater(bounds.size.sqrMagnitude, 0.25f);
+        }
+
+        private static Bounds Encapsulate(Renderer[] renderers)
+        {
+            Assert.Greater(renderers.Length, 0);
+            var bounds = renderers[0].bounds;
+            for (var index = 1; index < renderers.Length; index++)
+            {
+                bounds.Encapsulate(renderers[index].bounds);
+            }
+
+            return bounds;
         }
 
         [Test]

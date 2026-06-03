@@ -28,6 +28,7 @@ MonoBehaviour:
   targetFrameRate: 90
   vSyncCount: 0
   renderScale: 0.85
+  renderProfile: {fileID: 11400000, guid: 62fabb1b89995467cb89af494ae1fa58, type: 2}
   useComfortVignette: 1
   comfortVignetteRadius: 0.82
   comfortVignetteOpacity: 0.18

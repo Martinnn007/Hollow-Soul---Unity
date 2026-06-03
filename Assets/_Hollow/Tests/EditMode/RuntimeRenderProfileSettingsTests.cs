@@ -18,6 +18,8 @@ namespace Hollow.Tests.EditMode
         private RenderPipelineAsset previousPipeline;
         private bool hadPreviousPreference;
         private string previousPreference;
+        private bool hadPreviousResolutionPreference;
+        private string previousResolutionPreference;
 
         [SetUp]
         public void SetUp()
@@ -27,8 +29,12 @@ namespace Hollow.Tests.EditMode
             previousPipeline = QualitySettings.renderPipeline;
             hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
             previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            hadPreviousResolutionPreference = PlayerPrefs.HasKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+            previousResolutionPreference = hadPreviousResolutionPreference ? PlayerPrefs.GetString(RuntimeRenderResolutionSettings.PlayerPrefsKey) : string.Empty;
             PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+            PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
             RuntimeRenderProfileSettings.ResetForTests();
+            RuntimeRenderResolutionSettings.ResetForTests();
             CapturePipelineMembers(RuntimeRenderProfileSettings.ProfileFor(RuntimeRenderProfileMode.Cool)?.RenderPipelineAsset);
         }
 
@@ -48,7 +54,17 @@ namespace Hollow.Tests.EditMode
                 PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
             }
 
+            if (hadPreviousResolutionPreference)
+            {
+                PlayerPrefs.SetString(RuntimeRenderResolutionSettings.PlayerPrefsKey, previousResolutionPreference);
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+            }
+
             RuntimeRenderProfileSettings.ResetForTests();
+            RuntimeRenderResolutionSettings.ResetForTests();
             pipelineSnapshots.Clear();
         }
 
@@ -88,6 +104,72 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(0, QualitySettings.vSyncCount);
             Assert.AreEqual(quality.RenderPipelineAsset, QualitySettings.renderPipeline);
             Assert.AreEqual(1f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+        }
+
+        [Test]
+        public void UnsetRenderResolutionUsesProfileDefaultScale()
+        {
+            var cool = RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Cool, persist: false);
+
+            Assert.AreEqual(RuntimeRenderResolutionMode.Balanced, RuntimeRenderResolutionSettings.CurrentMode);
+            Assert.IsFalse(RuntimeRenderResolutionSettings.HasExplicitMode);
+            Assert.AreEqual(0.75f, ReadFloat(cool.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+
+            var quality = RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Quality, persist: false);
+
+            Assert.AreEqual(RuntimeRenderResolutionMode.Native, RuntimeRenderResolutionSettings.CurrentMode);
+            Assert.IsFalse(RuntimeRenderResolutionSettings.HasExplicitMode);
+            Assert.AreEqual(1f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+        }
+
+        [Test]
+        public void SelectedRenderResolutionPersistsThroughPlayerPrefs()
+        {
+            foreach (var mode in new[] { RuntimeRenderResolutionMode.Native, RuntimeRenderResolutionMode.Balanced, RuntimeRenderResolutionMode.Low })
+            {
+                PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+                RuntimeRenderResolutionSettings.ResetForTests();
+
+                RuntimeRenderResolutionSettings.SetMode(mode);
+                RuntimeRenderResolutionSettings.ResetForTests();
+
+                Assert.AreEqual(mode, RuntimeRenderResolutionSettings.CurrentMode);
+                Assert.IsTrue(RuntimeRenderResolutionSettings.HasExplicitMode);
+            }
+        }
+
+        [Test]
+        public void ApplyingRenderResolutionUpdatesPipelineRenderScaleOnly()
+        {
+            var quality = RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Quality, persist: false);
+            Assert.AreEqual(60, Application.targetFrameRate);
+            Assert.AreEqual(1f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+
+            RuntimeRenderResolutionSettings.SetMode(RuntimeRenderResolutionMode.Low, persist: false);
+            Assert.AreEqual(60, Application.targetFrameRate);
+            Assert.AreEqual(0, QualitySettings.vSyncCount);
+            Assert.AreEqual(quality.RenderPipelineAsset, QualitySettings.renderPipeline);
+            Assert.AreEqual(0.5f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+
+            RuntimeRenderResolutionSettings.SetMode(RuntimeRenderResolutionMode.Balanced, persist: false);
+            Assert.AreEqual(0.75f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+
+            RuntimeRenderResolutionSettings.SetMode(RuntimeRenderResolutionMode.Native, persist: false);
+            Assert.AreEqual(1f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+        }
+
+        [Test]
+        public void SwitchingRenderProfileKeepsExplicitRenderResolutionOverride()
+        {
+            RuntimeRenderResolutionSettings.SetMode(RuntimeRenderResolutionMode.Low, persist: false);
+
+            var quality = RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Quality, persist: false);
+            Assert.AreEqual(RuntimeRenderResolutionMode.Low, RuntimeRenderResolutionSettings.CurrentMode);
+            Assert.AreEqual(0.5f, ReadFloat(quality.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+
+            var cool = RuntimeRenderProfileSettings.SetMode(RuntimeRenderProfileMode.Cool, persist: false);
+            Assert.AreEqual(RuntimeRenderResolutionMode.Low, RuntimeRenderResolutionSettings.CurrentMode);
+            Assert.AreEqual(0.5f, ReadFloat(cool.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
         }
 
         [Test]

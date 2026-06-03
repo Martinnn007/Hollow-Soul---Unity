@@ -52,6 +52,47 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void WeaponMeleeArtPassPrefabUsesMeshySilentBladeVisualOnlyAsset()
+        {
+            var presentationCatalog = AssetDatabase.LoadAssetAtPath<PresentationContentCatalog>(Milestone9AssetGenerator.CatalogPath);
+            Assert.IsNotNull(presentationCatalog);
+            Assert.IsTrue(presentationCatalog.TryGetPrefab(PresentationPrefabRole.WeaponMelee, out var boundPrefab));
+            Assert.AreEqual(WeaponMeleeMeshyAssetGenerator.ArtPassWeaponMeleePrefabPath, AssetDatabase.GetAssetPath(boundPrefab));
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(WeaponMeleeMeshyAssetGenerator.ArtPassWeaponMeleePrefabPath);
+            Assert.IsNotNull(prefab, "Run Meshy melee weapon generation before validating the ArtPass visual.");
+            var errors = ArtPassProductionValidator.ValidatePrefabSafetyForTests(prefab, PresentationPrefabRole.WeaponMelee);
+            Assert.IsEmpty(errors, string.Join("; ", errors));
+
+            var renderers = prefab.GetComponentsInChildren<Renderer>(includeInactive: true);
+            Assert.Greater(renderers.Length, 0);
+            Assert.IsTrue(renderers
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null)
+                    .Any(material => AssetDatabase.GetAssetPath(material) == WeaponMeleeMeshyAssetGenerator.MeshyMaterialPath),
+                "Melee weapon ArtPass renderers should use the imported Meshy Silent Blade material.");
+            var instance = UnityEngine.Object.Instantiate(prefab);
+            try
+            {
+                var activeRenderers = instance.GetComponentsInChildren<Renderer>(includeInactive: false)
+                    .Where(renderer => renderer.enabled && renderer.gameObject.activeInHierarchy)
+                    .ToArray();
+                Assert.Greater(activeRenderers.Length, 0);
+                var bounds = Encapsulate(activeRenderers);
+                Assert.Greater(bounds.size.y, 0.7f, "Melee ArtPass sword should preserve the old local-Y weapon length footprint.");
+                Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.z), 0.08f, "Melee ArtPass sword should not be fitted as an edge-on sliver.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+            }
+
+            Assert.AreEqual(0, prefab.GetComponentsInChildren<Collider>(includeInactive: true).Length);
+            var markerScripts = prefab.GetComponentsInChildren<MonoBehaviour>(includeInactive: true);
+            Assert.IsTrue(markerScripts.All(component => component is PresentationVisualMarker));
+        }
+
+        [Test]
         public void HubShopCardAttachesVisualWithoutGameplayColliders()
         {
             var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -76,6 +117,18 @@ namespace Hollow.Tests.EditMode
         public void Milestone38ValidatorReportsGeneratedStateValid()
         {
             Assert.DoesNotThrow(() => Milestone38Validator.Validate());
+        }
+
+        private static Bounds Encapsulate(Renderer[] renderers)
+        {
+            Assert.Greater(renderers.Length, 0);
+            var bounds = renderers[0].bounds;
+            for (var index = 1; index < renderers.Length; index++)
+            {
+                bounds.Encapsulate(renderers[index].bounds);
+            }
+
+            return bounds;
         }
     }
 }

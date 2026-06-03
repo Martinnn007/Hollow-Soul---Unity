@@ -103,19 +103,21 @@ namespace Hollow.UI.Shell
             var panel = CreatePanel("Pause.Settings", root, new Vector2(620f, 560f), new Color(0.04f, 0.05f, 0.08f, PanelAlpha));
             AddText(panel, "Settings", 30, FontStyle.Bold, new Vector2(0f, 220f), new Vector2(540f, 52f));
             AddText(panel, "Runtime settings for the current run.", 13, FontStyle.Normal, new Vector2(0f, 180f), new Vector2(540f, 28f), new Color(0.76f, 0.83f, 0.92f));
-            AddDisabledRow(panel, "Audio", "Placeholder", 70f);
+            AddDisabledRow(panel, "Audio", "Placeholder", 95f);
             if (CanSwitchDesktopRenderProfile())
             {
-                AddRenderProfileSelector(panel, 10f);
+                AddRenderProfileSelector(panel, 35f);
+                AddRenderResolutionSelector(panel, -25f);
             }
             else
             {
-                AddDisabledRow(panel, "Graphics", "VisionOS Fixed", 10f);
+                AddDisabledRow(panel, "Graphics", "VisionOS Fixed", 35f);
+                AddDisabledRow(panel, "Render Resolution", "VisionOS Fixed", -25f);
             }
 
-            AddDisabledRow(panel, "Accessibility", "Placeholder", -60f);
-            AddButton(panel, "Controls", new Vector2(0f, -130f), ShowControls, new Color(0.20f, 0.44f, 0.70f));
-            AddButton(panel, "Back", new Vector2(0f, -210f), ShowRoot, new Color(0.22f, 0.25f, 0.33f));
+            AddDisabledRow(panel, "Accessibility", "Placeholder", -85f);
+            AddButton(panel, "Controls", new Vector2(0f, -150f), ShowControls, new Color(0.20f, 0.44f, 0.70f));
+            AddButton(panel, "Back", new Vector2(0f, -220f), ShowRoot, new Color(0.22f, 0.25f, 0.33f));
         }
 
         public void ShowControls()
@@ -351,6 +353,31 @@ namespace Hollow.UI.Shell
         private void SelectRenderProfile(RuntimeRenderProfileMode mode)
         {
             RuntimeRenderProfileSettings.SetMode(mode);
+            ShowSettings();
+        }
+
+        private void AddRenderResolutionSelector(RectTransform parent, float y)
+        {
+            var panel = CreatePanel("Setting.RenderResolution", parent, new Vector2(560f, 52f), new Color(0.11f, 0.12f, 0.16f, 0.90f));
+            panel.anchoredPosition = new Vector2(0f, y);
+            AddText(panel, "Render Resolution", 15, FontStyle.Bold, new Vector2(-205f, 0f), new Vector2(150f, 34f), new Color(0.86f, 0.90f, 1f));
+
+            var currentMode = RuntimeRenderResolutionSettings.CurrentModeFor(RuntimeRenderProfileSettings.CurrentProfile);
+            AddRenderResolutionButton(panel, "Native", RuntimeRenderResolutionMode.Native, currentMode, new Vector2(0f, 0f), new Vector2(105f, 34f));
+            AddRenderResolutionButton(panel, "Balanced", RuntimeRenderResolutionMode.Balanced, currentMode, new Vector2(120f, 0f), new Vector2(110f, 34f));
+            AddRenderResolutionButton(panel, "Low", RuntimeRenderResolutionMode.Low, currentMode, new Vector2(225f, 0f), new Vector2(90f, 34f));
+        }
+
+        private void AddRenderResolutionButton(RectTransform parent, string label, RuntimeRenderResolutionMode mode, RuntimeRenderResolutionMode currentMode, Vector2 anchoredPosition, Vector2 size)
+        {
+            var isActive = mode == currentMode;
+            var color = isActive ? new Color(0.18f, 0.45f, 0.28f) : new Color(0.18f, 0.22f, 0.30f);
+            AddButton(parent, label, anchoredPosition, () => SelectRenderResolution(mode), color, size);
+        }
+
+        private void SelectRenderResolution(RuntimeRenderResolutionMode mode)
+        {
+            RuntimeRenderResolutionSettings.SetMode(mode);
             ShowSettings();
         }
 

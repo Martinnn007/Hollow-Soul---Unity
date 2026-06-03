@@ -3,10 +3,14 @@ using System.Linq;
 using Hollow.Branches;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
+using Hollow.Editor.Validation;
+using Hollow.Presentation;
 using Hollow.Rewards;
 using Hollow.Rooms;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
 {
@@ -164,6 +168,89 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(1, restored.NextBranchChoices.Count(choice => choice.State == HubBranchPortalState.Defeated));
             Assert.AreEqual(HubBranchPortalState.Defeated, restored.NextBranchChoices[1].State);
             Assert.AreEqual(hub.ShopRefreshIndex, restored.ShopRefreshIndex);
+        }
+
+        [Test]
+        public void BossKeyPickupPresentationAnimatesAndPoolReturnRestoresBasePose()
+        {
+            var root = new GameObject("BossKeyAnimationRoot");
+            try
+            {
+                root.transform.localPosition = new Vector3(0.15f, 0.45f, -0.2f);
+                root.transform.localRotation = Quaternion.Euler(0f, 35f, 0f);
+                var pickup = root.AddComponent<BossKeyPickup>();
+
+                pickup.Configure("secret_room");
+                var basePosition = root.transform.localPosition;
+                var baseRotation = root.transform.localRotation;
+
+                pickup.TickPresentation(0.25f);
+
+                Assert.AreEqual(basePosition.x, root.transform.localPosition.x, 0.001f);
+                Assert.AreEqual(basePosition.z, root.transform.localPosition.z, 0.001f);
+                Assert.Greater(Mathf.Abs(root.transform.localPosition.y - basePosition.y), 0.01f);
+                Assert.LessOrEqual(Mathf.Abs(root.transform.localPosition.y - basePosition.y), BossKeyPickup.DefaultHoverAmplitudeMeters + 0.001f);
+                Assert.AreEqual(6f, Quaternion.Angle(baseRotation, root.transform.localRotation), 0.1f);
+                Assert.AreEqual(0f, Quaternion.Angle(baseRotation * Quaternion.Euler(0f, 6f, 0f), root.transform.localRotation), 0.001f);
+
+                pickup.OnReturnToPool();
+
+                Assert.AreEqual(string.Empty, pickup.RoomId);
+                Assert.IsFalse(pickup.Claimed);
+                Assert.AreEqual(basePosition, root.transform.localPosition);
+                Assert.AreEqual(0f, Quaternion.Angle(baseRotation, root.transform.localRotation), 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void BossKeyGameplayPrefabIsInvisibleHost()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Milestone20AssetGenerator.BossKeyPickupPrefabPath);
+
+            Assert.IsNotNull(prefab, "Run boss key Meshy generation before validating the M20 gameplay host.");
+            Assert.IsNotNull(prefab.GetComponent<BossKeyPickup>());
+            Assert.AreEqual(0, prefab.GetComponentsInChildren<Renderer>(includeInactive: true).Length);
+            Assert.AreEqual(0, prefab.GetComponentsInChildren<Collider>(includeInactive: true).Length);
+        }
+
+        [Test]
+        public void BossKeyArtPassPrefabResolvesToMeshyVisualOnlyAsset()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BossKeyMeshyAssetGenerator.ArtPassBossKeyPrefabPath);
+
+            Assert.IsNotNull(prefab, "Run boss key Meshy generation before validating the ArtPass visual.");
+            var errors = ArtPassProductionValidator.ValidatePrefabSafetyForTests(prefab, PresentationPrefabRole.BossKeyPickup);
+            Assert.IsEmpty(errors, string.Join("; ", errors));
+
+            var renderers = prefab.GetComponentsInChildren<Renderer>(includeInactive: true);
+            Assert.Greater(renderers.Length, 0);
+            Assert.AreEqual(200f, prefab.transform.GetChild(0).localScale.x, 0.01f, "Boss key ArtPass model should stay at the requested Meshy scale.");
+            Assert.IsTrue(renderers
+                    .SelectMany(renderer => renderer.sharedMaterials)
+                    .Where(material => material != null)
+                    .Any(material => AssetDatabase.GetAssetPath(material).StartsWith("Assets/MeshyImports/Meshy_Model_20260602_223831/", System.StringComparison.Ordinal)),
+                "Boss key ArtPass renderers should use the newly imported Meshy material.");
+
+            var markerScripts = prefab.GetComponentsInChildren<MonoBehaviour>(includeInactive: true);
+            Assert.IsTrue(markerScripts.All(component => component is PresentationVisualMarker));
+
+            var catalog = AssetDatabase.LoadAssetAtPath<PresentationContentCatalog>(Milestone9AssetGenerator.CatalogPath);
+            Assert.IsNotNull(catalog);
+            Assert.IsTrue(catalog.TryGetPrefab(PresentationPrefabRole.BossKeyPickup, out var boundPrefab));
+            Assert.AreEqual(BossKeyMeshyAssetGenerator.ArtPassBossKeyPrefabPath, AssetDatabase.GetAssetPath(boundPrefab));
+        }
+
+        [Test]
+        public void BossKeyHudSpriteUsesProvidedResourceIcon()
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Hollow/Resources/UI/Hud/BossKeyIcon.png");
+
+            Assert.IsNotNull(sprite);
+            Assert.AreEqual("BossKeyIcon", sprite.name);
         }
 
         private static BranchFloorGraph CreateM20Graph()

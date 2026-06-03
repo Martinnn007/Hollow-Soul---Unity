@@ -24,10 +24,20 @@ namespace Hollow.Presentation
             }
         }
 
+        public static void ApplyRenderScale(RenderPipelineAsset asset, float renderScale)
+        {
+            if (asset == null)
+            {
+                return;
+            }
+
+            SetMember(asset.GetType(), asset, "renderScale", "m_RenderScale", Mathf.Clamp(renderScale, 0.5f, 1.5f));
+        }
+
         private static void ApplyRenderPipelineRuntimeValues(RenderPipelineAsset asset, HollowRenderProfileDefinition profile)
         {
             var type = asset.GetType();
-            SetMember(type, asset, "renderScale", "m_RenderScale", profile.RenderScale);
+            ApplyRenderScale(asset, profile.RenderScale);
             SetMember(type, asset, "supportsHDR", "m_SupportsHDR", profile.SupportsHdr);
             SetMember(type, asset, "supportsCameraDepthTexture", "m_RequireDepthTexture", profile.RequiresDepthTexture);
             SetMember(type, asset, "supportsCameraOpaqueTexture", "m_RequireOpaqueTexture", profile.RequiresOpaqueTexture);

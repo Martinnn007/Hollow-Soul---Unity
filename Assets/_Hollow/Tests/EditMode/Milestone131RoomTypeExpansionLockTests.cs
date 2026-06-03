@@ -103,6 +103,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(HollowRuntimeV2Importer.TryImport(json, out var asset, out var error), error);
             Assert.AreEqual(BranchGenerator.WaveRoomAssetId, asset.Id);
             Assert.AreEqual("Wave Room Endpoint 1x1", asset.DisplayName);
+            Assert.AreEqual(91, asset.Layout.WalkableTiles.Count);
             Assert.GreaterOrEqual(asset.EnemySpawns.Count, 4);
             Assert.IsTrue(asset.ItemSpawns.Any(spawn => spawn.kind == RoomDesignerMarkerKinds.GoldenChestSpawn));
             Assert.IsTrue(RuntimeRoomValidator.Validate(asset).IsValid);
@@ -111,6 +112,18 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(content.TryGetRoomAsset(BranchGenerator.WaveRoomAssetId, RoomBiomeIds.VerdantRuins, out var verdantWaveAsset));
             Assert.AreEqual(RoomBiomeIds.VerdantRuins, verdantWaveAsset.BiomeId);
             Assert.AreEqual(BranchGenerator.WaveRoomAssetId, verdantWaveAsset.Id);
+        }
+
+        [Test]
+        public void WaveRoomDoorwayEntriesStayWalkableAfterDoorLock()
+        {
+            Assert.IsTrue(HollowRuntimeV2Importer.TryImport(
+                File.ReadAllText(Milestone131RoomTypeExpansionLockAssetGenerator.WaveRoomEndpointRoomPath),
+                out var asset,
+                out var error),
+                error);
+
+            AssertDoorwayEntriesStayWalkableAfterDoorLock(asset);
         }
 
         [Test]
@@ -210,6 +223,38 @@ namespace Hollow.Tests.EditMode
                 corruptedText,
                 waveText);
             return catalog;
+        }
+
+        private static void AssertDoorwayEntriesStayWalkableAfterDoorLock(ImportedRoomRuntimeAsset asset)
+        {
+            Assert.AreEqual(91, asset.Layout.WalkableTiles.Count, asset.Id);
+            var host = new GameObject($"{asset.Id}_doorway_access_test");
+            try
+            {
+                var room = host.AddComponent<RoomRuntimeRoot>();
+                room.BuildFrom(asset);
+                foreach (var port in room.DoorPorts)
+                {
+                    room.SetDoorVisualStateById(port.Id, RoomDoorVisualState.Locked);
+                }
+
+                var radius = Hollow.Entities.PlaceholderPlayerController.DefaultRadiusMeters;
+                foreach (var direction in new[] { "north", "south", "east", "west" })
+                {
+                    var entry = BranchTraversalService.EntryPositionFor(room, direction);
+                    var inward = BranchTraversalService.EntryInsetDirectionFor(direction);
+                    var resolved = RoomLocalCollision.ResolveNearestOccupiablePosition(room, entry, radius, inward, 3f);
+                    Assert.IsTrue(RoomLocalCollision.CanOccupy(room, resolved, radius), $"{asset.Id}:{direction} doorway entry must resolve to an occupiable point.");
+                    Assert.LessOrEqual(Vector3.Distance(resolved, entry), 0.05f, $"{asset.Id}:{direction} doorway entry should stay at the door inset.");
+
+                    var moved = RoomLocalCollision.ResolveMove(room, resolved, resolved + inward * 0.35f, radius);
+                    Assert.Greater(Vector3.Distance(resolved, moved), 0.1f, $"{asset.Id}:{direction} doorway entry must allow inward movement after door locks.");
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
         }
     }
 }

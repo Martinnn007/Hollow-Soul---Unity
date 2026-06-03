@@ -308,7 +308,7 @@ namespace Hollow.Editor.Validation
             foreach (var meshFilter in prefab.GetComponentsInChildren<MeshFilter>(includeInactive: true))
             {
                 var meshPath = meshFilter.sharedMesh != null ? AssetDatabase.GetAssetPath(meshFilter.sharedMesh) : string.Empty;
-                if (!string.IsNullOrWhiteSpace(meshPath) && meshPath.StartsWith("Assets/_Hollow/Art/", StringComparison.Ordinal))
+                if (!string.IsNullOrWhiteSpace(meshPath) && IsProductionAssetPath(meshPath))
                 {
                     return true;
                 }
@@ -320,7 +320,7 @@ namespace Hollow.Editor.Validation
                 {
                     var materialPath = material != null ? AssetDatabase.GetAssetPath(material) : string.Empty;
                     if (!string.IsNullOrWhiteSpace(materialPath) &&
-                        materialPath.StartsWith("Assets/_Hollow/Art/", StringComparison.Ordinal) &&
+                        IsProductionAssetPath(materialPath) &&
                         !Path.GetFileNameWithoutExtension(materialPath).StartsWith("AP_M_", StringComparison.Ordinal))
                     {
                         return true;
@@ -329,6 +329,12 @@ namespace Hollow.Editor.Validation
             }
 
             return false;
+        }
+
+        private static bool IsProductionAssetPath(string assetPath)
+        {
+            return assetPath.StartsWith("Assets/_Hollow/Art/", StringComparison.Ordinal) ||
+                assetPath.StartsWith("Assets/MeshyImports/", StringComparison.Ordinal);
         }
 
         private static string ExpectedPrefabPathFor(PresentationPrefabRole role)

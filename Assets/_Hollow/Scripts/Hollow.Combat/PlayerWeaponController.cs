@@ -100,6 +100,8 @@ namespace Hollow.Combat
         private float rollInvulnerableEndTime;
         private float lastActionEvaluationTime;
         private float staminaRegenBlockedUntil;
+        private bool heldAttackQueued;
+        private AttackKind heldAttackKind = AttackKind.Light;
         private CombatantHealth health;
 
         public float CooldownSeconds => cooldownSeconds * cooldownMultiplier;
@@ -336,9 +338,9 @@ namespace Hollow.Combat
             EnsureAimLockController();
             aimLockController.Configure(combatController);
             aimLockController.TickAim(input, timeSeconds);
-            if (rangedDrawActive)
+            UpdateHeldAttackIntent(input);
+            if (rangedDrawActive && HandleRangedDrawInput(input, timeSeconds))
             {
-                HandleRangedDrawInput(input, timeSeconds);
                 return;
             }
 
@@ -359,15 +361,65 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (heldAttackQueued)
+            {
+                TryAttack(heldAttackKind, CurrentAim(input, timeSeconds), timeSeconds);
+            }
+        }
+
+        private void UpdateHeldAttackIntent(GameplayInputSnapshot input)
+        {
+            var lightRequested = input.LightAttackPressed || input.LightAttackHeld;
+            var heavyRequested = input.HeavyAttackPressed || input.HeavyAttackHeld;
+            if (!lightRequested && !heavyRequested)
+            {
+                heldAttackQueued = false;
+                heldAttackKind = AttackKind.Light;
+                return;
+            }
+
+            if (input.LightAttackPressed && input.HeavyAttackPressed)
+            {
+                heldAttackQueued = true;
+                heldAttackKind = AttackKind.Heavy;
+                return;
+            }
+
             if (input.LightAttackPressed)
             {
-                TryAttack(AttackKind.Light, CurrentAim(input, timeSeconds), timeSeconds);
+                heldAttackQueued = true;
+                heldAttackKind = AttackKind.Light;
+                return;
             }
 
             if (input.HeavyAttackPressed)
             {
-                TryAttack(AttackKind.Heavy, CurrentAim(input, timeSeconds), timeSeconds);
+                heldAttackQueued = true;
+                heldAttackKind = AttackKind.Heavy;
+                return;
             }
+
+            if (heldAttackQueued && IsAttackHeld(input, heldAttackKind))
+            {
+                return;
+            }
+
+            if (input.HeavyAttackHeld)
+            {
+                heldAttackQueued = true;
+                heldAttackKind = AttackKind.Heavy;
+                return;
+            }
+
+            heldAttackQueued = true;
+            heldAttackKind = AttackKind.Light;
+        }
+
+        private static bool IsAttackHeld(GameplayInputSnapshot input, AttackKind attackKind)
+        {
+            return attackKind == AttackKind.Heavy
+                ? input.HeavyAttackHeld
+                : input.LightAttackHeld;
         }
 
         public void ToggleWeaponSlot()
@@ -592,7 +644,7 @@ namespace Hollow.Combat
             return true;
         }
 
-        private void HandleRangedDrawInput(GameplayInputSnapshot input, float timeSeconds)
+        private bool HandleRangedDrawInput(GameplayInputSnapshot input, float timeSeconds)
         {
             lastAimDirection = CurrentAim(input, timeSeconds);
             if (lastAimDirection.sqrMagnitude > 0.001f)
@@ -603,18 +655,22 @@ namespace Hollow.Combat
             if (input.SwapWeaponPressed || input.RollPressed || input.GuardHeld)
             {
                 CancelRangedDraw();
-                return;
+                return true;
             }
 
-            var release = rangedDrawAttackKind == AttackKind.Heavy
-                ? input.HeavyAttackReleased
-                : input.LightAttackReleased;
-            if (!release)
+            if (!heldAttackQueued || heldAttackKind != rangedDrawAttackKind || !IsAttackHeld(input, rangedDrawAttackKind))
             {
-                return;
+                CancelRangedDraw();
+                return false;
+            }
+
+            if (timeSeconds - rangedDrawStartTime + 0.001f < rangedDrawRequiredSeconds)
+            {
+                return true;
             }
 
             TryReleaseRangedDraw(CurrentAim(input, timeSeconds), timeSeconds);
+            return true;
         }
 
         public bool TryReleaseRangedDraw(Vector2 releaseDirection, float timeSeconds)

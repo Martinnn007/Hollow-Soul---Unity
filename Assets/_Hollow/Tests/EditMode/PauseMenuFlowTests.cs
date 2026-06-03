@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Hollow.Input;
 using Hollow.Persistence;
 using Hollow.Presentation;
@@ -113,11 +116,16 @@ namespace Hollow.Tests.EditMode
             var previousPipeline = QualitySettings.renderPipeline;
             var hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
             var previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            var hadPreviousResolutionPreference = PlayerPrefs.HasKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+            var previousResolutionPreference = hadPreviousResolutionPreference ? PlayerPrefs.GetString(RuntimeRenderResolutionSettings.PlayerPrefsKey) : string.Empty;
+            var pipelineSnapshots = CapturePipelineMembers(RuntimeRenderProfileSettings.ProfileFor(RuntimeRenderProfileMode.Cool)?.RenderPipelineAsset);
             var shell = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             try
             {
                 PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
                 RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
                 var pause = shell.AddComponent<PauseMenuController>();
 
                 pause.ShowSettings();
@@ -126,6 +134,10 @@ namespace Hollow.Tests.EditMode
                 Assert.Contains("Graphics", labels);
                 Assert.Contains("Cool", labels);
                 Assert.Contains("Quality", labels);
+                Assert.Contains("Render Resolution", labels);
+                Assert.Contains("Native", labels);
+                Assert.Contains("Balanced", labels);
+                Assert.Contains("Low", labels);
                 Assert.AreEqual(RuntimeRenderProfileMode.Cool, RuntimeRenderProfileSettings.CurrentMode);
 
                 FindButton(shell, "Quality").onClick.Invoke();
@@ -140,6 +152,7 @@ namespace Hollow.Tests.EditMode
             finally
             {
                 Object.DestroyImmediate(shell);
+                RestorePipelineMembers(pipelineSnapshots);
                 Application.targetFrameRate = previousTargetFrameRate;
                 QualitySettings.vSyncCount = previousVSyncCount;
                 QualitySettings.renderPipeline = previousPipeline;
@@ -152,7 +165,83 @@ namespace Hollow.Tests.EditMode
                     PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
                 }
 
+                if (hadPreviousResolutionPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderResolutionSettings.PlayerPrefsKey, previousResolutionPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+                }
+
                 RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
+            }
+        }
+
+        [Test]
+        public void SettingsPanelSwitchesRuntimeRenderResolution()
+        {
+            var previousTargetFrameRate = Application.targetFrameRate;
+            var previousVSyncCount = QualitySettings.vSyncCount;
+            var previousPipeline = QualitySettings.renderPipeline;
+            var hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+            var previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            var hadPreviousResolutionPreference = PlayerPrefs.HasKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+            var previousResolutionPreference = hadPreviousResolutionPreference ? PlayerPrefs.GetString(RuntimeRenderResolutionSettings.PlayerPrefsKey) : string.Empty;
+            var pipelineSnapshots = CapturePipelineMembers(RuntimeRenderProfileSettings.ProfileFor(RuntimeRenderProfileMode.Cool)?.RenderPipelineAsset);
+            var shell = new GameObject("PlatformShellCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            try
+            {
+                PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+                RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
+                var pause = shell.AddComponent<PauseMenuController>();
+
+                pause.ShowSettings();
+
+                Assert.AreEqual(RuntimeRenderResolutionMode.Balanced, RuntimeRenderResolutionSettings.CurrentMode);
+                FindButton(shell, "Low").onClick.Invoke();
+                Assert.AreEqual(RuntimeRenderResolutionMode.Low, RuntimeRenderResolutionSettings.CurrentMode);
+
+                FindButton(shell, "Native").onClick.Invoke();
+                Assert.AreEqual(RuntimeRenderResolutionMode.Native, RuntimeRenderResolutionSettings.CurrentMode);
+
+                FindButton(shell, "Balanced").onClick.Invoke();
+                Assert.AreEqual(RuntimeRenderResolutionMode.Balanced, RuntimeRenderResolutionSettings.CurrentMode);
+
+                RuntimeRenderResolutionSettings.ResetForTests();
+                Assert.AreEqual(RuntimeRenderResolutionMode.Balanced, RuntimeRenderResolutionSettings.CurrentMode);
+                Assert.AreEqual(0.75f, ReadFloat(RuntimeRenderProfileSettings.CurrentProfile.RenderPipelineAsset, "renderScale", "m_RenderScale"), 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(shell);
+                RestorePipelineMembers(pipelineSnapshots);
+                Application.targetFrameRate = previousTargetFrameRate;
+                QualitySettings.vSyncCount = previousVSyncCount;
+                QualitySettings.renderPipeline = previousPipeline;
+                if (hadPreviousPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderProfileSettings.PlayerPrefsKey, previousPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                }
+
+                if (hadPreviousResolutionPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderResolutionSettings.PlayerPrefsKey, previousResolutionPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+                }
+
+                RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
             }
         }
 
@@ -174,6 +263,102 @@ namespace Hollow.Tests.EditMode
                 .FirstOrDefault(candidate => candidate.GetComponentInChildren<Text>(includeInactive: true)?.text == label);
             Assert.NotNull(button, label);
             return button;
+        }
+
+        private static List<PipelineMemberSnapshot> CapturePipelineMembers(RenderPipelineAsset pipeline)
+        {
+            var snapshots = new List<PipelineMemberSnapshot>();
+            if (pipeline == null)
+            {
+                return snapshots;
+            }
+
+            Capture(snapshots, pipeline, "renderScale", "m_RenderScale");
+            Capture(snapshots, pipeline, "supportsHDR", "m_SupportsHDR");
+            Capture(snapshots, pipeline, "supportsCameraDepthTexture", "m_RequireDepthTexture");
+            Capture(snapshots, pipeline, "supportsCameraOpaqueTexture", "m_RequireOpaqueTexture");
+            Capture(snapshots, pipeline, "mainLightShadowmapResolution", "m_MainLightShadowmapResolution");
+            Capture(snapshots, pipeline, "shadowDistance", "m_ShadowDistance");
+            Capture(snapshots, pipeline, "shadowCascadeCount", "m_ShadowCascadeCount");
+            Capture(snapshots, pipeline, "supportsAdditionalLightShadows", "m_AdditionalLightShadowsSupported");
+            Capture(snapshots, pipeline, "maxAdditionalLights", "m_AdditionalLightsPerObjectLimit");
+            return snapshots;
+        }
+
+        private static void Capture(List<PipelineMemberSnapshot> snapshots, RenderPipelineAsset pipeline, string propertyName, string fieldName)
+        {
+            snapshots.Add(new PipelineMemberSnapshot(pipeline, propertyName, fieldName, ReadMember(pipeline, propertyName, fieldName)));
+        }
+
+        private static void RestorePipelineMembers(List<PipelineMemberSnapshot> snapshots)
+        {
+            for (var index = 0; index < snapshots.Count; index++)
+            {
+                var snapshot = snapshots[index];
+                WriteMember(snapshot.Pipeline, snapshot.PropertyName, snapshot.FieldName, snapshot.Value);
+            }
+        }
+
+        private static float ReadFloat(RenderPipelineAsset pipeline, string propertyName, string fieldName)
+        {
+            var value = ReadMember(pipeline, propertyName, fieldName);
+            return value is float floatValue ? floatValue : Convert.ToSingle(value);
+        }
+
+        private static object ReadMember(object target, string propertyName, string fieldName)
+        {
+            if (target == null)
+            {
+                return null;
+            }
+
+            var type = target.GetType();
+            var property = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property != null && property.CanRead)
+            {
+                return property.GetValue(target);
+            }
+
+            var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return field != null ? field.GetValue(target) : null;
+        }
+
+        private static void WriteMember(object target, string propertyName, string fieldName, object value)
+        {
+            if (target == null || value == null)
+            {
+                return;
+            }
+
+            var type = target.GetType();
+            var property = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property != null && property.CanWrite)
+            {
+                property.SetValue(target, value);
+                return;
+            }
+
+            var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            field?.SetValue(target, value);
+        }
+
+        private readonly struct PipelineMemberSnapshot
+        {
+            public PipelineMemberSnapshot(RenderPipelineAsset pipeline, string propertyName, string fieldName, object value)
+            {
+                Pipeline = pipeline;
+                PropertyName = propertyName;
+                FieldName = fieldName;
+                Value = value;
+            }
+
+            public RenderPipelineAsset Pipeline { get; }
+
+            public string PropertyName { get; }
+
+            public string FieldName { get; }
+
+            public object Value { get; }
         }
     }
 }

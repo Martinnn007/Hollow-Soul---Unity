@@ -64,13 +64,17 @@ namespace Hollow.Tests.PlayMode
             var previousPipeline = QualitySettings.renderPipeline;
             var hadPreviousPreference = PlayerPrefs.HasKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
             var previousPreference = hadPreviousPreference ? PlayerPrefs.GetString(RuntimeRenderProfileSettings.PlayerPrefsKey) : string.Empty;
+            var hadPreviousResolutionPreference = PlayerPrefs.HasKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+            var previousResolutionPreference = hadPreviousResolutionPreference ? PlayerPrefs.GetString(RuntimeRenderResolutionSettings.PlayerPrefsKey) : string.Empty;
 
             try
             {
                 foreach (var mode in new[] { RuntimeRenderProfileMode.Cool, RuntimeRenderProfileMode.Quality })
                 {
                     PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
+                    PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
                     RuntimeRenderProfileSettings.ResetForTests();
+                    RuntimeRenderResolutionSettings.ResetForTests();
                     RuntimeRenderProfileSettings.SetMode(mode, persist: false);
                     var outputRoot = Path.GetFullPath(Path.Combine("output", "reports", "lighting_render_audit", "playmode_branch_prewarm_" + mode.ToString().ToLowerInvariant()));
                     if (Directory.Exists(outputRoot))
@@ -112,7 +116,17 @@ namespace Hollow.Tests.PlayMode
                     PlayerPrefs.DeleteKey(RuntimeRenderProfileSettings.PlayerPrefsKey);
                 }
 
+                if (hadPreviousResolutionPreference)
+                {
+                    PlayerPrefs.SetString(RuntimeRenderResolutionSettings.PlayerPrefsKey, previousResolutionPreference);
+                }
+                else
+                {
+                    PlayerPrefs.DeleteKey(RuntimeRenderResolutionSettings.PlayerPrefsKey);
+                }
+
                 RuntimeRenderProfileSettings.ResetForTests();
+                RuntimeRenderResolutionSettings.ResetForTests();
             }
         }
 
