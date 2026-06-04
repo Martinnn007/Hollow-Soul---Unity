@@ -1,0 +1,184 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a86b0c7713c4a3da41e81a12af65d7c, type: 3}
+  m_Name: RifleCombatProfile
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlayerAnimationProfileDefinition
+  profileId: 3
+  profileName: RifleCombatProfile
+  allowsShieldInHand: 0
+  allowsShieldGuard: 0
+  requiresTwoHandedWeapon: 0
+  usesRangedAim: 1
+  usesFootIk: 1
+  usesTorsoAim: 1
+  idleClip: {fileID: -203655887218126122, guid: 6c17ca080a760435fa60cebbeefbf4df, type: 3}
+  directionalClips:
+  - direction: 0
+    walkClip: {fileID: -203655887218126122, guid: 8feed0fe532504df58829fd6b765c802, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 816f1bfd7416e4bb0b8ff5ba4e8df568, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 1
+    walkClip: {fileID: -203655887218126122, guid: f85da1b29ce744b58a2c95c05621eb5c, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 65eae658a934e48f9aa73dbec8180b55, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 2
+    walkClip: {fileID: -203655887218126122, guid: 59eb4a132379546e28d4e45c7b51c308, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 1b264dd6b121a4abeb0104ea8acb697b, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 3
+    walkClip: {fileID: -203655887218126122, guid: b8da2e4a890364e27a3eeaad6612c0f0, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 27f035bc75b1b43d39cf6d45b06bec3a, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 4
+    walkClip: {fileID: -203655887218126122, guid: a6143cb03d9964f0ebdc81670ca26c17, type: 3}
+    runClip: {fileID: -203655887218126122, guid: e72ffd2e438e543968df36f373b46900, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 5
+    walkClip: {fileID: -203655887218126122, guid: 76d66940757094cfeb413a931e06f6a2, type: 3}
+    runClip: {fileID: -203655887218126122, guid: f65466de630984fb68787cba476e332e, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 6
+    walkClip: {fileID: -203655887218126122, guid: fae2841693437411c94c6274de52318f, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 6c11f6722a76647918e099792f455953, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 7
+    walkClip: {fileID: -203655887218126122, guid: ec2562e81781c4e1fa75cfc58ea25be2, type: 3}
+    runClip: {fileID: -203655887218126122, guid: ec8888312269047c68a7bc2a6d6cc512, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  strafingClips: []
+  turnClips:
+  - {fileID: -203655887218126122, guid: b68d4cad9f1b54c26a162e84b220e73b, type: 3}
+  - {fileID: -203655887218126122, guid: d2d5a34cacfd54c49b884cb477ef097b, type: 3}
+  drawClips: []
+  sheatheClips: []
+  attackClips: []
+  fireClips:
+  - {fileID: -203655887218126122, guid: 574be6c9851254f84968bc17dcbeca72, type: 3}
+  shieldGuardClips: []
+  weaponBlockClips: []
+  impactClips: []
+  deathClips:
+  - {fileID: -203655887218126122, guid: 33f1ece63fb254f8191986ddc0499982, type: 3}
+  - {fileID: -203655887218126122, guid: 79a14ab3ad91344ed884b7623dab8438, type: 3}
+  - {fileID: -203655887218126122, guid: 5d525155e2146483482976625c19216a, type: 3}
+  - {fileID: -203655887218126122, guid: 6881483c8ec254dea9d4172cba5fe5bd, type: 3}
+  - {fileID: -203655887218126122, guid: d0318a5a95f4445f0b22349027afdc4d, type: 3}
+  - {fileID: -203655887218126122, guid: e4bea81f2d0e34644be82b6da527face, type: 3}
+  jumpClips:
+  - {fileID: -203655887218126122, guid: 8d3a575de250047c9bad0c7d6d3c3f85, type: 3}
+  - {fileID: -203655887218126122, guid: 6a3321cd43bf446baa36204bd9a71372, type: 3}
+  - {fileID: -203655887218126122, guid: 9566ec1a1e7db438581fa2dcef08b4ef, type: 3}
+  crouchClips:
+  - {fileID: -203655887218126122, guid: f6f591568292d47dab4b184096b87150, type: 3}
+  - {fileID: -203655887218126122, guid: 18e2d5448899949e7b0adfaa9528d72a, type: 3}
+  - {fileID: -203655887218126122, guid: 33f1ece63fb254f8191986ddc0499982, type: 3}
+  - {fileID: -203655887218126122, guid: f470fcf4a5aec443394d6e9f86cdd874, type: 3}
+  - {fileID: -203655887218126122, guid: 4393db1bd1113461fa2f8c64da0bcbb8, type: 3}
+  - {fileID: -203655887218126122, guid: 0080e70bab0784391bf852ae55ef975e, type: 3}
+  - {fileID: -203655887218126122, guid: a222345cdbc294ab184148ed117d6add, type: 3}
+  - {fileID: -203655887218126122, guid: f165f8624cccd4b9c8727af97c68f78d, type: 3}
+  - {fileID: -203655887218126122, guid: 58b406f34237542b792f0c960d71e728, type: 3}
+  - {fileID: -203655887218126122, guid: df0f7b7859fb347f3840a6cb357234ef, type: 3}
+  - {fileID: -203655887218126122, guid: 78f125634266b418a85f93cbf032ca2e, type: 3}
+  - {fileID: -203655887218126122, guid: b8d3ff53b7f2643119c33a53574c4a70, type: 3}
+  - {fileID: -203655887218126122, guid: 41826b2493f1346a5a1a49c5167e159a, type: 3}
+  missingRequiredClipSlots: []
+  missingOptionalClipSlots: []
+  placeholderClipSlots: []
+  mappedClipReports:
+  - 'Fire: Assets/_Hollow/Animation Packs/Shooter Pack/firing rifle.fbx'
+  - 'Idle: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle aiming.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching
+    turn 90 left.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching
+    turn 90 right.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    crouching headshot front.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle
+    crouching aiming.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle
+    crouching.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching backward left.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching backward right.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching backward.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching forward left.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching forward right.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching forward.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching left.fbx'
+  - 'Rifle_Crouch: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    crouching right.fbx'
+  - 'Rifle_Death: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    crouching headshot front.fbx'
+  - 'Rifle_Death: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    from back headshot.fbx'
+  - 'Rifle_Death: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    from front headshot.fbx'
+  - 'Rifle_Death: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    from right.fbx'
+  - 'Rifle_Death: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    from the back.fbx'
+  - 'Rifle_Death: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death
+    from the front.fbx'
+  - 'Rifle_Jump: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump
+    down.fbx'
+  - 'Rifle_Jump: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump
+    loop.fbx'
+  - 'Rifle_Jump: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump
+    up.fbx'
+  - 'Rifle_Turn: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/turn
+    90 left.fbx'
+  - 'Rifle_Turn: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/turn
+    90 right.fbx'
+  - 'Run.Backward: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run
+    backward.fbx'
+  - 'Run.BackwardLeft: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run
+    backward left.fbx'
+  - 'Run.BackwardRight: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run
+    backward right.fbx'
+  - 'Run.Forward: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run
+    forward.fbx'
+  - 'Run.ForwardLeft: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run
+    forward left.fbx'
+  - 'Run.ForwardRight: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run
+    forward right.fbx'
+  - 'Run.Left: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run left.fbx'
+  - 'Run.Right: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run right.fbx'
+  - 'Walk.Backward: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    backward.fbx'
+  - 'Walk.BackwardLeft: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    backward left.fbx'
+  - 'Walk.BackwardRight: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    backward right.fbx'
+  - 'Walk.Forward: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    forward.fbx'
+  - 'Walk.ForwardLeft: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    forward left.fbx'
+  - 'Walk.ForwardRight: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    forward right.fbx'
+  - 'Walk.Left: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk left.fbx'
+  - 'Walk.Right: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk
+    right.fbx'

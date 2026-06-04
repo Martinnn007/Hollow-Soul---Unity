@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Hollow.Data.Definitions;
 using Hollow.Presentation;
 using UnityEngine;
@@ -14,6 +17,11 @@ namespace Hollow.Combat
         public const string RangedMuzzleSocketName = "MainCharacter_RangedMuzzleSocket";
         public const string ShieldForearmSocketName = "MainCharacter_LeftForearmShieldSocket";
         public const string ShieldBackSocketName = "MainCharacter_BackShieldSocket";
+        public const string ActiveMeleeWeaponVisualName = "ActiveMeleeWeaponVisual";
+        public const string ActiveRangedWeaponVisualName = "ActiveRangedWeaponVisual";
+        public const string HolsteredMeleeWeaponVisualName = "HolsteredMeleeWeaponVisual";
+        public const string HolsteredRangedWeaponVisualName = "HolsteredRangedWeaponVisual";
+        public const string EquippedShieldVisualName = "EquippedShieldVisual";
 
         public static readonly Vector3 DefaultMeleeSocketLocalPosition = new(0.03f, 0f, 0.02f);
         public static readonly Vector3 DefaultMeleeSocketLocalEuler = new(90f, 0f, 0f);
@@ -42,8 +50,23 @@ namespace Hollow.Combat
         private const float LightAttackDurationSeconds = 0.14f;
         private const float HeavyAttackDurationSeconds = 0.22f;
         private const float MuzzleFlashDurationSeconds = 0.1f;
+        private const float MinimumScaleMagnitude = 0.0001f;
+        private const float MinimumEquipmentMaxDimensionMeters = 0.05f;
+        private const float MaximumAbsurdEquipmentMaxDimensionMeters = 3f;
+        private const float MaximumShieldMaxDimensionMeters = 1.2f;
+        private const float MaximumMeleeMaxDimensionMeters = 2.2f;
+        private const float MaximumRangedMaxDimensionMeters = 1.5f;
+        private static readonly string[] KnownEquipmentWrapperNames =
+        {
+            ActiveMeleeWeaponVisualName,
+            ActiveRangedWeaponVisualName,
+            HolsteredMeleeWeaponVisualName,
+            HolsteredRangedWeaponVisualName,
+            EquippedShieldVisualName
+        };
 
         [SerializeField] private PlayerWeaponController weaponController;
+        [SerializeField] private PlayerAnimationProfileController animationProfileController;
         [SerializeField] private Transform meleeHandSocket;
         [SerializeField] private Transform rangedHandSocket;
         [SerializeField] private Transform meleeHolsterSocket;
@@ -70,6 +93,8 @@ namespace Hollow.Combat
         private float attackAgeSeconds;
         private float attackDurationSeconds;
         private float muzzleFlashAgeSeconds;
+        private PlayerAnimationProfileController subscribedProfileController;
+        private int equipmentNormalizationPassCount;
 
         public Transform MeleeHandSocket => meleeHandSocket;
 
@@ -95,6 +120,11 @@ namespace Hollow.Combat
 
         public GameObject EquippedShieldVisual => equippedShieldVisual;
 
+        public int EquipmentNormalizationPassCount => equipmentNormalizationPassCount;
+
+        public bool CurrentProfileAllowsShieldInHand =>
+            animationProfileController != null && animationProfileController.AllowsShieldInHand;
+
         public bool IsUsingHandAttachedMeleeVisual =>
             visibleSlot == WeaponSlot.Melee &&
             activeVisual != null &&
@@ -113,6 +143,7 @@ namespace Hollow.Combat
             if (weaponController == nextWeaponController)
             {
                 RefreshVisual(force: false);
+                RefreshAllEquipmentVisualTransforms();
                 return;
             }
 
@@ -127,6 +158,7 @@ namespace Hollow.Combat
             }
 
             RefreshVisual(force: true);
+            RefreshAllEquipmentVisualTransforms();
         }
 
         public void BindMeleeHandSocket(Transform socket)
@@ -136,6 +168,7 @@ namespace Hollow.Combat
             if (weaponController != null || hasVisibleSlot || activeVisual != null)
             {
                 RefreshVisual(force: true);
+                RefreshAllEquipmentVisualTransforms();
             }
         }
 
@@ -176,7 +209,25 @@ namespace Hollow.Combat
             if (weaponController != null || hasVisibleSlot || activeVisual != null)
             {
                 RefreshVisual(force: true);
+                RefreshAllEquipmentVisualTransforms();
             }
+        }
+
+        private void Awake()
+        {
+            ResolveReferences();
+        }
+
+        private void OnEnable()
+        {
+            ResolveReferences();
+            SubscribeProfileController();
+            RefreshAllEquipmentVisualTransforms();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeProfileController();
         }
 
         private void OnValidate()
@@ -187,6 +238,7 @@ namespace Hollow.Combat
         private void OnDestroy()
         {
             Unsubscribe();
+            UnsubscribeProfileController();
         }
 
         private void Update()
@@ -206,6 +258,7 @@ namespace Hollow.Combat
             }
 
             RefreshVisual(force: false);
+            RefreshAllEquipmentVisualTransforms();
             currentFacing = ResolveVisualFacing();
             TickAttack(Time.deltaTime);
             TickMuzzleFlash(Time.deltaTime);
@@ -214,6 +267,7 @@ namespace Hollow.Combat
         private void LateUpdate()
         {
             ApplyPose();
+            RefreshAllEquipmentVisualTransforms();
         }
 
         public void ForceRangedAimPose(Vector2 direction)
@@ -274,9 +328,35 @@ namespace Hollow.Combat
             return true;
         }
 
+        public void NormalizeEquipmentVisualScales()
+        {
+            RefreshAllEquipmentVisualTransforms();
+        }
+
+        public void RefreshAllEquipmentVisualTransforms()
+        {
+            EnsureSockets();
+            SubscribeProfileController();
+            var slot = hasVisibleSlot
+                ? visibleSlot
+                : weaponController != null
+                    ? weaponController.ActiveWeaponSlot
+                    : WeaponSlot.Melee;
+            AdoptOrPruneEquipmentWrappers(slot);
+            RefreshEquipmentWrapperScales();
+            equipmentNormalizationPassCount++;
+        }
+
         private void HandleActiveWeaponSlotChanged(WeaponSlot slot)
         {
             RefreshVisual(force: true);
+            RefreshAllEquipmentVisualTransforms();
+        }
+
+        private void HandleAnimationProfileChanged(PlayerAnimationProfileDefinition profile)
+        {
+            RefreshVisual(force: true);
+            RefreshAllEquipmentVisualTransforms();
         }
 
         private void HandleWeaponActionAnimationRequested(
@@ -311,15 +391,19 @@ namespace Hollow.Combat
             attackAgeSeconds = 0f;
             attackDurationSeconds = Mathf.Max(0.01f, durationSeconds);
             ApplyPose();
+            RefreshAllEquipmentVisualTransforms();
         }
 
         private void RefreshVisual(bool force)
         {
             EnsureRoot();
             EnsureSockets();
+            SubscribeProfileController();
             var nextSlot = weaponController != null ? weaponController.ActiveWeaponSlot : WeaponSlot.Ranged;
             var nextParent = ActiveParentFor(nextSlot);
+            AdoptOrPruneEquipmentWrappers(nextSlot);
             EnsureShieldVisual(ShieldParentFor(nextSlot));
+            RefreshAllEquipmentVisualTransforms();
             if (nextParent == null)
             {
                 return;
@@ -341,24 +425,31 @@ namespace Hollow.Combat
             ClearVisuals();
             visibleSlot = nextSlot;
             hasVisibleSlot = true;
-            activeVisual = CreateWeaponVisual(nextSlot, nextParent, $"Active{nextSlot}WeaponVisual");
+            activeVisual = CreateWeaponVisual(
+                nextSlot,
+                nextParent,
+                $"Active{nextSlot}WeaponVisual",
+                ActivePresentationScale(nextSlot));
 
             if (nextSlot == WeaponSlot.Melee)
             {
                 holsteredRangedVisual = CreateWeaponVisual(
                     WeaponSlot.Ranged,
                     rangedHolsterSocket,
-                    "HolsteredRangedWeaponVisual");
+                    "HolsteredRangedWeaponVisual",
+                    DefaultRangedHolsterSocketLocalScale);
             }
             else
             {
                 holsteredMeleeVisual = CreateWeaponVisual(
                     WeaponSlot.Melee,
                     meleeHolsterSocket,
-                    "HolsteredMeleeWeaponVisual");
+                    "HolsteredMeleeWeaponVisual",
+                    DefaultMeleeHolsterSocketLocalScale);
             }
 
             ApplyPose();
+            RefreshAllEquipmentVisualTransforms();
         }
 
         private void EnsureRoot()
@@ -526,7 +617,7 @@ namespace Hollow.Combat
                     rangedHandSocket.localScale = DefaultRangedHandSocketLocalScale;
                     activeVisual.transform.localPosition = Vector3.zero;
                     activeVisual.transform.localRotation = Quaternion.identity;
-                    activeVisual.transform.localScale = Vector3.one;
+                    ApplyEquipmentWrapperScale(activeVisual.transform, ActivePresentationScale(slot));
                 }
                 else
                 {
@@ -536,9 +627,10 @@ namespace Hollow.Combat
                         aimRotation);
                     activeVisual.transform.localPosition = Vector3.zero;
                     activeVisual.transform.localRotation = Quaternion.identity;
-                    activeVisual.transform.localScale = Vector3.one;
+                    ApplyEquipmentWrapperScale(activeVisual.transform, ActivePresentationScale(slot));
                 }
 
+                RefreshEquipmentWrapperScales();
                 return;
             }
 
@@ -552,7 +644,8 @@ namespace Hollow.Combat
             var worldRotation = transform.rotation * aimRotation;
             activeVisual.transform.position = worldPosition;
             activeVisual.transform.rotation = worldRotation;
-            activeVisual.transform.localScale = Vector3.one;
+            ApplyEquipmentWrapperScale(activeVisual.transform, ActivePresentationScale(slot));
+            RefreshEquipmentWrapperScales();
         }
 
         private void SetPlayerSpacePose(Transform target, Vector3 localPosition, Quaternion localRotation)
@@ -640,7 +733,11 @@ namespace Hollow.Combat
             muzzleFlashAgeSeconds = 0f;
         }
 
-        private GameObject CreateWeaponVisual(WeaponSlot slot, Transform parent, string name)
+        private GameObject CreateWeaponVisual(
+            WeaponSlot slot,
+            Transform parent,
+            string name,
+            Vector3 intendedPresentationScale)
         {
             if (parent == null)
             {
@@ -651,7 +748,7 @@ namespace Hollow.Combat
             wrapper.transform.SetParent(parent, false);
             wrapper.transform.localPosition = Vector3.zero;
             wrapper.transform.localRotation = Quaternion.identity;
-            wrapper.transform.localScale = Vector3.one;
+            ApplyEquipmentWrapperScale(wrapper.transform, intendedPresentationScale);
 
             var model = PresentationPrefabResolver.InstantiateVisual(RoleFor(slot), wrapper.transform, Vector3.zero, Vector3.one);
             if (model != null)
@@ -661,6 +758,7 @@ namespace Hollow.Combat
                 model.transform.localScale = Vector3.one;
             }
 
+            NormalizeEquipmentWrapper(wrapper.transform, intendedPresentationScale, RoleFor(slot));
             return wrapper;
         }
 
@@ -673,7 +771,7 @@ namespace Hollow.Combat
 
             if (equippedShieldVisual == null)
             {
-                equippedShieldVisual = new GameObject("EquippedShieldVisual");
+                equippedShieldVisual = new GameObject(EquippedShieldVisualName);
                 equippedShieldVisual.transform.SetParent(parent, false);
                 var model = PresentationPrefabResolver.InstantiateVisual(
                     PresentationPrefabRole.Armor,
@@ -694,8 +792,305 @@ namespace Hollow.Combat
 
             equippedShieldVisual.transform.localPosition = Vector3.zero;
             equippedShieldVisual.transform.localRotation = Quaternion.identity;
-            equippedShieldVisual.transform.localScale = Vector3.one;
+            NormalizeEquipmentWrapper(
+                equippedShieldVisual.transform,
+                ShieldPresentationScale(parent),
+                PresentationPrefabRole.Armor);
             equippedShieldVisual.SetActive(true);
+        }
+
+        private void RefreshEquipmentWrapperScales()
+        {
+            if (activeVisual != null && hasVisibleSlot)
+            {
+                NormalizeEquipmentWrapper(activeVisual.transform, ActivePresentationScale(visibleSlot), RoleFor(visibleSlot));
+            }
+
+            if (holsteredMeleeVisual != null)
+            {
+                NormalizeEquipmentWrapper(
+                    holsteredMeleeVisual.transform,
+                    DefaultMeleeHolsterSocketLocalScale,
+                    PresentationPrefabRole.WeaponMelee);
+            }
+
+            if (holsteredRangedVisual != null)
+            {
+                NormalizeEquipmentWrapper(
+                    holsteredRangedVisual.transform,
+                    DefaultRangedHolsterSocketLocalScale,
+                    PresentationPrefabRole.WeaponRanged);
+            }
+
+            if (equippedShieldVisual != null)
+            {
+                NormalizeEquipmentWrapper(
+                    equippedShieldVisual.transform,
+                    ShieldPresentationScale(equippedShieldVisual.transform.parent),
+                    PresentationPrefabRole.Armor);
+            }
+        }
+
+        private Vector3 ActivePresentationScale(WeaponSlot slot)
+        {
+            return slot == WeaponSlot.Melee
+                ? ValidScale(meleeSocketLocalScale, DefaultMeleeSocketLocalScale)
+                : DefaultRangedHandSocketLocalScale;
+        }
+
+        private Vector3 ShieldPresentationScale(Transform parent)
+        {
+            if (parent == shieldForearmSocket)
+            {
+                return DefaultShieldForearmSocketLocalScale;
+            }
+
+            if (parent == shieldBackSocket)
+            {
+                return DefaultShieldBackSocketLocalScale;
+            }
+
+            return Vector3.one;
+        }
+
+        private static void ApplyEquipmentWrapperScale(Transform wrapper, Vector3 intendedPresentationScale)
+        {
+            if (wrapper == null)
+            {
+                return;
+            }
+
+            wrapper.localScale = ComputeEquipmentWrapperLocalScale(wrapper.parent, intendedPresentationScale);
+        }
+
+        private static void NormalizeEquipmentWrapper(
+            Transform wrapper,
+            Vector3 intendedPresentationScale,
+            PresentationPrefabRole role)
+        {
+            if (wrapper == null)
+            {
+                return;
+            }
+
+            ApplyEquipmentWrapperScale(wrapper, intendedPresentationScale);
+            wrapper.hasChanged = true;
+
+            if (!TryGetRendererBounds(wrapper.gameObject, out var bounds))
+            {
+                return;
+            }
+
+            var maxDimension = MaxDimension(bounds.size);
+            if (maxDimension <= MinimumScaleMagnitude)
+            {
+                return;
+            }
+
+            var targetMax = MaxDimensionForRole(role);
+            if (maxDimension > targetMax)
+            {
+                var factor = targetMax / maxDimension;
+                wrapper.localScale *= factor;
+                wrapper.hasChanged = true;
+                return;
+            }
+
+            if (maxDimension < MinimumEquipmentMaxDimensionMeters)
+            {
+                var factor = MinimumEquipmentMaxDimensionMeters / maxDimension;
+                wrapper.localScale *= factor;
+                wrapper.hasChanged = true;
+            }
+        }
+
+        public static Vector3 ComputeEquipmentWrapperLocalScale(Transform parent, Vector3 intendedPresentationScale)
+        {
+            var safeIntendedScale = ValidScale(intendedPresentationScale, Vector3.one);
+            if (parent == null)
+            {
+                return safeIntendedScale;
+            }
+
+            var parentScale = parent.lossyScale;
+            return new Vector3(
+                DivideScale(safeIntendedScale.x, parentScale.x),
+                DivideScale(safeIntendedScale.y, parentScale.y),
+                DivideScale(safeIntendedScale.z, parentScale.z));
+        }
+
+        private static float DivideScale(float intendedScale, float parentScale)
+        {
+            var parentMagnitude = Mathf.Abs(parentScale);
+            return parentMagnitude < MinimumScaleMagnitude
+                ? Mathf.Abs(intendedScale)
+                : Mathf.Abs(intendedScale) / parentMagnitude;
+        }
+
+        private void AdoptOrPruneEquipmentWrappers(WeaponSlot slot)
+        {
+            EnsureSockets();
+            var expected = ExpectedEquipmentWrappers(slot);
+            var wrappers = FindKnownEquipmentWrappers();
+            foreach (var group in wrappers.GroupBy(wrapper => wrapper.name))
+            {
+                if (!expected.TryGetValue(group.Key, out var spec))
+                {
+                    foreach (var stale in group)
+                    {
+                        DestroyVisual(stale.gameObject);
+                    }
+
+                    continue;
+                }
+
+                var keep = SelectEquipmentWrapperToKeep(group, spec);
+                foreach (var candidate in group)
+                {
+                    if (candidate != keep)
+                    {
+                        DestroyVisual(candidate.gameObject);
+                    }
+                }
+
+                if (keep == null)
+                {
+                    continue;
+                }
+
+                keep.SetParent(spec.Parent, worldPositionStays: false);
+                keep.localPosition = Vector3.zero;
+                keep.localRotation = Quaternion.identity;
+                AssignEquipmentWrapperField(group.Key, keep.gameObject);
+            }
+        }
+
+        private Dictionary<string, EquipmentWrapperSpec> ExpectedEquipmentWrappers(WeaponSlot slot)
+        {
+            var expected = new Dictionary<string, EquipmentWrapperSpec>(StringComparer.Ordinal)
+            {
+                [ActiveWrapperNameFor(slot)] = new(ActiveParentFor(slot), RoleFor(slot)),
+                [EquippedShieldVisualName] = new(ShieldParentFor(slot), PresentationPrefabRole.Armor)
+            };
+
+            if (slot == WeaponSlot.Melee)
+            {
+                expected[HolsteredRangedWeaponVisualName] = new(
+                    rangedHolsterSocket,
+                    PresentationPrefabRole.WeaponRanged);
+            }
+            else
+            {
+                expected[HolsteredMeleeWeaponVisualName] = new(
+                    meleeHolsterSocket,
+                    PresentationPrefabRole.WeaponMelee);
+            }
+
+            return expected;
+        }
+
+        private static string ActiveWrapperNameFor(WeaponSlot slot)
+        {
+            return slot == WeaponSlot.Melee ? ActiveMeleeWeaponVisualName : ActiveRangedWeaponVisualName;
+        }
+
+        private Transform SelectEquipmentWrapperToKeep(
+            IEnumerable<Transform> candidates,
+            EquipmentWrapperSpec spec)
+        {
+            var candidateArray = candidates.Where(candidate => candidate != null).ToArray();
+            if (candidateArray.Length == 0 || spec.Parent == null)
+            {
+                return null;
+            }
+
+            return candidateArray.FirstOrDefault(candidate => IsCurrentWrapper(candidate.gameObject)) ??
+                candidateArray.FirstOrDefault(candidate => candidate.parent == spec.Parent && ContainsRole(candidate.gameObject, spec.Role)) ??
+                candidateArray.FirstOrDefault(candidate => ContainsRole(candidate.gameObject, spec.Role)) ??
+                candidateArray.FirstOrDefault(candidate => candidate.parent == spec.Parent) ??
+                candidateArray[0];
+        }
+
+        private bool IsCurrentWrapper(GameObject candidate)
+        {
+            return candidate != null &&
+                (candidate == activeVisual ||
+                    candidate == holsteredMeleeVisual ||
+                    candidate == holsteredRangedVisual ||
+                    candidate == equippedShieldVisual);
+        }
+
+        private Transform[] FindKnownEquipmentWrappers()
+        {
+            return GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(transform =>
+                    transform != null &&
+                    transform.gameObject != null &&
+                    KnownEquipmentWrapperNames.Contains(transform.name, StringComparer.Ordinal))
+                .ToArray();
+        }
+
+        private void AssignEquipmentWrapperField(string wrapperName, GameObject wrapper)
+        {
+            switch (wrapperName)
+            {
+                case ActiveMeleeWeaponVisualName:
+                    if (visibleSlot == WeaponSlot.Melee || !hasVisibleSlot)
+                    {
+                        activeVisual = wrapper;
+                        visibleSlot = WeaponSlot.Melee;
+                        hasVisibleSlot = true;
+                    }
+                    break;
+                case ActiveRangedWeaponVisualName:
+                    if (visibleSlot == WeaponSlot.Ranged || !hasVisibleSlot)
+                    {
+                        activeVisual = wrapper;
+                        visibleSlot = WeaponSlot.Ranged;
+                        hasVisibleSlot = true;
+                    }
+                    break;
+                case HolsteredMeleeWeaponVisualName:
+                    holsteredMeleeVisual = wrapper;
+                    break;
+                case HolsteredRangedWeaponVisualName:
+                    holsteredRangedVisual = wrapper;
+                    break;
+                case EquippedShieldVisualName:
+                    equippedShieldVisual = wrapper;
+                    break;
+            }
+        }
+
+        private void ResolveReferences()
+        {
+            weaponController ??= GetComponent<PlayerWeaponController>();
+            animationProfileController ??= GetComponent<PlayerAnimationProfileController>();
+        }
+
+        private void SubscribeProfileController()
+        {
+            ResolveReferences();
+            if (subscribedProfileController == animationProfileController)
+            {
+                return;
+            }
+
+            UnsubscribeProfileController();
+            subscribedProfileController = animationProfileController;
+            if (subscribedProfileController != null)
+            {
+                subscribedProfileController.ProfileChanged += HandleAnimationProfileChanged;
+            }
+        }
+
+        private void UnsubscribeProfileController()
+        {
+            if (subscribedProfileController != null)
+            {
+                subscribedProfileController.ProfileChanged -= HandleAnimationProfileChanged;
+                subscribedProfileController = null;
+            }
         }
 
         private Transform ActiveParentFor(WeaponSlot slot)
@@ -707,7 +1102,11 @@ namespace Hollow.Combat
         private Transform ShieldParentFor(WeaponSlot slot)
         {
             EnsureSockets();
-            if (ActiveWeaponIsDoubleHandedForPresentation(slot))
+            animationProfileController ??= GetComponent<PlayerAnimationProfileController>();
+            if (animationProfileController == null ||
+                !animationProfileController.AllowsShieldInHand ||
+                animationProfileController.RequiresTwoHandedWeapon ||
+                ActiveWeaponIsDoubleHandedForPresentation(slot))
             {
                 return shieldBackSocket != null ? shieldBackSocket : heldRoot;
             }
@@ -765,6 +1164,13 @@ namespace Hollow.Combat
             return slot == WeaponSlot.Melee ? PresentationPrefabRole.WeaponMelee : PresentationPrefabRole.WeaponRanged;
         }
 
+        private static bool ContainsRole(GameObject root, PresentationPrefabRole role)
+        {
+            return root != null &&
+                root.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Any(marker => marker != null && marker.Role == role);
+        }
+
         private Transform FindCharacterBone(string boneName)
         {
             var visualRoot = FindDescendant(transform, MeshyVisualRootName);
@@ -777,7 +1183,7 @@ namespace Hollow.Combat
         {
             return rangedHandSocket != null &&
                 rangedHandSocket.parent != null &&
-                rangedHandSocket.parent.name == RightHandBoneName;
+                IsNormalizedBoneNameMatch(NormalizeTransformName(rangedHandSocket.parent.name), RightHandBoneName);
         }
 
         private Vector3 LocalPlanarToWorld(Vector2 direction)
@@ -832,13 +1238,41 @@ namespace Hollow.Combat
 
             foreach (var child in root.GetComponentsInChildren<Transform>(includeInactive: true))
             {
-                if (child.name == childName)
+                if (child.name == childName ||
+                    IsNormalizedBoneNameMatch(NormalizeTransformName(child.name), childName))
                 {
                     return child;
                 }
             }
 
             return null;
+        }
+
+        private static string NormalizeTransformName(string transformName)
+        {
+            if (string.IsNullOrEmpty(transformName))
+            {
+                return string.Empty;
+            }
+
+            var namespaceSeparator = transformName.LastIndexOf(':');
+            return namespaceSeparator >= 0 && namespaceSeparator < transformName.Length - 1
+                ? transformName[(namespaceSeparator + 1)..]
+                : transformName;
+        }
+
+        private static bool IsNormalizedBoneNameMatch(string normalizedName, string expectedName)
+        {
+            if (string.Equals(normalizedName, expectedName, System.StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return expectedName switch
+            {
+                BackShieldBoneName => string.Equals(normalizedName, "Spine2", System.StringComparison.Ordinal),
+                _ => false
+            };
         }
 
         private static void DestroyVisual(GameObject visual)
@@ -856,6 +1290,68 @@ namespace Hollow.Combat
             {
                 DestroyImmediate(visual);
             }
+        }
+
+        private static bool TryGetRendererBounds(GameObject root, out Bounds bounds)
+        {
+            bounds = default;
+            if (root == null)
+            {
+                return false;
+            }
+
+            var renderers = root.GetComponentsInChildren<Renderer>(includeInactive: true)
+                .Where(renderer => renderer != null && renderer.enabled)
+                .ToArray();
+            if (renderers.Length == 0)
+            {
+                return false;
+            }
+
+            bounds = renderers[0].bounds;
+            for (var index = 1; index < renderers.Length; index++)
+            {
+                bounds.Encapsulate(renderers[index].bounds);
+            }
+
+            return true;
+        }
+
+        private static float MaxDimension(Vector3 size)
+        {
+            return Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+        }
+
+        public static bool IsAbsurdEquipmentBounds(PresentationPrefabRole role, Vector3 boundsSize)
+        {
+            var maxDimension = MaxDimension(boundsSize);
+            return maxDimension < MinimumEquipmentMaxDimensionMeters ||
+                maxDimension > MaximumAbsurdEquipmentMaxDimensionMeters ||
+                maxDimension > MaxDimensionForRole(role);
+        }
+
+        public static float MaxDimensionForRole(PresentationPrefabRole role)
+        {
+            return role switch
+            {
+                PresentationPrefabRole.Armor => MaximumShieldMaxDimensionMeters,
+                PresentationPrefabRole.WeaponMelee => MaximumMeleeMaxDimensionMeters,
+                PresentationPrefabRole.WeaponRanged => MaximumRangedMaxDimensionMeters,
+                _ => MaximumAbsurdEquipmentMaxDimensionMeters
+            };
+        }
+
+        private readonly struct EquipmentWrapperSpec
+        {
+            public EquipmentWrapperSpec(Transform parent, PresentationPrefabRole role)
+            {
+                Parent = parent;
+                Role = role;
+            }
+
+            public Transform Parent { get; }
+
+            public PresentationPrefabRole Role { get; }
         }
     }
 }

@@ -1,0 +1,232 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a86b0c7713c4a3da41e81a12af65d7c, type: 3}
+  m_Name: SwordShieldCombatProfile
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlayerAnimationProfileDefinition
+  profileId: 1
+  profileName: SwordShieldCombatProfile
+  allowsShieldInHand: 1
+  allowsShieldGuard: 1
+  requiresTwoHandedWeapon: 0
+  usesRangedAim: 0
+  usesFootIk: 1
+  usesTorsoAim: 1
+  idleClip: {fileID: -203655887218126122, guid: 39d62957be0824815a6b5e76992ac7b2, type: 3}
+  directionalClips:
+  - direction: 0
+    walkClip: {fileID: -203655887218126122, guid: 3361586f07e4946e8b176b136422c406, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 94b9b15f7bff941ff99fd6af554f3592, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 1
+    walkClip: {fileID: 7400000, guid: aacab5074d2aa40d6bd6630270702238, type: 2}
+    runClip: {fileID: 7400000, guid: 662fa4d9d44a24ffbbdfdd2067bed79a, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 2
+    walkClip: {fileID: -203655887218126122, guid: a5ab73415b8194b4d862008a43341e22, type: 3}
+    runClip: {fileID: -203655887218126122, guid: fadb814eafe244798945cd8bc17b1aaf, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 3
+    walkClip: {fileID: 7400000, guid: 32f02e1124aff4c18ad52d9444cacc0d, type: 2}
+    runClip: {fileID: 7400000, guid: c80e80fcaf438485eb1b139078712efb, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 4
+    walkClip: {fileID: 7400000, guid: b14d6f7853dff4e40bcd55b61aa9298b, type: 2}
+    runClip: {fileID: 7400000, guid: e22b2b7985893443789441de30ac9084, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 5
+    walkClip: {fileID: 7400000, guid: 27a7220c0bf9f48b1ac55886c9989aed, type: 2}
+    runClip: {fileID: 7400000, guid: 1960adefe0da4460c85588fbb8828e37, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 6
+    walkClip: {fileID: -203655887218126122, guid: 62329d2bff85a45619a4f41ea139220e, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 485f1c0a8b65b47ac89b25eda487eee6, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 7
+    walkClip: {fileID: 7400000, guid: 738bad853dca24cebb1aee9ab304650e, type: 2}
+    runClip: {fileID: 7400000, guid: 3201a0c91273142e09dcfba6d87c305c, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  strafingClips:
+  - {fileID: -203655887218126122, guid: 62329d2bff85a45619a4f41ea139220e, type: 3}
+  - {fileID: -203655887218126122, guid: a5ab73415b8194b4d862008a43341e22, type: 3}
+  - {fileID: -203655887218126122, guid: 485f1c0a8b65b47ac89b25eda487eee6, type: 3}
+  - {fileID: -203655887218126122, guid: fadb814eafe244798945cd8bc17b1aaf, type: 3}
+  turnClips:
+  - {fileID: -203655887218126122, guid: 9da34d7810a05438697f8a086079e6ea, type: 3}
+  - {fileID: -203655887218126122, guid: a603d7208b54046ab973ccaf16526626, type: 3}
+  - {fileID: -203655887218126122, guid: c89b4243571c64cd189b4bd96a72ab6a, type: 3}
+  - {fileID: -203655887218126122, guid: da024a60cd3de4cdabe89addd0431587, type: 3}
+  drawClips:
+  - {fileID: -203655887218126122, guid: a5739533cf15644a3a6567f3bb6ceefa, type: 3}
+  - {fileID: -203655887218126122, guid: f6da003205f5a475898835338772b469, type: 3}
+  sheatheClips:
+  - {fileID: -203655887218126122, guid: 9c2e230e562f2431883b82efeb965149, type: 3}
+  - {fileID: -203655887218126122, guid: a1c5309fc9b224c98a4ee37a29aa7245, type: 3}
+  attackClips:
+  - {fileID: -203655887218126122, guid: 822239017df464f6099d75f35b8445fc, type: 3}
+  - {fileID: -203655887218126122, guid: 2beb10ef79d0e471681c3c1c701042df, type: 3}
+  - {fileID: -203655887218126122, guid: e533c2aabb2484aa18303c7e82abca4d, type: 3}
+  - {fileID: -203655887218126122, guid: 1b7f9af297cc14011bc4b0cece382540, type: 3}
+  - {fileID: -203655887218126122, guid: ee26a036202834b5490c2a66b95a34aa, type: 3}
+  - {fileID: -203655887218126122, guid: 0e3b843bd315840f5b9a519d5c8a80ec, type: 3}
+  - {fileID: -203655887218126122, guid: bf6ab0c77820144cc8ee23d7f600ac65, type: 3}
+  - {fileID: -203655887218126122, guid: 522eed5504ab64f29a59f648d7e455f8, type: 3}
+  - {fileID: -203655887218126122, guid: 15762d1fd0f234478807912e05ab4a5c, type: 3}
+  fireClips: []
+  shieldGuardClips:
+  - {fileID: -203655887218126122, guid: 5ec3515e2bb9f45a4832ba81174a6148, type: 3}
+  - {fileID: -203655887218126122, guid: 76413fd9e00924d72af1d4605403577f, type: 3}
+  - {fileID: -203655887218126122, guid: 5e0890a4ab867458891283163d86b13b, type: 3}
+  - {fileID: -203655887218126122, guid: 59e4b217b643948d7827e5d8557bbbdb, type: 3}
+  - {fileID: -203655887218126122, guid: 63a01e7fcda5643bfafc67ee2c6ed295, type: 3}
+  - {fileID: -203655887218126122, guid: eb523f945162e4a309cc61f4455a0cd2, type: 3}
+  weaponBlockClips: []
+  impactClips:
+  - {fileID: -203655887218126122, guid: 0b1e43fa0501543c48071e260fa088b0, type: 3}
+  - {fileID: -203655887218126122, guid: 5230019dc95764e6d823818b8e4e0470, type: 3}
+  - {fileID: -203655887218126122, guid: 028bc201b17bf427bac4697d2ce005f0, type: 3}
+  deathClips:
+  - {fileID: -203655887218126122, guid: 4cfc6d12be9de451dabee8432a8a594f, type: 3}
+  - {fileID: -203655887218126122, guid: 2f508400fc8f54a76aa2fc917c3c6c65, type: 3}
+  jumpClips:
+  - {fileID: -203655887218126122, guid: 748aa3d2348d24732bb0f638e518a536, type: 3}
+  - {fileID: -203655887218126122, guid: 8c291fb413a8c4efe90d874beb972c30, type: 3}
+  crouchClips:
+  - {fileID: -203655887218126122, guid: 59e4b217b643948d7827e5d8557bbbdb, type: 3}
+  - {fileID: -203655887218126122, guid: 63a01e7fcda5643bfafc67ee2c6ed295, type: 3}
+  - {fileID: -203655887218126122, guid: eb523f945162e4a309cc61f4455a0cd2, type: 3}
+  - {fileID: -203655887218126122, guid: 2d32e0e6e5e594d2a809a70ec83b1622, type: 3}
+  - {fileID: -203655887218126122, guid: 646aa8461d3ea49c0bc83de4d005f15e, type: 3}
+  - {fileID: -203655887218126122, guid: e6bcc58342726416c9c3635b1927c989, type: 3}
+  - {fileID: -203655887218126122, guid: ac060c99aa80f41be99d9e5f4a29c08f, type: 3}
+  - {fileID: -203655887218126122, guid: 228527434777c4b85875e6741e94d83e, type: 3}
+  missingRequiredClipSlots: []
+  missingOptionalClipSlots: []
+  placeholderClipSlots:
+  - Run.Backward
+  - Run.BackwardLeft
+  - Run.BackwardRight
+  - Run.ForwardLeft
+  - Run.ForwardRight
+  - Walk.Backward
+  - Walk.BackwardLeft
+  - Walk.BackwardRight
+  - Walk.ForwardLeft
+  - Walk.ForwardRight
+  mappedClipReports:
+  - 'Idle: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield
+    idle.fbx'
+  - 'Run.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Run_Backward.anim'
+  - 'Run.BackwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Run_BackwardLeft.anim'
+  - 'Run.BackwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Run_BackwardRight.anim'
+  - 'Run.Forward: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield run.fbx'
+  - 'Run.ForwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Run_ForwardLeft.anim'
+  - 'Run.ForwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Run_ForwardRight.anim'
+  - 'Run.Left: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and
+    shield strafe (2).fbx'
+  - 'Run.Right: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and
+    shield strafe (4).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield attack (2).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield attack (3).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield attack (4).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield attack.fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield slash (2).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield slash (3).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield slash (4).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield slash (5).fbx'
+  - 'SwordShield_Attack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield slash.fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouch block (2).fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouch block idle.fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouch block.fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouch idle.fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouch.fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouching (2).fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouching (3).fbx'
+  - 'SwordShield_Crouch: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield crouching.fbx'
+  - 'SwordShield_Death: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield death (2).fbx'
+  - 'SwordShield_Death: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield death.fbx'
+  - 'SwordShield_Draw: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw
+    sword 1.fbx'
+  - 'SwordShield_Draw: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw
+    sword 2.fbx'
+  - 'SwordShield_Impact: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield impact (2).fbx'
+  - 'SwordShield_Impact: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield impact (3).fbx'
+  - 'SwordShield_Impact: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield impact.fbx'
+  - 'SwordShield_Jump: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield jump (2).fbx'
+  - 'SwordShield_Jump: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield jump.fbx'
+  - 'SwordShield_Sheathe: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath
+    sword 1.fbx'
+  - 'SwordShield_Sheathe: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath
+    sword 2.fbx'
+  - 'SwordShield_ShieldGuard: Assets/_Hollow/Animation Packs/Pro Sword and Shield
+    Pack/sword and shield block (2).fbx'
+  - 'SwordShield_ShieldGuard: Assets/_Hollow/Animation Packs/Pro Sword and Shield
+    Pack/sword and shield block idle.fbx'
+  - 'SwordShield_ShieldGuard: Assets/_Hollow/Animation Packs/Pro Sword and Shield
+    Pack/sword and shield block.fbx'
+  - 'SwordShield_ShieldGuard: Assets/_Hollow/Animation Packs/Pro Sword and Shield
+    Pack/sword and shield crouch block (2).fbx'
+  - 'SwordShield_ShieldGuard: Assets/_Hollow/Animation Packs/Pro Sword and Shield
+    Pack/sword and shield crouch block idle.fbx'
+  - 'SwordShield_ShieldGuard: Assets/_Hollow/Animation Packs/Pro Sword and Shield
+    Pack/sword and shield crouch block.fbx'
+  - 'SwordShield_Turn: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield 180 turn (2).fbx'
+  - 'SwordShield_Turn: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield 180 turn.fbx'
+  - 'SwordShield_Turn: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield turn (2).fbx'
+  - 'SwordShield_Turn: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield turn.fbx'
+  - 'Walk.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Walk_Backward.anim'
+  - 'Walk.BackwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Walk_BackwardLeft.anim'
+  - 'Walk.BackwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Walk_BackwardRight.anim'
+  - 'Walk.Forward: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield walk.fbx'
+  - 'Walk.ForwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Walk_ForwardLeft.anim'
+  - 'Walk.ForwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Walk_ForwardRight.anim'
+  - 'Walk.Left: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and
+    shield strafe.fbx'
+  - 'Walk.Right: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and
+    shield strafe (3).fbx'

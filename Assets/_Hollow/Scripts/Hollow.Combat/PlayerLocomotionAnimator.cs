@@ -478,7 +478,7 @@ namespace Hollow.Combat
 
         private void SetActionFacing(Vector2 direction, float holdSeconds)
         {
-            if (UpdateLockedFacing(Vector3.zero, Time.deltaTime, rotateVisual: true))
+            if (UpdateLockedFacing(Vector3.zero, 0f, rotateVisual: true))
             {
                 actionFacingUntilTime = Mathf.Max(actionFacingUntilTime, Time.time + Mathf.Max(0.05f, holdSeconds));
                 return;
@@ -499,6 +499,7 @@ namespace Hollow.Combat
             var hasLockedDirection = !isDead && (
                 TryGetWeaponAimCommitment(out lockedDirection) ||
                 (aimLockController != null && aimLockController.TryGetLockedTargetDirection(out lockedDirection)) ||
+                (aimLockController != null && aimLockController.TryGetLocomotionFacingDirection(out lockedDirection)) ||
                 TryGetManualAimDirection(out lockedDirection));
             isTargetLockedForLocomotion = hasLockedDirection;
             if (!hasLockedDirection)
@@ -522,7 +523,7 @@ namespace Hollow.Combat
                     ? Vector3.RotateTowards(
                         SafePlanarDirection(facingDirectionWorld, aimFacingDirectionWorld),
                         aimFacingDirectionWorld,
-                        Mathf.Deg2Rad * turnSpeedDegreesPerSecond * Mathf.Max(0.15f, turnWeight) * deltaTime,
+                        Mathf.Deg2Rad * turnSpeedDegreesPerSecond * turnWeight * deltaTime,
                         0f)
                     : aimFacingDirectionWorld;
                 facingDirectionWorld = SafePlanarDirection(facingDirectionWorld, aimFacingDirectionWorld);

@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a86b0c7713c4a3da41e81a12af65d7c, type: 3}
+  m_Name: UnarmedLocomotionProfile
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlayerAnimationProfileDefinition
+  profileId: 0
+  profileName: UnarmedLocomotionProfile
+  allowsShieldInHand: 0
+  allowsShieldGuard: 0
+  requiresTwoHandedWeapon: 0
+  usesRangedAim: 0
+  usesFootIk: 1
+  usesTorsoAim: 0
+  idleClip: {fileID: -203655887218126122, guid: 83d256a834866423f9ddf2a1b9b6b9bf, type: 3}
+  directionalClips:
+  - direction: 0
+    walkClip: {fileID: -203655887218126122, guid: c0ca596ba8f8b4b4385632072b79385f, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 1fba70bc141d94692a60d725d7850472, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 1
+    walkClip: {fileID: 7400000, guid: ccf839f4ff82b4b118a149aa8aa1d2f8, type: 2}
+    runClip: {fileID: 7400000, guid: 98a1ed942f9704944aaf0a88638bafdf, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 2
+    walkClip: {fileID: -203655887218126122, guid: 6a75de99c2ac947cd9364cc5a75dba1c, type: 3}
+    runClip: {fileID: -203655887218126122, guid: f1fbbc5f68bc441c094607791363dca7, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 3
+    walkClip: {fileID: 7400000, guid: b6132767b173149aa963463cd7f6c838, type: 2}
+    runClip: {fileID: 7400000, guid: e75b1cb61d7e2431e84293d8ff7cb268, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 4
+    walkClip: {fileID: 7400000, guid: 4c78170e5cf074964bc7a2b43d23444b, type: 2}
+    runClip: {fileID: 7400000, guid: 5bf5c0324c0984d1eb13bf6fb5a0a1c4, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 5
+    walkClip: {fileID: 7400000, guid: 87ec671690efe46448233a890a27c951, type: 2}
+    runClip: {fileID: 7400000, guid: 767b786e389c34881b6308999d3a54e2, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 6
+    walkClip: {fileID: -203655887218126122, guid: fda94a85efcb94d0c8df68342a75bd82, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 5a19ce9ac1f7c444b8f646df021b8d21, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 7
+    walkClip: {fileID: 7400000, guid: 0fe45597a5d6046c99af18ce6ab6f25f, type: 2}
+    runClip: {fileID: 7400000, guid: d5a66d60023504e04801c898f7f33b92, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  strafingClips:
+  - {fileID: -203655887218126122, guid: fda94a85efcb94d0c8df68342a75bd82, type: 3}
+  - {fileID: -203655887218126122, guid: 6a75de99c2ac947cd9364cc5a75dba1c, type: 3}
+  - {fileID: -203655887218126122, guid: 5a19ce9ac1f7c444b8f646df021b8d21, type: 3}
+  - {fileID: -203655887218126122, guid: f1fbbc5f68bc441c094607791363dca7, type: 3}
+  turnClips:
+  - {fileID: -203655887218126122, guid: ff3848168cb6547f1b33f3dc3a5a7301, type: 3}
+  - {fileID: -203655887218126122, guid: 94f14b16b9919402fbffd5cb374f82d5, type: 3}
+  drawClips: []
+  sheatheClips: []
+  attackClips: []
+  fireClips: []
+  shieldGuardClips: []
+  weaponBlockClips: []
+  impactClips: []
+  deathClips: []
+  jumpClips:
+  - {fileID: -203655887218126122, guid: f03e6a8f24d5045a986bd8383fb99b47, type: 3}
+  crouchClips: []
+  missingRequiredClipSlots: []
+  missingOptionalClipSlots: []
+  placeholderClipSlots:
+  - Run.Backward
+  - Run.BackwardLeft
+  - Run.BackwardRight
+  - Run.ForwardLeft
+  - Run.ForwardRight
+  - Walk.Backward
+  - Walk.BackwardLeft
+  - Walk.BackwardRight
+  - Walk.ForwardLeft
+  - Walk.ForwardRight
+  mappedClipReports:
+  - 'Idle: Assets/_Hollow/Animation Packs/Male Locomotion Pack/idle.fbx'
+  - 'Jump: Assets/_Hollow/Animation Packs/Male Locomotion Pack/jump.fbx'
+  - 'Run.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Run_Backward.anim'
+  - 'Run.BackwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Run_BackwardLeft.anim'
+  - 'Run.BackwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Run_BackwardRight.anim'
+  - 'Run.Forward: Assets/_Hollow/Animation Packs/Male Locomotion Pack/standard run.fbx'
+  - 'Run.ForwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Run_ForwardLeft.anim'
+  - 'Run.ForwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Run_ForwardRight.anim'
+  - 'Run.Left: Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe.fbx'
+  - 'Run.Right: Assets/_Hollow/Animation Packs/Male Locomotion Pack/right strafe.fbx'
+  - 'Turn.Left: Assets/_Hollow/Animation Packs/Male Locomotion Pack/left turn 90.fbx'
+  - 'Turn.Right: Assets/_Hollow/Animation Packs/Male Locomotion Pack/right turn 90.fbx'
+  - 'Walk.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Walk_Backward.anim'
+  - 'Walk.BackwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Walk_BackwardLeft.anim'
+  - 'Walk.BackwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Walk_BackwardRight.anim'
+  - 'Walk.Forward: Assets/_Hollow/Animation Packs/Male Locomotion Pack/walking.fbx'
+  - 'Walk.ForwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Walk_ForwardLeft.anim'
+  - 'Walk.ForwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/UnarmedLocomotion/TEMP_UnarmedLocomotion_Walk_ForwardRight.anim'
+  - 'Walk.Left: Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe walking.fbx'
+  - 'Walk.Right: Assets/_Hollow/Animation Packs/Male Locomotion Pack/right strafe
+    walking.fbx'

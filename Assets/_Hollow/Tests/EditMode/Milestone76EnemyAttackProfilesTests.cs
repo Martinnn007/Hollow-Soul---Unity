@@ -295,6 +295,7 @@ namespace Hollow.Tests.EditMode
             health = player.AddComponent<CombatantHealth>();
             health.Configure(6);
             receiver = player.AddComponent<CombatKnockbackReceiver>();
+            PlayerAnimationProfileTestHelpers.ForceSwordShieldProfile(player);
             defense = player.AddComponent<PlayerDefenseController>();
             defense.Configure(0);
             defense.ConfigureStability(0, 0, 1f);

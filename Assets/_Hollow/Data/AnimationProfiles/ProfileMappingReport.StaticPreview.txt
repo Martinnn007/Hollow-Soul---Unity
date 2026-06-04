@@ -1,0 +1,623 @@
+Hollow Soul Player Animation Profile Static Mapping Preview
+ReportType: STATIC_PREVIEW
+ReportVersion: 1
+GeneratedAtUtc: 2026-06-04T19:09:10.1088900Z
+AnimationPackRoot: Assets/_Hollow/Animation Packs
+ProfileCatalogPath: Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationProfileCatalog.asset
+StaticPreviewReportPath: Assets/_Hollow/Data/AnimationProfiles/ProfileMappingReport.StaticPreview.txt
+Warning: This report does not prove Avatar/Humanoid import validity, clip loop settings, rig compatibility, Animator generation, prefab generation, debug scene generation, or gameplay correctness.
+InfrastructureFreezeGate: active until Unity profile generation, debug scene, player prefab, profile switching, shield gate, locomotion, Mixamo mapping, and targeted regressions are validated in a real editor session.
+
+DetectedPackFolders (8):
+- Assets/_Hollow/Animation Packs/Great Sword Pack
+- Assets/_Hollow/Animation Packs/Hollow_Main_Model
+- Assets/_Hollow/Animation Packs/Locomotion Pack
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack
+- Assets/_Hollow/Animation Packs/Shooter Pack
+DetectedCandidateFbxFiles (217):
+- Assets/_Hollow/Animation Packs/Great Sword Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great sword 1.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great sword 2.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword 180 turn (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword 180 turn.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword attack.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword blocking (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword blocking (3).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword blocking.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword casting.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (3).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (4).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (5).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (6).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword high spin attack.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle (3).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle (4).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle (5).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (3).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (4).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (5).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump attack.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword kick (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword kick.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword power up.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword run (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword run.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (3).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (4).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (5).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slide attack.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe (3).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe (4).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword turn (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword turn.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword walk (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/great sword walk.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/spell cast.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/two handed sword death (2).fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/two handed sword death.fbx
+- Assets/_Hollow/Animation Packs/Hollow_Main_Rig.fbx
+- Assets/_Hollow/Animation Packs/Hollow_Main_Rig2.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/idle.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/jump.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/left strafe walking.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/left strafe.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/left turn 90.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/left turn.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/right strafe walking.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/right strafe.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/right turn 90.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/right turn.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/running.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/walking.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/idle.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/jump.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe walking.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/left turn 90.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/right strafe walking.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/right strafe.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/right turn 90.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/standard run.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/walking.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol jump (2).fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol jump.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol kneel to stand.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol kneeling idle.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run arc (2).fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run arc.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run backward arc (2).fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run backward arc.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run backward.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol stand to kneel.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol strafe (2).fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol strafe.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk arc (2).fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk arc.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward arc (2).fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward arc.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw sword 1.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw sword 2.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath sword 1.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath sword 2.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield 180 turn (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield 180 turn.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack (3).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack (4).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block idle.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield casting (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield casting.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block idle.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch idle.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouching (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouching (3).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouching.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield death (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield death.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield idle (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield idle (3).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield idle (4).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield idle.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact (3).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield jump (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield jump.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield kick.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield power up.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield run (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield run.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (3).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (4).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (5).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (4).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield walk (2).fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield walk.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching turn 90 left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching turn 90 right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death crouching headshot front.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from back headshot.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from front headshot.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from the back.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from the front.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle aiming.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle crouching aiming.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle crouching.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump down.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump loop.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump up.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run backward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run backward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run backward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run forward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run forward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run forward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint backward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint backward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint backward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint forward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint forward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint forward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/sprint right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/turn 90 left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/turn 90 right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk backward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk backward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk backward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching backward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching backward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching backward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching forward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching forward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching forward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward right.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk left.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk right.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/firing rifle.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/jump backward.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/jump forward.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/rifle aiming idle.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/rifle run.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/run backwards.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/start walking backwards.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/start walking.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/stop walking.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/strafe (2).fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/strafe.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/walk backwards stop.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/walking backwards.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/walking to dying.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/walking.fbx
+SummaryChecks:
+- RifleReal8WayCandidateCoverage: yes
+- SwordShieldBlockGuardCandidates: yes
+- GreatSwordWeaponBlockOnly: yes
+- RifleShieldGuardDisabled: yes
+- PistolShieldGuardDisabled: yes
+- GreatSwordShieldGuardDisabled: yes
+- UnarmedSafeFallback: yes
+
+Profile: UnarmedLocomotionProfile (UnarmedLocomotion)
+- CapabilityFlags:
+  AllowsShieldInHand: no
+  AllowsShieldGuard: no
+  RequiresTwoHandedWeapon: no
+  UsesRangedAim: no
+  UsesFootIk: yes
+  UsesTorsoAim: no
+- Real8WayCandidateCoverage: no
+- SlotMatches:
+  - Idle:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/idle.fbx
+  - Jump:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/jump.fbx
+  - Run.Forward:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/standard run.fbx
+  - Run.Left:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe.fbx
+  - Run.Right:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/right strafe.fbx
+  - Turn.Left:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/left turn 90.fbx
+  - Turn.Right:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/right turn 90.fbx
+  - Walk.Forward:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/walking.fbx
+  - Walk.Left:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe walking.fbx
+  - Walk.Right:
+    - Assets/_Hollow/Animation Packs/Male Locomotion Pack/right strafe walking.fbx
+MissingRequiredSlots (0):
+- none
+MissingOptionalSlots (0):
+- none
+PlaceholderNeededSlots_NON_PRODUCTION (10):
+- Run.Backward (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.BackwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.BackwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.ForwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.ForwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.Backward (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.BackwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.BackwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.ForwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.ForwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+Warnings (2):
+- Placeholder-needed slots are diagnostic-only and must not be treated as production animation.
+- Shield guard is disabled for this profile by capability flags.
+
+Profile: SwordShieldCombatProfile (SwordShieldCombat)
+- CapabilityFlags:
+  AllowsShieldInHand: yes
+  AllowsShieldGuard: yes
+  RequiresTwoHandedWeapon: no
+  UsesRangedAim: no
+  UsesFootIk: yes
+  UsesTorsoAim: yes
+- Real8WayCandidateCoverage: no
+- SlotMatches:
+  - Attack:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack (3).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack (4).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield attack.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (3).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (4).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash (5).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash.fbx
+  - Crouch:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block idle.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch idle.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouching (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouching (3).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouching.fbx
+  - Death:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield death (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield death.fbx
+  - Draw:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw sword 1.fbx
+  - Draw:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw sword 2.fbx
+  - Idle:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield idle.fbx
+  - Impact:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact (3).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact.fbx
+  - Jump:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield jump (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield jump.fbx
+  - Run.Forward:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield run.fbx
+  - Run.Left:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (2).fbx
+  - Run.Right:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (4).fbx
+  - Sheathe:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath sword 1.fbx
+  - Sheathe:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath sword 2.fbx
+  - ShieldGuard:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block idle.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block (2).fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block idle.fbx
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield crouch block.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn (2).fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield 180 turn.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield 180 turn (2).fbx
+  - Walk.Forward:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield walk.fbx
+  - Walk.Left:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe.fbx
+  - Walk.Right:
+    - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx
+MissingRequiredSlots (0):
+- none
+MissingOptionalSlots (0):
+- none
+PlaceholderNeededSlots_NON_PRODUCTION (10):
+- Run.Backward (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.BackwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.BackwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.ForwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.ForwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.Backward (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.BackwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.BackwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.ForwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.ForwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+Warnings (1):
+- Placeholder-needed slots are diagnostic-only and must not be treated as production animation.
+
+Profile: GreatSwordCombatProfile (GreatSwordCombat)
+- CapabilityFlags:
+  AllowsShieldInHand: no
+  AllowsShieldGuard: no
+  RequiresTwoHandedWeapon: yes
+  UsesRangedAim: no
+  UsesFootIk: yes
+  UsesTorsoAim: yes
+- Real8WayCandidateCoverage: no
+- SlotMatches:
+  - Attack:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword attack.fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword high spin attack.fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump attack.fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (2).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (3).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (4).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash (5).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slash.fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword slide attack.fbx
+  - Crouch:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (2).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (3).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (4).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (5).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching (6).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword crouching.fbx
+  - Death:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/two handed sword death (2).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/two handed sword death.fbx
+  - Draw:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great sword 1.fbx
+  - Draw:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great sword 2.fbx
+  - Idle:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle.fbx
+  - Impact:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (2).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (3).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (4).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact (5).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword impact.fbx
+  - Jump:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump (2).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump attack.fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword jump.fbx
+  - Run.Forward:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword run.fbx
+  - Run.Left:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe (2).fbx
+  - Run.Right:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe (4).fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword turn.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword turn (2).fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword 180 turn.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword 180 turn (2).fbx
+  - Walk.Forward:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword walk.fbx
+  - Walk.Left:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe.fbx
+  - Walk.Right:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe (3).fbx
+  - WeaponBlock:
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword blocking (2).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword blocking (3).fbx
+    - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword blocking.fbx
+MissingRequiredSlots (0):
+- none
+MissingOptionalSlots (0):
+- none
+PlaceholderNeededSlots_NON_PRODUCTION (10):
+- Run.Backward (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.BackwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.BackwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.ForwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Run.ForwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.Backward (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.BackwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.BackwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.ForwardLeft (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+- Walk.ForwardRight (PLACEHOLDER_NEEDED_NON_PRODUCTION)
+Warnings (3):
+- GreatSword blocking candidates are mapped as WeaponBlock only; shield guard remains disabled.
+- Placeholder-needed slots are diagnostic-only and must not be treated as production animation.
+- Shield guard is disabled for this profile by capability flags.
+
+Profile: RifleCombatProfile (RifleCombat)
+- CapabilityFlags:
+  AllowsShieldInHand: no
+  AllowsShieldGuard: no
+  RequiresTwoHandedWeapon: no
+  UsesRangedAim: yes
+  UsesFootIk: yes
+  UsesTorsoAim: yes
+- Real8WayCandidateCoverage: yes
+- SlotMatches:
+  - Crouch:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching turn 90 left.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching turn 90 right.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death crouching headshot front.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle crouching aiming.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle crouching.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching backward left.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching backward right.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching backward.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching forward left.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching forward right.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching forward.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching left.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk crouching right.fbx
+  - Death:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death crouching headshot front.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from back headshot.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from front headshot.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from right.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from the back.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death from the front.fbx
+  - Fire:
+    - Assets/_Hollow/Animation Packs/Shooter Pack/firing rifle.fbx
+  - Idle:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/idle aiming.fbx
+  - Jump:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump down.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump loop.fbx
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/jump up.fbx
+  - Run.Backward:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run backward.fbx
+  - Run.BackwardLeft:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run backward left.fbx
+  - Run.BackwardRight:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run backward right.fbx
+  - Run.Forward:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run forward.fbx
+  - Run.ForwardLeft:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run forward left.fbx
+  - Run.ForwardRight:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run forward right.fbx
+  - Run.Left:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run left.fbx
+  - Run.Right:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/run right.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/turn 90 left.fbx
+  - Turn:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/turn 90 right.fbx
+  - Walk.Backward:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk backward.fbx
+  - Walk.BackwardLeft:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk backward left.fbx
+  - Walk.BackwardRight:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk backward right.fbx
+  - Walk.Forward:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward.fbx
+  - Walk.ForwardLeft:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward left.fbx
+  - Walk.ForwardRight:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward right.fbx
+  - Walk.Left:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk left.fbx
+  - Walk.Right:
+    - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk right.fbx
+MissingRequiredSlots (0):
+- none
+MissingOptionalSlots (0):
+- none
+PlaceholderNeededSlots_NON_PRODUCTION (0):
+- none
+Warnings (1):
+- Shield guard is disabled for this profile by capability flags.
+
+Profile: PistolCombatProfile (PistolCombat)
+- CapabilityFlags:
+  AllowsShieldInHand: no
+  AllowsShieldGuard: no
+  RequiresTwoHandedWeapon: no
+  UsesRangedAim: yes
+  UsesFootIk: yes
+  UsesTorsoAim: yes
+- Real8WayCandidateCoverage: yes
+- SlotMatches:
+  - Idle:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx
+  - Jump:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol jump (2).fbx
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol jump.fbx
+  - Kneel:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol kneel to stand.fbx
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol kneeling idle.fbx
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol stand to kneel.fbx
+  - Run.Backward:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run backward.fbx
+  - Run.BackwardLeft:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run backward arc (2).fbx
+  - Run.BackwardRight:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run backward arc.fbx
+  - Run.Forward:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run.fbx
+  - Run.ForwardLeft:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run arc (2).fbx
+  - Run.ForwardRight:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol run arc.fbx
+  - Run.Left:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol strafe.fbx
+  - Run.Right:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol strafe (2).fbx
+  - Walk.Backward:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward.fbx
+  - Walk.BackwardLeft:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward arc (2).fbx
+  - Walk.BackwardRight:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward arc.fbx
+  - Walk.Forward:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk.fbx
+  - Walk.ForwardLeft:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk arc (2).fbx
+  - Walk.ForwardRight:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk arc.fbx
+  - Walk.Left:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol strafe.fbx
+  - Walk.Right:
+    - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol strafe (2).fbx
+MissingRequiredSlots (0):
+- none
+MissingOptionalSlots (0):
+- none
+PlaceholderNeededSlots_NON_PRODUCTION (0):
+- none
+Warnings (1):
+- Shield guard is disabled for this profile by capability flags.
+

@@ -13,6 +13,8 @@ namespace Hollow.Editor.Validation
             "^Hollow\\.Tests\\.EditMode\\.(" +
             "Milestone38ArtPassRafalPipelineTests\\.(WeaponRangedArtPassPrefabUsesMeshyPistolVisualOnlyAsset|ArmorArtPassPrefabUsesMeshyShieldVisualOnlyAsset|NewM38PrefabRolesResolveToArtPassPrefabs)|" +
             "MainCharacterLocomotionAnimationTests\\.(HeldWeaponVisualSwapsActiveAndHolsteredWeaponsWithoutDuplicates|HeldWeaponVisualMovesShieldBetweenForearmAndBackForDoubleHandedWeapons)|" +
+            "PlayerAnimationProfileMappingTests\\.EquipmentScaleReportListsRuntimeScaleDiagnostics|" +
+            "ManualAimProjectileDirectionTests\\.(RangedProjectileUsesHeldWeaponMuzzleOriginWhenAvailable|DoubleBarrelLateralOffsetsStartFromHeldWeaponMuzzle)|" +
             "Milestone44ShieldArmorBehaviorV2Tests\\.(ShieldVisualAppearsWhileGuarding|ShieldGuardUsesEquippedShieldVisualWhenAvailable|ShieldVisualFallsBackWithoutPresentationCatalog)" +
             ")$";
 

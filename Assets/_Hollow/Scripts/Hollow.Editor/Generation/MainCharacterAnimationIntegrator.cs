@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
+using Hollow.Entities;
+using Hollow.Editor.Validation;
 using Hollow.Presentation;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -31,6 +33,7 @@ namespace Hollow.Editor.Generation
         private const string PlayerControllerPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Player.controller";
         private const string RollInPlaceClipPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Roll_InPlace.anim";
         private const string CanonicalMaterialPath = "Assets/_Hollow/Art/Materials/ArtPass/AP_M_MainCharacter_GreySentinel.mat";
+        private const string CleanRebuildBackupRoot = "/private/tmp/hollow-player-clean-rebuild";
         private const string IdleClipName = "MainCharacter_Idle";
         private const string WalkClipName = "MainCharacter_Walk";
         private const string RunClipName = "MainCharacter_Run";
@@ -89,22 +92,51 @@ namespace Hollow.Editor.Generation
         [MenuItem("Hollow/Art/Integrate Meshy Main Character")]
         public static void Integrate()
         {
-            var idleClip = ConfigureAnimationImport(IdleFbxPath, IdleClipName, loop: true);
-            var walkClip = ConfigureAnimationImport(WalkFbxPath, WalkClipName, loop: true);
-            var runClip = ConfigureAnimationImport(RunFbxPath, RunClipName, loop: true);
-            var directionalLocomotionClips = ConfigureDirectionalLocomotionImports(walkClip, runClip);
+            BackupGeneratedPlayerAssetsForCleanRebuild();
+            var profileCatalog = PlayerAnimationProfileAssetGenerator.GenerateProfiles();
+            var unarmedProfile = profileCatalog.Resolve(PlayerAnimationProfileId.UnarmedLocomotion);
+            var swordShieldProfile = profileCatalog.Resolve(PlayerAnimationProfileId.SwordShieldCombat);
+            var rifleProfile = profileCatalog.Resolve(PlayerAnimationProfileId.RifleCombat);
+            var locomotionProfile = SelectLockedLocomotionProfile(profileCatalog);
+            var idleClip = unarmedProfile != null && unarmedProfile.IdleClip != null
+                ? unarmedProfile.IdleClip
+                : ConfigureAnimationImport(IdleFbxPath, IdleClipName, loop: true);
+            var forwardLocomotion = ResolveDirectionalSet(
+                unarmedProfile,
+                PlayerAnimationDirection.Forward,
+                required: false);
+            var walkClip = forwardLocomotion.WalkClip != null
+                ? forwardLocomotion.WalkClip
+                : ConfigureAnimationImport(WalkFbxPath, WalkClipName, loop: true);
+            var runClip = forwardLocomotion.RunClip != null
+                ? forwardLocomotion.RunClip
+                : ConfigureAnimationImport(RunFbxPath, RunClipName, loop: true);
+            var directionalLocomotionClips = ConfigureDirectionalLocomotionFromProfile(locomotionProfile ?? rifleProfile ?? unarmedProfile);
             var importedRollClip = ConfigureAnimationImport(RollFbxPath, RollClipName, loop: false);
             var rollClip = CreateOrUpdateInPlaceRollClip(importedRollClip);
-            var slashClip = ConfigureAnimationImport(SlashFbxPath, SlashClipName, loop: false);
-            var hitClip = ConfigureAnimationImport(HitFbxPath, HitClipName, loop: false);
-            var deadClip = ConfigureAnimationImport(DeadFbxPath, DeadClipName, loop: false);
+            var slashClip = swordShieldProfile != null && swordShieldProfile.FirstAttackClip() != null
+                ? swordShieldProfile.FirstAttackClip()
+                : ConfigureAnimationImport(SlashFbxPath, SlashClipName, loop: false);
+            var hitClip = swordShieldProfile != null && swordShieldProfile.FirstImpactClip() != null
+                ? swordShieldProfile.FirstImpactClip()
+                : ConfigureAnimationImport(HitFbxPath, HitClipName, loop: false);
+            var deadClip = swordShieldProfile != null && swordShieldProfile.FirstDeathClip() != null
+                ? swordShieldProfile.FirstDeathClip()
+                : ConfigureAnimationImport(DeadFbxPath, DeadClipName, loop: false);
             var material = CreateOrUpdateCanonicalMaterial();
             var controller = CreateAnimatorController(idleClip, walkClip, runClip, directionalLocomotionClips, rollClip, slashClip, hitClip, deadClip);
-            UpdatePlayerPrefab(controller, material, rollClip, slashClip, hitClip, deadClip);
+            UpdatePlayerPrefab(controller, material, rollClip, slashClip, hitClip, deadClip, profileCatalog);
+            PlayerAnimationProfileAssetGenerator.GenerateDebugScene(profileCatalog);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Integrated Meshy main character idle/walk/run/action animations into PlayerCharacter.prefab.");
+        }
+
+        [MenuItem("Hollow/Debug/Clean Rebuild Generated Player + Debug Scene")]
+        public static void CleanRebuildGeneratedPlayerAndDebugScene()
+        {
+            Integrate();
         }
 
         public static string[] RequiredDirectionalLocomotionFbxPaths()
@@ -120,6 +152,38 @@ namespace Hollow.Editor.Generation
             return RequiredDirectionalLocomotionFbxPaths()
                 .Where(path => !File.Exists(path))
                 .ToArray();
+        }
+
+        private static void BackupGeneratedPlayerAssetsForCleanRebuild()
+        {
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+            var backupDirectory = Path.Combine(CleanRebuildBackupRoot, timestamp);
+            Directory.CreateDirectory(backupDirectory);
+
+            foreach (var assetPath in new[]
+            {
+                PlayerPrefabPath,
+                PlayerAnimationProfileAssetGenerator.DebugScenePath,
+                PlayerControllerPath
+            })
+            {
+                BackupFileIfPresent(assetPath, backupDirectory);
+                BackupFileIfPresent($"{assetPath}.meta", backupDirectory);
+            }
+
+            Debug.Log($"Backed up generated player assets for clean rebuild to {backupDirectory}");
+        }
+
+        private static void BackupFileIfPresent(string projectRelativePath, string backupDirectory)
+        {
+            if (!File.Exists(projectRelativePath))
+            {
+                return;
+            }
+
+            var destination = Path.Combine(backupDirectory, projectRelativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destination) ?? backupDirectory);
+            File.Copy(projectRelativePath, destination, overwrite: true);
         }
 
         private static string DirectionalPath(string folderName, string fileName)
@@ -203,6 +267,89 @@ namespace Hollow.Editor.Generation
                         spec.Direction.normalized * spec.SpeedMagnitude);
                 })
                 .ToArray();
+        }
+
+        private static PlayerAnimationProfileDefinition SelectLockedLocomotionProfile(PlayerAnimationProfileCatalogDefinition profileCatalog)
+        {
+            var rifle = profileCatalog.Resolve(PlayerAnimationProfileId.RifleCombat);
+            return HasCompleteDirectionalLocomotion(rifle)
+                ? rifle
+                : profileCatalog.Resolve(PlayerAnimationProfileId.UnarmedLocomotion);
+        }
+
+        private static bool HasCompleteDirectionalLocomotion(PlayerAnimationProfileDefinition profile)
+        {
+            return profile != null &&
+                Enum.GetValues(typeof(PlayerAnimationDirection))
+                    .Cast<PlayerAnimationDirection>()
+                    .All(direction =>
+                        profile.TryGetDirectionalClipSet(direction, out var clipSet) &&
+                        clipSet.WalkClip != null &&
+                        clipSet.RunClip != null);
+        }
+
+        private static DirectionalAnimationClipSet ResolveDirectionalSet(
+            PlayerAnimationProfileDefinition profile,
+            PlayerAnimationDirection direction,
+            bool required)
+        {
+            if (profile != null && profile.TryGetDirectionalClipSet(direction, out var clipSet))
+            {
+                return clipSet;
+            }
+
+            if (required)
+            {
+                throw new InvalidOperationException($"{profile?.ProfileName ?? "Missing profile"} does not define directional locomotion for {direction}.");
+            }
+
+            return default;
+        }
+
+        private static DirectionalLocomotionClip[] ConfigureDirectionalLocomotionFromProfile(PlayerAnimationProfileDefinition profile)
+        {
+            if (profile == null)
+            {
+                throw new InvalidOperationException("Cannot build locked locomotion without a player animation profile.");
+            }
+
+            var clips = new List<DirectionalLocomotionClip>();
+            foreach (PlayerAnimationDirection direction in Enum.GetValues(typeof(PlayerAnimationDirection)))
+            {
+                var clipSet = ResolveDirectionalSet(profile, direction, required: true);
+                var unit = DirectionVector(direction);
+                if (clipSet.WalkClip == null)
+                {
+                    throw new InvalidOperationException($"{profile.ProfileName} missing walk clip for {direction}.");
+                }
+
+                if (clipSet.RunClip == null)
+                {
+                    throw new InvalidOperationException($"{profile.ProfileName} missing run clip for {direction}.");
+                }
+
+                clips.Add(new DirectionalLocomotionClip($"{profile.ProfileName}.Walk.{direction}", clipSet.WalkClip, unit * 0.45f));
+                clips.Add(new DirectionalLocomotionClip($"{profile.ProfileName}.Run.{direction}", clipSet.RunClip, unit));
+            }
+
+            return clips.ToArray();
+        }
+
+        private static Vector2 DirectionVector(PlayerAnimationDirection direction)
+        {
+            const float diagonal = 0.70710677f;
+            return direction switch
+            {
+                PlayerAnimationDirection.Forward => new Vector2(0f, 1f),
+                PlayerAnimationDirection.ForwardRight => new Vector2(diagonal, diagonal),
+                PlayerAnimationDirection.Right => new Vector2(1f, 0f),
+                PlayerAnimationDirection.BackwardRight => new Vector2(diagonal, -diagonal),
+                PlayerAnimationDirection.Backward => new Vector2(0f, -1f),
+                PlayerAnimationDirection.BackwardLeft => new Vector2(-diagonal, -diagonal),
+                PlayerAnimationDirection.Left => new Vector2(-1f, 0f),
+                PlayerAnimationDirection.ForwardLeft => new Vector2(-diagonal, diagonal),
+                _ => Vector2.zero
+            };
         }
 
         private static AnimationClip CreateOrUpdateInPlaceRollClip(AnimationClip sourceClip)
@@ -329,24 +476,27 @@ namespace Hollow.Editor.Generation
         {
             Directory.CreateDirectory(Path.GetDirectoryName(CanonicalMaterialPath) ?? string.Empty);
             var sourceMaterial = AssetDatabase.LoadAssetAtPath<Material>(IdleMaterialPath);
-            if (sourceMaterial == null)
+            if (sourceMaterial == null && Shader.Find("Universal Render Pipeline/Lit") == null && Shader.Find("Standard") == null)
             {
-                throw new InvalidOperationException($"Missing Meshy source material: {IdleMaterialPath}");
+                throw new InvalidOperationException("Could not resolve a shader for the generated main character material.");
             }
 
             var material = AssetDatabase.LoadAssetAtPath<Material>(CanonicalMaterialPath);
             if (material == null)
             {
-                material = new Material(sourceMaterial);
+                material = sourceMaterial != null
+                    ? new Material(sourceMaterial)
+                    : new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
                 AssetDatabase.CreateAsset(material, CanonicalMaterialPath);
             }
-            else
+            else if (sourceMaterial != null)
             {
                 EditorUtility.CopySerialized(sourceMaterial, material);
             }
 
             material.name = Path.GetFileNameWithoutExtension(CanonicalMaterialPath);
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(AlbedoTexturePath);
+            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(PlayerAnimationProfileAssetGenerator.HollowMainModelTexturePath) ??
+                AssetDatabase.LoadAssetAtPath<Texture2D>(AlbedoTexturePath);
             var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(NormalTexturePath);
             var metallic = AssetDatabase.LoadAssetAtPath<Texture2D>(MetallicTexturePath);
             AssignTexture(material, "_BaseMap", albedo);
@@ -722,24 +872,26 @@ namespace Hollow.Editor.Generation
             AnimationClip rollClip,
             AnimationClip slashClip,
             AnimationClip hitClip,
-            AnimationClip deadClip)
+            AnimationClip deadClip,
+            PlayerAnimationProfileCatalogDefinition profileCatalog)
         {
-            if (!File.Exists(PlayerPrefabPath))
-            {
-                throw new FileNotFoundException($"Missing player prefab: {PlayerPrefabPath}", PlayerPrefabPath);
-            }
-
-            var modelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(IdleFbxPath);
+            var selectedBodyPath = PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyFbxPath();
+            var modelSourcePath = selectedBodyPath ?? PlayerAnimationProfileAssetGenerator.HollowMainRigPath;
+            var modelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelSourcePath) ??
+                AssetDatabase.LoadAssetAtPath<GameObject>(IdleFbxPath);
             if (modelPrefab == null)
             {
-                throw new InvalidOperationException($"Could not load Meshy model prefab from {IdleFbxPath}.");
+                throw new InvalidOperationException($"Could not load player model prefab from {modelSourcePath} or {IdleFbxPath}.");
             }
 
-            var prefabRoot = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
+            if (controller == null)
+            {
+                throw new InvalidOperationException("Cannot rebuild PlayerCharacter.prefab without a generated AnimatorController.");
+            }
+
+            var prefabRoot = CreateFreshPlayerPrefabRoot();
             try
             {
-                RemoveExistingVisuals(prefabRoot.transform);
-
                 var visualRoot = new GameObject(VisualRootName);
                 visualRoot.transform.SetParent(prefabRoot.transform, false);
                 visualRoot.transform.localPosition = Vector3.zero;
@@ -755,10 +907,14 @@ namespace Hollow.Editor.Generation
                 modelInstance.name = ModelInstanceName;
                 modelInstance.transform.localPosition = Vector3.zero;
                 modelInstance.transform.localRotation = Quaternion.identity;
-                modelInstance.transform.localScale = Vector3.one;
+                var selectedBodyLocalScale = !string.IsNullOrWhiteSpace(selectedBodyPath)
+                    ? PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyLocalScale()
+                    : 1f;
+                modelInstance.transform.localScale = Vector3.one * selectedBodyLocalScale;
 
                 StripGameplayComponentsFromVisual(modelInstance);
                 EnsureRendererMaterials(modelInstance, canonicalMaterial);
+                EnsureVisibleBody(visualRoot.transform, modelInstance, canonicalMaterial);
 
                 var animator = modelInstance.GetComponent<Animator>();
                 var sourceAnimator = modelPrefab.GetComponent<Animator>();
@@ -767,9 +923,10 @@ namespace Hollow.Editor.Generation
                     animator = modelInstance.AddComponent<Animator>();
                 }
 
-                if (sourceAnimator != null && sourceAnimator.avatar != null)
+                animator.avatar = ResolveMainCharacterAvatar(sourceAnimator);
+                if (animator.avatar == null || !animator.avatar.isValid || !animator.avatar.isHuman)
                 {
-                    animator.avatar = sourceAnimator.avatar;
+                    throw new InvalidOperationException($"Could not resolve a valid Humanoid Avatar from {modelSourcePath}.");
                 }
 
                 animator.runtimeAnimatorController = controller;
@@ -818,6 +975,11 @@ namespace Hollow.Editor.Generation
                     prefabRoot.AddComponent<PlayerLocomotionAnimator>();
                 var aimLockController = prefabRoot.GetComponent<PlayerAimLockController>() ??
                     prefabRoot.AddComponent<PlayerAimLockController>();
+                var profileController = prefabRoot.GetComponent<PlayerAnimationProfileController>() ??
+                    prefabRoot.AddComponent<PlayerAnimationProfileController>();
+                profileController.Configure(profileCatalog);
+                profileController.Bind(prefabRoot.GetComponent<PlayerWeaponController>());
+                EditorUtility.SetDirty(profileController);
                 locomotionAnimator.Bind(animator, visualRoot.transform);
                 locomotionAnimator.BindGameplay(
                     prefabRoot.GetComponent<PlayerWeaponController>(),
@@ -841,6 +1003,9 @@ namespace Hollow.Editor.Generation
                     rangedMuzzleSocket,
                     shieldForearmSocket,
                     shieldBackSocket);
+                heldWeaponVisual.Bind(prefabRoot.GetComponent<PlayerWeaponController>());
+                heldWeaponVisual.NormalizeEquipmentVisualScales();
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
                 EditorUtility.SetDirty(heldWeaponVisual);
 
                 var rangedHandPose = prefabRoot.GetComponent<PlayerRangedHandPoseController>() ??
@@ -945,18 +1110,61 @@ namespace Hollow.Editor.Generation
                     PlayerAnimationPoseCoordinator.DefaultHitReactionFootIkSuppressSeconds);
                 EditorUtility.SetDirty(poseCoordinator);
 
+                SanitizeRigForSave(prefabRoot.transform, animator.transform);
+                var preSaveValidation = PlayerVisualAssemblyValidator.Validate(prefabRoot, PlayerPrefabPath);
+                if (preSaveValidation.HasErrors)
+                {
+                    throw new InvalidOperationException(preSaveValidation.ToReportString());
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(PlayerPrefabPath) ?? string.Empty);
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, PlayerPrefabPath);
+                ValidateSavedPlayerVisualAssembly();
             }
             finally
             {
-                PrefabUtility.UnloadPrefabContents(prefabRoot);
+                Object.DestroyImmediate(prefabRoot);
             }
+        }
+
+        private static GameObject CreateFreshPlayerPrefabRoot()
+        {
+            var root = new GameObject("PlayerCharacter", typeof(CapsuleCollider));
+            var placeholder = root.AddComponent<PlaceholderPlayerController>();
+            placeholder.ConfigureDefault();
+
+            var health = root.AddComponent<CombatantHealth>();
+            health.Configure(RoomCombatController.PlayerMaxHealth);
+
+            var movement = root.AddComponent<PlayerMovementController>();
+            var weapon = root.AddComponent<PlayerWeaponController>();
+            var defense = root.AddComponent<PlayerDefenseController>();
+            defense.ConfigureShieldProfile(ShieldGuardProfileDefinition.Resolve(null));
+            root.AddComponent<PlayerAimLockController>();
+            root.AddComponent<PlayerLocomotionAnimator>();
+            root.AddComponent<PlayerHeldWeaponVisualController>();
+            var rollVisual = root.AddComponent<PlayerRollVisualController>();
+            rollVisual.Bind(weapon);
+            var feedback = root.AddComponent<PlayerDamageFeedbackController>();
+            feedback.Configure(null, null);
+            root.AddComponent<PlayerAnimationProfileController>();
+            root.AddComponent<PlayerRangedHandPoseController>();
+            root.AddComponent<PlayerShieldGuardPoseController>();
+            root.AddComponent<PlayerFootPlacementController>();
+            root.AddComponent<PlayerAnimationPoseCoordinator>();
+
+            var collider = root.GetComponent<CapsuleCollider>();
+            collider.radius = PlaceholderPlayerController.DefaultRadiusMeters;
+            collider.height = PlaceholderPlayerController.DefaultHeightMeters;
+            collider.center = new Vector3(0f, PlaceholderPlayerController.DefaultHeightMeters * 0.5f, 0f);
+            EditorUtility.SetDirty(movement);
+            return root;
         }
 
         private static ModernAnimationRigSetup EnsureModernAnimationRig(Animator animator, Transform visualRoot, Transform modelRoot)
         {
             var rigRoot = EnsureChild(
-                visualRoot,
+                modelRoot,
                 PlayerAnimationPoseCoordinator.ModernAnimationRigRootName,
                 Vector3.zero,
                 Vector3.zero,
@@ -1099,10 +1307,10 @@ namespace Hollow.Editor.Generation
 
             var rigBuilder = animator.GetComponent<RigBuilder>() ?? animator.gameObject.AddComponent<RigBuilder>();
             rigBuilder.layers.Clear();
-            rigBuilder.layers.Add(new RigLayer(baseRig, true));
-            rigBuilder.layers.Add(new RigLayer(fullBodyRig, true));
-            rigBuilder.layers.Add(new RigLayer(upperBodyRig, true));
-            rigBuilder.layers.Add(new RigLayer(additiveRig, true));
+            rigBuilder.layers.Add(new RigLayer(baseRig, IsConstraintValid(leftFootIk) || IsConstraintValid(rightFootIk) || IsConstraintValid(pelvisPosition)));
+            rigBuilder.layers.Add(new RigLayer(fullBodyRig, false));
+            rigBuilder.layers.Add(new RigLayer(upperBodyRig, IsConstraintValid(rightHandIk) || IsConstraintValid(leftHandIk) || IsConstraintValid(chestAim)));
+            rigBuilder.layers.Add(new RigLayer(additiveRig, false));
             EditorUtility.SetDirty(rigBuilder);
 
             return new ModernAnimationRigSetup(
@@ -1123,6 +1331,98 @@ namespace Hollow.Editor.Generation
                 leftFootTarget,
                 rightFootTarget,
                 pelvisTarget);
+        }
+
+        private static void SanitizeRigForSave(Transform prefabRoot, Transform animatorTransform)
+        {
+            if (prefabRoot == null || animatorTransform == null)
+            {
+                return;
+            }
+
+            foreach (var rigBuilder in prefabRoot.GetComponentsInChildren<RigBuilder>(includeInactive: true))
+            {
+                if (!IsTransformDescendantOf(rigBuilder.transform, animatorTransform))
+                {
+                    rigBuilder.enabled = false;
+                    EditorUtility.SetDirty(rigBuilder);
+                    Debug.LogWarning($"Disabled RigBuilder outside Animator hierarchy: {TransformPath(prefabRoot, rigBuilder.transform)}");
+                    continue;
+                }
+
+                var layers = rigBuilder.layers
+                    .Where(layer => layer.rig != null && IsTransformDescendantOf(layer.rig.transform, animatorTransform))
+                    .ToList();
+                if (layers.Count != rigBuilder.layers.Count)
+                {
+                    rigBuilder.layers.Clear();
+                    rigBuilder.layers.AddRange(layers);
+                    EditorUtility.SetDirty(rigBuilder);
+                    Debug.LogWarning("Removed null/out-of-hierarchy RigBuilder layers before saving PlayerCharacter.prefab.");
+                }
+            }
+
+            foreach (var constraint in prefabRoot.GetComponentsInChildren<TwoBoneIKConstraint>(includeInactive: true))
+            {
+                if (!IsTransformDescendantOf(constraint.transform, animatorTransform) || !HasValidTwoBoneData(constraint))
+                {
+                    DisableInvalidConstraint(prefabRoot, constraint);
+                }
+            }
+
+            foreach (var constraint in prefabRoot.GetComponentsInChildren<MultiAimConstraint>(includeInactive: true))
+            {
+                if (!IsTransformDescendantOf(constraint.transform, animatorTransform) || !HasValidMultiAimData(constraint))
+                {
+                    DisableInvalidConstraint(prefabRoot, constraint);
+                }
+            }
+
+            foreach (var constraint in prefabRoot.GetComponentsInChildren<MultiPositionConstraint>(includeInactive: true))
+            {
+                if (!IsTransformDescendantOf(constraint.transform, animatorTransform) || !HasValidMultiPositionData(constraint))
+                {
+                    DisableInvalidConstraint(prefabRoot, constraint);
+                }
+            }
+        }
+
+        private static void DisableInvalidConstraint<T>(Transform prefabRoot, T constraint) where T : Behaviour
+        {
+            if (constraint == null)
+            {
+                return;
+            }
+
+            constraint.enabled = false;
+            EditorUtility.SetDirty(constraint);
+            Debug.LogWarning($"Disabled invalid Animation Rigging constraint before save: {TransformPath(prefabRoot, constraint.transform)}");
+        }
+
+        private static bool HasValidTwoBoneData(TwoBoneIKConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.data.root != null &&
+                constraint.data.mid != null &&
+                constraint.data.tip != null &&
+                constraint.data.target != null &&
+                constraint.data.hint != null;
+        }
+
+        private static bool HasValidMultiAimData(MultiAimConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.data.constrainedObject != null &&
+                constraint.data.sourceObjects.Count > 0 &&
+                constraint.data.sourceObjects[0].transform != null;
+        }
+
+        private static bool HasValidMultiPositionData(MultiPositionConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.data.constrainedObject != null &&
+                constraint.data.sourceObjects.Count > 0 &&
+                constraint.data.sourceObjects[0].transform != null;
         }
 
         private static Rig EnsureRig(Transform parent, string rigName, float weight)
@@ -1146,6 +1446,8 @@ namespace Hollow.Editor.Generation
             var constraintTransform = EnsureChild(parent, constraintName, Vector3.zero, Vector3.zero, Vector3.one);
             var constraint = constraintTransform.GetComponent<TwoBoneIKConstraint>() ??
                 constraintTransform.gameObject.AddComponent<TwoBoneIKConstraint>();
+            var isValid = root != null && mid != null && tip != null && target != null;
+            constraint.enabled = isValid;
             constraint.weight = 0f;
             constraint.data.root = root;
             constraint.data.mid = mid;
@@ -1170,8 +1472,10 @@ namespace Hollow.Editor.Generation
             var constraintTransform = EnsureChild(parent, constraintName, Vector3.zero, Vector3.zero, Vector3.one);
             var constraint = constraintTransform.GetComponent<MultiAimConstraint>() ??
                 constraintTransform.gameObject.AddComponent<MultiAimConstraint>();
+            var isValid = chest != null && target != null;
             var sourceObjects = new WeightedTransformArray(1);
             sourceObjects[0] = new WeightedTransform(target, 1f);
+            constraint.enabled = isValid;
             constraint.weight = 0f;
             constraint.data.constrainedObject = chest;
             constraint.data.sourceObjects = sourceObjects;
@@ -1200,8 +1504,10 @@ namespace Hollow.Editor.Generation
             var constraintTransform = EnsureChild(parent, constraintName, Vector3.zero, Vector3.zero, Vector3.one);
             var constraint = constraintTransform.GetComponent<MultiPositionConstraint>() ??
                 constraintTransform.gameObject.AddComponent<MultiPositionConstraint>();
+            var isValid = constrainedObject != null && target != null;
             var sourceObjects = new WeightedTransformArray(1);
             sourceObjects[0] = new WeightedTransform(target, 1f);
+            constraint.enabled = isValid;
             constraint.weight = 0f;
             constraint.data.constrainedObject = constrainedObject;
             constraint.data.sourceObjects = sourceObjects;
@@ -1211,6 +1517,34 @@ namespace Hollow.Editor.Generation
             constraint.data.constrainedZAxis = constrainZ;
             EditorUtility.SetDirty(constraint);
             return constraint;
+        }
+
+        private static bool IsConstraintValid(TwoBoneIKConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.enabled &&
+                constraint.data.root != null &&
+                constraint.data.mid != null &&
+                constraint.data.tip != null &&
+                constraint.data.target != null;
+        }
+
+        private static bool IsConstraintValid(MultiAimConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.enabled &&
+                constraint.data.constrainedObject != null &&
+                constraint.data.sourceObjects.Count > 0 &&
+                constraint.data.sourceObjects[0].transform != null;
+        }
+
+        private static bool IsConstraintValid(MultiPositionConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.enabled &&
+                constraint.data.constrainedObject != null &&
+                constraint.data.sourceObjects.Count > 0 &&
+                constraint.data.sourceObjects[0].transform != null;
         }
 
         private static Transform EnsureChild(
@@ -1251,6 +1585,45 @@ namespace Hollow.Editor.Generation
             }
 
             return null;
+        }
+
+        private static bool IsTransformDescendantOf(Transform child, Transform ancestor)
+        {
+            var current = child;
+            while (current != null)
+            {
+                if (current == ancestor)
+                {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
+        }
+
+        private static string TransformPath(Transform root, Transform child)
+        {
+            if (root == null || child == null)
+            {
+                return string.Empty;
+            }
+
+            var names = new Stack<string>();
+            var current = child;
+            while (current != null)
+            {
+                names.Push(current.name);
+                if (current == root)
+                {
+                    break;
+                }
+
+                current = current.parent;
+            }
+
+            return string.Join("/", names);
         }
 
         private readonly struct DirectionalLocomotionImportSpec
@@ -1486,7 +1859,7 @@ namespace Hollow.Editor.Generation
             foreach (var child in root.GetComponentsInChildren<Transform>(includeInactive: true))
             {
                 if (string.Equals(child.name, childName, StringComparison.Ordinal) ||
-                    string.Equals(NormalizeTransformName(child.name), childName, StringComparison.Ordinal))
+                    IsNormalizedBoneNameMatch(NormalizeTransformName(child.name), childName))
                 {
                     return child;
                 }
@@ -1508,6 +1881,20 @@ namespace Hollow.Editor.Generation
                 : transformName;
         }
 
+        private static bool IsNormalizedBoneNameMatch(string normalizedName, string expectedName)
+        {
+            if (string.Equals(normalizedName, expectedName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return expectedName switch
+            {
+                BackShieldBoneName => string.Equals(normalizedName, "Spine2", StringComparison.Ordinal),
+                _ => false
+            };
+        }
+
         private static void EnsureRendererMaterials(GameObject visual, Material material)
         {
             if (material == null)
@@ -1517,6 +1904,7 @@ namespace Hollow.Editor.Generation
 
             foreach (var renderer in visual.GetComponentsInChildren<Renderer>(includeInactive: true))
             {
+                renderer.enabled = true;
                 var materials = renderer.sharedMaterials;
                 if (materials == null || materials.Length == 0)
                 {
@@ -1530,6 +1918,137 @@ namespace Hollow.Editor.Generation
                 }
 
                 renderer.sharedMaterials = materials;
+            }
+        }
+
+        private static Avatar ResolveMainCharacterAvatar(Animator sourceAnimator)
+        {
+            if (sourceAnimator != null && sourceAnimator.avatar != null && sourceAnimator.avatar.isValid)
+            {
+                return sourceAnimator.avatar;
+            }
+
+            return PlayerAnimationProfileAssetGenerator.EnsureSharedAvatar();
+        }
+
+        private static void ValidateSavedPlayerVisualAssembly()
+        {
+            var validation = PlayerVisualAssemblyValidator.ValidatePlayerPrefab();
+            PlayerVisualAssemblyValidator.WriteEquipmentScaleReportForPlayerPrefab(validation);
+            if (validation.HasErrors)
+            {
+                throw new InvalidOperationException(validation.ToReportString());
+            }
+
+            if (validation.Warnings.Count > 0)
+            {
+                Debug.LogWarning(validation.ToReportString());
+            }
+            else
+            {
+                Debug.Log(validation.ToReportString());
+            }
+        }
+
+        private static void EnsureVisibleBody(Transform visualRoot, GameObject rigInstance, Material material)
+        {
+            if (visualRoot == null || rigInstance == null)
+            {
+                return;
+            }
+
+            var existingFallback = visualRoot.Find(PlayerVisualAssemblyValidator.VisualBodyName);
+            var hasUsableSkinnedBody = rigInstance.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true)
+                .Any(IsUsableSkinnedBodyRenderer);
+            if (hasUsableSkinnedBody)
+            {
+                if (existingFallback != null)
+                {
+                    Object.DestroyImmediate(existingFallback.gameObject);
+                }
+
+                return;
+            }
+
+            if (existingFallback != null)
+            {
+                Object.DestroyImmediate(existingFallback.gameObject);
+            }
+
+            var modelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerAnimationProfileAssetGenerator.HollowMainModelObjPath);
+            if (modelPrefab == null)
+            {
+                Debug.LogWarning(
+                    $"Main character rig has no usable skinned body renderer and visible fallback model is missing: {PlayerAnimationProfileAssetGenerator.HollowMainModelObjPath}");
+                return;
+            }
+
+            var fallback = PrefabUtility.InstantiatePrefab(modelPrefab, visualRoot) as GameObject;
+            if (fallback == null)
+            {
+                fallback = Object.Instantiate(modelPrefab, visualRoot);
+            }
+
+            fallback.name = PlayerVisualAssemblyValidator.VisualBodyName;
+            fallback.transform.localPosition = Vector3.zero;
+            fallback.transform.localRotation = Quaternion.identity;
+            fallback.transform.localScale = Vector3.one;
+            SetLayerRecursively(fallback, visualRoot.gameObject.layer);
+            StripGameplayComponentsFromVisual(fallback);
+            EnsureRendererMaterials(fallback, material);
+            Debug.LogWarning(
+                $"{PlayerVisualAssemblyValidator.TemporaryStaticBodyFallbackLabel}: using {PlayerAnimationProfileAssetGenerator.HollowMainModelObjPath}. " +
+                PlayerVisualAssemblyValidator.FinalBodyReplacementRequirement);
+            EditorUtility.SetDirty(fallback);
+        }
+
+        private static bool IsUsableSkinnedBodyRenderer(SkinnedMeshRenderer renderer)
+        {
+            if (renderer == null ||
+                !renderer.enabled ||
+                renderer.sharedMesh == null ||
+                renderer.rootBone == null ||
+                renderer.bones == null ||
+                renderer.bones.Length == 0)
+            {
+                return false;
+            }
+
+            if (renderer.sharedMaterials == null ||
+                renderer.sharedMaterials.Length == 0 ||
+                renderer.sharedMaterials.Any(material => material == null))
+            {
+                return false;
+            }
+
+            var boundsSize = ScaledBoundsSize(renderer);
+            return boundsSize.y > 0.75f &&
+                boundsSize.y < 3f &&
+                boundsSize.x > 0.12f &&
+                boundsSize.z > 0.04f;
+        }
+
+        private static Vector3 ScaledBoundsSize(SkinnedMeshRenderer renderer)
+        {
+            var size = renderer.sharedMesh.bounds.size;
+            var scale = renderer.transform.lossyScale;
+            return new Vector3(
+                Mathf.Abs(size.x * scale.x),
+                Mathf.Abs(size.y * scale.y),
+                Mathf.Abs(size.z * scale.z));
+        }
+
+        private static void SetLayerRecursively(GameObject root, int layer)
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            root.layer = layer;
+            foreach (Transform child in root.transform)
+            {
+                SetLayerRecursively(child.gameObject, layer);
             }
         }
     }

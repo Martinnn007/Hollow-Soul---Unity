@@ -187,6 +187,7 @@ namespace Hollow.Tests.EditMode
                     root.transform,
                     out var muzzleLocalPosition,
                     out var muzzleDirection));
+                Assert.Less(muzzleLocalPosition.magnitude, 3f);
                 Assert.AreEqual(muzzleLocalPosition.y, projectile.localPosition.y, 0.001f);
                 Assert.AreEqual(muzzleLocalPosition.z, projectile.localPosition.z, 0.001f);
                 Assert.AreEqual(0f, muzzleDirection.x, 0.001f);

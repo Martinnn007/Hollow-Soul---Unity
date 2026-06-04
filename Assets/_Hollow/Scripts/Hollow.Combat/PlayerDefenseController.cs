@@ -27,6 +27,7 @@ namespace Hollow.Combat
         [SerializeField] private RoomCombatController combatController;
         [SerializeField] private PlayerWeaponController weaponController;
         [SerializeField] private PlayerAimLockController aimLockController;
+        [SerializeField] private PlayerAnimationProfileController animationProfileController;
         [SerializeField] private ShieldGuardProfileDefinition shieldProfile;
 
         private ShieldGuardVisualController visualController;
@@ -55,6 +56,8 @@ namespace Hollow.Combat
         public Vector3 GuardFacing => guardFacing.sqrMagnitude < 0.001f ? Vector3.forward : guardFacing.normalized;
 
         public float GuardMoveMultiplier => ShieldGuardProfileDefinition.Resolve(shieldProfile).GuardMoveMultiplier;
+
+        public bool CanUseShieldGuard => animationProfileController != null && animationProfileController.AllowsShieldGuard;
 
         private float CurrentDefenseTime => float.IsNaN(lastDefenseTimeSeconds) ? Time.time : lastDefenseTimeSeconds;
 
@@ -140,6 +143,15 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (!CanUseShieldGuard)
+            {
+                isGuarding = false;
+                lastGuardHeld = false;
+                parryConsumed = false;
+                visualController?.SetState(false, false, GuardFacing);
+                return;
+            }
+
             var profile = ShieldGuardProfileDefinition.Resolve(shieldProfile);
             if (!lastGuardHeld)
             {
@@ -179,7 +191,7 @@ namespace Hollow.Combat
                 LastGuardResult = ShieldGuardResult.PassiveReduced;
             }
 
-            if (!isGuarding || request.ThreatKind == DamageThreatKind.Environmental)
+            if (!isGuarding || !CanUseShieldGuard || request.ThreatKind == DamageThreatKind.Environmental)
             {
                 return reducedAmount;
             }
@@ -390,6 +402,11 @@ namespace Hollow.Combat
             if (aimLockController == null)
             {
                 aimLockController = GetComponent<PlayerAimLockController>() ?? gameObject.AddComponent<PlayerAimLockController>();
+            }
+
+            if (animationProfileController == null)
+            {
+                animationProfileController = GetComponent<PlayerAnimationProfileController>();
             }
 
             if (roomRuntimeRoot == null)

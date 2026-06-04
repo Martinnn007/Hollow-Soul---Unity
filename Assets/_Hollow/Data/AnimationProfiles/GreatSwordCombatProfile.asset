@@ -1,0 +1,216 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a86b0c7713c4a3da41e81a12af65d7c, type: 3}
+  m_Name: GreatSwordCombatProfile
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlayerAnimationProfileDefinition
+  profileId: 2
+  profileName: GreatSwordCombatProfile
+  allowsShieldInHand: 0
+  allowsShieldGuard: 0
+  requiresTwoHandedWeapon: 1
+  usesRangedAim: 0
+  usesFootIk: 1
+  usesTorsoAim: 1
+  idleClip: {fileID: -203655887218126122, guid: 0547c2bb292824fb097fe42994380311, type: 3}
+  directionalClips:
+  - direction: 0
+    walkClip: {fileID: -203655887218126122, guid: 102a36d404aae4435a5965df8ea71ef4, type: 3}
+    runClip: {fileID: -203655887218126122, guid: a79f880b9844b4dd29b6cda540d23849, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 1
+    walkClip: {fileID: 7400000, guid: d732b44838b8e45f8bbd860ae5da60a7, type: 2}
+    runClip: {fileID: 7400000, guid: 485ad27c4b96e4d4ba03b26edc8418b8, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 2
+    walkClip: {fileID: -203655887218126122, guid: 3c9eb6517c2f149a1b2f82796f4d38df, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 9b358c154c284420dbc48b45f2939e8f, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 3
+    walkClip: {fileID: 7400000, guid: 1813ae2f92549439db04da46341ae033, type: 2}
+    runClip: {fileID: 7400000, guid: 977574d8a42964247b4aee25464ba2db, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 4
+    walkClip: {fileID: 7400000, guid: d92e2932d120c4685b3ca73d0727bdbe, type: 2}
+    runClip: {fileID: 7400000, guid: a466473383c4f4670909c60a84682656, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 5
+    walkClip: {fileID: 7400000, guid: 264f96860f6bb473bac00698e886b518, type: 2}
+    runClip: {fileID: 7400000, guid: eba579c536f714457ab7057ab44d6bd4, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  - direction: 6
+    walkClip: {fileID: -203655887218126122, guid: 611adc59d082747bebcdb366542e47b4, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 3c535d025d7af4341bb8c2a3385570da, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 7
+    walkClip: {fileID: 7400000, guid: 506a107018b1848338d620df0bd1db96, type: 2}
+    runClip: {fileID: 7400000, guid: 7490e2e8beeda4607beac9effacb33fa, type: 2}
+    walkUsesTemporaryPlaceholder: 1
+    runUsesTemporaryPlaceholder: 1
+  strafingClips:
+  - {fileID: -203655887218126122, guid: 611adc59d082747bebcdb366542e47b4, type: 3}
+  - {fileID: -203655887218126122, guid: 3c9eb6517c2f149a1b2f82796f4d38df, type: 3}
+  - {fileID: -203655887218126122, guid: 3c535d025d7af4341bb8c2a3385570da, type: 3}
+  - {fileID: -203655887218126122, guid: 9b358c154c284420dbc48b45f2939e8f, type: 3}
+  turnClips:
+  - {fileID: -203655887218126122, guid: b1ad2f9e0991b40dcb07afb5ba9121a6, type: 3}
+  - {fileID: -203655887218126122, guid: 57775aba48cb34b8b99991c877de230a, type: 3}
+  - {fileID: -203655887218126122, guid: 78d375abbd00046ae8c0a5ed188447e9, type: 3}
+  - {fileID: -203655887218126122, guid: 18ff17a1f192049bc880993a5700c549, type: 3}
+  drawClips:
+  - {fileID: -203655887218126122, guid: 2b1573afaea834227a814a99bd5a7f46, type: 3}
+  - {fileID: -203655887218126122, guid: 06f73c171afb5403bab5f2d3fbb74ed9, type: 3}
+  sheatheClips: []
+  attackClips:
+  - {fileID: -203655887218126122, guid: 402b9b722e1e944a192ac7faf68c2160, type: 3}
+  - {fileID: -203655887218126122, guid: c2e7c49bc0c3d4b28adfec1eaecdab39, type: 3}
+  - {fileID: -203655887218126122, guid: 18237f76493e54dc88c4f5a9b104a80b, type: 3}
+  - {fileID: -203655887218126122, guid: 49776f4a450fd47e2a2ef86997801b45, type: 3}
+  - {fileID: -203655887218126122, guid: d06160f8cedb14f8dae6c6513bcd3c1f, type: 3}
+  - {fileID: -203655887218126122, guid: 07827cf29c106465e953f3d1a0b45565, type: 3}
+  - {fileID: -203655887218126122, guid: 1b9355f5345234574bd5a8b874b435ae, type: 3}
+  - {fileID: -203655887218126122, guid: abe362f8425ab4755bb0786c8b4c74f8, type: 3}
+  - {fileID: -203655887218126122, guid: 916c10f086346452a86e174dce65b772, type: 3}
+  fireClips: []
+  shieldGuardClips: []
+  weaponBlockClips:
+  - {fileID: -203655887218126122, guid: cda2bfc688248491cb13511201d688ba, type: 3}
+  - {fileID: -203655887218126122, guid: 4afa672f9e33f421290699c80603baae, type: 3}
+  - {fileID: -203655887218126122, guid: c01ac0aaf6060412fae7180e214e4ca8, type: 3}
+  impactClips:
+  - {fileID: -203655887218126122, guid: a823ef525b1b5442c9461d8bfabfc29c, type: 3}
+  - {fileID: -203655887218126122, guid: cf4be16a8a0944d1eb8bd866066c33b7, type: 3}
+  - {fileID: -203655887218126122, guid: d7eeed1462aa846a0a98ac232e503a28, type: 3}
+  - {fileID: -203655887218126122, guid: d0f365577ac324f42970f6720912eff9, type: 3}
+  - {fileID: -203655887218126122, guid: 4aece69e9cc2246a1b3bdd4d19e5c813, type: 3}
+  deathClips:
+  - {fileID: -203655887218126122, guid: 768b68fce64d14b35a9fd35e85a0c0d5, type: 3}
+  - {fileID: -203655887218126122, guid: b43ea1002076140c3bf07aa9289e61f9, type: 3}
+  jumpClips:
+  - {fileID: -203655887218126122, guid: cb382bd849e8c4cef94fc90f1cb5b670, type: 3}
+  - {fileID: -203655887218126122, guid: 18237f76493e54dc88c4f5a9b104a80b, type: 3}
+  - {fileID: -203655887218126122, guid: 6588614c2b2494e9faf3906cc30ff918, type: 3}
+  crouchClips:
+  - {fileID: -203655887218126122, guid: 0fe70482c23ad48aaab4dbf070d467b7, type: 3}
+  - {fileID: -203655887218126122, guid: 9cc573b8ba1614e48a65c39e66c6bfd3, type: 3}
+  - {fileID: -203655887218126122, guid: 788886591f38b4f878bb39ab99fee77f, type: 3}
+  - {fileID: -203655887218126122, guid: 0cee1d6a86e3947f5844efbd2bcb9ef3, type: 3}
+  - {fileID: -203655887218126122, guid: 852ff8626d6d74f1ba0e45b043d015ab, type: 3}
+  - {fileID: -203655887218126122, guid: 2623474bb3ef84939ac51fc0715cc5b0, type: 3}
+  missingRequiredClipSlots: []
+  missingOptionalClipSlots: []
+  placeholderClipSlots:
+  - Run.Backward
+  - Run.BackwardLeft
+  - Run.BackwardRight
+  - Run.ForwardLeft
+  - Run.ForwardRight
+  - Walk.Backward
+  - Walk.BackwardLeft
+  - Walk.BackwardRight
+  - Walk.ForwardLeft
+  - Walk.ForwardRight
+  mappedClipReports:
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    attack.fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    high spin attack.fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    jump attack.fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    slash (2).fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    slash (3).fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    slash (4).fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    slash (5).fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    slash.fbx'
+  - 'GreatSword_Attack: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    slide attack.fbx'
+  - 'GreatSword_Crouch: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    crouching (2).fbx'
+  - 'GreatSword_Crouch: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    crouching (3).fbx'
+  - 'GreatSword_Crouch: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    crouching (4).fbx'
+  - 'GreatSword_Crouch: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    crouching (5).fbx'
+  - 'GreatSword_Crouch: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    crouching (6).fbx'
+  - 'GreatSword_Crouch: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    crouching.fbx'
+  - 'GreatSword_Death: Assets/_Hollow/Animation Packs/Great Sword Pack/two handed
+    sword death (2).fbx'
+  - 'GreatSword_Death: Assets/_Hollow/Animation Packs/Great Sword Pack/two handed
+    sword death.fbx'
+  - 'GreatSword_Draw: Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great
+    sword 1.fbx'
+  - 'GreatSword_Draw: Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great
+    sword 2.fbx'
+  - 'GreatSword_Impact: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    impact (2).fbx'
+  - 'GreatSword_Impact: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    impact (3).fbx'
+  - 'GreatSword_Impact: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    impact (4).fbx'
+  - 'GreatSword_Impact: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    impact (5).fbx'
+  - 'GreatSword_Impact: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    impact.fbx'
+  - 'GreatSword_Jump: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    jump (2).fbx'
+  - 'GreatSword_Jump: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    jump attack.fbx'
+  - 'GreatSword_Jump: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    jump.fbx'
+  - 'GreatSword_Turn: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    180 turn (2).fbx'
+  - 'GreatSword_Turn: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    180 turn.fbx'
+  - 'GreatSword_Turn: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    turn (2).fbx'
+  - 'GreatSword_Turn: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword
+    turn.fbx'
+  - 'GreatSword_WeaponBlock: Assets/_Hollow/Animation Packs/Great Sword Pack/great
+    sword blocking (2).fbx'
+  - 'GreatSword_WeaponBlock: Assets/_Hollow/Animation Packs/Great Sword Pack/great
+    sword blocking (3).fbx'
+  - 'GreatSword_WeaponBlock: Assets/_Hollow/Animation Packs/Great Sword Pack/great
+    sword blocking.fbx'
+  - 'Idle: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword idle.fbx'
+  - 'Run.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Run_Backward.anim'
+  - 'Run.BackwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Run_BackwardLeft.anim'
+  - 'Run.BackwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Run_BackwardRight.anim'
+  - 'Run.Forward: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword run.fbx'
+  - 'Run.ForwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Run_ForwardLeft.anim'
+  - 'Run.ForwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Run_ForwardRight.anim'
+  - 'Run.Left: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe
+    (2).fbx'
+  - 'Run.Right: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe
+    (4).fbx'
+  - 'Walk.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Walk_Backward.anim'
+  - 'Walk.BackwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Walk_BackwardLeft.anim'
+  - 'Walk.BackwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Walk_BackwardRight.anim'
+  - 'Walk.Forward: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword walk.fbx'
+  - 'Walk.ForwardLeft: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Walk_ForwardLeft.anim'
+  - 'Walk.ForwardRight: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/GreatSwordCombat/TEMP_GreatSwordCombat_Walk_ForwardRight.anim'
+  - 'Walk.Left: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe.fbx'
+  - 'Walk.Right: Assets/_Hollow/Animation Packs/Great Sword Pack/great sword strafe
+    (3).fbx'

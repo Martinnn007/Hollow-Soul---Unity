@@ -229,6 +229,16 @@ namespace Hollow.Combat
                 initialized &= TryUpdatePlant(rightDesired, footRotation, ref rightPlantPosition, ref rightPlantRotation);
             }
 
+            if (!leftPlanting)
+            {
+                leftDesired = GroundSwingTarget(leftDesired);
+            }
+
+            if (!rightPlanting)
+            {
+                rightDesired = GroundSwingTarget(rightDesired);
+            }
+
             if (!initialized)
             {
                 isEligible = false;
@@ -290,6 +300,13 @@ namespace Hollow.Combat
             plantPosition = grounded;
             plantRotation = desiredWorldRotation;
             return true;
+        }
+
+        private Vector3 GroundSwingTarget(Vector3 desiredWorldPosition)
+        {
+            return TryProjectToGround(desiredWorldPosition, out var grounded)
+                ? grounded
+                : desiredWorldPosition + Vector3.up * footHeightMeters;
         }
 
         private bool TryProjectToGround(Vector3 desiredWorldPosition, out Vector3 groundedPosition)

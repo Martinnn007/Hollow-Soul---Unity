@@ -162,6 +162,54 @@ namespace Hollow.Combat
             return false;
         }
 
+        public bool TryGetLocomotionFacingDirection(out Vector2 direction)
+        {
+            direction = Vector2.zero;
+            if (hasManualAimOverride && attackDirection.sqrMagnitude > 0.001f)
+            {
+                direction = SafeDirection(attackDirection);
+                return true;
+            }
+
+            if (combatController == null)
+            {
+                return false;
+            }
+
+            var bestDistanceSqr = SoftAutoLockRangeMeters * SoftAutoLockRangeMeters;
+            EnemyRuntimeController bestEnemy = null;
+            var playerPosition = transform.position;
+            var enemies = combatController.Enemies;
+            for (var index = 0; index < enemies.Count; index++)
+            {
+                var enemy = enemies[index];
+                if (enemy == null || !enemy.gameObject.activeInHierarchy || !enemy.IsAlive)
+                {
+                    continue;
+                }
+
+                var delta = enemy.transform.position - playerPosition;
+                delta.y = 0f;
+                var distanceSqr = delta.sqrMagnitude;
+                if (distanceSqr <= 0.001f || distanceSqr > bestDistanceSqr)
+                {
+                    continue;
+                }
+
+                bestDistanceSqr = distanceSqr;
+                bestEnemy = enemy;
+            }
+
+            if (bestEnemy == null)
+            {
+                return false;
+            }
+
+            var bestDelta = bestEnemy.transform.position - playerPosition;
+            direction = SafeDirection(new Vector2(bestDelta.x, bestDelta.z));
+            return true;
+        }
+
         public PlayerAimAssistResult ResolveAttackAssist(
             GameplayInputSnapshot input,
             float rangeMeters,

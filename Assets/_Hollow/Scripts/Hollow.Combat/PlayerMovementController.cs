@@ -20,12 +20,18 @@ namespace Hollow.Combat
         [SerializeField] private PlayerDefenseController defenseController;
         [SerializeField] private PlayerWeaponController weaponController;
         private float temporarySpeedEndTime;
-        private bool currentFrameGuardHeld;
         private EnemyRuntimeController lastBodyBlockedEnemy;
         private float nextBodyBumpStimulusTime;
         private const float BodyBumpStimulusIntervalSeconds = 0.2f;
 
-        public float SpeedMetersPerSecond => (speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus) * GuardLikeSpeedMultiplier;
+        public float SpeedMetersPerSecond
+        {
+            get
+            {
+                ResolveReferences();
+                return (speedMetersPerSecond + runSpeedBonusMetersPerSecond + CurrentTemporarySpeedBonus) * GuardLikeSpeedMultiplier;
+            }
+        }
 
         private float CurrentTemporarySpeedBonus => Time.time < temporarySpeedEndTime ? temporarySpeedBonusMetersPerSecond : 0f;
 
@@ -35,7 +41,6 @@ namespace Hollow.Combat
 
         private bool IsGuardLikeSlowActive =>
             (defenseController != null && defenseController.IsGuarding) ||
-            currentFrameGuardHeld ||
             (weaponController != null &&
                 (weaponController.IsRangedAttackCommitted || weaponController.IsRangedHeldAttackPoseActive));
 
@@ -82,22 +87,18 @@ namespace Hollow.Combat
             }
 
             var input = GameplayInputReader.ReadCurrent(ResolveGameplayRoot());
-            currentFrameGuardHeld = input.GuardHeld;
             Move(input.Move, Time.deltaTime);
-            currentFrameGuardHeld = false;
+        }
+
+        private void ResolveReferences()
+        {
+            defenseController ??= GetComponent<PlayerDefenseController>();
+            weaponController ??= GetComponent<PlayerWeaponController>();
         }
 
         public Vector3 Move(Vector2 moveInput, float deltaTime)
         {
-            if (defenseController == null)
-            {
-                defenseController = GetComponent<PlayerDefenseController>();
-            }
-
-            if (weaponController == null)
-            {
-                weaponController = GetComponent<PlayerWeaponController>();
-            }
+            ResolveReferences();
 
             if (deltaTime <= 0f)
             {

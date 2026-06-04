@@ -340,6 +340,7 @@ namespace Hollow.Tests.EditMode
             health.Configure(6);
             weapon = player.AddComponent<PlayerWeaponController>();
             weapon.ConfigureBuildStats(1f, 0, 0, 100f, 0f, "starter_blade", "starter_bolt", WeaponSlot.Ranged, 100f);
+            PlayerAnimationProfileTestHelpers.ForceSwordShieldProfile(player, weapon);
             defense = player.AddComponent<PlayerDefenseController>();
             defense.Configure(0);
             defense.ConfigureShieldProfile(null);

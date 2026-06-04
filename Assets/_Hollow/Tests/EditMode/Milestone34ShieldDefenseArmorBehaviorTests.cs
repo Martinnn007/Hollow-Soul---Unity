@@ -43,6 +43,7 @@ namespace Hollow.Tests.EditMode
                 health.Configure(6);
                 var weapon = player.AddComponent<PlayerWeaponController>();
                 weapon.ConfigureBuildStats(1f, 0, 0, 100f, 0f, "starter_blade", "starter_bolt", WeaponSlot.Ranged, 40f);
+                PlayerAnimationProfileTestHelpers.ForceSwordShieldProfile(player, weapon);
                 var defense = player.AddComponent<PlayerDefenseController>();
                 defense.Configure(0);
                 defense.Tick(guardHeld: true, deltaTime: 0.1f);
@@ -72,6 +73,7 @@ namespace Hollow.Tests.EditMode
                 health.Configure(6);
                 var weapon = player.AddComponent<PlayerWeaponController>();
                 weapon.ConfigureBuildStats(1f, 0, 0, 100f, 0f, "starter_blade", "starter_bolt", WeaponSlot.Ranged, 40f);
+                PlayerAnimationProfileTestHelpers.ForceSwordShieldProfile(player, weapon);
                 var defense = player.AddComponent<PlayerDefenseController>();
                 defense.Configure(0);
                 defense.Tick(guardHeld: true, deltaTime: 0f);

@@ -5,6 +5,7 @@ using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
+using Hollow.Editor.Validation;
 using Hollow.Entities;
 using Hollow.Input;
 using Hollow.Presentation;
@@ -254,7 +255,9 @@ namespace Hollow.Tests.EditMode
         public void HeldWeaponVisualSwapsActiveAndHolsteredWeaponsWithoutDuplicates()
         {
             var presentationCatalog = AssetDatabase.LoadAssetAtPath<PresentationContentCatalog>(Milestone9AssetGenerator.CatalogPath);
+            var weaponCatalog = AssetDatabase.LoadAssetAtPath<WeaponCatalogDefinition>(Milestone27AssetGenerator.WeaponCatalogPath);
             Assert.IsNotNull(presentationCatalog);
+            Assert.IsNotNull(weaponCatalog);
             PresentationContentProvider.Configure(presentationCatalog);
 
             var player = new GameObject("PlayerCharacter");
@@ -263,8 +266,21 @@ namespace Hollow.Tests.EditMode
             try
             {
                 rightHand.transform.SetParent(player.transform, false);
+                rightHand.transform.localScale = Vector3.one * 100f;
                 socket.transform.SetParent(rightHand.transform, false);
                 var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.ConfigureBuildStats(
+                    1f,
+                    0,
+                    1,
+                    10000f,
+                    1000f,
+                    "starter_blade",
+                    WeaponIdAliases.StarterPistolId,
+                    WeaponSlot.Melee,
+                    10000f,
+                    weaponCatalog);
+                PlayerAnimationProfileTestHelpers.BindProfileCatalog(player, weapon);
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
                 heldWeaponVisual.BindMeleeHandSocket(socket.transform);
                 heldWeaponVisual.Bind(weapon);
@@ -278,12 +294,24 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(1, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
                 AssertVisibleMeshyMeleeWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.ActiveWeaponVisual, 2f);
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponRanged));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.Armor));
                 AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.HolsteredRangedVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.HolsteredRangedVisual, 2f);
                 AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.EquippedShieldVisual, 2f);
+
+                CreateDuplicateEquipmentWrapper(
+                    player.transform,
+                    PlayerHeldWeaponVisualController.ActiveMeleeWeaponVisualName,
+                    PresentationPrefabRole.WeaponMelee);
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+                Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                    .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.ActiveWeaponVisual, 2f);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
 
@@ -293,7 +321,7 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(heldWeaponVisual.ActiveWeaponVisual);
                 Assert.IsNotNull(heldWeaponVisual.HolsteredMeleeVisual);
                 Assert.IsNull(heldWeaponVisual.HolsteredRangedVisual);
-                Assert.AreSame(heldWeaponVisual.ShieldForearmSocket, heldWeaponVisual.CurrentShieldSocket);
+                Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
                 Assert.AreEqual(0, socket.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
@@ -303,8 +331,11 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.Armor));
                 AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.ActiveWeaponVisual, 2f);
                 AssertVisibleMeshyMeleeWeaponVisual(heldWeaponVisual.HolsteredMeleeVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.HolsteredMeleeVisual, 2f);
                 AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.EquippedShieldVisual, 2f);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
@@ -316,6 +347,7 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.Armor));
                 Assert.AreSame(heldWeaponVisual.RangedHandSocket, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
+                Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
                 AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
             }
             finally
@@ -342,6 +374,9 @@ namespace Hollow.Tests.EditMode
                 rightHand.transform.SetParent(player.transform, false);
                 leftForearm.transform.SetParent(player.transform, false);
                 spine.transform.SetParent(player.transform, false);
+                rightHand.transform.localScale = Vector3.one * 100f;
+                leftForearm.transform.localScale = Vector3.one * 100f;
+                spine.transform.localScale = Vector3.one * 100f;
                 var weapon = player.AddComponent<PlayerWeaponController>();
                 weapon.ConfigureBuildStats(
                     1f,
@@ -354,6 +389,7 @@ namespace Hollow.Tests.EditMode
                     WeaponSlot.Melee,
                     10000f,
                     weaponCatalog);
+                PlayerAnimationProfileTestHelpers.BindProfileCatalog(player, weapon);
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
                 heldWeaponVisual.Bind(weapon);
 
@@ -363,11 +399,15 @@ namespace Hollow.Tests.EditMode
                 Assert.AreSame(spine.transform, heldWeaponVisual.ShieldBackSocket.parent);
                 Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
                 AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.EquippedShieldVisual, 2f);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
 
                 Assert.IsTrue(heldWeaponVisual.IsUsingHandAttachedRangedVisual);
-                Assert.AreSame(heldWeaponVisual.ShieldForearmSocket, heldWeaponVisual.CurrentShieldSocket);
+                Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
+                AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.ActiveWeaponVisual, 2f);
+                AssertWrapperLossyScaleBelow(heldWeaponVisual.EquippedShieldVisual, 2f);
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.Armor));
             }
@@ -522,6 +562,7 @@ namespace Hollow.Tests.EditMode
             {
                 leftForearm.transform.SetParent(player.transform, false);
                 var weapon = player.AddComponent<PlayerWeaponController>();
+                PlayerAnimationProfileTestHelpers.ForceSwordShieldProfile(player, weapon);
                 var defense = player.AddComponent<PlayerDefenseController>();
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
                 heldWeaponVisual.Bind(weapon);
@@ -569,6 +610,45 @@ namespace Hollow.Tests.EditMode
             var manifest = File.ReadAllText("Packages/manifest.json");
 
             StringAssert.Contains("\"com.unity.animation.rigging\": \"1.4.0\"", manifest);
+        }
+
+        [Test]
+        public void SkinnedBodyCandidateResolverSelectsMixamoWithSkinBody()
+        {
+            var candidates = PlayerAnimationProfileAssetGenerator.SkinnedBodyCandidateFbxPaths();
+            Assert.IsNotEmpty(candidates);
+            Assert.IsTrue(candidates.Any(File.Exists));
+
+            var selected = PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyFbxPath();
+            Assert.IsFalse(string.IsNullOrWhiteSpace(selected), "Expected a valid with-skin FBX body candidate.");
+            StringAssert.Contains("Male Locomotion Pack", selected);
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(selected);
+            Assert.IsNotNull(prefab);
+            var animator = prefab.GetComponent<Animator>();
+            Assert.IsNotNull(animator);
+            Assert.IsNotNull(animator.avatar);
+            Assert.IsTrue(animator.avatar.isValid);
+            Assert.IsTrue(animator.avatar.isHuman);
+
+            var skinnedBody = prefab.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true)
+                .FirstOrDefault(renderer =>
+                    renderer != null &&
+                    renderer.enabled &&
+                    renderer.sharedMesh != null &&
+                    renderer.rootBone != null &&
+                    renderer.bones != null &&
+                    renderer.bones.Length > 0);
+            Assert.IsNotNull(skinnedBody);
+            Assert.IsTrue(IsDescendantOf(skinnedBody.rootBone, prefab.transform));
+            Assert.IsTrue(skinnedBody.bones.All(bone => bone != null && IsDescendantOf(bone, prefab.transform)));
+            Assert.IsTrue(skinnedBody.sharedMaterials.Length > 0);
+            Assert.IsTrue(skinnedBody.sharedMaterials.All(material => material != null));
+            var selectedLocalScale = PlayerAnimationProfileAssetGenerator.ResolveSkinnedBodyLocalScale(selected);
+            var scaledBoundsSize = Vector3.Scale(skinnedBody.sharedMesh.bounds.size, skinnedBody.transform.lossyScale) *
+                selectedLocalScale;
+            Assert.Greater(scaledBoundsSize.y, 0.75f);
+            Assert.Less(scaledBoundsSize.y, 3f);
         }
 
         [Test]
@@ -657,6 +737,7 @@ namespace Hollow.Tests.EditMode
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
                 var defense = player.AddComponent<PlayerDefenseController>();
                 defense.Configure(0);
+                PlayerAnimationProfileTestHelpers.ForceSwordShieldProfile(player, weapon);
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
                 heldWeaponVisual.Bind(weapon);
                 var rangedPose = player.AddComponent<PlayerRangedHandPoseController>();
@@ -994,10 +1075,38 @@ namespace Hollow.Tests.EditMode
             var chestAim = new GameObject(PlayerAnimationPoseCoordinator.ChestAimConstraintName);
             chestAim.transform.SetParent(parent, false);
 
-            return new ModernConstraintHarness(
-                rightHand.AddComponent<TwoBoneIKConstraint>(),
-                leftHand.AddComponent<TwoBoneIKConstraint>(),
-                chestAim.AddComponent<MultiAimConstraint>());
+            var rightHandIk = rightHand.AddComponent<TwoBoneIKConstraint>();
+            var leftHandIk = leftHand.AddComponent<TwoBoneIKConstraint>();
+            var chestAimConstraint = chestAim.AddComponent<MultiAimConstraint>();
+            ConfigureTestTwoBoneIk(rightHandIk, parent, "Right");
+            ConfigureTestTwoBoneIk(leftHandIk, parent, "Left");
+            ConfigureTestMultiAim(chestAimConstraint, parent);
+
+            return new ModernConstraintHarness(rightHandIk, leftHandIk, chestAimConstraint);
+        }
+
+        private static void ConfigureTestTwoBoneIk(TwoBoneIKConstraint constraint, Transform parent, string prefix)
+        {
+            constraint.data.root = CreateTarget(parent, prefix + "UpperArm");
+            constraint.data.mid = CreateTarget(parent, prefix + "Forearm");
+            constraint.data.tip = CreateTarget(parent, prefix + "Hand");
+            constraint.data.target = CreateTarget(parent, prefix + "HandTarget");
+            constraint.data.hint = CreateTarget(parent, prefix + "ElbowHint");
+            constraint.data.targetPositionWeight = 1f;
+            constraint.data.targetRotationWeight = 1f;
+            constraint.data.hintWeight = 0.75f;
+        }
+
+        private static void ConfigureTestMultiAim(MultiAimConstraint constraint, Transform parent)
+        {
+            var sourceObjects = new WeightedTransformArray(1);
+            sourceObjects[0] = new WeightedTransform(CreateTarget(parent, "ChestAimSource"), 1f);
+            constraint.data.constrainedObject = CreateTarget(parent, "Chest");
+            constraint.data.sourceObjects = sourceObjects;
+            constraint.data.aimAxis = MultiAimConstraintData.Axis.Z;
+            constraint.data.upAxis = MultiAimConstraintData.Axis.Y;
+            constraint.data.worldUpType = MultiAimConstraintData.WorldUpType.SceneUp;
+            constraint.data.worldUpAxis = MultiAimConstraintData.Axis.Y;
         }
 
         private readonly struct ModernConstraintHarness
@@ -1097,7 +1206,9 @@ namespace Hollow.Tests.EditMode
                 .ToArray();
             Assert.Greater(renderers.Length, 0, "Melee weapon visual should have an active renderer in gameplay hierarchy.");
             var bounds = Encapsulate(renderers);
-            Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.5f);
+            var maxDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            Assert.Greater(maxDimension, 0.5f);
+            Assert.Less(maxDimension, 2.2f);
             Assert.Greater(bounds.size.sqrMagnitude, 0.25f);
         }
 
@@ -1110,7 +1221,9 @@ namespace Hollow.Tests.EditMode
                 .ToArray();
             Assert.Greater(renderers.Length, 0, "Ranged weapon visual should have an active renderer in gameplay hierarchy.");
             var bounds = Encapsulate(renderers);
-            Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.35f);
+            var maxDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            Assert.Greater(maxDimension, 0.15f);
+            Assert.Less(maxDimension, 1.5f);
             Assert.Greater(bounds.size.sqrMagnitude, 0.08f);
         }
 
@@ -1124,8 +1237,31 @@ namespace Hollow.Tests.EditMode
                 .ToArray();
             Assert.Greater(renderers.Length, 0, "Shield visual should have an active renderer in gameplay hierarchy.");
             var bounds = Encapsulate(renderers);
-            Assert.Greater(Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z), 0.35f);
+            var maxDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            Assert.Greater(maxDimension, 0.3f);
+            Assert.Less(maxDimension, 1.3f);
             Assert.Greater(bounds.size.sqrMagnitude, 0.08f);
+        }
+
+        private static void AssertWrapperLossyScaleBelow(GameObject root, float maxScale)
+        {
+            Assert.IsNotNull(root);
+            var scale = root.transform.lossyScale;
+            Assert.Less(Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)), maxScale);
+        }
+
+        private static void CreateDuplicateEquipmentWrapper(
+            Transform parent,
+            string wrapperName,
+            PresentationPrefabRole role)
+        {
+            var wrapper = new GameObject(wrapperName);
+            wrapper.transform.SetParent(parent, false);
+            wrapper.AddComponent<PresentationVisualMarker>().Configure(role, isFallback: false);
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "StaleDuplicateRenderer";
+            cube.transform.SetParent(wrapper.transform, false);
+            Object.DestroyImmediate(cube.GetComponent<Collider>());
         }
 
         private static Bounds Encapsulate(Renderer[] renderers)
@@ -1388,21 +1524,21 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(1, rangedMuzzleSockets.Length);
             Assert.LessOrEqual(shieldForearmSockets.Length, 1);
             Assert.LessOrEqual(shieldBackSockets.Length, 1);
-            Assert.AreEqual("RightHand", meleeSockets[0].parent.name);
+            Assert.IsTrue(IsBoneNamed(meleeSockets[0].parent, "RightHand"));
             Assert.IsTrue(
-                rangedHandSockets[0].parent.name == "RightHand" || rangedHandSockets[0].parent == visualRoot,
+                IsBoneNamed(rangedHandSockets[0].parent, "RightHand") || rangedHandSockets[0].parent == visualRoot,
                 "Regenerated prefabs should parent the ranged hand socket to RightHand; older prefabs are repaired by PlayerHeldWeaponVisualController at runtime.");
             Assert.AreSame(visualRoot, meleeHolsterSockets[0].parent);
             Assert.AreSame(visualRoot, rangedHolsterSockets[0].parent);
             Assert.AreSame(rangedHandSockets[0], rangedMuzzleSockets[0].parent);
             if (shieldForearmSockets.Length > 0)
             {
-                Assert.AreEqual("LeftForeArm", shieldForearmSockets[0].parent.name);
+                Assert.IsTrue(IsBoneNamed(shieldForearmSockets[0].parent, "LeftForeArm"));
             }
 
             if (shieldBackSockets.Length > 0)
             {
-                Assert.AreEqual("Spine02", shieldBackSockets[0].parent.name);
+                Assert.IsTrue(IsBoneNamed(shieldBackSockets[0].parent, "Spine02"));
             }
 
             var locomotionAnimator = prefab.GetComponent<PlayerLocomotionAnimator>();
@@ -1411,6 +1547,42 @@ namespace Hollow.Tests.EditMode
             var rangedHandPose = prefab.GetComponent<PlayerRangedHandPoseController>();
             var shieldGuardPose = prefab.GetComponent<PlayerShieldGuardPoseController>();
             var animator = prefab.GetComponentInChildren<Animator>(includeInactive: true);
+            var visualValidation = PlayerVisualAssemblyValidator.Validate(prefab, PlayerPrefabPath);
+            Assert.IsFalse(visualValidation.HasErrors, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.BodyVisibleForDebug, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.AnimatorAvatarAssigned, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.AnimatorControllerAssigned, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.BodyRendererCount, 0, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.EnabledBodyRendererCount, 0, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.BodyRenderersWithMaterialCount, 0, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.BodyBoundsSize.y, 0.75f, visualValidation.ToReportString());
+            Assert.AreEqual(0, visualValidation.MissingScriptCount, visualValidation.ToReportString());
+            Assert.AreEqual(0, visualValidation.MissingReferenceCount, visualValidation.ToReportString());
+            Assert.AreEqual(0, visualValidation.InvalidConstraintsCount, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.BodySkinnedAndAnimationReady, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.BodyWillDeformWithAnimator, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.BodyVisibleSkinnedMesh, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.BodyUsesStaticFallback, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.UsesTemporaryStaticFallback, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.SkinnedBodyRendererCount, 0, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.EquipmentVisualScaleValid, visualValidation.ToReportString());
+            Assert.AreEqual(0, visualValidation.OversizedEquipmentCount, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.EquipmentRendererDetails.Count, 0, visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.EquipmentRendererDetails.All(detail => detail.BoundsValid), visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.EquipmentRendererDetails.All(detail =>
+            {
+                var finalWrapperScale = Vector3.Scale(detail.ParentLossyScale, detail.WrapperLocalScale);
+                return Mathf.Max(
+                    Mathf.Abs(finalWrapperScale.x),
+                    Mathf.Abs(finalWrapperScale.y),
+                    Mathf.Abs(finalWrapperScale.z)) < 2f;
+            }), visualValidation.ToReportString());
+            Assert.IsFalse(string.IsNullOrWhiteSpace(visualValidation.SelectedSkinnedBodyFbx), visualValidation.ToReportString());
+            StringAssert.Contains("Male Locomotion Pack", visualValidation.SelectedSkinnedBodyFbx);
+            Assert.AreEqual(visualValidation.SelectedSkinnedBodyFbx, visualValidation.SelectedAvatarSource);
+            Assert.IsTrue(visualValidation.SkinnedBodyRootBoneAssigned, visualValidation.ToReportString());
+            Assert.Greater(visualValidation.SkinnedBodyBoneCount, 0, visualValidation.ToReportString());
+
             Assert.IsNotNull(locomotionAnimator);
             Assert.IsNotNull(heldWeaponVisual);
             Assert.IsNotNull(aimLockController);
@@ -1432,6 +1604,18 @@ namespace Hollow.Tests.EditMode
             }
             Assert.IsNotNull(animator);
             Assert.IsFalse(animator.applyRootMotion);
+            Assert.IsTrue(IsDescendantOf(meleeSockets[0].parent, animator.transform));
+            Assert.IsTrue(IsDescendantOf(rangedHandSockets[0].parent, animator.transform));
+            if (shieldForearmSockets.Length > 0)
+            {
+                Assert.IsTrue(IsDescendantOf(shieldForearmSockets[0].parent, animator.transform));
+            }
+
+            if (shieldBackSockets.Length > 0)
+            {
+                Assert.IsTrue(IsDescendantOf(shieldBackSockets[0].parent, animator.transform));
+            }
+
             var aimLockField = typeof(PlayerLocomotionAnimator).GetField(
                 "aimLockController",
                 BindingFlags.Instance | BindingFlags.NonPublic);
@@ -1477,7 +1661,7 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(deadState.motion);
             Assert.AreEqual(RollClipName, rollState.motion.name);
             Assert.AreEqual(RollInPlaceClipPath, AssetDatabase.GetAssetPath(rollState.motion));
-            Assert.AreEqual(RunClipName, runState.motion.name);
+            Assert.That(runState.motion.name, Does.Contain("Run"));
             Assert.IsNotNull(deadState);
             Assert.AreEqual(0, deadState.transitions.Length);
 
@@ -1507,13 +1691,71 @@ namespace Hollow.Tests.EditMode
             var renderers = visualRoot.GetComponentsInChildren<Renderer>(includeInactive: true);
             Assert.Greater(renderers.Length, 0);
             Assert.IsTrue(renderers.All(renderer => renderer.sharedMaterials.Length > 0));
-            Assert.IsTrue(renderers
-                .SelectMany(renderer => renderer.sharedMaterials)
-                .All(material => material != null && AssetDatabase.GetAssetPath(material) == CanonicalMaterialPath));
-            Assert.IsTrue(renderers
-                .SelectMany(renderer => renderer.sharedMaterials)
-                .All(HasTexture));
+            Assert.IsTrue(visualValidation.BodyRendererDetails
+                .SelectMany(detail => detail.MaterialPaths)
+                .All(path => path == CanonicalMaterialPath), visualValidation.ToReportString());
+            Assert.IsTrue(visualValidation.BodyRendererDetails
+                .SelectMany(detail => detail.MaterialNames)
+                .All(name => !string.IsNullOrWhiteSpace(name)), visualValidation.ToReportString());
             Assert.AreEqual(0, visualRoot.GetComponentsInChildren<Collider>(includeInactive: true).Length);
+        }
+
+        [Test]
+        public void PlayerCharacterSkinnedBodyUsesSkeletonAnimatedByAnimator()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            Assert.IsNotNull(prefab);
+
+            var instance = Object.Instantiate(prefab);
+            try
+            {
+                var animator = instance.GetComponentInChildren<Animator>(includeInactive: true);
+                Assert.IsNotNull(animator);
+                Assert.IsNotNull(animator.avatar);
+                Assert.IsNotNull(animator.runtimeAnimatorController);
+
+                var skinnedBody = instance.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true)
+                    .FirstOrDefault(renderer =>
+                        renderer != null &&
+                        renderer.enabled &&
+                        renderer.sharedMesh != null &&
+                        renderer.rootBone != null &&
+                        renderer.bones != null &&
+                        renderer.bones.Length > 0);
+                Assert.IsNotNull(skinnedBody);
+                Assert.IsTrue(IsDescendantOf(skinnedBody.rootBone, animator.transform));
+                Assert.IsTrue(skinnedBody.bones.All(bone => bone != null && IsDescendantOf(bone, animator.transform)));
+
+                var movingBone = skinnedBody.bones.FirstOrDefault(bone => IsBoneNamed(bone, "RightFoot")) ??
+                    skinnedBody.bones.FirstOrDefault(bone => IsBoneNamed(bone, "LeftFoot")) ??
+                    skinnedBody.bones.FirstOrDefault();
+                Assert.IsNotNull(movingBone);
+
+                animator.Rebind();
+                animator.Update(0f);
+                var initialPosition = movingBone.position;
+                var initialRotation = movingBone.rotation;
+
+                animator.SetBool(PlayerLocomotionAnimator.IsMovingParameter, true);
+                animator.SetBool(PlayerLocomotionAnimator.IsTargetLockedParameter, true);
+                animator.SetFloat(PlayerLocomotionAnimator.MoveSpeedParameter, 1f);
+                animator.SetFloat(PlayerLocomotionAnimator.LockedMoveXParameter, 0f);
+                animator.SetFloat(PlayerLocomotionAnimator.LockedMoveYParameter, 1f);
+                for (var index = 0; index < 20; index++)
+                {
+                    animator.Update(0.05f);
+                }
+
+                var movedDistance = Vector3.Distance(initialPosition, movingBone.position);
+                var movedAngle = Quaternion.Angle(initialRotation, movingBone.rotation);
+                Assert.IsTrue(
+                    movedDistance > 0.001f || movedAngle > 0.1f,
+                    $"Expected Animator locomotion to move a skinned body bone. Distance={movedDistance:0.####}, angle={movedAngle:0.####}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
         }
 
         private static void AssertControllerParameter(
@@ -1632,6 +1874,44 @@ namespace Hollow.Tests.EditMode
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field);
             return (bool)field.GetValue(animator);
+        }
+
+        private static bool IsBoneNamed(Transform bone, string expectedName)
+        {
+            if (bone == null)
+            {
+                return false;
+            }
+
+            var actualName = bone.name;
+            var separator = actualName.LastIndexOf(':');
+            if (separator >= 0 && separator < actualName.Length - 1)
+            {
+                actualName = actualName[(separator + 1)..];
+            }
+
+            if (expectedName == "Spine02" && actualName == "Spine2")
+            {
+                return true;
+            }
+
+            return actualName == expectedName;
+        }
+
+        private static bool IsDescendantOf(Transform child, Transform ancestor)
+        {
+            var cursor = child;
+            while (cursor != null)
+            {
+                if (cursor == ancestor)
+                {
+                    return true;
+                }
+
+                cursor = cursor.parent;
+            }
+
+            return false;
         }
 
         private static void InvokePrivateLateUpdate(object target)

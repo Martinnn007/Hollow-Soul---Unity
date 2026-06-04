@@ -72,6 +72,7 @@ namespace Hollow.Combat
         [SerializeField] private PlayerHeldWeaponVisualController heldWeaponVisual;
         [SerializeField] private PlayerRangedHandPoseController rangedHandPose;
         [SerializeField] private PlayerShieldGuardPoseController shieldGuardPose;
+        [SerializeField] private PlayerAnimationProfileController animationProfileController;
         [SerializeField] private PlayerFootPlacementController footPlacement;
         [SerializeField] private Rig baseLocomotionRig;
         [SerializeField] private Rig fullBodyActionRig;
@@ -142,6 +143,12 @@ namespace Hollow.Combat
         public float AimBodyAngleDegrees => locomotionAnimator != null ? locomotionAnimator.AimBodyAngleDegrees : 0f;
 
         public bool IsTurnInPlaceActive => locomotionAnimator != null && locomotionAnimator.IsTurnInPlaceActive;
+
+        public PlayerAnimationProfileId CurrentProfileId => animationProfileController != null
+            ? animationProfileController.CurrentProfileId
+            : PlayerAnimationProfileId.UnarmedLocomotion;
+
+        public bool AllowsShieldGuard => animationProfileController != null && animationProfileController.AllowsShieldGuard;
 
         public float BodyLean01 => bodyLean01;
 
@@ -334,7 +341,9 @@ namespace Hollow.Combat
                 CurrentLocomotionMode = PlayerAnimationLocomotionMode.Idle;
             }
 
-            var isGuarding = defenseController != null && defenseController.IsGuarding;
+            var isGuarding = defenseController != null &&
+                defenseController.IsGuarding &&
+                (animationProfileController == null || animationProfileController.AllowsShieldGuard);
             var isRangedPose = weaponController != null &&
                 weaponController.ActiveWeaponSlot == WeaponSlot.Ranged &&
                 (weaponController.IsRangedHeldAttackPoseActive || weaponController.IsRangedAttackCommitted);
@@ -389,7 +398,11 @@ namespace Hollow.Combat
             var desiredFullBody = CurrentLocomotionMode is PlayerAnimationLocomotionMode.Roll or PlayerAnimationLocomotionMode.Dead ? 1f : 0f;
             var desiredUpperBody = CurrentUpperBodyPose == PlayerAnimationUpperBodyPose.None ? 0f : 1f;
             var desiredAdditive = PhysicalImpulse01;
-            var desiredFootIk = ShouldAllowFootIk() && footPlacement != null ? 1f : 0f;
+            var desiredFootIk = ShouldAllowFootIk() &&
+                footPlacement != null &&
+                (animationProfileController == null || animationProfileController.UsesFootIk)
+                    ? 1f
+                    : 0f;
             baseRigWeight = 1f;
             fullBodyActionRigWeight = MoveWeight(fullBodyActionRigWeight, desiredFullBody, deltaTime);
             upperBodyCombatRigWeight = MoveWeight(upperBodyCombatRigWeight, desiredUpperBody, deltaTime);
@@ -544,33 +557,41 @@ namespace Hollow.Combat
 
             if (rightHandWeaponIkConstraint != null)
             {
-                rightHandWeaponIkConstraint.weight = CurrentUpperBodyPose switch
-                {
-                    PlayerAnimationUpperBodyPose.RangedAim => upperBodyCombatRigWeight,
-                    PlayerAnimationUpperBodyPose.MeleeAttack => upperBodyCombatRigWeight * 0.65f,
-                    _ => 0f
-                };
+                rightHandWeaponIkConstraint.weight = IsConstraintUsable(rightHandWeaponIkConstraint)
+                    ? CurrentUpperBodyPose switch
+                    {
+                        PlayerAnimationUpperBodyPose.RangedAim => upperBodyCombatRigWeight,
+                        PlayerAnimationUpperBodyPose.MeleeAttack => upperBodyCombatRigWeight * 0.65f,
+                        _ => 0f
+                    }
+                    : 0f;
             }
 
             if (leftHandShieldIkConstraint != null)
             {
-                leftHandShieldIkConstraint.weight = CurrentUpperBodyPose == PlayerAnimationUpperBodyPose.ShieldGuard
+                leftHandShieldIkConstraint.weight = IsConstraintUsable(leftHandShieldIkConstraint) &&
+                    CurrentUpperBodyPose == PlayerAnimationUpperBodyPose.ShieldGuard
                     ? upperBodyCombatRigWeight
                     : 0f;
             }
 
             if (chestAimConstraint != null)
             {
-                chestAimConstraint.weight = CurrentUpperBodyPose switch
-                {
-                    PlayerAnimationUpperBodyPose.RangedAim => upperBodyCombatRigWeight * 0.45f,
-                    PlayerAnimationUpperBodyPose.ShieldGuard => upperBodyCombatRigWeight * 0.35f,
-                    PlayerAnimationUpperBodyPose.MeleeAttack => upperBodyCombatRigWeight * 0.18f,
-                    _ => 0f
-                };
+                chestAimConstraint.weight = IsConstraintUsable(chestAimConstraint)
+                    ? CurrentUpperBodyPose switch
+                    {
+                        PlayerAnimationUpperBodyPose.RangedAim => upperBodyCombatRigWeight * 0.45f,
+                        PlayerAnimationUpperBodyPose.ShieldGuard => upperBodyCombatRigWeight * 0.35f,
+                        PlayerAnimationUpperBodyPose.MeleeAttack => upperBodyCombatRigWeight * 0.18f,
+                        _ => 0f
+                    }
+                    : 0f;
             }
 
-            if (footPlacement != null)
+            if (footPlacement != null &&
+                IsConstraintUsable(leftFootIkConstraint) &&
+                IsConstraintUsable(rightFootIkConstraint) &&
+                IsConstraintUsable(pelvisPositionConstraint))
             {
                 footPlacement.ApplyConstraintWeights(footIkWeight);
             }
@@ -609,6 +630,7 @@ namespace Hollow.Combat
         private void ResolveReferences()
         {
             animator ??= GetComponentInChildren<Animator>(includeInactive: true);
+            RepairRigHierarchy();
             locomotionAnimator ??= GetComponent<PlayerLocomotionAnimator>();
             weaponController ??= GetComponent<PlayerWeaponController>();
             defenseController ??= GetComponent<PlayerDefenseController>();
@@ -616,7 +638,9 @@ namespace Hollow.Combat
             heldWeaponVisual ??= GetComponent<PlayerHeldWeaponVisualController>();
             rangedHandPose ??= GetComponent<PlayerRangedHandPoseController>();
             shieldGuardPose ??= GetComponent<PlayerShieldGuardPoseController>();
+            animationProfileController ??= GetComponent<PlayerAnimationProfileController>();
             footPlacement ??= GetComponent<PlayerFootPlacementController>();
+            DisableInvalidRigConstraints();
             BindWeaponEvents();
             BindHealthEvents();
         }
@@ -688,6 +712,127 @@ namespace Hollow.Combat
 
             destination.position = source.position;
             destination.rotation = source.rotation;
+        }
+
+        private void RepairRigHierarchy()
+        {
+            if (animator == null)
+            {
+                return;
+            }
+
+            var rigRoot = FindDescendant(transform, ModernAnimationRigRootName);
+            if (rigRoot == null || IsDescendantOf(rigRoot, animator.transform))
+            {
+                return;
+            }
+
+            rigRoot.SetParent(animator.transform, false);
+        }
+
+        private void DisableInvalidRigConstraints()
+        {
+            DisableIfInvalid(rightHandWeaponIkConstraint);
+            DisableIfInvalid(leftHandShieldIkConstraint);
+            DisableIfInvalid(leftFootIkConstraint);
+            DisableIfInvalid(rightFootIkConstraint);
+            DisableIfInvalid(chestAimConstraint);
+            DisableIfInvalid(pelvisPositionConstraint);
+        }
+
+        private static void DisableIfInvalid(TwoBoneIKConstraint constraint)
+        {
+            if (constraint == null || IsConstraintUsable(constraint))
+            {
+                return;
+            }
+
+            constraint.weight = 0f;
+            constraint.enabled = false;
+        }
+
+        private static void DisableIfInvalid(MultiAimConstraint constraint)
+        {
+            if (constraint == null || IsConstraintUsable(constraint))
+            {
+                return;
+            }
+
+            constraint.weight = 0f;
+            constraint.enabled = false;
+        }
+
+        private static void DisableIfInvalid(MultiPositionConstraint constraint)
+        {
+            if (constraint == null || IsConstraintUsable(constraint))
+            {
+                return;
+            }
+
+            constraint.weight = 0f;
+            constraint.enabled = false;
+        }
+
+        private static bool IsConstraintUsable(TwoBoneIKConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.enabled &&
+                constraint.data.root != null &&
+                constraint.data.mid != null &&
+                constraint.data.tip != null &&
+                constraint.data.target != null;
+        }
+
+        private static bool IsConstraintUsable(MultiAimConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.enabled &&
+                constraint.data.constrainedObject != null &&
+                constraint.data.sourceObjects.Count > 0 &&
+                constraint.data.sourceObjects[0].transform != null;
+        }
+
+        private static bool IsConstraintUsable(MultiPositionConstraint constraint)
+        {
+            return constraint != null &&
+                constraint.enabled &&
+                constraint.data.constrainedObject != null &&
+                constraint.data.sourceObjects.Count > 0 &&
+                constraint.data.sourceObjects[0].transform != null;
+        }
+
+        private static Transform FindDescendant(Transform root, string childName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (var child in root.GetComponentsInChildren<Transform>(includeInactive: true))
+            {
+                if (child.name == childName)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsDescendantOf(Transform child, Transform ancestor)
+        {
+            var cursor = child;
+            while (cursor != null)
+            {
+                if (cursor == ancestor)
+                {
+                    return true;
+                }
+
+                cursor = cursor.parent;
+            }
+
+            return false;
         }
 
         private void RebindFootPlacement()

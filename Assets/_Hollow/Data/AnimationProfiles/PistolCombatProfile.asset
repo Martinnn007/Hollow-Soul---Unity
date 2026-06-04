@@ -1,0 +1,130 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a86b0c7713c4a3da41e81a12af65d7c, type: 3}
+  m_Name: PistolCombatProfile
+  m_EditorClassIdentifier: Hollow.Data::Hollow.Data.Definitions.PlayerAnimationProfileDefinition
+  profileId: 4
+  profileName: PistolCombatProfile
+  allowsShieldInHand: 0
+  allowsShieldGuard: 0
+  requiresTwoHandedWeapon: 0
+  usesRangedAim: 1
+  usesFootIk: 1
+  usesTorsoAim: 1
+  idleClip: {fileID: -203655887218126122, guid: a3d9448f5c368432dbbcd7f55097bb06, type: 3}
+  directionalClips:
+  - direction: 0
+    walkClip: {fileID: -203655887218126122, guid: 39d57e9ca0efa44fd9bafc33cc0760c7, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 19e8f5db4dcff40efbc64cfea7060550, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 1
+    walkClip: {fileID: -203655887218126122, guid: 59e3b3ed054464ff0997617d615976ca, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 3ce504343d8f84d6aad5c47687c0f3d1, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 2
+    walkClip: {fileID: -203655887218126122, guid: a63f6c7fffa4044e2a78158f4d93dea7, type: 3}
+    runClip: {fileID: -203655887218126122, guid: a63f6c7fffa4044e2a78158f4d93dea7, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 3
+    walkClip: {fileID: -203655887218126122, guid: ebc837faa145449b48189f3a6d378d22, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 4ae8af00609cd46239a48abfbed4516e, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 4
+    walkClip: {fileID: -203655887218126122, guid: a56b79df356fc4a46813b22547fbbbe9, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 50e69b5bcb3f144e895761030f20b1bc, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 5
+    walkClip: {fileID: -203655887218126122, guid: 13065880879b5467e8f5cfe3fe7f0d1e, type: 3}
+    runClip: {fileID: -203655887218126122, guid: c4092bda6ffb74a9db5253ed37b8eb4e, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 6
+    walkClip: {fileID: -203655887218126122, guid: 7c758c8a7bfc746d5b53634c34449f40, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 7c758c8a7bfc746d5b53634c34449f40, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  - direction: 7
+    walkClip: {fileID: -203655887218126122, guid: 30bdebcb2a5b340b8930957a22dbc36f, type: 3}
+    runClip: {fileID: -203655887218126122, guid: 9a4e4dddb113f49e68e17b7efd4ace29, type: 3}
+    walkUsesTemporaryPlaceholder: 0
+    runUsesTemporaryPlaceholder: 0
+  strafingClips:
+  - {fileID: -203655887218126122, guid: 7c758c8a7bfc746d5b53634c34449f40, type: 3}
+  - {fileID: -203655887218126122, guid: a63f6c7fffa4044e2a78158f4d93dea7, type: 3}
+  turnClips: []
+  drawClips: []
+  sheatheClips: []
+  attackClips: []
+  fireClips: []
+  shieldGuardClips: []
+  weaponBlockClips: []
+  impactClips: []
+  deathClips: []
+  jumpClips:
+  - {fileID: -203655887218126122, guid: a0ff19a41d3ef4fb9b4871e15e0a522a, type: 3}
+  - {fileID: -203655887218126122, guid: 5d9772fbfa3f6445e8d321d97626ae04, type: 3}
+  crouchClips:
+  - {fileID: -203655887218126122, guid: 3215866750b244bf1ac6d44043e376a1, type: 3}
+  - {fileID: -203655887218126122, guid: 9458ed9b3f2eb4e909f4eac9acec0653, type: 3}
+  - {fileID: -203655887218126122, guid: 70e03b31b26444212be53b57871ea927, type: 3}
+  missingRequiredClipSlots: []
+  missingOptionalClipSlots: []
+  placeholderClipSlots: []
+  mappedClipReports:
+  - 'Idle: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx'
+  - 'Pistol_Jump: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    jump (2).fbx'
+  - 'Pistol_Jump: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    jump.fbx'
+  - 'Pistol_Kneel: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    kneel to stand.fbx'
+  - 'Pistol_Kneel: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    kneeling idle.fbx'
+  - 'Pistol_Kneel: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    stand to kneel.fbx'
+  - 'Run.Backward: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    run backward.fbx'
+  - 'Run.BackwardLeft: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    run backward arc (2).fbx'
+  - 'Run.BackwardRight: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion
+    Pack/pistol run backward arc.fbx'
+  - 'Run.Forward: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    run.fbx'
+  - 'Run.ForwardLeft: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    run arc (2).fbx'
+  - 'Run.ForwardRight: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    run arc.fbx'
+  - 'Run.Left: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    strafe.fbx'
+  - 'Run.Right: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    strafe (2).fbx'
+  - 'Walk.Backward: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    walk backward.fbx'
+  - 'Walk.BackwardLeft: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion
+    Pack/pistol walk backward arc (2).fbx'
+  - 'Walk.BackwardRight: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion
+    Pack/pistol walk backward arc.fbx'
+  - 'Walk.Forward: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    walk.fbx'
+  - 'Walk.ForwardLeft: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    walk arc (2).fbx'
+  - 'Walk.ForwardRight: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion
+    Pack/pistol walk arc.fbx'
+  - 'Walk.Left: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    strafe.fbx'
+  - 'Walk.Right: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol
+    strafe (2).fbx'
