@@ -1,7 +1,7 @@
 Hollow Soul Player Animation Profile Static Mapping Preview
 ReportType: STATIC_PREVIEW
 ReportVersion: 1
-GeneratedAtUtc: 2026-06-05T00:10:15.7014060Z
+GeneratedAtUtc: 2026-06-05T09:34:31.6070130Z
 AnimationPackRoot: Assets/_Hollow/Animation Packs
 ProfileCatalogPath: Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationProfileCatalog.asset
 StaticPreviewReportPath: Assets/_Hollow/Data/AnimationProfiles/ProfileMappingReport.StaticPreview.txt

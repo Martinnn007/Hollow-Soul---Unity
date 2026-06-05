@@ -9,6 +9,7 @@ using Hollow.Editor.Validation;
 using Hollow.Presentation;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using Object = UnityEngine.Object;
@@ -31,6 +32,7 @@ namespace Hollow.Editor.Generation
         private const string MetallicTexturePath = "Assets/MeshyImports/MainCharacter_001/Idle_11_20260506_124917/Meshy_AI_Grey_Sentinel_biped_texture_0_metallic.png";
         private const string PlayerPrefabPath = "Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab";
         private const string PlayerControllerPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Player.controller";
+        public const string RawMixamoDebugScenePath = "Assets/_Hollow/Scenes/DeveloperLab/RawMixamoAnimationDebug.unity";
         private const string RollInPlaceClipPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Roll_InPlace.anim";
         private const string CanonicalMaterialPath = "Assets/_Hollow/Art/Materials/ArtPass/AP_M_MainCharacter_GreySentinel.mat";
         private const string CleanRebuildBackupRoot = "/private/tmp/hollow-player-clean-rebuild";
@@ -61,6 +63,7 @@ namespace Hollow.Editor.Generation
         private const string RightLowerLegBoneName = "RightLeg";
         private const string RightFootBoneName = "RightFoot";
         private const string BackShieldBoneName = "Spine02";
+        public const PlayerAnimationSystemMode DefaultAnimationSystemMode = PlayerAnimationSystemMode.SimpleFullBodyAnimation;
         private static readonly DirectionalLocomotionImportSpec[] DirectionalLocomotionImportSpecs =
         {
             new("WalkForward", WalkFbxPath, "MainCharacter_Walk_Forward", new Vector2(0f, 1f), 0.45f, usesBaseForwardClip: true),
@@ -92,10 +95,22 @@ namespace Hollow.Editor.Generation
         [MenuItem("Hollow/Art/Integrate Meshy Main Character")]
         public static void Integrate()
         {
+            Integrate(DefaultAnimationSystemMode);
+        }
+
+        [MenuItem("Hollow/Art/Integrate Meshy Main Character (Advanced Layered)")]
+        public static void IntegrateAdvancedLayeredAnimation()
+        {
+            Integrate(PlayerAnimationSystemMode.AdvancedLayeredAnimation);
+        }
+
+        public static void Integrate(PlayerAnimationSystemMode animationSystemMode)
+        {
             BackupGeneratedPlayerAssetsForCleanRebuild();
             var profileCatalog = PlayerAnimationProfileAssetGenerator.GenerateProfiles();
             var unarmedProfile = profileCatalog.Resolve(PlayerAnimationProfileId.UnarmedLocomotion);
             var swordShieldProfile = profileCatalog.Resolve(PlayerAnimationProfileId.SwordShieldCombat);
+            var greatSwordProfile = profileCatalog.Resolve(PlayerAnimationProfileId.GreatSwordCombat);
             var rifleProfile = profileCatalog.Resolve(PlayerAnimationProfileId.RifleCombat);
             var locomotionProfile = SelectLockedLocomotionProfile(profileCatalog);
             var idleClip = unarmedProfile != null && unarmedProfile.IdleClip != null
@@ -123,14 +138,30 @@ namespace Hollow.Editor.Generation
             var deadClip = swordShieldProfile != null && swordShieldProfile.FirstDeathClip() != null
                 ? swordShieldProfile.FirstDeathClip()
                 : ConfigureAnimationImport(DeadFbxPath, DeadClipName, loop: false);
+            var guardBlockClip = swordShieldProfile != null && swordShieldProfile.ShieldGuardClips.Count > 0
+                ? swordShieldProfile.ShieldGuardClips[0]
+                : greatSwordProfile != null && greatSwordProfile.WeaponBlockClips.Count > 0
+                    ? greatSwordProfile.WeaponBlockClips[0]
+                    : slashClip;
             var material = CreateOrUpdateCanonicalMaterial();
-            var controller = CreateAnimatorController(idleClip, walkClip, runClip, directionalLocomotionClips, rollClip, slashClip, hitClip, deadClip);
-            UpdatePlayerPrefab(controller, material, rollClip, slashClip, hitClip, deadClip, profileCatalog);
+            var controller = CreateAnimatorController(
+                idleClip,
+                walkClip,
+                runClip,
+                directionalLocomotionClips,
+                rollClip,
+                slashClip,
+                guardBlockClip,
+                hitClip,
+                deadClip,
+                animationSystemMode);
+            UpdatePlayerPrefab(controller, material, rollClip, slashClip, hitClip, deadClip, profileCatalog, animationSystemMode);
             PlayerAnimationProfileAssetGenerator.GenerateDebugScene(profileCatalog);
+            GenerateRawMixamoAnimationDebugScene(controller, material, animationSystemMode);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("Integrated Meshy main character idle/walk/run/action animations into PlayerCharacter.prefab.");
+            Debug.Log($"Integrated Meshy main character in {animationSystemMode} mode into PlayerCharacter.prefab.");
         }
 
         [MenuItem("Hollow/Debug/Clean Rebuild Generated Player + Debug Scene")]
@@ -164,6 +195,7 @@ namespace Hollow.Editor.Generation
             {
                 PlayerPrefabPath,
                 PlayerAnimationProfileAssetGenerator.DebugScenePath,
+                RawMixamoDebugScenePath,
                 PlayerControllerPath
             })
             {
@@ -573,8 +605,10 @@ namespace Hollow.Editor.Generation
             IReadOnlyList<DirectionalLocomotionClip> directionalLocomotionClips,
             AnimationClip rollClip,
             AnimationClip slashClip,
+            AnimationClip guardBlockClip,
             AnimationClip hitClip,
-            AnimationClip deadClip)
+            AnimationClip deadClip,
+            PlayerAnimationSystemMode animationSystemMode)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(PlayerControllerPath) ?? string.Empty);
             if (AssetDatabase.LoadAssetAtPath<AnimatorController>(PlayerControllerPath) != null)
@@ -583,13 +617,22 @@ namespace Hollow.Editor.Generation
             }
 
             var controller = AnimatorController.CreateAnimatorControllerAtPath(PlayerControllerPath);
-            var layers = controller.layers;
-            if (layers.Length > 0)
+            AddPlayerAnimatorParameters(controller);
+            if (animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation)
             {
-                layers[0].iKPass = true;
-                controller.layers = layers;
+                BuildSimpleFullBodyController(controller, idleClip, walkClip, runClip, rollClip, slashClip, guardBlockClip, hitClip, deadClip);
+            }
+            else
+            {
+                BuildAdvancedLayeredController(controller, idleClip, walkClip, runClip, directionalLocomotionClips, rollClip, slashClip, hitClip, deadClip);
             }
 
+            EditorUtility.SetDirty(controller);
+            return controller;
+        }
+
+        private static void AddPlayerAnimatorParameters(AnimatorController controller)
+        {
             controller.AddParameter(PlayerLocomotionAnimator.IsMovingParameter, AnimatorControllerParameterType.Bool);
             controller.AddParameter(PlayerLocomotionAnimator.MoveSpeedParameter, AnimatorControllerParameterType.Float);
             controller.AddParameter(PlayerLocomotionAnimator.ActionSpeedParameter, AnimatorControllerParameterType.Float);
@@ -601,6 +644,67 @@ namespace Hollow.Editor.Generation
             controller.AddParameter(PlayerLocomotionAnimator.IsTargetLockedParameter, AnimatorControllerParameterType.Bool);
             controller.AddParameter(PlayerLocomotionAnimator.LockedMoveXParameter, AnimatorControllerParameterType.Float);
             controller.AddParameter(PlayerLocomotionAnimator.LockedMoveYParameter, AnimatorControllerParameterType.Float);
+        }
+
+        private static void BuildSimpleFullBodyController(
+            AnimatorController controller,
+            AnimationClip idleClip,
+            AnimationClip walkClip,
+            AnimationClip runClip,
+            AnimationClip rollClip,
+            AnimationClip attackClip,
+            AnimationClip guardBlockClip,
+            AnimationClip hitClip,
+            AnimationClip deadClip)
+        {
+            var layers = controller.layers;
+            if (layers.Length > 0)
+            {
+                layers[0].name = "Simple Full Body";
+                layers[0].defaultWeight = 1f;
+                layers[0].iKPass = false;
+                controller.layers = layers;
+            }
+
+            var stateMachine = controller.layers[0].stateMachine;
+            var idleState = AddState(stateMachine, "Idle", idleClip, new Vector3(220f, 120f, 0f));
+            stateMachine.defaultState = idleState;
+            var walkState = AddState(stateMachine, "Walk", walkClip, new Vector3(500f, 120f, 0f));
+            var runState = AddState(stateMachine, "Run", runClip, new Vector3(780f, 120f, 0f));
+            var rollState = AddActionState(stateMachine, "Roll", rollClip, new Vector3(220f, 320f, 0f));
+            var attackState = AddActionState(stateMachine, "Attack", attackClip, new Vector3(500f, 320f, 0f));
+            AddState(stateMachine, "GuardBlock", guardBlockClip, new Vector3(500f, 520f, 0f));
+            var hitState = AddActionState(stateMachine, "HitReaction", hitClip, new Vector3(780f, 320f, 0f));
+            var deadState = AddState(stateMachine, "Death", deadClip, new Vector3(1060f, 120f, 0f));
+
+            AddSimpleLocomotionTransitions(idleState, walkState, runState);
+            AddAnyStateTriggerTransition(stateMachine, deadState, PlayerLocomotionAnimator.DeathTriggerParameter, allowWhileDead: true, duration: 0.04f);
+            AddAnyStateBoolTransition(stateMachine, deadState, PlayerLocomotionAnimator.IsDeadParameter, duration: 0.04f);
+            AddAnyStateTriggerTransition(stateMachine, hitState, PlayerLocomotionAnimator.HitTriggerParameter, allowWhileDead: false, duration: 0.04f);
+            AddAnyStateTriggerTransition(stateMachine, rollState, PlayerLocomotionAnimator.RollTriggerParameter, allowWhileDead: false, duration: 0.05f);
+            AddAnyStateTriggerTransition(stateMachine, attackState, PlayerLocomotionAnimator.SlashTriggerParameter, allowWhileDead: false, duration: 0.04f);
+            AddSimpleActionExitTransitions(rollState, idleState, walkState, runState);
+            AddSimpleActionExitTransitions(attackState, idleState, walkState, runState);
+            AddSimpleActionExitTransitions(hitState, idleState, walkState, runState);
+        }
+
+        private static void BuildAdvancedLayeredController(
+            AnimatorController controller,
+            AnimationClip idleClip,
+            AnimationClip walkClip,
+            AnimationClip runClip,
+            IReadOnlyList<DirectionalLocomotionClip> directionalLocomotionClips,
+            AnimationClip rollClip,
+            AnimationClip slashClip,
+            AnimationClip hitClip,
+            AnimationClip deadClip)
+        {
+            var layers = controller.layers;
+            if (layers.Length > 0)
+            {
+                layers[0].iKPass = true;
+                controller.layers = layers;
+            }
 
             var stateMachine = controller.layers[0].stateMachine;
             var idleState = AddState(stateMachine, "Idle", idleClip, new Vector3(220f, 120f, 0f));
@@ -629,8 +733,6 @@ namespace Hollow.Editor.Generation
             AddActionExitTransitions(hitState, idleState, walkState, runState, lockedState);
 
             AddModernAnimationLayers(controller);
-            EditorUtility.SetDirty(controller);
-            return controller;
         }
 
         private static void AddModernAnimationLayers(AnimatorController controller)
@@ -750,6 +852,49 @@ namespace Hollow.Editor.Generation
             runToWalk.duration = 0.12f;
             runToWalk.offset = 0f;
             runToWalk.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsTargetLockedParameter);
+            runToWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            runToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+        }
+
+        private static void AddSimpleLocomotionTransitions(AnimatorState idleState, AnimatorState walkState, AnimatorState runState)
+        {
+            var idleToWalk = idleState.AddTransition(walkState);
+            idleToWalk.hasExitTime = false;
+            idleToWalk.duration = 0.1f;
+            idleToWalk.offset = 0f;
+            idleToWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            idleToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var idleToRun = idleState.AddTransition(runState);
+            idleToRun.hasExitTime = false;
+            idleToRun.duration = 0.1f;
+            idleToRun.offset = 0f;
+            idleToRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            idleToRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var walkToIdle = walkState.AddTransition(idleState);
+            walkToIdle.hasExitTime = false;
+            walkToIdle.duration = 0.12f;
+            walkToIdle.offset = 0f;
+            walkToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+
+            var walkToRun = walkState.AddTransition(runState);
+            walkToRun.hasExitTime = false;
+            walkToRun.duration = 0.1f;
+            walkToRun.offset = 0f;
+            walkToRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            walkToRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var runToIdle = runState.AddTransition(idleState);
+            runToIdle.hasExitTime = false;
+            runToIdle.duration = 0.12f;
+            runToIdle.offset = 0f;
+            runToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+
+            var runToWalk = runState.AddTransition(walkState);
+            runToWalk.hasExitTime = false;
+            runToWalk.duration = 0.12f;
+            runToWalk.offset = 0f;
             runToWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             runToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
         }
@@ -876,6 +1021,39 @@ namespace Hollow.Editor.Generation
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
         }
 
+        private static void AddSimpleActionExitTransitions(
+            AnimatorState actionState,
+            AnimatorState idleState,
+            AnimatorState walkState,
+            AnimatorState runState)
+        {
+            var toRun = actionState.AddTransition(runState);
+            toRun.hasExitTime = true;
+            toRun.exitTime = 0.92f;
+            toRun.duration = 0.08f;
+            toRun.offset = 0f;
+            toRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            toRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+            toRun.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+
+            var toWalk = actionState.AddTransition(walkState);
+            toWalk.hasExitTime = true;
+            toWalk.exitTime = 0.92f;
+            toWalk.duration = 0.08f;
+            toWalk.offset = 0f;
+            toWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            toWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+            toWalk.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+
+            var toIdle = actionState.AddTransition(idleState);
+            toIdle.hasExitTime = true;
+            toIdle.exitTime = 0.92f;
+            toIdle.duration = 0.08f;
+            toIdle.offset = 0f;
+            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+        }
+
         private static void UpdatePlayerPrefab(
             RuntimeAnimatorController controller,
             Material canonicalMaterial,
@@ -883,7 +1061,8 @@ namespace Hollow.Editor.Generation
             AnimationClip slashClip,
             AnimationClip hitClip,
             AnimationClip deadClip,
-            PlayerAnimationProfileCatalogDefinition profileCatalog)
+            PlayerAnimationProfileCatalogDefinition profileCatalog,
+            PlayerAnimationSystemMode animationSystemMode)
         {
             var selectedBodyPath = PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyFbxPath();
             var modelSourcePath = selectedBodyPath ?? PlayerAnimationProfileAssetGenerator.HollowMainRigPath;
@@ -925,6 +1104,17 @@ namespace Hollow.Editor.Generation
                 StripGameplayComponentsFromVisual(modelInstance);
                 EnsureRendererMaterials(modelInstance, canonicalMaterial);
                 EnsureVisibleBody(visualRoot.transform, modelInstance, canonicalMaterial);
+                var grounding = prefabRoot.GetComponent<SimpleFullBodyGroundingController>() ??
+                    prefabRoot.AddComponent<SimpleFullBodyGroundingController>();
+                grounding.Configure(
+                    modelInstance.transform,
+                    visualRoot.transform,
+                    prefabRoot.transform,
+                    animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation,
+                    SimpleFullBodyGroundingController.DefaultGroundClearanceMeters,
+                    SimpleFullBodyGroundingController.DefaultMaxCorrectionMeters);
+                grounding.ApplyGrounding();
+                EditorUtility.SetDirty(grounding);
 
                 var animator = modelInstance.GetComponent<Animator>();
                 var sourceAnimator = modelPrefab.GetComponent<Animator>();
@@ -1118,8 +1308,10 @@ namespace Hollow.Editor.Generation
                     PlayerAnimationPoseCoordinator.DefaultLeanSpeedReferenceMetersPerSecond,
                     PlayerAnimationPoseCoordinator.DefaultFootYawAimInfluenceMaxDegrees,
                     PlayerAnimationPoseCoordinator.DefaultHitReactionFootIkSuppressSeconds);
+                poseCoordinator.ConfigureAnimationSystemMode(animationSystemMode);
                 EditorUtility.SetDirty(poseCoordinator);
 
+                ApplyAnimationSystemMode(prefabRoot, animationSystemMode);
                 SanitizeRigForSave(prefabRoot.transform, animator.transform);
                 var preSaveValidation = PlayerVisualAssemblyValidator.Validate(prefabRoot, PlayerPrefabPath);
                 if (preSaveValidation.HasErrors)
@@ -1135,6 +1327,119 @@ namespace Hollow.Editor.Generation
             {
                 Object.DestroyImmediate(prefabRoot);
             }
+        }
+
+        private static void GenerateRawMixamoAnimationDebugScene(
+            RuntimeAnimatorController controller,
+            Material canonicalMaterial,
+            PlayerAnimationSystemMode animationSystemMode)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(RawMixamoDebugScenePath) ?? string.Empty);
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.name = "RawMixamoDebug.FlatFloor";
+            floor.transform.position = new Vector3(0f, -0.05f, 0f);
+            floor.transform.localScale = new Vector3(8f, 0.1f, 8f);
+
+            var selectedBodyPath = PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyFbxPath();
+            var modelSourcePath = selectedBodyPath ?? PlayerAnimationProfileAssetGenerator.HollowMainRigPath;
+            var modelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelSourcePath);
+            if (modelPrefab == null)
+            {
+                throw new InvalidOperationException($"Cannot generate raw Mixamo debug scene without body prefab: {modelSourcePath}");
+            }
+
+            var bodyRoot = new GameObject("RawMixamoDebug.SelectedBody");
+            bodyRoot.transform.position = Vector3.zero;
+            var modelInstance = PrefabUtility.InstantiatePrefab(modelPrefab, bodyRoot.transform) as GameObject;
+            modelInstance ??= Object.Instantiate(modelPrefab, bodyRoot.transform);
+            modelInstance.name = ModelInstanceName;
+            modelInstance.transform.localPosition = Vector3.zero;
+            modelInstance.transform.localRotation = Quaternion.identity;
+            modelInstance.transform.localScale = Vector3.one * PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyLocalScale();
+            StripGameplayComponentsFromVisual(modelInstance);
+            EnsureRendererMaterials(modelInstance, canonicalMaterial);
+
+            var animator = modelInstance.GetComponent<Animator>();
+            var sourceAnimator = modelPrefab.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = modelInstance.AddComponent<Animator>();
+            }
+
+            animator.avatar = ResolveMainCharacterAvatar(sourceAnimator);
+            animator.runtimeAnimatorController = controller;
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.Rebind();
+            animator.Update(0f);
+            AlignRendererBottomToGround(modelInstance.transform, groundY: 0f, clearanceMeters: 0.02f);
+            var grounding = bodyRoot.AddComponent<SimpleFullBodyGroundingController>();
+            grounding.Configure(
+                modelInstance.transform,
+                bodyRoot.transform,
+                null,
+                animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation,
+                SimpleFullBodyGroundingController.DefaultGroundClearanceMeters,
+                SimpleFullBodyGroundingController.DefaultMaxCorrectionMeters);
+            grounding.ApplyGrounding();
+
+            var cameraObject = new GameObject("RawMixamoDebug.Camera");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.transform.position = new Vector3(0f, 2.4f, -4.2f);
+            camera.transform.rotation = Quaternion.Euler(18f, 0f, 0f);
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.black;
+
+            var lightObject = new GameObject("RawMixamoDebug.DirectionalLight");
+            var light = lightObject.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.intensity = 1.25f;
+            light.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
+
+            var overlayObject = new GameObject("RawMixamoDebug.Overlay");
+            var overlay = overlayObject.AddComponent<RawMixamoAnimationDebugOverlay>();
+            overlay.Configure(animator, animationSystemMode);
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, RawMixamoDebugScenePath);
+        }
+
+        private static void AlignRendererBottomToGround(Transform visualRoot, float groundY, float clearanceMeters)
+        {
+            if (visualRoot == null || !TryGetRendererBounds(visualRoot, out var bounds))
+            {
+                return;
+            }
+
+            var offsetY = groundY + clearanceMeters - bounds.min.y;
+            visualRoot.position += Vector3.up * offsetY;
+        }
+
+        private static bool TryGetRendererBounds(Transform root, out Bounds bounds)
+        {
+            bounds = default;
+            var hasBounds = false;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(includeInactive: true))
+            {
+                if (renderer == null || !renderer.enabled)
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    bounds = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(renderer.bounds);
+                }
+            }
+
+            return hasBounds && bounds.size.sqrMagnitude > 0.0001f;
         }
 
         private static GameObject CreateFreshPlayerPrefabRoot()
@@ -1162,6 +1467,7 @@ namespace Hollow.Editor.Generation
             root.AddComponent<PlayerShieldGuardPoseController>();
             root.AddComponent<PlayerFootPlacementController>();
             root.AddComponent<PlayerAnimationPoseCoordinator>();
+            root.AddComponent<SimpleFullBodyGroundingController>();
 
             var collider = root.GetComponent<CapsuleCollider>();
             collider.radius = PlaceholderPlayerController.DefaultRadiusMeters;
@@ -1169,6 +1475,83 @@ namespace Hollow.Editor.Generation
             collider.center = new Vector3(0f, PlaceholderPlayerController.DefaultHeightMeters * 0.5f, 0f);
             EditorUtility.SetDirty(movement);
             return root;
+        }
+
+        private static void ApplyAnimationSystemMode(GameObject prefabRoot, PlayerAnimationSystemMode animationSystemMode)
+        {
+            if (prefabRoot == null)
+            {
+                return;
+            }
+
+            var simpleMode = animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation;
+            foreach (var rigBuilder in prefabRoot.GetComponentsInChildren<RigBuilder>(includeInactive: true))
+            {
+                rigBuilder.enabled = !simpleMode;
+                EditorUtility.SetDirty(rigBuilder);
+            }
+
+            foreach (var constraint in prefabRoot.GetComponentsInChildren<TwoBoneIKConstraint>(includeInactive: true))
+            {
+                constraint.enabled = !simpleMode;
+                constraint.weight = simpleMode ? 0f : constraint.weight;
+                EditorUtility.SetDirty(constraint);
+            }
+
+            foreach (var constraint in prefabRoot.GetComponentsInChildren<MultiAimConstraint>(includeInactive: true))
+            {
+                constraint.enabled = !simpleMode;
+                constraint.weight = simpleMode ? 0f : constraint.weight;
+                EditorUtility.SetDirty(constraint);
+            }
+
+            foreach (var constraint in prefabRoot.GetComponentsInChildren<MultiPositionConstraint>(includeInactive: true))
+            {
+                constraint.enabled = !simpleMode;
+                constraint.weight = simpleMode ? 0f : constraint.weight;
+                EditorUtility.SetDirty(constraint);
+            }
+
+            foreach (var footPlacement in prefabRoot.GetComponentsInChildren<PlayerFootPlacementController>(includeInactive: true))
+            {
+                footPlacement.enabled = !simpleMode;
+                EditorUtility.SetDirty(footPlacement);
+            }
+
+            foreach (var rangedHandPose in prefabRoot.GetComponentsInChildren<PlayerRangedHandPoseController>(includeInactive: true))
+            {
+                rangedHandPose.enabled = !simpleMode;
+                EditorUtility.SetDirty(rangedHandPose);
+            }
+
+            foreach (var shieldPose in prefabRoot.GetComponentsInChildren<PlayerShieldGuardPoseController>(includeInactive: true))
+            {
+                shieldPose.enabled = !simpleMode;
+                EditorUtility.SetDirty(shieldPose);
+            }
+
+            foreach (var relay in prefabRoot.GetComponentsInChildren<PlayerRangedHandPoseIkRelay>(includeInactive: true))
+            {
+                relay.enabled = !simpleMode;
+                EditorUtility.SetDirty(relay);
+            }
+
+            foreach (var coordinator in prefabRoot.GetComponentsInChildren<PlayerAnimationPoseCoordinator>(includeInactive: true))
+            {
+                coordinator.ConfigureAnimationSystemMode(animationSystemMode);
+                EditorUtility.SetDirty(coordinator);
+            }
+
+            foreach (var grounding in prefabRoot.GetComponentsInChildren<SimpleFullBodyGroundingController>(includeInactive: true))
+            {
+                grounding.SetGroundingEnabled(simpleMode);
+                if (simpleMode)
+                {
+                    grounding.ApplyGrounding();
+                }
+
+                EditorUtility.SetDirty(grounding);
+            }
         }
 
         private static ModernAnimationRigSetup EnsureModernAnimationRig(Animator animator, Transform visualRoot, Transform modelRoot)

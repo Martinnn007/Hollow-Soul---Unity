@@ -8,6 +8,7 @@ using Hollow.Data.Definitions;
 using Hollow.Editor.Generation;
 using Hollow.Presentation;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
@@ -283,7 +284,14 @@ namespace Hollow.Editor.Validation
             }
 
             ValidateRigHierarchy(prefabRoot.transform, animatorTransform, result);
+            PopulateAnimationSystemDiagnostics(prefabRoot, result);
             ValidateMissingScriptsAndReferences(prefabRoot, result);
+
+            if (result.AnimationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
+                result.SimpleModeHasActiveRigInfluence)
+            {
+                result.Errors.Add("SimpleFullBodyAnimation mode has active rig, IK, or foot-placement influence.");
+            }
 
             if (result.UsesTemporaryStaticFallback)
             {
@@ -534,6 +542,7 @@ namespace Hollow.Editor.Validation
         {
             var rigBuilders = prefabRoot.GetComponentsInChildren<RigBuilder>(includeInactive: true);
             result.RigBuilderCount = rigBuilders.Length;
+            result.RigBuilderEnabled = rigBuilders.Any(rigBuilder => rigBuilder != null && rigBuilder.enabled);
             if (animatorTransform == null)
             {
                 return;
@@ -562,20 +571,80 @@ namespace Hollow.Editor.Validation
 
             foreach (var constraint in prefabRoot.GetComponentsInChildren<TwoBoneIKConstraint>(includeInactive: true))
             {
+                if (constraint != null && constraint.enabled)
+                {
+                    result.EnabledRigConstraintCount++;
+                }
+
                 ValidateConstraintTransform(prefabRoot, animatorTransform, constraint.transform, result);
                 ValidateTwoBoneConstraint(prefabRoot, animatorTransform, constraint, result);
             }
 
             foreach (var constraint in prefabRoot.GetComponentsInChildren<MultiAimConstraint>(includeInactive: true))
             {
+                if (constraint != null && constraint.enabled)
+                {
+                    result.EnabledRigConstraintCount++;
+                    result.TorsoAimEnabled = true;
+                }
+
                 ValidateConstraintTransform(prefabRoot, animatorTransform, constraint.transform, result);
                 ValidateMultiAimConstraint(prefabRoot, animatorTransform, constraint, result);
             }
 
             foreach (var constraint in prefabRoot.GetComponentsInChildren<MultiPositionConstraint>(includeInactive: true))
             {
+                if (constraint != null && constraint.enabled)
+                {
+                    result.EnabledRigConstraintCount++;
+                }
+
                 ValidateConstraintTransform(prefabRoot, animatorTransform, constraint.transform, result);
                 ValidateMultiPositionConstraint(prefabRoot, animatorTransform, constraint, result);
+            }
+        }
+
+        private static void PopulateAnimationSystemDiagnostics(
+            GameObject prefabRoot,
+            PlayerVisualAssemblyValidationResult result)
+        {
+            var coordinator = prefabRoot.GetComponentInChildren<PlayerAnimationPoseCoordinator>(includeInactive: true);
+            result.AnimationSystemMode = coordinator != null
+                ? coordinator.AnimationSystemMode
+                : MainCharacterAnimationIntegrator.DefaultAnimationSystemMode;
+            result.FootPlacementEnabled = prefabRoot
+                .GetComponentsInChildren<PlayerFootPlacementController>(includeInactive: true)
+                .Any(component => component != null && component.enabled);
+            result.HandIkEnabled = prefabRoot
+                .GetComponentsInChildren<PlayerRangedHandPoseController>(includeInactive: true)
+                .Any(component => component != null && component.enabled);
+            result.ShieldIkEnabled = prefabRoot
+                .GetComponentsInChildren<PlayerShieldGuardPoseController>(includeInactive: true)
+                .Any(component => component != null && component.enabled);
+            result.HandIkEnabled = result.HandIkEnabled || prefabRoot
+                .GetComponentsInChildren<TwoBoneIKConstraint>(includeInactive: true)
+                .Any(constraint => constraint != null &&
+                    constraint.enabled &&
+                    string.Equals(constraint.name, PlayerAnimationPoseCoordinator.RightHandWeaponIkConstraintName, StringComparison.Ordinal));
+            result.ShieldIkEnabled = result.ShieldIkEnabled || prefabRoot
+                .GetComponentsInChildren<TwoBoneIKConstraint>(includeInactive: true)
+                .Any(constraint => constraint != null &&
+                    constraint.enabled &&
+                    string.Equals(constraint.name, PlayerAnimationPoseCoordinator.LeftHandShieldIkConstraintName, StringComparison.Ordinal));
+            result.SimpleModeHasActiveRigInfluence =
+                result.AnimationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
+                (result.RigBuilderEnabled ||
+                    result.FootPlacementEnabled ||
+                    result.HandIkEnabled ||
+                    result.ShieldIkEnabled ||
+                    result.TorsoAimEnabled ||
+                    result.EnabledRigConstraintCount > 0);
+
+            var animator = prefabRoot.GetComponentInChildren<Animator>(includeInactive: true);
+            if (animator != null && animator.runtimeAnimatorController is AnimatorController controller)
+            {
+                result.AnimatorLayerCount = controller.layers.Length;
+                result.AnimatorBaseLayerIkPass = controller.layers.Length > 0 && controller.layers[0].iKPass;
             }
         }
 
@@ -1154,6 +1223,15 @@ namespace Hollow.Editor.Validation
         public bool BodyWillDeformWithAnimator { get; set; }
         public bool BodyVisibleSkinnedMesh { get; set; }
         public bool BodyUsesStaticFallback { get; set; }
+        public PlayerAnimationSystemMode AnimationSystemMode { get; set; } = PlayerAnimationSystemMode.AdvancedLayeredAnimation;
+        public int AnimatorLayerCount { get; set; }
+        public bool AnimatorBaseLayerIkPass { get; set; }
+        public bool RigBuilderEnabled { get; set; }
+        public bool FootPlacementEnabled { get; set; }
+        public bool HandIkEnabled { get; set; }
+        public bool ShieldIkEnabled { get; set; }
+        public bool TorsoAimEnabled { get; set; }
+        public bool SimpleModeHasActiveRigInfluence { get; set; }
         public bool UsesTemporaryStaticFallback { get; set; }
         public bool BodyUnderAnimatorHierarchy { get; set; }
         public bool SkinnedBodyRootBoneAssigned { get; set; }
@@ -1174,6 +1252,7 @@ namespace Hollow.Editor.Validation
         public int DuplicateEquipmentWrapperCount { get; set; }
         public int DuplicateEquipmentMarkerCount { get; set; }
         public int RigBuilderCount { get; set; }
+        public int EnabledRigConstraintCount { get; set; }
         public int InvalidConstraintsCount { get; set; }
         public int MissingReferenceCount { get; set; }
         public int MissingScriptCount { get; set; }
@@ -1196,10 +1275,13 @@ namespace Hollow.Editor.Validation
             builder.AppendLine($"BODY_WILL_DEFORM_WITH_ANIMATOR = {BodyWillDeformWithAnimator}");
             builder.AppendLine($"BODY_VISIBLE_SKINNED_MESH = {BodyVisibleSkinnedMesh}");
             builder.AppendLine($"BODY_USES_STATIC_FALLBACK = {BodyUsesStaticFallback}");
+            builder.AppendLine($"PlayerAnimationSystemMode: {AnimationSystemMode}");
             builder.AppendLine($"SELECTED_SKINNED_BODY_FBX = {(string.IsNullOrWhiteSpace(SelectedSkinnedBodyFbx) ? "<none>" : SelectedSkinnedBodyFbx)}");
             builder.AppendLine($"SELECTED_AVATAR_SOURCE = {SelectedAvatarSource}");
             builder.AppendLine($"Animator Avatar: {(AnimatorAvatarAssigned ? "assigned" : "missing")}");
             builder.AppendLine($"Animator Controller: {(AnimatorControllerAssigned ? "assigned" : "missing")}");
+            builder.AppendLine($"Animator Layers: {AnimatorLayerCount}");
+            builder.AppendLine($"Animator Base Layer IK Pass: {AnimatorBaseLayerIkPass}");
             builder.AppendLine($"Animator Path: {AnimatorPath}");
             builder.AppendLine($"Body Renderers: {BodyRendererCount} enabled {EnabledBodyRendererCount} skinned {SkinnedBodyRendererCount} mesh {MeshBodyRendererCount}");
             builder.AppendLine($"Body Textured Renderers: {BodyRenderersWithTextureCount}");
@@ -1215,6 +1297,13 @@ namespace Hollow.Editor.Validation
             builder.AppendLine($"Body Bounds Center: {FormatVector(BodyBoundsCenter)}");
             builder.AppendLine($"Body Bounds Size: {FormatVector(BodyBoundsSize)}");
             builder.AppendLine($"RigBuilders: {RigBuilderCount}");
+            builder.AppendLine($"RigBuilderEnabled: {RigBuilderEnabled}");
+            builder.AppendLine($"FootPlacementEnabled: {FootPlacementEnabled}");
+            builder.AppendLine($"HandIkEnabled: {HandIkEnabled}");
+            builder.AppendLine($"ShieldIkEnabled: {ShieldIkEnabled}");
+            builder.AppendLine($"TorsoAimEnabled: {TorsoAimEnabled}");
+            builder.AppendLine($"Enabled Rig Constraints: {EnabledRigConstraintCount}");
+            builder.AppendLine($"SimpleModeHasActiveRigInfluence: {SimpleModeHasActiveRigInfluence}");
             builder.AppendLine($"Invalid Constraints: {InvalidConstraintsCount}");
             builder.AppendLine($"Missing References: {MissingReferenceCount}");
             builder.AppendLine($"Missing Scripts: {MissingScriptCount}");

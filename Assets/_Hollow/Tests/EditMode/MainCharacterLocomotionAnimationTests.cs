@@ -12,8 +12,10 @@ using Hollow.Presentation;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace Hollow.Tests.EditMode
@@ -613,6 +615,56 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void SimpleFullBodyAnimationIsDefaultWhileAdvancedModeRemainsAvailable()
+        {
+            Assert.AreEqual(PlayerAnimationSystemMode.SimpleFullBodyAnimation, MainCharacterAnimationIntegrator.DefaultAnimationSystemMode);
+            Assert.IsTrue(System.Enum.IsDefined(typeof(PlayerAnimationSystemMode), PlayerAnimationSystemMode.AdvancedLayeredAnimation));
+        }
+
+        [Test]
+        public void RawMixamoAnimationDebugSceneReferencesSimpleControllerAndBody()
+        {
+            var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(MainCharacterAnimationIntegrator.RawMixamoDebugScenePath);
+            Assert.IsNotNull(sceneAsset);
+
+            var previousScenePath = SceneManager.GetActiveScene().path;
+            var scene = EditorSceneManager.OpenScene(MainCharacterAnimationIntegrator.RawMixamoDebugScenePath, OpenSceneMode.Single);
+            try
+            {
+                Assert.IsTrue(scene.IsValid());
+                var overlay = Object.FindFirstObjectByType<RawMixamoAnimationDebugOverlay>();
+                var animator = Object.FindFirstObjectByType<Animator>();
+                var grounding = Object.FindFirstObjectByType<SimpleFullBodyGroundingController>();
+                Assert.IsNotNull(overlay);
+                Assert.IsNotNull(animator);
+                Assert.IsNotNull(grounding);
+                Assert.IsNotNull(animator.avatar);
+                Assert.IsNotNull(animator.runtimeAnimatorController);
+                Assert.IsTrue(grounding.GroundingEnabled);
+                Assert.AreSame(animator.transform, grounding.MeasuredRoot);
+                Assert.GreaterOrEqual(grounding.GroundClearanceMeters, 0.04f);
+
+                var controller = animator.runtimeAnimatorController as AnimatorController;
+                Assert.IsNotNull(controller);
+                Assert.AreEqual(1, controller.layers.Length);
+                Assert.IsFalse(controller.layers[0].iKPass);
+                Assert.IsNotNull(animator.GetComponentInChildren<SkinnedMeshRenderer>(includeInactive: true));
+                Assert.AreEqual(0, Object.FindObjectsByType<PresentationVisualMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length);
+            }
+            finally
+            {
+                if (!string.IsNullOrWhiteSpace(previousScenePath))
+                {
+                    EditorSceneManager.OpenScene(previousScenePath, OpenSceneMode.Single);
+                }
+                else
+                {
+                    EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+                }
+            }
+        }
+
+        [Test]
         public void SkinnedBodyCandidateResolverSelectsMixamoWithSkinBody()
         {
             var candidates = PlayerAnimationProfileAssetGenerator.SkinnedBodyCandidateFbxPaths();
@@ -764,6 +816,7 @@ namespace Hollow.Tests.EditMode
                     rigHarness.LeftFootTarget,
                     rigHarness.RightFootTarget);
                 coordinator.Configure(10f, 10f, 10f, PlayerMovementController.DefaultSpeedMetersPerSecond);
+                coordinator.ConfigureAnimationSystemMode(PlayerAnimationSystemMode.AdvancedLayeredAnimation);
 
                 weapon.TickInput(HeldRangedLightSnapshot(Vector2.up), 0f, 0f);
                 rangedPose.SamplePose(0.2f);
@@ -1547,6 +1600,7 @@ namespace Hollow.Tests.EditMode
             var aimLockController = prefab.GetComponent<PlayerAimLockController>();
             var rangedHandPose = prefab.GetComponent<PlayerRangedHandPoseController>();
             var shieldGuardPose = prefab.GetComponent<PlayerShieldGuardPoseController>();
+            var grounding = prefab.GetComponent<SimpleFullBodyGroundingController>();
             var animator = prefab.GetComponentInChildren<Animator>(includeInactive: true);
             var visualValidation = PlayerVisualAssemblyValidator.Validate(prefab, PlayerPrefabPath);
             Assert.IsFalse(visualValidation.HasErrors, visualValidation.ToReportString());
@@ -1584,12 +1638,26 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(visualValidation.SelectedSkinnedBodyFbx, visualValidation.SelectedAvatarSource);
             Assert.IsTrue(visualValidation.SkinnedBodyRootBoneAssigned, visualValidation.ToReportString());
             Assert.Greater(visualValidation.SkinnedBodyBoneCount, 0, visualValidation.ToReportString());
+            Assert.AreEqual(PlayerAnimationSystemMode.SimpleFullBodyAnimation, visualValidation.AnimationSystemMode, visualValidation.ToReportString());
+            Assert.AreEqual(1, visualValidation.AnimatorLayerCount, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.AnimatorBaseLayerIkPass, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.RigBuilderEnabled, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.FootPlacementEnabled, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.HandIkEnabled, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.ShieldIkEnabled, visualValidation.ToReportString());
+            Assert.IsFalse(visualValidation.SimpleModeHasActiveRigInfluence, visualValidation.ToReportString());
 
             Assert.IsNotNull(locomotionAnimator);
             Assert.IsNotNull(heldWeaponVisual);
             Assert.IsNotNull(aimLockController);
             Assert.IsNotNull(rangedHandPose);
             Assert.IsNotNull(shieldGuardPose);
+            Assert.IsNotNull(grounding);
+            Assert.IsTrue(grounding.GroundingEnabled);
+            Assert.AreSame(visualRoot.transform, grounding.OffsetRoot);
+            Assert.AreSame(prefab.transform, grounding.GroundReference);
+            Assert.IsNotNull(grounding.MeasuredRoot);
+            Assert.AreEqual("MainCharacter_MeshyModel", grounding.MeasuredRoot.name);
             Assert.AreSame(meleeSockets[0], heldWeaponVisual.MeleeHandSocket);
             Assert.AreSame(rangedHandSockets[0], heldWeaponVisual.RangedHandSocket);
             Assert.AreSame(meleeHolsterSockets[0], heldWeaponVisual.MeleeHolsterSocket);
@@ -1626,7 +1694,8 @@ namespace Hollow.Tests.EditMode
 
             var controller = animator.runtimeAnimatorController as AnimatorController;
             Assert.IsNotNull(controller);
-            Assert.IsTrue(controller.layers[0].iKPass);
+            Assert.AreEqual(1, controller.layers.Length);
+            Assert.IsFalse(controller.layers[0].iKPass);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.IsMovingParameter, AnimatorControllerParameterType.Bool);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.MoveSpeedParameter, AnimatorControllerParameterType.Float);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.ActionSpeedParameter, AnimatorControllerParameterType.Float);
@@ -1643,45 +1712,32 @@ namespace Hollow.Tests.EditMode
             var idleState = FindState(states, "Idle");
             var walkState = FindState(states, "Walk");
             var runState = FindState(states, "Run");
-            var lockedState = FindState(states, "LockedLocomotion");
             var rollState = FindState(states, "Roll");
-            var slashState = FindState(states, "LeftSlash");
+            var attackState = FindState(states, "Attack");
+            var guardBlockState = FindState(states, "GuardBlock");
             var hitState = FindState(states, "HitReaction");
-            var deadState = FindState(states, "Dead");
+            var deathState = FindState(states, "Death");
             Assert.IsNotNull(idleState.motion);
             Assert.IsNotNull(walkState.motion);
             Assert.IsNotNull(runState.motion);
-            var lockedBlendTree = lockedState.motion as BlendTree;
-            Assert.IsNotNull(lockedBlendTree);
-            Assert.AreEqual(BlendTreeType.FreeformCartesian2D, lockedBlendTree.blendType);
-            Assert.AreEqual(PlayerLocomotionAnimator.LockedMoveXParameter, lockedBlendTree.blendParameter);
-            Assert.AreEqual(PlayerLocomotionAnimator.LockedMoveYParameter, lockedBlendTree.blendParameterY);
-            Assert.GreaterOrEqual(lockedBlendTree.children.Length, 17);
+            Assert.IsNull(states.FirstOrDefault(state => state.name == "LockedLocomotion"));
             Assert.IsNotNull(rollState.motion);
-            Assert.IsNotNull(slashState.motion);
+            Assert.IsNotNull(attackState.motion);
+            Assert.IsNotNull(guardBlockState.motion);
             Assert.IsNotNull(hitState.motion);
-            Assert.IsNotNull(deadState.motion);
+            Assert.IsNotNull(deathState.motion);
             Assert.AreEqual(RollClipName, rollState.motion.name);
             Assert.AreEqual(RollInPlaceClipPath, AssetDatabase.GetAssetPath(rollState.motion));
             Assert.That(runState.motion.name, Does.Contain("Run"));
-            Assert.IsNotNull(deadState);
-            Assert.AreEqual(0, deadState.transitions.Length);
+            Assert.IsNotNull(deathState);
+            Assert.AreEqual(0, deathState.transitions.Length);
 
-            AssertHasLocomotionTransition(idleState, "Walk", AnimatorConditionMode.Less, RunStartMoveSpeedThreshold);
-            AssertHasLocomotionTransition(idleState, "Run", AnimatorConditionMode.Greater, RunStartMoveSpeedThreshold);
-            AssertHasLocomotionTransition(walkState, "Run", AnimatorConditionMode.Greater, RunStartMoveSpeedThreshold);
-            AssertHasLocomotionTransition(runState, "Walk", AnimatorConditionMode.Less, RunStartMoveSpeedThreshold);
-            AssertHasLockedTransition(idleState, lockedState);
-            AssertHasLockedTransition(walkState, lockedState);
-            AssertHasLockedTransition(runState, lockedState);
-            AssertHasLockedExitTransition(lockedState, "Idle");
-            AssertHasLockedExitTransition(lockedState, "Walk");
-            AssertHasLockedExitTransition(lockedState, "Run");
-            AssertHasActionExitToLockedTransition(rollState, lockedState);
-            AssertHasActionExitToLockedTransition(slashState, lockedState);
-            AssertHasActionExitToLockedTransition(hitState, lockedState);
+            AssertHasSimpleLocomotionTransition(idleState, "Walk", AnimatorConditionMode.Less, RunStartMoveSpeedThreshold);
+            AssertHasSimpleLocomotionTransition(idleState, "Run", AnimatorConditionMode.Greater, RunStartMoveSpeedThreshold);
+            AssertHasSimpleLocomotionTransition(walkState, "Run", AnimatorConditionMode.Greater, RunStartMoveSpeedThreshold);
+            AssertHasSimpleLocomotionTransition(runState, "Walk", AnimatorConditionMode.Less, RunStartMoveSpeedThreshold);
             AssertHasActionExitTransition(rollState, "Run", AnimatorConditionMode.Greater);
-            AssertHasActionExitTransition(slashState, "Run", AnimatorConditionMode.Greater);
+            AssertHasActionExitTransition(attackState, "Run", AnimatorConditionMode.Greater);
             AssertHasActionExitTransition(hitState, "Run", AnimatorConditionMode.Greater);
 
             var canonicalMaterial = AssetDatabase.LoadAssetAtPath<Material>(CanonicalMaterialPath);
@@ -1803,6 +1859,24 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(
                 transition,
                 $"Expected {fromState.name} -> {toStateName} transition using {speedConditionMode} {threshold:0.###}.");
+            Assert.IsFalse(transition.hasExitTime);
+        }
+
+        private static void AssertHasSimpleLocomotionTransition(
+            AnimatorState fromState,
+            string toStateName,
+            AnimatorConditionMode speedConditionMode,
+            float threshold)
+        {
+            var transition = fromState.transitions.FirstOrDefault(candidate =>
+                candidate.destinationState != null &&
+                candidate.destinationState.name == toStateName &&
+                HasCondition(candidate, PlayerLocomotionAnimator.IsMovingParameter, AnimatorConditionMode.If) &&
+                HasSpeedCondition(candidate, speedConditionMode, threshold) &&
+                !candidate.conditions.Any(condition => condition.parameter == PlayerLocomotionAnimator.IsTargetLockedParameter));
+            Assert.IsNotNull(
+                transition,
+                $"Expected simple {fromState.name} -> {toStateName} transition using {speedConditionMode} {threshold:0.###} without target-lock conditions.");
             Assert.IsFalse(transition.hasExitTime);
         }
 

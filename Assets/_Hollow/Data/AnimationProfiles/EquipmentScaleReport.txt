@@ -1,6 +1,6 @@
 Hollow Soul Equipment Scale Report
 ReportVersion: 1
-UnityTimestampUtc: 2026-06-05T00:11:45.6900380Z
+UnityTimestampUtc: 2026-06-05T09:49:59.4706490Z
 PrefabPath: Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab
 ValidationErrors: 0
 ValidationWarnings: 0
@@ -101,10 +101,13 @@ BODY_SKINNED_AND_ANIMATION_READY = True
 BODY_WILL_DEFORM_WITH_ANIMATOR = True
 BODY_VISIBLE_SKINNED_MESH = True
 BODY_USES_STATIC_FALLBACK = False
+PlayerAnimationSystemMode: SimpleFullBodyAnimation
 SELECTED_SKINNED_BODY_FBX = Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 SELECTED_AVATAR_SOURCE = Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 Animator Avatar: assigned
 Animator Controller: assigned
+Animator Layers: 1
+Animator Base Layer IK Pass: False
 Animator Path: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel
 Body Renderers: 1 enabled 1 skinned 1 mesh 0
 Body Textured Renderers: 1
@@ -120,6 +123,13 @@ Body Under Animator Hierarchy: True
 Body Bounds Center: 0.002, 1, -0.004
 Body Bounds Size: 2.006, 2, 0.412
 RigBuilders: 1
+RigBuilderEnabled: False
+FootPlacementEnabled: False
+HandIkEnabled: False
+ShieldIkEnabled: False
+TorsoAimEnabled: False
+Enabled Rig Constraints: 0
+SimpleModeHasActiveRigInfluence: False
 Invalid Constraints: 0
 Missing References: 0
 Missing Scripts: 0

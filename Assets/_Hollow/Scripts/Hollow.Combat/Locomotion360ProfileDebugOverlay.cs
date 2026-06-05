@@ -32,13 +32,13 @@ namespace Hollow.Combat
             ResolveReferences();
             for (var index = 0; index < profileOrder.Length; index++)
             {
-                if (UnityEngine.Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + index)))
+                if (DebugKeyboardInput.NumberWasPressed(index + 1))
                 {
                     SetDebugProfile(profileOrder[index]);
                 }
             }
 
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Alpha0))
+            if (DebugKeyboardInput.NumberWasPressed(0))
             {
                 profileController?.ClearDebugProfileOverride();
             }

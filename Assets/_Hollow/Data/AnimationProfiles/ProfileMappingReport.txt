@@ -1,6 +1,6 @@
 Hollow Soul Player Animation Profile Mapping Report
 ReportVersion: 1
-GeneratedAtUtc: 2026-06-05T00:10:15.5310170Z
+GeneratedAtUtc: 2026-06-05T09:49:58.5681620Z
 UnityVersion: 6000.4.1f1
 AnimationPackRoot: Assets/_Hollow/Animation Packs
 ProfileCatalogPath: Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationProfileCatalog.asset

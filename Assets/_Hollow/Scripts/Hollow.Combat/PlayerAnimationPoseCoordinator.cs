@@ -91,6 +91,7 @@ namespace Hollow.Combat
         [SerializeField] private Transform leftFootGroundTarget;
         [SerializeField] private Transform rightFootGroundTarget;
         [SerializeField] private Transform pelvisTarget;
+        [SerializeField] private PlayerAnimationSystemMode animationSystemMode = PlayerAnimationSystemMode.AdvancedLayeredAnimation;
         [SerializeField] private float rigBlendSpeed = DefaultRigBlendSpeed;
         [SerializeField] private float impulseDecaySpeed = DefaultImpulseDecaySpeed;
         [SerializeField] private float leanBlendSpeed = DefaultLeanBlendSpeed;
@@ -149,6 +150,18 @@ namespace Hollow.Combat
             : PlayerAnimationProfileId.UnarmedLocomotion;
 
         public bool AllowsShieldGuard => animationProfileController != null && animationProfileController.AllowsShieldGuard;
+
+        public PlayerAnimationSystemMode AnimationSystemMode => animationSystemMode;
+
+        public bool HasActiveRigInfluence =>
+            baseRigWeight > 0.0001f ||
+            fullBodyActionRigWeight > 0.0001f ||
+            upperBodyCombatRigWeight > 0.0001f ||
+            additivePhysicalResponseRigWeight > 0.0001f ||
+            footIkWeight > 0.0001f ||
+            RightHandWeaponIkWeight > 0.0001f ||
+            LeftHandShieldIkWeight > 0.0001f ||
+            ChestAimWeight > 0.0001f;
 
         public float BodyLean01 => bodyLean01;
 
@@ -302,11 +315,26 @@ namespace Hollow.Combat
             hitReactionFootIkSuppressSeconds = Mathf.Max(0f, nextHitReactionFootIkSuppressSeconds);
         }
 
+        public void ConfigureAnimationSystemMode(PlayerAnimationSystemMode nextAnimationSystemMode)
+        {
+            animationSystemMode = nextAnimationSystemMode;
+            if (animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation)
+            {
+                ClearRigInfluence();
+            }
+        }
+
         public void SamplePose(float deltaTime)
         {
             ResolveReferences();
             var safeDeltaTime = Mathf.Max(0f, deltaTime);
             UpdateModes(safeDeltaTime);
+            if (animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation)
+            {
+                ClearRigInfluence();
+                return;
+            }
+
             UpdateRigWeights(safeDeltaTime);
             DriveRigTargets(safeDeltaTime);
             ApplyRigWeights();
@@ -408,6 +436,19 @@ namespace Hollow.Combat
             upperBodyCombatRigWeight = MoveWeight(upperBodyCombatRigWeight, desiredUpperBody, deltaTime);
             additivePhysicalResponseRigWeight = MoveWeight(additivePhysicalResponseRigWeight, desiredAdditive, deltaTime);
             footIkWeight = MoveWeight(footIkWeight, desiredFootIk, deltaTime);
+        }
+
+        private void ClearRigInfluence()
+        {
+            baseRigWeight = 0f;
+            fullBodyActionRigWeight = 0f;
+            upperBodyCombatRigWeight = 0f;
+            additivePhysicalResponseRigWeight = 0f;
+            footIkWeight = 0f;
+            bodyLean01 = 0f;
+            recoilImpulse = 0f;
+            flinchImpulse = 0f;
+            ApplyRigWeights();
         }
 
         private float MoveWeight(float current, float target, float deltaTime)
