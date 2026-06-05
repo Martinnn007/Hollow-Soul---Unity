@@ -1890,6 +1890,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerAimLockController
   combatController: {fileID: 0}
+  drivesPresentationFacing: 0
 --- !u!114 &6834353484986484719
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1915,6 +1916,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerAimLockController
   combatController: {fileID: 0}
+  drivesPresentationFacing: 0
 --- !u!114 &4517400533699199549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1932,6 +1934,8 @@ MonoBehaviour:
   weaponController: {fileID: 2505458630128641707}
   health: {fileID: 6884480649955783043}
   aimLockController: {fileID: 7201000000000000009}
+  animationSystemMode: 0
+  alwaysFaceAimDirectionInSimpleMode: 1
   movementThresholdMetersPerSecond: 0.05
   turnSpeedDegreesPerSecond: 720
   walkSpeedNormalizationMetersPerSecond: 4
@@ -1943,6 +1947,8 @@ MonoBehaviour:
   turnInPlaceStartDegrees: 85
   turnInPlaceFullDegrees: 125
   diagnosticSmoothingSeconds: 0.08
+  simpleModeMeleeActionSpeedMin: 0.65
+  simpleModeMeleeActionSpeedMax: 1.25
 --- !u!114 &1415239101306977971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2165,8 +2171,10 @@ MonoBehaviour:
   offsetRoot: {fileID: 7164586861399250940}
   groundReference: {fileID: 256995449777400149}
   groundingEnabled: 1
+  stabilizePlanarCenter: 1
   groundClearanceMeters: 0.08
   maxCorrectionMeters: 2.5
+  maxPlanarCorrectionMeters: 1.25
 --- !u!1 &9099661264327843427
 GameObject:
   m_ObjectHideFlags: 0
