@@ -19,12 +19,16 @@ namespace Hollow.Combat
         public const float DefaultTurnInPlaceStartDegrees = 85f;
         public const float DefaultTurnInPlaceFullDegrees = 125f;
         public const float DefaultDiagnosticSmoothingSeconds = 0.08f;
+        public const float DefaultSimpleModeMeleeActionSpeedMin = 0.65f;
+        public const float DefaultSimpleModeMeleeActionSpeedMax = 1.25f;
 
         [SerializeField] private Animator animator;
         [SerializeField] private Transform visualFacingRoot;
         [SerializeField] private PlayerWeaponController weaponController;
         [SerializeField] private CombatantHealth health;
         [SerializeField] private PlayerAimLockController aimLockController;
+        [SerializeField] private PlayerAnimationSystemMode animationSystemMode = PlayerAnimationSystemMode.AdvancedLayeredAnimation;
+        [SerializeField] private bool alwaysFaceAimDirectionInSimpleMode = true;
         [SerializeField] private float movementThresholdMetersPerSecond = 0.05f;
         [SerializeField] private float turnSpeedDegreesPerSecond = 720f;
         [SerializeField] private float walkSpeedNormalizationMetersPerSecond = PlayerMovementController.DefaultSpeedMetersPerSecond;
@@ -36,6 +40,8 @@ namespace Hollow.Combat
         [SerializeField] private float turnInPlaceStartDegrees = DefaultTurnInPlaceStartDegrees;
         [SerializeField] private float turnInPlaceFullDegrees = DefaultTurnInPlaceFullDegrees;
         [SerializeField] private float diagnosticSmoothingSeconds = DefaultDiagnosticSmoothingSeconds;
+        [SerializeField] private float simpleModeMeleeActionSpeedMin = DefaultSimpleModeMeleeActionSpeedMin;
+        [SerializeField] private float simpleModeMeleeActionSpeedMax = DefaultSimpleModeMeleeActionSpeedMax;
 
         private static readonly int IsMovingHash = Animator.StringToHash(IsMovingParameter);
         private static readonly int MoveSpeedHash = Animator.StringToHash(MoveSpeedParameter);
@@ -121,6 +127,14 @@ namespace Hollow.Combat
 
         public bool IsTurnInPlaceActive => isTurnInPlaceActive;
 
+        public PlayerAnimationSystemMode AnimationSystemMode => animationSystemMode;
+
+        public bool AlwaysFaceAimDirectionInSimpleMode => alwaysFaceAimDirectionInSimpleMode;
+
+        public float SimpleModeMeleeActionSpeedMin => simpleModeMeleeActionSpeedMin;
+
+        public float SimpleModeMeleeActionSpeedMax => simpleModeMeleeActionSpeedMax;
+
         private void Awake()
         {
             ResolveReferences();
@@ -158,6 +172,8 @@ namespace Hollow.Combat
             turnInPlaceStartDegrees = Mathf.Clamp(turnInPlaceStartDegrees, 0f, 180f);
             turnInPlaceFullDegrees = Mathf.Clamp(Mathf.Max(turnInPlaceStartDegrees, turnInPlaceFullDegrees), 0f, 180f);
             diagnosticSmoothingSeconds = Mathf.Max(0f, diagnosticSmoothingSeconds);
+            simpleModeMeleeActionSpeedMin = Mathf.Max(0.01f, simpleModeMeleeActionSpeedMin);
+            simpleModeMeleeActionSpeedMax = Mathf.Max(simpleModeMeleeActionSpeedMin, simpleModeMeleeActionSpeedMax);
         }
 
         private void LateUpdate()
@@ -212,6 +228,20 @@ namespace Hollow.Combat
             teleportResetDistanceMeters = Mathf.Max(0.1f, nextTeleportResetDistanceMeters);
             turnInPlaceStartDegrees = Mathf.Clamp(nextTurnInPlaceStartDegrees, 0f, 180f);
             turnInPlaceFullDegrees = Mathf.Clamp(Mathf.Max(turnInPlaceStartDegrees, nextTurnInPlaceFullDegrees), 0f, 180f);
+        }
+
+        public void ConfigureAnimationSystemMode(
+            PlayerAnimationSystemMode nextAnimationSystemMode,
+            bool nextAlwaysFaceAimDirectionInSimpleMode = true)
+        {
+            animationSystemMode = nextAnimationSystemMode;
+            alwaysFaceAimDirectionInSimpleMode = nextAlwaysFaceAimDirectionInSimpleMode;
+        }
+
+        public void ConfigureSimpleModeActionSpeedClamp(float minimum, float maximum)
+        {
+            simpleModeMeleeActionSpeedMin = Mathf.Max(0.01f, minimum);
+            simpleModeMeleeActionSpeedMax = Mathf.Max(simpleModeMeleeActionSpeedMin, maximum);
         }
 
         public void ConfigureActionClips(
@@ -432,7 +462,7 @@ namespace Hollow.Combat
                 return;
             }
 
-            actionSpeed = ClipSpeedForDuration(slashClipDurationSeconds, actionDurationSeconds);
+            actionSpeed = ActionClipSpeedFor(slot, slashClipDurationSeconds, actionDurationSeconds);
             if (slot == WeaponSlot.Melee)
             {
                 pendingSlashTrigger = true;
@@ -514,7 +544,20 @@ namespace Hollow.Combat
             aimFacingDirectionWorld = new Vector3(lockedDirection.x, 0f, lockedDirection.y).normalized;
             aimBodyAngleDegrees = Vector3.Angle(SafePlanarDirection(facingDirectionWorld, Vector3.forward), aimFacingDirectionWorld);
             isTurnInPlaceActive = aimBodyAngleDegrees >= turnInPlaceStartDegrees;
-            if (isTurnInPlaceActive)
+            if (ShouldAlwaysFaceAimDirection())
+            {
+                facingDirectionWorld = rotateVisual && deltaTime > 0f
+                    ? Vector3.RotateTowards(
+                        SafePlanarDirection(facingDirectionWorld, aimFacingDirectionWorld),
+                        aimFacingDirectionWorld,
+                        Mathf.Deg2Rad * turnSpeedDegreesPerSecond * deltaTime,
+                        0f)
+                    : aimFacingDirectionWorld;
+                facingDirectionWorld = SafePlanarDirection(facingDirectionWorld, aimFacingDirectionWorld);
+                aimBodyAngleDegrees = Vector3.Angle(facingDirectionWorld, aimFacingDirectionWorld);
+                isTurnInPlaceActive = aimBodyAngleDegrees > 1f;
+            }
+            else if (isTurnInPlaceActive)
             {
                 var turnWeight = turnInPlaceFullDegrees <= turnInPlaceStartDegrees
                     ? 1f
@@ -561,6 +604,20 @@ namespace Hollow.Combat
 
             direction = aimLockController.AttackDirection;
             return direction.sqrMagnitude > 0.001f;
+        }
+
+        private bool ShouldAlwaysFaceAimDirection()
+        {
+            return animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
+                   alwaysFaceAimDirectionInSimpleMode;
+        }
+
+        private float ActionClipSpeedFor(WeaponSlot slot, float clipDurationSeconds, float actionDurationSeconds)
+        {
+            var speed = ClipSpeedForDuration(clipDurationSeconds, actionDurationSeconds);
+            return animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation && slot == WeaponSlot.Melee
+                ? Mathf.Clamp(speed, simpleModeMeleeActionSpeedMin, simpleModeMeleeActionSpeedMax)
+                : speed;
         }
 
         private Vector2 CalculateLockedRelativeMove(Vector3 planarDelta, Vector3 forward, float deltaTime)

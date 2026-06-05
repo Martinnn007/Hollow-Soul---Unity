@@ -34,6 +34,9 @@ namespace Hollow.Editor.Generation
         private const string PlayerControllerPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Player.controller";
         public const string RawMixamoDebugScenePath = "Assets/_Hollow/Scenes/DeveloperLab/RawMixamoAnimationDebug.unity";
         private const string RollInPlaceClipPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Roll_InPlace.anim";
+        private const string SimpleWalkStableClipPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Walk_SimpleStable.anim";
+        private const string SimpleRunStableClipPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Run_SimpleStable.anim";
+        private const string SimpleAttackInPlaceClipPath = "Assets/_Hollow/Art/Models/Characters/Player/MainCharacter_Attack_SimpleInPlace.anim";
         private const string CanonicalMaterialPath = "Assets/_Hollow/Art/Materials/ArtPass/AP_M_MainCharacter_GreySentinel.mat";
         private const string CleanRebuildBackupRoot = "/private/tmp/hollow-player-clean-rebuild";
         private const string IdleClipName = "MainCharacter_Idle";
@@ -46,6 +49,8 @@ namespace Hollow.Editor.Generation
         private const float RunStartMoveSpeedThreshold = 0.5f;
         private const float RunTransitionThreshold = RunStartMoveSpeedThreshold - 0.001f;
         private const float RollRootDriftStripThresholdMeters = 0.25f;
+        private const float LocomotionRootDriftStripThresholdMeters = 0.05f;
+        private const float AttackRootDriftStripThresholdMeters = 0.025f;
         private const string VisualRootName = "MainCharacter_VisualRoot";
         private const string ModelInstanceName = "MainCharacter_MeshyModel";
         private const string LegacyCapsuleName = "PlayerHeight_1_78m";
@@ -84,6 +89,20 @@ namespace Hollow.Editor.Generation
             new("RunForwardLeft", DirectionalPath("Run_ForwardLeft", "Meshy_AI_Grey_Sentinel_biped_Animation_Run_ForwardLeft_withSkin.fbx"), "MainCharacter_Run_ForwardLeft", new Vector2(-0.70710677f, 0.70710677f), 1f)
         };
         private static readonly HashSet<string> RollRootLikeBindingNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Armature",
+            "Hips",
+            "Pelvis",
+            "Root",
+            "RootNode"
+        };
+        private static readonly HashSet<string> LocomotionRootLikeBindingNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Armature",
+            "Root",
+            "RootNode"
+        };
+        private static readonly HashSet<string> AttackRootLikeBindingNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "Armature",
             "Hips",
@@ -143,19 +162,28 @@ namespace Hollow.Editor.Generation
                 : greatSwordProfile != null && greatSwordProfile.WeaponBlockClips.Count > 0
                     ? greatSwordProfile.WeaponBlockClips[0]
                     : slashClip;
+            var controllerWalkClip = animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation
+                ? CreateOrUpdateStabilizedSimpleLocomotionClip(walkClip, SimpleWalkStableClipPath, "MainCharacter_Walk_SimpleStable")
+                : walkClip;
+            var controllerRunClip = animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation
+                ? CreateOrUpdateStabilizedSimpleLocomotionClip(runClip, SimpleRunStableClipPath, "MainCharacter_Run_SimpleStable")
+                : runClip;
+            var controllerAttackClip = animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation
+                ? CreateOrUpdateSimpleInPlaceAttackClip(slashClip)
+                : slashClip;
             var material = CreateOrUpdateCanonicalMaterial();
             var controller = CreateAnimatorController(
                 idleClip,
-                walkClip,
-                runClip,
+                controllerWalkClip,
+                controllerRunClip,
                 directionalLocomotionClips,
                 rollClip,
-                slashClip,
+                controllerAttackClip,
                 guardBlockClip,
                 hitClip,
                 deadClip,
                 animationSystemMode);
-            UpdatePlayerPrefab(controller, material, rollClip, slashClip, hitClip, deadClip, profileCatalog, animationSystemMode);
+            UpdatePlayerPrefab(controller, material, rollClip, controllerAttackClip, hitClip, deadClip, profileCatalog, animationSystemMode);
             PlayerAnimationProfileAssetGenerator.GenerateDebugScene(profileCatalog);
             GenerateRawMixamoAnimationDebugScene(controller, material, animationSystemMode);
 
@@ -448,6 +476,119 @@ namespace Hollow.Editor.Generation
             return asset;
         }
 
+        private static AnimationClip CreateOrUpdateStabilizedSimpleLocomotionClip(
+            AnimationClip sourceClip,
+            string assetPath,
+            string clipName)
+        {
+            return CreateOrUpdateStabilizedClip(
+                sourceClip,
+                assetPath,
+                clipName,
+                loop: true,
+                candidateBindingNames: LocomotionRootLikeBindingNames,
+                stripThreshold: LocomotionRootDriftStripThresholdMeters,
+                stabilizeHorizontalPosition: true,
+                stabilizeYaw: true);
+        }
+
+        private static AnimationClip CreateOrUpdateSimpleInPlaceAttackClip(AnimationClip sourceClip)
+        {
+            return CreateOrUpdateStabilizedClip(
+                sourceClip,
+                SimpleAttackInPlaceClipPath,
+                "MainCharacter_Attack_SimpleInPlace",
+                loop: false,
+                candidateBindingNames: AttackRootLikeBindingNames,
+                stripThreshold: AttackRootDriftStripThresholdMeters,
+                stabilizeHorizontalPosition: true,
+                stabilizeYaw: false);
+        }
+
+        private static AnimationClip CreateOrUpdateStabilizedClip(
+            AnimationClip sourceClip,
+            string assetPath,
+            string clipName,
+            bool loop,
+            HashSet<string> candidateBindingNames,
+            float stripThreshold,
+            bool stabilizeHorizontalPosition,
+            bool stabilizeYaw)
+        {
+            if (sourceClip == null)
+            {
+                throw new InvalidOperationException($"Cannot generate stabilized clip {clipName} from a null source clip.");
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(assetPath) ?? string.Empty);
+            var stabilizedClip = Object.Instantiate(sourceClip);
+            stabilizedClip.name = clipName;
+            var settings = AnimationUtility.GetAnimationClipSettings(sourceClip);
+            settings.loopTime = loop;
+            settings.loopBlend = loop;
+            settings.loopBlendPositionXZ = loop;
+            AnimationUtility.SetAnimationClipSettings(stabilizedClip, settings);
+
+            var strippedBindings = new List<string>();
+            foreach (var binding in AnimationUtility.GetCurveBindings(stabilizedClip))
+            {
+                if (binding.type != typeof(Transform) || !IsRootLikeTransformBinding(binding, candidateBindingNames))
+                {
+                    continue;
+                }
+
+                if (stabilizeHorizontalPosition && IsHorizontalPositionBinding(binding))
+                {
+                    StripCurveDrift(stabilizedClip, sourceClip.length, binding, stripThreshold, strippedBindings);
+                }
+                else if (stabilizeYaw && IsYawBinding(binding))
+                {
+                    StripCurveDrift(stabilizedClip, sourceClip.length, binding, 1.5f, strippedBindings);
+                }
+            }
+
+            if (AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath) != null)
+            {
+                AssetDatabase.DeleteAsset(assetPath);
+            }
+
+            AssetDatabase.CreateAsset(stabilizedClip, assetPath);
+            AssetDatabase.ImportAsset(assetPath);
+            var asset = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+            if (asset == null)
+            {
+                throw new InvalidOperationException($"Failed to create stabilized animation clip at {assetPath}.");
+            }
+
+            asset.name = clipName;
+            EditorUtility.SetDirty(asset);
+            if (strippedBindings.Count > 0)
+            {
+                Debug.Log($"Generated {clipName} by locking {strippedBindings.Count} drifting curves: {string.Join(", ", strippedBindings)}");
+            }
+
+            return asset;
+        }
+
+        private static void StripCurveDrift(
+            AnimationClip clip,
+            float clipLengthSeconds,
+            EditorCurveBinding binding,
+            float threshold,
+            ICollection<string> strippedBindings)
+        {
+            var curve = AnimationUtility.GetEditorCurve(clip, binding);
+            if (!HasSignificantDrift(curve, threshold))
+            {
+                return;
+            }
+
+            var initialValue = curve.Evaluate(0f);
+            var lockedCurve = AnimationCurve.Constant(0f, Mathf.Max(0.01f, clipLengthSeconds), initialValue);
+            AnimationUtility.SetEditorCurve(clip, binding, lockedCurve);
+            strippedBindings.Add($"{binding.path}.{binding.propertyName}");
+        }
+
         private static bool IsRootLikeRollPositionBinding(EditorCurveBinding binding)
         {
             if (binding.type != typeof(Transform))
@@ -482,7 +623,50 @@ namespace Hollow.Editor.Generation
             return RollRootLikeBindingNames.Contains(normalized);
         }
 
+        private static bool IsRootLikeTransformBinding(EditorCurveBinding binding, HashSet<string> candidateBindingNames)
+        {
+            if (string.IsNullOrEmpty(binding.path))
+            {
+                return true;
+            }
+
+            var normalized = BindingLeafName(binding);
+            return candidateBindingNames.Contains(normalized);
+        }
+
+        private static string BindingLeafName(EditorCurveBinding binding)
+        {
+            var segments = binding.path.Split('/');
+            var segment = segments[^1];
+            var namespaceSeparator = segment.LastIndexOf(':');
+            return namespaceSeparator >= 0 && namespaceSeparator < segment.Length - 1
+                ? segment[(namespaceSeparator + 1)..]
+                : segment;
+        }
+
+        private static bool IsHorizontalPositionBinding(EditorCurveBinding binding)
+        {
+            return binding.propertyName == "m_LocalPosition.x" ||
+                   binding.propertyName == "m_LocalPosition.z" ||
+                   binding.propertyName == "localPosition.x" ||
+                   binding.propertyName == "localPosition.z";
+        }
+
+        private static bool IsYawBinding(EditorCurveBinding binding)
+        {
+            return binding.propertyName == "localEulerAnglesRaw.y" ||
+                   binding.propertyName == "localEulerAnglesBaked.y" ||
+                   binding.propertyName == "localEulerAngles.y" ||
+                   binding.propertyName == "m_LocalEulerAngles.y" ||
+                   binding.propertyName == "m_LocalEulerAnglesRaw.y";
+        }
+
         private static bool HasSignificantRollDrift(AnimationCurve curve)
+        {
+            return HasSignificantDrift(curve, RollRootDriftStripThresholdMeters);
+        }
+
+        private static bool HasSignificantDrift(AnimationCurve curve, float threshold)
         {
             if (curve == null || curve.length <= 1)
             {
@@ -501,7 +685,7 @@ namespace Hollow.Editor.Generation
 
             var range = maximum - minimum;
             var drift = Mathf.Abs(last - first);
-            return Mathf.Max(range, drift) > RollRootDriftStripThresholdMeters;
+            return Mathf.Max(range, drift) > threshold;
         }
 
         private static Material CreateOrUpdateCanonicalMaterial()
@@ -1180,12 +1364,19 @@ namespace Hollow.Editor.Generation
                 profileController.Configure(profileCatalog);
                 profileController.Bind(prefabRoot.GetComponent<PlayerWeaponController>());
                 EditorUtility.SetDirty(profileController);
+                aimLockController.ConfigurePresentationFacing(false);
                 locomotionAnimator.Bind(animator, visualRoot.transform);
                 locomotionAnimator.BindGameplay(
                     prefabRoot.GetComponent<PlayerWeaponController>(),
                     prefabRoot.GetComponent<CombatantHealth>(),
                     aimLockController);
                 locomotionAnimator.Configure(0.05f, 720f, PlayerMovementController.DefaultSpeedMetersPerSecond, 1.5f);
+                locomotionAnimator.ConfigureAnimationSystemMode(
+                    animationSystemMode,
+                    nextAlwaysFaceAimDirectionInSimpleMode: true);
+                locomotionAnimator.ConfigureSimpleModeActionSpeedClamp(
+                    PlayerLocomotionAnimator.DefaultSimpleModeMeleeActionSpeedMin,
+                    PlayerLocomotionAnimator.DefaultSimpleModeMeleeActionSpeedMax);
                 locomotionAnimator.ConfigureActionClips(
                     rollClip != null ? rollClip.length : PlayerWeaponController.RollDurationSeconds,
                     slashClip != null ? slashClip.length : 0.75f,

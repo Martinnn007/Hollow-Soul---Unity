@@ -77,6 +77,7 @@ namespace Hollow.Combat
         public const float MouseAimIntentMemorySeconds = 1.25f;
 
         [SerializeField] private RoomCombatController combatController;
+        [SerializeField] private bool drivesPresentationFacing = true;
 
         private Transform playerVisualRoot;
         private GameObject lockMarker;
@@ -113,10 +114,18 @@ namespace Hollow.Combat
 
         public bool HasManualAimOverride => hasManualAimOverride;
 
+        public bool DrivesPresentationFacing => drivesPresentationFacing;
+
         public void Configure(RoomCombatController controller)
         {
             combatController = controller;
             HideLockMarker();
+        }
+
+        public void ConfigurePresentationFacing(bool enabled)
+        {
+            drivesPresentationFacing = enabled;
+            ApplyPresentationFacing();
         }
 
         public void BindPresentation(GameObject nextPlayerVisualRoot)
@@ -386,7 +395,7 @@ namespace Hollow.Combat
 
         private void ApplyPresentationFacing()
         {
-            if (playerVisualRoot == null)
+            if (!drivesPresentationFacing || playerVisualRoot == null)
             {
                 return;
             }

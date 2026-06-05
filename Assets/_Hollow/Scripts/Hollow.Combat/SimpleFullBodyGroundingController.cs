@@ -7,24 +7,33 @@ namespace Hollow.Combat
     {
         public const float DefaultGroundClearanceMeters = 0.08f;
         public const float DefaultMaxCorrectionMeters = 2.5f;
+        public const float DefaultMaxPlanarCorrectionMeters = 1.25f;
         private const float FootBoneSoleApproximationMeters = 0.08f;
 
         [SerializeField] private Transform measuredRoot;
         [SerializeField] private Transform offsetRoot;
         [SerializeField] private Transform groundReference;
         [SerializeField] private bool groundingEnabled = true;
+        [SerializeField] private bool stabilizePlanarCenter = true;
         [SerializeField] private float groundClearanceMeters = DefaultGroundClearanceMeters;
         [SerializeField] private float maxCorrectionMeters = DefaultMaxCorrectionMeters;
+        [SerializeField] private float maxPlanarCorrectionMeters = DefaultMaxPlanarCorrectionMeters;
+
+        private bool hasPlanarAnchor;
+        private Vector2 planarCenterAnchor;
 
         public bool GroundingEnabled => groundingEnabled;
+        public bool StabilizePlanarCenter => stabilizePlanarCenter;
         public Transform MeasuredRoot => measuredRoot;
         public Transform OffsetRoot => offsetRoot;
         public Transform GroundReference => groundReference;
         public float GroundClearanceMeters => groundClearanceMeters;
+        public float MaxPlanarCorrectionMeters => maxPlanarCorrectionMeters;
         public float LastBodyBottomY { get; private set; }
         public float LastMeasuredFootBottomY { get; private set; }
         public float LastGroundY { get; private set; }
         public float LastCorrectionY { get; private set; }
+        public Vector2 LastPlanarCorrection { get; private set; }
         public bool LastApplySucceeded { get; private set; }
 
         public void Configure(
@@ -33,14 +42,19 @@ namespace Hollow.Combat
             Transform nextGroundReference,
             bool enabled,
             float clearanceMeters = DefaultGroundClearanceMeters,
-            float maximumCorrectionMeters = DefaultMaxCorrectionMeters)
+            float maximumCorrectionMeters = DefaultMaxCorrectionMeters,
+            bool stabilizePlanar = true,
+            float maximumPlanarCorrectionMeters = DefaultMaxPlanarCorrectionMeters)
         {
             measuredRoot = nextMeasuredRoot;
             offsetRoot = nextOffsetRoot;
             groundReference = nextGroundReference;
             groundingEnabled = enabled;
+            stabilizePlanarCenter = stabilizePlanar;
             groundClearanceMeters = Mathf.Max(0f, clearanceMeters);
             maxCorrectionMeters = Mathf.Max(0.01f, maximumCorrectionMeters);
+            maxPlanarCorrectionMeters = Mathf.Max(0.01f, maximumPlanarCorrectionMeters);
+            hasPlanarAnchor = false;
         }
 
         public void SetGroundingEnabled(bool enabled)
@@ -49,7 +63,9 @@ namespace Hollow.Combat
             if (!enabled)
             {
                 LastCorrectionY = 0f;
+                LastPlanarCorrection = Vector2.zero;
                 LastApplySucceeded = false;
+                hasPlanarAnchor = false;
             }
         }
 
@@ -71,9 +87,16 @@ namespace Hollow.Combat
         public bool ApplyGrounding()
         {
             LastCorrectionY = 0f;
+            LastPlanarCorrection = Vector2.zero;
             LastApplySucceeded = false;
 
             if (!groundingEnabled || offsetRoot == null || !TryResolveBodyBounds(out var bounds))
+            {
+                return false;
+            }
+
+            ApplyPlanarCenterStabilization(bounds);
+            if (LastPlanarCorrection.sqrMagnitude > 0.000001f && !TryResolveBodyBounds(out bounds))
             {
                 return false;
             }
@@ -92,6 +115,36 @@ namespace Hollow.Combat
             LastCorrectionY = correction;
             LastApplySucceeded = true;
             return true;
+        }
+
+        private void ApplyPlanarCenterStabilization(Bounds bounds)
+        {
+            if (!stabilizePlanarCenter)
+            {
+                hasPlanarAnchor = false;
+                return;
+            }
+
+            var referencePosition = groundReference != null ? groundReference.position : transform.position;
+            var referencePlanar = new Vector2(referencePosition.x, referencePosition.z);
+            var centerPlanar = new Vector2(bounds.center.x, bounds.center.z);
+            if (!hasPlanarAnchor)
+            {
+                planarCenterAnchor = centerPlanar - referencePlanar;
+                hasPlanarAnchor = true;
+                return;
+            }
+
+            var desiredCenter = referencePlanar + planarCenterAnchor;
+            var correction = desiredCenter - centerPlanar;
+            if (correction.sqrMagnitude <= 0.000001f)
+            {
+                return;
+            }
+
+            correction = Vector2.ClampMagnitude(correction, maxPlanarCorrectionMeters);
+            offsetRoot.position += new Vector3(correction.x, 0f, correction.y);
+            LastPlanarCorrection = correction;
         }
 
         private bool TryResolveBodyBounds(out Bounds bounds)
