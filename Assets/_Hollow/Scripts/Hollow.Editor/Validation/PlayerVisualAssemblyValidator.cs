@@ -267,6 +267,11 @@ namespace Hollow.Editor.Validation
                 result.Errors.Add("At least one body renderer has no assigned material.");
             }
 
+            if (!result.UsesTemporaryStaticFallback && result.BodyRenderersWithTextureCount == 0)
+            {
+                result.Errors.Add("Skinned player body has no assigned albedo/base texture.");
+            }
+
             if (!IsSaneBodyBounds(result.BodyBoundsSize))
             {
                 result.Errors.Add($"Body renderer bounds are tiny or implausible: {FormatVector(result.BodyBoundsSize)}.");
@@ -441,6 +446,11 @@ namespace Hollow.Editor.Validation
                 if (renderer.sharedMaterials.Length > 0 && renderer.sharedMaterials.All(material => material != null))
                 {
                     result.BodyRenderersWithMaterialCount++;
+                }
+
+                if (renderer.sharedMaterials.Any(MaterialHasBaseTexture))
+                {
+                    result.BodyRenderersWithTextureCount++;
                 }
 
                 var bounds = RendererBounds(renderer);
@@ -731,6 +741,17 @@ namespace Hollow.Editor.Validation
                 size.y <= MaximumBodyHeightMeters &&
                 size.x >= MinimumBodyWidthMeters &&
                 size.z >= MinimumBodyDepthMeters;
+        }
+
+        private static bool MaterialHasBaseTexture(Material material)
+        {
+            if (material == null)
+            {
+                return false;
+            }
+
+            return (material.HasProperty("_BaseMap") && material.GetTexture("_BaseMap") != null) ||
+                (material.HasProperty("_MainTex") && material.GetTexture("_MainTex") != null);
         }
 
         private static bool IsSaneEquipmentBounds(PresentationPrefabRole role, Vector3 size)
@@ -1143,6 +1164,7 @@ namespace Hollow.Editor.Validation
         public int BodyRendererCount { get; set; }
         public int EnabledBodyRendererCount { get; set; }
         public int BodyRenderersWithMaterialCount { get; set; }
+        public int BodyRenderersWithTextureCount { get; set; }
         public int SkinnedBodyRendererCount { get; set; }
         public int MeshBodyRendererCount { get; set; }
         public int WeaponRendererCount { get; set; }
@@ -1180,6 +1202,7 @@ namespace Hollow.Editor.Validation
             builder.AppendLine($"Animator Controller: {(AnimatorControllerAssigned ? "assigned" : "missing")}");
             builder.AppendLine($"Animator Path: {AnimatorPath}");
             builder.AppendLine($"Body Renderers: {BodyRendererCount} enabled {EnabledBodyRendererCount} skinned {SkinnedBodyRendererCount} mesh {MeshBodyRendererCount}");
+            builder.AppendLine($"Body Textured Renderers: {BodyRenderersWithTextureCount}");
             builder.AppendLine($"Skinned RootBone: {(SkinnedBodyRootBoneAssigned ? SkinnedBodyRootBonePath : "<missing>")}");
             builder.AppendLine($"Skinned Bone Count: {SkinnedBodyBoneCount}");
             builder.AppendLine($"Weapon Renderers: {WeaponRendererCount}");

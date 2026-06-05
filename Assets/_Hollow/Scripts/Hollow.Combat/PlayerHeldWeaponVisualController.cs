@@ -266,8 +266,8 @@ namespace Hollow.Combat
 
         private void LateUpdate()
         {
-            ApplyPose();
             RefreshAllEquipmentVisualTransforms();
+            ApplyPose();
         }
 
         public void ForceRangedAimPose(Vector2 direction)
@@ -390,8 +390,8 @@ namespace Hollow.Combat
             currentFacing = attackFacing;
             attackAgeSeconds = 0f;
             attackDurationSeconds = Mathf.Max(0.01f, durationSeconds);
-            ApplyPose();
             RefreshAllEquipmentVisualTransforms();
+            ApplyPose();
         }
 
         private void RefreshVisual(bool force)
@@ -448,8 +448,8 @@ namespace Hollow.Combat
                     DefaultMeleeHolsterSocketLocalScale);
             }
 
-            ApplyPose();
             RefreshAllEquipmentVisualTransforms();
+            ApplyPose();
         }
 
         private void EnsureRoot()

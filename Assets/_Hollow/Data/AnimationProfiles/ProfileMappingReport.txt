@@ -1,22 +1,87 @@
 Hollow Soul Player Animation Profile Mapping Report
 ReportVersion: 1
-GeneratedAtUtc: 2026-06-04T22:25:09.3217460Z
+GeneratedAtUtc: 2026-06-05T00:10:15.5310170Z
 UnityVersion: 6000.4.1f1
 AnimationPackRoot: Assets/_Hollow/Animation Packs
 ProfileCatalogPath: Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationProfileCatalog.asset
-SELECTED_SKINNED_BODY_FBX: Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
-SELECTED_AVATAR_SOURCE: Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
-SELECTED_SKINNED_BODY_SCALE: 100
+SELECTED_SKINNED_BODY_FBX: Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
+SELECTED_AVATAR_SOURCE: Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
+SELECTED_SKINNED_BODY_SCALE: 1
 FallbackProfile: UnarmedLocomotionProfile (UnarmedLocomotion)
 
 SkinnedBodyCandidates:
-- VALID Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
-- VALID Assets/_Hollow/Animation Packs/Great Sword Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
-- VALID Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
-- VALID Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
-- VALID Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
-- VALID Assets/_Hollow/Animation Packs/Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
-- VALID Assets/_Hollow/Animation Packs/Shooter Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0603210958_textureAvatar, renderer=Meshy_AI_Neon_Exoskeleton_0603210958_texture, rootBone=mixamorig:Hips, bones=52, bounds=1.797,1.78,0.372; localScale=100
+- INVALID Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.fbx: missing valid Humanoid Avatar; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Great Sword Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Shooter Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- VALID Assets/_Hollow/Animation Packs/Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx: valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+
+AnimationPackValidation:
+- Pack: Assets/_Hollow/Animation Packs/Great Sword Pack
+  FBXCount: 52
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 51
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Great Sword Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Hollow_Main_Model
+  FBXCount: 1
+  TextureCount: 4
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 0
+  - BodyCandidate: INVALID Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.fbx; missing valid Humanoid Avatar; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Locomotion Pack
+  FBXCount: 13
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 12
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Male Locomotion Pack
+  FBXCount: 11
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 10
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack
+  FBXCount: 21
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 20
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack
+  FBXCount: 52
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 51
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack
+  FBXCount: 50
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 49
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Shooter Pack
+  FBXCount: 16
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 1
+  AnimationClipCandidates: 15
+  - BodyCandidate: VALID Assets/_Hollow/Animation Packs/Shooter Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx; valid Avatar=Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbxAvatar, renderer=temp, rootBone=mixamorig:Hips, bones=52, bounds=2.006,2,0.412; localScale=1; materialTextureAssigned=no; canonicalAlbedo=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.png; canonicalNormal=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_normal.png; canonicalMetallic=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_metallic.png; canonicalRoughness=Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture_roughness.png
+- Pack: Assets/_Hollow/Animation Packs/Textures
+  FBXCount: 0
+  TextureCount: 0
+  MaterialCount: 0
+  WithSkinBodyCandidates: 0
+  AnimationClipCandidates: 0
 
 GeneratedProfileAssets:
 - UnarmedLocomotion: Assets/_Hollow/Data/AnimationProfiles/UnarmedLocomotionProfile.asset

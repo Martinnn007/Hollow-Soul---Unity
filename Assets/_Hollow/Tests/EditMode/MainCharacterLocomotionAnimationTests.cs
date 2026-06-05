@@ -621,6 +621,7 @@ namespace Hollow.Tests.EditMode
 
             var selected = PlayerAnimationProfileAssetGenerator.ResolveSelectedSkinnedBodyFbxPath();
             Assert.IsFalse(string.IsNullOrWhiteSpace(selected), "Expected a valid with-skin FBX body candidate.");
+            StringAssert.Contains("0604223747", selected);
             StringAssert.Contains("Male Locomotion Pack", selected);
 
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(selected);
@@ -1578,6 +1579,7 @@ namespace Hollow.Tests.EditMode
                     Mathf.Abs(finalWrapperScale.z)) < 2f;
             }), visualValidation.ToReportString());
             Assert.IsFalse(string.IsNullOrWhiteSpace(visualValidation.SelectedSkinnedBodyFbx), visualValidation.ToReportString());
+            StringAssert.Contains("0604223747", visualValidation.SelectedSkinnedBodyFbx);
             StringAssert.Contains("Male Locomotion Pack", visualValidation.SelectedSkinnedBodyFbx);
             Assert.AreEqual(visualValidation.SelectedSkinnedBodyFbx, visualValidation.SelectedAvatarSource);
             Assert.IsTrue(visualValidation.SkinnedBodyRootBoneAssigned, visualValidation.ToReportString());

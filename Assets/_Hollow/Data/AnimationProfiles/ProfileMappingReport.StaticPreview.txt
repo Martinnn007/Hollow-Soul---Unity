@@ -1,14 +1,14 @@
 Hollow Soul Player Animation Profile Static Mapping Preview
 ReportType: STATIC_PREVIEW
 ReportVersion: 1
-GeneratedAtUtc: 2026-06-04T19:09:10.1088900Z
+GeneratedAtUtc: 2026-06-05T00:10:15.7014060Z
 AnimationPackRoot: Assets/_Hollow/Animation Packs
 ProfileCatalogPath: Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationProfileCatalog.asset
 StaticPreviewReportPath: Assets/_Hollow/Data/AnimationProfiles/ProfileMappingReport.StaticPreview.txt
 Warning: This report does not prove Avatar/Humanoid import validity, clip loop settings, rig compatibility, Animator generation, prefab generation, debug scene generation, or gameplay correctness.
 InfrastructureFreezeGate: active until Unity profile generation, debug scene, player prefab, profile switching, shield gate, locomotion, Mixamo mapping, and targeted regressions are validated in a real editor session.
 
-DetectedPackFolders (8):
+DetectedPackFolders (9):
 - Assets/_Hollow/Animation Packs/Great Sword Pack
 - Assets/_Hollow/Animation Packs/Hollow_Main_Model
 - Assets/_Hollow/Animation Packs/Locomotion Pack
@@ -17,8 +17,9 @@ DetectedPackFolders (8):
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack
 - Assets/_Hollow/Animation Packs/Shooter Pack
+- Assets/_Hollow/Animation Packs/Textures
 DetectedCandidateFbxFiles (217):
-- Assets/_Hollow/Animation Packs/Great Sword Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Great Sword Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great sword 1.fbx
 - Assets/_Hollow/Animation Packs/Great Sword Pack/draw a great sword 2.fbx
 - Assets/_Hollow/Animation Packs/Great Sword Pack/great sword 180 turn (2).fbx
@@ -70,9 +71,9 @@ DetectedCandidateFbxFiles (217):
 - Assets/_Hollow/Animation Packs/Great Sword Pack/spell cast.fbx
 - Assets/_Hollow/Animation Packs/Great Sword Pack/two handed sword death (2).fbx
 - Assets/_Hollow/Animation Packs/Great Sword Pack/two handed sword death.fbx
+- Assets/_Hollow/Animation Packs/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0604223747_texture.fbx
 - Assets/_Hollow/Animation Packs/Hollow_Main_Rig.fbx
-- Assets/_Hollow/Animation Packs/Hollow_Main_Rig2.fbx
-- Assets/_Hollow/Animation Packs/Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Locomotion Pack/idle.fbx
 - Assets/_Hollow/Animation Packs/Locomotion Pack/jump.fbx
 - Assets/_Hollow/Animation Packs/Locomotion Pack/left strafe walking.fbx
@@ -85,7 +86,7 @@ DetectedCandidateFbxFiles (217):
 - Assets/_Hollow/Animation Packs/Locomotion Pack/right turn.fbx
 - Assets/_Hollow/Animation Packs/Locomotion Pack/running.fbx
 - Assets/_Hollow/Animation Packs/Locomotion Pack/walking.fbx
-- Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Male Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Male Locomotion Pack/idle.fbx
 - Assets/_Hollow/Animation Packs/Male Locomotion Pack/jump.fbx
 - Assets/_Hollow/Animation Packs/Male Locomotion Pack/left strafe walking.fbx
@@ -96,7 +97,7 @@ DetectedCandidateFbxFiles (217):
 - Assets/_Hollow/Animation Packs/Male Locomotion Pack/right turn 90.fbx
 - Assets/_Hollow/Animation Packs/Male Locomotion Pack/standard run.fbx
 - Assets/_Hollow/Animation Packs/Male Locomotion Pack/walking.fbx
-- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx
 - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol jump (2).fbx
 - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol jump.fbx
@@ -117,7 +118,7 @@ DetectedCandidateFbxFiles (217):
 - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward arc.fbx
 - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk backward.fbx
 - Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol walk.fbx
-- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw sword 1.fbx
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/draw sword 2.fbx
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sheath sword 1.fbx
@@ -169,7 +170,7 @@ DetectedCandidateFbxFiles (217):
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn.fbx
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield walk (2).fbx
 - Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield walk.fbx
-- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching turn 90 left.fbx
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/crouching turn 90 right.fbx
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/death crouching headshot front.fbx
@@ -219,7 +220,7 @@ DetectedCandidateFbxFiles (217):
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk forward.fbx
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk left.fbx
 - Assets/_Hollow/Animation Packs/Rifle 8-Way Locomotion Pack/walk right.fbx
-- Assets/_Hollow/Animation Packs/Shooter Pack/Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx
+- Assets/_Hollow/Animation Packs/Shooter Pack/Meshy_AI_Neon_Exoskeleton_0604223747_texture_fbx.fbx
 - Assets/_Hollow/Animation Packs/Shooter Pack/firing rifle.fbx
 - Assets/_Hollow/Animation Packs/Shooter Pack/jump backward.fbx
 - Assets/_Hollow/Animation Packs/Shooter Pack/jump forward.fbx

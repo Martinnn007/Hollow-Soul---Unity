@@ -23,9 +23,10 @@ namespace Hollow.Editor.Generation
         public const string GeneratedPlaceholderDirectory = ProfileDirectory + "/GeneratedTemporaryDirectionalPlaceholders";
         public const string DebugScenePath = "Assets/_Hollow/Scenes/DeveloperLab/Locomotion360ProfileDebug.unity";
         public const string HollowMainRigPath = AnimationPackRoot + "/Hollow_Main_Rig.fbx";
+        public const string HollowMainModelDirectory = AnimationPackRoot + "/Hollow_Main_Model";
         public const string HollowMainModelObjPath = AnimationPackRoot + "/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0603210958_texture.obj";
         public const string HollowMainModelTexturePath = AnimationPackRoot + "/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0603210958_texture.png";
-        public const string SkinnedBodyFbxFileName = "Meshy_AI_Neon_Exoskeleton_0603210958_texture.fbx";
+        public const string SkinnedBodyFbxSearchPattern = "Meshy_AI_Neon_Exoskeleton_*texture*.fbx";
         public const float SkinnedBodyCentimeterImportScale = 100f;
 
         private const string CatalogId = "player_animation_profiles_v1";
@@ -36,15 +37,16 @@ namespace Hollow.Editor.Generation
         private const string RiflePack = AnimationPackRoot + "/Rifle 8-Way Locomotion Pack";
         private const string ShooterPack = AnimationPackRoot + "/Shooter Pack";
         private const string PistolPack = AnimationPackRoot + "/Pistol_Handgun Locomotion Pack";
-        private static readonly string[] SkinnedBodyCandidatePaths =
+        private static readonly string[] SkinnedBodyPriorityFolders =
         {
-            ClipPath(LocomotionPack, SkinnedBodyFbxFileName),
-            ClipPath(GreatSwordPack, SkinnedBodyFbxFileName),
-            ClipPath(SwordShieldPack, SkinnedBodyFbxFileName),
-            ClipPath(RiflePack, SkinnedBodyFbxFileName),
-            ClipPath(PistolPack, SkinnedBodyFbxFileName),
-            ClipPath(AnimationPackRoot + "/Locomotion Pack", SkinnedBodyFbxFileName),
-            ClipPath(ShooterPack, SkinnedBodyFbxFileName)
+            HollowMainModelDirectory,
+            LocomotionPack,
+            RiflePack,
+            SwordShieldPack,
+            GreatSwordPack,
+            PistolPack,
+            ShooterPack,
+            AnimationPackRoot + "/Locomotion Pack"
         };
 
         [MenuItem("Hollow/Animation/Generate Player Animation Profiles")]
@@ -154,6 +156,8 @@ namespace Hollow.Editor.Generation
                 builder.AppendLine($"- {candidate}");
             }
 
+            builder.AppendLine();
+            AppendAnimationPackValidationReport(builder);
             builder.AppendLine();
             builder.AppendLine("GeneratedProfileAssets:");
             foreach (var profileId in RequiredProfileIds())
@@ -799,7 +803,7 @@ namespace Hollow.Editor.Generation
 
         public static string ResolveSelectedSkinnedBodyFbxPath()
         {
-            foreach (var path in SkinnedBodyCandidatePaths)
+            foreach (var path in ResolveSkinnedBodyCandidatePaths())
             {
                 if (TryValidateSkinnedBodyCandidate(path, out _))
                 {
@@ -812,7 +816,7 @@ namespace Hollow.Editor.Generation
 
         public static IReadOnlyList<string> SkinnedBodyCandidateFbxPaths()
         {
-            return SkinnedBodyCandidatePaths;
+            return ResolveSkinnedBodyCandidatePaths();
         }
 
         public static float ResolveSelectedSkinnedBodyLocalScale()
@@ -828,10 +832,138 @@ namespace Hollow.Editor.Generation
 
         private static IEnumerable<string> BuildSkinnedBodyCandidateReportLines()
         {
-            foreach (var path in SkinnedBodyCandidatePaths)
+            foreach (var path in ResolveSkinnedBodyCandidatePaths())
             {
                 var valid = TryValidateSkinnedBodyCandidate(path, out var reason, out var localScale);
-                yield return $"{(valid ? "VALID" : "INVALID")} {path}: {reason}; localScale={localScale:0.###}";
+                yield return $"{(valid ? "VALID" : "INVALID")} {path}: {reason}; localScale={localScale:0.###}; {TextureSourceReport(path)}";
+            }
+        }
+
+        public static string ResolveHollowMainModelAlbedoTexturePath()
+        {
+            return ResolveHollowMainModelTexturePath(path =>
+                !path.Contains("_normal", StringComparison.OrdinalIgnoreCase) &&
+                !path.Contains("_metallic", StringComparison.OrdinalIgnoreCase) &&
+                !path.Contains("_roughness", StringComparison.OrdinalIgnoreCase));
+        }
+
+        public static string ResolveHollowMainModelNormalTexturePath()
+        {
+            return ResolveHollowMainModelTexturePath(path => path.Contains("_normal", StringComparison.OrdinalIgnoreCase));
+        }
+
+        public static string ResolveHollowMainModelMetallicTexturePath()
+        {
+            return ResolveHollowMainModelTexturePath(path => path.Contains("_metallic", StringComparison.OrdinalIgnoreCase));
+        }
+
+        public static string ResolveHollowMainModelRoughnessTexturePath()
+        {
+            return ResolveHollowMainModelTexturePath(path => path.Contains("_roughness", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string ResolveHollowMainModelTexturePath(Func<string, bool> predicate)
+        {
+            if (!Directory.Exists(HollowMainModelDirectory))
+            {
+                return string.Empty;
+            }
+
+            return Directory.GetFiles(HollowMainModelDirectory, "Meshy_AI_Neon_Exoskeleton_*texture*.png", SearchOption.TopDirectoryOnly)
+                .Select(NormalizeAssetPath)
+                .Where(predicate)
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault() ?? string.Empty;
+        }
+
+        private static string[] ResolveSkinnedBodyCandidatePaths()
+        {
+            if (!Directory.Exists(AnimationPackRoot))
+            {
+                return Array.Empty<string>();
+            }
+
+            return Directory.GetFiles(AnimationPackRoot, SkinnedBodyFbxSearchPattern, SearchOption.AllDirectories)
+                .Select(NormalizeAssetPath)
+                .Where(IsSkinnedBodyCandidatePath)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(BodyCandidatePriority)
+                .ThenBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        private static bool IsSkinnedBodyCandidatePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var fileName = Path.GetFileName(path);
+            return fileName.StartsWith("Meshy_AI_Neon_Exoskeleton_", StringComparison.OrdinalIgnoreCase) &&
+                fileName.Contains("texture", StringComparison.OrdinalIgnoreCase) &&
+                fileName.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int BodyCandidatePriority(string path)
+        {
+            var folder = NormalizeAssetPath(Path.GetDirectoryName(path) ?? string.Empty);
+            for (var index = 0; index < SkinnedBodyPriorityFolders.Length; index++)
+            {
+                if (string.Equals(folder, SkinnedBodyPriorityFolders[index], StringComparison.OrdinalIgnoreCase))
+                {
+                    return index;
+                }
+            }
+
+            return SkinnedBodyPriorityFolders.Length + 1;
+        }
+
+        private static string NormalizeAssetPath(string path)
+        {
+            return (path ?? string.Empty).Replace('\\', '/');
+        }
+
+        private static void AppendAnimationPackValidationReport(StringBuilder builder)
+        {
+            builder.AppendLine("AnimationPackValidation:");
+            if (!Directory.Exists(AnimationPackRoot))
+            {
+                builder.AppendLine("- Animation pack root missing.");
+                return;
+            }
+
+            foreach (var directory in Directory.GetDirectories(AnimationPackRoot).OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+            {
+                var folder = NormalizeAssetPath(directory);
+                var fbxFiles = Directory.GetFiles(folder, "*.fbx", SearchOption.TopDirectoryOnly)
+                    .Select(NormalizeAssetPath)
+                    .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                var textures = Directory.GetFiles(folder, "*.*", SearchOption.TopDirectoryOnly)
+                    .Select(NormalizeAssetPath)
+                    .Where(path =>
+                        path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".tga", StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+                var materials = Directory.GetFiles(folder, "*.mat", SearchOption.TopDirectoryOnly)
+                    .Select(NormalizeAssetPath)
+                    .ToArray();
+                var bodyCandidates = fbxFiles.Where(IsSkinnedBodyCandidatePath).ToArray();
+
+                builder.AppendLine($"- Pack: {folder}");
+                builder.AppendLine($"  FBXCount: {fbxFiles.Length}");
+                builder.AppendLine($"  TextureCount: {textures.Length}");
+                builder.AppendLine($"  MaterialCount: {materials.Length}");
+                builder.AppendLine($"  WithSkinBodyCandidates: {bodyCandidates.Length}");
+                builder.AppendLine($"  AnimationClipCandidates: {fbxFiles.Length - bodyCandidates.Length}");
+                foreach (var candidate in bodyCandidates)
+                {
+                    var valid = TryValidateSkinnedBodyCandidate(candidate, out var reason, out var localScale);
+                    builder.AppendLine($"  - BodyCandidate: {(valid ? "VALID" : "INVALID")} {candidate}; {reason}; localScale={localScale:0.###}; {TextureSourceReport(candidate)}");
+                }
             }
         }
 
@@ -966,6 +1098,18 @@ namespace Hollow.Editor.Generation
                 return false;
             }
 
+            if (!HasUsableMaterial(renderer))
+            {
+                reason = $"{renderer.name}: material missing";
+                return false;
+            }
+
+            if (!HasTextureSource(renderer))
+            {
+                reason = $"{renderer.name}: texture source missing";
+                return false;
+            }
+
             if (!TryResolveHumanScaleBounds(renderer, out localScale, out boundsSize))
             {
                 reason = $"{renderer.name}: implausible height bounds {FormatVector(boundsSize)}";
@@ -974,6 +1118,55 @@ namespace Hollow.Editor.Generation
 
             reason = "valid";
             return true;
+        }
+
+        private static bool HasUsableMaterial(Renderer renderer)
+        {
+            return renderer != null &&
+                renderer.sharedMaterials != null &&
+                renderer.sharedMaterials.Length > 0 &&
+                renderer.sharedMaterials.All(material => material != null);
+        }
+
+        private static bool HasTextureSource(Renderer renderer)
+        {
+            if (renderer != null &&
+                renderer.sharedMaterials != null &&
+                renderer.sharedMaterials.Any(MaterialHasTexture))
+            {
+                return true;
+            }
+
+            return !string.IsNullOrWhiteSpace(ResolveHollowMainModelAlbedoTexturePath());
+        }
+
+        private static bool MaterialHasTexture(Material material)
+        {
+            if (material == null)
+            {
+                return false;
+            }
+
+            return (material.HasProperty("_BaseMap") && material.GetTexture("_BaseMap") != null) ||
+                (material.HasProperty("_MainTex") && material.GetTexture("_MainTex") != null);
+        }
+
+        private static string TextureSourceReport(string candidatePath)
+        {
+            var albedo = ResolveHollowMainModelAlbedoTexturePath();
+            var normal = ResolveHollowMainModelNormalTexturePath();
+            var metallic = ResolveHollowMainModelMetallicTexturePath();
+            var roughness = ResolveHollowMainModelRoughnessTexturePath();
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(candidatePath);
+            var sourceMaterialHasTexture = prefab != null &&
+                prefab.GetComponentsInChildren<Renderer>(includeInactive: true)
+                    .SelectMany(renderer => renderer.sharedMaterials ?? Array.Empty<Material>())
+                    .Any(MaterialHasTexture);
+            return $"materialTextureAssigned={Bool(sourceMaterialHasTexture)}; " +
+                $"canonicalAlbedo={(string.IsNullOrWhiteSpace(albedo) ? "<missing>" : albedo)}; " +
+                $"canonicalNormal={(string.IsNullOrWhiteSpace(normal) ? "<missing>" : normal)}; " +
+                $"canonicalMetallic={(string.IsNullOrWhiteSpace(metallic) ? "<missing>" : metallic)}; " +
+                $"canonicalRoughness={(string.IsNullOrWhiteSpace(roughness) ? "<missing>" : roughness)}";
         }
 
         private static bool TryResolveHumanScaleBounds(SkinnedMeshRenderer renderer, out float localScale, out Vector3 boundsSize)

@@ -495,10 +495,13 @@ namespace Hollow.Editor.Generation
             }
 
             material.name = Path.GetFileNameWithoutExtension(CanonicalMaterialPath);
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(PlayerAnimationProfileAssetGenerator.HollowMainModelTexturePath) ??
+            var albedo = LoadTexture(PlayerAnimationProfileAssetGenerator.ResolveHollowMainModelAlbedoTexturePath()) ??
+                AssetDatabase.LoadAssetAtPath<Texture2D>(PlayerAnimationProfileAssetGenerator.HollowMainModelTexturePath) ??
                 AssetDatabase.LoadAssetAtPath<Texture2D>(AlbedoTexturePath);
-            var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(NormalTexturePath);
-            var metallic = AssetDatabase.LoadAssetAtPath<Texture2D>(MetallicTexturePath);
+            var normal = LoadTexture(PlayerAnimationProfileAssetGenerator.ResolveHollowMainModelNormalTexturePath()) ??
+                AssetDatabase.LoadAssetAtPath<Texture2D>(NormalTexturePath);
+            var metallic = LoadTexture(PlayerAnimationProfileAssetGenerator.ResolveHollowMainModelMetallicTexturePath()) ??
+                AssetDatabase.LoadAssetAtPath<Texture2D>(MetallicTexturePath);
             AssignTexture(material, "_BaseMap", albedo);
             AssignTexture(material, "_MainTex", albedo);
             AssignTexture(material, "_BumpMap", normal);
@@ -538,6 +541,13 @@ namespace Hollow.Editor.Generation
 
             EditorUtility.SetDirty(material);
             return material;
+        }
+
+        private static Texture2D LoadTexture(string path)
+        {
+            return string.IsNullOrWhiteSpace(path)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         private static void AssignTexture(Material material, string propertyName, Texture texture)
