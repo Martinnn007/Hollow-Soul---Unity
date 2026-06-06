@@ -1745,13 +1745,19 @@ namespace Hollow.Editor.Generation
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalScale);
-                var meleeHolsterSocket = EnsureSocket(
+                var meleeHolsterSocket = EnsureSocketInReferenceSpace(
+                    FindDescendant(modelInstance.transform, BackShieldBoneName) ??
+                        FindDescendant(modelInstance.transform, HipsBoneName) ??
+                        visualRoot.transform,
                     visualRoot.transform,
                     PlayerHeldWeaponVisualController.MeleeHolsterSocketName,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalScale);
-                var rangedHolsterSocket = EnsureSocket(
+                var rangedHolsterSocket = EnsureSocketInReferenceSpace(
+                    FindDescendant(modelInstance.transform, RightUpperLegBoneName) ??
+                        FindDescendant(modelInstance.transform, HipsBoneName) ??
+                        visualRoot.transform,
                     visualRoot.transform,
                     PlayerHeldWeaponVisualController.RangedHolsterSocketName,
                     PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
@@ -1816,6 +1822,7 @@ namespace Hollow.Editor.Generation
                     shieldForearmSocket,
                     shieldBackSocket);
                 heldWeaponVisual.Bind(prefabRoot.GetComponent<PlayerWeaponController>());
+                heldWeaponVisual.ConfigureAnimationSystemMode(animationSystemMode);
                 heldWeaponVisual.NormalizeEquipmentVisualScales();
                 heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
                 EditorUtility.SetDirty(heldWeaponVisual);
@@ -2159,6 +2166,12 @@ namespace Hollow.Editor.Generation
             {
                 coordinator.ConfigureAnimationSystemMode(animationSystemMode);
                 EditorUtility.SetDirty(coordinator);
+            }
+
+            foreach (var heldVisual in prefabRoot.GetComponentsInChildren<PlayerHeldWeaponVisualController>(includeInactive: true))
+            {
+                heldVisual.ConfigureAnimationSystemMode(animationSystemMode);
+                EditorUtility.SetDirty(heldVisual);
             }
 
             foreach (var grounding in prefabRoot.GetComponentsInChildren<SimpleFullBodyGroundingController>(includeInactive: true))
@@ -2910,6 +2923,29 @@ namespace Hollow.Editor.Generation
             return socket;
         }
 
+        private static Transform EnsureSocketInReferenceSpace(
+            Transform parent,
+            Transform referenceRoot,
+            string socketName,
+            Vector3 referenceLocalPosition,
+            Vector3 referenceLocalEuler,
+            Vector3 localScale)
+        {
+            var socket = EnsureSocket(parent, socketName, Vector3.zero, Vector3.zero, localScale);
+            if (referenceRoot == null)
+            {
+                socket.localPosition = referenceLocalPosition;
+                socket.localRotation = Quaternion.Euler(referenceLocalEuler);
+                socket.localScale = localScale;
+                return socket;
+            }
+
+            socket.position = referenceRoot.TransformPoint(referenceLocalPosition);
+            socket.rotation = referenceRoot.rotation * Quaternion.Euler(referenceLocalEuler);
+            socket.localScale = localScale;
+            return socket;
+        }
+
         private static Transform FindDescendant(Transform root, string childName)
         {
             if (root == null)
@@ -2952,6 +2988,9 @@ namespace Hollow.Editor.Generation
             return expectedName switch
             {
                 BackShieldBoneName => string.Equals(normalizedName, "Spine2", StringComparison.Ordinal),
+                HipsBoneName => string.Equals(normalizedName, "Pelvis", StringComparison.Ordinal),
+                RightUpperLegBoneName => string.Equals(normalizedName, "RightUpperLeg", StringComparison.Ordinal) ||
+                    string.Equals(normalizedName, "RightThigh", StringComparison.Ordinal),
                 _ => false
             };
         }

@@ -324,6 +324,7 @@ namespace Hollow.Tests.EditMode
                 PlayerAnimationProfileTestHelpers.BindProfileCatalog(player, weapon);
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
                 heldWeaponVisual.BindMeleeHandSocket(socket.transform);
+                heldWeaponVisual.ConfigureAnimationSystemMode(PlayerAnimationSystemMode.AdvancedLayeredAnimation);
                 heldWeaponVisual.Bind(weapon);
 
                 Assert.IsTrue(heldWeaponVisual.IsUsingHandAttachedMeleeVisual);
@@ -421,6 +422,47 @@ namespace Hollow.Tests.EditMode
                 Assert.AreSame(heldWeaponVisual.RangedHandSocket, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
                 Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
                 AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void HeldWeaponVisualRepairsRangedHolsterSocketToAnimatedRightThigh()
+        {
+            var player = new GameObject("PlayerCharacter");
+            var visualRoot = new GameObject(VisualRootName);
+            var modelRoot = new GameObject("MainCharacter_MeshyModel");
+            var rightUpperLeg = new GameObject("mixamorig:RightUpLeg");
+            var staleRangedHolster = new GameObject(PlayerHeldWeaponVisualController.RangedHolsterSocketName);
+            try
+            {
+                visualRoot.transform.SetParent(player.transform, false);
+                modelRoot.transform.SetParent(visualRoot.transform, false);
+                rightUpperLeg.transform.SetParent(modelRoot.transform, false);
+                staleRangedHolster.transform.SetParent(visualRoot.transform, false);
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+
+                Assert.AreSame(rightUpperLeg.transform, heldWeaponVisual.RangedHolsterSocket.parent);
+                AssertVectorNear(
+                    PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
+                    visualRoot.transform.InverseTransformPoint(heldWeaponVisual.RangedHolsterSocket.position),
+                    0.001f);
+
+                var boneLocalSocketPosition = heldWeaponVisual.RangedHolsterSocket.localPosition;
+                rightUpperLeg.transform.localPosition = new Vector3(0.5f, 0.25f, -0.1f);
+                rightUpperLeg.transform.localRotation = Quaternion.Euler(0f, 35f, 0f);
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+
+                Assert.AreSame(rightUpperLeg.transform, heldWeaponVisual.RangedHolsterSocket.parent);
+                AssertVectorNear(
+                    boneLocalSocketPosition,
+                    heldWeaponVisual.RangedHolsterSocket.localPosition,
+                    0.001f);
             }
             finally
             {
@@ -554,6 +596,7 @@ namespace Hollow.Tests.EditMode
                 weapon.Configure(null, combat, projectilePrefab);
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.ConfigureAnimationSystemMode(PlayerAnimationSystemMode.AdvancedLayeredAnimation);
                 heldWeaponVisual.Bind(weapon);
                 var pose = player.AddComponent<PlayerRangedHandPoseController>();
                 pose.Bind(null, weapon, heldWeaponVisual);
@@ -1522,6 +1565,78 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void SimpleFullBodyHeldWeaponsRemainSocketDrivenWhenHandBonesExist()
+        {
+            var root = new GameObject("SocketDrivenWeaponHarness");
+            var projectilePrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectilePrefab.AddComponent<ProjectileController>();
+            try
+            {
+                var combat = root.AddComponent<RoomCombatController>();
+                var player = new GameObject("PlayerCharacter");
+                player.transform.SetParent(root.transform, false);
+                var visualRoot = new GameObject("MainCharacter_VisualRoot");
+                visualRoot.transform.SetParent(player.transform, false);
+                var modelRoot = new GameObject("MainCharacter_MeshyModel");
+                modelRoot.transform.SetParent(visualRoot.transform, false);
+                var rightHand = new GameObject("mixamorig:RightHand");
+                rightHand.transform.SetParent(modelRoot.transform, false);
+                rightHand.transform.localPosition = new Vector3(0.35f, 1.1f, 0.1f);
+                var meleeSocket = new GameObject(PlayerHeldWeaponVisualController.MeleeHandSocketName);
+                meleeSocket.transform.SetParent(rightHand.transform, false);
+                var rangedSocket = new GameObject(PlayerHeldWeaponVisualController.RangedHandSocketName);
+                rangedSocket.transform.SetParent(rightHand.transform, false);
+                var muzzleSocket = new GameObject(PlayerHeldWeaponVisualController.RangedMuzzleSocketName);
+                muzzleSocket.transform.SetParent(rangedSocket.transform, false);
+
+                var weapon = player.AddComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, projectilePrefab);
+                weapon.ConfigureBuildStats(
+                    1f,
+                    0,
+                    1,
+                    10000f,
+                    1000f,
+                    "starter_blade",
+                    WeaponIdAliases.StarterPistolId,
+                    WeaponSlot.Melee,
+                    10000f);
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+                heldWeaponVisual.BindWeaponSockets(
+                    meleeSocket.transform,
+                    rangedSocket.transform,
+                    null,
+                    null,
+                    muzzleSocket.transform);
+                heldWeaponVisual.ConfigureAnimationSystemMode(PlayerAnimationSystemMode.SimpleFullBodyAnimation);
+                heldWeaponVisual.Bind(weapon);
+
+                weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
+                heldWeaponVisual.ForceRangedAimPose(Vector2.right);
+
+                Assert.AreSame(meleeSocket.transform, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
+                Assert.That(heldWeaponVisual.ActiveWeaponVisual.transform.localPosition, Is.EqualTo(Vector3.zero));
+                Assert.Less(
+                    Quaternion.Angle(Quaternion.identity, heldWeaponVisual.ActiveWeaponVisual.transform.localRotation),
+                    0.001f);
+
+                weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
+                heldWeaponVisual.ForceRangedAimPose(Vector2.left);
+
+                Assert.AreSame(rangedSocket.transform, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
+                Assert.That(heldWeaponVisual.ActiveWeaponVisual.transform.localPosition, Is.EqualTo(Vector3.zero));
+                Assert.Less(
+                    Quaternion.Angle(Quaternion.identity, heldWeaponVisual.ActiveWeaponVisual.transform.localRotation),
+                    0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectilePrefab);
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void WeaponAimCommitmentKeepsVisualFacingWhileStrafing()
         {
             var root = new GameObject("WeaponAimCommitmentHarness");
@@ -1697,8 +1812,16 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(
                 IsBoneNamed(rangedHandSockets[0].parent, "RightHand") || rangedHandSockets[0].parent == visualRoot,
                 "Regenerated prefabs should parent the ranged hand socket to RightHand; older prefabs are repaired by PlayerHeldWeaponVisualController at runtime.");
-            Assert.AreSame(visualRoot, meleeHolsterSockets[0].parent);
-            Assert.AreSame(visualRoot, rangedHolsterSockets[0].parent);
+            Assert.IsTrue(
+                IsBoneNamed(meleeHolsterSockets[0].parent, "Spine02") ||
+                    IsBoneNamed(meleeHolsterSockets[0].parent, "Hips") ||
+                    meleeHolsterSockets[0].parent == visualRoot,
+                "Regenerated prefabs should parent the melee holster socket to the animated back/hips skeleton so holstered melee weapons follow body animation; older prefabs are repaired at runtime.");
+            Assert.IsTrue(
+                IsBoneNamed(rangedHolsterSockets[0].parent, "RightUpLeg") ||
+                    IsBoneNamed(rangedHolsterSockets[0].parent, "Hips") ||
+                    rangedHolsterSockets[0].parent == visualRoot,
+                "Regenerated prefabs should parent the ranged holster socket to RightUpLeg so holstered ranged weapons follow right hip/thigh animation; older prefabs are repaired at runtime.");
             Assert.AreSame(rangedHandSockets[0], rangedMuzzleSockets[0].parent);
             if (shieldForearmSockets.Length > 0)
             {
@@ -1802,6 +1925,18 @@ namespace Hollow.Tests.EditMode
             Assert.IsFalse(animator.applyRootMotion);
             Assert.IsTrue(IsDescendantOf(meleeSockets[0].parent, animator.transform));
             Assert.IsTrue(IsDescendantOf(rangedHandSockets[0].parent, animator.transform));
+            if (IsBoneNamed(meleeHolsterSockets[0].parent, "Spine02") ||
+                IsBoneNamed(meleeHolsterSockets[0].parent, "Hips"))
+            {
+                Assert.IsTrue(IsDescendantOf(meleeHolsterSockets[0].parent, animator.transform));
+            }
+
+            if (IsBoneNamed(rangedHolsterSockets[0].parent, "RightUpLeg") ||
+                IsBoneNamed(rangedHolsterSockets[0].parent, "Hips"))
+            {
+                Assert.IsTrue(IsDescendantOf(rangedHolsterSockets[0].parent, animator.transform));
+            }
+
             if (shieldForearmSockets.Length > 0)
             {
                 Assert.IsTrue(IsDescendantOf(shieldForearmSockets[0].parent, animator.transform));
@@ -2117,6 +2252,12 @@ namespace Hollow.Tests.EditMode
             }
 
             if (expectedName == "Spine02" && actualName == "Spine2")
+            {
+                return true;
+            }
+
+            if (expectedName == "RightUpLeg" &&
+                (actualName == "RightUpperLeg" || actualName == "RightThigh"))
             {
                 return true;
             }

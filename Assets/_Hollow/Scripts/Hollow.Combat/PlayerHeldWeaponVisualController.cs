@@ -41,18 +41,20 @@ namespace Hollow.Combat
         public static readonly Vector3 DefaultShieldBackSocketLocalPosition = new(0f, 0.08f, -0.13f);
         public static readonly Vector3 DefaultShieldBackSocketLocalEuler = new(0f, 180f, 0f);
         public static readonly Vector3 DefaultShieldBackSocketLocalScale = new(0.82f, 0.82f, 0.82f);
-        public static readonly Vector3 DefaultActiveMeleeVisualLocalPosition = new(-0.05f, 0.03000003f, -0.12500001f);
-        public static readonly Vector3 DefaultActiveMeleeVisualLocalEuler = new(81.00165f, 56.99997f, 153.99995f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalPosition = new(-0.03f, -0.13f, 0.015f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalEuler = new(80.00048f, 165.99997f, 177f);
         public static readonly Vector3 DefaultActiveMeleeVisualLocalScale = Vector3.one;
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalPosition = new(-0.95500004f, -0.14999999f, -0.17499997f);
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalEuler = new(357f, 74.00005f, 167f);
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalScale = Vector3.one;
-        public static readonly Vector3 DefaultShieldForearmVisualLocalPosition = new(0.12500001f, 0.20499994f, -0.08499999f);
-        public static readonly Vector3 DefaultShieldForearmVisualLocalEuler = new(0f, 180f, 90f);
+        public static readonly Vector3 DefaultShieldForearmVisualLocalPosition = new(0.07999999f, 0.20499994f, -0.08499999f);
+        public static readonly Vector3 DefaultShieldForearmVisualLocalEuler = new(0f, 219.99998f, 90f);
         public static readonly Vector3 DefaultShieldForearmVisualLocalScale = Vector3.one;
 
         private const string MeshyVisualRootName = "MainCharacter_VisualRoot";
         private const string MeshyModelName = "MainCharacter_MeshyModel";
+        private const string HipsBoneName = "Hips";
+        private const string RightUpperLegBoneName = "RightUpLeg";
         private const string RightHandBoneName = "RightHand";
         private const string LeftForearmBoneName = "LeftForeArm";
         private const string BackShieldBoneName = "Spine02";
@@ -76,6 +78,7 @@ namespace Hollow.Combat
 
         [SerializeField] private PlayerWeaponController weaponController;
         [SerializeField] private PlayerAnimationProfileController animationProfileController;
+        [SerializeField] private PlayerAnimationSystemMode animationSystemMode = PlayerAnimationSystemMode.SimpleFullBodyAnimation;
         [SerializeField] private Transform meleeHandSocket;
         [SerializeField] private Transform rangedHandSocket;
         [SerializeField] private Transform meleeHolsterSocket;
@@ -131,6 +134,11 @@ namespace Hollow.Combat
 
         public int EquipmentNormalizationPassCount => equipmentNormalizationPassCount;
 
+        public PlayerAnimationSystemMode AnimationSystemMode => animationSystemMode;
+
+        public bool UsesSocketDrivenEquipment =>
+            animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation;
+
         public bool CurrentProfileAllowsShieldInHand =>
             animationProfileController != null && animationProfileController.AllowsShieldInHand;
 
@@ -168,6 +176,13 @@ namespace Hollow.Combat
 
             RefreshVisual(force: true);
             RefreshAllEquipmentVisualTransforms();
+        }
+
+        public void ConfigureAnimationSystemMode(PlayerAnimationSystemMode nextAnimationSystemMode)
+        {
+            animationSystemMode = nextAnimationSystemMode;
+            RefreshAllEquipmentVisualTransforms();
+            ApplyPose();
         }
 
         public void BindMeleeHandSocket(Transform socket)
@@ -306,7 +321,15 @@ namespace Hollow.Combat
                 return false;
             }
 
-            ForceRangedAimPose(aimDirection);
+            if (UsesSocketDrivenEquipment && IsRangedHandSocketHandAttached())
+            {
+                RefreshAllEquipmentVisualTransforms();
+            }
+            else
+            {
+                ForceRangedAimPose(aimDirection);
+            }
+
             var forwardWorld = rangedMuzzleSocket.forward;
             forwardWorld.y = 0f;
             if (forwardWorld.sqrMagnitude < 0.000001f)
@@ -478,76 +501,177 @@ namespace Hollow.Combat
             EnsureRoot();
             meleeHandSocket ??= FindDescendant(transform, MeleeHandSocketName);
             var rightHand = FindCharacterBone(RightHandBoneName);
+            var applyMeleeHandDefaults = false;
             if (meleeHandSocket == null)
             {
                 meleeHandSocket = CreateSocket(rightHand != null ? rightHand : heldRoot, MeleeHandSocketName);
+                applyMeleeHandDefaults = true;
             }
             else if (rightHand != null && meleeHandSocket.parent != rightHand)
             {
                 meleeHandSocket.SetParent(rightHand, false);
+                applyMeleeHandDefaults = true;
             }
 
             rangedHandSocket ??= FindDescendant(transform, RangedHandSocketName);
+            var applyRangedHandDefaults = false;
             if (rangedHandSocket == null)
             {
                 rangedHandSocket = CreateSocket(rightHand != null ? rightHand : heldRoot, RangedHandSocketName);
+                applyRangedHandDefaults = true;
             }
             else if (rightHand != null && rangedHandSocket.parent != rightHand)
             {
                 rangedHandSocket.SetParent(rightHand, false);
+                applyRangedHandDefaults = true;
             }
 
             var visualRoot = FindDescendant(transform, MeshyVisualRootName) ?? transform;
+            var backHolsterBone = FindCharacterBone(BackShieldBoneName) ?? FindCharacterBone(HipsBoneName);
             meleeHolsterSocket ??= FindDescendant(transform, MeleeHolsterSocketName);
-            meleeHolsterSocket ??= CreateSocket(visualRoot, MeleeHolsterSocketName);
+            var meleeHolsterParent = backHolsterBone != null ? backHolsterBone : visualRoot;
+            var applyMeleeHolsterDefaults = false;
+            if (meleeHolsterSocket == null)
+            {
+                meleeHolsterSocket = CreateSocket(meleeHolsterParent, MeleeHolsterSocketName);
+                applyMeleeHolsterDefaults = true;
+            }
+            else if (meleeHolsterSocket.parent != meleeHolsterParent)
+            {
+                meleeHolsterSocket.SetParent(meleeHolsterParent, worldPositionStays: true);
+                applyMeleeHolsterDefaults = true;
+            }
+
+            var rangedHolsterBone = FindCharacterBone(RightUpperLegBoneName) ?? FindCharacterBone(HipsBoneName);
             rangedHolsterSocket ??= FindDescendant(transform, RangedHolsterSocketName);
-            rangedHolsterSocket ??= CreateSocket(visualRoot, RangedHolsterSocketName);
+            var rangedHolsterParent = rangedHolsterBone != null ? rangedHolsterBone : visualRoot;
+            var applyRangedHolsterDefaults = false;
+            if (rangedHolsterSocket == null)
+            {
+                rangedHolsterSocket = CreateSocket(rangedHolsterParent, RangedHolsterSocketName);
+                applyRangedHolsterDefaults = true;
+            }
+            else if (rangedHolsterSocket.parent != rangedHolsterParent)
+            {
+                rangedHolsterSocket.SetParent(rangedHolsterParent, worldPositionStays: true);
+                applyRangedHolsterDefaults = true;
+            }
+
             var leftForearm = FindCharacterBone(LeftForearmBoneName);
             shieldForearmSocket ??= FindDescendant(transform, ShieldForearmSocketName);
+            var applyShieldForearmDefaults = false;
             if (shieldForearmSocket == null)
             {
                 shieldForearmSocket = CreateSocket(leftForearm != null ? leftForearm : visualRoot, ShieldForearmSocketName);
+                applyShieldForearmDefaults = true;
             }
             else if (leftForearm != null && shieldForearmSocket.parent != leftForearm)
             {
                 shieldForearmSocket.SetParent(leftForearm, false);
+                applyShieldForearmDefaults = true;
             }
 
             var backShieldBone = FindCharacterBone(BackShieldBoneName);
             shieldBackSocket ??= FindDescendant(transform, ShieldBackSocketName);
+            var applyShieldBackDefaults = false;
             if (shieldBackSocket == null)
             {
                 shieldBackSocket = CreateSocket(backShieldBone != null ? backShieldBone : visualRoot, ShieldBackSocketName);
+                applyShieldBackDefaults = true;
             }
             else if (backShieldBone != null && shieldBackSocket.parent != backShieldBone)
             {
                 shieldBackSocket.SetParent(backShieldBone, false);
+                applyShieldBackDefaults = true;
             }
 
             rangedMuzzleSocket ??= FindDescendant(transform, RangedMuzzleSocketName);
+            var applyMuzzleDefaults = false;
             if (rangedMuzzleSocket == null)
             {
                 rangedMuzzleSocket = CreateSocket(rangedHandSocket, RangedMuzzleSocketName);
+                applyMuzzleDefaults = true;
             }
 
             if (rangedMuzzleSocket.parent != rangedHandSocket)
             {
                 rangedMuzzleSocket.SetParent(rangedHandSocket, false);
+                applyMuzzleDefaults = true;
             }
 
-            ApplyKnownSocketDefaults();
+            if (applyMeleeHandDefaults)
+            {
+                ApplySocketDefaults(meleeHandSocket, meleeSocketLocalPosition, meleeSocketLocalEuler, meleeSocketLocalScale);
+            }
+
+            if (applyRangedHandDefaults)
+            {
+                ApplySocketDefaults(
+                    rangedHandSocket,
+                    DefaultRangedHandSocketLocalPosition,
+                    DefaultRangedHandSocketLocalEuler,
+                    DefaultRangedHandSocketLocalScale);
+            }
+
+            if (applyMeleeHolsterDefaults)
+            {
+                ApplyHolsterSocketDefaults(
+                    meleeHolsterSocket,
+                    visualRoot,
+                    DefaultMeleeHolsterSocketLocalPosition,
+                    DefaultMeleeHolsterSocketLocalEuler,
+                    DefaultMeleeHolsterSocketLocalScale);
+            }
+
+            if (applyRangedHolsterDefaults)
+            {
+                ApplyHolsterSocketDefaults(
+                    rangedHolsterSocket,
+                    visualRoot,
+                    DefaultRangedHolsterSocketLocalPosition,
+                    DefaultRangedHolsterSocketLocalEuler,
+                    DefaultRangedHolsterSocketLocalScale);
+            }
+
+            if (applyShieldForearmDefaults)
+            {
+                ApplySocketDefaults(
+                    shieldForearmSocket,
+                    DefaultShieldForearmSocketLocalPosition,
+                    DefaultShieldForearmSocketLocalEuler,
+                    DefaultShieldForearmSocketLocalScale);
+            }
+
+            if (applyShieldBackDefaults)
+            {
+                ApplySocketDefaults(
+                    shieldBackSocket,
+                    DefaultShieldBackSocketLocalPosition,
+                    DefaultShieldBackSocketLocalEuler,
+                    DefaultShieldBackSocketLocalScale);
+            }
+
+            if (applyMuzzleDefaults && rangedMuzzleSocket != null)
+            {
+                rangedMuzzleSocket.localPosition = PlayerWeaponVisualPosePolicy.MuzzleLocalPosition();
+                rangedMuzzleSocket.localRotation = Quaternion.identity;
+                rangedMuzzleSocket.localScale = Vector3.one;
+            }
         }
 
         private void ApplyKnownSocketDefaults()
         {
             ApplySocketDefaults(meleeHandSocket, meleeSocketLocalPosition, meleeSocketLocalEuler, meleeSocketLocalScale);
-            ApplySocketDefaults(
+            var visualRoot = FindDescendant(transform, MeshyVisualRootName) ?? transform;
+            ApplyHolsterSocketDefaults(
                 meleeHolsterSocket,
+                visualRoot,
                 DefaultMeleeHolsterSocketLocalPosition,
                 DefaultMeleeHolsterSocketLocalEuler,
                 DefaultMeleeHolsterSocketLocalScale);
-            ApplySocketDefaults(
+            ApplyHolsterSocketDefaults(
                 rangedHolsterSocket,
+                visualRoot,
                 DefaultRangedHolsterSocketLocalPosition,
                 DefaultRangedHolsterSocketLocalEuler,
                 DefaultRangedHolsterSocketLocalScale);
@@ -579,6 +703,32 @@ namespace Hollow.Combat
             }
         }
 
+        private static void ApplyHolsterSocketDefaults(
+            Transform socket,
+            Transform referenceRoot,
+            Vector3 referenceLocalPosition,
+            Vector3 referenceLocalEuler,
+            Vector3 localScale)
+        {
+            if (socket == null)
+            {
+                return;
+            }
+
+            if (referenceRoot != null && socket.parent != null && socket.parent != referenceRoot)
+            {
+                ApplySocketDefaultsInReferenceSpace(
+                    socket,
+                    referenceRoot,
+                    referenceLocalPosition,
+                    referenceLocalEuler,
+                    localScale);
+                return;
+            }
+
+            ApplySocketDefaults(socket, referenceLocalPosition, referenceLocalEuler, localScale);
+        }
+
         private void ClearVisuals()
         {
             DestroyVisual(muzzleFlash);
@@ -601,6 +751,12 @@ namespace Hollow.Combat
 
             EnsureSockets();
             var slot = visibleSlot;
+            if (ShouldUseSocketDrivenActivePose(slot))
+            {
+                ApplySocketDrivenActivePose(slot);
+                return;
+            }
+
             var direction2 = ActiveAttackProgress > 0f && attackSlot == slot
                 ? attackFacing
                 : currentFacing;
@@ -653,6 +809,33 @@ namespace Hollow.Combat
             var worldRotation = transform.rotation * aimRotation;
             activeVisual.transform.position = worldPosition;
             activeVisual.transform.rotation = worldRotation;
+            ApplyEquipmentWrapperScale(activeVisual.transform, ActivePresentationScale(slot));
+            RefreshEquipmentWrapperScales();
+        }
+
+        private bool ShouldUseSocketDrivenActivePose(WeaponSlot slot)
+        {
+            if (!UsesSocketDrivenEquipment || activeVisual == null)
+            {
+                return false;
+            }
+
+            if (slot == WeaponSlot.Melee)
+            {
+                return meleeHandSocket != null &&
+                    activeVisual.transform.parent == meleeHandSocket &&
+                    IsMeleeHandSocketHandAttached();
+            }
+
+            return rangedHandSocket != null &&
+                activeVisual.transform.parent == rangedHandSocket &&
+                IsRangedHandSocketHandAttached();
+        }
+
+        private void ApplySocketDrivenActivePose(WeaponSlot slot)
+        {
+            activeVisual.transform.localPosition = Vector3.zero;
+            activeVisual.transform.localRotation = Quaternion.identity;
             ApplyEquipmentWrapperScale(activeVisual.transform, ActivePresentationScale(slot));
             RefreshEquipmentWrapperScales();
         }
@@ -1281,6 +1464,13 @@ namespace Hollow.Combat
                 IsNormalizedBoneNameMatch(NormalizeTransformName(rangedHandSocket.parent.name), RightHandBoneName);
         }
 
+        private bool IsMeleeHandSocketHandAttached()
+        {
+            return meleeHandSocket != null &&
+                meleeHandSocket.parent != null &&
+                IsNormalizedBoneNameMatch(NormalizeTransformName(meleeHandSocket.parent.name), RightHandBoneName);
+        }
+
         private Vector3 LocalPlanarToWorld(Vector2 direction)
         {
             var local = PlayerWeaponVisualPosePolicy.PlanarForward(direction);
@@ -1313,6 +1503,29 @@ namespace Hollow.Combat
 
             socket.localPosition = localPosition;
             socket.localRotation = Quaternion.Euler(localEuler);
+            socket.localScale = localScale;
+        }
+
+        private static void ApplySocketDefaultsInReferenceSpace(
+            Transform socket,
+            Transform referenceRoot,
+            Vector3 referenceLocalPosition,
+            Vector3 referenceLocalEuler,
+            Vector3 localScale)
+        {
+            if (socket == null)
+            {
+                return;
+            }
+
+            if (referenceRoot == null)
+            {
+                ApplySocketDefaults(socket, referenceLocalPosition, referenceLocalEuler, localScale);
+                return;
+            }
+
+            socket.position = referenceRoot.TransformPoint(referenceLocalPosition);
+            socket.rotation = referenceRoot.rotation * Quaternion.Euler(referenceLocalEuler);
             socket.localScale = localScale;
         }
 
@@ -1366,6 +1579,9 @@ namespace Hollow.Combat
             return expectedName switch
             {
                 BackShieldBoneName => string.Equals(normalizedName, "Spine2", System.StringComparison.Ordinal),
+                HipsBoneName => string.Equals(normalizedName, "Pelvis", System.StringComparison.Ordinal),
+                RightUpperLegBoneName => string.Equals(normalizedName, "RightUpperLeg", System.StringComparison.Ordinal) ||
+                    string.Equals(normalizedName, "RightThigh", System.StringComparison.Ordinal),
                 _ => false
             };
         }

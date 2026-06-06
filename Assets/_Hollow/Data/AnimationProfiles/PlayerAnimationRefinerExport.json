@@ -1,5 +1,5 @@
 {
-    "generatedUtc": "2026-06-06T00:45:54.3809180Z",
+    "generatedUtc": "2026-06-06T01:06:26.3292990Z",
     "playerPrefabPath": "Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab",
     "previewScenePath": "Assets/_Hollow/Scenes/DeveloperLab/PlayerAnimationRefiner.unity",
     "selectedProfile": "SwordShieldCombat",
@@ -100,13 +100,13 @@
             "editTargetKind": "Visible ArtPass Visual",
             "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor",
             "localPosition": {
-                "x": 0.1250000149011612,
+                "x": 0.07999999076128006,
                 "y": 0.20499993860721589,
                 "z": -0.08499999344348908
             },
             "localEuler": {
                 "x": 0.0,
-                "y": 180.0,
+                "y": 219.99998474121095,
                 "z": 90.0
             },
             "localScale": {
