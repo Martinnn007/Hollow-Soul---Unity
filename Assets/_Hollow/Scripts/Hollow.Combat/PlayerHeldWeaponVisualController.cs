@@ -32,8 +32,8 @@ namespace Hollow.Combat
         public static readonly Vector3 DefaultMeleeHolsterSocketLocalPosition = new(-0.22f, 0.98f, -0.18f);
         public static readonly Vector3 DefaultMeleeHolsterSocketLocalEuler = new(35f, -35f, 145f);
         public static readonly Vector3 DefaultMeleeHolsterSocketLocalScale = new(0.72f, 0.72f, 0.72f);
-        public static readonly Vector3 DefaultRangedHolsterSocketLocalPosition = new(0.32f, 1.08f, -0.18f);
-        public static readonly Vector3 DefaultRangedHolsterSocketLocalEuler = new(0f, 90f, 18f);
+        public static readonly Vector3 DefaultRangedHolsterSocketLocalPosition = new(0.43000025f, 0.2f, -0.65500015f);
+        public static readonly Vector3 DefaultRangedHolsterSocketLocalEuler = new(1.3367312f, 89.49392f, 21.706121f);
         public static readonly Vector3 DefaultRangedHolsterSocketLocalScale = new(0.78f, 0.78f, 0.78f);
         public static readonly Vector3 DefaultShieldForearmSocketLocalPosition = new(0.015f, 0.02f, 0.02f);
         public static readonly Vector3 DefaultShieldForearmSocketLocalEuler = new(0f, 0f, 0f);
@@ -41,8 +41,8 @@ namespace Hollow.Combat
         public static readonly Vector3 DefaultShieldBackSocketLocalPosition = new(0f, 0.08f, -0.13f);
         public static readonly Vector3 DefaultShieldBackSocketLocalEuler = new(0f, 180f, 0f);
         public static readonly Vector3 DefaultShieldBackSocketLocalScale = new(0.82f, 0.82f, 0.82f);
-        public static readonly Vector3 DefaultActiveMeleeVisualLocalPosition = new(-0.03f, -0.13f, 0.015f);
-        public static readonly Vector3 DefaultActiveMeleeVisualLocalEuler = new(80.00048f, 165.99997f, 177f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalPosition = new(-0.020000007f, 0.01000003f, -0.095000006f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalEuler = new(87.001274f, 249.99951f, 0f);
         public static readonly Vector3 DefaultActiveMeleeVisualLocalScale = Vector3.one;
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalPosition = new(-0.95500004f, -0.14999999f, -0.17499997f);
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalEuler = new(357f, 74.00005f, 167f);
@@ -54,7 +54,6 @@ namespace Hollow.Combat
         private const string MeshyVisualRootName = "MainCharacter_VisualRoot";
         private const string MeshyModelName = "MainCharacter_MeshyModel";
         private const string HipsBoneName = "Hips";
-        private const string RightUpperLegBoneName = "RightUpLeg";
         private const string RightHandBoneName = "RightHand";
         private const string LeftForearmBoneName = "LeftForeArm";
         private const string BackShieldBoneName = "Spine02";
@@ -542,7 +541,7 @@ namespace Hollow.Combat
                 applyMeleeHolsterDefaults = true;
             }
 
-            var rangedHolsterBone = FindCharacterBone(RightUpperLegBoneName) ?? FindCharacterBone(HipsBoneName);
+            var rangedHolsterBone = FindCharacterBone(HipsBoneName);
             rangedHolsterSocket ??= FindDescendant(transform, RangedHolsterSocketName);
             var rangedHolsterParent = rangedHolsterBone != null ? rangedHolsterBone : visualRoot;
             var applyRangedHolsterDefaults = false;
@@ -554,6 +553,14 @@ namespace Hollow.Combat
             else if (rangedHolsterSocket.parent != rangedHolsterParent)
             {
                 rangedHolsterSocket.SetParent(rangedHolsterParent, worldPositionStays: true);
+                applyRangedHolsterDefaults = true;
+            }
+            else if (!SocketApproximatelyMatches(
+                         rangedHolsterSocket,
+                         DefaultRangedHolsterSocketLocalPosition,
+                         DefaultRangedHolsterSocketLocalEuler,
+                         DefaultRangedHolsterSocketLocalScale))
+            {
                 applyRangedHolsterDefaults = true;
             }
 
@@ -625,9 +632,8 @@ namespace Hollow.Combat
 
             if (applyRangedHolsterDefaults)
             {
-                ApplyHolsterSocketDefaults(
+                ApplySocketDefaults(
                     rangedHolsterSocket,
-                    visualRoot,
                     DefaultRangedHolsterSocketLocalPosition,
                     DefaultRangedHolsterSocketLocalEuler,
                     DefaultRangedHolsterSocketLocalScale);
@@ -669,9 +675,8 @@ namespace Hollow.Combat
                 DefaultMeleeHolsterSocketLocalPosition,
                 DefaultMeleeHolsterSocketLocalEuler,
                 DefaultMeleeHolsterSocketLocalScale);
-            ApplyHolsterSocketDefaults(
+            ApplySocketDefaults(
                 rangedHolsterSocket,
-                visualRoot,
                 DefaultRangedHolsterSocketLocalPosition,
                 DefaultRangedHolsterSocketLocalEuler,
                 DefaultRangedHolsterSocketLocalScale);
@@ -1013,6 +1018,10 @@ namespace Hollow.Combat
 
             if (holsteredRangedVisual != null)
             {
+                ApplyWeaponVisualRootPose(
+                    FindEquipmentVisualRoot(holsteredRangedVisual.transform),
+                    WeaponSlot.Ranged,
+                    HolsteredRangedWeaponVisualName);
                 NormalizeEquipmentWrapper(
                     holsteredRangedVisual.transform,
                     DefaultRangedHolsterSocketLocalScale,
@@ -1021,6 +1030,9 @@ namespace Hollow.Combat
 
             if (equippedShieldVisual != null)
             {
+                ApplyShieldVisualRootPose(
+                    FindEquipmentVisualRoot(equippedShieldVisual.transform),
+                    equippedShieldVisual.transform.parent);
                 NormalizeEquipmentWrapper(
                     equippedShieldVisual.transform,
                     ShieldPresentationScale(equippedShieldVisual.transform.parent),
@@ -1506,6 +1518,18 @@ namespace Hollow.Combat
             socket.localScale = localScale;
         }
 
+        private static bool SocketApproximatelyMatches(
+            Transform socket,
+            Vector3 localPosition,
+            Vector3 localEuler,
+            Vector3 localScale)
+        {
+            return socket != null &&
+                Vector3.Distance(socket.localPosition, localPosition) <= 0.0005f &&
+                Quaternion.Angle(socket.localRotation, Quaternion.Euler(localEuler)) <= 0.1f &&
+                Vector3.Distance(socket.localScale, localScale) <= 0.0005f;
+        }
+
         private static void ApplySocketDefaultsInReferenceSpace(
             Transform socket,
             Transform referenceRoot,
@@ -1580,8 +1604,6 @@ namespace Hollow.Combat
             {
                 BackShieldBoneName => string.Equals(normalizedName, "Spine2", System.StringComparison.Ordinal),
                 HipsBoneName => string.Equals(normalizedName, "Pelvis", System.StringComparison.Ordinal),
-                RightUpperLegBoneName => string.Equals(normalizedName, "RightUpperLeg", System.StringComparison.Ordinal) ||
-                    string.Equals(normalizedName, "RightThigh", System.StringComparison.Ordinal),
                 _ => false
             };
         }

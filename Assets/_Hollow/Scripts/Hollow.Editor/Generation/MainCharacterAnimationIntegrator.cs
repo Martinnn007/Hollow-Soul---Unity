@@ -1754,11 +1754,9 @@ namespace Hollow.Editor.Generation
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalScale);
-                var rangedHolsterSocket = EnsureSocketInReferenceSpace(
-                    FindDescendant(modelInstance.transform, RightUpperLegBoneName) ??
-                        FindDescendant(modelInstance.transform, HipsBoneName) ??
+                var rangedHolsterSocket = EnsureSocket(
+                    FindDescendant(modelInstance.transform, HipsBoneName) ??
                         visualRoot.transform,
-                    visualRoot.transform,
                     PlayerHeldWeaponVisualController.RangedHolsterSocketName,
                     PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalEuler,
