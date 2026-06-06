@@ -55,7 +55,11 @@ namespace Hollow.Editor.AnimationRefiner
         private static readonly EquipmentSocketTuning[] EquipmentSlots =
         {
             new("Melee In Hand", PlayerHeldWeaponVisualController.MeleeHandSocketName, PlayerHeldWeaponVisualController.ActiveMeleeWeaponVisualName),
-            new("Melee Holstered", PlayerHeldWeaponVisualController.MeleeHolsterSocketName, PlayerHeldWeaponVisualController.HolsteredMeleeWeaponVisualName),
+            new(
+                "Melee Holstered",
+                PlayerHeldWeaponVisualController.MeleeHolsterSocketName,
+                PlayerHeldWeaponVisualController.HolsteredMeleeWeaponVisualName,
+                EquipmentEditTargetMode.ScenarioSocket),
             new("Ranged In Hand", PlayerHeldWeaponVisualController.RangedHandSocketName, PlayerHeldWeaponVisualController.ActiveRangedWeaponVisualName),
             new(
                 "Ranged Holstered",

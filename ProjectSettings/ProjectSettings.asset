@@ -839,7 +839,7 @@ PlayerSettings:
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
     Standalone: APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED
-    VisionOS: APP_UI_EDITOR_ONLY
+    VisionOS: APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

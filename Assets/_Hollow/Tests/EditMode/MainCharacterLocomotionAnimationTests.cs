@@ -442,6 +442,16 @@ namespace Hollow.Tests.EditMode
                     PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalScale);
+                var editedHolsteredMeleeVisualRoot = ResolveVisualRoot(heldWeaponVisual.HolsteredMeleeVisual);
+                editedHolsteredMeleeVisualRoot.localPosition = new Vector3(0.15f, -2.4f, 0.35f);
+                editedHolsteredMeleeVisualRoot.localRotation = Quaternion.Euler(15f, 25f, 35f);
+                editedHolsteredMeleeVisualRoot.localScale = Vector3.one * 0.4f;
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+                AssertVisualRootPose(
+                    heldWeaponVisual.HolsteredMeleeVisual,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalScale);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
@@ -465,6 +475,51 @@ namespace Hollow.Tests.EditMode
                     PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalScale);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void HeldWeaponVisualRepairsMeleeHolsterSocketToStableHips()
+        {
+            var player = new GameObject("PlayerCharacter");
+            var visualRoot = new GameObject(VisualRootName);
+            var modelRoot = new GameObject("MainCharacter_MeshyModel");
+            var hips = new GameObject("mixamorig:Hips");
+            var spine = new GameObject("mixamorig:Spine2");
+            var staleMeleeHolster = new GameObject(PlayerHeldWeaponVisualController.MeleeHolsterSocketName);
+            try
+            {
+                visualRoot.transform.SetParent(player.transform, false);
+                modelRoot.transform.SetParent(visualRoot.transform, false);
+                hips.transform.SetParent(modelRoot.transform, false);
+                spine.transform.SetParent(hips.transform, false);
+                staleMeleeHolster.transform.SetParent(spine.transform, false);
+                staleMeleeHolster.transform.localPosition = new Vector3(0.1f, -2.2f, 0.4f);
+                staleMeleeHolster.transform.localRotation = Quaternion.Euler(45f, 12f, 210f);
+                staleMeleeHolster.transform.localScale = Vector3.one * 0.25f;
+                var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
+
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+
+                Assert.AreSame(hips.transform, heldWeaponVisual.MeleeHolsterSocket.parent);
+                Assert.AreNotSame(spine.transform, heldWeaponVisual.MeleeHolsterSocket.parent);
+                AssertVectorNear(
+                    PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalPosition,
+                    heldWeaponVisual.MeleeHolsterSocket.localPosition,
+                    0.001f);
+                Assert.Less(
+                    Quaternion.Angle(
+                        Quaternion.Euler(PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalEuler),
+                        heldWeaponVisual.MeleeHolsterSocket.localRotation),
+                    0.1f);
+                AssertVectorNear(
+                    PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalScale,
+                    heldWeaponVisual.MeleeHolsterSocket.localScale,
+                    0.001f);
             }
             finally
             {
@@ -900,7 +955,7 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void PlayerAnimationRefinerEditsRangedHolsteredScenarioSocket()
+        public void PlayerAnimationRefinerEditsHolsteredWeaponsAsScenarioSockets()
         {
             var slotsField = typeof(PlayerAnimationRefinerWindow)
                 .GetField("EquipmentSlots", BindingFlags.NonPublic | BindingFlags.Static);
@@ -909,25 +964,43 @@ namespace Hollow.Tests.EditMode
             var slots = (System.Array)slotsField.GetValue(null);
             Assert.IsNotNull(slots);
 
-            object rangedHolsteredSlot = null;
+            AssertScenarioSocketSlot(
+                slots,
+                "Melee Holstered",
+                PlayerHeldWeaponVisualController.MeleeHolsterSocketName,
+                PlayerHeldWeaponVisualController.HolsteredMeleeWeaponVisualName);
+            AssertScenarioSocketSlot(
+                slots,
+                "Ranged Holstered",
+                PlayerHeldWeaponVisualController.RangedHolsterSocketName,
+                PlayerHeldWeaponVisualController.HolsteredRangedWeaponVisualName);
+        }
+
+        private static void AssertScenarioSocketSlot(
+            System.Array slots,
+            string expectedLabel,
+            string expectedSocketName,
+            string expectedWrapperName)
+        {
+            object matchingSlot = null;
             foreach (var slot in slots)
             {
                 var label = (string)slot.GetType().GetProperty("Label")?.GetValue(slot);
-                if (label == "Ranged Holstered")
+                if (label == expectedLabel)
                 {
-                    rangedHolsteredSlot = slot;
+                    matchingSlot = slot;
                     break;
                 }
             }
 
-            Assert.IsNotNull(rangedHolsteredSlot);
-            var slotType = rangedHolsteredSlot.GetType();
-            var socketName = (string)slotType.GetProperty("SocketName")?.GetValue(rangedHolsteredSlot);
-            var wrapperName = (string)slotType.GetProperty("WrapperName")?.GetValue(rangedHolsteredSlot);
-            var editTargetMode = slotType.GetProperty("EditTargetMode")?.GetValue(rangedHolsteredSlot);
+            Assert.IsNotNull(matchingSlot);
+            var slotType = matchingSlot.GetType();
+            var socketName = (string)slotType.GetProperty("SocketName")?.GetValue(matchingSlot);
+            var wrapperName = (string)slotType.GetProperty("WrapperName")?.GetValue(matchingSlot);
+            var editTargetMode = slotType.GetProperty("EditTargetMode")?.GetValue(matchingSlot);
 
-            Assert.AreEqual(PlayerHeldWeaponVisualController.RangedHolsterSocketName, socketName);
-            Assert.AreEqual(PlayerHeldWeaponVisualController.HolsteredRangedWeaponVisualName, wrapperName);
+            Assert.AreEqual(expectedSocketName, socketName);
+            Assert.AreEqual(expectedWrapperName, wrapperName);
             Assert.AreEqual("ScenarioSocket", editTargetMode?.ToString());
         }
 

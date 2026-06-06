@@ -1,6 +1,6 @@
 Hollow Soul Equipment Scale Report
 ReportVersion: 1
-UnityTimestampUtc: 2026-06-06T22:28:36.5392740Z
+UnityTimestampUtc: 2026-06-06T22:49:07.2705280Z
 PrefabPath: Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab
 ValidationErrors: 0
 ValidationWarnings: 0
@@ -15,7 +15,7 @@ LeftHand: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel
 LeftForeArm: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
 MainCharacter_RightHandWeaponSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket localScale=0.75, 0.75, 0.75 lossyScale=0.668, 0.668, 0.668
 MainCharacter_RangedHandWeaponSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
-MainCharacter_BackMeleeHolsterSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackMeleeHolsterSocket localScale=0.72, 0.72, 0.72 lossyScale=0.641, 0.641, 0.641
+MainCharacter_BackMeleeHolsterSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_BackMeleeHolsterSocket localScale=0.72, 0.72, 0.72 lossyScale=0.641, 0.641, 0.641
 MainCharacter_HipRangedHolsterSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket localScale=0.78, 0.78, 0.78 lossyScale=0.694, 0.694, 0.694
 MainCharacter_LeftForearmShieldSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket localScale=0.72, 0.72, 0.72 lossyScale=0.641, 0.641, 0.641
 MainCharacter_BackShieldSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket localScale=0.82, 0.82, 0.82 lossyScale=0.73, 0.73, 0.73

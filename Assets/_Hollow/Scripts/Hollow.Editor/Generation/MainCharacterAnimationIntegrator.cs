@@ -1776,11 +1776,9 @@ namespace Hollow.Editor.Generation
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultRangedHandSocketLocalScale);
-                var meleeHolsterSocket = EnsureSocketInReferenceSpace(
-                    FindDescendant(modelInstance.transform, BackShieldBoneName) ??
-                        FindDescendant(modelInstance.transform, HipsBoneName) ??
+                var meleeHolsterSocket = EnsureSocket(
+                    FindDescendant(modelInstance.transform, HipsBoneName) ??
                         visualRoot.transform,
-                    visualRoot.transform,
                     PlayerHeldWeaponVisualController.MeleeHolsterSocketName,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultMeleeHolsterSocketLocalEuler,
@@ -2948,29 +2946,6 @@ namespace Hollow.Editor.Generation
 
             socket.localPosition = localPosition;
             socket.localRotation = Quaternion.Euler(localEuler);
-            socket.localScale = localScale;
-            return socket;
-        }
-
-        private static Transform EnsureSocketInReferenceSpace(
-            Transform parent,
-            Transform referenceRoot,
-            string socketName,
-            Vector3 referenceLocalPosition,
-            Vector3 referenceLocalEuler,
-            Vector3 localScale)
-        {
-            var socket = EnsureSocket(parent, socketName, Vector3.zero, Vector3.zero, localScale);
-            if (referenceRoot == null)
-            {
-                socket.localPosition = referenceLocalPosition;
-                socket.localRotation = Quaternion.Euler(referenceLocalEuler);
-                socket.localScale = localScale;
-                return socket;
-            }
-
-            socket.position = referenceRoot.TransformPoint(referenceLocalPosition);
-            socket.rotation = referenceRoot.rotation * Quaternion.Euler(referenceLocalEuler);
             socket.localScale = localScale;
             return socket;
         }
