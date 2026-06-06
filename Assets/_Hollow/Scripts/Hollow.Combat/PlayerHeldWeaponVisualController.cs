@@ -44,9 +44,15 @@ namespace Hollow.Combat
         public static readonly Vector3 DefaultActiveMeleeVisualLocalPosition = new(-0.020000007f, 0.01000003f, -0.095000006f);
         public static readonly Vector3 DefaultActiveMeleeVisualLocalEuler = new(87.001274f, 249.99951f, 0f);
         public static readonly Vector3 DefaultActiveMeleeVisualLocalScale = Vector3.one;
+        public static readonly Vector3 DefaultActiveRangedVisualLocalPosition = new(-0.05f, 0.22f, 0.07f);
+        public static readonly Vector3 DefaultActiveRangedVisualLocalEuler = new(0.000041408024f, 90.00001f, 10.00001f);
+        public static readonly Vector3 DefaultActiveRangedVisualLocalScale = new(0.7f, 0.7f, 0.7f);
+        public static readonly Vector3 DefaultHolsteredMeleeVisualLocalPosition = new(-0.83f, 0.84f, 0.88f);
+        public static readonly Vector3 DefaultHolsteredMeleeVisualLocalEuler = new(50.999653f, 300.99994f, 349.99994f);
+        public static readonly Vector3 DefaultHolsteredMeleeVisualLocalScale = Vector3.one;
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalPosition = new(-0.95500004f, -0.14999999f, -0.17499997f);
         public static readonly Vector3 DefaultHolsteredRangedVisualLocalEuler = new(357f, 74.00005f, 167f);
-        public static readonly Vector3 DefaultHolsteredRangedVisualLocalScale = Vector3.one;
+        public static readonly Vector3 DefaultHolsteredRangedVisualLocalScale = new(0.7f, 0.7f, 0.7f);
         public static readonly Vector3 DefaultShieldForearmVisualLocalPosition = new(0.07999999f, 0.20499994f, -0.08499999f);
         public static readonly Vector3 DefaultShieldForearmVisualLocalEuler = new(0f, 219.99998f, 90f);
         public static readonly Vector3 DefaultShieldForearmVisualLocalScale = Vector3.one;
@@ -1086,6 +1092,26 @@ namespace Hollow.Combat
                     DefaultActiveMeleeVisualLocalPosition,
                     DefaultActiveMeleeVisualLocalEuler,
                     DefaultActiveMeleeVisualLocalScale);
+                return;
+            }
+
+            if (slot == WeaponSlot.Ranged && wrapperName == ActiveRangedWeaponVisualName)
+            {
+                ApplyVisualRootPose(
+                    visualRoot,
+                    DefaultActiveRangedVisualLocalPosition,
+                    DefaultActiveRangedVisualLocalEuler,
+                    DefaultActiveRangedVisualLocalScale);
+                return;
+            }
+
+            if (slot == WeaponSlot.Melee && wrapperName == HolsteredMeleeWeaponVisualName)
+            {
+                ApplyVisualRootPose(
+                    visualRoot,
+                    DefaultHolsteredMeleeVisualLocalPosition,
+                    DefaultHolsteredMeleeVisualLocalEuler,
+                    DefaultHolsteredMeleeVisualLocalScale);
                 return;
             }
 

@@ -355,6 +355,10 @@ namespace Hollow.Tests.EditMode
                     PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalScale);
+                Assert.AreEqual(
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalScale,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalScale,
+                    "Active and holstered ranged visuals should share the baked pistol/rifle model scale.");
                 AssertVisualRootPose(
                     heldWeaponVisual.EquippedShieldVisual,
                     PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalPosition,
@@ -428,6 +432,16 @@ namespace Hollow.Tests.EditMode
                 AssertWrapperLossyScaleBelow(heldWeaponVisual.HolsteredMeleeVisual, 2f);
                 AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
                 AssertWrapperLossyScaleBelow(heldWeaponVisual.EquippedShieldVisual, 2f);
+                AssertVisualRootPose(
+                    heldWeaponVisual.ActiveWeaponVisual,
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalScale);
+                AssertVisualRootPose(
+                    heldWeaponVisual.HolsteredMeleeVisual,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalScale);
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
@@ -441,6 +455,16 @@ namespace Hollow.Tests.EditMode
                 Assert.AreSame(heldWeaponVisual.RangedHandSocket, heldWeaponVisual.ActiveWeaponVisual.transform.parent);
                 Assert.AreSame(heldWeaponVisual.ShieldBackSocket, heldWeaponVisual.CurrentShieldSocket);
                 AssertVisibleMeshyRangedWeaponVisual(heldWeaponVisual.ActiveWeaponVisual);
+                AssertVisualRootPose(
+                    heldWeaponVisual.ActiveWeaponVisual,
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultActiveRangedVisualLocalScale);
+                AssertVisualRootPose(
+                    heldWeaponVisual.HolsteredMeleeVisual,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredMeleeVisualLocalScale);
             }
             finally
             {
