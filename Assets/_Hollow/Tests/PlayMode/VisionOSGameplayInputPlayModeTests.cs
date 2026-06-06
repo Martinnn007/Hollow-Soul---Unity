@@ -32,10 +32,10 @@ namespace Hollow.Tests.PlayMode
             PlatformPresentationRoot presentationRoot = null;
             for (var frame = 0; frame < 30 && (player == null || diagnostics == null || volumeCamera == null || presentationRoot == null); frame++)
             {
-                player = Object.FindFirstObjectByType<PlayerMovementController>();
-                diagnostics = Object.FindFirstObjectByType<VisionOSGameplayInputDiagnostics>();
+                player = UnityEngine.Object.FindFirstObjectByType<PlayerMovementController>();
+                diagnostics = UnityEngine.Object.FindFirstObjectByType<VisionOSGameplayInputDiagnostics>();
                 volumeCamera = FindFirstComponentOfType(volumeCameraType);
-                presentationRoot = Object.FindFirstObjectByType<PlatformPresentationRoot>();
+                presentationRoot = UnityEngine.Object.FindFirstObjectByType<PlatformPresentationRoot>();
                 yield return null;
             }
 
@@ -68,7 +68,7 @@ namespace Hollow.Tests.PlayMode
         {
             return componentType == null
                 ? null
-                : Object.FindObjectsByType(componentType, FindObjectsInactive.Include, FindObjectsSortMode.None)
+                : UnityEngine.Object.FindObjectsByType(componentType, FindObjectsInactive.Include, FindObjectsSortMode.None)
                     .OfType<Component>()
                     .FirstOrDefault();
         }
