@@ -114,6 +114,8 @@ namespace Hollow.Combat
 
         public bool HasManualAimOverride => hasManualAimOverride;
 
+        public bool HasActiveAimIntent => hasManualAimOverride || IsTargetLocked || HasAssistTarget;
+
         public bool DrivesPresentationFacing => drivesPresentationFacing;
 
         public void Configure(RoomCombatController controller)

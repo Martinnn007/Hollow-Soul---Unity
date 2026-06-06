@@ -64,11 +64,13 @@ namespace Hollow.Tests.EditMode
                 aim.TickAim(Snapshot(move: new Vector2(1f, 1f), shoot: Vector2.zero, lockPressed: false), 0f);
                 Assert.AreEqual(0.707f, aim.BodyFacingDirection.x, 0.001f);
                 Assert.AreEqual(0.707f, aim.AttackDirection.y, 0.001f);
+                Assert.IsFalse(aim.HasActiveAimIntent);
 
                 var manual = new Vector2(-0.8f, 0.2f).normalized;
                 aim.TickAim(Snapshot(move: Vector2.right, shoot: new Vector2(-0.8f, 0.2f), lockPressed: false), 0.1f);
                 Assert.AreEqual(manual.x, aim.AttackDirection.x, 0.001f);
                 Assert.AreEqual(manual.y, aim.AttackDirection.y, 0.001f);
+                Assert.IsTrue(aim.HasActiveAimIntent);
 
                 var eastEnemy = CreateEnemy(root.transform, new Vector3(2f, 0f, 0.75f));
                 var northEnemy = CreateEnemy(root.transform, new Vector3(0f, 0f, 3f));

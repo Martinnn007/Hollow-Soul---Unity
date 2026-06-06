@@ -41,6 +41,15 @@ namespace Hollow.Combat
         public static readonly Vector3 DefaultShieldBackSocketLocalPosition = new(0f, 0.08f, -0.13f);
         public static readonly Vector3 DefaultShieldBackSocketLocalEuler = new(0f, 180f, 0f);
         public static readonly Vector3 DefaultShieldBackSocketLocalScale = new(0.82f, 0.82f, 0.82f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalPosition = new(-0.05f, 0.03000003f, -0.12500001f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalEuler = new(81.00165f, 56.99997f, 153.99995f);
+        public static readonly Vector3 DefaultActiveMeleeVisualLocalScale = Vector3.one;
+        public static readonly Vector3 DefaultHolsteredRangedVisualLocalPosition = new(-0.95500004f, -0.14999999f, -0.17499997f);
+        public static readonly Vector3 DefaultHolsteredRangedVisualLocalEuler = new(357f, 74.00005f, 167f);
+        public static readonly Vector3 DefaultHolsteredRangedVisualLocalScale = Vector3.one;
+        public static readonly Vector3 DefaultShieldForearmVisualLocalPosition = new(0.12500001f, 0.20499994f, -0.08499999f);
+        public static readonly Vector3 DefaultShieldForearmVisualLocalEuler = new(0f, 180f, 90f);
+        public static readonly Vector3 DefaultShieldForearmVisualLocalScale = Vector3.one;
 
         private const string MeshyVisualRootName = "MainCharacter_VisualRoot";
         private const string MeshyModelName = "MainCharacter_MeshyModel";
@@ -753,9 +762,7 @@ namespace Hollow.Combat
             var model = PresentationPrefabResolver.InstantiateVisual(RoleFor(slot), wrapper.transform, Vector3.zero, Vector3.one);
             if (model != null)
             {
-                model.transform.localPosition = Vector3.zero;
-                model.transform.localRotation = PlayerWeaponVisualPosePolicy.ModelCanonicalLocalRotation(slot);
-                model.transform.localScale = Vector3.one;
+                ApplyWeaponVisualRootPose(model.transform, slot, name);
             }
 
             NormalizeEquipmentWrapper(wrapper.transform, intendedPresentationScale, RoleFor(slot));
@@ -769,6 +776,7 @@ namespace Hollow.Combat
                 return;
             }
 
+            var shouldApplyDefaultVisualPose = false;
             if (equippedShieldVisual == null)
             {
                 equippedShieldVisual = new GameObject(EquippedShieldVisualName);
@@ -780,18 +788,24 @@ namespace Hollow.Combat
                     Vector3.one);
                 if (model != null)
                 {
-                    model.transform.localPosition = Vector3.zero;
-                    model.transform.localRotation = Quaternion.identity;
-                    model.transform.localScale = Vector3.one;
+                    ApplyShieldVisualRootPose(model.transform, parent);
                 }
+
+                shouldApplyDefaultVisualPose = true;
             }
             else if (equippedShieldVisual.transform.parent != parent)
             {
                 equippedShieldVisual.transform.SetParent(parent, false);
+                shouldApplyDefaultVisualPose = true;
             }
 
             equippedShieldVisual.transform.localPosition = Vector3.zero;
             equippedShieldVisual.transform.localRotation = Quaternion.identity;
+            if (shouldApplyDefaultVisualPose)
+            {
+                ApplyShieldVisualRootPose(FindEquipmentVisualRoot(equippedShieldVisual.transform), parent);
+            }
+
             NormalizeEquipmentWrapper(
                 equippedShieldVisual.transform,
                 ShieldPresentationScale(parent),
@@ -861,6 +875,71 @@ namespace Hollow.Combat
             }
 
             wrapper.localScale = ComputeEquipmentWrapperLocalScale(wrapper.parent, intendedPresentationScale);
+        }
+
+        private static void ApplyWeaponVisualRootPose(Transform visualRoot, WeaponSlot slot, string wrapperName)
+        {
+            if (visualRoot == null)
+            {
+                return;
+            }
+
+            if (slot == WeaponSlot.Melee && wrapperName == ActiveMeleeWeaponVisualName)
+            {
+                ApplyVisualRootPose(
+                    visualRoot,
+                    DefaultActiveMeleeVisualLocalPosition,
+                    DefaultActiveMeleeVisualLocalEuler,
+                    DefaultActiveMeleeVisualLocalScale);
+                return;
+            }
+
+            if (slot == WeaponSlot.Ranged && wrapperName == HolsteredRangedWeaponVisualName)
+            {
+                ApplyVisualRootPose(
+                    visualRoot,
+                    DefaultHolsteredRangedVisualLocalPosition,
+                    DefaultHolsteredRangedVisualLocalEuler,
+                    DefaultHolsteredRangedVisualLocalScale);
+                return;
+            }
+
+            ApplyVisualRootPose(
+                visualRoot,
+                Vector3.zero,
+                PlayerWeaponVisualPosePolicy.ModelCanonicalLocalRotation(slot).eulerAngles,
+                Vector3.one);
+        }
+
+        private void ApplyShieldVisualRootPose(Transform visualRoot, Transform parent)
+        {
+            if (visualRoot == null)
+            {
+                return;
+            }
+
+            if (parent == shieldForearmSocket)
+            {
+                ApplyVisualRootPose(
+                    visualRoot,
+                    DefaultShieldForearmVisualLocalPosition,
+                    DefaultShieldForearmVisualLocalEuler,
+                    DefaultShieldForearmVisualLocalScale);
+                return;
+            }
+
+            ApplyVisualRootPose(visualRoot, Vector3.zero, Vector3.zero, Vector3.one);
+        }
+
+        private static void ApplyVisualRootPose(
+            Transform visualRoot,
+            Vector3 localPosition,
+            Vector3 localEuler,
+            Vector3 localScale)
+        {
+            visualRoot.localPosition = localPosition;
+            visualRoot.localRotation = Quaternion.Euler(localEuler);
+            visualRoot.localScale = ValidScale(localScale, Vector3.one);
         }
 
         private static void NormalizeEquipmentWrapper(
@@ -958,7 +1037,11 @@ namespace Hollow.Combat
                     continue;
                 }
 
-                keep.SetParent(spec.Parent, worldPositionStays: false);
+                if (keep.parent != spec.Parent)
+                {
+                    keep.SetParent(spec.Parent, worldPositionStays: false);
+                }
+
                 keep.localPosition = Vector3.zero;
                 keep.localRotation = Quaternion.identity;
                 AssignEquipmentWrapperField(group.Key, keep.gameObject);
@@ -1169,6 +1252,18 @@ namespace Hollow.Combat
             return root != null &&
                 root.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Any(marker => marker != null && marker.Role == role);
+        }
+
+        private static Transform FindEquipmentVisualRoot(Transform wrapper)
+        {
+            if (wrapper == null)
+            {
+                return null;
+            }
+
+            return wrapper.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
+                .Select(marker => marker != null ? marker.transform : null)
+                .FirstOrDefault(transform => transform != null);
         }
 
         private Transform FindCharacterBone(string boneName)

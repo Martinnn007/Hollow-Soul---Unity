@@ -6,6 +6,7 @@ using Hollow.Editor.Validation;
 using Hollow.Input;
 using Hollow.Presentation;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
@@ -36,6 +37,15 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(sword.AllowsShieldInHand);
             Assert.IsTrue(sword.AllowsShieldGuard);
             Assert.IsNotEmpty(sword.ShieldGuardClips);
+            AssertProfileClipPath(sword.ShieldGuardClips, "SwordShield_ShieldGuard_02", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield block idle.fbx");
+            AssertProfileClipPath(sword.StrafingClips, "SwordShield_GuardStrafe_Left", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (2).fbx");
+            AssertProfileClipPath(sword.StrafingClips, "SwordShield_GuardStrafe_Right", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe.fbx");
+            AssertProfileClipPath(sword.TurnClips, "SwordShield_Turn_01", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn.fbx");
+            AssertProfileClipPath(sword.TurnClips, "SwordShield_Turn_02", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield turn (2).fbx");
+            AssertProfileClipPath(sword.AttackClips, "SwordShield_Attack_09", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield slash.fbx");
+            AssertProfileClipPath(sword.ImpactClips, "SwordShield_Impact_02", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact (3).fbx");
+            AssertProfileClipPath(sword.ImpactClips, "SwordShield_Impact_03", "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield impact.fbx");
+            AssertRootPositionXZIsNotBaked("Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield run.fbx");
             Assert.IsFalse(great.AllowsShieldGuard);
             Assert.IsTrue(great.RequiresTwoHandedWeapon);
             Assert.IsNotEmpty(great.WeaponBlockClips);
@@ -304,6 +314,28 @@ namespace Hollow.Tests.EditMode
                     Assert.IsFalse(clipSet.RunUsesTemporaryPlaceholder, $"{profile.ProfileName} Run {direction}");
                 }
             }
+        }
+
+        private static void AssertProfileClipPath(
+            System.Collections.Generic.IReadOnlyList<AnimationClip> clips,
+            string clipName,
+            string expectedAssetPath)
+        {
+            var clip = clips.FirstOrDefault(candidate => candidate != null && candidate.name == clipName);
+            Assert.IsNotNull(clip, $"Expected profile clip {clipName}.");
+            Assert.AreEqual(expectedAssetPath, AssetDatabase.GetAssetPath(clip));
+        }
+
+        private static void AssertRootPositionXZIsNotBaked(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+            Assert.IsNotNull(importer, assetPath);
+            var clips = importer.clipAnimations != null && importer.clipAnimations.Length > 0
+                ? importer.clipAnimations
+                : importer.defaultClipAnimations;
+            Assert.IsNotEmpty(clips, assetPath);
+            Assert.IsFalse(clips[0].lockRootPositionXZ, $"{assetPath} should not bake XZ root position into pose.");
+            Assert.IsTrue(clips[0].keepOriginalPositionXZ, $"{assetPath} should keep original XZ root position.");
         }
 
         private static GameplayInputSnapshot GuardSnapshot(Vector2 aim)

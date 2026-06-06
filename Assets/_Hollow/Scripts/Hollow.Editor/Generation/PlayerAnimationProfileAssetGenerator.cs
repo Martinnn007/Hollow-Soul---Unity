@@ -28,6 +28,7 @@ namespace Hollow.Editor.Generation
         public const string HollowMainModelTexturePath = AnimationPackRoot + "/Hollow_Main_Model/Meshy_AI_Neon_Exoskeleton_0603210958_texture.png";
         public const string SkinnedBodyFbxSearchPattern = "Meshy_AI_Neon_Exoskeleton_*texture*.fbx";
         public const float SkinnedBodyCentimeterImportScale = 100f;
+        public const float TargetSkinnedBodyHeightMeters = 1.78f;
 
         private const string CatalogId = "player_animation_profiles_v1";
         private const string PlayerPrefabPath = "Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab";
@@ -432,6 +433,8 @@ namespace Hollow.Editor.Generation
             var runLeft = context.Load(ClipPath(SwordShieldPack, "sword and shield strafe (2).fbx"), "SwordShield_Run_Left", loop: true, sharedAvatar, optionalSlot: "Run.Left");
             var walkRight = context.Load(ClipPath(SwordShieldPack, "sword and shield strafe (3).fbx"), "SwordShield_Walk_Right", loop: true, sharedAvatar, optionalSlot: "Walk.Right");
             var runRight = context.Load(ClipPath(SwordShieldPack, "sword and shield strafe (4).fbx"), "SwordShield_Run_Right", loop: true, sharedAvatar, optionalSlot: "Run.Right");
+            var guardStrafeLeft = context.Load(ClipPath(SwordShieldPack, "sword and shield strafe (2).fbx"), "SwordShield_GuardStrafe_Left", loop: true, sharedAvatar, optionalSlot: "GuardStrafe.Left");
+            var guardStrafeRight = context.Load(ClipPath(SwordShieldPack, "sword and shield strafe.fbx"), "SwordShield_GuardStrafe_Right", loop: true, sharedAvatar, optionalSlot: "GuardStrafe.Right");
 
             var directional = DirectionalSets(
                 context,
@@ -455,15 +458,48 @@ namespace Hollow.Editor.Generation
                 usesTorsoAim: true,
                 idle,
                 directional,
-                strafing: Clips(walkLeft, walkRight, runLeft, runRight),
+                strafing: Clips(walkLeft, walkRight, runLeft, runRight, guardStrafeLeft, guardStrafeRight),
                 turns: LoadMany(context, SwordShieldPack, "SwordShield_Turn", sharedAvatar, false, "sword and shield turn.fbx", "sword and shield turn (2).fbx", "sword and shield 180 turn.fbx", "sword and shield 180 turn (2).fbx"),
                 draw: LoadMany(context, SwordShieldPack, "SwordShield_Draw", sharedAvatar, false, "draw sword 1.fbx", "draw sword 2.fbx"),
                 sheathe: LoadMany(context, SwordShieldPack, "SwordShield_Sheathe", sharedAvatar, false, "sheath sword 1.fbx", "sheath sword 2.fbx"),
-                attack: LoadMatching(context, SwordShieldPack, "SwordShield_Attack", sharedAvatar, false, "attack", "slash"),
+                attack: LoadMany(
+                    context,
+                    SwordShieldPack,
+                    "SwordShield_Attack",
+                    sharedAvatar,
+                    false,
+                    "sword and shield attack (2).fbx",
+                    "sword and shield attack (3).fbx",
+                    "sword and shield attack (4).fbx",
+                    "sword and shield attack.fbx",
+                    "sword and shield slash (2).fbx",
+                    "sword and shield slash (3).fbx",
+                    "sword and shield slash (4).fbx",
+                    "sword and shield slash (5).fbx",
+                    "sword and shield slash.fbx"),
                 fire: null,
-                shieldGuard: LoadMatching(context, SwordShieldPack, "SwordShield_ShieldGuard", sharedAvatar, true, "block"),
+                shieldGuard: LoadMany(
+                    context,
+                    SwordShieldPack,
+                    "SwordShield_ShieldGuard",
+                    sharedAvatar,
+                    true,
+                    "sword and shield block (2).fbx",
+                    "sword and shield block idle.fbx",
+                    "sword and shield block.fbx",
+                    "sword and shield crouch block (2).fbx",
+                    "sword and shield crouch block idle.fbx",
+                    "sword and shield crouch block.fbx"),
                 weaponBlock: null,
-                impact: LoadMatching(context, SwordShieldPack, "SwordShield_Impact", sharedAvatar, false, "impact"),
+                impact: LoadMany(
+                    context,
+                    SwordShieldPack,
+                    "SwordShield_Impact",
+                    sharedAvatar,
+                    false,
+                    "sword and shield impact (2).fbx",
+                    "sword and shield impact (3).fbx",
+                    "sword and shield impact.fbx"),
                 death: LoadMatching(context, SwordShieldPack, "SwordShield_Death", sharedAvatar, false, "death"),
                 jump: LoadMatching(context, SwordShieldPack, "SwordShield_Jump", sharedAvatar, false, "jump"),
                 crouch: LoadMatching(context, SwordShieldPack, "SwordShield_Crouch", sharedAvatar, true, "crouch", "crouching"));
@@ -1013,7 +1049,7 @@ namespace Hollow.Editor.Generation
             {
                 if (IsValidSkinnedBodyRenderer(prefab.transform, renderer, out reason, out localScale, out var boundsSize))
                 {
-                    reason = $"valid Avatar={avatar.name}, renderer={renderer.name}, rootBone={renderer.rootBone.name}, bones={renderer.bones.Length}, bounds={FormatVector(boundsSize)}";
+                    reason = $"valid Avatar={avatar.name}, renderer={renderer.name}, rootBone={renderer.rootBone.name}, bones={renderer.bones.Length}, targetHeight={TargetSkinnedBodyHeightMeters:0.###}, bounds={FormatVector(boundsSize)}";
                     return true;
                 }
 
@@ -1173,13 +1209,14 @@ namespace Hollow.Editor.Generation
         {
             foreach (var candidateScale in new[] { 1f, SkinnedBodyCentimeterImportScale })
             {
-                boundsSize = ScaledBoundsSize(renderer, candidateScale);
-                if (boundsSize.y > 0.75f &&
-                    boundsSize.y < 3f &&
-                    boundsSize.x > 0.12f &&
-                    boundsSize.z > 0.04f)
+                var rawBoundsSize = ScaledBoundsSize(renderer, candidateScale);
+                if (rawBoundsSize.y > 0.75f &&
+                    rawBoundsSize.y < 3f &&
+                    rawBoundsSize.x > 0.12f &&
+                    rawBoundsSize.z > 0.04f)
                 {
-                    localScale = candidateScale;
+                    localScale = candidateScale * (TargetSkinnedBodyHeightMeters / rawBoundsSize.y);
+                    boundsSize = ScaledBoundsSize(renderer, localScale);
                     return true;
                 }
             }
@@ -1358,8 +1395,8 @@ namespace Hollow.Editor.Generation
             clip.keepOriginalOrientation = false;
             clip.lockRootHeightY = true;
             clip.keepOriginalPositionY = false;
-            clip.lockRootPositionXZ = true;
-            clip.keepOriginalPositionXZ = false;
+            clip.lockRootPositionXZ = false;
+            clip.keepOriginalPositionXZ = true;
             importer.clipAnimations = new[] { clip };
             importer.SaveAndReimport();
 

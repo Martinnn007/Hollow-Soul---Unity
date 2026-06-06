@@ -16,6 +16,10 @@ namespace Hollow.Combat
         public const string IsTargetLockedParameter = "IsTargetLocked";
         public const string LockedMoveXParameter = "LockedMoveX";
         public const string LockedMoveYParameter = "LockedMoveY";
+        public const string IsSwordShieldProfileParameter = "IsSwordShieldProfile";
+        public const string IsShieldGuardingParameter = "IsShieldGuarding";
+        public const string ShieldImpactBlockedParameter = "ShieldImpactBlocked";
+        public const string ShieldImpactBreakthroughParameter = "ShieldImpactBreakthrough";
         public const float DefaultTurnInPlaceStartDegrees = 85f;
         public const float DefaultTurnInPlaceFullDegrees = 125f;
         public const float DefaultDiagnosticSmoothingSeconds = 0.08f;
@@ -27,6 +31,8 @@ namespace Hollow.Combat
         [SerializeField] private PlayerWeaponController weaponController;
         [SerializeField] private CombatantHealth health;
         [SerializeField] private PlayerAimLockController aimLockController;
+        [SerializeField] private PlayerDefenseController defenseController;
+        [SerializeField] private PlayerAnimationProfileController animationProfileController;
         [SerializeField] private PlayerAnimationSystemMode animationSystemMode = PlayerAnimationSystemMode.AdvancedLayeredAnimation;
         [SerializeField] private bool alwaysFaceAimDirectionInSimpleMode = true;
         [SerializeField] private float movementThresholdMetersPerSecond = 0.05f;
@@ -54,9 +60,14 @@ namespace Hollow.Combat
         private static readonly int IsTargetLockedHash = Animator.StringToHash(IsTargetLockedParameter);
         private static readonly int LockedMoveXHash = Animator.StringToHash(LockedMoveXParameter);
         private static readonly int LockedMoveYHash = Animator.StringToHash(LockedMoveYParameter);
+        private static readonly int IsSwordShieldProfileHash = Animator.StringToHash(IsSwordShieldProfileParameter);
+        private static readonly int IsShieldGuardingHash = Animator.StringToHash(IsShieldGuardingParameter);
+        private static readonly int ShieldImpactBlockedHash = Animator.StringToHash(ShieldImpactBlockedParameter);
+        private static readonly int ShieldImpactBreakthroughHash = Animator.StringToHash(ShieldImpactBreakthroughParameter);
 
         private PlayerWeaponController subscribedWeaponController;
         private CombatantHealth subscribedHealth;
+        private PlayerDefenseController subscribedDefenseController;
         private Vector3 previousWorldPosition;
         private Vector3 facingDirectionWorld = Vector3.forward;
         private bool hasIsMovingParameter;
@@ -70,6 +81,10 @@ namespace Hollow.Combat
         private bool hasIsTargetLockedParameter;
         private bool hasLockedMoveXParameter;
         private bool hasLockedMoveYParameter;
+        private bool hasIsSwordShieldProfileParameter;
+        private bool hasIsShieldGuardingParameter;
+        private bool hasShieldImpactBlockedParameter;
+        private bool hasShieldImpactBreakthroughParameter;
         private bool parameterCacheValid;
         private bool initialized;
         private bool isMoving;
@@ -79,6 +94,9 @@ namespace Hollow.Combat
         private bool pendingSlashTrigger;
         private bool pendingHitTrigger;
         private bool pendingDeathTrigger;
+        private bool pendingShieldImpactBlockedTrigger;
+        private bool pendingShieldImpactBreakthroughTrigger;
+        private bool suppressNextGuardedDamageHit;
         private float planarSpeedMetersPerSecond;
         private float actionSpeed = 1f;
         private float actionFacingUntilTime;
@@ -90,6 +108,8 @@ namespace Hollow.Combat
         private Vector3 aimFacingDirectionWorld = Vector3.forward;
         private float aimBodyAngleDegrees;
         private bool isTurnInPlaceActive;
+        private bool isSwordShieldProfile;
+        private bool isShieldGuardingForAnimation;
 
         public bool IsMoving => isMoving;
 
@@ -135,6 +155,10 @@ namespace Hollow.Combat
 
         public float SimpleModeMeleeActionSpeedMax => simpleModeMeleeActionSpeedMax;
 
+        public bool IsSwordShieldProfile => isSwordShieldProfile;
+
+        public bool IsShieldGuardingForAnimation => isShieldGuardingForAnimation;
+
         private void Awake()
         {
             ResolveReferences();
@@ -151,12 +175,14 @@ namespace Hollow.Combat
         {
             UnbindWeaponEvents();
             UnbindHealthEvents();
+            UnbindDefenseEvents();
         }
 
         private void OnDestroy()
         {
             UnbindWeaponEvents();
             UnbindHealthEvents();
+            UnbindDefenseEvents();
         }
 
         private void OnValidate()
@@ -272,6 +298,9 @@ namespace Hollow.Combat
             aimFacingDirectionWorld = facingDirectionWorld;
             aimBodyAngleDegrees = 0f;
             isTurnInPlaceActive = false;
+            isSwordShieldProfile = ResolveIsSwordShieldProfile();
+            isShieldGuardingForAnimation = ResolveIsShieldGuardingForAnimation();
+            suppressNextGuardedDamageHit = false;
             lastObservedRollPhase = weaponController != null ? weaponController.CurrentRollPhase : PlayerRollPhase.None;
             ApplyAnimatorParameters();
         }
@@ -280,6 +309,8 @@ namespace Hollow.Combat
         {
             ResolveReferences();
             ObserveRollPhase();
+            isSwordShieldProfile = ResolveIsSwordShieldProfile();
+            isShieldGuardingForAnimation = ResolveIsShieldGuardingForAnimation();
             if (!initialized)
             {
                 ResetTracking();
@@ -303,6 +334,7 @@ namespace Hollow.Combat
                 smoothedRelativeMove = SmoothVector2(smoothedRelativeMove, Vector2.zero, deltaTime);
                 aimBodyAngleDegrees = 0f;
                 isTurnInPlaceActive = false;
+                isShieldGuardingForAnimation = false;
                 ApplyAnimatorParameters();
                 return;
             }
@@ -376,8 +408,19 @@ namespace Hollow.Combat
                 aimLockController = GetComponent<PlayerAimLockController>();
             }
 
+            if (defenseController == null)
+            {
+                defenseController = GetComponent<PlayerDefenseController>();
+            }
+
+            if (animationProfileController == null)
+            {
+                animationProfileController = GetComponent<PlayerAnimationProfileController>();
+            }
+
             BindWeaponEvents();
             BindHealthEvents();
+            BindDefenseEvents();
         }
 
         private void BindWeaponEvents()
@@ -434,6 +477,32 @@ namespace Hollow.Combat
             subscribedHealth = null;
         }
 
+        private void BindDefenseEvents()
+        {
+            if (subscribedDefenseController == defenseController)
+            {
+                return;
+            }
+
+            UnbindDefenseEvents();
+            subscribedDefenseController = defenseController;
+            if (subscribedDefenseController != null)
+            {
+                subscribedDefenseController.ShieldGuardAnimationRequested += OnShieldGuardAnimationRequested;
+            }
+        }
+
+        private void UnbindDefenseEvents()
+        {
+            if (subscribedDefenseController == null)
+            {
+                return;
+            }
+
+            subscribedDefenseController.ShieldGuardAnimationRequested -= OnShieldGuardAnimationRequested;
+            subscribedDefenseController = null;
+        }
+
         private void ObserveRollPhase()
         {
             if (weaponController == null || isDead)
@@ -465,6 +534,8 @@ namespace Hollow.Combat
             actionSpeed = ActionClipSpeedFor(slot, slashClipDurationSeconds, actionDurationSeconds);
             if (slot == WeaponSlot.Melee)
             {
+                isSwordShieldProfile = ResolveIsSwordShieldProfile();
+                isShieldGuardingForAnimation = ResolveIsShieldGuardingForAnimation();
                 pendingSlashTrigger = true;
             }
 
@@ -479,8 +550,38 @@ namespace Hollow.Combat
                 return;
             }
 
+            if (suppressNextGuardedDamageHit && IsSwordShieldProfileActive())
+            {
+                suppressNextGuardedDamageHit = false;
+                return;
+            }
+
             actionSpeed = ClipSpeedForDuration(hitClipDurationSeconds, hitClipDurationSeconds);
             pendingHitTrigger = true;
+            actionFacingUntilTime = Mathf.Max(actionFacingUntilTime, Time.time + hitClipDurationSeconds);
+            ApplyAnimatorParameters();
+        }
+
+        private void OnShieldGuardAnimationRequested(ShieldGuardAnimationCue cue, ShieldGuardResult _)
+        {
+            isSwordShieldProfile = ResolveIsSwordShieldProfile();
+            isShieldGuardingForAnimation = ResolveIsShieldGuardingForAnimation();
+            if (isDead || !IsSwordShieldProfileActive())
+            {
+                return;
+            }
+
+            actionSpeed = 1f;
+            if (cue == ShieldGuardAnimationCue.Blocked)
+            {
+                pendingShieldImpactBlockedTrigger = true;
+            }
+            else
+            {
+                pendingShieldImpactBreakthroughTrigger = true;
+                suppressNextGuardedDamageHit = true;
+            }
+
             actionFacingUntilTime = Mathf.Max(actionFacingUntilTime, Time.time + hitClipDurationSeconds);
             ApplyAnimatorParameters();
         }
@@ -528,9 +629,12 @@ namespace Hollow.Combat
             var lockedDirection = Vector2.zero;
             var hasLockedDirection = !isDead && (
                 TryGetWeaponAimCommitment(out lockedDirection) ||
+                TryGetShieldGuardDirection(out lockedDirection) ||
                 (aimLockController != null && aimLockController.TryGetLockedTargetDirection(out lockedDirection)) ||
-                (aimLockController != null && aimLockController.TryGetLocomotionFacingDirection(out lockedDirection)) ||
-                TryGetManualAimDirection(out lockedDirection));
+                TryGetManualAimDirection(out lockedDirection) ||
+                (animationSystemMode != PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
+                    aimLockController != null &&
+                    aimLockController.TryGetLocomotionFacingDirection(out lockedDirection)));
             isTargetLockedForLocomotion = hasLockedDirection;
             if (!hasLockedDirection)
             {
@@ -597,7 +701,7 @@ namespace Hollow.Combat
         private bool TryGetManualAimDirection(out Vector2 direction)
         {
             direction = Vector2.zero;
-            if (aimLockController == null || !aimLockController.HasManualAimOverride)
+            if (aimLockController == null || !aimLockController.HasActiveAimIntent)
             {
                 return false;
             }
@@ -606,10 +710,44 @@ namespace Hollow.Combat
             return direction.sqrMagnitude > 0.001f;
         }
 
+        private bool TryGetShieldGuardDirection(out Vector2 direction)
+        {
+            direction = Vector2.zero;
+            if (defenseController == null ||
+                !defenseController.IsGuarding ||
+                !defenseController.CanUseShieldGuard)
+            {
+                return false;
+            }
+
+            var guardFacing = defenseController.GuardFacing;
+            direction = new Vector2(guardFacing.x, guardFacing.z);
+            return direction.sqrMagnitude > 0.001f;
+        }
+
         private bool ShouldAlwaysFaceAimDirection()
         {
             return animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
                    alwaysFaceAimDirectionInSimpleMode;
+        }
+
+        private bool ResolveIsSwordShieldProfile()
+        {
+            return animationProfileController != null &&
+                   animationProfileController.CurrentProfileId == PlayerAnimationProfileId.SwordShieldCombat;
+        }
+
+        private bool IsSwordShieldProfileActive()
+        {
+            return isSwordShieldProfile || ResolveIsSwordShieldProfile();
+        }
+
+        private bool ResolveIsShieldGuardingForAnimation()
+        {
+            return defenseController != null &&
+                   defenseController.IsGuarding &&
+                   defenseController.CanUseShieldGuard &&
+                   ResolveIsSwordShieldProfile();
         }
 
         private float ActionClipSpeedFor(WeaponSlot slot, float clipDurationSeconds, float actionDurationSeconds)
@@ -741,10 +879,22 @@ namespace Hollow.Combat
                 animator.SetFloat(LockedMoveYHash, isTargetLockedForLocomotion && !isDead ? lockedRelativeMove.y : 0f);
             }
 
+            if (hasIsSwordShieldProfileParameter)
+            {
+                animator.SetBool(IsSwordShieldProfileHash, isSwordShieldProfile && !isDead);
+            }
+
+            if (hasIsShieldGuardingParameter)
+            {
+                animator.SetBool(IsShieldGuardingHash, isShieldGuardingForAnimation && !isDead);
+            }
+
             SetTriggerIfAvailable(ref pendingRollTrigger, hasRollTriggerParameter, RollTriggerHash);
             SetTriggerIfAvailable(ref pendingSlashTrigger, hasSlashTriggerParameter, SlashTriggerHash);
             SetTriggerIfAvailable(ref pendingHitTrigger, hasHitTriggerParameter, HitTriggerHash);
             SetTriggerIfAvailable(ref pendingDeathTrigger, hasDeathTriggerParameter, DeathTriggerHash);
+            SetTriggerIfAvailable(ref pendingShieldImpactBlockedTrigger, hasShieldImpactBlockedParameter, ShieldImpactBlockedHash);
+            SetTriggerIfAvailable(ref pendingShieldImpactBreakthroughTrigger, hasShieldImpactBreakthroughParameter, ShieldImpactBreakthroughHash);
         }
 
         private void SetTriggerIfAvailable(ref bool pendingTrigger, bool hasParameter, int hash)
@@ -777,6 +927,10 @@ namespace Hollow.Combat
             hasIsTargetLockedParameter = false;
             hasLockedMoveXParameter = false;
             hasLockedMoveYParameter = false;
+            hasIsSwordShieldProfileParameter = false;
+            hasIsShieldGuardingParameter = false;
+            hasShieldImpactBlockedParameter = false;
+            hasShieldImpactBreakthroughParameter = false;
             foreach (var parameter in animator.parameters)
             {
                 if (parameter.nameHash == IsMovingHash && parameter.type == AnimatorControllerParameterType.Bool)
@@ -822,6 +976,22 @@ namespace Hollow.Combat
                 else if (parameter.nameHash == LockedMoveYHash && parameter.type == AnimatorControllerParameterType.Float)
                 {
                     hasLockedMoveYParameter = true;
+                }
+                else if (parameter.nameHash == IsSwordShieldProfileHash && parameter.type == AnimatorControllerParameterType.Bool)
+                {
+                    hasIsSwordShieldProfileParameter = true;
+                }
+                else if (parameter.nameHash == IsShieldGuardingHash && parameter.type == AnimatorControllerParameterType.Bool)
+                {
+                    hasIsShieldGuardingParameter = true;
+                }
+                else if (parameter.nameHash == ShieldImpactBlockedHash && parameter.type == AnimatorControllerParameterType.Trigger)
+                {
+                    hasShieldImpactBlockedParameter = true;
+                }
+                else if (parameter.nameHash == ShieldImpactBreakthroughHash && parameter.type == AnimatorControllerParameterType.Trigger)
+                {
+                    hasShieldImpactBreakthroughParameter = true;
                 }
             }
 

@@ -1,3 +1,4 @@
+using System;
 using Hollow.Entities;
 using Hollow.Data.Definitions;
 using Hollow.Input;
@@ -60,6 +61,8 @@ namespace Hollow.Combat
         public bool CanUseShieldGuard => animationProfileController != null && animationProfileController.AllowsShieldGuard;
 
         private float CurrentDefenseTime => float.IsNaN(lastDefenseTimeSeconds) ? Time.time : lastDefenseTimeSeconds;
+
+        public event Action<ShieldGuardAnimationCue, ShieldGuardResult> ShieldGuardAnimationRequested;
 
         public void Configure(int nextDefense)
         {
@@ -217,6 +220,7 @@ namespace Hollow.Combat
                     LastGuardResult = ShieldGuardResult.PerfectParry;
                     ApplyParryCounter(request, sourceDirection, profile);
                     PlayGuardFeedback(LastGuardResult);
+                    EmitShieldGuardAnimationCue(finalDamageAmount: 0);
                     return 0;
                 }
 
@@ -232,12 +236,26 @@ namespace Hollow.Combat
                 LastGuardResult = parryable ? ShieldGuardResult.GuardBlocked : ShieldGuardResult.RejectedThreat;
                 PushSourceAway(request.Source, profile.GuardPushMeters);
                 PlayGuardFeedback(LastGuardResult);
+                EmitShieldGuardAnimationCue(reducedAmount);
                 return reducedAmount;
             }
 
             LastGuardResult = ShieldGuardResult.FailedNoStamina;
             visualController?.ShowFeedback(LastGuardResult);
             return reducedAmount;
+        }
+
+        private void EmitShieldGuardAnimationCue(int finalDamageAmount)
+        {
+            if (!isGuarding || !CanUseShieldGuard || !LastHitWasGuarded)
+            {
+                return;
+            }
+
+            var cue = finalDamageAmount <= 0
+                ? ShieldGuardAnimationCue.Blocked
+                : ShieldGuardAnimationCue.Breakthrough;
+            ShieldGuardAnimationRequested?.Invoke(cue, LastGuardResult);
         }
 
         public bool IsInParryWindowAt(float timeSeconds)

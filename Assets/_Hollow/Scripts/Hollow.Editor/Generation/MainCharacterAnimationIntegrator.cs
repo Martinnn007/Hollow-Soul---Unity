@@ -111,6 +111,38 @@ namespace Hollow.Editor.Generation
             "RootNode"
         };
 
+        private readonly struct SwordShieldSimpleClipSet
+        {
+            public SwordShieldSimpleClipSet(
+                AnimationClip walkForward,
+                AnimationClip runForward,
+                AnimationClip guardHold,
+                AnimationClip guardStrafeLeft,
+                AnimationClip guardStrafeRight,
+                AnimationClip attack,
+                AnimationClip impactBlocked,
+                AnimationClip impactBreakthrough)
+            {
+                WalkForward = walkForward;
+                RunForward = runForward;
+                GuardHold = guardHold;
+                GuardStrafeLeft = guardStrafeLeft;
+                GuardStrafeRight = guardStrafeRight;
+                Attack = attack;
+                ImpactBlocked = impactBlocked;
+                ImpactBreakthrough = impactBreakthrough;
+            }
+
+            public AnimationClip WalkForward { get; }
+            public AnimationClip RunForward { get; }
+            public AnimationClip GuardHold { get; }
+            public AnimationClip GuardStrafeLeft { get; }
+            public AnimationClip GuardStrafeRight { get; }
+            public AnimationClip Attack { get; }
+            public AnimationClip ImpactBlocked { get; }
+            public AnimationClip ImpactBreakthrough { get; }
+        }
+
         [MenuItem("Hollow/Art/Integrate Meshy Main Character")]
         public static void Integrate()
         {
@@ -148,20 +180,49 @@ namespace Hollow.Editor.Generation
             var directionalLocomotionClips = ConfigureDirectionalLocomotionFromProfile(locomotionProfile ?? rifleProfile ?? unarmedProfile);
             var importedRollClip = ConfigureAnimationImport(RollFbxPath, RollClipName, loop: false);
             var rollClip = CreateOrUpdateInPlaceRollClip(importedRollClip);
-            var slashClip = swordShieldProfile != null && swordShieldProfile.FirstAttackClip() != null
-                ? swordShieldProfile.FirstAttackClip()
-                : ConfigureAnimationImport(SlashFbxPath, SlashClipName, loop: false);
+            var swordShieldAttackSourceClip = FindClipByName(swordShieldProfile?.AttackClips, "SwordShield_Attack_09");
+            var slashClip = swordShieldAttackSourceClip != null
+                ? swordShieldAttackSourceClip
+                : swordShieldProfile != null && swordShieldProfile.FirstAttackClip() != null
+                    ? swordShieldProfile.FirstAttackClip()
+                    : ConfigureAnimationImport(SlashFbxPath, SlashClipName, loop: false);
+            var swordShieldForwardLocomotion = ResolveDirectionalSet(
+                swordShieldProfile,
+                PlayerAnimationDirection.Forward,
+                required: false);
+            var swordShieldWalkClip = swordShieldForwardLocomotion.WalkClip != null
+                ? swordShieldForwardLocomotion.WalkClip
+                : walkClip;
+            var swordShieldRunClip = swordShieldForwardLocomotion.RunClip != null
+                ? swordShieldForwardLocomotion.RunClip
+                : runClip;
+            var swordShieldGuardClip = FindClipByName(swordShieldProfile?.ShieldGuardClips, "SwordShield_ShieldGuard_02");
+            var swordShieldSimpleClips = new SwordShieldSimpleClipSet(
+                swordShieldWalkClip,
+                swordShieldRunClip,
+                swordShieldGuardClip,
+                FindClipByName(swordShieldProfile?.StrafingClips, "SwordShield_GuardStrafe_Left"),
+                FindClipByName(swordShieldProfile?.StrafingClips, "SwordShield_GuardStrafe_Right"),
+                slashClip,
+                FindClipByName(swordShieldProfile?.ImpactClips, "SwordShield_Impact_03"),
+                FindClipByName(swordShieldProfile?.ImpactClips, "SwordShield_Impact_02"));
             var hitClip = swordShieldProfile != null && swordShieldProfile.FirstImpactClip() != null
                 ? swordShieldProfile.FirstImpactClip()
                 : ConfigureAnimationImport(HitFbxPath, HitClipName, loop: false);
+            if (hitClip == slashClip)
+            {
+                hitClip = ConfigureAnimationImport(HitFbxPath, HitClipName, loop: false);
+            }
             var deadClip = swordShieldProfile != null && swordShieldProfile.FirstDeathClip() != null
                 ? swordShieldProfile.FirstDeathClip()
                 : ConfigureAnimationImport(DeadFbxPath, DeadClipName, loop: false);
-            var guardBlockClip = swordShieldProfile != null && swordShieldProfile.ShieldGuardClips.Count > 0
-                ? swordShieldProfile.ShieldGuardClips[0]
-                : greatSwordProfile != null && greatSwordProfile.WeaponBlockClips.Count > 0
-                    ? greatSwordProfile.WeaponBlockClips[0]
-                    : slashClip;
+            var guardBlockClip = swordShieldGuardClip != null
+                ? swordShieldGuardClip
+                : swordShieldProfile != null && swordShieldProfile.ShieldGuardClips.Count > 0
+                    ? swordShieldProfile.ShieldGuardClips[0]
+                    : greatSwordProfile != null && greatSwordProfile.WeaponBlockClips.Count > 0
+                        ? greatSwordProfile.WeaponBlockClips[0]
+                        : slashClip;
             var controllerWalkClip = animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation
                 ? CreateOrUpdateStabilizedSimpleLocomotionClip(walkClip, SimpleWalkStableClipPath, "MainCharacter_Walk_SimpleStable")
                 : walkClip;
@@ -171,6 +232,15 @@ namespace Hollow.Editor.Generation
             var controllerAttackClip = animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation
                 ? CreateOrUpdateSimpleInPlaceAttackClip(slashClip)
                 : slashClip;
+            swordShieldSimpleClips = new SwordShieldSimpleClipSet(
+                swordShieldSimpleClips.WalkForward,
+                swordShieldSimpleClips.RunForward,
+                swordShieldSimpleClips.GuardHold,
+                swordShieldSimpleClips.GuardStrafeLeft,
+                swordShieldSimpleClips.GuardStrafeRight,
+                controllerAttackClip,
+                swordShieldSimpleClips.ImpactBlocked,
+                swordShieldSimpleClips.ImpactBreakthrough);
             var material = CreateOrUpdateCanonicalMaterial();
             var controller = CreateAnimatorController(
                 idleClip,
@@ -182,6 +252,7 @@ namespace Hollow.Editor.Generation
                 guardBlockClip,
                 hitClip,
                 deadClip,
+                swordShieldSimpleClips,
                 animationSystemMode);
             UpdatePlayerPrefab(controller, material, rollClip, controllerAttackClip, hitClip, deadClip, profileCatalog, animationSystemMode);
             PlayerAnimationProfileAssetGenerator.GenerateDebugScene(profileCatalog);
@@ -285,8 +356,8 @@ namespace Hollow.Editor.Generation
             clip.keepOriginalOrientation = false;
             clip.lockRootHeightY = true;
             clip.keepOriginalPositionY = false;
-            clip.lockRootPositionXZ = true;
-            clip.keepOriginalPositionXZ = false;
+            clip.lockRootPositionXZ = false;
+            clip.keepOriginalPositionXZ = true;
 
             importer.clipAnimations = new[] { clip };
             importer.SaveAndReimport();
@@ -346,6 +417,16 @@ namespace Hollow.Editor.Generation
                         profile.TryGetDirectionalClipSet(direction, out var clipSet) &&
                         clipSet.WalkClip != null &&
                         clipSet.RunClip != null);
+        }
+
+        private static AnimationClip FindClipByName(IReadOnlyList<AnimationClip> clips, string clipName)
+        {
+            if (clips == null || string.IsNullOrWhiteSpace(clipName))
+            {
+                return null;
+            }
+
+            return clips.FirstOrDefault(clip => clip != null && string.Equals(clip.name, clipName, StringComparison.Ordinal));
         }
 
         private static DirectionalAnimationClipSet ResolveDirectionalSet(
@@ -792,6 +873,7 @@ namespace Hollow.Editor.Generation
             AnimationClip guardBlockClip,
             AnimationClip hitClip,
             AnimationClip deadClip,
+            SwordShieldSimpleClipSet swordShieldClips,
             PlayerAnimationSystemMode animationSystemMode)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(PlayerControllerPath) ?? string.Empty);
@@ -804,7 +886,7 @@ namespace Hollow.Editor.Generation
             AddPlayerAnimatorParameters(controller);
             if (animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation)
             {
-                BuildSimpleFullBodyController(controller, idleClip, walkClip, runClip, rollClip, slashClip, guardBlockClip, hitClip, deadClip);
+                BuildSimpleFullBodyController(controller, idleClip, walkClip, runClip, rollClip, slashClip, guardBlockClip, hitClip, deadClip, swordShieldClips);
             }
             else
             {
@@ -828,6 +910,10 @@ namespace Hollow.Editor.Generation
             controller.AddParameter(PlayerLocomotionAnimator.IsTargetLockedParameter, AnimatorControllerParameterType.Bool);
             controller.AddParameter(PlayerLocomotionAnimator.LockedMoveXParameter, AnimatorControllerParameterType.Float);
             controller.AddParameter(PlayerLocomotionAnimator.LockedMoveYParameter, AnimatorControllerParameterType.Float);
+            controller.AddParameter(PlayerLocomotionAnimator.IsSwordShieldProfileParameter, AnimatorControllerParameterType.Bool);
+            controller.AddParameter(PlayerLocomotionAnimator.IsShieldGuardingParameter, AnimatorControllerParameterType.Bool);
+            controller.AddParameter(PlayerLocomotionAnimator.ShieldImpactBlockedParameter, AnimatorControllerParameterType.Trigger);
+            controller.AddParameter(PlayerLocomotionAnimator.ShieldImpactBreakthroughParameter, AnimatorControllerParameterType.Trigger);
         }
 
         private static void BuildSimpleFullBodyController(
@@ -839,7 +925,8 @@ namespace Hollow.Editor.Generation
             AnimationClip attackClip,
             AnimationClip guardBlockClip,
             AnimationClip hitClip,
-            AnimationClip deadClip)
+            AnimationClip deadClip,
+            SwordShieldSimpleClipSet swordShieldClips)
         {
             var layers = controller.layers;
             if (layers.Length > 0)
@@ -861,15 +948,93 @@ namespace Hollow.Editor.Generation
             var hitState = AddActionState(stateMachine, "HitReaction", hitClip, new Vector3(780f, 320f, 0f));
             var deadState = AddState(stateMachine, "Death", deadClip, new Vector3(1060f, 120f, 0f));
 
-            AddSimpleLocomotionTransitions(idleState, walkState, runState);
+            var swordShieldWalkState = AddState(
+                stateMachine,
+                "SwordShield_Walk_Forward",
+                swordShieldClips.WalkForward ?? walkClip,
+                new Vector3(500f, -90f, 0f));
+            var swordShieldRunState = AddState(
+                stateMachine,
+                "SwordShield_Run_Forward",
+                swordShieldClips.RunForward ?? runClip,
+                new Vector3(780f, -90f, 0f));
+            var swordShieldAttackState = AddActionState(
+                stateMachine,
+                "SwordShield_Attack_09",
+                swordShieldClips.Attack ?? attackClip,
+                new Vector3(500f, 720f, 0f));
+            var swordShieldGuardHoldState = AddState(
+                stateMachine,
+                "SwordShield_ShieldGuard_02",
+                swordShieldClips.GuardHold ?? guardBlockClip,
+                new Vector3(220f, 520f, 0f));
+            var swordShieldGuardLeftState = AddState(
+                stateMachine,
+                "SwordShield_GuardStrafe_Left",
+                swordShieldClips.GuardStrafeLeft ?? swordShieldClips.GuardHold ?? guardBlockClip,
+                new Vector3(-60f, 520f, 0f));
+            var swordShieldGuardRightState = AddState(
+                stateMachine,
+                "SwordShield_GuardStrafe_Right",
+                swordShieldClips.GuardStrafeRight ?? swordShieldClips.GuardHold ?? guardBlockClip,
+                new Vector3(500f, 520f, 0f));
+            var swordShieldImpactBlockedState = AddActionState(
+                stateMachine,
+                "SwordShield_Impact_03_Blocked",
+                swordShieldClips.ImpactBlocked ?? hitClip,
+                new Vector3(780f, 520f, 0f));
+            var swordShieldImpactBreakthroughState = AddActionState(
+                stateMachine,
+                "SwordShield_Impact_02_Breakthrough",
+                swordShieldClips.ImpactBreakthrough ?? hitClip,
+                new Vector3(1060f, 520f, 0f));
+
+            AddSimpleLocomotionTransitions(idleState, walkState, runState, excludesSwordShieldProfile: true);
+            AddSwordShieldLocomotionTransitions(idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSwordShieldGuardTransitions(
+                new[] { idleState, walkState, runState, swordShieldWalkState, swordShieldRunState },
+                idleState,
+                swordShieldGuardHoldState,
+                swordShieldGuardLeftState,
+                swordShieldGuardRightState);
             AddAnyStateTriggerTransition(stateMachine, deadState, PlayerLocomotionAnimator.DeathTriggerParameter, allowWhileDead: true, duration: 0.04f);
             AddAnyStateBoolTransition(stateMachine, deadState, PlayerLocomotionAnimator.IsDeadParameter, duration: 0.04f);
             AddAnyStateTriggerTransition(stateMachine, hitState, PlayerLocomotionAnimator.HitTriggerParameter, allowWhileDead: false, duration: 0.04f);
             AddAnyStateTriggerTransition(stateMachine, rollState, PlayerLocomotionAnimator.RollTriggerParameter, allowWhileDead: false, duration: 0.05f);
-            AddAnyStateTriggerTransition(stateMachine, attackState, PlayerLocomotionAnimator.SlashTriggerParameter, allowWhileDead: false, duration: 0.04f);
-            AddSimpleActionExitTransitions(rollState, idleState, walkState, runState);
-            AddSimpleActionExitTransitions(attackState, idleState, walkState, runState);
-            AddSimpleActionExitTransitions(hitState, idleState, walkState, runState);
+            AddAnyStateTriggerTransition(
+                stateMachine,
+                attackState,
+                PlayerLocomotionAnimator.SlashTriggerParameter,
+                allowWhileDead: false,
+                duration: 0.04f,
+                requiresSwordShieldProfile: false);
+            AddAnyStateTriggerTransition(
+                stateMachine,
+                swordShieldAttackState,
+                PlayerLocomotionAnimator.SlashTriggerParameter,
+                allowWhileDead: false,
+                duration: 0.04f,
+                requiresSwordShieldProfile: true);
+            AddAnyStateTriggerTransition(
+                stateMachine,
+                swordShieldImpactBlockedState,
+                PlayerLocomotionAnimator.ShieldImpactBlockedParameter,
+                allowWhileDead: false,
+                duration: 0.035f,
+                requiresSwordShieldProfile: true);
+            AddAnyStateTriggerTransition(
+                stateMachine,
+                swordShieldImpactBreakthroughState,
+                PlayerLocomotionAnimator.ShieldImpactBreakthroughParameter,
+                allowWhileDead: false,
+                duration: 0.035f,
+                requiresSwordShieldProfile: true);
+            AddSimpleActionExitTransitions(rollState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSimpleActionExitTransitions(attackState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSimpleActionExitTransitions(hitState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSimpleActionExitTransitions(swordShieldAttackState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSwordShieldActionExitTransitions(swordShieldImpactBlockedState, idleState, swordShieldWalkState, swordShieldRunState, swordShieldGuardHoldState);
+            AddSwordShieldActionExitTransitions(swordShieldImpactBreakthroughState, idleState, swordShieldWalkState, swordShieldRunState, swordShieldGuardHoldState);
         }
 
         private static void BuildAdvancedLayeredController(
@@ -1040,12 +1205,17 @@ namespace Hollow.Editor.Generation
             runToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
         }
 
-        private static void AddSimpleLocomotionTransitions(AnimatorState idleState, AnimatorState walkState, AnimatorState runState)
+        private static void AddSimpleLocomotionTransitions(
+            AnimatorState idleState,
+            AnimatorState walkState,
+            AnimatorState runState,
+            bool excludesSwordShieldProfile = false)
         {
             var idleToWalk = idleState.AddTransition(walkState);
             idleToWalk.hasExitTime = false;
             idleToWalk.duration = 0.1f;
             idleToWalk.offset = 0f;
+            AddSwordShieldProfileExclusion(idleToWalk, excludesSwordShieldProfile);
             idleToWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             idleToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
 
@@ -1053,6 +1223,7 @@ namespace Hollow.Editor.Generation
             idleToRun.hasExitTime = false;
             idleToRun.duration = 0.1f;
             idleToRun.offset = 0f;
+            AddSwordShieldProfileExclusion(idleToRun, excludesSwordShieldProfile);
             idleToRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             idleToRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
 
@@ -1060,12 +1231,14 @@ namespace Hollow.Editor.Generation
             walkToIdle.hasExitTime = false;
             walkToIdle.duration = 0.12f;
             walkToIdle.offset = 0f;
+            AddSwordShieldProfileExclusion(walkToIdle, excludesSwordShieldProfile);
             walkToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
 
             var walkToRun = walkState.AddTransition(runState);
             walkToRun.hasExitTime = false;
             walkToRun.duration = 0.1f;
             walkToRun.offset = 0f;
+            AddSwordShieldProfileExclusion(walkToRun, excludesSwordShieldProfile);
             walkToRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             walkToRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
 
@@ -1073,14 +1246,184 @@ namespace Hollow.Editor.Generation
             runToIdle.hasExitTime = false;
             runToIdle.duration = 0.12f;
             runToIdle.offset = 0f;
+            AddSwordShieldProfileExclusion(runToIdle, excludesSwordShieldProfile);
             runToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
 
             var runToWalk = runState.AddTransition(walkState);
             runToWalk.hasExitTime = false;
             runToWalk.duration = 0.12f;
             runToWalk.offset = 0f;
+            AddSwordShieldProfileExclusion(runToWalk, excludesSwordShieldProfile);
             runToWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             runToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+        }
+
+        private static void AddSwordShieldLocomotionTransitions(
+            AnimatorState idleState,
+            AnimatorState defaultWalkState,
+            AnimatorState defaultRunState,
+            AnimatorState swordShieldWalkState,
+            AnimatorState swordShieldRunState)
+        {
+            foreach (var fromState in new[] { idleState, defaultWalkState, defaultRunState })
+            {
+                AddToSwordShieldWalkTransition(fromState, swordShieldWalkState);
+                AddToSwordShieldRunTransition(fromState, swordShieldRunState);
+            }
+
+            var walkToIdle = swordShieldWalkState.AddTransition(idleState);
+            walkToIdle.hasExitTime = false;
+            walkToIdle.duration = 0.12f;
+            walkToIdle.offset = 0f;
+            walkToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            walkToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+
+            var runToIdle = swordShieldRunState.AddTransition(idleState);
+            runToIdle.hasExitTime = false;
+            runToIdle.duration = 0.12f;
+            runToIdle.offset = 0f;
+            runToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            runToIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+
+            var walkToRun = swordShieldWalkState.AddTransition(swordShieldRunState);
+            walkToRun.hasExitTime = false;
+            walkToRun.duration = 0.1f;
+            walkToRun.offset = 0f;
+            AddSwordShieldLocomotionConditions(walkToRun);
+            walkToRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var runToWalk = swordShieldRunState.AddTransition(swordShieldWalkState);
+            runToWalk.hasExitTime = false;
+            runToWalk.duration = 0.12f;
+            runToWalk.offset = 0f;
+            AddSwordShieldLocomotionConditions(runToWalk);
+            runToWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var walkProfileExit = swordShieldWalkState.AddTransition(idleState);
+            walkProfileExit.hasExitTime = false;
+            walkProfileExit.duration = 0.08f;
+            walkProfileExit.offset = 0f;
+            walkProfileExit.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+
+            var runProfileExit = swordShieldRunState.AddTransition(idleState);
+            runProfileExit.hasExitTime = false;
+            runProfileExit.duration = 0.08f;
+            runProfileExit.offset = 0f;
+            runProfileExit.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+        }
+
+        private static void AddToSwordShieldWalkTransition(AnimatorState fromState, AnimatorState swordShieldWalkState)
+        {
+            var transition = fromState.AddTransition(swordShieldWalkState);
+            transition.hasExitTime = false;
+            transition.duration = 0.1f;
+            transition.offset = 0f;
+            AddSwordShieldLocomotionConditions(transition);
+            transition.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+        }
+
+        private static void AddToSwordShieldRunTransition(AnimatorState fromState, AnimatorState swordShieldRunState)
+        {
+            var transition = fromState.AddTransition(swordShieldRunState);
+            transition.hasExitTime = false;
+            transition.duration = 0.1f;
+            transition.offset = 0f;
+            AddSwordShieldLocomotionConditions(transition);
+            transition.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+        }
+
+        private static void AddSwordShieldLocomotionConditions(AnimatorStateTransition transition)
+        {
+            transition.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            transition.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+            transition.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            transition.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+        }
+
+        private static void AddSwordShieldGuardTransitions(
+            IEnumerable<AnimatorState> entryStates,
+            AnimatorState idleState,
+            AnimatorState guardHoldState,
+            AnimatorState guardLeftState,
+            AnimatorState guardRightState)
+        {
+            foreach (var entryState in entryStates)
+            {
+                AddGuardStrafeTransition(entryState, guardLeftState, AnimatorConditionMode.Less, -0.25f);
+                AddGuardStrafeTransition(entryState, guardRightState, AnimatorConditionMode.Greater, 0.25f);
+
+                var enterGuard = entryState.AddTransition(guardHoldState);
+                enterGuard.hasExitTime = false;
+                enterGuard.duration = 0.08f;
+                enterGuard.offset = 0f;
+                enterGuard.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+                enterGuard.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+                enterGuard.AddCondition(AnimatorConditionMode.Greater, -0.25f, PlayerLocomotionAnimator.LockedMoveXParameter);
+                enterGuard.AddCondition(AnimatorConditionMode.Less, 0.25f, PlayerLocomotionAnimator.LockedMoveXParameter);
+                enterGuard.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+            }
+
+            AddGuardStrafeTransition(guardHoldState, guardLeftState, AnimatorConditionMode.Less, -0.25f);
+            AddGuardStrafeTransition(guardHoldState, guardRightState, AnimatorConditionMode.Greater, 0.25f);
+            AddGuardStrafeTransition(guardLeftState, guardRightState, AnimatorConditionMode.Greater, 0.25f);
+            AddGuardStrafeTransition(guardRightState, guardLeftState, AnimatorConditionMode.Less, -0.25f);
+
+            var leftToHold = guardLeftState.AddTransition(guardHoldState);
+            leftToHold.hasExitTime = false;
+            leftToHold.duration = 0.08f;
+            leftToHold.offset = 0f;
+            leftToHold.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            leftToHold.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+            leftToHold.AddCondition(AnimatorConditionMode.Greater, -0.2f, PlayerLocomotionAnimator.LockedMoveXParameter);
+            leftToHold.AddCondition(AnimatorConditionMode.Less, 0.25f, PlayerLocomotionAnimator.LockedMoveXParameter);
+
+            var rightToHold = guardRightState.AddTransition(guardHoldState);
+            rightToHold.hasExitTime = false;
+            rightToHold.duration = 0.08f;
+            rightToHold.offset = 0f;
+            rightToHold.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            rightToHold.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+            rightToHold.AddCondition(AnimatorConditionMode.Less, 0.2f, PlayerLocomotionAnimator.LockedMoveXParameter);
+            rightToHold.AddCondition(AnimatorConditionMode.Greater, -0.25f, PlayerLocomotionAnimator.LockedMoveXParameter);
+
+            foreach (var guardState in new[] { guardHoldState, guardLeftState, guardRightState })
+            {
+                var exitGuard = guardState.AddTransition(idleState);
+                exitGuard.hasExitTime = false;
+                exitGuard.duration = 0.08f;
+                exitGuard.offset = 0f;
+                exitGuard.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+
+                var exitProfile = guardState.AddTransition(idleState);
+                exitProfile.hasExitTime = false;
+                exitProfile.duration = 0.08f;
+                exitProfile.offset = 0f;
+                exitProfile.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            }
+        }
+
+        private static void AddGuardStrafeTransition(
+            AnimatorState fromState,
+            AnimatorState toState,
+            AnimatorConditionMode mode,
+            float threshold)
+        {
+            var transition = fromState.AddTransition(toState);
+            transition.hasExitTime = false;
+            transition.duration = 0.08f;
+            transition.offset = 0f;
+            transition.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            transition.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+            transition.AddCondition(mode, threshold, PlayerLocomotionAnimator.LockedMoveXParameter);
+            transition.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+        }
+
+        private static void AddSwordShieldProfileExclusion(AnimatorStateTransition transition, bool excludesSwordShieldProfile)
+        {
+            if (excludesSwordShieldProfile)
+            {
+                transition.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            }
         }
 
         private static void AddLockedLocomotionTransitions(
@@ -1132,7 +1475,8 @@ namespace Hollow.Editor.Generation
             AnimatorState targetState,
             string triggerParameter,
             bool allowWhileDead,
-            float duration)
+            float duration,
+            bool? requiresSwordShieldProfile = null)
         {
             var transition = stateMachine.AddAnyStateTransition(targetState);
             transition.hasExitTime = false;
@@ -1144,6 +1488,15 @@ namespace Hollow.Editor.Generation
             {
                 transition.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
             }
+
+            if (requiresSwordShieldProfile.HasValue)
+            {
+                transition.AddCondition(
+                    requiresSwordShieldProfile.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot,
+                    0f,
+                    PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            }
+
         }
 
         private static void AddAnyStateBoolTransition(
@@ -1209,13 +1562,38 @@ namespace Hollow.Editor.Generation
             AnimatorState actionState,
             AnimatorState idleState,
             AnimatorState walkState,
-            AnimatorState runState)
+            AnimatorState runState,
+            AnimatorState swordShieldWalkState = null,
+            AnimatorState swordShieldRunState = null)
         {
+            if (swordShieldRunState != null)
+            {
+                var toSwordShieldRun = actionState.AddTransition(swordShieldRunState);
+                toSwordShieldRun.hasExitTime = true;
+                toSwordShieldRun.exitTime = 0.92f;
+                toSwordShieldRun.duration = 0.08f;
+                toSwordShieldRun.offset = 0f;
+                AddSwordShieldLocomotionConditions(toSwordShieldRun);
+                toSwordShieldRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+            }
+
+            if (swordShieldWalkState != null)
+            {
+                var toSwordShieldWalk = actionState.AddTransition(swordShieldWalkState);
+                toSwordShieldWalk.hasExitTime = true;
+                toSwordShieldWalk.exitTime = 0.92f;
+                toSwordShieldWalk.duration = 0.08f;
+                toSwordShieldWalk.offset = 0f;
+                AddSwordShieldLocomotionConditions(toSwordShieldWalk);
+                toSwordShieldWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+            }
+
             var toRun = actionState.AddTransition(runState);
             toRun.hasExitTime = true;
             toRun.exitTime = 0.92f;
             toRun.duration = 0.08f;
             toRun.offset = 0f;
+            toRun.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
             toRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             toRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
             toRun.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
@@ -1225,6 +1603,7 @@ namespace Hollow.Editor.Generation
             toWalk.exitTime = 0.92f;
             toWalk.duration = 0.08f;
             toWalk.offset = 0f;
+            toWalk.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
             toWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             toWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
             toWalk.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
@@ -1235,6 +1614,48 @@ namespace Hollow.Editor.Generation
             toIdle.duration = 0.08f;
             toIdle.offset = 0f;
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+        }
+
+        private static void AddSwordShieldActionExitTransitions(
+            AnimatorState actionState,
+            AnimatorState idleState,
+            AnimatorState swordShieldWalkState,
+            AnimatorState swordShieldRunState,
+            AnimatorState guardHoldState)
+        {
+            var toGuard = actionState.AddTransition(guardHoldState);
+            toGuard.hasExitTime = true;
+            toGuard.exitTime = 0.9f;
+            toGuard.duration = 0.08f;
+            toGuard.offset = 0f;
+            toGuard.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsSwordShieldProfileParameter);
+            toGuard.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
+            toGuard.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+
+            var toRun = actionState.AddTransition(swordShieldRunState);
+            toRun.hasExitTime = true;
+            toRun.exitTime = 0.92f;
+            toRun.duration = 0.08f;
+            toRun.offset = 0f;
+            AddSwordShieldLocomotionConditions(toRun);
+            toRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var toWalk = actionState.AddTransition(swordShieldWalkState);
+            toWalk.hasExitTime = true;
+            toWalk.exitTime = 0.92f;
+            toWalk.duration = 0.08f;
+            toWalk.offset = 0f;
+            AddSwordShieldLocomotionConditions(toWalk);
+            toWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
+
+            var toIdle = actionState.AddTransition(idleState);
+            toIdle.hasExitTime = true;
+            toIdle.exitTime = 0.92f;
+            toIdle.duration = 0.08f;
+            toIdle.offset = 0f;
+            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
+            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsShieldGuardingParameter);
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
         }
 
@@ -1502,7 +1923,14 @@ namespace Hollow.Editor.Generation
                 poseCoordinator.ConfigureAnimationSystemMode(animationSystemMode);
                 EditorUtility.SetDirty(poseCoordinator);
 
+                if (animationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation)
+                {
+                    animator.Rebind();
+                    animator.Update(0f);
+                }
+
                 ApplyAnimationSystemMode(prefabRoot, animationSystemMode);
+                ApplySimpleModeGroundingForPrefabSave(prefabRoot, animationSystemMode);
                 SanitizeRigForSave(prefabRoot.transform, animator.transform);
                 var preSaveValidation = PlayerVisualAssemblyValidator.Validate(prefabRoot, PlayerPrefabPath);
                 if (preSaveValidation.HasErrors)
@@ -1743,6 +2171,55 @@ namespace Hollow.Editor.Generation
 
                 EditorUtility.SetDirty(grounding);
             }
+        }
+
+        private static void ApplySimpleModeGroundingForPrefabSave(
+            GameObject prefabRoot,
+            PlayerAnimationSystemMode animationSystemMode)
+        {
+            if (prefabRoot == null || animationSystemMode != PlayerAnimationSystemMode.SimpleFullBodyAnimation)
+            {
+                return;
+            }
+
+            var grounding = prefabRoot.GetComponentInChildren<SimpleFullBodyGroundingController>(includeInactive: true);
+            var animator = prefabRoot.GetComponentInChildren<Animator>(includeInactive: true);
+            if (grounding == null || !grounding.GroundingEnabled || grounding.OffsetRoot == null)
+            {
+                return;
+            }
+
+            if (animator != null)
+            {
+                animator.Update(0f);
+            }
+
+            grounding.ApplyGrounding();
+            for (var iteration = 0; iteration < 4; iteration++)
+            {
+                if (animator != null)
+                {
+                    animator.Update(0f);
+                }
+
+                var validation = PlayerVisualAssemblyValidator.Validate(prefabRoot, PlayerPrefabPath);
+                var correction = validation.SimpleGroundingPredictedCorrectionY;
+                if (Mathf.Abs(correction) <= PlayerVisualAssemblyValidator.MaximumSimpleGroundingPredictedCorrectionMeters)
+                {
+                    EditorUtility.SetDirty(grounding.OffsetRoot);
+                    EditorUtility.SetDirty(grounding);
+                    return;
+                }
+
+                correction = Mathf.Clamp(
+                    correction,
+                    -SimpleFullBodyGroundingController.DefaultMaxCorrectionMeters,
+                    SimpleFullBodyGroundingController.DefaultMaxCorrectionMeters);
+                grounding.OffsetRoot.position += Vector3.up * correction;
+            }
+
+            EditorUtility.SetDirty(grounding.OffsetRoot);
+            EditorUtility.SetDirty(grounding);
         }
 
         private static ModernAnimationRigSetup EnsureModernAnimationRig(Animator animator, Transform visualRoot, Transform modelRoot)

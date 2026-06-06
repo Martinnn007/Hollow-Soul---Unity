@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Linq;
 using Hollow.Combat;
 using Hollow.Data.Definitions;
+using Hollow.Editor.AnimationRefiner;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
 using Hollow.Entities;
@@ -134,6 +135,44 @@ namespace Hollow.Tests.EditMode
             finally
             {
                 Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void SimpleModeFacesMovementUntilExplicitAimIsActive()
+        {
+            var player = new GameObject("SimpleFacingPlayer");
+            var visualRoot = new GameObject(VisualRootName);
+            try
+            {
+                visualRoot.transform.SetParent(player.transform, false);
+                var aimLock = player.AddComponent<PlayerAimLockController>();
+                var locomotionAnimator = player.AddComponent<PlayerLocomotionAnimator>();
+                locomotionAnimator.Bind(null, visualRoot.transform);
+                locomotionAnimator.BindGameplay(null, null, aimLock);
+                locomotionAnimator.Configure(0.05f, 3600f, PlayerMovementController.DefaultSpeedMetersPerSecond, 100f);
+                locomotionAnimator.ConfigureAnimationSystemMode(PlayerAnimationSystemMode.SimpleFullBodyAnimation);
+                aimLock.TickAim(Snapshot(Vector2.right, Vector2.zero, lockPressed: false), 0f);
+                locomotionAnimator.ResetTracking();
+
+                player.transform.position = new Vector3(0.4f, 0f, 0f);
+                locomotionAnimator.Sample(0.1f);
+
+                Assert.IsFalse(locomotionAnimator.IsTargetLockedForLocomotion);
+                Assert.Greater(Vector3.Dot(visualRoot.transform.forward, Vector3.right), 0.99f);
+
+                aimLock.TickAim(Snapshot(Vector2.right, Vector2.up, lockPressed: false), 0.2f);
+                player.transform.position = new Vector3(0.8f, 0f, 0f);
+                locomotionAnimator.Sample(0.1f);
+
+                Assert.IsTrue(aimLock.HasActiveAimIntent);
+                Assert.IsTrue(locomotionAnimator.IsTargetLockedForLocomotion);
+                Assert.Greater(Vector3.Dot(visualRoot.transform.forward, Vector3.forward), 0.99f);
+                Assert.Greater(locomotionAnimator.LockedRelativeMove.x, 0.95f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
             }
         }
 
@@ -305,6 +344,32 @@ namespace Hollow.Tests.EditMode
                 AssertWrapperLossyScaleBelow(heldWeaponVisual.HolsteredRangedVisual, 2f);
                 AssertVisibleMeshyShieldVisual(heldWeaponVisual.EquippedShieldVisual);
                 AssertWrapperLossyScaleBelow(heldWeaponVisual.EquippedShieldVisual, 2f);
+                AssertVisualRootPose(
+                    heldWeaponVisual.ActiveWeaponVisual,
+                    PlayerHeldWeaponVisualController.DefaultActiveMeleeVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultActiveMeleeVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultActiveMeleeVisualLocalScale);
+                AssertVisualRootPose(
+                    heldWeaponVisual.HolsteredRangedVisual,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalScale);
+                AssertVisualRootPose(
+                    heldWeaponVisual.EquippedShieldVisual,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalScale);
+                var editedActiveMeleeVisualRoot = ResolveVisualRoot(heldWeaponVisual.ActiveWeaponVisual);
+                var editedActiveMeleePosition = new Vector3(0.11f, -0.07f, 0.04f);
+                editedActiveMeleeVisualRoot.localPosition = editedActiveMeleePosition;
+                editedActiveMeleeVisualRoot.localRotation = Quaternion.Euler(12f, 34f, 56f);
+                editedActiveMeleeVisualRoot.localScale = new Vector3(1.05f, 0.95f, 1.02f);
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+                AssertVisualRootPose(
+                    heldWeaponVisual.ActiveWeaponVisual,
+                    editedActiveMeleePosition,
+                    new Vector3(12f, 34f, 56f),
+                    new Vector3(1.05f, 0.95f, 1.02f));
 
                 CreateDuplicateEquipmentWrapper(
                     player.transform,
@@ -314,6 +379,11 @@ namespace Hollow.Tests.EditMode
                 Assert.AreEqual(1, player.GetComponentsInChildren<PresentationVisualMarker>(includeInactive: true)
                     .Count(marker => marker.Role == PresentationPrefabRole.WeaponMelee));
                 AssertWrapperLossyScaleBelow(heldWeaponVisual.ActiveWeaponVisual, 2f);
+                AssertVisualRootPose(
+                    heldWeaponVisual.ActiveWeaponVisual,
+                    editedActiveMeleePosition,
+                    new Vector3(12f, 34f, 56f),
+                    new Vector3(1.05f, 0.95f, 1.02f));
 
                 weapon.SetActiveWeaponSlot(WeaponSlot.Ranged);
 
@@ -642,7 +712,9 @@ namespace Hollow.Tests.EditMode
                 Assert.IsNotNull(animator.runtimeAnimatorController);
                 Assert.IsTrue(grounding.GroundingEnabled);
                 Assert.AreSame(animator.transform, grounding.MeasuredRoot);
-                Assert.GreaterOrEqual(grounding.GroundClearanceMeters, 0.04f);
+                Assert.That(
+                    grounding.GroundClearanceMeters,
+                    Is.EqualTo(SimpleFullBodyGroundingController.DefaultGroundClearanceMeters).Within(0.001f));
 
                 var controller = animator.runtimeAnimatorController as AnimatorController;
                 Assert.IsNotNull(controller);
@@ -662,6 +734,18 @@ namespace Hollow.Tests.EditMode
                     EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
                 }
             }
+        }
+
+        [Test]
+        public void PlayerAnimationRefinerDeclaresPreviewSceneAndExportPaths()
+        {
+            Assert.AreEqual("Hollow/Animation/Player Animation Refiner", PlayerAnimationRefinerWindow.MenuPath);
+            Assert.AreEqual(
+                "Assets/_Hollow/Scenes/DeveloperLab/PlayerAnimationRefiner.unity",
+                PlayerAnimationRefinerWindow.PreviewScenePath);
+            Assert.AreEqual(
+                "Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationRefinerExport.json",
+                PlayerAnimationRefinerWindow.ExportPath);
         }
 
         [Test]
@@ -700,8 +784,9 @@ namespace Hollow.Tests.EditMode
             var selectedLocalScale = PlayerAnimationProfileAssetGenerator.ResolveSkinnedBodyLocalScale(selected);
             var scaledBoundsSize = Vector3.Scale(skinnedBody.sharedMesh.bounds.size, skinnedBody.transform.lossyScale) *
                 selectedLocalScale;
-            Assert.Greater(scaledBoundsSize.y, 0.75f);
-            Assert.Less(scaledBoundsSize.y, 3f);
+            Assert.That(
+                scaledBoundsSize.y,
+                Is.EqualTo(PlayerAnimationProfileAssetGenerator.TargetSkinnedBodyHeightMeters).Within(0.04f));
         }
 
         [Test]
@@ -1304,6 +1389,36 @@ namespace Hollow.Tests.EditMode
             Assert.Less(Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)), maxScale);
         }
 
+        private static void AssertVisualRootPose(
+            GameObject wrapper,
+            Vector3 expectedPosition,
+            Vector3 expectedEuler,
+            Vector3 expectedScale)
+        {
+            var visualRoot = ResolveVisualRoot(wrapper);
+            AssertVectorNear(expectedPosition, visualRoot.localPosition, 0.001f);
+            Assert.Less(
+                Quaternion.Angle(Quaternion.Euler(expectedEuler), visualRoot.localRotation),
+                0.1f,
+                $"{visualRoot.name} rotation should match exported refiner tuning.");
+            AssertVectorNear(expectedScale, visualRoot.localScale, 0.001f);
+        }
+
+        private static Transform ResolveVisualRoot(GameObject wrapper)
+        {
+            Assert.IsNotNull(wrapper);
+            var marker = wrapper.GetComponentInChildren<PresentationVisualMarker>(includeInactive: true);
+            Assert.IsNotNull(marker);
+            return marker.transform;
+        }
+
+        private static void AssertVectorNear(Vector3 expected, Vector3 actual, float tolerance)
+        {
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(tolerance), "x");
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(tolerance), "y");
+            Assert.That(actual.z, Is.EqualTo(expected.z).Within(tolerance), "z");
+        }
+
         private static void CreateDuplicateEquipmentWrapper(
             Transform parent,
             string wrapperName,
@@ -1610,7 +1725,18 @@ namespace Hollow.Tests.EditMode
             Assert.Greater(visualValidation.BodyRendererCount, 0, visualValidation.ToReportString());
             Assert.Greater(visualValidation.EnabledBodyRendererCount, 0, visualValidation.ToReportString());
             Assert.Greater(visualValidation.BodyRenderersWithMaterialCount, 0, visualValidation.ToReportString());
-            Assert.Greater(visualValidation.BodyBoundsSize.y, 0.75f, visualValidation.ToReportString());
+            Assert.That(
+                visualValidation.BodyBoundsSize.y,
+                Is.EqualTo(PlayerAnimationProfileAssetGenerator.TargetSkinnedBodyHeightMeters).Within(0.04f),
+                visualValidation.ToReportString());
+            Assert.That(
+                visualValidation.BodyBoundsMinY,
+                Is.LessThanOrEqualTo(SimpleFullBodyGroundingController.DefaultGroundClearanceMeters + 0.05f),
+                visualValidation.ToReportString());
+            Assert.That(
+                Mathf.Abs(visualValidation.SimpleGroundingPredictedCorrectionY),
+                Is.LessThanOrEqualTo(PlayerVisualAssemblyValidator.MaximumSimpleGroundingPredictedCorrectionMeters),
+                visualValidation.ToReportString());
             Assert.AreEqual(0, visualValidation.MissingScriptCount, visualValidation.ToReportString());
             Assert.AreEqual(0, visualValidation.MissingReferenceCount, visualValidation.ToReportString());
             Assert.AreEqual(0, visualValidation.InvalidConstraintsCount, visualValidation.ToReportString());
@@ -1707,6 +1833,12 @@ namespace Hollow.Tests.EditMode
             AssertControllerParameter(controller, PlayerLocomotionAnimator.IsTargetLockedParameter, AnimatorControllerParameterType.Bool);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.LockedMoveXParameter, AnimatorControllerParameterType.Float);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.LockedMoveYParameter, AnimatorControllerParameterType.Float);
+            AssertControllerParameter(controller, PlayerLocomotionAnimator.IsSwordShieldProfileParameter, AnimatorControllerParameterType.Bool);
+            AssertControllerParameter(controller, PlayerLocomotionAnimator.IsShieldGuardingParameter, AnimatorControllerParameterType.Bool);
+            AssertControllerParameter(controller, PlayerLocomotionAnimator.ShieldImpactBlockedParameter, AnimatorControllerParameterType.Trigger);
+            AssertControllerParameter(controller, PlayerLocomotionAnimator.ShieldImpactBreakthroughParameter, AnimatorControllerParameterType.Trigger);
+            AssertControllerParameterMissing(controller, "SwordShieldTurnLeft");
+            AssertControllerParameterMissing(controller, "SwordShieldTurnRight");
 
             var states = controller.layers[0].stateMachine.states.Select(child => child.state).ToArray();
             var idleState = FindState(states, "Idle");
@@ -1715,8 +1847,14 @@ namespace Hollow.Tests.EditMode
             var rollState = FindState(states, "Roll");
             var attackState = FindState(states, "Attack");
             var guardBlockState = FindState(states, "GuardBlock");
+            var swordShieldGuardState = FindState(states, "SwordShield_ShieldGuard_02");
+            var swordShieldAttackState = FindState(states, "SwordShield_Attack_09");
+            var swordShieldGuardLeftState = FindState(states, "SwordShield_GuardStrafe_Left");
+            var swordShieldGuardRightState = FindState(states, "SwordShield_GuardStrafe_Right");
             var hitState = FindState(states, "HitReaction");
             var deathState = FindState(states, "Death");
+            Assert.IsNull(states.FirstOrDefault(state => state.name == "SwordShield_Turn_Left"));
+            Assert.IsNull(states.FirstOrDefault(state => state.name == "SwordShield_Turn_Right"));
             Assert.IsNotNull(idleState.motion);
             Assert.IsNotNull(walkState.motion);
             Assert.IsNotNull(runState.motion);
@@ -1724,6 +1862,10 @@ namespace Hollow.Tests.EditMode
             Assert.IsNotNull(rollState.motion);
             Assert.IsNotNull(attackState.motion);
             Assert.IsNotNull(guardBlockState.motion);
+            Assert.IsNotNull(swordShieldGuardState.motion);
+            Assert.IsNotNull(swordShieldAttackState.motion);
+            Assert.IsNotNull(swordShieldGuardLeftState.motion);
+            Assert.IsNotNull(swordShieldGuardRightState.motion);
             Assert.IsNotNull(hitState.motion);
             Assert.IsNotNull(deathState.motion);
             Assert.AreEqual(RollClipName, rollState.motion.name);
@@ -1824,6 +1966,14 @@ namespace Hollow.Tests.EditMode
             Assert.IsTrue(controller.parameters.Any(parameter =>
                     parameter.name == parameterName && parameter.type == parameterType),
                 $"Expected animator parameter {parameterName} ({parameterType}).");
+        }
+
+        private static void AssertControllerParameterMissing(
+            AnimatorController controller,
+            string parameterName)
+        {
+            Assert.IsFalse(controller.parameters.Any(parameter => parameter.name == parameterName),
+                $"Did not expect animator parameter {parameterName}.");
         }
 
         private static bool HasTexture(Material material)
@@ -2001,9 +2151,14 @@ namespace Hollow.Tests.EditMode
 
         private static GameplayInputSnapshot Snapshot(Vector2 move)
         {
+            return Snapshot(move, Vector2.zero, lockPressed: false);
+        }
+
+        private static GameplayInputSnapshot Snapshot(Vector2 move, Vector2 shoot, bool lockPressed)
+        {
             return new GameplayInputSnapshot(
                 move,
-                Vector2.zero,
+                shoot,
                 interactPressed: false,
                 swapWeaponPressed: false,
                 lightAttackPressed: false,
@@ -2013,7 +2168,7 @@ namespace Hollow.Tests.EditMode
                 guardHeld: false,
                 pausePressed: false,
                 rollPressed: false,
-                lockTargetPressed: false);
+                lockTargetPressed: lockPressed);
         }
 
         private static EnemyRuntimeController CreateEnemy(Transform parent, Vector3 localPosition)

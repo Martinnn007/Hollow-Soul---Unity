@@ -130,6 +130,10 @@ MonoBehaviour:
   - Walk.ForwardLeft
   - Walk.ForwardRight
   mappedClipReports:
+  - 'GuardStrafe.Left: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield strafe (2).fbx'
+  - 'GuardStrafe.Right: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword
+    and shield strafe.fbx'
   - 'Idle: Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield
     idle.fbx'
   - 'Run.Backward: TEMP placeholder Assets/_Hollow/Data/AnimationProfiles/GeneratedTemporaryDirectionalPlaceholders/SwordShieldCombat/TEMP_SwordShieldCombat_Run_Backward.anim'

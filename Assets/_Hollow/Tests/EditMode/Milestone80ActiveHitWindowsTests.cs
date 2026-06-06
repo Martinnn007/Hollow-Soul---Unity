@@ -203,7 +203,7 @@ namespace Hollow.Tests.EditMode
 
                 Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
                 movement.Move(Vector2.up, 1f);
-                Assert.AreEqual(PlayerMovementController.DefaultSpeedMetersPerSecond * PlayerWeaponController.AttackMovementMultiplier, player.transform.localPosition.z, 0.02f);
+                Assert.AreEqual(0f, player.transform.localPosition.z, 0.02f);
 
                 var roller = CreatePlayer(root.transform);
                 var rollWeapon = roller.GetComponent<PlayerWeaponController>();

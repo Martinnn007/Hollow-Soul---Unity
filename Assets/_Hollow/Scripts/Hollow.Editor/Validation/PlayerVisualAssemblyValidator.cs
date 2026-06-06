@@ -34,6 +34,7 @@ namespace Hollow.Editor.Validation
         private const float MaximumShieldMaxDimensionMeters = 1.2f;
         private const float MaximumMeleeMaxDimensionMeters = 2.2f;
         private const float MaximumRangedMaxDimensionMeters = 1.5f;
+        public const float MaximumSimpleGroundingPredictedCorrectionMeters = 0.05f;
 
         [MenuItem("Hollow/Debug/Validate Player Visual Assembly")]
         public static void ValidatePlayerVisualAssemblyMenu()
@@ -285,7 +286,16 @@ namespace Hollow.Editor.Validation
 
             ValidateRigHierarchy(prefabRoot.transform, animatorTransform, result);
             PopulateAnimationSystemDiagnostics(prefabRoot, result);
+            PopulateGroundingDiagnostics(prefabRoot, result);
             ValidateMissingScriptsAndReferences(prefabRoot, result);
+
+            if (result.AnimationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
+                result.SimpleGroundingEnabled &&
+                Mathf.Abs(result.SimpleGroundingPredictedCorrectionY) > MaximumSimpleGroundingPredictedCorrectionMeters)
+            {
+                result.Errors.Add(
+                    $"Simple full-body grounding is not baked into the prefab. Predicted correction is {result.SimpleGroundingPredictedCorrectionY:0.###}m, expected <= {MaximumSimpleGroundingPredictedCorrectionMeters:0.###}m.");
+            }
 
             if (result.AnimationSystemMode == PlayerAnimationSystemMode.SimpleFullBodyAnimation &&
                 result.SimpleModeHasActiveRigInfluence)
@@ -469,6 +479,8 @@ namespace Hollow.Editor.Validation
             {
                 result.BodyBoundsCenter = aggregateBounds.Value.center;
                 result.BodyBoundsSize = aggregateBounds.Value.size;
+                result.BodyBoundsMinY = aggregateBounds.Value.min.y;
+                result.BodyBoundsMaxY = aggregateBounds.Value.max.y;
             }
         }
 
@@ -646,6 +658,31 @@ namespace Hollow.Editor.Validation
                 result.AnimatorLayerCount = controller.layers.Length;
                 result.AnimatorBaseLayerIkPass = controller.layers.Length > 0 && controller.layers[0].iKPass;
             }
+        }
+
+        private static void PopulateGroundingDiagnostics(
+            GameObject prefabRoot,
+            PlayerVisualAssemblyValidationResult result)
+        {
+            var grounding = prefabRoot.GetComponentInChildren<SimpleFullBodyGroundingController>(includeInactive: true);
+            if (grounding == null)
+            {
+                return;
+            }
+
+            result.HasSimpleGroundingController = true;
+            result.SimpleGroundingEnabled = grounding.GroundingEnabled;
+            result.SimpleGroundingClearanceMeters = grounding.GroundClearanceMeters;
+            result.SimpleGroundingLastBodyBottomY = grounding.LastBodyBottomY;
+            result.SimpleGroundingLastMeasuredFootBottomY = grounding.LastMeasuredFootBottomY;
+            result.SimpleGroundingLastGroundY = grounding.LastGroundY;
+            result.SimpleGroundingLastCorrectionY = grounding.LastCorrectionY;
+            result.SimpleGroundingLastApplySucceeded = grounding.LastApplySucceeded;
+            result.SimpleGroundingTargetBodyBottomY =
+                (grounding.GroundReference != null ? grounding.GroundReference.position.y : 0f) +
+                grounding.GroundClearanceMeters;
+            result.SimpleGroundingPredictedCorrectionY =
+                result.SimpleGroundingTargetBodyBottomY - result.BodyBoundsMinY;
         }
 
         private static void ValidateConstraintTransform(
@@ -1258,6 +1295,18 @@ namespace Hollow.Editor.Validation
         public int MissingScriptCount { get; set; }
         public Vector3 BodyBoundsCenter { get; set; }
         public Vector3 BodyBoundsSize { get; set; }
+        public float BodyBoundsMinY { get; set; }
+        public float BodyBoundsMaxY { get; set; }
+        public bool HasSimpleGroundingController { get; set; }
+        public bool SimpleGroundingEnabled { get; set; }
+        public bool SimpleGroundingLastApplySucceeded { get; set; }
+        public float SimpleGroundingClearanceMeters { get; set; }
+        public float SimpleGroundingLastBodyBottomY { get; set; }
+        public float SimpleGroundingLastMeasuredFootBottomY { get; set; }
+        public float SimpleGroundingLastGroundY { get; set; }
+        public float SimpleGroundingLastCorrectionY { get; set; }
+        public float SimpleGroundingTargetBodyBottomY { get; set; }
+        public float SimpleGroundingPredictedCorrectionY { get; set; }
         public List<PlayerVisualAssemblyRendererDetail> BodyRendererDetails { get; } = new();
         public List<PlayerVisualAssemblyEquipmentDetail> EquipmentRendererDetails { get; } = new();
         public List<string> FirstSkinnedBodyBonePaths { get; } = new();
@@ -1296,6 +1345,18 @@ namespace Hollow.Editor.Validation
             builder.AppendLine($"Body Under Animator Hierarchy: {BodyUnderAnimatorHierarchy}");
             builder.AppendLine($"Body Bounds Center: {FormatVector(BodyBoundsCenter)}");
             builder.AppendLine($"Body Bounds Size: {FormatVector(BodyBoundsSize)}");
+            builder.AppendLine($"Body Bounds MinY: {BodyBoundsMinY:0.###}");
+            builder.AppendLine($"Body Bounds MaxY: {BodyBoundsMaxY:0.###}");
+            builder.AppendLine($"Simple Grounding Controller: {(HasSimpleGroundingController ? "present" : "missing")}");
+            builder.AppendLine($"Simple Grounding Enabled: {SimpleGroundingEnabled}");
+            builder.AppendLine($"Simple Grounding Clearance: {SimpleGroundingClearanceMeters:0.###}");
+            builder.AppendLine($"Simple Grounding TargetBodyBottomY: {SimpleGroundingTargetBodyBottomY:0.###}");
+            builder.AppendLine($"Simple Grounding PredictedCorrectionY: {SimpleGroundingPredictedCorrectionY:0.###}");
+            builder.AppendLine($"Simple Grounding RuntimeLastApplySucceeded: {SimpleGroundingLastApplySucceeded}");
+            builder.AppendLine($"Simple Grounding RuntimeLastBodyBottomY: {SimpleGroundingLastBodyBottomY:0.###}");
+            builder.AppendLine($"Simple Grounding RuntimeLastMeasuredFootBottomY: {SimpleGroundingLastMeasuredFootBottomY:0.###}");
+            builder.AppendLine($"Simple Grounding RuntimeLastGroundY: {SimpleGroundingLastGroundY:0.###}");
+            builder.AppendLine($"Simple Grounding RuntimeLastCorrectionY: {SimpleGroundingLastCorrectionY:0.###}");
             builder.AppendLine($"RigBuilders: {RigBuilderCount}");
             builder.AppendLine($"RigBuilderEnabled: {RigBuilderEnabled}");
             builder.AppendLine($"FootPlacementEnabled: {FootPlacementEnabled}");

@@ -10,4 +10,10 @@ namespace Hollow.Combat
         FailedNoStamina,
         RejectedThreat
     }
+
+    public enum ShieldGuardAnimationCue
+    {
+        Blocked,
+        Breakthrough
+    }
 }

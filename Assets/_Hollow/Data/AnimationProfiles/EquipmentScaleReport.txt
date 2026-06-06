@@ -1,6 +1,6 @@
 Hollow Soul Equipment Scale Report
 ReportVersion: 1
-UnityTimestampUtc: 2026-06-05T09:49:59.4706490Z
+UnityTimestampUtc: 2026-06-05T22:15:57.7586920Z
 PrefabPath: Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab
 ValidationErrors: 0
 ValidationWarnings: 0
@@ -8,18 +8,18 @@ CurrentProfile: UnarmedLocomotion
 NormalizationPassCount: 0
 PlayerCharacterRoot: path=PlayerCharacter localScale=1, 1, 1 lossyScale=1, 1, 1
 MainCharacter_VisualRoot: path=PlayerCharacter/MainCharacter_VisualRoot localScale=1, 1, 1 lossyScale=1, 1, 1
-Animator: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel localScale=1, 1, 1 lossyScale=1, 1, 1
-mixamorig:Hips: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips localScale=1, 1, 1 lossyScale=1, 1, 1
-RightHand: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand localScale=1, 1, 1 lossyScale=1, 1, 1
-LeftHand: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand localScale=1, 1, 1 lossyScale=1, 1, 1
-LeftForeArm: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm localScale=1, 1, 1 lossyScale=1, 1, 1
-MainCharacter_RightHandWeaponSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket localScale=0.75, 0.75, 0.75 lossyScale=0.75, 0.75, 0.75
-MainCharacter_RangedHandWeaponSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket localScale=1, 1, 1 lossyScale=1, 1, 1
+Animator: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel localScale=0.89, 0.89, 0.89 lossyScale=0.89, 0.89, 0.89
+mixamorig:Hips: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
+RightHand: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
+LeftHand: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
+LeftForeArm: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
+MainCharacter_RightHandWeaponSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket localScale=0.75, 0.75, 0.75 lossyScale=0.668, 0.668, 0.668
+MainCharacter_RangedHandWeaponSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
 MainCharacter_BackMeleeHolsterSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_BackMeleeHolsterSocket localScale=0.72, 0.72, 0.72 lossyScale=0.72, 0.72, 0.72
 MainCharacter_HipRangedHolsterSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_HipRangedHolsterSocket localScale=0.78, 0.78, 0.78 lossyScale=0.78, 0.78, 0.78
-MainCharacter_LeftForearmShieldSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket localScale=0.72, 0.72, 0.72 lossyScale=0.72, 0.72, 0.72
-MainCharacter_BackShieldSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket localScale=0.82, 0.82, 0.82 lossyScale=0.82, 0.82, 0.82
-MainCharacter_RangedMuzzleSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket/MainCharacter_RangedMuzzleSocket localScale=1, 1, 1 lossyScale=1, 1, 1
+MainCharacter_LeftForearmShieldSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket localScale=0.72, 0.72, 0.72 lossyScale=0.641, 0.641, 0.641
+MainCharacter_BackShieldSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket localScale=0.82, 0.82, 0.82 lossyScale=0.73, 0.73, 0.73
+MainCharacter_RangedMuzzleSocket: path=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket/MainCharacter_RangedMuzzleSocket localScale=1, 1, 1 lossyScale=0.89, 0.89, 0.89
 
 RootCauseClassification
 A_PrefabNotRegeneratedOrStaleWrapperScales: False
@@ -35,17 +35,17 @@ EquipmentInstances
 - role: HeldWeapon
   instancePath: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket/ActiveMeleeWeaponVisual
   sourcePrefabOrModelPath: Assets/_Hollow/Prefabs/ArtPass/AP_WeaponMelee.prefab
-  rootLocalScale: 1, 1, 1
+  rootLocalScale: 1.124, 1.124, 1.124
   rootLossyScale: 0.75, 0.75, 0.75
   parentPath: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket
   parentLocalScale: 0.75, 0.75, 0.75
-  parentLossyScale: 0.75, 0.75, 0.75
+  parentLossyScale: 0.668, 0.668, 0.668
   socketPath: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket
   socketLocalScale: 0.75, 0.75, 0.75
-  socketLossyScale: 0.75, 0.75, 0.75
+  socketLossyScale: 0.668, 0.668, 0.668
   markerRole: WeaponMelee
   rendererBoundsSize: 0.137, 0.045, 0.713
-  rendererBoundsCenterDistanceFromPlayerRoot: 1.725
+  rendererBoundsCenterDistanceFromPlayerRoot: 0.278
   boundsValid: True
   renderer: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket/ActiveMeleeWeaponVisual/ArtPassVisual.WeaponMelee/MeshySilentBladeModel bounds=0.137, 0.045, 0.713
   currentProfile: UnarmedLocomotion
@@ -55,17 +55,17 @@ EquipmentInstances
 - role: BackShield
   instancePath: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual
   sourcePrefabOrModelPath: Assets/_Hollow/Prefabs/ArtPass/AP_Armor.prefab
-  rootLocalScale: 1, 1, 1
+  rootLocalScale: 1.124, 1.124, 1.124
   rootLossyScale: 0.82, 0.82, 0.82
   parentPath: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket
   parentLocalScale: 0.82, 0.82, 0.82
-  parentLossyScale: 0.82, 0.82, 0.82
+  parentLossyScale: 0.73, 0.73, 0.73
   socketPath: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket
   socketLocalScale: 0.82, 0.82, 0.82
-  socketLossyScale: 0.82, 0.82, 0.82
+  socketLossyScale: 0.73, 0.73, 0.73
   markerRole: Armor
   rendererBoundsSize: 0.471, 0.363, 0.476
-  rendererBoundsCenterDistanceFromPlayerRoot: 1.659
+  rendererBoundsCenterDistanceFromPlayerRoot: 0.437
   boundsValid: True
   renderer: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor/MeshyBasicSmallShieldModel bounds=0.471, 0.363, 0.476
   currentProfile: UnarmedLocomotion
@@ -85,7 +85,7 @@ EquipmentInstances
   socketLossyScale: 0.78, 0.78, 0.78
   markerRole: WeaponRanged
   rendererBoundsSize: 0.484, 0.126, 0.303
-  rendererBoundsCenterDistanceFromPlayerRoot: 1.141
+  rendererBoundsCenterDistanceFromPlayerRoot: 1.165
   boundsValid: True
   renderer: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged/MeshyAlienTechPistolModel bounds=0.484, 0.126, 0.303
   currentProfile: UnarmedLocomotion
@@ -120,8 +120,20 @@ Oversized Equipment Count: 0
 Duplicate Equipment Wrappers: 0
 Duplicate Equipment Markers: 0
 Body Under Animator Hierarchy: True
-Body Bounds Center: 0.002, 1, -0.004
-Body Bounds Size: 2.006, 2, 0.412
+Body Bounds Center: -0.013, 0.915, -0.026
+Body Bounds Size: 1.785, 1.78, 0.367
+Body Bounds MinY: 0.025
+Body Bounds MaxY: 1.805
+Simple Grounding Controller: present
+Simple Grounding Enabled: True
+Simple Grounding Clearance: 0.025
+Simple Grounding TargetBodyBottomY: 0.025
+Simple Grounding PredictedCorrectionY: 0
+Simple Grounding RuntimeLastApplySucceeded: False
+Simple Grounding RuntimeLastBodyBottomY: 0
+Simple Grounding RuntimeLastMeasuredFootBottomY: 0
+Simple Grounding RuntimeLastGroundY: 0
+Simple Grounding RuntimeLastCorrectionY: 0
 RigBuilders: 1
 RigBuilderEnabled: False
 FootPlacementEnabled: False
@@ -133,14 +145,14 @@ SimpleModeHasActiveRigInfluence: False
 Invalid Constraints: 0
 Missing References: 0
 Missing Scripts: 0
-- PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/temp [SkinnedMeshRenderer] enabled=True layer=0 bounds=2.006, 2, 0.412 scale=100, 100, 100
+- PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/temp [SkinnedMeshRenderer] enabled=True layer=0 bounds=1.785, 1.78, 0.367 scale=100, 100, 100
   Materials: AP_M_MainCharacter_GreySentinel
   Shaders: Universal Render Pipeline/Lit
   Material Paths: Assets/_Hollow/Art/Materials/ArtPass/AP_M_MainCharacter_GreySentinel.mat
 - Equipment WeaponMelee renderer=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket/ActiveMeleeWeaponVisual/ArtPassVisual.WeaponMelee/MeshySilentBladeModel artpass=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket/ActiveMeleeWeaponVisual/ArtPassVisual.WeaponMelee wrapper=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket/ActiveMeleeWeaponVisual socket=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket
-  parentLossyScale=0.75, 0.75, 0.75 wrapperLocalScale=1, 1, 1 compensationScale=1, 1, 1 bounds=0.137, 0.045, 0.713 valid=True
+  parentLossyScale=0.668, 0.668, 0.668 wrapperLocalScale=1.124, 1.124, 1.124 compensationScale=1.124, 1.124, 1.124 bounds=0.137, 0.045, 0.713 valid=True
 - Equipment Armor renderer=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor/MeshyBasicSmallShieldModel artpass=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor wrapper=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual socket=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket
-  parentLossyScale=0.82, 0.82, 0.82 wrapperLocalScale=1, 1, 1 compensationScale=1, 1, 1 bounds=0.471, 0.363, 0.476 valid=True
+  parentLossyScale=0.73, 0.73, 0.73 wrapperLocalScale=1.124, 1.124, 1.124 compensationScale=1.124, 1.124, 1.124 bounds=0.471, 0.363, 0.476 valid=True
 - Equipment WeaponRanged renderer=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged/MeshyAlienTechPistolModel artpass=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged wrapper=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual socket=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_HipRangedHolsterSocket
   parentLossyScale=0.78, 0.78, 0.78 wrapperLocalScale=1, 1, 1 compensationScale=1, 1, 1 bounds=0.484, 0.126, 0.303 valid=True
 First Skinned Body Bones:

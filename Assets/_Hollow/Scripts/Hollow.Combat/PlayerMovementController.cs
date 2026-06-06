@@ -132,11 +132,7 @@ namespace Hollow.Combat
                 ? weaponController.RollDirection
                 : Vector2.ClampMagnitude(moveInput, 1f);
             var rollDirectionLocal = isRollTraveling ? new Vector3(move.x, 0f, move.y) : Vector3.zero;
-            var attackMoveMultiplier = weaponController != null &&
-                weaponController.IsAttackCommitted &&
-                !weaponController.IsRangedAttackCommitted
-                    ? PlayerWeaponController.AttackMovementMultiplier
-                    : 1f;
+            var attackMoveMultiplier = weaponController != null && weaponController.IsAttackCommitted ? 0f : 1f;
             var speed = isRollTraveling
                 ? weaponController.RollSpeedMetersPerSecond
                 : SpeedMetersPerSecond * attackMoveMultiplier;

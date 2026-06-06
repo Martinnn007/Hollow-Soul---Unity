@@ -5,7 +5,7 @@ namespace Hollow.Combat
     [DisallowMultipleComponent]
     public sealed class SimpleFullBodyGroundingController : MonoBehaviour
     {
-        public const float DefaultGroundClearanceMeters = 0.08f;
+        public const float DefaultGroundClearanceMeters = 0.025f;
         public const float DefaultMaxCorrectionMeters = 2.5f;
         public const float DefaultMaxPlanarCorrectionMeters = 1.25f;
         private const float FootBoneSoleApproximationMeters = 0.08f;
