@@ -360,6 +360,25 @@ namespace Hollow.Tests.EditMode
                     PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalPosition,
                     PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalEuler,
                     PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalScale);
+                var editedHolsteredRangedVisualRoot = ResolveVisualRoot(heldWeaponVisual.HolsteredRangedVisual);
+                editedHolsteredRangedVisualRoot.localPosition = new Vector3(0.25f, -1.7f, 0.15f);
+                editedHolsteredRangedVisualRoot.localRotation = Quaternion.Euler(11f, 22f, 33f);
+                editedHolsteredRangedVisualRoot.localScale = new Vector3(0.6f, 0.6f, 0.6f);
+                var editedShieldVisualRoot = ResolveVisualRoot(heldWeaponVisual.EquippedShieldVisual);
+                editedShieldVisualRoot.localPosition = new Vector3(-0.18f, 0.03f, 0.11f);
+                editedShieldVisualRoot.localRotation = Quaternion.Euler(0f, 40f, 270f);
+                editedShieldVisualRoot.localScale = new Vector3(1.1f, 0.9f, 1.05f);
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+                AssertVisualRootPose(
+                    heldWeaponVisual.HolsteredRangedVisual,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultHolsteredRangedVisualLocalScale);
+                AssertVisualRootPose(
+                    heldWeaponVisual.EquippedShieldVisual,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalPosition,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalEuler,
+                    PlayerHeldWeaponVisualController.DefaultShieldForearmVisualLocalScale);
                 var editedActiveMeleeVisualRoot = ResolveVisualRoot(heldWeaponVisual.ActiveWeaponVisual);
                 var editedActiveMeleePosition = new Vector3(0.11f, -0.07f, 0.04f);
                 editedActiveMeleeVisualRoot.localPosition = editedActiveMeleePosition;
@@ -430,35 +449,50 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
-        public void HeldWeaponVisualRepairsRangedHolsterSocketToAnimatedRightThigh()
+        public void HeldWeaponVisualRepairsRangedHolsterSocketToStableHips()
         {
             var player = new GameObject("PlayerCharacter");
             var visualRoot = new GameObject(VisualRootName);
             var modelRoot = new GameObject("MainCharacter_MeshyModel");
+            var hips = new GameObject("mixamorig:Hips");
             var rightUpperLeg = new GameObject("mixamorig:RightUpLeg");
             var staleRangedHolster = new GameObject(PlayerHeldWeaponVisualController.RangedHolsterSocketName);
             try
             {
                 visualRoot.transform.SetParent(player.transform, false);
                 modelRoot.transform.SetParent(visualRoot.transform, false);
-                rightUpperLeg.transform.SetParent(modelRoot.transform, false);
+                hips.transform.SetParent(modelRoot.transform, false);
+                rightUpperLeg.transform.SetParent(hips.transform, false);
                 staleRangedHolster.transform.SetParent(visualRoot.transform, false);
                 var heldWeaponVisual = player.AddComponent<PlayerHeldWeaponVisualController>();
 
                 heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
 
-                Assert.AreSame(rightUpperLeg.transform, heldWeaponVisual.RangedHolsterSocket.parent);
+                Assert.AreSame(hips.transform, heldWeaponVisual.RangedHolsterSocket.parent);
+                Assert.AreNotSame(rightUpperLeg.transform, heldWeaponVisual.RangedHolsterSocket.parent);
+                AssertVectorNear(
+                    PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
+                    heldWeaponVisual.RangedHolsterSocket.localPosition,
+                    0.001f);
                 AssertVectorNear(
                     PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
                     visualRoot.transform.InverseTransformPoint(heldWeaponVisual.RangedHolsterSocket.position),
                     0.001f);
+                heldWeaponVisual.RangedHolsterSocket.localPosition = new Vector3(-0.8f, -1.4f, 0.35f);
+                heldWeaponVisual.RangedHolsterSocket.localRotation = Quaternion.Euler(45f, 10f, 270f);
+                heldWeaponVisual.RangedHolsterSocket.localScale = Vector3.one * 0.2f;
+                heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
+                AssertVectorNear(
+                    PlayerHeldWeaponVisualController.DefaultRangedHolsterSocketLocalPosition,
+                    heldWeaponVisual.RangedHolsterSocket.localPosition,
+                    0.001f);
 
                 var boneLocalSocketPosition = heldWeaponVisual.RangedHolsterSocket.localPosition;
-                rightUpperLeg.transform.localPosition = new Vector3(0.5f, 0.25f, -0.1f);
-                rightUpperLeg.transform.localRotation = Quaternion.Euler(0f, 35f, 0f);
+                hips.transform.localPosition = new Vector3(0.5f, 0.25f, -0.1f);
+                hips.transform.localRotation = Quaternion.Euler(0f, 35f, 0f);
                 heldWeaponVisual.RefreshAllEquipmentVisualTransforms();
 
-                Assert.AreSame(rightUpperLeg.transform, heldWeaponVisual.RangedHolsterSocket.parent);
+                Assert.AreSame(hips.transform, heldWeaponVisual.RangedHolsterSocket.parent);
                 AssertVectorNear(
                     boneLocalSocketPosition,
                     heldWeaponVisual.RangedHolsterSocket.localPosition,
@@ -789,6 +823,88 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(
                 "Assets/_Hollow/Data/AnimationProfiles/PlayerAnimationRefinerExport.json",
                 PlayerAnimationRefinerWindow.ExportPath);
+            Assert.AreEqual(
+                "Assets/_Hollow/Data/AnimationProfiles/PlayerPositionRefinerExport.json",
+                PlayerAnimationRefinerWindow.PositionExportPath);
+            Assert.IsTrue(System.Enum.IsDefined(typeof(PlayerAnimationRefinerMode), PlayerAnimationRefinerMode.EquipmentRefiner));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(PlayerAnimationRefinerMode), PlayerAnimationRefinerMode.PositionRefiner));
+        }
+
+        [Test]
+        public void PlayerAnimationRefinerExportsPositionSnapshotFromActualPreviewTransforms()
+        {
+            var root = new GameObject("PlayerAnimationRefiner.PlayerPreview");
+            var visualRoot = new GameObject(VisualRootName);
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var meleeSocket = new GameObject(PlayerHeldWeaponVisualController.MeleeHandSocketName);
+            var muzzleSocket = new GameObject(PlayerHeldWeaponVisualController.RangedMuzzleSocketName);
+            try
+            {
+                root.AddComponent<CapsuleCollider>().height = 1.78f;
+                visualRoot.transform.SetParent(root.transform, false);
+                visualRoot.transform.localPosition = new Vector3(0.05f, -0.08f, 0.02f);
+                body.name = "SyntheticBodyRenderer";
+                body.transform.SetParent(visualRoot.transform, false);
+                body.transform.localScale = new Vector3(0.5f, 1.78f, 0.25f);
+                meleeSocket.transform.SetParent(visualRoot.transform, false);
+                meleeSocket.transform.localPosition = new Vector3(0.3f, 1.1f, 0.2f);
+                muzzleSocket.transform.SetParent(visualRoot.transform, false);
+                muzzleSocket.transform.localPosition = new Vector3(0.2f, 1.2f, 0.65f);
+                muzzleSocket.transform.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
+
+                var path = PlayerAnimationRefinerWindow.ExportPositionRefinerSnapshot(
+                    root,
+                    PlayerAnimationRefinerWindow.PositionExportPath);
+
+                Assert.AreEqual(PlayerAnimationRefinerWindow.PositionExportPath, path);
+                Assert.IsTrue(File.Exists(path));
+                var json = File.ReadAllText(path);
+                StringAssert.Contains("\"masterVisualRootPath\": \"PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot\"", json);
+                StringAssert.Contains("\"masterVisualRootLocalPosition\"", json);
+                StringAssert.Contains("\"bodyBoundsCenter\"", json);
+                StringAssert.Contains("\"predictedGroundingOffsetY\"", json);
+                StringAssert.Contains("\"projectileOrigin\"", json);
+                StringAssert.Contains("\"projectileDirection\"", json);
+                StringAssert.Contains("\"swordArcSamples\"", json);
+                StringAssert.Contains("\"label\": \"Melee In Hand\"", json);
+                StringAssert.Contains("\"label\": \"Ranged Muzzle\"", json);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlayerAnimationRefinerEditsRangedHolsteredScenarioSocket()
+        {
+            var slotsField = typeof(PlayerAnimationRefinerWindow)
+                .GetField("EquipmentSlots", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(slotsField);
+
+            var slots = (System.Array)slotsField.GetValue(null);
+            Assert.IsNotNull(slots);
+
+            object rangedHolsteredSlot = null;
+            foreach (var slot in slots)
+            {
+                var label = (string)slot.GetType().GetProperty("Label")?.GetValue(slot);
+                if (label == "Ranged Holstered")
+                {
+                    rangedHolsteredSlot = slot;
+                    break;
+                }
+            }
+
+            Assert.IsNotNull(rangedHolsteredSlot);
+            var slotType = rangedHolsteredSlot.GetType();
+            var socketName = (string)slotType.GetProperty("SocketName")?.GetValue(rangedHolsteredSlot);
+            var wrapperName = (string)slotType.GetProperty("WrapperName")?.GetValue(rangedHolsteredSlot);
+            var editTargetMode = slotType.GetProperty("EditTargetMode")?.GetValue(rangedHolsteredSlot);
+
+            Assert.AreEqual(PlayerHeldWeaponVisualController.RangedHolsterSocketName, socketName);
+            Assert.AreEqual(PlayerHeldWeaponVisualController.HolsteredRangedWeaponVisualName, wrapperName);
+            Assert.AreEqual("ScenarioSocket", editTargetMode?.ToString());
         }
 
         [Test]
@@ -1818,10 +1934,9 @@ namespace Hollow.Tests.EditMode
                     meleeHolsterSockets[0].parent == visualRoot,
                 "Regenerated prefabs should parent the melee holster socket to the animated back/hips skeleton so holstered melee weapons follow body animation; older prefabs are repaired at runtime.");
             Assert.IsTrue(
-                IsBoneNamed(rangedHolsterSockets[0].parent, "RightUpLeg") ||
-                    IsBoneNamed(rangedHolsterSockets[0].parent, "Hips") ||
+                IsBoneNamed(rangedHolsterSockets[0].parent, "Hips") ||
                     rangedHolsterSockets[0].parent == visualRoot,
-                "Regenerated prefabs should parent the ranged holster socket to RightUpLeg so holstered ranged weapons follow right hip/thigh animation; older prefabs are repaired at runtime.");
+                "Regenerated prefabs should parent the ranged holster socket to Hips so holstered ranged weapons stay stable across attack, idle, walk, and run animations; older prefabs are repaired at runtime.");
             Assert.AreSame(rangedHandSockets[0], rangedMuzzleSockets[0].parent);
             if (shieldForearmSockets.Length > 0)
             {
@@ -1931,8 +2046,10 @@ namespace Hollow.Tests.EditMode
                 Assert.IsTrue(IsDescendantOf(meleeHolsterSockets[0].parent, animator.transform));
             }
 
-            if (IsBoneNamed(rangedHolsterSockets[0].parent, "RightUpLeg") ||
-                IsBoneNamed(rangedHolsterSockets[0].parent, "Hips"))
+            Assert.IsFalse(
+                IsBoneNamed(rangedHolsterSockets[0].parent, "RightUpLeg"),
+                "The default ranged holster socket should stay on a stable hip/hips parent; thigh-strapped holsters must be an explicit future mode.");
+            if (IsBoneNamed(rangedHolsterSockets[0].parent, "Hips"))
             {
                 Assert.IsTrue(IsDescendantOf(rangedHolsterSockets[0].parent, animator.transform));
             }
