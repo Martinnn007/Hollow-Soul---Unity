@@ -21,7 +21,6 @@
     "Unity.Animation.Rigging",
     "Unity.Behavior",
     "Unity.Behavior.SerializableGUID",
-    "Unity.PolySpatial",
     "Unity.Addressables",
     "Unity.Addressables.Editor",
     "UnityEngine.AIModule",

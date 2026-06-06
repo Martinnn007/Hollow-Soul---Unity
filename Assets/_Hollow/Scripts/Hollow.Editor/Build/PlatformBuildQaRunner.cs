@@ -9,7 +9,6 @@ using Hollow.Diagnostics;
 using Hollow.Editor.Generation;
 using Hollow.Editor.Validation;
 using Hollow.Presentation;
-using Unity.PolySpatial;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Build;
@@ -257,11 +256,19 @@ namespace Hollow.Editor.Build
             ValidateScene(profile, "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", failures);
             ValidateFile(Milestone10AssetGenerator.BoundedProfilePath, failures);
             ValidateFile(Milestone10AssetGenerator.ImmersiveProfilePath, failures);
-            ValidateFile(VisionOSVolumeCameraSetup.BoundedConfigPath, failures);
-            ValidateFile(VisionOSVolumeCameraSetup.ImmersiveConfigPath, failures);
-            ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", failures);
-            ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", failures);
-            ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", failures);
+            if (VisionOSVolumeCameraSetup.IsPolySpatialAvailable)
+            {
+                ValidateFile(VisionOSVolumeCameraSetup.BoundedConfigPath, failures);
+                ValidateFile(VisionOSVolumeCameraSetup.ImmersiveConfigPath, failures);
+                ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", failures);
+                ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", failures);
+                ValidateVisionOSVolumeCamera("Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", failures);
+            }
+            else
+            {
+                blocked = true;
+                remediation.AppendLine("Install Unity PolySpatial/visionOS support to validate VolumeCamera scenes.");
+            }
 
             if (!Enum.GetNames(typeof(BuildTargetGroup)).Contains("VisionOS") || !Enum.GetNames(typeof(BuildTarget)).Contains("VisionOS"))
             {
@@ -297,19 +304,20 @@ namespace Hollow.Editor.Build
             }
 
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-            var volumeCamera = UnityEngine.Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            var volumeCamera = VisionOSVolumeCameraSetup.FindOpenSceneVolumeCamera();
             if (volumeCamera == null)
             {
                 failures.AppendLine($"Missing explicit VolumeCamera in {scenePath}.");
                 return;
             }
 
-            if (volumeCamera.WindowConfiguration == null)
+            if (!VisionOSVolumeCameraSetup.HasWindowConfiguration(volumeCamera))
             {
                 failures.AppendLine($"VolumeCamera has no window configuration in {scenePath}.");
             }
 
-            if (!volumeCamera.OpenWindowOnLoad)
+            if (!VisionOSVolumeCameraSetup.TryGetOpenWindowOnLoad(volumeCamera, out var openWindowOnLoad) ||
+                !openWindowOnLoad)
             {
                 failures.AppendLine($"VolumeCamera should open on load in {scenePath}.");
             }

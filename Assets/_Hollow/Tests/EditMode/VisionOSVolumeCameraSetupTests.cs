@@ -1,7 +1,7 @@
+using System;
 using Hollow.Editor.Generation;
 using Hollow.Presentation;
 using NUnit.Framework;
-using Unity.PolySpatial;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -10,18 +10,31 @@ namespace Hollow.Tests.EditMode
 {
     public sealed class VisionOSVolumeCameraSetupTests
     {
+        private static Type VolumeCameraType => Type.GetType("Unity.PolySpatial.VolumeCamera, Unity.PolySpatial");
+
+        private static Type VolumeCameraWindowConfigurationType =>
+            Type.GetType("Unity.PolySpatial.VolumeCameraWindowConfiguration, Unity.PolySpatial");
+
         [Test]
         public void VisionOSVolumeConfigurationsExistAndUseExpectedModes()
         {
-            var bounded = AssetDatabase.LoadAssetAtPath<VolumeCameraWindowConfiguration>(VisionOSVolumeCameraSetup.BoundedConfigPath);
-            var immersive = AssetDatabase.LoadAssetAtPath<VolumeCameraWindowConfiguration>(VisionOSVolumeCameraSetup.ImmersiveConfigPath);
+            RequirePolySpatial();
+
+            var bounded = AssetDatabase.LoadAssetAtPath(
+                VisionOSVolumeCameraSetup.BoundedConfigPath,
+                VolumeCameraWindowConfigurationType);
+            var immersive = AssetDatabase.LoadAssetAtPath(
+                VisionOSVolumeCameraSetup.ImmersiveConfigPath,
+                VolumeCameraWindowConfigurationType);
 
             Assert.IsNotNull(bounded);
             Assert.IsNotNull(immersive);
-            Assert.AreEqual(VolumeCamera.PolySpatialVolumeCameraMode.Bounded, bounded.Mode);
-            Assert.AreEqual(VolumeCamera.PolySpatialVolumeCameraMode.Unbounded, immersive.Mode);
-            Assert.AreEqual(VisionOSVolumeCameraSetup.BoundedOutputDimensions, bounded.Dimensions);
-            Assert.AreEqual(Vector3.one, immersive.Dimensions);
+            Assert.AreEqual("Bounded", ReadEnumName(bounded, "Mode", "m_Mode"));
+            Assert.AreEqual("Unbounded", ReadEnumName(immersive, "Mode", "m_Mode"));
+            AssertVectorApproximately(
+                VisionOSVolumeCameraSetup.BoundedOutputDimensions,
+                ReadVector3(bounded, "Dimensions", "m_OutputDimensions"));
+            AssertVectorApproximately(Vector3.one, ReadVector3(immersive, "Dimensions", "m_OutputDimensions"));
             AssertVolumeAspectMatches(VisionOSVolumeCameraSetup.BoundedSourceDimensions, VisionOSVolumeCameraSetup.BoundedOutputDimensions);
             Assert.AreEqual(
                 VisionOSVolumeCameraSetup.BoundedLevelFloorY,
@@ -29,37 +42,54 @@ namespace Hollow.Tests.EditMode
                 0.001f);
         }
 
-        [TestCase("Assets/_Hollow/Scenes/Boot.unity", VolumeCamera.PolySpatialVolumeCameraMode.Unbounded)]
-        [TestCase("Assets/_Hollow/Scenes/MainMenu.unity", VolumeCamera.PolySpatialVolumeCameraMode.Unbounded)]
-        [TestCase("Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", VolumeCamera.PolySpatialVolumeCameraMode.Bounded)]
-        [TestCase("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", VolumeCamera.PolySpatialVolumeCameraMode.Bounded)]
-        [TestCase("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", VolumeCamera.PolySpatialVolumeCameraMode.Unbounded)]
-        [TestCase("Assets/_Hollow/Scenes/ArenaMode/ArenaMode.unity", VolumeCamera.PolySpatialVolumeCameraMode.Bounded)]
-        public void VisionOSRuntimeScenesHaveExplicitVolumeCamera(string scenePath, VolumeCamera.PolySpatialVolumeCameraMode expectedMode)
+        [TestCase("Assets/_Hollow/Scenes/Boot.unity", "Unbounded")]
+        [TestCase("Assets/_Hollow/Scenes/MainMenu.unity", "Unbounded")]
+        [TestCase("Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", "Bounded")]
+        [TestCase("Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", "Bounded")]
+        [TestCase("Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity", "Unbounded")]
+        [TestCase("Assets/_Hollow/Scenes/ArenaMode/ArenaMode.unity", "Bounded")]
+        public void VisionOSRuntimeScenesHaveExplicitVolumeCamera(string scenePath, string expectedMode)
         {
+            RequirePolySpatial();
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
 
-            var volumeCamera = Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            var volumeCamera = VisionOSVolumeCameraSetup.FindOpenSceneVolumeCamera();
 
             Assert.IsNotNull(volumeCamera, $"{scenePath} should have an explicit VolumeCamera.");
-            Assert.IsTrue(volumeCamera.OpenWindowOnLoad);
-            Assert.IsNotNull(volumeCamera.WindowConfiguration);
-            Assert.AreEqual(expectedMode, volumeCamera.WindowConfiguration.Mode);
-            if (expectedMode == VolumeCamera.PolySpatialVolumeCameraMode.Bounded)
+            Assert.IsTrue(
+                VisionOSVolumeCameraSetup.TryGetOpenWindowOnLoad(volumeCamera, out var openWindowOnLoad) &&
+                openWindowOnLoad);
+            var windowConfiguration = ReadObject(volumeCamera, "WindowConfiguration", "m_WindowConfiguration");
+            Assert.IsNotNull(windowConfiguration);
+            Assert.AreEqual(expectedMode, ReadEnumName(windowConfiguration, "Mode", "m_Mode"));
+            if (expectedMode == "Bounded")
             {
-                Assert.AreEqual(VisionOSVolumeCameraSetup.BoundedSourceDimensions, volumeCamera.Dimensions);
-                Assert.AreEqual(VisionOSVolumeCameraSetup.BoundedOutputDimensions, volumeCamera.WindowConfiguration.Dimensions);
+                var dimensions = ReadVector3(volumeCamera, "Dimensions", "m_Dimensions");
+                AssertVectorApproximately(VisionOSVolumeCameraSetup.BoundedSourceDimensions, dimensions);
+                AssertVectorApproximately(
+                    VisionOSVolumeCameraSetup.BoundedOutputDimensions,
+                    ReadVector3(windowConfiguration, "Dimensions", "m_OutputDimensions"));
                 AssertVectorApproximately(ExpectedBoundedSourceCenterFor(scenePath), volumeCamera.transform.localPosition);
-                AssertVolumeAspectMatches(volumeCamera.Dimensions, volumeCamera.WindowConfiguration.Dimensions);
+                AssertVolumeAspectMatches(
+                    dimensions,
+                    ReadVector3(windowConfiguration, "Dimensions", "m_OutputDimensions"));
 
                 if (UsesBottomAnchoredLevelFraming(scenePath))
                 {
                     Assert.AreEqual(
                         VisionOSVolumeCameraSetup.BoundedLevelFloorY,
-                        SourceBottomY(volumeCamera.transform.localPosition, volumeCamera.Dimensions),
+                        SourceBottomY(volumeCamera.transform.localPosition, dimensions),
                         0.001f);
                     AssertWorldRootUnmoved(scenePath);
                 }
+            }
+        }
+
+        private static void RequirePolySpatial()
+        {
+            if (VolumeCameraType == null || VolumeCameraWindowConfigurationType == null)
+            {
+                Assert.Ignore("PolySpatial is not available in this editor; skipping visionOS VolumeCamera setup tests.");
             }
         }
 
@@ -111,6 +141,70 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(expected.x, actual.x, 0.001f);
             Assert.AreEqual(expected.y, actual.y, 0.001f);
             Assert.AreEqual(expected.z, actual.z, 0.001f);
+        }
+
+        private static string ReadEnumName(UnityEngine.Object target, string propertyName, string serializedName)
+        {
+            if (target == null)
+            {
+                return string.Empty;
+            }
+
+            var property = target.GetType().GetProperty(propertyName);
+            var propertyValue = property?.GetValue(target);
+            if (propertyValue != null)
+            {
+                return propertyValue.ToString();
+            }
+
+            var serialized = new SerializedObject(target);
+            var serializedProperty = serialized.FindProperty(serializedName);
+            if (serializedProperty == null ||
+                serializedProperty.enumNames == null ||
+                serializedProperty.enumValueIndex < 0 ||
+                serializedProperty.enumValueIndex >= serializedProperty.enumNames.Length)
+            {
+                return string.Empty;
+            }
+
+            return serializedProperty.enumNames[serializedProperty.enumValueIndex];
+        }
+
+        private static UnityEngine.Object ReadObject(Component component, string propertyName, string serializedName)
+        {
+            if (component == null)
+            {
+                return null;
+            }
+
+            var property = component.GetType().GetProperty(propertyName);
+            if (property?.GetValue(component) is UnityEngine.Object propertyValue)
+            {
+                return propertyValue;
+            }
+
+            var serialized = new SerializedObject(component);
+            return serialized.FindProperty(serializedName)?.objectReferenceValue;
+        }
+
+        private static Vector3 ReadVector3(UnityEngine.Object target, string propertyName, string serializedName)
+        {
+            if (target == null)
+            {
+                return Vector3.zero;
+            }
+
+            var property = target.GetType().GetProperty(propertyName);
+            if (property?.GetValue(target) is Vector3 propertyValue)
+            {
+                return propertyValue;
+            }
+
+            var serialized = new SerializedObject(target);
+            var serializedProperty = serialized.FindProperty(serializedName);
+            return serializedProperty != null
+                ? serializedProperty.vector3Value
+                : Vector3.zero;
         }
     }
 }

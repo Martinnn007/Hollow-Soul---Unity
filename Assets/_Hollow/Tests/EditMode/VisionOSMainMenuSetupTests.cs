@@ -8,7 +8,6 @@ using Hollow.Persistence;
 using Hollow.Platform;
 using Hollow.UI.MainMenu;
 using NUnit.Framework;
-using Unity.PolySpatial;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,6 +18,11 @@ namespace Hollow.Tests.EditMode
 {
     public sealed class VisionOSMainMenuSetupTests
     {
+        private static System.Type VolumeCameraType => System.Type.GetType("Unity.PolySpatial.VolumeCamera, Unity.PolySpatial");
+
+        private static System.Type VolumeCameraWindowConfigurationType =>
+            System.Type.GetType("Unity.PolySpatial.VolumeCameraWindowConfiguration, Unity.PolySpatial");
+
         private readonly List<GameObject> createdObjects = new();
         private string tempRoot;
 
@@ -142,6 +146,7 @@ namespace Hollow.Tests.EditMode
         [Test]
         public void VisionOSMainMenuSceneHasGuidedMenuAndBoundedVolumeCamera()
         {
+            RequirePolySpatial();
             EditorSceneManager.OpenScene(VisionOSMainMenuSetup.ScenePath);
 
             Assert.IsNotNull(Object.FindFirstObjectByType<MainMenuController>());
@@ -149,22 +154,37 @@ namespace Hollow.Tests.EditMode
             Assert.IsNull(Object.FindFirstObjectByType<MainMenuScreen>());
             Assert.IsNotNull(Object.FindFirstObjectByType<EventSystem>());
 
-            var volumeCamera = Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            var volumeCamera = VisionOSVolumeCameraSetup.FindOpenSceneVolumeCamera();
             Assert.IsNotNull(volumeCamera);
-            Assert.IsTrue(volumeCamera.OpenWindowOnLoad);
-            Assert.AreEqual(VolumeCamera.PolySpatialVolumeCameraMode.Bounded, volumeCamera.WindowConfiguration.Mode);
+            Assert.IsTrue(
+                VisionOSVolumeCameraSetup.TryGetOpenWindowOnLoad(volumeCamera, out var openWindowOnLoad) &&
+                openWindowOnLoad);
+            Assert.AreEqual(
+                "Bounded",
+                ReadEnumName(ReadObject(volumeCamera, "WindowConfiguration", "m_WindowConfiguration"), "Mode", "m_Mode"));
             AssertVectorApproximately(VisionOSVolumeCameraSetup.BoundedMenuSourceCenter, volumeCamera.transform.localPosition);
         }
 
         [Test]
         public void ArenaModeSceneHasBoundedVolumeCameraForVisionOSLaunches()
         {
+            RequirePolySpatial();
             EditorSceneManager.OpenScene("Assets/_Hollow/Scenes/ArenaMode/ArenaMode.unity");
 
-            var volumeCamera = Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            var volumeCamera = VisionOSVolumeCameraSetup.FindOpenSceneVolumeCamera();
             Assert.IsNotNull(volumeCamera);
-            Assert.AreEqual(VolumeCamera.PolySpatialVolumeCameraMode.Bounded, volumeCamera.WindowConfiguration.Mode);
+            Assert.AreEqual(
+                "Bounded",
+                ReadEnumName(ReadObject(volumeCamera, "WindowConfiguration", "m_WindowConfiguration"), "Mode", "m_Mode"));
             AssertVectorApproximately(VisionOSVolumeCameraSetup.BoundedLevelSourceCenter, volumeCamera.transform.localPosition);
+        }
+
+        private static void RequirePolySpatial()
+        {
+            if (VolumeCameraType == null || VolumeCameraWindowConfigurationType == null)
+            {
+                Assert.Ignore("PolySpatial is not available in this editor; skipping visionOS VolumeCamera scene tests.");
+            }
         }
 
         private VisionOSMainMenuScreen CreateBuiltScreen()
@@ -227,6 +247,50 @@ namespace Hollow.Tests.EditMode
             Assert.AreEqual(expected.x, actual.x, 0.001f);
             Assert.AreEqual(expected.y, actual.y, 0.001f);
             Assert.AreEqual(expected.z, actual.z, 0.001f);
+        }
+
+        private static UnityEngine.Object ReadObject(Component component, string propertyName, string serializedName)
+        {
+            if (component == null)
+            {
+                return null;
+            }
+
+            var property = component.GetType().GetProperty(propertyName);
+            if (property?.GetValue(component) is UnityEngine.Object propertyValue)
+            {
+                return propertyValue;
+            }
+
+            var serialized = new SerializedObject(component);
+            return serialized.FindProperty(serializedName)?.objectReferenceValue;
+        }
+
+        private static string ReadEnumName(UnityEngine.Object target, string propertyName, string serializedName)
+        {
+            if (target == null)
+            {
+                return string.Empty;
+            }
+
+            var property = target.GetType().GetProperty(propertyName);
+            var propertyValue = property?.GetValue(target);
+            if (propertyValue != null)
+            {
+                return propertyValue.ToString();
+            }
+
+            var serialized = new SerializedObject(target);
+            var serializedProperty = serialized.FindProperty(serializedName);
+            if (serializedProperty == null ||
+                serializedProperty.enumNames == null ||
+                serializedProperty.enumValueIndex < 0 ||
+                serializedProperty.enumValueIndex >= serializedProperty.enumNames.Length)
+            {
+                return string.Empty;
+            }
+
+            return serializedProperty.enumNames[serializedProperty.enumValueIndex];
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Linq;
 using Hollow.Data.Definitions;
 using Hollow.Editor.Build;
 using Hollow.Editor.Generation;
-using Unity.PolySpatial;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.SceneManagement;
@@ -202,6 +201,12 @@ namespace Hollow.Editor.Validation
                 return;
             }
 
+            if (!VisionOSVolumeCameraSetup.IsPolySpatialAvailable)
+            {
+                Debug.LogWarning("Skipping M24 PolySpatial VolumeCamera static validation because PolySpatial is not available in this editor.");
+                return;
+            }
+
             foreach (var scenePath in new[] { "Assets/_Hollow/Scenes/MainMenu_VisionOS.unity", "Assets/_Hollow/Scenes/Game_VisionOS_Bounded.unity", "Assets/_Hollow/Scenes/Game_VisionOS_Immersive.unity" })
             {
                 if (!File.Exists(scenePath))
@@ -242,19 +247,20 @@ namespace Hollow.Editor.Validation
         private static void ValidateSceneVolumeCamera(string scenePath, List<string> failures)
         {
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-            var volumeCamera = Object.FindFirstObjectByType<VolumeCamera>(FindObjectsInactive.Include);
+            var volumeCamera = VisionOSVolumeCameraSetup.FindOpenSceneVolumeCamera();
             if (volumeCamera == null)
             {
                 failures.Add($"Vision Pro scene must contain an explicit VolumeCamera: {scenePath}");
                 return;
             }
 
-            if (!volumeCamera.OpenWindowOnLoad)
+            if (!VisionOSVolumeCameraSetup.TryGetOpenWindowOnLoad(volumeCamera, out var openWindowOnLoad) ||
+                !openWindowOnLoad)
             {
                 failures.Add($"Vision Pro VolumeCamera must open on load: {scenePath}");
             }
 
-            if (volumeCamera.WindowConfiguration == null)
+            if (!VisionOSVolumeCameraSetup.HasWindowConfiguration(volumeCamera))
             {
                 failures.Add($"Vision Pro VolumeCamera must reference a window configuration: {scenePath}");
             }

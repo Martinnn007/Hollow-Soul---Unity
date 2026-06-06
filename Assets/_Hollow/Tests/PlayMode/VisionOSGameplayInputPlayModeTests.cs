@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
+using System.Linq;
+using System.Reflection;
 using Hollow.Combat;
 using Hollow.Diagnostics;
 using Hollow.Presentation;
 using NUnit.Framework;
-using Unity.PolySpatial;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -16,17 +18,23 @@ namespace Hollow.Tests.PlayMode
         [UnityTest]
         public IEnumerator BoundedVisionOSSceneMovesPlayerFromInjectedGamepadStick()
         {
+            var volumeCameraType = Type.GetType("Unity.PolySpatial.VolumeCamera, Unity.PolySpatial");
+            if (volumeCameraType == null)
+            {
+                Assert.Ignore("PolySpatial is not available in this editor; skipping visionOS VolumeCamera playmode smoke.");
+            }
+
             yield return SceneManager.LoadSceneAsync("Game_VisionOS_Bounded", LoadSceneMode.Single);
 
             PlayerMovementController player = null;
             VisionOSGameplayInputDiagnostics diagnostics = null;
-            VolumeCamera volumeCamera = null;
+            Component volumeCamera = null;
             PlatformPresentationRoot presentationRoot = null;
             for (var frame = 0; frame < 30 && (player == null || diagnostics == null || volumeCamera == null || presentationRoot == null); frame++)
             {
                 player = Object.FindFirstObjectByType<PlayerMovementController>();
                 diagnostics = Object.FindFirstObjectByType<VisionOSGameplayInputDiagnostics>();
-                volumeCamera = Object.FindFirstObjectByType<VolumeCamera>();
+                volumeCamera = FindFirstComponentOfType(volumeCameraType);
                 presentationRoot = Object.FindFirstObjectByType<PlatformPresentationRoot>();
                 yield return null;
             }
@@ -37,9 +45,9 @@ namespace Hollow.Tests.PlayMode
             Assert.IsNotNull(presentationRoot, "Bounded visionOS gameplay scene should include a presentation root.");
             Assert.AreEqual(PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, presentationRoot.WorldYawDegrees, 0.001f);
             Assert.AreEqual(Quaternion.Euler(0f, PresentationOrientationPolicy.VisionOSGameplayWorldYawDegrees, 0f), presentationRoot.transform.localRotation);
-            AssertVectorApproximately(new Vector3(8f, 5.333333f, 8f), volumeCamera.Dimensions);
+            AssertVectorApproximately(new Vector3(8f, 5.333333f, 8f), ReadVector3(volumeCamera, "Dimensions", "m_Dimensions"));
             AssertVectorApproximately(new Vector3(0f, 2.6666665f, 0.25f), volumeCamera.transform.localPosition);
-            Assert.AreEqual(0f, volumeCamera.transform.localPosition.y - volumeCamera.Dimensions.y * 0.5f, 0.001f);
+            Assert.AreEqual(0f, volumeCamera.transform.localPosition.y - ReadVector3(volumeCamera, "Dimensions", "m_Dimensions").y * 0.5f, 0.001f);
             Assert.IsNull(GameObject.Find("VisionOSMovePad"), "The spatial diagnostics move pad should be disabled for gamepad-only testing.");
 
             var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -54,6 +62,34 @@ namespace Hollow.Tests.PlayMode
             var travelled = Vector3.Distance(startPosition, player.transform.position);
             Assert.Greater(travelled, 0.01f, "Injected gamepad left stick input should move the player.");
             StringAssert.Contains("Gamepad:", diagnostics.BuildHudLine(Vector2.right));
+        }
+
+        private static Component FindFirstComponentOfType(Type componentType)
+        {
+            return componentType == null
+                ? null
+                : Object.FindObjectsByType(componentType, FindObjectsInactive.Include, FindObjectsSortMode.None)
+                    .OfType<Component>()
+                    .FirstOrDefault();
+        }
+
+        private static Vector3 ReadVector3(Component component, string propertyName, string serializedName)
+        {
+            if (component == null)
+            {
+                return Vector3.zero;
+            }
+
+            var property = component.GetType().GetProperty(propertyName);
+            if (property != null && property.GetValue(component) is Vector3 propertyValue)
+            {
+                return propertyValue;
+            }
+
+            var field = component.GetType().GetField(serializedName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            return field != null && field.GetValue(component) is Vector3 fieldValue
+                ? fieldValue
+                : Vector3.zero;
         }
 
         private static void AssertVectorApproximately(Vector3 expected, Vector3 actual)
