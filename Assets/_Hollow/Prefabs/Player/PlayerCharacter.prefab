@@ -61,7 +61,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2809175592730859590}
-  - {fileID: 3744045059770634385}
   m_Father: {fileID: 256995449777400149}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &376905711917670273
@@ -422,7 +421,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.1235952, y: 1.1235956, z: 1.1235955}
+  m_LocalScale: {x: 1.123595, y: 1.1235955, z: 1.1235952}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5775836827065452460}
@@ -1074,7 +1073,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.123595, y: 1.1235945, z: 1.1235949}
+  m_LocalScale: {x: 1.1235951, y: 1.1235944, z: 1.1235945}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5385246888707486821}
@@ -1689,12 +1688,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7987698577516797229}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.18727589, y: -0.35975364, z: 0.8946691, w: 0.18727595}
-  m_LocalPosition: {x: -0.22, y: 0.98, z: -0.18}
+  m_LocalRotation: {x: -0.1790861, y: -0.39772815, z: 0.8784463, w: 0.19512226}
+  m_LocalPosition: {x: -0.24720421, y: -0.4642409, z: -0.20288596}
   m_LocalScale: {x: 0.72, y: 0.72, z: 0.72}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7164586861399250940}
+  m_Father: {fileID: 2621764912518180802}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8222509475206734107
 GameObject:
@@ -1964,6 +1963,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Hollow.Combat::Hollow.Combat.PlayerHeldWeaponVisualController
   weaponController: {fileID: 2505458630128641707}
   animationProfileController: {fileID: 6358506608366832862}
+  animationSystemMode: 0
   meleeHandSocket: {fileID: 2554065099350078328}
   rangedHandSocket: {fileID: 3073142994549455194}
   meleeHolsterSocket: {fileID: 3744045059770634385}
@@ -2264,7 +2264,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.1235952, y: 1.1235955, z: 1.1235952}
+  m_LocalScale: {x: 1.123595, y: 1.1235954, z: 1.123595}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8563806133816783744}
@@ -3759,6 +3759,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8169382868667117632, guid: 270ec5590546a46c4b34026b1da51860, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6843471950342987245}
+    - targetCorrespondingSourceObject: {fileID: 366175167995203695, guid: 270ec5590546a46c4b34026b1da51860, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3744045059770634385}
     - targetCorrespondingSourceObject: {fileID: 366175167995203695, guid: 270ec5590546a46c4b34026b1da51860, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3717264390192485011}
