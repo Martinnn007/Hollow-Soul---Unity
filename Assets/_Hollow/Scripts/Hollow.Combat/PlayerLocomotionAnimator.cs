@@ -8,6 +8,7 @@ namespace Hollow.Combat
         public const string IsMovingParameter = "IsMoving";
         public const string MoveSpeedParameter = "MoveSpeed";
         public const string ActionSpeedParameter = "ActionSpeed";
+        public const string IsAttackCommittedParameter = "IsAttackCommitted";
         public const string RollTriggerParameter = "Roll";
         public const string SlashTriggerParameter = "Slash";
         public const string HitTriggerParameter = "Hit";
@@ -52,6 +53,7 @@ namespace Hollow.Combat
         private static readonly int IsMovingHash = Animator.StringToHash(IsMovingParameter);
         private static readonly int MoveSpeedHash = Animator.StringToHash(MoveSpeedParameter);
         private static readonly int ActionSpeedHash = Animator.StringToHash(ActionSpeedParameter);
+        private static readonly int IsAttackCommittedHash = Animator.StringToHash(IsAttackCommittedParameter);
         private static readonly int RollTriggerHash = Animator.StringToHash(RollTriggerParameter);
         private static readonly int SlashTriggerHash = Animator.StringToHash(SlashTriggerParameter);
         private static readonly int HitTriggerHash = Animator.StringToHash(HitTriggerParameter);
@@ -73,6 +75,7 @@ namespace Hollow.Combat
         private bool hasIsMovingParameter;
         private bool hasMoveSpeedParameter;
         private bool hasActionSpeedParameter;
+        private bool hasIsAttackCommittedParameter;
         private bool hasRollTriggerParameter;
         private bool hasSlashTriggerParameter;
         private bool hasHitTriggerParameter;
@@ -532,14 +535,20 @@ namespace Hollow.Combat
             }
 
             actionSpeed = ActionClipSpeedFor(slot, slashClipDurationSeconds, actionDurationSeconds);
+            var presentationDurationSeconds = actionDurationSeconds;
             if (slot == WeaponSlot.Melee)
             {
                 isSwordShieldProfile = ResolveIsSwordShieldProfile();
                 isShieldGuardingForAnimation = ResolveIsShieldGuardingForAnimation();
                 pendingSlashTrigger = true;
+                presentationDurationSeconds = Mathf.Max(
+                    actionDurationSeconds,
+                    slashClipDurationSeconds / Mathf.Max(0.01f, actionSpeed));
+                weaponController?.ExtendCurrentAttackCommitmentUntil(
+                    weaponController.AttackCommitmentClockSeconds + presentationDurationSeconds);
             }
 
-            SetActionFacing(direction, actionDurationSeconds);
+            SetActionFacing(direction, presentationDurationSeconds);
             ApplyAnimatorParameters();
         }
 
@@ -859,6 +868,11 @@ namespace Hollow.Combat
                 animator.SetFloat(ActionSpeedHash, Mathf.Max(0.01f, actionSpeed));
             }
 
+            if (hasIsAttackCommittedParameter)
+            {
+                animator.SetBool(IsAttackCommittedHash, weaponController != null && weaponController.IsAttackCommitted && !isDead);
+            }
+
             if (hasIsDeadParameter)
             {
                 animator.SetBool(IsDeadHash, isDead);
@@ -919,6 +933,7 @@ namespace Hollow.Combat
             hasIsMovingParameter = false;
             hasMoveSpeedParameter = false;
             hasActionSpeedParameter = false;
+            hasIsAttackCommittedParameter = false;
             hasRollTriggerParameter = false;
             hasSlashTriggerParameter = false;
             hasHitTriggerParameter = false;
@@ -944,6 +959,10 @@ namespace Hollow.Combat
                 else if (parameter.nameHash == ActionSpeedHash && parameter.type == AnimatorControllerParameterType.Float)
                 {
                     hasActionSpeedParameter = true;
+                }
+                else if (parameter.nameHash == IsAttackCommittedHash && parameter.type == AnimatorControllerParameterType.Bool)
+                {
+                    hasIsAttackCommittedParameter = true;
                 }
                 else if (parameter.nameHash == RollTriggerHash && parameter.type == AnimatorControllerParameterType.Trigger)
                 {

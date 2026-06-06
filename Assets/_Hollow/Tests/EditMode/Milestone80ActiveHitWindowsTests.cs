@@ -231,6 +231,110 @@ namespace Hollow.Tests.EditMode
         }
 
         [Test]
+        public void PlayerMeleeCommitmentCanExtendPastCombatRecoveryForAnimation()
+        {
+            var root = new GameObject("M80MeleeCommitmentHarness");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            combat.transform.SetParent(root.transform, false);
+            var player = CreatePlayer(root.transform);
+            try
+            {
+                var weapon = player.GetComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, null);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
+
+                var attack = WeaponAttackDefinition.DefaultLight(WeaponSlot.Melee);
+                var combatEnd = attack.WindupSeconds + attack.ActiveSeconds + attack.RecoverySeconds;
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.right, 0f));
+                weapon.ExtendCurrentAttackCommitmentUntil(1.2f);
+                weapon.TickAction(0f, combatEnd + 0.02f);
+
+                Assert.IsTrue(weapon.IsAttackCommitted);
+                Assert.AreEqual(Vector2.right, weapon.CommittedAttackDirection);
+                Assert.Greater(weapon.AttackCommitmentRemainingSeconds, 0f);
+                Assert.IsFalse(weapon.TryAttack(AttackKind.Light, Vector2.up, combatEnd + 0.03f));
+
+                weapon.TickAction(0f, 1.21f);
+
+                Assert.IsFalse(weapon.IsAttackCommitted);
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 1.22f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlayerMeleeRollCancelOnlyWorksDuringWindup()
+        {
+            var root = new GameObject("M80MeleeRollCancelHarness");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            combat.transform.SetParent(root.transform, false);
+            var player = CreatePlayer(root.transform);
+            try
+            {
+                var weapon = player.GetComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, null);
+                weapon.ConfigureBuildStats(1f, 0, 0, 200f, 11f, "starter_blade", "starter_pistol", WeaponSlot.Melee, 200f);
+
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                Assert.IsTrue(weapon.IsMeleeAttackInWindup);
+                Assert.IsTrue(weapon.CanRollCancelCurrentAttack);
+                Assert.IsTrue(weapon.TryRoll(Vector2.left, Vector2.up, 0.01f));
+                Assert.IsFalse(weapon.IsAttackCommitted);
+                Assert.IsTrue(weapon.IsRolling);
+
+                weapon.TickAction(0f, PlayerWeaponController.RollDurationSeconds + 0.05f);
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 1f));
+                weapon.TickAction(0f, 1f + WeaponAttackDefinition.DefaultLight(WeaponSlot.Melee).WindupSeconds + 0.01f);
+
+                Assert.IsFalse(weapon.CanRollCancelCurrentAttack);
+                Assert.IsFalse(weapon.TryRoll(Vector2.left, Vector2.up, 1.2f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlayerMeleeSwingWindowHitsEnemyThatEntersArcDuringActiveFramesOnce()
+        {
+            var root = new GameObject("M80MeleeSwingWindowHarness");
+            var combat = new GameObject("Combat").AddComponent<RoomCombatController>();
+            combat.transform.SetParent(root.transform, false);
+            var player = CreatePlayer(root.transform);
+            try
+            {
+                var weapon = player.GetComponent<PlayerWeaponController>();
+                weapon.Configure(null, combat, null);
+                weapon.SetActiveWeaponSlot(WeaponSlot.Melee);
+                var enemy = CreateEnemy(root.transform, player.GetComponent<PlaceholderPlayerController>(), EnemyCatalog.CreateRuntimeDefault().Resolve("spawnEnemyNormal"));
+                enemy.transform.localPosition = new Vector3(3f, 0f, 0f);
+                RegisterEnemy(combat, enemy);
+
+                var startingHealth = enemy.Health.CurrentHealth;
+                var attack = WeaponAttackDefinition.DefaultLight(WeaponSlot.Melee);
+                Assert.IsTrue(weapon.TryAttack(AttackKind.Light, Vector2.up, 0f));
+                weapon.TickAction(0f, attack.WindupSeconds + 0.01f);
+                Assert.AreEqual(startingHealth, enemy.Health.CurrentHealth);
+
+                enemy.transform.localPosition = new Vector3(0f, 0f, 0.7f);
+                weapon.TickAction(0.02f, attack.WindupSeconds + 0.03f);
+                var damagedHealth = enemy.Health.CurrentHealth;
+
+                Assert.Less(damagedHealth, startingHealth);
+                weapon.TickAction(0.02f, attack.WindupSeconds + 0.05f);
+                Assert.AreEqual(damagedHealth, enemy.Health.CurrentHealth);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void DocsAndValidatorPass()
         {
             Assert.IsTrue(File.Exists("Docs/Hollow_M80_Active_Hit_Windows.md"));

@@ -1,87 +1,87 @@
 {
-    "generatedUtc": "2026-06-06T16:15:47.0253860Z",
+    "generatedUtc": "2026-06-06T22:10:45.3423030Z",
     "playerPrefabPath": "Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab",
     "previewScenePath": "Assets/_Hollow/Scenes/DeveloperLab/PlayerAnimationRefiner.unity",
-    "selectedProfile": "SwordShieldCombat",
-    "selectedWeaponSlot": "Melee",
-    "selectedClip": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
+    "selectedProfile": "PistolCombat",
+    "selectedWeaponSlot": "Ranged",
+    "selectedClip": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
     "slots": [
         {
             "label": "Melee In Hand",
             "socketName": "MainCharacter_RightHandWeaponSocket",
             "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket",
-            "editTargetKind": "Visible ArtPass Visual",
-            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket/ActiveMeleeWeaponVisual/ArtPassVisual.WeaponMelee",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
-            "notes": "",
+            "editTargetKind": "Socket (missing visual)",
+            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RightHandWeaponSocket",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
+            "notes": "ActiveMeleeWeaponVisual is not spawned in the current preview state. The socket can still be edited, but you will not see a model move until that visual is active.",
             "localPosition": {
-                "x": -0.05000000074505806,
-                "y": 0.030000027269124986,
-                "z": -0.1250000149011612
+                "x": 0.029999999329447748,
+                "y": 0.0,
+                "z": 0.019999999552965165
             },
             "localEuler": {
-                "x": 81.00164794921875,
-                "y": 56.999969482421878,
-                "z": 153.9999542236328
+                "x": 90.0,
+                "y": 0.0,
+                "z": 0.0
             },
             "localScale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
+                "x": 0.75,
+                "y": 0.75,
+                "z": 0.75
             }
         },
         {
             "label": "Melee Holstered",
             "socketName": "MainCharacter_BackMeleeHolsterSocket",
             "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackMeleeHolsterSocket",
-            "editTargetKind": "Socket (missing visual)",
-            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackMeleeHolsterSocket",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
-            "notes": "HolsteredMeleeWeaponVisual is not spawned in the current preview state. The socket can still be edited, but you will not see a model move until that visual is active.",
+            "editTargetKind": "Visible ArtPass Visual",
+            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackMeleeHolsterSocket/HolsteredMeleeWeaponVisual/ArtPassVisual.WeaponMelee",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
+            "notes": "",
             "localPosition": {
-                "x": -0.274403840303421,
-                "y": 0.7509508728981018,
-                "z": -0.11513960361480713
+                "x": -0.8299999833106995,
+                "y": 0.8399999737739563,
+                "z": 0.8799999952316284
             },
             "localEuler": {
-                "x": 38.83148193359375,
-                "y": 326.6884765625,
-                "z": 145.4860382080078
+                "x": 50.99965286254883,
+                "y": 300.99993896484377,
+                "z": 349.99993896484377
             },
             "localScale": {
-                "x": 0.7200000286102295,
-                "y": 0.7200000286102295,
-                "z": 0.7200000286102295
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
             }
         },
         {
             "label": "Ranged In Hand",
             "socketName": "MainCharacter_RangedHandWeaponSocket",
             "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket",
-            "editTargetKind": "Socket (missing visual)",
-            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
-            "notes": "ActiveRangedWeaponVisual is not spawned in the current preview state. The socket can still be edited, but you will not see a model move until that visual is active.",
+            "editTargetKind": "Visible ArtPass Visual",
+            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket/ActiveRangedWeaponVisual/ArtPassVisual.WeaponRanged",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
+            "notes": "",
             "localPosition": {
-                "x": 0.04500000178813934,
-                "y": -0.014999999664723874,
-                "z": 0.02500000037252903
+                "x": -0.05000000074505806,
+                "y": 0.2199999988079071,
+                "z": 0.07000000029802323
             },
             "localEuler": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.00004140802411711775,
+                "y": 90.00000762939453,
+                "z": 10.000009536743164
             },
             "localScale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
+                "x": 0.699999988079071,
+                "y": 0.699999988079071,
+                "z": 0.699999988079071
             }
         },
         {
@@ -90,9 +90,9 @@
             "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket",
             "editTargetKind": "Scenario Socket",
             "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
             "notes": "This scenario edits the socket so placement remains stable across all animations for the active profile/loadout.",
             "localPosition": {
                 "x": 0.4300002455711365,
@@ -114,21 +114,47 @@
             "label": "Shield Forearm",
             "socketName": "MainCharacter_LeftForearmShieldSocket",
             "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket",
-            "editTargetKind": "Visible ArtPass Visual",
-            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
-            "notes": "",
+            "editTargetKind": "Socket (inactive visual)",
+            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
+            "notes": "EquippedShieldVisual is currently parented to PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket, so this slot is not visible in the current weapon/profile state. Switch profile/slot/guard state to preview it live.",
             "localPosition": {
-                "x": 0.07999999076128006,
-                "y": 0.20499993860721589,
-                "z": -0.08499999344348908
+                "x": 0.014999999664723874,
+                "y": 0.019999999552965165,
+                "z": 0.019999999552965165
             },
             "localEuler": {
                 "x": 0.0,
-                "y": 219.99998474121095,
-                "z": 90.0
+                "y": 0.0,
+                "z": 0.0
+            },
+            "localScale": {
+                "x": 0.7200000286102295,
+                "y": 0.7200000286102295,
+                "z": 0.7200000286102295
+            }
+        },
+        {
+            "label": "Shield Back",
+            "socketName": "MainCharacter_BackShieldSocket",
+            "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket",
+            "editTargetKind": "Visible ArtPass Visual",
+            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
+            "notes": "",
+            "localPosition": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "localEuler": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
             },
             "localScale": {
                 "x": 1.0,
@@ -137,40 +163,14 @@
             }
         },
         {
-            "label": "Shield Back",
-            "socketName": "MainCharacter_BackShieldSocket",
-            "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket",
-            "editTargetKind": "Socket (inactive visual)",
-            "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
-            "notes": "EquippedShieldVisual is currently parented to PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/MainCharacter_LeftForearmShieldSocket, so this slot is not visible in the current weapon/profile state. Switch profile/slot/guard state to preview it live.",
-            "localPosition": {
-                "x": 0.0,
-                "y": 0.07999999821186066,
-                "z": -0.12999999523162843
-            },
-            "localEuler": {
-                "x": 0.0,
-                "y": 180.0,
-                "z": 0.0
-            },
-            "localScale": {
-                "x": 0.8199999928474426,
-                "y": 0.8199999928474426,
-                "z": 0.8199999928474426
-            }
-        },
-        {
             "label": "Ranged Muzzle",
             "socketName": "MainCharacter_RangedMuzzleSocket",
             "socketPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket/MainCharacter_RangedMuzzleSocket",
             "editTargetKind": "Socket",
             "editTargetPath": "PlayerAnimationRefiner.PlayerPreview/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/MainCharacter_RangedHandWeaponSocket/MainCharacter_RangedMuzzleSocket",
-            "profileContext": "SwordShieldCombat",
-            "weaponSlotContext": "Melee",
-            "clipContext": "Assets/_Hollow/Animation Packs/Pro Sword and Shield Pack/sword and shield strafe (3).fbx",
+            "profileContext": "PistolCombat",
+            "weaponSlotContext": "Ranged",
+            "clipContext": "Assets/_Hollow/Animation Packs/Pistol_Handgun Locomotion Pack/pistol idle.fbx",
             "notes": "",
             "localPosition": {
                 "x": 0.0,

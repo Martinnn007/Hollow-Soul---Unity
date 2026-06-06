@@ -902,6 +902,7 @@ namespace Hollow.Editor.Generation
             controller.AddParameter(PlayerLocomotionAnimator.IsMovingParameter, AnimatorControllerParameterType.Bool);
             controller.AddParameter(PlayerLocomotionAnimator.MoveSpeedParameter, AnimatorControllerParameterType.Float);
             controller.AddParameter(PlayerLocomotionAnimator.ActionSpeedParameter, AnimatorControllerParameterType.Float);
+            controller.AddParameter(PlayerLocomotionAnimator.IsAttackCommittedParameter, AnimatorControllerParameterType.Bool);
             controller.AddParameter(PlayerLocomotionAnimator.RollTriggerParameter, AnimatorControllerParameterType.Trigger);
             controller.AddParameter(PlayerLocomotionAnimator.SlashTriggerParameter, AnimatorControllerParameterType.Trigger);
             controller.AddParameter(PlayerLocomotionAnimator.HitTriggerParameter, AnimatorControllerParameterType.Trigger);
@@ -1030,9 +1031,23 @@ namespace Hollow.Editor.Generation
                 duration: 0.035f,
                 requiresSwordShieldProfile: true);
             AddSimpleActionExitTransitions(rollState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
-            AddSimpleActionExitTransitions(attackState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSimpleActionExitTransitions(
+                attackState,
+                idleState,
+                walkState,
+                runState,
+                swordShieldWalkState,
+                swordShieldRunState,
+                requiresAttackCommitmentReleased: true);
             AddSimpleActionExitTransitions(hitState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
-            AddSimpleActionExitTransitions(swordShieldAttackState, idleState, walkState, runState, swordShieldWalkState, swordShieldRunState);
+            AddSimpleActionExitTransitions(
+                swordShieldAttackState,
+                idleState,
+                walkState,
+                runState,
+                swordShieldWalkState,
+                swordShieldRunState,
+                requiresAttackCommitmentReleased: true);
             AddSwordShieldActionExitTransitions(swordShieldImpactBlockedState, idleState, swordShieldWalkState, swordShieldRunState, swordShieldGuardHoldState);
             AddSwordShieldActionExitTransitions(swordShieldImpactBreakthroughState, idleState, swordShieldWalkState, swordShieldRunState, swordShieldGuardHoldState);
         }
@@ -1564,7 +1579,8 @@ namespace Hollow.Editor.Generation
             AnimatorState walkState,
             AnimatorState runState,
             AnimatorState swordShieldWalkState = null,
-            AnimatorState swordShieldRunState = null)
+            AnimatorState swordShieldRunState = null,
+            bool requiresAttackCommitmentReleased = false)
         {
             if (swordShieldRunState != null)
             {
@@ -1574,6 +1590,7 @@ namespace Hollow.Editor.Generation
                 toSwordShieldRun.duration = 0.08f;
                 toSwordShieldRun.offset = 0f;
                 AddSwordShieldLocomotionConditions(toSwordShieldRun);
+                AddAttackCommitmentReleasedCondition(toSwordShieldRun, requiresAttackCommitmentReleased);
                 toSwordShieldRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
             }
 
@@ -1585,6 +1602,7 @@ namespace Hollow.Editor.Generation
                 toSwordShieldWalk.duration = 0.08f;
                 toSwordShieldWalk.offset = 0f;
                 AddSwordShieldLocomotionConditions(toSwordShieldWalk);
+                AddAttackCommitmentReleasedCondition(toSwordShieldWalk, requiresAttackCommitmentReleased);
                 toSwordShieldWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
             }
 
@@ -1597,6 +1615,7 @@ namespace Hollow.Editor.Generation
             toRun.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             toRun.AddCondition(AnimatorConditionMode.Greater, RunTransitionThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
             toRun.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+            AddAttackCommitmentReleasedCondition(toRun, requiresAttackCommitmentReleased);
 
             var toWalk = actionState.AddTransition(walkState);
             toWalk.hasExitTime = true;
@@ -1607,6 +1626,7 @@ namespace Hollow.Editor.Generation
             toWalk.AddCondition(AnimatorConditionMode.If, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             toWalk.AddCondition(AnimatorConditionMode.Less, RunStartMoveSpeedThreshold, PlayerLocomotionAnimator.MoveSpeedParameter);
             toWalk.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+            AddAttackCommitmentReleasedCondition(toWalk, requiresAttackCommitmentReleased);
 
             var toIdle = actionState.AddTransition(idleState);
             toIdle.hasExitTime = true;
@@ -1615,6 +1635,17 @@ namespace Hollow.Editor.Generation
             toIdle.offset = 0f;
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsMovingParameter);
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsDeadParameter);
+            AddAttackCommitmentReleasedCondition(toIdle, requiresAttackCommitmentReleased);
+        }
+
+        private static void AddAttackCommitmentReleasedCondition(AnimatorStateTransition transition, bool required)
+        {
+            if (!required)
+            {
+                return;
+            }
+
+            transition.AddCondition(AnimatorConditionMode.IfNot, 0f, PlayerLocomotionAnimator.IsAttackCommittedParameter);
         }
 
         private static void AddSwordShieldActionExitTransitions(

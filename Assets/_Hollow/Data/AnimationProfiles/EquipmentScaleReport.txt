@@ -1,6 +1,6 @@
 Hollow Soul Equipment Scale Report
 ReportVersion: 1
-UnityTimestampUtc: 2026-06-06T19:59:13.2697400Z
+UnityTimestampUtc: 2026-06-06T21:56:00.3814680Z
 PrefabPath: Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab
 ValidationErrors: 0
 ValidationWarnings: 0

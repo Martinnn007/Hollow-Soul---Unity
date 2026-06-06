@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Hollow.Core;
 using Hollow.Input;
 using Hollow.Data.Definitions;
@@ -88,6 +89,12 @@ namespace Hollow.Combat
         private float attackWindupEndTime;
         private float attackActiveEndTime;
         private float attackRecoveryEndTime;
+        private float attackCommitmentEndTime;
+        private WeaponSlot committedAttackSlot = WeaponSlot.Melee;
+        private Vector2 committedAttackDirection = Vector2.up;
+        private bool meleeSwipeVisualSpawned;
+        private readonly HashSet<EnemyRuntimeController> meleeTargetsHitThisAttack = new();
+        private readonly HashSet<DestructibleRoomObjectController> destructiblesHitThisAttack = new();
         private bool pendingAttackApplied;
         private bool rangedDrawActive;
         private AttackKind rangedDrawAttackKind = AttackKind.Light;
@@ -124,10 +131,24 @@ namespace Hollow.Combat
 
         public bool DebugLightAttackSpeedDoubled => debugLightAttackSpeedDoubled;
 
-        public bool IsAttackCommitted => rangedDrawActive || IsPendingAttackCommitted;
+        public bool IsAttackCommitted => rangedDrawActive || IsPendingAttackCommitted || IsMeleeAnimationCommitmentActive;
 
         public bool IsRangedAttackCommitted => rangedDrawActive ||
             (pendingAttackSlot == WeaponSlot.Ranged && IsPendingAttackCommitted);
+
+        public Vector2 CommittedAttackDirection => committedAttackDirection.sqrMagnitude > 0.001f
+            ? committedAttackDirection.normalized
+            : LastAimDirection;
+
+        public float AttackCommitmentClockSeconds => lastActionEvaluationTime;
+
+        public float AttackCommitmentRemainingSeconds => Mathf.Max(0f, attackCommitmentEndTime - lastActionEvaluationTime);
+
+        public bool IsMeleeAttackInWindup =>
+            pendingAttackSlot == WeaponSlot.Melee &&
+            attackExecutionState == PlayerAttackExecutionState.Windup;
+
+        public bool CanRollCancelCurrentAttack => IsMeleeAttackInWindup && !pendingAttackApplied;
 
         public bool IsRangedHeldAttackPoseActive =>
             rangedHeldAttackPoseActive &&
@@ -153,6 +174,12 @@ namespace Hollow.Combat
                 if (rangedDrawActive)
                 {
                     return rangedDrawDirection.sqrMagnitude > 0.001f ? rangedDrawDirection.normalized : LastAimDirection;
+                }
+
+                if ((pendingAttackSlot == WeaponSlot.Melee && (IsPendingAttackCommitted || IsMeleeAnimationCommitmentActive)) ||
+                    (committedAttackSlot == WeaponSlot.Melee && IsMeleeAnimationCommitmentActive))
+                {
+                    return CommittedAttackDirection;
                 }
 
                 if (attackExecutionState is PlayerAttackExecutionState.Windup
@@ -196,6 +223,11 @@ namespace Hollow.Combat
             attackExecutionState is PlayerAttackExecutionState.Windup
             or PlayerAttackExecutionState.Active
             or PlayerAttackExecutionState.Recovery;
+
+        private bool IsMeleeAnimationCommitmentActive =>
+            committedAttackSlot == WeaponSlot.Melee &&
+            attackCommitmentEndTime > 0f &&
+            lastActionEvaluationTime + 0.0001f < attackCommitmentEndTime;
 
         public bool IsRolling => CurrentRollPhase != PlayerRollPhase.None;
 
@@ -527,12 +559,18 @@ namespace Hollow.Combat
         {
             BindHealthEvents();
             TickAction(0f, timeSeconds);
+            var canRollCancelAttack = CanRollCancelCurrentAttack;
             if (rangedDrawActive ||
-                attackExecutionState != PlayerAttackExecutionState.Idle ||
+                (!canRollCancelAttack && (attackExecutionState != PlayerAttackExecutionState.Idle || IsAttackCommitted)) ||
                 IsGuarding ||
                 !TrySpendStamina(RollStaminaCost, timeSeconds, StaminaSpendKind.Action))
             {
                 return false;
+            }
+
+            if (canRollCancelAttack)
+            {
+                CancelPendingMeleeAttackForRoll();
             }
 
             var direction = ResolveRollDirection(moveDirection, aimDirection);
@@ -566,6 +604,7 @@ namespace Hollow.Combat
         public void TickAction(float deltaTime, float timeSeconds)
         {
             lastActionEvaluationTime = timeSeconds;
+            ClearExpiredMeleeCommitment(timeSeconds);
             for (var guard = 0; guard < 5; guard++)
             {
                 if (attackExecutionState == PlayerAttackExecutionState.Idle)
@@ -614,12 +653,17 @@ namespace Hollow.Combat
                     }
 
                     attackExecutionState = PlayerAttackExecutionState.Active;
-                    ExecutePendingAttack(timeSeconds);
+                    BeginPendingAttack(timeSeconds);
                     continue;
                 }
 
                 if (attackExecutionState == PlayerAttackExecutionState.Active)
                 {
+                    if (pendingAttackSlot == WeaponSlot.Melee)
+                    {
+                        ApplyPendingMeleeSwingHits(timeSeconds);
+                    }
+
                     if (timeSeconds < attackActiveEndTime)
                     {
                         return;
@@ -633,6 +677,12 @@ namespace Hollow.Combat
                 {
                     if (timeSeconds < attackRecoveryEndTime)
                     {
+                        return;
+                    }
+
+                    if (pendingAttackSlot == WeaponSlot.Melee && timeSeconds + 0.0001f < attackCommitmentEndTime)
+                    {
+                        ClearPendingAction(clearCommitment: false);
                         return;
                     }
 
@@ -998,6 +1048,7 @@ namespace Hollow.Combat
             var weapon = ResolveWeapon(WeaponSlot.Melee);
             var attack = ResolveAttack(weapon, WeaponSlot.Melee, attackKind);
             if (timeSeconds < nextAllowedMeleeTime ||
+                IsAttackCommitted ||
                 attackExecutionState != PlayerAttackExecutionState.Idle ||
                 combatController == null ||
                 !TrySpendStamina(AdjustedAttackStaminaCost(attack.StaminaCost), timeSeconds, StaminaSpendKind.Action))
@@ -1031,17 +1082,34 @@ namespace Hollow.Combat
             pendingAttackTarget = slot == WeaponSlot.Ranged ? shotTarget : null;
             pendingAttackAssistResult = assistResult;
             lastAimDirection = pendingAttackDirection;
+            committedAttackSlot = slot;
+            committedAttackDirection = pendingAttackDirection;
             pendingAttackApplied = false;
+            meleeSwipeVisualSpawned = false;
+            meleeTargetsHitThisAttack.Clear();
+            destructiblesHitThisAttack.Clear();
             attackWindupEndTime = timeSeconds + attack.WindupSeconds;
             attackActiveEndTime = attackWindupEndTime + attack.ActiveSeconds;
             attackRecoveryEndTime = attackActiveEndTime + attack.RecoverySeconds;
+            attackCommitmentEndTime = slot == WeaponSlot.Melee ? attackRecoveryEndTime : 0f;
             attackExecutionState = PlayerAttackExecutionState.Windup;
             aimLockController?.NotifyAttackCommitted(assistResult, timeSeconds);
             var actionDurationSeconds = Mathf.Max(0.01f, attack.WindupSeconds + attack.ActiveSeconds + attack.RecoverySeconds);
             WeaponActionAnimationRequested?.Invoke(slot, attackKind, pendingAttackDirection, actionDurationSeconds);
         }
 
-        private void ExecutePendingAttack(float timeSeconds)
+        public void ExtendCurrentAttackCommitmentUntil(float timeSeconds)
+        {
+            if (committedAttackSlot != WeaponSlot.Melee ||
+                !IsAttackCommitted)
+            {
+                return;
+            }
+
+            attackCommitmentEndTime = Mathf.Max(attackCommitmentEndTime, timeSeconds);
+        }
+
+        private void BeginPendingAttack(float timeSeconds)
         {
             if (pendingAttackApplied)
             {
@@ -1055,7 +1123,8 @@ namespace Hollow.Combat
                 return;
             }
 
-            ExecutePendingMeleeAttack(timeSeconds);
+            BeginPendingMeleeAttack(timeSeconds);
+            ApplyPendingMeleeSwingHits(timeSeconds);
         }
 
         private void ExecutePendingRangedAttack(float timeSeconds)
@@ -1098,9 +1167,9 @@ namespace Hollow.Combat
             AudioPresenter.Play(AudioCueId.ProjectileFire, transform.position);
         }
 
-        private void ExecutePendingMeleeAttack(float timeSeconds)
+        private void BeginPendingMeleeAttack(float timeSeconds)
         {
-            if (combatController == null)
+            if (combatController == null || meleeSwipeVisualSpawned)
             {
                 return;
             }
@@ -1108,6 +1177,7 @@ namespace Hollow.Combat
             var cardinal = pendingAttackDirection.sqrMagnitude > 0.001f ? pendingAttackDirection : LastAimDirection;
             var direction = new Vector3(cardinal.x, 0f, cardinal.y).normalized;
             var effectiveRange = EffectiveRange(pendingAttack, WeaponSlot.Melee);
+            meleeSwipeVisualSpawned = true;
             WeaponAttackVisualRequested?.Invoke(WeaponSlot.Melee, pendingAttackKind, cardinal);
             MeleeSwipePresenter.Spawn(transform.parent, transform.localPosition, direction, effectiveRange, pendingAttackKind);
             combatController.EmitPlayerStimulus(
@@ -1116,13 +1186,33 @@ namespace Hollow.Combat
                 timeSeconds,
                 RoomCombatController.StimulusTierForPlayerAttack(pendingAttackKind),
                 pendingAttackKind == AttackKind.Heavy ? "heavy_melee" : "light_melee");
-            var radius = Mathf.Max(0.25f, effectiveRange * 0.48f);
-            var hitCenter = transform.localPosition + direction * Mathf.Max(0.35f, effectiveRange * 0.72f) + new Vector3(0f, CombatFeelTuning.MeleeHitHeightMeters, 0f);
-            var target = combatController.FindEnemyHit(hitCenter, radius);
-            if (target != null && IsInsideMeleeHitArc(target, direction, pendingAttack.HitArcDegrees))
+        }
+
+        private void ApplyPendingMeleeSwingHits(float timeSeconds)
+        {
+            if (combatController == null || pendingAttackSlot != WeaponSlot.Melee)
             {
-                var damage = Mathf.Max(1, pendingAttack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus);
-                var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+                return;
+            }
+
+            var cardinal = pendingAttackDirection.sqrMagnitude > 0.001f ? pendingAttackDirection : LastAimDirection;
+            var direction = new Vector3(cardinal.x, 0f, cardinal.y).normalized;
+            var effectiveRange = EffectiveRange(pendingAttack, WeaponSlot.Melee);
+            var damage = Mathf.Max(1, pendingAttack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus);
+            var profile = CombatFeelProfileDefinition.Resolve(combatFeelProfile);
+
+            foreach (var target in combatController.Enemies)
+            {
+                if (target == null ||
+                    meleeTargetsHitThisAttack.Contains(target) ||
+                    !IsValidTarget(target) ||
+                    !IsInsideMeleeHitArc(target, direction, pendingAttack.HitArcDegrees) ||
+                    !IsInsideMeleeHitRange(target, effectiveRange))
+                {
+                    continue;
+                }
+
+                meleeTargetsHitThisAttack.Add(target);
                 if (DamageSystem.ApplyDamage(
                     target.Health,
                     new DamageRequest(
@@ -1137,13 +1227,20 @@ namespace Hollow.Combat
                 VfxPresenter.Play(VfxCueId.EnemyHit, target.transform.position, target.transform.parent);
                 AudioPresenter.Play(AudioCueId.EnemyHit, target.transform.position);
             }
-            else
+
+            foreach (var destructible in combatController.DestructibleObjects)
             {
-                var destructible = combatController.FindDestructibleHit(hitCenter, radius);
-                if (destructible != null)
+                if (destructible == null ||
+                    destructiblesHitThisAttack.Contains(destructible) ||
+                    destructible.IsDestroyed ||
+                    !IsInsideMeleeHitArc(destructible.transform.localPosition, direction, pendingAttack.HitArcDegrees) ||
+                    !IsInsideMeleeHitRange(destructible.transform.localPosition, destructible.RadiusMeters, effectiveRange))
                 {
-                    destructible.TryApplyHit(Mathf.Max(1, pendingAttack.Damage + meleeDamageBonus + CurrentTemporaryDamageBonus), gameObject);
+                    continue;
                 }
+
+                destructiblesHitThisAttack.Add(destructible);
+                destructible.TryApplyHit(damage, gameObject);
             }
         }
 
@@ -1164,7 +1261,31 @@ namespace Hollow.Combat
             return Vector3.Angle(direction.normalized, toTarget.normalized) <= Mathf.Clamp(arcDegrees, 1f, 360f) * 0.5f;
         }
 
-        private void ClearPendingAction()
+        private bool IsInsideMeleeHitArc(Vector3 localPosition, Vector3 direction, float arcDegrees)
+        {
+            var toTarget = localPosition - transform.localPosition;
+            toTarget.y = 0f;
+            if (toTarget.sqrMagnitude <= 0.001f)
+            {
+                return true;
+            }
+
+            return Vector3.Angle(direction.normalized, toTarget.normalized) <= Mathf.Clamp(arcDegrees, 1f, 360f) * 0.5f;
+        }
+
+        private bool IsInsideMeleeHitRange(EnemyRuntimeController target, float effectiveRange)
+        {
+            return target != null && IsInsideMeleeHitRange(target.transform.localPosition, Mathf.Max(0.36f, target.RadiusMeters), effectiveRange);
+        }
+
+        private bool IsInsideMeleeHitRange(Vector3 localPosition, float targetRadius, float effectiveRange)
+        {
+            var delta = localPosition - transform.localPosition;
+            delta.y = 0f;
+            return delta.magnitude <= Mathf.Max(0.1f, effectiveRange) + Mathf.Max(0f, targetRadius);
+        }
+
+        private void ClearPendingAction(bool clearCommitment = true)
         {
             CancelRangedDraw();
             attackExecutionState = PlayerAttackExecutionState.Idle;
@@ -1173,9 +1294,42 @@ namespace Hollow.Combat
             attackWindupEndTime = 0f;
             attackActiveEndTime = 0f;
             attackRecoveryEndTime = 0f;
+            meleeSwipeVisualSpawned = false;
+            meleeTargetsHitThisAttack.Clear();
+            destructiblesHitThisAttack.Clear();
+            if (clearCommitment)
+            {
+                attackCommitmentEndTime = 0f;
+                committedAttackSlot = WeaponSlot.Melee;
+                committedAttackDirection = LastAimDirection;
+            }
+
             rollInvulnerableStartTime = 0f;
             rollEndTime = 0f;
             rollInvulnerableEndTime = 0f;
+        }
+
+        private void ClearExpiredMeleeCommitment(float timeSeconds)
+        {
+            if (attackExecutionState != PlayerAttackExecutionState.Idle ||
+                attackCommitmentEndTime <= 0f ||
+                timeSeconds + 0.0001f < attackCommitmentEndTime)
+            {
+                return;
+            }
+
+            attackCommitmentEndTime = 0f;
+            committedAttackSlot = WeaponSlot.Melee;
+        }
+
+        private void CancelPendingMeleeAttackForRoll()
+        {
+            if (!CanRollCancelCurrentAttack)
+            {
+                return;
+            }
+
+            ClearPendingAction();
         }
 
         public bool IsRollInvulnerableAt(float timeSeconds)

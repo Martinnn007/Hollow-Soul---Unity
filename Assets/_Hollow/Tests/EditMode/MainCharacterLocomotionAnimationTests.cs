@@ -2077,6 +2077,7 @@ namespace Hollow.Tests.EditMode
             AssertControllerParameter(controller, PlayerLocomotionAnimator.IsMovingParameter, AnimatorControllerParameterType.Bool);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.MoveSpeedParameter, AnimatorControllerParameterType.Float);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.ActionSpeedParameter, AnimatorControllerParameterType.Float);
+            AssertControllerParameter(controller, PlayerLocomotionAnimator.IsAttackCommittedParameter, AnimatorControllerParameterType.Bool);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.RollTriggerParameter, AnimatorControllerParameterType.Trigger);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.SlashTriggerParameter, AnimatorControllerParameterType.Trigger);
             AssertControllerParameter(controller, PlayerLocomotionAnimator.HitTriggerParameter, AnimatorControllerParameterType.Trigger);
@@ -2132,6 +2133,8 @@ namespace Hollow.Tests.EditMode
             AssertHasSimpleLocomotionTransition(runState, "Walk", AnimatorConditionMode.Less, RunStartMoveSpeedThreshold);
             AssertHasActionExitTransition(rollState, "Run", AnimatorConditionMode.Greater);
             AssertHasActionExitTransition(attackState, "Run", AnimatorConditionMode.Greater);
+            AssertHasAttackCommitmentReleaseCondition(attackState);
+            AssertHasAttackCommitmentReleaseCondition(swordShieldAttackState);
             AssertHasActionExitTransition(hitState, "Run", AnimatorConditionMode.Greater);
 
             var canonicalMaterial = AssetDatabase.LoadAssetAtPath<Material>(CanonicalMaterialPath);
@@ -2295,6 +2298,16 @@ namespace Hollow.Tests.EditMode
                 HasSpeedCondition(candidate, speedConditionMode, RunStartMoveSpeedThreshold));
             Assert.IsNotNull(transition, $"Expected action exit {fromState.name} -> {toStateName}.");
             Assert.IsTrue(transition.hasExitTime);
+        }
+
+        private static void AssertHasAttackCommitmentReleaseCondition(AnimatorState fromState)
+        {
+            Assert.IsTrue(
+                fromState.transitions.Any(transition =>
+                    transition.conditions.Any(condition =>
+                        condition.parameter == PlayerLocomotionAnimator.IsAttackCommittedParameter &&
+                        condition.mode == AnimatorConditionMode.IfNot)),
+                $"Expected {fromState.name} exits to wait for {PlayerLocomotionAnimator.IsAttackCommittedParameter}=false.");
         }
 
         private static void AssertHasLockedTransition(AnimatorState fromState, AnimatorState lockedState)
