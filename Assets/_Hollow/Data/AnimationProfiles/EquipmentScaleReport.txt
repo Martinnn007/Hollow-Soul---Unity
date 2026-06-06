@@ -1,6 +1,6 @@
 Hollow Soul Equipment Scale Report
 ReportVersion: 1
-UnityTimestampUtc: 2026-06-06T21:56:00.3814680Z
+UnityTimestampUtc: 2026-06-06T22:28:36.5392740Z
 PrefabPath: Assets/_Hollow/Prefabs/Player/PlayerCharacter.prefab
 ValidationErrors: 0
 ValidationWarnings: 0
@@ -84,10 +84,10 @@ EquipmentInstances
   socketLocalScale: 0.78, 0.78, 0.78
   socketLossyScale: 0.694, 0.694, 0.694
   markerRole: WeaponRanged
-  rendererBoundsSize: 0.484, 0.126, 0.303
+  rendererBoundsSize: 0.339, 0.088, 0.212
   rendererBoundsCenterDistanceFromPlayerRoot: 0.262
   boundsValid: True
-  renderer: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged/MeshyAlienTechPistolModel bounds=0.484, 0.126, 0.303
+  renderer: PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged/MeshyAlienTechPistolModel bounds=0.339, 0.088, 0.212
   currentProfile: UnarmedLocomotion
   normalizationPassCount: 0
   visualWasSpawnedAfterNormalize: False
@@ -154,7 +154,7 @@ Missing Scripts: 0
 - Equipment Armor renderer=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor/MeshyBasicSmallShieldModel artpass=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual/ArtPassVisual.Armor wrapper=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket/EquippedShieldVisual socket=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/MainCharacter_BackShieldSocket
   parentLossyScale=0.73, 0.73, 0.73 wrapperLocalScale=1.124, 1.124, 1.124 compensationScale=1.124, 1.124, 1.124 bounds=0.471, 0.363, 0.476 valid=True
 - Equipment WeaponRanged renderer=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged/MeshyAlienTechPistolModel artpass=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual/ArtPassVisual.WeaponRanged wrapper=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket/HolsteredRangedWeaponVisual socket=PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/MainCharacter_HipRangedHolsterSocket
-  parentLossyScale=0.694, 0.694, 0.694 wrapperLocalScale=1.124, 1.124, 1.124 compensationScale=1.124, 1.124, 1.124 bounds=0.484, 0.126, 0.303 valid=True
+  parentLossyScale=0.694, 0.694, 0.694 wrapperLocalScale=1.124, 1.124, 1.124 compensationScale=1.124, 1.124, 1.124 bounds=0.339, 0.088, 0.212 valid=True
 First Skinned Body Bones:
 - PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm
 - PlayerCharacter/MainCharacter_VisualRoot/MainCharacter_MeshyModel/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm
